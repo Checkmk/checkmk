@@ -167,7 +167,7 @@ def register(
     config_variable_registry.register(ConfigVariableUserDowntimeTimeranges)
     config_variable_registry.register(ConfigVariableBuiltinIconVisibility)
     config_variable_registry.register(ConfigVariableServiceViewGrouping)
-    config_variable_registry.register(ConfigVariableViewActionDefaults)
+    config_variable_registry.register(ConfigVariableAcknowledgeProblems)
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
@@ -1944,7 +1944,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         )
 
 
-class ConfigVariableViewActionDefaults(ConfigVariable):
+class ConfigVariableAcknowledgeProblems(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
@@ -1952,42 +1952,47 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         return ConfigDomainGUI
 
     def ident(self) -> str:
-        return "view_action_defaults"
+        return "acknowledge_problems"
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("View action defaults"),
+            title=_("Acknowledge problems"),
             elements=[
                 (
                     "ack_sticky",
                     Checkbox(
-                        title=_("Sticky"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_notify",
-                    Checkbox(
-                        title=_("Send notification"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_persistent",
-                    Checkbox(
-                        title=_("Persistent comment"),
+                        title=_(
+                            "Ignore status changes until services/hosts are OK/UP again (sticky)"
+                        ),
                         label=_("Enable"),
                         default_value=False,
                     ),
                 ),
                 (
+                    "ack_persistent",
+                    Checkbox(
+                        title=_("Keep comment after acknowledgment expires (persistent comment)"),
+                        label=_("Enable"),
+                        default_value=False,
+                    ),
+                ),
+                (
+                    "ack_notify",
+                    Checkbox(
+                        title=_(
+                            "Notify affected users if notification rules are in place (send notifications)"
+                        ),
+                        label=_("Enable"),
+                        default_value=True,
+                    ),
+                ),
+                (
                     "ack_expire",
                     Age(
-                        title=_("Expire acknowledgement after"),
+                        title=_("Default expiration time (relative)"),
                         display=["days", "hours", "minutes"],
                         default_value=3600,
+                        minvalue=60,
                     ),
                 ),
             ],

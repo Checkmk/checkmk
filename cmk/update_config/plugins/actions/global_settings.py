@@ -29,7 +29,9 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
-_REMOVED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
+_REMOVED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
+    ("view_action_defaults", "acknowledge_problems", {}),
+]
 
 
 class UpdateGlobalSettings(UpdateAction):

@@ -46,7 +46,7 @@ from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
-from ..v1.painter_lib import experimental_painter_registry
+from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
 
@@ -71,6 +71,44 @@ class Painter(abc.ABC):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
+
+    def to_v1_painter(self) -> V1Painter[object]:
+        """Convert an instance of an old painter to a v1 Painter."""
+
+        def get_row(rows: Rows, config: PainterConfiguration) -> Sequence[Any]:
+            return rows
+
+        # Needed because of old calling conventions. Doesn't have any effect.
+        empty_cell = EmptyCell(None, None)
+
+        def format_html(row: Row, _painter_configuration: PainterConfiguration) -> CellSpec:
+            return self.render(row, empty_cell)
+
+        def format_json(row: Row, _painter_configuration: PainterConfiguration) -> object:
+            return self.export_for_json(row, empty_cell)
+
+        def format_csv(row: Row, _painter_configuration: PainterConfiguration) -> str:
+            result = self.export_for_csv(row, empty_cell)
+            if isinstance(result, HTML):
+                # ??? Typing doesn't fit.
+                return str(result)
+            return result
+
+        return V1Painter[Any](
+            ident=self.ident,
+            computer=get_row,
+            formatters=Formatters[Any](
+                html=format_html,
+                json=format_json,
+                csv=format_csv,
+            ),
+            title=self.title(empty_cell),
+            short_title=self.short_title(empty_cell),
+            columns=self.columns,
+            list_title=self.list_title(empty_cell),
+            painter_options=self.painter_options,
+            title_classes=self.title_classes(),
+        )
 
     @staticmethod
     def uuid_col(cell: Cell) -> str:
@@ -695,6 +733,16 @@ class EmptyCell(Cell):
 
 
 class PainterAdapter(Painter):
+    """Adapt a "new" Painter to work in code expecting an "old" one.
+
+    "new" means Painters deriving from cmk.gui.painter.v1.painter_lib.Painter
+    "old" means Painters deriving from cmk.gui.painter.v0.base.Painter
+
+    Args:
+        painter: a "new" Painter instance
+
+    """
+
     def __init__(self, painter: V1Painter):
         self._painter = painter
 

@@ -365,7 +365,8 @@ export function textinput_enter_submit(
 export function confirm_dialog(
     optional_args: any,
     confirm_handler: null | (() => void),
-    cancel_handler: null | (() => void) = null
+    cancel_handler: null | (() => void) = null,
+    deny_handler: null | (() => void) = null
 ) {
     const default_custom_class_args = {
         title: "confirm_title",
@@ -418,9 +419,11 @@ export function confirm_dialog(
     };
 
     Swal.fire(args).then(result => {
-        if (result.value) {
+        if (result.isConfirmed) {
             if (confirm_handler) confirm_handler();
-        } else if (result.dismiss == Swal.DismissReason.cancel) {
+        } else if (result.isDenied) {
+            if (deny_handler) deny_handler();
+        } else if (result.isDismissed) {
             if (cancel_handler) cancel_handler();
         }
     });

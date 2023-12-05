@@ -12,7 +12,7 @@ from typing import Literal
 from livestatus import SiteId
 
 from cmk.gui import sites
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
@@ -33,6 +33,9 @@ class CommandConfirmDialogOptions:
     additions: HTML
     icon_class: Literal["question", "warning"]
     confirm_button: LazyString
+    cancel_button: LazyString
+    deny_button: LazyString | None = None
+    deny_js_function: str | None = None
 
 
 CommandActionResult = (
@@ -61,6 +64,18 @@ class Command(abc.ABC):
     @abc.abstractmethod
     def confirm_button(self) -> LazyString:
         raise NotImplementedError()
+
+    @property
+    def cancel_button(self) -> LazyString:
+        return _l("Cancel")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return None
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return None
 
     @property
     @abc.abstractmethod
@@ -93,6 +108,9 @@ class Command(abc.ABC):
             self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
         )
 
     def confirm_dialog_date_and_time_format(

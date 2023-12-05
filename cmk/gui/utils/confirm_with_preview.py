@@ -71,6 +71,8 @@ def command_confirm_dialog(
     icon_class: Literal["question", "warning"],
     confirm_button: LazyString = _l("Confirm"),
     cancel_button: LazyString = _l("Cancel"),
+    deny_button: LazyString | None = None,
+    deny_js_function: str | None = None,
 ) -> bool | None:
     if any(request.has_var(varname) for _title, varname in confirm_options):
         return True if transactions.check_transaction() else None
@@ -95,11 +97,19 @@ def command_confirm_dialog(
         else makeuri(
             request=request,
             addvars=[("_do_actions", "no")],
-            delvars=["_transid"],
+            delvars=["filled_in", "_transid"],
         )
     )
+    deny_button_config = (
+        {}
+        if deny_button is None and deny_js_function is None
+        else {
+            "denyButtonText": str(deny_button or _l("Deny")),
+            "showDenyButton": True,
+        }
+    )
     html.javascript(
-        "cmk.forms.confirm_dialog(%s, () => {const form = document.getElementById('form_confirm');form.submit()}, %s)"
+        "cmk.forms.confirm_dialog(%s, () => {const form = document.getElementById('form_confirm');form.submit()}, %s, %s)"
         % (
             json.dumps(
                 {
@@ -112,9 +122,11 @@ def command_confirm_dialog(
                         "confirmButton": "confirm_%s" % icon_class,
                         "icon": "confirm_icon confirm_%s" % icon_class,
                     },
-                },
+                    **deny_button_config,
+                }
             ),
             f"()=>{{location.href = {json.dumps(cancel_url)}}}",
+            deny_js_function if deny_js_function is not None else "null",
         )
     )
 

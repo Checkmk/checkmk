@@ -870,6 +870,18 @@ class CommandAcknowledge(Command):
         return _l("Yes, acknowledge")
 
     @property
+    def cancel_button(self) -> LazyString:
+        return _l("No, discard")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return _l("No, adjust settings")
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return '() => cmk.page_menu.toggle_popup("popup_command_acknowledge")'
+
+    @property
     def icon_name(self):
         return "ack"
 
@@ -943,6 +955,11 @@ class CommandAcknowledge(Command):
             placeholder=_("e.g. ticket ID"),
             onkeyup=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
+        if request.get_str_input("_ack_comment"):
+            html.final_javascript(
+                f"cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('ack_comment'), ['{submit_id}']);"
+            )
+
         html.close_div()
 
         html.open_div(class_="group ack_command_options")
@@ -1396,7 +1413,19 @@ class CommandScheduleDowntimes(Command):
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Schedule")
+        return _l("Yes, schedule")
+
+    @property
+    def cancel_button(self) -> LazyString:
+        return _l("No, discard")
+
+    @property
+    def deny_button(self) -> LazyString | None:
+        return _l("No, adjust settings")
+
+    @property
+    def deny_js_function(self) -> str | None:
+        return '() => cmk.page_menu.toggle_popup("popup_command_schedule_downtimes")'
 
     @property
     def icon_name(self):
@@ -1466,6 +1495,10 @@ class CommandScheduleDowntimes(Command):
             submit="_down_custom",
             onkeyup="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
+        if request.get_str_input("_down_comment"):
+            html.final_javascript(
+                "cmk.forms.enable_submit_buttons_on_nonempty_input(document.getElementById('down_comment'), ['_down_host', '_down_service']);"
+            )
         html.close_div()
 
     def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
@@ -1725,6 +1758,9 @@ class CommandScheduleDowntimes(Command):
             self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
         )
 
     def _get_adhoc_end_time(self, start_time: float) -> float:
@@ -2072,6 +2108,9 @@ class CommandRemoveDowntime(Command):
             self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+            self.cancel_button,
+            self.deny_button,
+            self.deny_js_function,
         )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]

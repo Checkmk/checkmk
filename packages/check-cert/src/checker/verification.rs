@@ -38,7 +38,7 @@ use selfsigned::SelfSigned;
 mod verify {
     use openssl::stack::Stack;
     use openssl::x509::store::{X509Store, X509StoreBuilder};
-    use openssl::x509::{X509StoreContext, X509StoreContextRef, X509};
+    use openssl::x509::{X509StoreContext, X509StoreContextRef, X509VerifyResult, X509};
 
     fn from_der(der: &[u8]) -> X509 {
         X509::from_der(der).unwrap()
@@ -62,14 +62,14 @@ mod verify {
         (cert, stack)
     }
 
-    pub fn verify(chain: &[Vec<u8>], cacerts: &[Vec<u8>]) -> (bool, String) {
+    pub fn verify(chain: &[Vec<u8>], cacerts: &[Vec<u8>]) -> (bool, X509VerifyResult) {
         let store = make_store(cacerts);
         let (cert, chain) = make_stack(chain);
 
         let mut verify_ctx = X509StoreContext::new().unwrap();
         let result = verify_ctx.init(&store, &cert, &chain, X509StoreContextRef::verify_cert);
 
-        (result.unwrap(), verify_ctx.error().to_string())
+        (result.unwrap(), verify_ctx.error())
     }
 }
 
@@ -90,7 +90,7 @@ pub fn check(chain: &[Vec<u8>], config: Config) -> Collection {
             config.allow_self_signed,
         )
         .into(),
-        check_verify_chain(chain, config.trust_store).into(),
+        check_verify_chain(chain, config.trust_store, config.allow_self_signed).into(),
     ])
 }
 
@@ -105,14 +105,17 @@ fn check_self_signed(self_signed: SelfSigned, allow: bool) -> SimpleCheckResult 
     }
 }
 
-fn check_verify_chain(chain: &[Vec<u8>], cacerts: &[Vec<u8>]) -> SimpleCheckResult {
+fn check_verify_chain(
+    chain: &[Vec<u8>],
+    cacerts: &[Vec<u8>],
+    allow_self_signed: bool,
+) -> SimpleCheckResult {
     let (ok, reason) = verify::verify(chain, cacerts);
     if ok {
         SimpleCheckResult::ok("Certificate chain verification OK")
+    } else if reason.as_raw() == 18 && allow_self_signed {
+        SimpleCheckResult::ok(&format!("Certificate chain verification OK: {reason}"))
     } else {
-        SimpleCheckResult::warn(&format!(
-            "Certificate chain verification failed: {}",
-            reason
-        ))
+        SimpleCheckResult::warn(&format!("Certificate chain verification failed: {reason}",))
     }
 }

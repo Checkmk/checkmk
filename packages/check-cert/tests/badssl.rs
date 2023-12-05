@@ -48,6 +48,17 @@ fn test_self_signed() {
 
 #[test]
 #[ignore]
+fn test_allow_self_signed() {
+    let mut cmd = cmd("self-signed.badssl.com");
+    cmd.arg("--allow-self-signed");
+
+    assert!(
+        stdout(cmd.output()).contains("Certificate chain verification OK: self-signed certificate")
+    );
+}
+
+#[test]
+#[ignore]
 fn test_untrusted_root() {
     let mut cmd = cmd("self-signed.badssl.com");
 

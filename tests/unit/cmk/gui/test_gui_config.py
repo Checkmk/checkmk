@@ -50,7 +50,7 @@ def test_default_config_from_plugins() -> None:
         "view_option_refreshes",
         "view_option_columns",
         "doculink_urlformat",
-        "view_action_defaults",
+        "acknowledge_problems",
         "custom_links",
         "debug_livestatus_queries",
         "show_livestatus_errors",

@@ -208,6 +208,13 @@ class Bounds(Generic[C]):
                 ).format(actual=formatter(value), bound=formatter(self._upper)),
             )
 
+    def transform_value(self, value: C) -> C:
+        if self._lower is not None and value < self._lower:
+            return self._lower
+        if self._upper is not None and self._upper < value:
+            return self._upper
+        return value
+
 
 class ValueSpec(abc.ABC, Generic[T]):
     """Abstract base class of all value declaration classes"""
@@ -503,6 +510,9 @@ class Age(ValueSpec[int]):
 
     def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
+
+    def transform_value(self, value: int) -> int:
+        return self._bounds.transform_value(value)
 
 
 class NumericRenderer:

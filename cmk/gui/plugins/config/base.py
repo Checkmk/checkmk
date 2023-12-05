@@ -197,9 +197,9 @@ class CREConfig:
     # MISC
     doculink_urlformat: str = "https://checkmk.com/checkmk_%s.html"
 
-    view_action_defaults: dict[str, bool] = field(
+    acknowledge_problems: dict[str, bool] = field(
         default_factory=lambda: {
-            "ack_sticky": True,
+            "ack_sticky": False,
             "ack_notify": True,
             "ack_persistent": False,
         }

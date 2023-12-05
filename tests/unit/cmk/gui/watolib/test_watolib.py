@@ -181,7 +181,7 @@ def test_registered_configvars() -> None:
         "user_downtime_timeranges",
         "user_icons_and_actions",
         "user_localizations",
-        "view_action_defaults",
+        "acknowledge_problems",
         "virtual_host_trees",
         "wato_activation_method",
         "wato_activate_changes_comment_mode",

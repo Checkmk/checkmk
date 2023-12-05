@@ -972,7 +972,7 @@ class CommandAcknowledge(Command):
             html.close_span()
 
         date, time_ = self._expiration_date_and_time(
-            active_config.view_action_defaults.get("ack_expire", 3600)
+            active_config.acknowledge_problems.get("ack_expire", 3600)
         )
         is_raw_edition: bool = cmk_version.edition() is cmk_version.Edition.CRE
         html.open_div(class_="disabled" if is_raw_edition else "")
@@ -1004,7 +1004,7 @@ class CommandAcknowledge(Command):
         html.open_div()
         html.checkbox(
             "_ack_sticky",
-            active_config.view_action_defaults["ack_sticky"],
+            active_config.acknowledge_problems["ack_sticky"],
             label=_("Ignore status changes until services/hosts are OK/UP again (sticky)"),
         )
         html.div(
@@ -1019,7 +1019,7 @@ class CommandAcknowledge(Command):
         html.div(
             html.render_checkbox(
                 "_ack_persistent",
-                active_config.view_action_defaults["ack_persistent"],
+                active_config.acknowledge_problems["ack_persistent"],
                 label=_("Keep comment after acknowledgment expires (persistent comment)"),
             )
         )
@@ -1027,7 +1027,7 @@ class CommandAcknowledge(Command):
         html.div(
             html.render_checkbox(
                 "_ack_notify",
-                active_config.view_action_defaults["ack_notify"],
+                active_config.acknowledge_problems["ack_notify"],
                 label=_("Notify affected users if %s are in place (send notifications)")
                 % self._link_to_notification_rules(),
             )
@@ -1050,7 +1050,7 @@ class CommandAcknowledge(Command):
     def _action_defaults_url(self) -> str:
         return makeuri_contextless(
             request,
-            [("mode", "edit_configvar"), ("varname", "view_action_defaults")],
+            [("mode", "edit_configvar"), ("varname", "acknowledge_problems")],
             filename="wato.py",
         )
 

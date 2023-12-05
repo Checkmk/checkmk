@@ -597,12 +597,9 @@ async fn test_check_config_exec_local() {
 
 #[test]
 fn test_no_ms_sql() {
-    #[cfg(windows)]
-    const EXPECTED_ERROR: &str = "No such host is known";
-    #[cfg(unix)]
-    const EXPECTED_ERROR: &str = "failed to lookup address information";
+    const EXPECTED_ERROR: &str = "ERROR: Failed to gather SQL server instances";
 
-    let file = tools::create_config_with_missing_ms_sql();
+    let file = tools::create_config_with_wrong_host();
     let r = tools::run_bin()
         .arg("-c")
         .arg(&file.path().to_string_lossy().into_owned())

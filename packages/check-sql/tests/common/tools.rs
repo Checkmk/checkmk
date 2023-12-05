@@ -145,7 +145,7 @@ mssql:
     l
 }
 
-pub fn create_config_with_missing_ms_sql() -> NamedTempFile {
+pub fn create_config_with_wrong_host() -> NamedTempFile {
     let mut l = NamedTempFile::new().unwrap();
     let config = r#"
 ---

@@ -1087,6 +1087,9 @@ impl CheckConfig {
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
     let instances = find_instances(ms_sql).await?;
+    if instances.is_empty() {
+        return Ok("ERROR: Failed to gather SQL server instances".to_string());
+    }
     let sections = section::get_work_sections(ms_sql);
     Ok(generate_instance_entries(&instances)
         + &generate_result(&instances, &sections, ms_sql).await?)
@@ -1112,7 +1115,12 @@ async fn find_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstan
 
 async fn discover_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
     let instances = if ms_sql.discovery().detect() {
-        get_sql_instances(&ms_sql.endpoint()).await?
+        get_sql_instances(&ms_sql.endpoint())
+            .await
+            .unwrap_or_else(|e| {
+                log::warn!("Error discovering instances: {e}");
+                vec![]
+            })
     } else {
         Vec::new()
     };

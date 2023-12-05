@@ -4,7 +4,7 @@
 
 use reqwest::{
     redirect::{Action, Attempt, Policy},
-    Client, Result as ReqwestResult,
+    Client, Result as ReqwestResult, Version,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
@@ -25,6 +25,7 @@ pub enum ForceIP {
 }
 
 pub struct ClientConfig {
+    pub version: Option<Version>,
     pub user_agent: String,
     pub timeout: Duration,
     pub onredirect: OnRedirect,
@@ -33,7 +34,22 @@ pub struct ClientConfig {
 }
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
-    let client = reqwest::Client::builder();
+    let client = reqwest::Client::builder()
+        // rustls (or native-tls with native-tls-alpn feature) backend is needed to establish
+        // a HTTP/2 connection via TLS.
+        .use_rustls_tls();
+
+    let client = match cfg.version {
+        // See IETF RFC 9113, Section 3:
+        // HTTP/2 without TLS can only be established with "prior knowledge".
+        // HTTP/2 without TLS always uses ALPN and is not affected by this setting, so we can
+        // safely enable it.
+        // That said, HTTP/2 over TLS is de facto unsupported by common server software,
+        // so this will probably fail anyways.
+        Some(Version::HTTP_2) => client.http2_prior_knowledge(),
+        Some(Version::HTTP_11) => client.http1_only(),
+        _ => client,
+    };
 
     let client = match &cfg.force_ip {
         None => client,

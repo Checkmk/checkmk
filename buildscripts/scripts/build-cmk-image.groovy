@@ -157,6 +157,7 @@ def main() {
                                 --branch=${branch_name} \
                                 --edition=${EDITION} \
                                 --version=${cmk_version} \
+                                --version_rc_aware=${cmk_version_rc_aware} \
                                 --source_path=${source_dir} \
                                 --action=load \
                                 -vvvv

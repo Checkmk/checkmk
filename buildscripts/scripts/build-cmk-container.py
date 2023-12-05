@@ -78,6 +78,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--source_path", required=True, help="Full path to downloaded tar.gz and deb files"
     )
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=["build", "load", "push", "check_local"],
+        help="Action to perform",
+    )
+    parser.add_argument(
+        "--version_rc_aware",
+        required=parser.parse_known_args()[0].action in ["load", "check_local"],
+        help="RC aware version to load or check e.g. '2.2.0p16-rc3'",
+    )
 
     parser.add_argument(
         "--set_latest_tag",
@@ -102,12 +113,6 @@ def parse_arguments() -> argparse.Namespace:
         const=True,
         default=False,
         help="Flag to build image without docker cache",
-    )
-    parser.add_argument(
-        "--action",
-        required=True,
-        choices=["build", "load", "push", "check_local"],
-        help="Action to perform",
     )
     parser.add_argument(
         "--image_cmk_base", help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE"
@@ -531,7 +536,7 @@ def main() -> None:
                         "--verbose",
                         "-e",
                         f"ssh -o StrictHostKeyChecking=no -i {release_key} -p {internal_deploy_port}",
-                        f"{internal_deploy_dest}/{args.version}/{file_pattern}",
+                        f"{internal_deploy_dest}/{args.version_rc_aware}/{file_pattern}",
                         f"{tmp_path}/",
                     ]
                 )

@@ -264,7 +264,6 @@ class _ServiceFilter:
         self._skip_ignored = skip_ignored
 
     def keep(self, service: ConfiguredService) -> bool:
-
         if self._skip_ignored and (
             self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
             or self._config_cache.service_ignored(self._host_name, service.description)
@@ -762,7 +761,6 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
 
 
 def _collect_parameter_rulesets_from_globals(global_dict: dict[str, Any]) -> None:
-
     vars_to_remove = set()
 
     for ruleset_name in agent_based_register.iter_all_discovery_rulesets():
@@ -2140,6 +2138,7 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
         "service_description": None,
         "has_perfdata": False,
         "management_board": None,
+        "supersedes": None,
     }
 
     for check_plugin_name, info in check_info.items():
@@ -4869,7 +4868,6 @@ def _boil_down_agent_rules(
     # TODO: Better move whole computation to cmk.base.config for making
     # ruleset matching transparent
     for varname, entries in rulesets.items():
-
         if not entries:
             continue
 

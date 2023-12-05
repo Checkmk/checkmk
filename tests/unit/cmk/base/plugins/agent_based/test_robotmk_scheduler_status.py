@@ -45,6 +45,7 @@ _CONFIG = Config(
     results_directory=Path("C:\\robotmk\\results"),
     rcc_config=RCCConfig(
         binary_path=Path("C:\\robotmk\\rcc.exe"),
+        profile_config=None,
     ),
     suites={
         "system": SuiteConfig(

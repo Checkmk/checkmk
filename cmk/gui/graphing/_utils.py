@@ -42,6 +42,7 @@ from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graph as graph_api
 from cmk.graphing.v1 import metric as metric_api
 from cmk.graphing.v1 import perfometer as perfometer_api
+from cmk.graphing.v1 import PhysicalUnit, ScientificUnit
 from cmk.graphing.v1 import translation as translation_api
 from cmk.graphing.v1 import Unit
 
@@ -162,6 +163,13 @@ def _parse_raw_graph_range(
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
 
 
+def _parse_or_add_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> str:
+    unit_name = unit.name if isinstance(unit, Unit) else unit.symbol
+    if unit_name not in set(unit_info.keys()):
+        unit_info[unit_name] = parse_unit(unit)
+    return unit_name
+
+
 def _parse_quantity(
     quantity: (
         str
@@ -187,7 +195,11 @@ def _parse_quantity(
             )
         case metric_api.Constant():
             return MetricDefinition(
-                expression=Constant(quantity.value),
+                expression=Constant(
+                    quantity.value,
+                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_color=parse_color(quantity.color),
+                ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
             )
@@ -208,21 +220,28 @@ def _parse_quantity(
         case metric_api.MinimumOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MinimumOf(Metric(quantity.name)),
+                expression=MinimumOf(
+                    Metric(quantity.name),
+                    explicit_color=parse_color(quantity.color),
+                ),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.MaximumOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MaximumOf(Metric(quantity.name)),
+                expression=MaximumOf(
+                    Metric(quantity.name),
+                    explicit_color=parse_color(quantity.color),
+                ),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.Sum():
             return MetricDefinition(
                 expression=Sum(
-                    [_parse_quantity(s, line_type).expression for s in quantity.summands]
+                    [_parse_quantity(s, line_type).expression for s in quantity.summands],
+                    explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
@@ -230,7 +249,9 @@ def _parse_quantity(
         case metric_api.Product():
             return MetricDefinition(
                 expression=Product(
-                    [_parse_quantity(f, line_type).expression for f in quantity.factors]
+                    [_parse_quantity(f, line_type).expression for f in quantity.factors],
+                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
@@ -240,6 +261,7 @@ def _parse_quantity(
                 expression=Difference(
                     minuend=_parse_quantity(quantity.minuend, line_type).expression,
                     subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression,
+                    explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
@@ -249,6 +271,8 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
+                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
@@ -565,11 +589,9 @@ def add_graphing_plugins(
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metric_api.Metric):
-            unit_name = plugin.unit.name if isinstance(plugin.unit, Unit) else plugin.unit.symbol
-            unit_info[unit_name] = parse_unit(plugin.unit)
             metric_info[MetricName_(plugin.name)] = {
                 "title": plugin.title.localize(_),
-                "unit": unit_name,
+                "unit": _parse_or_add_unit(plugin.unit),
                 "color": parse_color(plugin.color),
             }
 

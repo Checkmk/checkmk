@@ -1057,7 +1057,11 @@ def test_graph_template_from_template(
                         "metric-name-1",
                     ),
                     MetricDefinition(
-                        Constant(value=10),
+                        Constant(
+                            value=10,
+                            explicit_unit_name="COUNT",
+                            explicit_color="#f0f8ff",
+                        ),
                         "stack",
                         "Constant",
                     ),
@@ -1072,22 +1076,35 @@ def test_graph_template_from_template(
                         "metric-name-3",
                     ),
                     MetricDefinition(
-                        MinimumOf(Metric("metric-name-4")),
+                        MinimumOf(
+                            Metric("metric-name-4"),
+                            explicit_color="#faebd7",
+                        ),
                         "stack",
                         "metric-name-4",
                     ),
                     MetricDefinition(
-                        MaximumOf(Metric("metric-name-5")),
+                        MaximumOf(
+                            Metric("metric-name-5"),
+                            explicit_color="#00ffff",
+                        ),
                         "stack",
                         "metric-name-5",
                     ),
                     MetricDefinition(
-                        Sum([Metric("metric-name-6")]),
+                        Sum(
+                            [Metric("metric-name-6")],
+                            explicit_color="#7fffd4",
+                        ),
                         "stack",
                         "Sum",
                     ),
                     MetricDefinition(
-                        Product([Metric("metric-name-7")]),
+                        Product(
+                            [Metric("metric-name-7")],
+                            explicit_unit_name="COUNT",
+                            explicit_color="#f0ffff",
+                        ),
                         "stack",
                         "Product",
                     ),
@@ -1095,6 +1112,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
+                            explicit_color="#f5f5dc",
                         ),
                         "stack",
                         "Difference",
@@ -1103,6 +1121,8 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
+                            explicit_unit_name="COUNT",
+                            explicit_color="#ffe4c4",
                         ),
                         "stack",
                         "Fraction",
@@ -1173,11 +1193,17 @@ def test_graph_template_from_template(
                         "metric-name-3",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-4")),
+                        MinimumOf(
+                            Metric("metric-name-4"),
+                            explicit_color="#faebd7",
+                        ),
                         "metric-name-4",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-5")),
+                        MaximumOf(
+                            Metric("metric-name-5"),
+                            explicit_color="#00ffff",
+                        ),
                         "metric-name-5",
                     ),
                 ],
@@ -1193,17 +1219,28 @@ def test_graph_template_from_template(
                         "metric-name-1",
                     ),
                     MetricDefinition(
-                        Constant(value=10),
+                        Constant(
+                            value=10,
+                            explicit_unit_name="COUNT",
+                            explicit_color="#f0f8ff",
+                        ),
                         "line",
                         "Constant",
                     ),
                     MetricDefinition(
-                        Sum([Metric("metric-name-6")]),
+                        Sum(
+                            [Metric("metric-name-6")],
+                            explicit_color="#7fffd4",
+                        ),
                         "line",
                         "Sum",
                     ),
                     MetricDefinition(
-                        Product([Metric("metric-name-7")]),
+                        Product(
+                            [Metric("metric-name-7")],
+                            explicit_unit_name="COUNT",
+                            explicit_color="#f0ffff",
+                        ),
                         "line",
                         "Product",
                     ),
@@ -1211,6 +1248,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
+                            explicit_color="#f5f5dc",
                         ),
                         "line",
                         "Difference",
@@ -1219,6 +1257,8 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
+                            explicit_unit_name="COUNT",
+                            explicit_color="#ffe4c4",
                         ),
                         "line",
                         "Fraction",
@@ -1344,11 +1384,11 @@ def test_graph_template_from_graph(
                         "metric-name-l4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), "min"),
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color="#faebd7"),
                         "metric-name-l5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), "max"),
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color="#00ffff"),
                         "metric-name-l6",
                     ),
                     utils.ScalarDefinition(
@@ -1360,11 +1400,11 @@ def test_graph_template_from_graph(
                         "metric-name-u4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), "min"),
+                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color="#faebd7"),
                         "metric-name-u5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), "max"),
+                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color="#00ffff"),
                         "metric-name-u6",
                     ),
                 ],

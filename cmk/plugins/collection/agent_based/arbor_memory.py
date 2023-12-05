@@ -31,6 +31,7 @@ snmp_section_arbor_memory_peakflow_sp = SimpleSNMPSection(
     ),
     parse_function=parse_arbor_memory,
     parsed_section_name="arbor_memory",
+    supersedes=["mem_used"],
 )
 
 snmp_section_arbor_memory_peakflow_tms = SimpleSNMPSection(
@@ -42,6 +43,7 @@ snmp_section_arbor_memory_peakflow_tms = SimpleSNMPSection(
     ),
     parse_function=parse_arbor_memory,
     parsed_section_name="arbor_memory",
+    supersedes=["mem_used"],
 )
 
 snmp_section_arbor_memory_peakflow_pravail = SimpleSNMPSection(
@@ -53,6 +55,7 @@ snmp_section_arbor_memory_peakflow_pravail = SimpleSNMPSection(
     ),
     parse_function=parse_arbor_memory,
     parsed_section_name="arbor_memory",
+    supersedes=["mem_used"],
 )
 
 

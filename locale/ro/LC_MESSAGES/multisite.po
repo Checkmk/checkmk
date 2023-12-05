@@ -1166,6 +1166,9 @@ msgstr "Afișaj cu 7 segmente uid"
 msgid "8 days back"
 msgstr "8 zile înapoi"
 
+msgid "802.3ad"
+msgstr ""
+
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 deviații standard"
@@ -8000,6 +8003,10 @@ msgstr "Coadă de corp pentru notificări de serviciu"
 msgid "Bold"
 msgstr "Bold"
 
+#, fuzzy
+msgid "Bonding interface status"
+msgstr "Interfețe de lipire"
+
 msgid "Bonding interfaces"
 msgstr "Interfețe de lipire"
 
@@ -13863,9 +13870,6 @@ msgstr "Critic (în)"
 msgid "Critical (Out)"
 msgstr "Critic (Out)"
 
-msgid "Critical (active connections)"
-msgstr "Critic (conexiuni active)"
-
 msgid "Critical above"
 msgstr "Critic de mai sus"
 
@@ -14770,6 +14774,9 @@ msgstr "Raportul de succesiune a datelor"
 msgid "Data ingress"
 msgstr "Intrarea datelor"
 
+msgid "Data is outdated and will be removed with the next check execution"
+msgstr ""
+
 msgid "Data movement completed"
 msgstr "Mișcarea datelor a fost finalizată"
 
@@ -14852,6 +14859,10 @@ msgstr "Unități de date scrise"
 
 msgid "Data usage"
 msgstr "Utilizarea datelor"
+
+#, fuzzy, python-format
+msgid "Data was provided at %s and is considered valid until %s"
+msgstr "Acest mesaj a fost creat la %s și este valabil până la %s."
 
 msgid "Data width"
 msgstr "Lățimea datelor"
@@ -20565,6 +20576,10 @@ msgstr "Trasee active preconizate"
 
 msgid "Expected autoextend setting"
 msgstr "Setarea de extindere automată preconizată"
+
+#, fuzzy
+msgid "Expected bonding mode"
+msgstr "Modul așteptat"
 
 msgid "Expected cluster type."
 msgstr "Tipul de cluster așteptat."
@@ -50526,6 +50541,9 @@ msgstr ""
 "Specificați numele logic, de exemplu, numele de gazdă, al PLC-ului. Acest "
 "nume este utilizat pentru a denumi serviciile rezultate."
 
+msgid "Specify the monitoring state when the bonding mode is not as expected."
+msgstr ""
+
 msgid "Specify the name of a store (This is either a mailbox or public folder)"
 msgstr ""
 "Specificați numele unui magazin (acesta este fie o căsuță poștală, fie un "
@@ -51205,6 +51223,10 @@ msgstr "Starea dacă nodul are o alarmă mem în vigoare"
 
 msgid "State if node is not in state running"
 msgstr "Stare dacă nodul nu este în stare de funcționare"
+
+#, fuzzy
+msgid "State if not as expected"
+msgstr "Indicați dacă licența este expirată"
 
 msgid "State if probe state not OK"
 msgstr "Stare dacă starea sondei nu este OK"
@@ -67658,9 +67680,6 @@ msgstr "Avertisment (în)"
 msgid "Warning (Out)"
 msgstr "Avertisment (Out)"
 
-msgid "Warning (active connections)"
-msgstr "Avertisment (conexiuni active)"
-
 msgid "Warning above"
 msgstr "Avertismentul de mai sus"
 
@@ -71865,6 +71884,10 @@ msgstr "gazde active"
 msgid "active instances"
 msgstr "instanțe active"
 
+#, fuzzy
+msgid "active-backup"
+msgstr "Ultima copie de rezervă"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "adăugați \"ISL\" la descrierea serviciului pentru legăturile între "
@@ -71979,6 +72002,20 @@ msgstr "backup"
 msgid "baking"
 msgstr "coacere"
 
+msgid "balance-alb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-rr"
+msgstr "Balansatoare de sarcină"
+
+msgid "balance-tlb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-xor"
+msgstr "Balansatoare de sarcină"
+
 msgid "bar"
 msgstr "bar"
 
@@ -72014,6 +72051,9 @@ msgstr "biți/s"
 
 msgid "blocks/s"
 msgstr "blocuri/s"
+
+msgid "broadcast"
+msgstr "difuzare"
 
 msgid "built-in"
 msgstr "built-in"
@@ -73848,6 +73888,12 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Critical (active connections)"
+#~ msgstr "Critic (conexiuni active)"
+
+#~ msgid "Warning (active connections)"
+#~ msgstr "Avertisment (conexiuni active)"
+
 #~ msgid "Forwarding"
 #~ msgstr "Redirecționare"
 
@@ -74220,9 +74266,6 @@ msgstr ""
 
 #~ msgid "Remove comments"
 #~ msgstr "Eliminați comentariile"
-
-#~ msgid "broadcast"
-#~ msgstr "difuzare"
 
 #~ msgid "forced"
 #~ msgstr "forțat"

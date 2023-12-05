@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-30 16:54+0000\n"
+"PO-Revision-Date: 2023-12-05 00:08+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -1165,6 +1165,9 @@ msgstr "UID Siebensegmentanzeige"
 
 msgid "8 days back"
 msgstr "Vor 8 Tagen"
+
+msgid "802.3ad"
+msgstr "802.3ad"
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -7921,6 +7924,9 @@ msgstr "Ende des E-Mail Texts für Servicealarme"
 msgid "Bold"
 msgstr "Fett"
 
+msgid "Bonding interface status"
+msgstr "Status der Bonding-Schnittstelle"
+
 msgid "Bonding interfaces"
 msgstr "Bonding-Schnittstelle"
 
@@ -13739,9 +13745,6 @@ msgstr "Kritisch (In)"
 msgid "Critical (Out)"
 msgstr "Kritisch (Out)"
 
-msgid "Critical (active connections)"
-msgstr "Kritisch (aktive Verbindungen)"
-
 msgid "Critical above"
 msgstr "Kritisch über"
 
@@ -14643,6 +14646,10 @@ msgstr "Daten-Hitrate"
 msgid "Data ingress"
 msgstr "Datafiles-Größe"
 
+msgid "Data is outdated and will be removed with the next check execution"
+msgstr ""
+"Die Daten sind veraltet und werden bei der nächsten Check-Ausführung entfernt"
+
 msgid "Data movement completed"
 msgstr "Datenverschiebung abgeschlossen"
 
@@ -14725,6 +14732,10 @@ msgstr "Geschriebene Dateneinheiten"
 
 msgid "Data usage"
 msgstr "verwendete Daten"
+
+#, python-format
+msgid "Data was provided at %s and is considered valid until %s"
+msgstr "Die Daten wurden um %s bereitgestellt und sind bis %s gültig"
 
 msgid "Data width"
 msgstr "Datenbreite"
@@ -16597,9 +16608,8 @@ msgstr "Benachrichtigungen deaktivieren"
 msgid "Disable notifications?"
 msgstr "Benachrichtigungen deaktivieren?"
 
-#, fuzzy
 msgid "Disable or enable forwarding"
-msgstr "Deaktivierte oder aktivierte Sektionen (SNMP)"
+msgstr "Weiterleitung deaktivieren oder aktivieren"
 
 msgid "Disable passive checks"
 msgstr "Passive Checks abschalten"
@@ -20400,6 +20410,9 @@ msgstr "Erwartete aktive Pfade"
 
 msgid "Expected autoextend setting"
 msgstr "Erwarteter Pfadzustand"
+
+msgid "Expected bonding mode"
+msgstr "Erwarteter Bonding-Modus"
 
 msgid "Expected cluster type."
 msgstr "Erwarteter Cluster Typ."
@@ -33342,14 +33355,13 @@ msgid "Map RWVDMS names"
 msgstr "RWVDMS-Namen zuordnen"
 
 msgid "Map `False` to"
-msgstr ""
+msgstr "Setze `False`auf"
 
 msgid "Map `True` to"
-msgstr ""
+msgstr "Setze `True`auf"
 
-#, fuzzy
 msgid "Map `Unknown` to"
-msgstr "Unbekanntes Datum"
+msgstr "Setze `Unknown`auf"
 
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr "Admin-Zustände abbilden (nur SNMP mit 64-Bit-Zählern)"
@@ -34500,6 +34512,8 @@ msgstr "Meldungsrate"
 
 msgid "Message are forwarded according to below or inherited settings."
 msgstr ""
+"Nachrichten werden gemäß den unten aufgeführten oder geerbten Einstellungen "
+"weitergeleitet."
 
 msgid "Message averaging"
 msgstr "Meldungen mitteln"
@@ -50071,6 +50085,11 @@ msgstr ""
 "Gegen Sie den logischen Namen des PLCs an (z.B. den Hostbname). Dieser Name "
 "wird für die Benennung der resultierenden Services verwendet."
 
+msgid "Specify the monitoring state when the bonding mode is not as expected."
+msgstr ""
+"Geben Sie den Monitoring-Zustand an, wenn der Bonding-Modus nicht wie "
+"erwartet funktioniert."
+
 msgid "Specify the name of a store (This is either a mailbox or public folder)"
 msgstr ""
 "Gegen Sie den Namen des Stores an (Das ist entweder eine Mailbox oder ein "
@@ -50743,6 +50762,9 @@ msgstr "Zustand, wenn der Knoten einen Mem-Alarm in Kraft hat"
 
 msgid "State if node is not in state running"
 msgstr "Zustand, wenn Node nicht im Zustand running ist"
+
+msgid "State if not as expected"
+msgstr "Status, wenn nicht wie erwartet"
 
 msgid "State if probe state not OK"
 msgstr "Status, wenn der Probe-Status nicht OK ist"
@@ -67038,9 +67060,6 @@ msgstr "Warnung (Eingang)"
 msgid "Warning (Out)"
 msgstr "Warnung (Ausgang)"
 
-msgid "Warning (active connections)"
-msgstr "Warnung (aktive Verbindungen)"
-
 msgid "Warning above"
 msgstr "Warnung über"
 
@@ -71228,6 +71247,9 @@ msgstr "aktiven Hosts"
 msgid "active instances"
 msgstr "aktive Instanzen"
 
+msgid "active-backup"
+msgstr "active-backup"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "Bei Links zwischen zwei Switchen das Kürzel \"ISL\" hinzufügen"
 
@@ -71339,6 +71361,18 @@ msgstr "Backup"
 msgid "baking"
 msgstr "backen"
 
+msgid "balance-alb"
+msgstr "balance-alb"
+
+msgid "balance-rr"
+msgstr "balance-rr"
+
+msgid "balance-tlb"
+msgstr "balance-tlb"
+
+msgid "balance-xor"
+msgstr "balance-xor"
+
 msgid "bar"
 msgstr "bar"
 
@@ -71374,6 +71408,9 @@ msgstr "bits/s"
 
 msgid "blocks/s"
 msgstr "Blöcke/Sek"
+
+msgid "broadcast"
+msgstr "an alle"
 
 msgid "built-in"
 msgstr "mitgeliefert"
@@ -73188,6 +73225,12 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 msgid "Ω"
 msgstr "Ω"
 
+#~ msgid "Critical (active connections)"
+#~ msgstr "Kritisch (aktive Verbindungen)"
+
+#~ msgid "Warning (active connections)"
+#~ msgstr "Warnung (aktive Verbindungen)"
+
 #~ msgid "Forwarding"
 #~ msgstr "Weiterleitung"
 
@@ -73552,9 +73595,6 @@ msgstr "Ω"
 
 #~ msgid "Remove comments"
 #~ msgstr "Kommentare entfernen"
-
-#~ msgid "broadcast"
-#~ msgstr "an alle"
 
 #~ msgid "forced"
 #~ msgstr "erzwungen"

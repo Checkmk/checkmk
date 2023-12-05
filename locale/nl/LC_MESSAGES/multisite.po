@@ -1157,6 +1157,9 @@ msgstr "7-segmenten beeldscherm uid"
 msgid "8 days back"
 msgstr "8 dagen geleden"
 
+msgid "802.3ad"
+msgstr ""
+
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1.5 standaard afwijkingen"
@@ -7941,6 +7944,10 @@ msgstr "Body tail voor dienstmeldingen"
 msgid "Bold"
 msgstr "Bold"
 
+#, fuzzy
+msgid "Bonding interface status"
+msgstr "Koppelvlakken"
+
 msgid "Bonding interfaces"
 msgstr "Koppelvlakken"
 
@@ -13768,9 +13775,6 @@ msgstr "Kritisch (In)"
 msgid "Critical (Out)"
 msgstr "Kritisch (uit)"
 
-msgid "Critical (active connections)"
-msgstr "Kritisch (actieve verbindingen)"
-
 msgid "Critical above"
 msgstr "Kritisch boven"
 
@@ -14677,6 +14681,9 @@ msgstr "Gegevens hitratio"
 msgid "Data ingress"
 msgstr "Gegevensinvoer"
 
+msgid "Data is outdated and will be removed with the next check execution"
+msgstr ""
+
 msgid "Data movement completed"
 msgstr "Verplaatsen van gegevens voltooid"
 
@@ -14761,6 +14768,10 @@ msgstr "Geschreven data-eenheden"
 
 msgid "Data usage"
 msgstr "Gebruik van gegevens"
+
+#, fuzzy, python-format
+msgid "Data was provided at %s and is considered valid until %s"
+msgstr "Dit bericht is aangemaakt op %s en is geldig tot %s."
 
 msgid "Data width"
 msgstr "Gegevensbreedte"
@@ -20441,6 +20452,10 @@ msgstr "Verwacht aantal actieve paden"
 
 msgid "Expected autoextend setting"
 msgstr "Verwachte autoextend instelling"
+
+#, fuzzy
+msgid "Expected bonding mode"
+msgstr "Verwachte modus"
 
 msgid "Expected cluster type."
 msgstr "Verwacht clustertype."
@@ -50205,6 +50220,9 @@ msgstr ""
 "Geef de logische naam op, bijvoorbeeld de hostnaam, van de PLC. Deze naam "
 "wordt gebruikt om de resulterende services een naam te geven."
 
+msgid "Specify the monitoring state when the bonding mode is not as expected."
+msgstr ""
+
 msgid "Specify the name of a store (This is either a mailbox or public folder)"
 msgstr ""
 "Specificeer de naam van een opslagplaats (Dit is ofwel een postbus of een "
@@ -50887,6 +50905,10 @@ msgstr "Geeft aan of het knooppunt een mem-alarm heeft"
 
 msgid "State if node is not in state running"
 msgstr "Staat indien knooppunt niet in staat is te draaien"
+
+#, fuzzy
+msgid "State if not as expected"
+msgstr "Vermeld of de vergunning verlopen is"
 
 msgid "State if probe state not OK"
 msgstr "Staat indien sondestaat niet OK"
@@ -67204,9 +67226,6 @@ msgstr "Waarschuwing (In)"
 msgid "Warning (Out)"
 msgstr "Waarschuwing (Uit)"
 
-msgid "Warning (active connections)"
-msgstr "Waarschuwing (actieve verbindingen)"
-
 msgid "Warning above"
 msgstr "Waarschuwing boven"
 
@@ -71400,6 +71419,10 @@ msgstr "actieve gastheren"
 msgid "active instances"
 msgstr "actieve instanties"
 
+#, fuzzy
+msgid "active-backup"
+msgstr "Laatste back-up"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr "ISL\" toevoegen aan dienstbeschrijving voor interswitch links"
 
@@ -71511,6 +71534,20 @@ msgstr "back-up"
 msgid "baking"
 msgstr "bakken"
 
+msgid "balance-alb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-rr"
+msgstr "Load balancers"
+
+msgid "balance-tlb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-xor"
+msgstr "Load balancers"
+
 msgid "bar"
 msgstr "bar"
 
@@ -71546,6 +71583,9 @@ msgstr "bits/s"
 
 msgid "blocks/s"
 msgstr "blokken/s"
+
+msgid "broadcast"
+msgstr "uitzending"
 
 #, fuzzy
 msgid "built-in"
@@ -73381,6 +73421,12 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Critical (active connections)"
+#~ msgstr "Kritisch (actieve verbindingen)"
+
+#~ msgid "Warning (active connections)"
+#~ msgstr "Waarschuwing (actieve verbindingen)"
+
 #~ msgid "Forwarding"
 #~ msgstr "Doorsturen"
 
@@ -73752,9 +73798,6 @@ msgstr ""
 
 #~ msgid "Remove comments"
 #~ msgstr "Opmerkingen verwijderen"
-
-#~ msgid "broadcast"
-#~ msgstr "uitzending"
 
 #~ msgid "forced"
 #~ msgstr "gedwongen"

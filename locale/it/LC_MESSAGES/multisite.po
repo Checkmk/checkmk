@@ -1155,6 +1155,9 @@ msgstr "display a 7 segmenti uid"
 msgid "8 days back"
 msgstr "8 giorni indietro"
 
+msgid "802.3ad"
+msgstr ""
+
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 deviazioni standard"
@@ -7969,6 +7972,10 @@ msgstr "Coda del corpo per le notifiche di servizio"
 msgid "Bold"
 msgstr "Grassetto"
 
+#, fuzzy
+msgid "Bonding interface status"
+msgstr "Interfacce di incollaggio"
+
 msgid "Bonding interfaces"
 msgstr "Interfacce di incollaggio"
 
@@ -13813,9 +13820,6 @@ msgstr "Critico (In)"
 msgid "Critical (Out)"
 msgstr "Critico (fuori)"
 
-msgid "Critical (active connections)"
-msgstr "Critico (connessioni attive)"
-
 msgid "Critical above"
 msgstr "Critico sopra"
 
@@ -14721,6 +14725,9 @@ msgstr "Dati hitratio"
 msgid "Data ingress"
 msgstr "Ingresso dei dati"
 
+msgid "Data is outdated and will be removed with the next check execution"
+msgstr ""
+
 msgid "Data movement completed"
 msgstr "Movimento dei dati completato"
 
@@ -14805,6 +14812,10 @@ msgstr "Unità di dati scritte"
 
 msgid "Data usage"
 msgstr "Utilizzo dei dati"
+
+#, fuzzy, python-format
+msgid "Data was provided at %s and is considered valid until %s"
+msgstr "Questo messaggio è stato creato a %s ed è valido fino a %s."
 
 msgid "Data width"
 msgstr "Larghezza dei dati"
@@ -20520,6 +20531,10 @@ msgstr "Numero previsto di percorsi attivi"
 
 msgid "Expected autoextend setting"
 msgstr "Impostazione prevista per l'autoestensione"
+
+#, fuzzy
+msgid "Expected bonding mode"
+msgstr "Modo previsto"
 
 msgid "Expected cluster type."
 msgstr "Tipo di cluster previsto."
@@ -50416,6 +50431,9 @@ msgstr ""
 "Specificare il nome logico, ad esempio l'hostname, del PLC. Questo nome "
 "viene usato per nominare i servizi risultanti."
 
+msgid "Specify the monitoring state when the bonding mode is not as expected."
+msgstr ""
+
 msgid "Specify the name of a store (This is either a mailbox or public folder)"
 msgstr ""
 "Specificare il nome di un negozio (si tratta di una casella di posta o di "
@@ -51092,6 +51110,10 @@ msgstr "Stato se il nodo ha un allarme mem in vigore"
 
 msgid "State if node is not in state running"
 msgstr "Stato se il nodo non è in stato di esecuzione"
+
+#, fuzzy
+msgid "State if not as expected"
+msgstr "Indicare se la licenza è scaduta"
 
 msgid "State if probe state not OK"
 msgstr "Stato se lo stato della sonda non è OK"
@@ -67450,9 +67472,6 @@ msgstr "Attenzione (In)"
 msgid "Warning (Out)"
 msgstr "Attenzione (Fuori)"
 
-msgid "Warning (active connections)"
-msgstr "Attenzione (connessioni attive)"
-
 msgid "Warning above"
 msgstr "Avvertimento di cui sopra"
 
@@ -71630,6 +71649,10 @@ msgstr "ospiti attivi"
 msgid "active instances"
 msgstr "istanze attive"
 
+#, fuzzy
+msgid "active-backup"
+msgstr "Ultimo backup"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "aggiungere \"ISL\" alla descrizione del servizio per i collegamenti "
@@ -71743,6 +71766,20 @@ msgstr "backup"
 msgid "baking"
 msgstr "cottura"
 
+msgid "balance-alb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-rr"
+msgstr "Bilanciatori di carico"
+
+msgid "balance-tlb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-xor"
+msgstr "Bilanciatori di carico"
+
 msgid "bar"
 msgstr "bar"
 
@@ -71778,6 +71815,9 @@ msgstr "bit/s"
 
 msgid "blocks/s"
 msgstr "blocchi/s"
+
+msgid "broadcast"
+msgstr "trasmissione"
 
 #, fuzzy
 msgid "built-in"
@@ -73615,6 +73655,12 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Critical (active connections)"
+#~ msgstr "Critico (connessioni attive)"
+
+#~ msgid "Warning (active connections)"
+#~ msgstr "Attenzione (connessioni attive)"
+
 #~ msgid "Forwarding"
 #~ msgstr "Inoltro"
 
@@ -73994,9 +74040,6 @@ msgstr ""
 
 #~ msgid "Remove comments"
 #~ msgstr "Rimuovere i commenti"
-
-#~ msgid "broadcast"
-#~ msgstr "trasmissione"
 
 #~ msgid "forced"
 #~ msgstr "forzato"

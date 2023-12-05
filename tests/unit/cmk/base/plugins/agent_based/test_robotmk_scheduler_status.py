@@ -27,7 +27,8 @@ from cmk.plugins.lib.robotmk_config import (
     EnvironmentConfigSystem,
     ExecutionConfig,
     PiggybackHost,
-    RccConfig,
+    RCCConfig,
+    RCCEnvironmentConfig,
     RetryStrategy,
     RobotFrameworkConfig,
     SessionConfigCurrent,
@@ -42,7 +43,9 @@ from cmk.plugins.lib.robotmk_config import (
 _CONFIG = Config(
     working_directory=Path("C:\\robotmk\\working"),
     results_directory=Path("C:\\robotmk\\results"),
-    rcc_binary_path=Path("C:\\robotmk\\rcc.exe"),
+    rcc_config=RCCConfig(
+        binary_path=Path("C:\\robotmk\\rcc.exe"),
+    ),
     suites={
         "system": SuiteConfig(
             robot_framework_config=RobotFrameworkConfig(
@@ -70,7 +73,7 @@ _CONFIG = Config(
                 timeout=100,
             ),
             environment_config=EnvironmentConfigRcc(
-                Rcc=RccConfig(
+                Rcc=RCCEnvironmentConfig(
                     robot_yaml_path=Path("C:\\robotmk\\suites\\rcc\\robot.yaml"),
                     build_timeout=300,
                     env_json_path=None,
@@ -93,7 +96,7 @@ _CONFIG = Config(
                 timeout=100,
             ),
             environment_config=EnvironmentConfigRcc(
-                Rcc=RccConfig(
+                Rcc=RCCEnvironmentConfig(
                     robot_yaml_path=Path("C:\\robotmk\\suites\\piggyback\\robot.yaml"),
                     build_timeout=300,
                     env_json_path=None,

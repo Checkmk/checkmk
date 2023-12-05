@@ -10,6 +10,10 @@ from pathlib import PurePath
 from pydantic import BaseModel, Field
 
 
+class RCCConfig(BaseModel, frozen=True):
+    binary_path: PurePath
+
+
 class RobotFrameworkConfig(BaseModel, frozen=True):
     robot_target: PurePath
     command_line_args: Sequence[str] = Field(default=[])
@@ -31,14 +35,14 @@ class EnvironmentConfigSystem(Enum):
     System = "System"
 
 
-class RccConfig(BaseModel, frozen=True):
+class RCCEnvironmentConfig(BaseModel, frozen=True):
     robot_yaml_path: PurePath
     build_timeout: int
     env_json_path: PurePath | None
 
 
 class EnvironmentConfigRcc(BaseModel, frozen=True):
-    Rcc: RccConfig
+    Rcc: RCCEnvironmentConfig
 
 
 class SessionConfigCurrent(Enum):
@@ -83,5 +87,5 @@ class SuiteConfig(BaseModel, frozen=True):
 class Config(BaseModel, frozen=True):
     working_directory: PurePath
     results_directory: PurePath
-    rcc_binary_path: PurePath
+    rcc_config: RCCConfig
     suites: Mapping[str, SuiteConfig]

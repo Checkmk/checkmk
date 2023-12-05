@@ -1588,8 +1588,9 @@ class SiteFactory:
             f"--conflict={conflict_mode}",
         ]
         test_site.stop()
-        proc = test_site.run_as_site_user(cmd)
-        assert proc.returncode == 0, proc.stdout
+        process = test_site.execute(cmd)
+        rc = process.wait()
+        assert rc == 0, process.stderr
 
         # refresh the site object after creating the site
         site = self.get_existing_site("central")

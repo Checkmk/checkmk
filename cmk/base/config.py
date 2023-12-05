@@ -1992,6 +1992,7 @@ def convert_check_info() -> None:
         "service_description": None,
         "has_perfdata": False,
         "management_board": None,
+        "supersedes": None,
     }
 
     for check_plugin_name, info in check_info.items():

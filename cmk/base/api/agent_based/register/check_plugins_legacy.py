@@ -36,6 +36,7 @@ CONSIDERED_KEYS = {
     "service_description",
     "snmp_info",  # handled in section
     "snmp_scan_function",  # handled in section
+    "supersedes",
 }
 
 
@@ -260,7 +261,6 @@ def _create_new_result(
     legacy_text: str,
     legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, None]:
-
     if legacy_state or legacy_text:  # skip "Null"-Result
         yield Result(state=State(legacy_state), summary=legacy_text.strip())
     yield from _create_new_metric(legacy_metrics)
@@ -328,7 +328,6 @@ def create_check_plugin_from_legacy(
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
-
     if extra_sections:
         raise NotImplementedError(
             "[%s]: cannot auto-migrate plugins with extra sections" % check_plugin_name

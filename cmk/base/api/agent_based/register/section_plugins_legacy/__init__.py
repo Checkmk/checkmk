@@ -218,6 +218,7 @@ def create_agent_section_plugin_from_legacy(
         name=get_section_name(check_plugin_name),
         parse_function=parse_function,
         validate_creation_kwargs=validate_creation_kwargs,
+        supersedes=check_info_dict.get("supersedes"),
     )
 
 
@@ -255,4 +256,5 @@ def create_snmp_section_plugin_from_legacy(
         fetch=trees,
         detect_spec=detect_spec,
         validate_creation_kwargs=validate_creation_kwargs,
+        supersedes=check_info_dict.get("supersedes"),
     )

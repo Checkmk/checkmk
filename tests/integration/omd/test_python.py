@@ -89,12 +89,7 @@ def _load_pipfile_data() -> dict:
 
 
 def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
-    # We still have some exceptions to the rule...
-    dist_renamings = {
-        "repoze-profile": "repoze.profile",
-    }
-
-    metadata_dir = pkg.get_distribution(dist_renamings.get(dist_name, dist_name)).egg_info
+    metadata_dir = pkg.get_distribution(dist_name).egg_info
     with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)

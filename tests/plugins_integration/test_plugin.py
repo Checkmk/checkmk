@@ -40,8 +40,5 @@ def test_plugin(
         # perform assertion over check data
         tmp_path = tmp_path_factory.mktemp("responses")
         logger.info(tmp_path)
-        assert process_check_output(
-            test_site,
-            host_name,
-            tmp_path,
-        ), f"Check output mismatch for host {host_name}!"
+        diffing_checks = process_check_output(test_site, host_name, tmp_path)
+        assert not diffing_checks, f"Check output mismatch for host {host_name}!"

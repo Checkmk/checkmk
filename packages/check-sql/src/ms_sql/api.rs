@@ -2,13 +2,17 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::{self, Client};
+use super::client::{self, create_from_config, Client};
 use super::section::{self, Section};
-use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint, CheckConfig};
+use crate::config::{
+    self,
+    ms_sql::{AuthType, CustomInstance, Endpoint},
+    CheckConfig,
+};
 use crate::ms_sql::queries;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 use tiberius::{ColumnData, Query, Row};
@@ -111,7 +115,7 @@ impl SqlInstanceBuilder {
     pub fn build(self) -> SqlInstance {
         SqlInstance {
             alias: self.alias,
-            name: self.name.unwrap_or_default(),
+            name: self.name.unwrap_or_default().to_uppercase(),
             id: self.id.unwrap_or_default(),
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
@@ -770,6 +774,10 @@ impl SqlInstance {
     pub fn port(&self) -> Option<u16> {
         self.port.or(self.dynamic_port)
     }
+
+    pub fn computer_name(&self) -> &Option<String> {
+        &self.computer_name
+    }
 }
 
 #[derive(Debug)]
@@ -1116,7 +1124,7 @@ impl CheckConfig {
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    let instances = find_instances(ms_sql).await?;
+    let instances = find_instances_to_use(ms_sql).await?;
     if instances.is_empty() {
         return Ok("ERROR: Failed to gather SQL server instances".to_string());
     }
@@ -1135,27 +1143,122 @@ fn generate_instance_entries(instances: &[SqlInstance]) -> String {
         .join("")
 }
 
-async fn find_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
-    Ok(discover_instances(ms_sql)
+async fn find_instances_to_use(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
+    Ok(find_all_instances(ms_sql)
         .await?
         .into_iter()
         .filter(|i| ms_sql.is_instance_allowed(&i.name))
         .collect::<Vec<SqlInstance>>())
 }
 
-async fn discover_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
-    let instances = if ms_sql.discovery().detect() {
-        get_sql_instances(&ms_sql.endpoint())
-            .await
-            .unwrap_or_else(|e| {
-                log::warn!("Error discovering instances: {e}");
-                vec![]
-            })
+pub async fn find_all_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
+    let already_detected = if ms_sql.discovery().detect() {
+        find_detectable_instances(ms_sql).await
     } else {
         Vec::new()
     };
+    add_custom_instances(ms_sql, &already_detected).await
+}
 
-    Ok(instances)
+/// find instances described in the config but not detected by the discovery
+async fn find_detectable_instances(ms_sql: &config::ms_sql::Config) -> Vec<SqlInstance> {
+    get_sql_instances(&ms_sql.endpoint())
+        .await
+        .unwrap_or_else(|e| {
+            log::warn!("Error discovering instances: {e}");
+            vec![]
+        })
+}
+
+/// find instances described in the config but not detected by the discovery
+async fn add_custom_instances(
+    ms_sql: &config::ms_sql::Config,
+    detected: &[SqlInstance],
+) -> Result<Vec<SqlInstance>> {
+    let (mut sql_instances, name_to_custom_map) = process_detected(ms_sql, detected);
+
+    for (name, instance) in name_to_custom_map.into_iter() {
+        match create_from_config(&instance.endpoint()).await {
+            Ok(mut client) => {
+                if let Some(properties) = ensure_required_instance(&mut client, name).await {
+                    sql_instances.push(make_sql_instance(instance, &properties));
+                }
+            }
+            Err(e) => {
+                log::error!("Error creating client for instance `{name}`: {e}");
+            }
+        }
+    }
+    Ok(sql_instances)
+}
+
+async fn ensure_required_instance(
+    client: &mut Client,
+    name: &str,
+) -> Option<SqlInstanceProperties> {
+    match SqlInstanceProperties::obtain_by_query(client).await {
+        Ok(properties) => {
+            if properties.name == *name {
+                log::info!("Custom instance `{name}` added");
+                return Some(properties);
+            }
+            log::error!(
+                "Wrong instance: expected `{name}` but found `{}`",
+                properties.name
+            );
+        }
+        Err(e) => {
+            log::error!("Error accessing instance `{name}` with error: {e:?}");
+        }
+    }
+    None
+}
+
+fn make_sql_instance(instance: &CustomInstance, properties: &SqlInstanceProperties) -> SqlInstance {
+    SqlInstanceBuilder::new()
+        .name(properties.name.to_uppercase())
+        .alias(
+            instance
+                .alias()
+                .map(|i| str::to_string(i))
+                .unwrap_or_default(),
+        )
+        .port(Some(instance.conn().port()))
+        .computer_name(&Some(properties.machine_name.clone()))
+        .version(&properties.version)
+        .edition(&properties.edition)
+        .build()
+}
+/// returns
+/// - SQL instances which are not touched by customizing
+/// - map of instances to be found
+fn process_detected<'a>(
+    ms_sql: &'a config::ms_sql::Config,
+    detected: &[SqlInstance],
+) -> (Vec<SqlInstance>, HashMap<&'a String, &'a CustomInstance>) {
+    let mut name_to_custom_map: HashMap<&String, &CustomInstance> =
+        ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
+    let sql_instances = detected
+        .iter()
+        .filter_map(
+            |sql_instance| match name_to_custom_map.get(&sql_instance.name) {
+                None => {
+                    log::info!("Add detected instance {} as absent", sql_instance.name);
+                    Some(sql_instance.clone())
+                }
+                Some(instance) if instance.endpoint() == sql_instance.endpoint => {
+                    log::info!("Add detected instance {}: as same", sql_instance.name);
+                    name_to_custom_map.remove(&sql_instance.name);
+                    Some(sql_instance.clone())
+                }
+                _ => {
+                    log::info!("Skip detected instance {} as customized", sql_instance.name);
+                    None
+                }
+            },
+        )
+        .collect::<Vec<SqlInstance>>();
+    (sql_instances, name_to_custom_map)
 }
 
 /// Intelligent async processing of the data
@@ -1220,21 +1323,26 @@ async fn get_sql_instances(endpoint: &Endpoint) -> Result<Vec<SqlInstance>> {
 pub async fn obtain_sql_instances_from_registry(
     endpoint: &Endpoint,
 ) -> Result<(Vec<SqlInstance>, Vec<SqlInstance>)> {
-    let mut client = client::create_from_config(endpoint).await?;
-    Ok((
-        exec_win_registry_sql_instances_query(
-            &mut client,
-            endpoint,
-            &queries::get_win_registry_instances_query(),
-        )
-        .await?,
-        exec_win_registry_sql_instances_query(
-            &mut client,
-            endpoint,
-            &queries::get_wow64_32_registry_instances_query(),
-        )
-        .await?,
-    ))
+    match client::create_from_config(endpoint).await {
+        Ok(mut client) => Ok((
+            exec_win_registry_sql_instances_query(
+                &mut client,
+                endpoint,
+                &queries::get_win_registry_instances_query(),
+            )
+            .await?,
+            exec_win_registry_sql_instances_query(
+                &mut client,
+                endpoint,
+                &queries::get_wow64_32_registry_instances_query(),
+            )
+            .await?,
+        )),
+        Err(err) => {
+            log::error!("Failed to create client: {err}");
+            anyhow::bail!("Failed to create client: {err}")
+        }
+    }
 }
 
 /// return all MS SQL instances installed
@@ -1298,11 +1406,11 @@ mod tests {
 
         assert_eq!(
             i.generate_state_entry(false, '.'),
-            format!("MSSQL_test_name.state.0\n")
+            format!("MSSQL_TEST_NAME.state.0\n")
         );
         assert_eq!(
             i.generate_state_entry(true, '.'),
-            format!("MSSQL_test_name.state.1\n")
+            format!("MSSQL_TEST_NAME.state.1\n")
         );
     }
 }

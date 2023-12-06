@@ -51,7 +51,7 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_find_all_instances_local() {
+async fn test_obtain_all_instances_from_registry_local() {
     let instances = api::obtain_sql_instances_from_registry(&Endpoint::default())
         .await
         .unwrap();
@@ -598,6 +598,188 @@ async fn test_get_computer_name() {
     }
 }
 
+fn make_remote_config_string(
+    user: &str,
+    pwd: &str,
+    host: &str,
+    custom: bool,
+    detect: bool,
+) -> String {
+    format!(
+        r#"
+mssql:
+  main:
+    authentication:
+      username: {user}
+      password: {pwd}
+      type: sql_server
+    connection:
+      hostname: {host}
+    discovery:
+      detect: {}
+{}
+"#,
+        if detect { "yes" } else { "no" },
+        if custom {
+            make_remote_custom_config_sub_string(user, pwd, host)
+        } else {
+            "".to_string()
+        }
+    )
+}
+
+#[cfg(windows)]
+fn make_local_config_string(custom: &str, detect: bool) -> String {
+    format!(
+        r#"
+mssql:
+  main:
+    authentication:
+      username: you
+      type: integrated
+    connection:
+      hostname: localhost
+    discovery:
+      detect: {}
+{custom}
+"#,
+        if detect { "yes" } else { "no" }
+    )
+}
+
+fn make_remote_custom_config_sub_string(user: &str, pwd: &str, host: &str) -> String {
+    format!(
+        r#"
+    custom:
+      - sid: MSSQLSERVER
+        authentication:
+          username: {user}
+          password: {pwd}
+          type: sql_server
+        connection:
+          hostname: {host}
+          port: 1433
+      - sid: WEIRD
+        authentication:
+          username: {user}
+          password: {pwd}
+          type: sql_server
+        connection:
+          hostname: {host}
+        port: 1433
+"#
+    )
+}
+
+#[cfg(windows)]
+fn make_local_custom_config_sub_string() -> String {
+    r#"
+    custom:
+      - sid: MSSQLSERVER
+        authentication:
+          username: user
+          type: integrated
+        connection:
+          hostname: localhost
+          port: 1433
+      - sid: WEIRD
+        authentication:
+          username: user
+          type: integrated
+        connection:
+          hostname: localhost
+        port: 1433
+"#
+    .to_string()
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_no_detect_local() {
+    // no detect - no instances
+    let mssql =
+        check_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
+            .unwrap()
+            .unwrap();
+    let instances = api::find_all_instances(&mssql).await.unwrap();
+    assert_eq!(instances.len(), 0);
+}
+
+// no detect plus one custom = 1 instance
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_no_detect_two_custom_local() {
+    let mssql = check_sql::config::ms_sql::Config::from_string(&make_local_config_string(
+        &make_local_custom_config_sub_string(),
+        false,
+    ))
+    .unwrap()
+    .unwrap();
+    let instances = api::find_all_instances(&mssql).await.unwrap();
+    assert_eq!(instances.len(), 1);
+    assert_eq!(instances[0].name, "MSSQLSERVER");
+    assert!(instances[0].edition.contains(" Edition"));
+    assert!(instances[0].version.contains('.'));
+    assert_eq!(instances[0].port(), Some(1433));
+    let pc = instances[0].computer_name().as_ref().unwrap().clone();
+    assert!(
+        pc.to_uppercase().contains("KLAPP"),
+        "{:?}",
+        instances[0].computer_name()
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_no_detect_remote() {
+    // no detect - no instances
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mssql = check_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
+            &endpoint.user,
+            &endpoint.pwd,
+            &endpoint.host,
+            false,
+            false,
+        ))
+        .unwrap()
+        .unwrap();
+        let instances = api::find_all_instances(&mssql).await.unwrap();
+        assert_eq!(instances.len(), 0);
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
+// no detect plus two custom but one ok instance
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_no_detect_two_custom_remote() {
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mssql = check_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
+            &endpoint.user,
+            &endpoint.pwd,
+            &endpoint.host,
+            true,
+            false,
+        ))
+        .unwrap()
+        .unwrap();
+        let instances = api::find_all_instances(&mssql).await.unwrap();
+        assert_eq!(instances.len(), 1);
+        assert_eq!(instances[0].name, "MSSQLSERVER");
+        assert!(instances[0].edition.contains(" Edition"));
+        assert!(instances[0].version.contains('.'));
+        assert_eq!(instances[0].port(), Some(1433));
+        let pc = instances[0].computer_name().as_ref().unwrap().clone();
+        assert!(
+            pc.to_uppercase().contains("AGENTBUILD"),
+            "{:?}",
+            instances[0].computer_name()
+        );
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_check_config_exec_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
@@ -633,13 +815,13 @@ fn test_no_ms_sql() {
 #[test]
 fn test_run_local() {
     let file = tools::create_local_config();
-    let r = tools::run_bin()
+    let output = tools::run_bin()
         .arg("-c")
         .arg(&file.path().to_string_lossy().into_owned())
-        .unwrap()
-        .status
-        .success();
-    assert!(r);
+        .unwrap();
+    let (stdout, code) = tools::get_good_results(&output).unwrap();
+    assert_eq!(code, 0);
+    assert!(stdout.contains("|state|1"), "{}", stdout);
 }
 
 #[cfg(unix)]

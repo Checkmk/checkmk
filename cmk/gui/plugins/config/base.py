@@ -372,6 +372,7 @@ class CREConfig:
     lock_on_logon_failures: int | None = 10
     session_mgmt: dict[str, Any] = field(
         default_factory=lambda: {
+            "max_duration": {"enforce_reauth": 86400, "enforce_reauth_warning_threshold": 900},
             "user_idle_timeout": 5400,
         }
     )

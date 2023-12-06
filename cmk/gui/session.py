@@ -27,6 +27,8 @@ from cmk.gui.log import AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
+from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
+from cmk.gui.utils.flashed_messages import MSG_TYPET
 from cmk.gui.wsgi.utils import dict_property
 
 
@@ -176,6 +178,56 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def invalidate(self) -> None:
         self.session_info.logged_out = True
 
+    def is_expired(self, now: datetime) -> bool:
+        """Check if session has expired either due to maximum duration or exceeded idle time."""
+        session_duration = now.timestamp() - self.session_info.started_at
+        max_duration = config.active_config.session_mgmt.get("max_duration", {}).get(
+            "enforce_reauth"
+        )
+        if max_duration and session_duration > max_duration:
+            return True
+
+        assert self.user.id is not None
+
+        idle_time = int(now.timestamp()) - self.session_info.last_activity
+        idle_timeout = load_custom_attr(
+            user_id=self.user.id, key="idle_timeout", parser=convert_idle_timeout
+        )
+        if idle_timeout is None:
+            idle_timeout = config.active_config.session_mgmt.get("user_idle_timeout")
+
+        return idle_timeout is not None and idle_timeout is not False and idle_time > idle_timeout
+
+    def warn_if_session_expires_soon(self, now: datetime) -> None:
+        """Warn user if they are close to maximum session duration only"""
+        session_duration = now.timestamp() - self.session_info.started_at
+        max_duration = config.active_config.session_mgmt.get("max_duration", {}).get(
+            "enforce_reauth"
+        )
+        warning_threshold = config.active_config.session_mgmt.get("max_duration", {}).get(
+            "enforce_reauth_warning_threshold"
+        )
+        if (
+            max_duration
+            and warning_threshold
+            and (warning_threshold >= max_duration - session_duration)
+        ):
+            self._flash_message(
+                "warning",
+                "Maximum session duration almost reached. Re-authenticate session to prevent dataloss.",
+            )
+
+    def _flash_message(self, msg_type: MSG_TYPET, message: str) -> None:
+        """
+
+        Copy of the flash.flash functionality.
+        We cannot use original flask.flash method as we do not have a session within our request context
+
+        """
+        tuple_to_add = (msg_type, message)
+        if tuple_to_add not in self.session_info.flashes:
+            self.session_info.flashes.append(tuple_to_add)
+
 
 class FileBasedSession(SessionInterface):
     """A "session" which loads its information from a .mk file
@@ -216,13 +268,14 @@ class FileBasedSession(SessionInterface):
 
         try:
             user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
-            userdb.on_access(user_name, session_id, datetime.now())
+            sess = self.session_class.load_session(user_name, session_id)
+            sess.warn_if_session_expires_soon(datetime.now())
+            if sess.is_expired(datetime.now()):
+                return None
         except MKAuthException:
-            # The cookie is not considered valid, timed out, etc. So we authenticate
+            # Catches an invalid cred issue checked by test_session.py
             return None
-        # This can throw a MKAuthException but this one we want to raise because
-        # if there is a valid session but we cannot load it there is something fishy...
-        return self.session_class.load_session(user_name, session_id)
+        return sess
 
     def _authenticate_and_open(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession:
         """Authenticate and open new session

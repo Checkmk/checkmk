@@ -56,7 +56,6 @@ from cmk.gui.valuespec import (
     NetworkPort,
     Optional,
     PasswordSpec,
-    Percentage,
     RegExp,
     TextInput,
     Transform,
@@ -2568,6 +2567,15 @@ class ConfigVariableSessionManagement(ConfigVariable):
         return "session_mgmt"
 
     def valuespec(self) -> ValueSpec:
+        def _validate_max_duration(d: dict, varprefix: str) -> None:
+            if "enforce_reauth_warning_threshold" not in d:
+                return
+            if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
+                return
+            raise MKUserError(
+                varprefix, _("Warning threshold must be smaller than maximum session duration")
+            )
+
         return Dictionary(
             title=_("Session management"),
             elements=[
@@ -2591,21 +2599,22 @@ class ConfigVariableSessionManagement(ConfigVariable):
                                 ),
                             ),
                             (
-                                "force_authuser",
-                                Percentage(
-                                    title=_(
-                                        "Prevent data loss of forms by forcing "
-                                        "re-authentification after"
+                                "enforce_reauth_warning_threshold",
+                                Age(
+                                    title=_("Advise re-authentication before termination:"),
+                                    display=["minutes", "hours", "days"],
+                                    minvalue=60,
+                                    help=_(
+                                        "Warn the user at a specificied time before"
+                                        "the maximum session duration is reached"
+                                        "to aid users in preserving data.",
                                     ),
-                                    unit=_(
-                                        # xgettext: no-python-format
-                                        "% of the specified time via GET request"
-                                    ),
-                                    default_value=50.0,
+                                    default_value=900,
                                 ),
                             ),
                         ],
                         required_keys=["enforce_reauth"],
+                        validate=_validate_max_duration,
                     ),
                 ),
                 (

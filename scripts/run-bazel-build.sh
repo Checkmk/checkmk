@@ -50,6 +50,14 @@ else
     echo "Bazel remote cache configured to \"${BAZEL_CACHE_URL}\""
     BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_USER}:${BAZEL_CACHE_PASSWORD}@${BAZEL_CACHE_URL}"
 fi
+
+if [ "${CI}" == "true" ]; then
+    BAZEL_CI_ARGS="--color=no --show_progress_rate_limit=0 --show_timestamps"
+    echo "Running on a CI machine, using addional args: \"${BAZEL_CI_ARGS}\""
+else
+    BAZEL_CI_ARGS=""
+    echo "Running on a non CI machine"
+fi
 echo "========================================================================="
 
 # We encountered false cache hits with remote caching due to environment variables
@@ -59,6 +67,7 @@ echo "========================================================================="
 
 # shellcheck disable=SC2086
 bazel build \
+    ${BAZEL_CI_ARGS} \
     --verbose_failures \
     --sandbox_debug \
     --subcommands=pretty_print \
@@ -68,7 +77,8 @@ bazel build \
     --host_action_env=PATH="$PATH" \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
     --experimental_ui_max_stdouterr_bytes=10000000 \
-    --jobs=4 \
+    --experimental_remote_cache_async \
+    --experimental_remote_cache_compression \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \
     "${TARGET}"

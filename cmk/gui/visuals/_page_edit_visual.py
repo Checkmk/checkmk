@@ -375,7 +375,9 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
 
 def get_context_specs(
-    single_infos: Sequence[InfoName], info_keys: Sequence[InfoName]
+    single_infos: Sequence[InfoName],
+    info_keys: Sequence[InfoName],
+    ignored_context_choices: Sequence[str] = (),
 ) -> list[tuple[InfoName, Transform[dict] | VisualFilterList]]:
     single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
@@ -394,7 +396,7 @@ def get_context_specs(
     ] + [
         (info_key, spec)
         for info_key in multi_info_keys
-        for spec in [_visual_spec_multi(info_key)]
+        for spec in [_visual_spec_multi(info_key, ignored_context_choices)]
         if spec is not None
     ]
 
@@ -449,9 +451,13 @@ def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
     )
 
 
-def _visual_spec_multi(info_key: InfoName) -> VisualFilterList | None:
+def _visual_spec_multi(
+    info_key: InfoName, ignored_context_choices: Sequence[str] = ()
+) -> VisualFilterList | None:
     info = visual_info_registry[info_key]()
-    filter_list = VisualFilterList([info_key], title=info.title)
+    filter_list = VisualFilterList(
+        [info_key], title=info.title, ignored_context_choices=ignored_context_choices
+    )
     filter_names = filter_list.filter_names()
     # Skip infos which have no filters available
     return filter_list if filter_names else None

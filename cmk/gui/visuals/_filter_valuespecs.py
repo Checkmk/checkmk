@@ -147,17 +147,23 @@ class VisualFilterList(ListOfMultiple):
     """
 
     @classmethod
-    def get_choices(cls, info: str) -> Sequence[tuple[str, VisualFilter]]:
+    def get_choices(
+        cls, info: str, ignored_context_choices: Sequence[str] = ()
+    ) -> Sequence[tuple[str, VisualFilter]]:
         return sorted(
-            cls._get_filter_specs(info), key=lambda x: (x[1]._filter.sort_index, x[1].title())
+            cls._get_filter_specs(info, ignored_context_choices),
+            key=lambda x: (x[1]._filter.sort_index, x[1].title()),
         )
 
     @classmethod
-    def _get_filter_specs(cls, info: str) -> Iterator[tuple[str, VisualFilter]]:
+    def _get_filter_specs(
+        cls, info: str, ignored_context_choices: Sequence[str]
+    ) -> Iterator[tuple[str, VisualFilter]]:
         for fname, filter_ in filters_allowed_for_info(info):
-            yield fname, VisualFilter(name=fname, title=filter_.title)
+            if fname not in ignored_context_choices:
+                yield fname, VisualFilter(name=fname, title=filter_.title)
 
-    def __init__(self, info_list: SingleInfos, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, info_list: SingleInfos, ignored_context_choices: Sequence[str] = (), **kwargs) -> None:  # type: ignore[no-untyped-def]
         self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault("title", _("Filters"))
@@ -167,7 +173,8 @@ class VisualFilterList(ListOfMultiple):
 
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(
-                title=visual_info_registry[info]().title, choices=self.get_choices(info)
+                title=visual_info_registry[info]().title,
+                choices=self.get_choices(info, ignored_context_choices),
             )
             for info in info_list
         ]

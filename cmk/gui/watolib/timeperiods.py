@@ -5,17 +5,11 @@
 
 from typing import Callable
 
-import cmk.utils.store as store
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.timeperiod import (
-    builtin_timeperiods,
-    load_timeperiods,
-    timeperiod_spec_alias,
-    TimeperiodSpec,
-    TimeperiodSpecs,
-)
+from cmk.utils.timeperiod import builtin_timeperiods, load_timeperiods
+from cmk.utils.timeperiod import save_timeperiods as _save_timeperiods
+from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
 
-from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -23,7 +17,6 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 
 from . import changes as _changes
-from .utils import wato_root_dir
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
@@ -59,7 +52,8 @@ class TimePeriodInUseError(Exception):
 
 @request_memoize()
 def _load_timeperiods() -> TimeperiodSpecs:
-    return load_timeperiods()
+    timeperiods = load_timeperiods()
+    return timeperiods
 
 
 def load_timeperiod(name: str) -> TimeperiodSpec:
@@ -84,13 +78,7 @@ def delete_timeperiod(name: str) -> None:
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
-    store.mkdir(wato_root_dir())
-    store.save_to_mk_file(
-        wato_root_dir() + "timeperiods.mk",
-        "timeperiods",
-        _filter_builtin_timeperiods(timeperiods),
-        pprint_value=active_config.wato_pprint_config,
-    )
+    _save_timeperiods(timeperiods)
     _load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 
@@ -117,11 +105,6 @@ def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: i
 def verify_timeperiod_name_exists(name):
     existing_timperiods = _load_timeperiods()
     return name in existing_timperiods
-
-
-def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    builtin_keys = set(builtin_timeperiods().keys())
-    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 
 class TimeperiodSelection(DropdownChoice[str]):

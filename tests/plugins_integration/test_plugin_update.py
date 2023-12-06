@@ -36,6 +36,12 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
     for host_name in get_host_names():
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
+
+            # The 'Postfix status' service has been renamed into 'Postfix status default'.
+            # Related: CMK-13774
+            if "Postfix status" in base_data[host_name]:
+                base_data[host_name].pop("Postfix status")
+
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
 
     target_version = version_from_env(
@@ -71,12 +77,12 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             for service in base_data_status_0[host_name]
             if service not in target_data_status_0[host_name]
         ]
-        assert len(base_data[host_name]) == len(target_data[host_name]), (
+        assert len(base_data[host_name]) <= len(target_data[host_name]), (
             f"The following services are found in {host_name} in base-version but not in "
             f"target-version: {not_found_services}"
         )
         # todo: return a set inside the get_service_with_status helper
-        assert set(base_data_status_0[host_name]) == set(target_data_status_0[host_name]), (
+        assert set(base_data_status_0[host_name]).issubset(set(target_data_status_0[host_name])), (
             f"The following services are found in state=0 in {host_name} in base-version but not "
             f"in target-version: {not_found_status_0_services}"
         )
@@ -100,11 +106,13 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             if service not in target_data_sd_status_0[host_name]
         ]
 
-        assert len(target_data[host_name]) == len(target_data_sd[host_name]), (
+        assert len(target_data[host_name]) <= len(target_data_sd[host_name]), (
             f"The following services are found in {host_name} in target-version before "
             f"service-discovery but not after: {not_found_services_sd}"
         )
-        assert set(target_data_status_0[host_name]) == set(target_data_sd_status_0[host_name]), (
+        assert set(target_data_status_0[host_name]).issubset(
+            set(target_data_sd_status_0[host_name])
+        ), (
             f"The following services are found in state=0 in {host_name} target-version before "
             f"service-discovery but not after: {not_found_status_0_services_sd}"
         )

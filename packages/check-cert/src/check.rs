@@ -209,9 +209,9 @@ where
     value: T,
     #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
     uom: Option<String>,
-    #[builder(default, setter(transform = |x: &Levels<T>| Some(x.clone()) ))]
+    #[builder(default, setter(strip_option))]
     levels: Option<Levels<T>>,
-    #[builder(default, setter(transform = |x: &Bounds<T>| Some(x.clone()) ))]
+    #[builder(default, setter(strip_option))]
     bounds: Option<Bounds<T>>,
 }
 
@@ -591,7 +591,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(i(42))
-                    .levels(&Levels {
+                    .levels(Levels {
                         warn: i(24),
                         crit: i(42)
                     })
@@ -610,11 +610,11 @@ mod test_metrics_display {
                     .label("name")
                     .value(i(42))
                     .uom("ms")
-                    .levels(&Levels {
+                    .levels(Levels {
                         warn: i(24),
                         crit: i(42)
                     })
-                    .bounds(&Bounds {
+                    .bounds(Bounds {
                         min: i(0),
                         max: i(100)
                     })
@@ -633,11 +633,11 @@ mod test_metrics_display {
                     .label("name")
                     .value(d(42.0))
                     .uom("ms")
-                    .levels(&Levels {
+                    .levels(Levels {
                         warn: d(24.0),
                         crit: d(42.0)
                     })
-                    .bounds(&Bounds {
+                    .bounds(Bounds {
                         min: d(0.0),
                         max: d(100.0)
                     })

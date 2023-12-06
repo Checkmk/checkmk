@@ -5,15 +5,11 @@
 
 """Raw edition and only raw edition specific registrations"""
 
-from collections.abc import Sequence
-from functools import partial
-
 import cmk.utils.version as cmk_version
 
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.openapi.endpoints import host_config
@@ -24,13 +20,6 @@ from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
-
-
-def resolve_combined_single_metric_spec(
-    specification: CombinedSingleMetricSpec,
-) -> Sequence[GraphMetric]:
-    # Not available in CRE.
-    return ()
 
 
 def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:
@@ -46,23 +35,10 @@ def register_pages() -> None:
         ("ajax_render_graph_content", html_render.ajax_render_graph_content),
         ("ajax_graph_hover", html_render.ajax_graph_hover),
     ):
-        cmk.gui.pages.register(path)(partial(callback, resolve_combined_single_metric_spec))
+        cmk.gui.pages.register(path)(callback)
 
 
 def register_painters() -> None:
-    graph.PainterServiceGraphs.resolve_combined_single_metric_spec = (
-        resolve_combined_single_metric_spec
-    )
-    graph.PainterHostGraphs.resolve_combined_single_metric_spec = (
-        resolve_combined_single_metric_spec
-    )
-    graph.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
-        resolve_combined_single_metric_spec
-    )
-    graph.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
-        resolve_combined_single_metric_spec
-    )
-
     painter_registry.register(graph.PainterServiceGraphs)
     painter_registry.register(graph.PainterHostGraphs)
     painter_registry.register(graph.PainterSvcPnpgraph)

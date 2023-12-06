@@ -7,7 +7,7 @@ import copy
 import json
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -48,13 +48,7 @@ from ._artwork import (
 )
 from ._color import render_color_icon
 from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    GraphSpecification,
-)
+from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
 from ._utils import SizeEx
 
 RenderOutput = HTML | str
@@ -92,9 +86,6 @@ def host_service_graph_popup_cmk(
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -122,7 +113,6 @@ def host_service_graph_popup_cmk(
             ),
             graph_data_range,
             graph_render_config,
-            resolve_combined_single_metric_spec,
             render_async=False,
         )
     )
@@ -570,17 +560,13 @@ def _graph_margin_ex(
     )
 
 
-def ajax_graph(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def ajax_graph() -> None:
     """Registered as `ajax_graph`."""
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
-        response_data = _render_ajax_graph(context, resolve_combined_single_metric_spec)
+        response_data = _render_ajax_graph(context)
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -589,12 +575,7 @@ def ajax_graph(
         response.set_data("ERROR: %s" % e)
 
 
-def _render_ajax_graph(
-    context: Mapping[str, Any],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> dict[str, Any]:
+def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -650,7 +631,6 @@ def _render_ajax_graph(
         graph_recipe,
         graph_data_range,
         graph_render_config.size,
-        resolve_combined_single_metric_spec,
     )
 
     with output_funnel.plugged():
@@ -722,9 +702,6 @@ def render_graphs_from_specification_html(
     graph_specification: GraphSpecification,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     render_async: bool = True,
     graph_display_id: str = "",
@@ -737,7 +714,6 @@ def render_graphs_from_specification_html(
         graph_recipes,
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -747,9 +723,6 @@ def _render_graphs_from_definitions(
     graph_recipes: Sequence[GraphRecipe],
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     render_async: bool = True,
     graph_display_id: str = "",
@@ -775,7 +748,6 @@ def _render_graphs_from_definitions(
                 graph_recipe,
                 recipe_specific_data_range,
                 recipe_specific_render_config,
-                resolve_combined_single_metric_spec,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -821,11 +793,7 @@ def _render_graph_container_html(
 
 
 # Called from javascript code via JSON to initially render a graph
-def ajax_render_graph_content(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def ajax_render_graph_content() -> None:
     """Registered as `ajax_render_graph_content`."""
     response.set_content_type("application/json")
     try:
@@ -836,7 +804,6 @@ def ajax_render_graph_content(
                 GraphRecipe.model_validate(api_request["graph_recipe"]),
                 GraphDataRange.model_validate(api_request["graph_data_range"]),
                 GraphRenderConfig.model_validate(api_request["graph_render_config"]),
-                resolve_combined_single_metric_spec,
                 graph_display_id=api_request["graph_display_id"],
             ),
         }
@@ -854,9 +821,6 @@ def _render_graph_content_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str = "",
 ) -> HTML:
@@ -867,7 +831,6 @@ def _render_graph_content_html(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
             graph_display_id=graph_display_id,
         )
         main_graph_html = _render_graph_or_error_html(
@@ -880,7 +843,6 @@ def _render_graph_content_html(
                 + _render_time_range_selection(
                     graph_recipe,
                     graph_render_config,
-                    resolve_combined_single_metric_spec,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -903,9 +865,6 @@ def _render_graph_content_html(
 def _render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str,
 ) -> HTML:
@@ -939,7 +898,6 @@ def _render_time_range_selection(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
             graph_display_id=graph_display_id,
         )
         rows.append(
@@ -986,20 +944,14 @@ def estimate_graph_step_for_html(
 #   '----------------------------------------------------------------------'
 
 
-def ajax_graph_hover(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def ajax_graph_hover() -> None:
     """Registered as `ajax_graph_hover`."""
     response.set_content_type("application/json")
     try:
         context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
         hover_time = request.get_integer_input_mandatory("hover_time")
-        response_data = __render_ajax_graph_hover(
-            context, hover_time, resolve_combined_single_metric_spec
-        )
+        response_data = __render_ajax_graph_hover(context, hover_time)
         response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
@@ -1011,18 +963,11 @@ def ajax_graph_hover(
 def __render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
-    )
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
@@ -1087,9 +1032,6 @@ def _graph_title_height_ex(config: GraphRenderConfig) -> SizeEx:
 def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
     graph_render_config: GraphRenderConfig,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str = "",
 ) -> HTML | None:
@@ -1137,7 +1079,6 @@ def host_service_graph_dashlet_cmk(
             graph_recipe,
             graph_data_range,
             graph_render_config.size,
-            resolve_combined_single_metric_spec,
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(
@@ -1150,7 +1091,6 @@ def host_service_graph_dashlet_cmk(
         [graph_recipe],
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         render_async=False,
         graph_display_id=graph_display_id,
     )

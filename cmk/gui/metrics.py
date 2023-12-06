@@ -14,7 +14,7 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 from livestatus import SiteId
@@ -32,11 +32,7 @@ from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing import parse_perfometers, perfometer_info
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphMetric,
-    parse_raw_graph_specification,
-)
+from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
@@ -201,17 +197,12 @@ def translate_perf_data(
 
 
 # This page is called for the popup of the graph icon of hosts/services.
-def page_host_service_graph_popup(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def page_host_service_graph_popup() -> None:
     """Registered as `host_service_graph_popup`."""
     host_service_graph_popup_cmk(
         SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
         HostName(request.get_str_input_mandatory("host_name")),
         ServiceName(request.get_str_input_mandatory("service")),
-        resolve_combined_single_metric_spec,
     )
 
 
@@ -228,15 +219,10 @@ def page_host_service_graph_popup(
 #   '----------------------------------------------------------------------'
 
 
-def page_graph_dashlet(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def page_graph_dashlet() -> None:
     """Registered as `graph_dashlet`."""
     host_service_graph_dashlet_cmk(
         parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
         GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
-        resolve_combined_single_metric_spec,
         graph_display_id=request.get_str_input_mandatory("id"),
     )

@@ -8,7 +8,7 @@
 import collections
 import contextlib
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping
 
 import livestatus
 from livestatus import livestatus_lql, SiteId
@@ -23,13 +23,7 @@ from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    NeededElementForRRDDataKey,
-)
+from ._graph_specification import GraphDataRange, GraphRecipe, NeededElementForRRDDataKey
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
 from ._unit_info import unit_info
@@ -44,9 +38,6 @@ from ._utils import (
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> RRDData:
     unit_conversion = unit_info[graph_recipe.unit].get(
         "conversion",
@@ -62,7 +53,7 @@ def fetch_rrd_data_for_graph(
             element.scale,
         )
         for metric in graph_recipe.metrics
-        for element in metric.operation.needed_elements(resolve_combined_single_metric_spec)
+        for element in metric.operation.needed_elements()
         if isinstance(element, NeededElementForRRDDataKey)
     )
     rrd_data: RRDData = {}

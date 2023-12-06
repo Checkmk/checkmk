@@ -24,13 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    HorizontalRule,
-)
+from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
 from ._type_defs import LineType, RRDData, UnitInfo
@@ -142,19 +136,10 @@ def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     size: tuple[int, int],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    curves = list(
-        compute_graph_artwork_curves(
-            graph_recipe,
-            graph_data_range,
-            resolve_combined_single_metric_spec,
-        )
-    )
+    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range))
 
     pin_time = _load_graph_pin()
     _compute_scalars(graph_recipe, curves, pin_time)
@@ -363,16 +348,9 @@ def _compute_graph_curves(
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
 ) -> list[Curve]:
     # Fetch all raw RRD data
-    rrd_data = fetch_rrd_data_for_graph(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
-    )
+    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
     curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data))
 

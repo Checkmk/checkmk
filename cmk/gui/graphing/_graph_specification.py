@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Callable, Literal, Union
+from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Field, field_validator, PlainValidator, SerializeAsAny, TypeAdapter
 
@@ -79,10 +79,7 @@ class MetricOperation(BaseModel, ABC, frozen=True):
         raise NotImplementedError()
 
     @abstractmethod
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -121,10 +118,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_constant"
 
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield from ()
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
@@ -142,10 +136,7 @@ class MetricOpScalar(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_scalar"
 
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
@@ -165,11 +156,8 @@ class MetricOpOperator(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_operator"
 
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (ne for o in self.operands for ne in o.needed_elements(resolver))
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield from (ne for o in self.operands for ne in o.needed_elements())
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         return MetricOpOperator(
@@ -191,10 +179,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_rrd"
 
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForRRDDataKey(
             self.site_id,
             self.host_name,
@@ -235,10 +220,7 @@ class MetricOpRRDChoice(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_rrd_choice"
 
-    def needed_elements(
-        self,
-        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:

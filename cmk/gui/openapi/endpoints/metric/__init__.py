@@ -18,7 +18,6 @@ from cmk.gui.openapi.endpoints.metric.common import (
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.raw.registration import resolve_combined_single_metric_spec
 
 
 # This is the only endpoint that is available in the raw edition
@@ -51,7 +50,6 @@ def get_graph(params):
                 "data_range": reorganize_time_range(body["time_range"]),
                 "consolidation_function": body["reduce"],
             },
-            resolve_combined_single_metric_spec,
         )
 
     except MKUserError as e:

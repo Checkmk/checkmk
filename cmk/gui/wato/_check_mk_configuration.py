@@ -1253,7 +1253,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                         "duration",
                         Integer(
                             title=_("Duration"),
-                            help=_("The duration in minutes of the adhoc downtime."),
+                            help=_("The duration in minutes of the ad hoc downtime."),
                             minvalue=1,
                             unit=_("minutes"),
                             default_value=60,
@@ -1262,9 +1262,9 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     (
                         "comment",
                         TextInput(
-                            title=_("Adhoc comment"),
+                            title=_("Ad hoc comment"),
                             help=_(
-                                "The comment which is automatically sent with an adhoc downtime"
+                                "The comment which is automatically sent with an ad hoc downtime"
                             ),
                             size=80,
                             allow_empty=False,
@@ -1272,11 +1272,11 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     ),
                 ],
             ),
-            title=_("Adhoc downtime"),
-            label=_("Enable adhoc downtime"),
+            title=_("Ad hoc downtime"),
+            label=_("Enable ad hoc downtime"),
             help=_(
-                "This setting allows to set an adhoc downtime comment and its duration. "
-                "When enabled a new button <i>Adhoc downtime for __ minutes</i> will "
+                "This setting allows to set an ad hoc downtime comment and its duration. "
+                "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
                 "be available in the command form."
             ),
         )

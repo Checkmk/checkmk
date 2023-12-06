@@ -258,6 +258,7 @@ def _verify_check_result(
         _apply_regexps(check_id, canon_data, result_data)
 
     if result_data and canon_data == result_data:
+        # if the canon was just added or matches the result, there is nothing else to do
         return True, ""
 
     with open(
@@ -280,7 +281,7 @@ def _verify_check_result(
         check=False,
     ).stdout
 
-    if mode == CheckModes.DEFAULT:
+    if mode != CheckModes.UPDATE:
         if len(canon_data) != len(result_data):
             logger.error("[%s] Invalid field count! Data mismatch:\n%s", check_id, diff)
         else:

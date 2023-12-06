@@ -1025,8 +1025,8 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return GraphTemplate.from_name(template_id)
-    if template_id in graph_info:
-        return graph_templates_internal()[template_id]
+    if template := graph_templates_internal().get(template_id):
+        return template
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 

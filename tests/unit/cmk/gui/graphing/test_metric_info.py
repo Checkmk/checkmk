@@ -67,13 +67,13 @@ def test_metric_info_color() -> None:
 
 
 _DUPLICATE_METRIC_INFOS = [
+    ["aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"],
     ["db_read_latency", "read_latency"],
     ["db_write_latency", "write_latency"],
-    ["aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"],
-    ["kube_memory_request_utilization", "kube_cpu_request_utilization"],
-    ["kube_memory_limit_utilization", "kube_cpu_limit_utilization"],
     ["kube_memory_cluster_allocatable_utilization", "kube_cpu_cluster_allocatable_utilization"],
+    ["kube_memory_limit_utilization", "kube_cpu_limit_utilization"],
     ["kube_memory_node_allocatable_utilization", "kube_cpu_node_allocatable_utilization"],
+    ["kube_memory_request_utilization", "kube_cpu_request_utilization"],
 ]
 
 
@@ -84,4 +84,6 @@ def test_metric_info_duplicates() -> None:
     for name, info in metric_info.items():
         duplicates.setdefault(tuple(sorted(info.items())), []).append(name)
 
-    assert [names for names in duplicates.values() if len(names) > 1] == _DUPLICATE_METRIC_INFOS
+    assert sorted([names for names in duplicates.values() if len(names) > 1]) == sorted(
+        _DUPLICATE_METRIC_INFOS
+    )

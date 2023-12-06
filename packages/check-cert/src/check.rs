@@ -131,8 +131,8 @@ pub struct LevelsCheckerArgs {
 
 #[derive(Debug)]
 pub struct LevelsChecker<T> {
-    pub strategy: LevelsStrategy,
-    pub levels: Levels<T>,
+    strategy: LevelsStrategy,
+    levels: Levels<T>,
 }
 
 impl<T> LevelsChecker<T>

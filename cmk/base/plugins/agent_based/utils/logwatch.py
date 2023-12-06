@@ -15,7 +15,7 @@
 
 import re
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Literal, NamedTuple, Pattern, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
@@ -60,14 +60,30 @@ def service_extra_conf(service: str) -> list:
     )
 
 
-def extract_unseen_lines(
+ClusterSection = dict[str | None, Section]
+
+
+def update_seen_batches(
     value_store: MutableMapping[str, Any],
-    batches_of_lines: Mapping[str, list[str]],
-) -> list[str]:
+    cluster_section: ClusterSection,
+    logfiles: Iterable[str],
+) -> Container[str]:
     # Watch out: we cannot write an empty set to the value_store :-(
     seen_batches = value_store.get("seen_batches", ())
-    value_store["seen_batches"] = tuple(batches_of_lines)
+    value_store["seen_batches"] = tuple(
+        batch_id
+        for node_section in cluster_section.values()
+        for logfile in logfiles
+        if (logfile_data := node_section.logfiles.get(logfile)) is not None
+        for batch_id in logfile_data["lines"]
+    )
+    return seen_batches
 
+
+def extract_unseen_lines(
+    batches_of_lines: Mapping[str, list[str]],
+    seen_batches: Container[str],
+) -> list[str]:
     return [
         line
         for batch, lines in sorted(batches_of_lines.items())

@@ -17,7 +17,7 @@ import ast
 import socket
 import time
 from collections import Counter, defaultdict
-from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Container, Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
@@ -52,7 +52,6 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
 
 from .utils import logwatch
 
-ClusterSection = dict[str | None, logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
 CHECK_DEFAULT_PARAMETERS: logwatch.DictLogwatchEc = {
@@ -292,15 +291,15 @@ def _get_missing_logfiles_from_attr(used_logfiles: UsedLogFiles) -> Sequence:
 
 
 def _filter_accumulated_lines(
-    cluster_section: ClusterSection,
+    cluster_section: logwatch.ClusterSection,
     item: str,
-    value_store: MutableMapping[str, Any],
+    seen_batches: Container[str],
 ) -> Iterable[str]:
     yield from (
         line
         for node_data in cluster_section.values()
         if (item_data := node_data.logfiles.get(item)) is not None
-        for line in logwatch.extract_unseen_lines(value_store, item_data["lines"])
+        for line in logwatch.extract_unseen_lines(item_data["lines"], seen_batches)
         if line[0] not in (".", "I") and len(line) > 1
     )
 
@@ -308,7 +307,7 @@ def _filter_accumulated_lines(
 def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     item: str | None,
     params: logwatch.ParameterLogwatchEc,
-    parsed: ClusterSection,
+    parsed: logwatch.ClusterSection,
     *,
     service_level: int,
     value_store: MutableMapping[str, Any],
@@ -409,8 +408,9 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         else:  # legacy configuration
             logfile_reclassify_settings["reclassify_patterns"].extend(settings)
 
+    seen_batches = logwatch.update_seen_batches(value_store, parsed, used_logfiles)
     for logfile in used_logfiles:
-        lines = _filter_accumulated_lines(parsed, logfile, value_store)
+        lines = _filter_accumulated_lines(parsed, logfile, seen_batches)
 
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"] = {}

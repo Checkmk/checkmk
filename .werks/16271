@@ -1,0 +1,14 @@
+Title: logwatch_ec: Duplicate messages forwarded to event console
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701810299
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This fixes duplicate messages forwarded to the event console by the plugin <i>"Forward Logwatch Messages to the Event Console"</i> (<tt>logwatch_ec</tt>).
+It only affects users that configured it to monitore multiple logfiles in one common service.
+
+Users who need an instant solution and cannot wait for the next patch release can change their settings to mitigate the issue.
+By checking <i>"Create a separate check for each logfile"</i> in the relevant <i>"Logwatch Event Console Forwarding"</i> rule and rediscovering the host you can switch to a configuration that is not affected.

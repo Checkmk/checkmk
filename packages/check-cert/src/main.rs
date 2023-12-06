@@ -116,6 +116,10 @@ struct Args {
     )]
     response_time: Vec<u32>,
 
+    /// Load CA store at this location in place of the default one
+    #[arg(long)]
+    ca_store: Option<std::path::PathBuf>,
+
     /// Allow self-signed certificates
     #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
     allow_self_signed: bool,
@@ -152,6 +156,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Levels::from(&mut response_time.map(|v| v * Duration::MILLISECOND)),
     ) else {
         check::bail_out("invalid args: response time crit higher than warn")
+    };
+
+    let Ok(trust_store) = (match args.ca_store {
+        Some(ca_store) => truststore::load_store(&ca_store),
+        None => truststore::system(),
+    }) else {
+        check::abort("Failed to load trust store")
     };
 
     let start = Instant::now();
@@ -203,7 +214,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     collection.join(&mut verification::check(
         &chain,
         VerifConfig::builder()
-            .trust_store(&truststore::system().unwrap_or_default())
+            .trust_store(&trust_store)
             .allow_self_signed(args.allow_self_signed)
             .build(),
     ));

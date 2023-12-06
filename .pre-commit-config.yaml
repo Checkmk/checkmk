@@ -17,9 +17,7 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/charliermarsh/ruff-pre-commit
-      # v0.0.241 has problems suppressing SyntaxErrors due to its
-      # missing implementation of match expression. Skip that one.
-      rev: 'v0.0.240'
+      rev: 'v0.1.7'
       hooks:
         - id: ruff
     - repo: https://github.com/pre-commit/pre-commit-hooks

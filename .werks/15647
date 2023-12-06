@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p37
+Version: 2.1.0p38
 
 Previously, the diskspace cronjob overwrote the $OMD_ROOT/var/log/diskspace.log on every run. This
 is not necessary, since the file is automatically logrotated.

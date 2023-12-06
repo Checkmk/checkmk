@@ -9,7 +9,7 @@ import base64
 import json
 import time
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import ValidationError as PydanticValidationError
@@ -38,13 +38,7 @@ from ._graph_pdf import (
     render_graph_pdf,
 )
 from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphDataRange,
-    GraphMetric,
-    GraphRecipe,
-    parse_raw_graph_specification,
-)
+from ._graph_specification import GraphDataRange, GraphRecipe, parse_raw_graph_specification
 from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
 
@@ -52,11 +46,7 @@ from ._utils import get_graph_data_from_livestatus
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
 #    # Needed by mail notification plugin (-> no authentication from localhost)
-def ajax_graph_images_for_notifications(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def ajax_graph_images_for_notifications() -> None:
     """Registered as `noauth:ajax_graph_images`."""
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
@@ -64,14 +54,10 @@ def ajax_graph_images_for_notifications(
         )
 
     with SuperUserContext():
-        _answer_graph_image_request(resolve_combined_single_metric_spec)
+        _answer_graph_image_request()
 
 
-def _answer_graph_image_request(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def _answer_graph_image_request() -> None:
     try:
         host_name = HostName(request.get_ascii_input_mandatory("host"))
         if not host_name:
@@ -121,7 +107,6 @@ def _answer_graph_image_request(
                 graph_recipe,
                 graph_data_range,
                 graph_render_config.size,
-                resolve_combined_single_metric_spec,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -249,12 +234,7 @@ def graph_recipes_for_api_request(
     return GraphDataRange.model_validate(raw_graph_data_range), graph_recipes
 
 
-def graph_spec_from_request(
-    api_request: dict[str, Any],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> dict[str, Any]:
+def graph_spec_from_request(api_request: dict[str, Any]) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
         graph_recipe = graph_recipes[0]
@@ -265,11 +245,7 @@ def graph_spec_from_request(
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = compute_graph_artwork_curves(
-        graph_recipe,
-        graph_data_range,
-        resolve_combined_single_metric_spec,
-    )
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     api_curves = []
     (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph

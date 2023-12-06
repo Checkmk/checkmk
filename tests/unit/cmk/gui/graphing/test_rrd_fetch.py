@@ -91,11 +91,7 @@ _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            lambda _specs: (),
-        ) == {
+        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
             ("NO_SITE", "my-host", "Temperature Zone 6", "temp", "max", 1): TimeSeries(
                 [4, 5, None],
                 time_window=(1, 2, 3),
@@ -108,11 +104,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            lambda _specs: (),
-        ) == {
+        assert fetch_rrd_data_for_graph(_GRAPH_RECIPE, _GRAPH_DATA_RANGE) == {
             ("NO_SITE", "my-host", "Temperature Zone 6", "temp", "max", 1): TimeSeries(
                 [39.2, 41.0, None],
                 time_window=(1, 2, 3),

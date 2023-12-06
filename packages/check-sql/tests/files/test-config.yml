@@ -46,7 +46,7 @@ mssql:
       type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated(current windows user)
       access_token: "baz" # optional, no default
     connection: # optional
-      hostname: "localhost" # optional, default: "localhost"
+      hostname: "localhost" # optional, default: "localhost" if type of authentication is integrated value is assumed as a localhost
       failoverpartner: "localhost2" # optional, no default
       port: 1433 # optional, default: 1433
       socket: 'C:\path\to\file' # optional, no default

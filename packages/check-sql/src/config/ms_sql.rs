@@ -573,7 +573,7 @@ impl TryFrom<&str> for Mode {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct CustomInstance {
     sid: String,
     auth: Authentication,
@@ -591,7 +591,8 @@ impl CustomInstance {
     ) -> Result<Self> {
         let sid = yaml
             .get_string(keys::SID)
-            .context("Bad/Missing sid in instance")?;
+            .context("Bad/Missing sid in instance")?
+            .to_lowercase();
         let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &sid)?;
         Ok(Self {
             sid,
@@ -660,6 +661,9 @@ impl CustomInstance {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
+    pub fn endpoint(&self) -> Endpoint {
+        Endpoint::new(&self.auth, &self.conn)
+    }
     pub fn alias(&self) -> Option<&String> {
         self.alias.as_ref()
     }
@@ -679,7 +683,7 @@ pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> String {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Piggyback {
     hostname: String,
     sections: Sections,
@@ -1141,7 +1145,7 @@ discovery:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.sid(), "INST1");
+        assert_eq!(instance.sid(), "inst1");
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.conn().hostname(), "localhost");
         assert_eq!(instance.calc_real_host(), "localhost");
@@ -1159,8 +1163,8 @@ discovery:
             c.instances()[0].piggyback().unwrap().hostname(),
             "myPiggybackHost"
         );
-        assert_eq!(c.instances()[0].sid(), "INST1");
-        assert_eq!(c.instances()[1].sid(), "INST2");
+        assert_eq!(c.instances()[0].sid(), "inst1");
+        assert_eq!(c.instances()[1].sid(), "inst2");
         assert_eq!(c.mode(), &Mode::Port);
         assert_eq!(
             c.discovery().include(),

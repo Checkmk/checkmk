@@ -450,7 +450,7 @@ def test__group_by_transition(
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
-        # Vanished services
+        # Service vanished
         # Whitelist
         (
             (
@@ -876,7 +876,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
             ),
             True,
         ),
-        # Vanished services
+        # Service vanished
         # Whitelist
         (
             _get_params(
@@ -1111,32 +1111,32 @@ def test__check_service_table(
             0,
             "",
             [
-                "Unmonitored service: check_plugin_name: Test Description New Item 1",
+                "Service unmonitored: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Unmonitored service: check_plugin_name: Test Description New Item 2",
+                "Service unmonitored: check_plugin_name: Test Description New Item 2",
             ],
         ),
-        ActiveCheckResult(1, "Unmonitored services: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(1, "Services unmonitored: 2 (check_plugin_name: 2)"),
         ActiveCheckResult(
             0,
             "",
             [
-                "Vanished service: check_plugin_name: Test Description Vanished Item 1",
+                "Service vanished: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Vanished service: check_plugin_name: Test Description Vanished Item 2",
+                "Service vanished: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
-        ActiveCheckResult(0, "Vanished services: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(0, "Services vanished: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
 

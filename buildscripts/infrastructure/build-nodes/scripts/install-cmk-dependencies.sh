@@ -43,7 +43,7 @@ case "$DISTRO" in
         yum install -y $(cat "$TARGET_DIR"/needed-packages)
         ;;
     almalinux-*)
-        gpg --import "$TARGET_DIR"/Check_MK-pubkey.gpg
+        add_gpg_key
         # "mod_auth_mellon" is assumed to be installed on RHEL-9 from 2.3 on
         # see announcement in werk 15561 and removal of package from MK file with 15694
         # This line can be removed in 2.4. onwards

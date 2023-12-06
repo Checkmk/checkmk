@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
+from cmk.base.plugins.agent_based.utils.logwatch import ClusterSection, ItemData, Section
 
 from cmk.ec.export import SyslogMessage
 
@@ -239,7 +240,7 @@ class _FakeForwarder:
 def test_check_logwatch_ec_common_single_node(
     item: str | None,
     params: Mapping[str, Any],
-    parsed: logwatch_ec.ClusterSection,
+    parsed: ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
@@ -341,7 +342,7 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_grouped(
-    cluster_section: logwatch_ec.ClusterSection,
+    cluster_section: ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
@@ -442,7 +443,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
 )
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
     params: Mapping[str, Any],
-    cluster_section: logwatch_ec.ClusterSection,
+    cluster_section: ClusterSection,
     expected_result: CheckResult,
 ) -> None:
     assert (
@@ -816,3 +817,34 @@ def test_logwatch_spool_path_is_escaped():
 
     assert logwatch_ec.logwatch_spool_path(HostName("short"), ".").name == "item_."
     assert logwatch_ec.logwatch_spool_path(HostName("short"), "..").name == "item_.."
+
+
+def test_check_logwatch_ec_common_batch_stored() -> None:
+    """Multiple logfiles with different batches. All must be remembered as "seen_batches".
+
+    Failing to do so leads to messages being processed multiple times.
+    """
+    value_store: dict = {}
+
+    _result = list(
+        logwatch_ec.check_logwatch_ec_common(
+            None,
+            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            {
+                None: Section(
+                    errors=(),
+                    logfiles={
+                        "foo": ItemData(attr="", lines={"batch_id_occuring_in_foo": []}),
+                        "bar": ItemData(attr="", lines={"batch_id_occuring_in_bar": []}),
+                    },
+                ),
+            },
+            service_level=10,
+            value_store=value_store,
+            hostname=HostName("test-host"),
+            message_forwarder=_FakeForwarder(),
+        )
+    )
+
+    # the value store now needs to report both batches as seen:
+    assert value_store["seen_batches"] == ("batch_id_occuring_in_bar", "batch_id_occuring_in_foo")

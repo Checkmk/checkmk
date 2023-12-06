@@ -14,6 +14,7 @@
 #########################################################################################
 
 import re
+from collections.abc import Container
 from typing import (
     Any,
     Counter,
@@ -48,14 +49,30 @@ class Section(NamedTuple):
     logfiles: Mapping[str, ItemData]
 
 
-def extract_unseen_lines(
+ClusterSection = Dict[Optional[str], Section]
+
+
+def update_seen_batches(
     value_store: MutableMapping[str, Any],
-    batches_of_lines: Mapping[str, list[str]],
-) -> list[str]:
+    cluster_section: ClusterSection,
+    logfiles: Iterable[str],
+) -> Container[str]:
     # Watch out: we cannot write an empty set to the value_store :-(
     seen_batches = value_store.get("seen_batches", ())
-    value_store["seen_batches"] = tuple(batches_of_lines)
+    value_store["seen_batches"] = tuple(
+        batch_id
+        for node_section in cluster_section.values()
+        for logfile in logfiles
+        if (logfile_data := node_section.logfiles.get(logfile)) is not None
+        for batch_id in logfile_data["lines"]
+    )
+    return seen_batches
 
+
+def extract_unseen_lines(
+    batches_of_lines: Mapping[str, list[str]],
+    seen_batches: Container[str],
+) -> list[str]:
     return [
         line
         for batch, lines in sorted(batches_of_lines.items())

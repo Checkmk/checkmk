@@ -25,7 +25,7 @@ def _FixedLevels(
     unit: str,
     direction: Literal["upper", "lower"],
 ) -> Tuple:
-    type_ = int if value_spec is Integer else float
+    type_ = int if value_spec in (Integer, Age) else float
     kw = {} if value_spec is Age else {"unit": unit}
     return Tuple(
         title=_("Fixed Levels"),

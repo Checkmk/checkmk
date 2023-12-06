@@ -27,7 +27,6 @@ from tests.testlib.utils import (
     check_output,
     cmc_path,
     cme_path,
-    cmk_path,
     cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
@@ -35,6 +34,7 @@ from tests.testlib.utils import (
     is_containerized,
     makedirs,
     PExpectDialog,
+    repo_path,
     restart_httpd,
     spawn_expect_process,
     write_file,
@@ -599,9 +599,9 @@ class Site:
             logger.info("Installing Checkmk version %s", self.version.version_directory())
             completed_process = subprocess.run(
                 [
-                    f"{cmk_path()}/scripts/run-pipenv",
+                    f"{repo_path()}/scripts/run-pipenv",
                     "run",
-                    f"{cmk_path()}/tests/scripts/install-cmk.py",
+                    f"{repo_path()}/tests/scripts/install-cmk.py",
                 ],
                 env=dict(
                     os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
@@ -707,49 +707,49 @@ class Site:
         return missing
 
     def _update_with_f12_files(self) -> None:
-        paths = [
-            cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/omd/packages/maintenance",
-            cmk_path() + "/omd/packages/check_mk/skel/etc/init.d",
-            cmk_path() + "/livestatus/api/python",
-            cmk_path() + "/bin",
-            cmk_path() + "/agents/special",
-            cmk_path() + "/agents/plugins",
-            cmk_path() + "/agents/windows/plugins",
-            cmk_path() + "/agents",
-            cmk_path() + "/cmk/base",
-            cmk_path() + "/cmk",
-            cmk_path() + "/web",
-            cmk_path() + "/inventory",
-            cmk_path() + "/notifications",
-            cmk_path() + "/.werks",
-            cmk_path() + "/active_checks",
-            cmk_path() + "/packages/cmk-agent-based",
-            cmk_path() + "/packages/cmk-agent-receiver",
-            cmk_path() + "/packages/cmk-graphing",
-            cmk_path() + "/packages/cmk-mkp-tool",
-            cmk_path() + "/packages/cmk-rulesets",
-            cmk_path() + "/packages/cmk-server-side-calls",
-            cmk_path() + "/packages/cmk-werks",
-            cmk_path() + "/packages/cmk-livestatus-client",
+        paths: list[Path] = [
+            repo_path() / "omd/packages/omd",
+            repo_path() / "omd/packages/maintenance",
+            repo_path() / "omd/packages/check_mk/skel/etc/init.d",
+            repo_path() / "livestatus/api/python",
+            repo_path() / "bin",
+            repo_path() / "agents/special",
+            repo_path() / "agents/plugins",
+            repo_path() / "agents/windows/plugins",
+            repo_path() / "agents",
+            repo_path() / "cmk/base",
+            repo_path() / "cmk",
+            repo_path() / "web",
+            repo_path() / "inventory",
+            repo_path() / "notifications",
+            repo_path() / ".werks",
+            repo_path() / "active_checks",
+            repo_path() / "packages/cmk-agent-based",
+            repo_path() / "packages/cmk-agent-receiver",
+            repo_path() / "packages/cmk-graphing",
+            repo_path() / "packages/cmk-mkp-tool",
+            repo_path() / "packages/cmk-rulesets",
+            repo_path() / "packages/cmk-server-side-calls",
+            repo_path() / "packages/cmk-werks",
+            repo_path() / "packages/cmk-livestatus-client",
         ]
 
         if self.version.is_raw_edition():
             # The module is only used in CRE
             paths += [
-                cmk_path() + "/livestatus",
+                repo_path() / "livestatus",
             ]
 
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
-                cmc_path() + "/bin",
-                cmc_path() + "/agents/plugins",
-                cmc_path() + "/web",
-                cmc_path() + "/alert_handlers",
-                cmc_path() + "/core",
+                cmc_path() / "bin",
+                cmc_path() / "agents/plugins",
+                cmc_path() / "web",
+                cmc_path() / "alert_handlers",
+                cmc_path() / "core",
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
-                # cmc_path() + "/agents",
+                # cmc_path() / "agents",
             ]
 
         if os.path.exists(cme_path()) and self.version.is_managed_edition():

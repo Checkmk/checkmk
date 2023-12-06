@@ -20,7 +20,7 @@ from docker.models.images import Image  # type: ignore[import]
 from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
-from tests.testlib.utils import cmk_path
+from tests.testlib.utils import repo_path
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
@@ -105,7 +105,7 @@ def resolve_image_alias(alias: str) -> str:
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
+        [os.path.join(repo_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
         text=True,
     ).split("\n", maxsplit=1)[0]
 

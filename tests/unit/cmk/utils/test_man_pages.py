@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import cmk_path
+from tests.testlib import repo_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
@@ -63,7 +63,7 @@ def test_man_page_path_only_shipped() -> None:
     mpm = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
-    assert mpm["if64"] == Path(cmk_path(), "cmk", "plugins", "collection", "checkman", "if64")
+    assert mpm["if64"] == repo_path() / "cmk" / "plugins" / "collection" / "checkman" / "if64"
 
 
 def test_man_page_path_both_dirs(tmp_path: Path) -> None:
@@ -102,7 +102,7 @@ def test_all_man_pages(tmp_path: Path) -> None:
     assert "asd~" not in pages
 
     assert pages["if"] == tmp_checkman / "if"
-    assert pages["if64"] == Path(cmk_path(), "cmk", "plugins", "collection", "checkman", "if64")
+    assert pages["if64"] == repo_path() / "cmk" / "plugins" / "collection" / "checkman" / "if64"
 
 
 def test_load_all_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:

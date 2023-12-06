@@ -8,15 +8,15 @@ from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 from tests.testlib.utils import is_enterprise_repo
 
 
 def scss_files() -> set[Path]:
     return set(
         chain(
-            Path(cmk_path(), "web", "htdocs", "themes").glob("**/*.scss"),
-            Path(cmk_path(), "enterprise", "web", "htdocs", "themes").glob("**/*.scss"),
+            (repo_path() / "web" / "htdocs" / "themes").glob("**/*.scss"),
+            (repo_path() / "enterprise" / "web" / "htdocs" / "themes").glob("**/*.scss"),
         )
     )
 

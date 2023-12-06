@@ -11,7 +11,7 @@ from typing import Literal
 
 import pytest
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
@@ -793,7 +793,9 @@ def test_filter_tree_mixed() -> None:
 
 
 def _get_tree_store() -> TreeStore:
-    return TreeStore(Path("%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()))
+    return TreeStore(
+        repo_path() / "tests" / "unit" / "cmk" / "utils" / "structured_data" / "tree_test_data"
+    )
 
 
 @pytest.mark.parametrize(

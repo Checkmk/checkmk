@@ -46,9 +46,11 @@ pub async fn create_from_config(endpoint: &Endpoint) -> Result<Client> {
         }
 
         #[cfg(windows)]
-        AuthType::Integrated => tokio::time::timeout(conn.timeout(), create_local(None))
-            .await
-            .map_err(map_elapsed_to_anyhow)?,
+        AuthType::Integrated => {
+            tokio::time::timeout(conn.timeout(), create_local(None, conn.port()))
+                .await
+                .map_err(map_elapsed_to_anyhow)?
+        }
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
@@ -159,12 +161,13 @@ pub async fn _create_remote_client(
 
 /// Check `local` (Integrated) connection to MS SQL
 #[cfg(windows)]
-pub async fn create_local(database: Option<String>) -> Result<Client> {
+pub async fn create_local(database: Option<String>, port: u16) -> Result<Client> {
     let mut config = Config::new();
 
     if let Some(db) = database {
         config.database(db);
     }
+    config.port(port);
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
     let tcp = TcpStream::connect(config.get_addr()).await?;
@@ -177,7 +180,7 @@ pub async fn create_local(database: Option<String>) -> Result<Client> {
 }
 
 #[cfg(unix)]
-pub async fn create_local(_database: Option<String>) -> Result<Client> {
+pub async fn create_local(_database: Option<String>, _port: u16) -> Result<Client> {
     anyhow::bail!("not supported");
 }
 

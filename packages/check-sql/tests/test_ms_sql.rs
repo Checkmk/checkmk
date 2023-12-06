@@ -31,7 +31,11 @@ fn expected_instances() -> Vec<String> {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    assert!(client::create_local(None).await.is_ok());
+    assert!(
+        client::create_local(None, check_sql::ms_sql::defaults::STANDARD_PORT)
+            .await
+            .is_ok()
+    );
 }
 
 fn is_instance_good(i: &SqlInstance) -> bool {

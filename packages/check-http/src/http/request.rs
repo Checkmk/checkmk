@@ -4,10 +4,10 @@
 
 use bytes::Bytes;
 use encoding_rs::{Encoding, UTF_8};
-use http::{HeaderMap, HeaderName, HeaderValue, Method};
 use mime::Mime;
 use reqwest::{
-    header::CONTENT_TYPE, Client, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
+    header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
+    Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 
 pub struct RequestConfig {

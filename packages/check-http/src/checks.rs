@@ -2,10 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use http::{HeaderMap, HeaderValue};
 use httpdate::parse_http_date;
 use regex::Regex;
-use reqwest::{StatusCode, Version};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    StatusCode, Version,
+};
 use std::time::{Duration, SystemTime};
 
 use crate::checking_types::{check_levels, notice, Bounds, CheckResult, State, UpperLevels};
@@ -308,7 +310,7 @@ fn check_document_age(
 #[cfg(test)]
 mod test_check_status {
     use super::*;
-    use http::{StatusCode, Version};
+    use reqwest::{StatusCode, Version};
 
     #[test]
     fn test_success_unchecked() {
@@ -383,7 +385,7 @@ mod test_check_status {
 #[cfg(test)]
 mod test_check_redirect {
     use super::*;
-    use http::StatusCode;
+    use reqwest::StatusCode;
 
     #[test]
     fn test_no_redirect() {
@@ -426,7 +428,7 @@ mod test_check_redirect {
 
 #[cfg(test)]
 mod test_check_headers {
-    use http::HeaderName;
+    use reqwest::header::HeaderName;
 
     use super::*;
     use std::collections::HashMap;

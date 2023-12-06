@@ -5,8 +5,11 @@
 use crate::pwstore;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
-use http::{HeaderName, HeaderValue, Method, StatusCode};
 use regex::{Regex, RegexBuilder};
+use reqwest::{
+    header::{HeaderName, HeaderValue},
+    Method, StatusCode,
+};
 use std::{str::FromStr, time::Duration};
 
 #[derive(Parser, Debug)]

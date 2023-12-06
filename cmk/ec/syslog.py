@@ -145,7 +145,7 @@ class StructuredDataName:
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, StructuredDataName):
-            raise NotImplementedError
+            return NotImplemented
         return self.name == o.name
 
 
@@ -169,7 +169,7 @@ class StructuredDataID:
 
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, StructuredDataID):
-            raise NotImplementedError
+            return NotImplemented
         return self.id == o.id
 
     @staticmethod

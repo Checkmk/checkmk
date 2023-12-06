@@ -402,9 +402,7 @@ class SpecialAgentSource(Source[AgentRawData]):
 
     def fetcher(self) -> Fetcher[AgentRawData]:
         return ProgramFetcher(
-            cmdline=self.config_cache.translate_commandline(
-                self.host_name, self.ipaddress, self._cmdline
-            ),
+            cmdline=self._cmdline,
             stdin=self._stdin,
             is_cmc=config.is_cmc(),
         )

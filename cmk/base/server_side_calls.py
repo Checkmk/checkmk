@@ -258,6 +258,12 @@ def _replace_passwords(
     return " ".join(formatted)
 
 
+def _replace_macros(string: str, macros: Mapping[str, str]) -> str:
+    for macro, replacement in macros.items():
+        string = string.replace(macro, str(replacement))
+    return string
+
+
 class ActiveCheck:
     def __init__(
         self,
@@ -353,7 +359,7 @@ class ActiveCheck:
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         for params in plugin_params:
             for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
-                args_without_macros = self._replace_macros(args)
+                args_without_macros = _replace_macros(args, self.macros)
                 command_line = plugin_info.command_line.replace("$ARG1$", args_without_macros)
                 yield desc, args_without_macros, command_line, params
 
@@ -401,11 +407,6 @@ class ActiveCheck:
 
         command = f"check_mk_active-{plugin_name}"
         return command, core_config.autodetect_plugin(command_line)
-
-    def _replace_macros(self, string: str) -> str:
-        for macro, replacement in self.macros.items():
-            string = string.replace(macro, str(replacement))
-        return string
 
     @staticmethod
     def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:
@@ -537,6 +538,7 @@ class SpecialAgent:
         host_address: HostAddress | None,
         host_attrs: Mapping[str, str],
         stored_passwords: Mapping[str, str],
+        macros: Mapping[str, str] | None,
     ):
         self._plugins = plugins
         self._legacy_plugins = legacy_plugins
@@ -544,6 +546,9 @@ class SpecialAgent:
         self.host_address = host_address
         self.host_attrs = host_attrs
         self.stored_passwords = stored_passwords
+
+        # add legacy macros
+        self.macros = {**(macros or {}), "<IP>": self.host_address or "", "<HOST>": self.host_name}
 
     def _make_source_path(self, agent_name: str) -> Path:
         file_name = f"agent_{agent_name}"
@@ -559,7 +564,7 @@ class SpecialAgent:
     ) -> str:
         path = self._make_source_path(agent_name)
         args = commandline_arguments(self.host_name, None, agent_configuration)
-        return f"{path} {args}"
+        return _replace_macros(f"{path} {args}", self.macros)
 
     def _iter_legacy_commands(
         self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]

@@ -164,7 +164,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ) {
         Ok(chain) => chain,
-        Err(err) => check::abort(&format!("{:?}", err)),
+        Err(err) => check::abort(format!("{:?}", err)),
     };
     let response_time = start.elapsed();
 
@@ -175,7 +175,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut collection = Collection::from(&mut vec![response_time_levels_checker
         .check(
             response_time,
-            &format!(
+            format!(
                 "Certificate obtained in {} ms",
                 response_time.whole_milliseconds()
             ),

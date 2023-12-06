@@ -149,7 +149,12 @@ where
             .ok_or(Box::from("bad values"))
     }
 
-    pub fn check(&self, value: T, summary: &str, args: LevelsCheckerArgs) -> CheckResult<T> {
+    pub fn check<Str: Into<String>>(
+        &self,
+        value: T,
+        summary: Str,
+        args: LevelsCheckerArgs,
+    ) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
             if self.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
@@ -264,10 +269,10 @@ pub struct Summary {
 }
 
 impl Summary {
-    fn new(state: State, text: &str) -> Self {
+    fn new<Str: Into<String>>(state: State, text: Str) -> Self {
         Self {
             state,
-            text: String::from(text),
+            text: text.into(),
         }
     }
 }
@@ -294,25 +299,25 @@ pub struct SimpleCheckResult {
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, text: &str) -> Self {
+    fn new<Str: Into<String>>(state: State, text: Str) -> Self {
         Self {
             summary: Summary::new(state, text),
         }
     }
 
-    pub fn ok(summary: &str) -> Self {
+    pub fn ok<Str: Into<String>>(summary: Str) -> Self {
         Self::new(State::Ok, summary)
     }
 
-    pub fn warn(summary: &str) -> Self {
+    pub fn warn<Str: Into<String>>(summary: Str) -> Self {
         Self::new(State::Warn, summary)
     }
 
-    pub fn crit(summary: &str) -> Self {
+    pub fn crit<Str: Into<String>>(summary: Str) -> Self {
         Self::new(State::Crit, summary)
     }
 
-    pub fn unknown(summary: &str) -> Self {
+    pub fn unknown<Str: Into<String>>(summary: Str) -> Self {
         Self::new(State::Unknown, summary)
     }
 }
@@ -338,26 +343,26 @@ impl<T> CheckResult<T>
 where
     T: Clone,
 {
-    fn new(state: State, text: &str, metrics: Option<Metric<T>>) -> Self {
+    fn new<Str: Into<String>>(state: State, text: Str, metrics: Option<Metric<T>>) -> Self {
         Self {
             summary: Summary::new(state, text),
             metrics,
         }
     }
 
-    pub fn ok(summary: &str, metrics: Metric<T>) -> Self {
+    pub fn ok<Str: Into<String>>(summary: Str, metrics: Metric<T>) -> Self {
         Self::new(State::Ok, summary, Some(metrics))
     }
 
-    pub fn warn(summary: &str, metrics: Metric<T>) -> Self {
+    pub fn warn<Str: Into<String>>(summary: Str, metrics: Metric<T>) -> Self {
         Self::new(State::Warn, summary, Some(metrics))
     }
 
-    pub fn crit(summary: &str, metrics: Metric<T>) -> Self {
+    pub fn crit<Str: Into<String>>(summary: Str, metrics: Metric<T>) -> Self {
         Self::new(State::Crit, summary, Some(metrics))
     }
 
-    pub fn unknown(summary: &str, metrics: Metric<T>) -> Self {
+    pub fn unknown<Str: Into<String>>(summary: Str, metrics: Metric<T>) -> Self {
         Self::new(State::Unknown, summary, Some(metrics))
     }
 }
@@ -465,13 +470,13 @@ pub fn exit_code(collection: &Collection) -> i32 {
     }
 }
 
-pub fn bail_out(message: &str) -> ! {
+pub fn bail_out<Str: Into<String>>(message: Str) -> ! {
     let out = Collection::from(SimpleCheckResult::unknown(message));
     eprintln!("{}", out);
     std::process::exit(exit_code(&out))
 }
 
-pub fn abort(message: &str) -> ! {
+pub fn abort<Str: Into<String>>(message: Str) -> ! {
     let out = Collection::from(SimpleCheckResult::crit(message));
     eprintln!("{}", out);
     std::process::exit(exit_code(&out))

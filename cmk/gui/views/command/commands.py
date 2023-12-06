@@ -1477,7 +1477,7 @@ class CommandScheduleDowntimes(Command):
         adhoc_duration = active_config.adhoc_downtime.get("duration")
         adhoc_comment = active_config.adhoc_downtime.get("comment", "")
         html.open_div(class_="group")
-        html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
+        html.button("_down_adhoc", _("Ad hoc for %d minutes") % adhoc_duration)
         html.nbsp()
         html.write_text(_("Comment") + ": " + adhoc_comment)
         html.hr()

@@ -85,6 +85,7 @@ def test_dashlet_registry_plugins() -> None:
             "ntop_top_talkers",
             "single_timeseries",
             "state_service",
+            "top_list",
             "state_host",
             "host_state_summary",
             "service_state_summary",

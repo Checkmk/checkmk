@@ -875,6 +875,12 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "single_metric"),
     )
 
+    yield PageMenuEntryCEEOnly(
+        title="Top list",
+        icon_name="rank",
+        item=_dashboard_add_non_view_dashlet_link(name, "top_list"),
+    )
+
 
 def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
     yield PageMenuEntryCEEOnly(

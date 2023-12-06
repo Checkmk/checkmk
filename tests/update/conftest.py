@@ -6,6 +6,7 @@ import dataclasses
 import json
 import logging
 import os
+import subprocess
 from collections.abc import Generator, Iterator
 from pathlib import Path
 
@@ -80,7 +81,9 @@ def get_omd_status(site: Site) -> dict[str, str]:
     """Get the omd status for all services of the given site."""
     cmd = ["/usr/bin/omd", "status", "--bare"]
     status = {}
-    for line in [_ for _ in site.run_as_site_user(cmd).stdout.splitlines() if " " in _]:
+    process = site.execute(cmd, stdout=subprocess.PIPE)
+    stdout, _ = process.communicate()
+    for line in [_ for _ in stdout.splitlines() if " " in _]:
         key, val = (_.strip() for _ in line.split(" ", 1))
         status[key] = {"0": "running", "1": "stopped", "2": "partially running"}.get(val, val)
     return status
@@ -111,11 +114,13 @@ def update_config(site: Site) -> int:
     """
     for rc, conflict_mode in enumerate(("abort", "install")):
         cmd = [f"{site.root}/bin/cmk-update-config", "-v", f"--conflict={conflict_mode}"]
-        completed_process = site.run_as_site_user(cmd)
-        if completed_process.returncode == 0:
-            logger.debug(completed_process.stdout)
+        process = site.execute(cmd, stdout=subprocess.PIPE)
+        stdout, _ = process.communicate()
+        rc = process.returncode
+        if rc == 0:
+            logger.debug(stdout)
             return rc
-        logger.error(completed_process.stdout)
+        logger.error(stdout)
     return 2
 
 

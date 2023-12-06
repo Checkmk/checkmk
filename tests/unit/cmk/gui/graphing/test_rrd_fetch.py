@@ -19,31 +19,12 @@ from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
     GraphMetric,
     GraphRecipe,
-    MetricOpRRDChoice,
     MetricOpRRDSource,
-    NeededElementForTranslation,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._rrd_fetch import fetch_rrd_data_for_graph, translate_and_merge_rrd_columns
-from cmk.gui.graphing.cee._graphs import MetricOpTransformation, TransformationParametersPercentile
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-
-
-def test_needed_elements_of_expression() -> None:
-    assert set(
-        MetricOpTransformation(
-            parameters=TransformationParametersPercentile(percentile=95),
-            operands=[
-                MetricOpRRDChoice(
-                    host_name=HostName("heute"),
-                    service_name="CPU utilization",
-                    metric_name="util",
-                    consolidation_func_name="max",
-                )
-            ],
-        ).needed_elements(lambda *args: ())
-    ) == {NeededElementForTranslation(HostName("heute"), "CPU utilization")}
 
 
 @contextmanager

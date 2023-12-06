@@ -1059,6 +1059,14 @@ def test_get_host_config(
             id="legacy plugin with stdin",
         ),
         pytest.param(
+            {},
+            {"test_agent": lambda a, b, c: ["-h", "$HOSTNAME$", "-a", "<IP>"]},
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path -h 'test_host' -a '127.0.0.1'", None)],
+            id="legacy plugin with macros",
+        ),
+        pytest.param(
             {
                 "test_agent": SpecialAgentConfig(
                     name="test_agent",
@@ -1144,6 +1152,26 @@ def test_get_host_config(
             ],
             id="stored password",
         ),
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    commands_function=lambda *_: (
+                        [
+                            SpecialAgentCommand(
+                                command_arguments=["-h", "<HOST>", "-a", "$HOSTADDRESS$"],
+                            ),
+                        ]
+                    ),
+                )
+            },
+            {},
+            HOST_ATTRS,
+            {"mypassword": "123456"},
+            [SpecialAgentCommandLine("agent_path -h '<HOST>' -a '$HOSTADDRESS$'", None)],
+            id="command with macros",
+        ),
     ],
 )
 def test_iter_special_agent_commands(
@@ -1163,6 +1191,7 @@ def test_iter_special_agent_commands(
         HostAddress("127.0.0.1"),
         host_attrs,
         stored_passwords,
+        {"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
     assert commands == expected_result
@@ -1200,12 +1229,7 @@ def test_iter_special_agent_commands_crash(
     )
 
     special_agent = SpecialAgent(
-        plugins,
-        legacy_plugins,
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_ATTRS,
-        {},
+        plugins, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), HOST_ATTRS, {}, {}
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1248,12 +1272,7 @@ def test_iter_special_agent_commands_crash_with_debug(
     )
 
     special_agent = SpecialAgent(
-        plugins,
-        legacy_plugins,
-        HostName("test_host"),
-        HostAddress("127.0.0.1"),
-        HOST_ATTRS,
-        {},
+        plugins, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), HOST_ATTRS, {}, {}
     )
 
     with pytest.raises(
@@ -1266,7 +1285,9 @@ def test_iter_special_agent_commands_crash_with_debug(
 def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
 
-    special_agent = SpecialAgent({}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {})
+    special_agent = SpecialAgent(
+        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}, {}
+    )
     agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == tmp_path / "special" / "agent_test_agent"
@@ -1279,7 +1300,9 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     local_agent_path = tmp_path / "special" / "agent_test_agent"
     local_agent_path.touch()
 
-    special_agent = SpecialAgent({}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {})
+    special_agent = SpecialAgent(
+        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}, {}
+    )
     agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == local_agent_path

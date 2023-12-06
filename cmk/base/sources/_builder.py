@@ -166,6 +166,9 @@ class _Builder:
         def make_special_agents() -> Iterable[Source]:
             for agentname, params in self.config_cache.special_agents(self.host_name):
                 host_attrs = self.config_cache.get_host_attributes(self.host_name)
+                macros = self.config_cache.get_host_macros_from_attributes(
+                    self.host_name, host_attrs
+                )
                 special_agent = SpecialAgent(
                     load_special_agents()[1],
                     config.special_agent_info,
@@ -173,6 +176,7 @@ class _Builder:
                     self.ipaddress,
                     host_attrs,
                     cmk.utils.password_store.load(),
+                    macros=macros,
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield SpecialAgentSource(

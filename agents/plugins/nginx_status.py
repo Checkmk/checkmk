@@ -123,7 +123,7 @@ def main():  # pylint: disable=too-many-branches
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
-    config: dict = {}
+    config = {}  # type: dict
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
             config_src = open_config_file.read()

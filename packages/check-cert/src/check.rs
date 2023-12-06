@@ -123,9 +123,9 @@ impl LevelsStrategy {
 
 #[derive(Debug, TypedBuilder)]
 pub struct LevelsCheckerArgs {
-    #[builder(setter(transform = |x: &str| x.to_string() ))]
+    #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
     label: String,
-    #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
+    #[builder(default, setter(transform = |x: impl Into<String>| Some(x.into()) ))]
     uom: Option<String>,
 }
 
@@ -204,10 +204,10 @@ pub struct Metric<T>
 where
     T: Clone,
 {
-    #[builder(setter(transform = |x: &str| x.to_string() ))]
+    #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
     label: String,
     value: T,
-    #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
+    #[builder(default, setter(transform = |x: impl Into<String>| Some(x.into()) ))]
     uom: Option<String>,
     #[builder(default, setter(strip_option))]
     levels: Option<Levels<T>>,
@@ -516,31 +516,27 @@ mod test_metrics_map {
         );
     }
 
-    fn s(s: &str) -> String {
-        String::from(s)
-    }
-
     #[test]
     fn test_metric() {
         assert_eq!(
-            Metric {
-                label: s("Label"),
-                value: 42,
-                uom: Some(s("unit")),
-                levels: Some(Levels { warn: 5, crit: 10 }),
-                bounds: Some(Bounds { min: 1, max: 10 })
-            }
-            .map(|v| v * 10),
-            Metric {
-                label: s("Label"),
-                value: 420,
-                uom: Some(s("unit")),
-                levels: Some(Levels {
+            Metric::builder()
+                .label("Label")
+                .value(42)
+                .uom("unit")
+                .levels(Levels { warn: 5, crit: 10 })
+                .bounds(Bounds { min: 1, max: 10 })
+                .build()
+                .map(|v| v * 10),
+            Metric::builder()
+                .label("Label")
+                .value(420)
+                .uom("unit")
+                .levels(Levels {
                     warn: 50,
                     crit: 100,
-                }),
-                bounds: Some(Bounds { min: 10, max: 100 })
-            }
+                })
+                .bounds(Bounds { min: 10, max: 100 })
+                .build()
         );
     }
 }

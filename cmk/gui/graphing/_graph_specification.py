@@ -8,6 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from itertools import chain
 from typing import Annotated, Literal, Union
 
 from pydantic import BaseModel, Field, field_validator, PlainValidator, SerializeAsAny, TypeAdapter
@@ -19,32 +20,13 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.time_series import TimeSeries
 
 from ._graph_render_config import GraphRenderOptions
-from ._type_defs import (
-    GraphConsoldiationFunction,
-    GraphPresentation,
-    LineType,
-    Operators,
-    TranslatedMetric,
-)
+from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
+from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, TranslatedMetric
 
 HorizontalRule = tuple[float, str, str, str]
-
-
-class SelectedMetric(BaseModel, frozen=True):
-    expression: str
-    line_type: LineType
-
-
-@dataclass(frozen=True)
-class CombinedSingleMetricSpec:
-    datasource: str
-    context: VisualContext
-    selected_metric: SelectedMetric
-    consolidation_function: GraphConsoldiationFunction
-    presentation: GraphPresentation
 
 
 @dataclass(frozen=True)
@@ -86,6 +68,10 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         raise NotImplementedError()
 
+    @abstractmethod
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        raise NotImplementedError()
+
     def fade_odd_color(self) -> bool:
         return True
 
@@ -124,6 +110,10 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         return self
 
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
+
 
 class MetricOpScalar(MetricOperation, frozen=True):
     ident: Literal["scalar"] = "scalar"
@@ -146,6 +136,9 @@ class MetricOpScalar(MetricOperation, frozen=True):
             raise TypeError(value)
         return MetricOpConstant(value=value)
 
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        return []
+
 
 class MetricOpOperator(MetricOperation, frozen=True):
     ident: Literal["operator"] = "operator"
@@ -164,6 +157,19 @@ class MetricOpOperator(MetricOperation, frozen=True):
             operator_name=self.operator_name,
             operands=[o.reverse_translate(retranslation_map) for o in self.operands],
         )
+
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        if result := time_series_math(
+            self.operator_name,
+            [
+                operand_evaluated.data
+                for operand_evaluated in chain.from_iterable(
+                    operand.compute_time_series(rrd_data) for operand in self.operands
+                )
+            ],
+        ):
+            return [AugmentedTimeSeries(data=result)]
+        return []
 
 
 class MetricOpRRDSource(MetricOperation, frozen=True):
@@ -208,6 +214,22 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
 
         return metrics[0]
 
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        if (
+            key := (
+                self.site_id,
+                self.host_name,
+                self.service_name,
+                self.metric_name,
+                self.consolidation_func_name,
+                self.scale,
+            )
+        ) in rrd_data:
+            return [AugmentedTimeSeries(data=rrd_data[key])]
+
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+
 
 class MetricOpRRDChoice(MetricOperation, frozen=True):
     ident: Literal["rrd_choice"] = "rrd_choice"
@@ -241,6 +263,9 @@ class MetricOpRRDChoice(MetricOperation, frozen=True):
             return MetricOpOperator(operator_name="MERGE", operands=metrics)
 
         return metrics[0]
+
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        return []
 
 
 MetricOpOperator.model_rebuild()

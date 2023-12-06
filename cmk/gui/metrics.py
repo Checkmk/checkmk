@@ -38,7 +38,6 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._timeseries import time_series_expression_registry
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
 from cmk.gui.http import request
@@ -104,11 +103,6 @@ def _register_pre_21_plugin_api() -> None:
     ):
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
-
-    legacy_api_module.__dict__["time_series_expression_registry"] = time_series_expression_registry
-    legacy_plugin_utils.__dict__[
-        "time_series_expression_registry"
-    ] = time_series_expression_registry
 
     legacy_api_module.__dict__["perfometer_info"] = perfometer_info
     legacy_plugin_utils.__dict__["perfometer_info"] = perfometer_info

@@ -28,7 +28,6 @@ from ._perfometer import (
     renderer_registry,
 )
 from ._settings import ConfigVariableGraphTimeranges
-from ._timeseries import register_time_series_expressions, time_series_expression_registry
 from ._valuespecs import PageVsAutocomplete
 
 
@@ -41,7 +40,6 @@ def register(page_registry: PageRegistry, config_variable_registry: ConfigVariab
     metric_operation_registry.register(MetricOpRRDChoice)
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
-    register_time_series_expressions(time_series_expression_registry)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
     _perfometer.register()
 

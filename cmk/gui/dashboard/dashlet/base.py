@@ -7,7 +7,7 @@ import abc
 import json
 import urllib.parse
 from collections.abc import Callable, Iterable
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Generic, Literal, Sequence, TypeVar
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 
@@ -71,6 +71,11 @@ class Dashlet(abc.ABC, Generic[T]):
     def single_infos(cls) -> SingleInfos:
         """Return a list of the single infos (for the visual context) of this dashlet"""
         return []
+
+    @classmethod
+    def ignored_context_choices(cls) -> Sequence[str]:
+        """Return a sequence of strings that should be ignored in the context filter dropdown"""
+        return ()
 
     @classmethod
     def is_selectable(cls) -> bool:

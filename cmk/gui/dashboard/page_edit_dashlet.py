@@ -129,7 +129,9 @@ class EditDashletPage(Page):
             return dashlet.infos()
 
         context_specs = visuals.get_context_specs(
-            dashlet_spec["single_infos"], dashlet_info_handler(dashlet_spec)
+            dashlet_spec["single_infos"],
+            dashlet_info_handler(dashlet_spec),
+            dashlet_type.ignored_context_choices(),
         )
 
         vs_type: ValueSpec | None = None

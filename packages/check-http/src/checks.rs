@@ -89,19 +89,17 @@ pub fn collect_response_checks(
 }
 
 fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
-    if err.is_builder() {
-        notice(State::Unknown, "Error building the request")
-    } else if err.is_request() {
-        notice(State::Unknown, "Error while sending request")
-    } else if err.is_timeout() {
+    if err.is_timeout() {
         notice(State::Crit, "timeout")
-    } else if err.is_connect() {
-        notice(State::Crit, "Failed to connect")
-    } else if err.is_redirect() {
+    } else if err.is_connect()
         // Hit one of max_redirs, sticky, stickyport
-        notice(State::Crit, &err.to_string())
+        | err.is_redirect()
+    {
+        notice(State::Crit, &err.to_string().replace('\n', " - "))
     } else {
-        notice(State::Unknown, "Unknown error")
+        // The errors coming from reqwest are usually short and don't contain
+        // newlines, but we want to be safe.
+        notice(State::Unknown, &err.to_string().replace('\n', " - "))
     }
     .into_iter()
     .flatten()

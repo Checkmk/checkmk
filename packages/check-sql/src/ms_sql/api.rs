@@ -30,7 +30,7 @@ pub trait Column<'a> {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct InstanceEngineBuilder {
+pub struct SqlInstanceBuilder {
     alias: Option<String>,
     name: Option<String>,
     id: Option<String>,
@@ -43,9 +43,9 @@ pub struct InstanceEngineBuilder {
     computer_name: Option<String>,
 }
 
-impl InstanceEngineBuilder {
-    pub fn new() -> InstanceEngineBuilder {
-        InstanceEngineBuilder::default()
+impl SqlInstanceBuilder {
+    pub fn new() -> SqlInstanceBuilder {
+        SqlInstanceBuilder::default()
     }
 
     pub fn name<S: Into<String>>(mut self, name: S) -> Self {
@@ -1218,9 +1218,9 @@ async fn exec_win_registry_sql_instances_query(
         let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
             .await
             .unwrap_or_default();
-        let engines = to_sql_instance(rows, endpoint, computer_name);
-        log::info!("Instances found {}", engines.len());
-        Ok(engines)
+        let instances = to_sql_instance(rows, endpoint, computer_name);
+        log::info!("Instances found {}", instances.len());
+        Ok(instances)
     } else {
         log::warn!("Empty answer by query: {query}");
         Ok(vec![])
@@ -1234,7 +1234,7 @@ fn to_sql_instance(
 ) -> Vec<SqlInstance> {
     rows.iter()
         .map(|r| {
-            InstanceEngineBuilder::new()
+            SqlInstanceBuilder::new()
                 .row(r)
                 .computer_name(&computer_name)
                 .endpoint(endpoint)
@@ -1260,11 +1260,11 @@ pub async fn get_computer_name(client: &mut Client, query: &str) -> Result<Optio
 
 #[cfg(test)]
 mod tests {
-    use super::InstanceEngineBuilder;
+    use super::SqlInstanceBuilder;
 
     #[test]
     fn test_generate_state_entry() {
-        let i = InstanceEngineBuilder::new().name("test_name").build();
+        let i = SqlInstanceBuilder::new().name("test_name").build();
 
         assert_eq!(
             i.generate_state_entry(false, '.'),

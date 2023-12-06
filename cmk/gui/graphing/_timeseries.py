@@ -5,25 +5,16 @@
 
 import functools
 import operator
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Literal, TypeVar
 
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.plugin_registry import Registry
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 
-from ._graph_specification import (
-    MetricOpConstant,
-    MetricOperation,
-    MetricOpOperator,
-    MetricOpRRDSource,
-)
 from ._type_defs import LineType, Operators, RRDData
 
 
@@ -40,123 +31,7 @@ class AugmentedTimeSeries:
     metadata: TimeSeriesMetaData = TimeSeriesMetaData()
 
 
-ExpressionFunc = Callable[[MetricOperation, RRDData], Sequence[AugmentedTimeSeries]]
-
-
-class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
-    def plugin_name(self, instance: ExpressionFunc) -> str:
-        # mypy does not know this attribute
-        return instance._ident  # type: ignore[attr-defined]
-
-    def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
-        def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
-            if not callable(plugin_func):
-                raise TypeError()
-
-            # We define the attribute here. for the `plugin_name` method.
-            plugin_func._ident = ident  # type: ignore[attr-defined]
-
-            self.register(plugin_func)
-            return plugin_func
-
-        return wrap
-
-
-time_series_expression_registry = TimeSeriesExpressionRegistry()
-
-# .
-#   .--Curves--------------------------------------------------------------.
-#   |                    ____                                              |
-#   |                   / ___|   _ _ ____   _____  ___                     |
-#   |                  | |  | | | | '__\ \ / / _ \/ __|                    |
-#   |                  | |__| |_| | |   \ V /  __/\__ \                    |
-#   |                   \____\__,_|_|    \_/ \___||___/                    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Compute the curves from the raw RRD data by evaluating expressions. |
-#   '----------------------------------------------------------------------'
-
-
-def evaluate_time_series_expression(
-    expression: MetricOperation,
-    rrd_data: RRDData,
-) -> Sequence[AugmentedTimeSeries]:
-    try:
-        expression_func = time_series_expression_registry[expression.ident]
-    except KeyError:
-        if cmk_version.edition() is cmk_version.Edition.CRE and expression.ident in [
-            "combined",
-            "transformation",
-        ]:
-            raise MKGeneralException(
-                _(
-                    "Metric transformations and combinations like Forecasts calculations, "
-                    "aggregations and filtering are only available with the "
-                    "Checkmk Enterprise Editions"
-                )
-            )
-
-        raise MKGeneralException("Unrecognized expressions type %s" % expression.ident)
-
-    return expression_func(expression, rrd_data)
-
-
-def _expression_operator(
-    expression: MetricOperation,
-    rrd_data: RRDData,
-) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, MetricOpOperator):
-        raise TypeError(expression)
-
-    if result := _time_series_math(
-        expression.operator_name,
-        [
-            operand_evaluated.data
-            for operand_evaluated in chain.from_iterable(
-                evaluate_time_series_expression(operand, rrd_data)
-                for operand in expression.operands
-            )
-        ],
-    ):
-        return [AugmentedTimeSeries(data=result)]
-    return []
-
-
-def _expression_rrd(
-    expression: MetricOperation,
-    rrd_data: RRDData,
-) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, MetricOpRRDSource):
-        raise TypeError(expression)
-
-    if (
-        key := (
-            expression.site_id,
-            expression.host_name,
-            expression.service_name,
-            expression.metric_name,
-            expression.consolidation_func_name,
-            expression.scale,
-        )
-    ) in rrd_data:
-        return [AugmentedTimeSeries(data=rrd_data[key])]
-
-    num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
-
-
-def _expression_constant(
-    expression: MetricOperation,
-    rrd_data: RRDData,
-) -> Sequence[AugmentedTimeSeries]:
-    if not isinstance(expression, MetricOpConstant):
-        raise TypeError(expression)
-
-    num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [AugmentedTimeSeries(data=TimeSeries([expression.value] * num_points, twindow))]
-
-
-def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
+def derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         return len(sample_data), sample_data.twindow
@@ -164,7 +39,7 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, 
     return 1, (0, 60, 60)
 
 
-def _time_series_math(
+def time_series_math(
     operator_id: Operators,
     operands_evaluated: list[TimeSeries],
 ) -> TimeSeries | None:
@@ -271,9 +146,3 @@ def time_series_operators() -> (
         "AVERAGE": (_("Average"), _time_series_operator_average),
         "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }
-
-
-def register_time_series_expressions(registy: TimeSeriesExpressionRegistry) -> None:
-    registy.register_expression("operator")(_expression_operator)
-    registy.register_expression("rrd")(_expression_rrd)
-    registy.register_expression("constant")(_expression_constant)

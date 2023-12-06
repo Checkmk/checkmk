@@ -26,7 +26,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
 from ._rrd_fetch import fetch_rrd_data_for_graph
-from ._timeseries import clean_time_series_point, evaluate_time_series_expression
+from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData, UnitInfo
 from ._utils import Curve, SizeEx
 
@@ -318,7 +318,7 @@ def _compute_graph_curves(
         assert_never((mirror_prefix, ts_line_type))
 
     for metric in metrics:
-        time_series = evaluate_time_series_expression(metric.operation, rrd_data)
+        time_series = metric.operation.compute_time_series(rrd_data)
         if not time_series:
             continue
 

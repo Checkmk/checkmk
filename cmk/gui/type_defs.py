@@ -108,7 +108,7 @@ class SessionInfo:
     started_at: int
     last_activity: int
     csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
-    flashes: list[str] = field(default_factory=list)
+    flashes: list[tuple[str, str]] = field(default_factory=list)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library

@@ -63,7 +63,7 @@ def _check_test(params: Params, test: Test) -> CheckResult:
             runtime,
             label="Test runtime",
             levels_upper=params["test_runtime"],
-            metric_name="test_runtime",
+            metric_name="robotmk_test_runtime",
             render_func=render.timespan,
         )
 

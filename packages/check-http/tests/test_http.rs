@@ -74,6 +74,8 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             onredirect: OnRedirect::Follow,
             max_redirs: 10,
             force_ip: None,
+            min_tls_version: None,
+            max_tls_version: None,
         },
         RequestConfig {
             url: format!("http://{}:{}", LOCALHOST_DNS, port),

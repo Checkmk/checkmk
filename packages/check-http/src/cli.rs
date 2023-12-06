@@ -147,6 +147,16 @@ pub struct Cli {
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
     #[arg(short = 'e', long)]
     pub status_code: Option<StatusCode>,
+
+    /// Use TLS version for HTTPS requests.
+    /// Not relevant for HTTP connections without TLS.
+    #[arg(short = 'S', long)]
+    pub tls_version: Option<TlsVersion>,
+
+    /// Set minimum accepted TLS version for HTTPS requests.
+    /// Not relevant for HTTP connections without TLS.
+    #[arg(long, conflicts_with = "tls_version")]
+    pub min_tls_version: Option<TlsVersion>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);
@@ -163,6 +173,14 @@ type ResponseTimeLevels = (f64, Option<f64>);
 pub enum HttpVersion {
     Http11,
     Http2,
+}
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum TlsVersion {
+    Tls10,
+    Tls11,
+    Tls12,
+    Tls13,
 }
 
 #[derive(Clone, Debug, ValueEnum)]

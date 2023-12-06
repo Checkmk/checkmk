@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -23,7 +23,7 @@ def test_find_debug_code(changed_files: ChangedFiles) -> None:
 
 
 def _files_to_scan(changed_files: ChangedFiles) -> Iterable[Path]:
-    base_dir = Path(cmk_path(), "cmk", "gui")
+    base_dir = repo_path() / "cmk" / "gui"
     to_scan = []
     for matched_file in chain(base_dir.glob("**/*.py"), base_dir.glob("**/*.wsgi")):
         if matched_file.is_file() and changed_files.is_changed(matched_file):

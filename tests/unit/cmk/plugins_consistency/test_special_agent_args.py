@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
-from glob import glob
 from types import ModuleType
 from typing import Final, Mapping
 
 import pytest
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.special_agents import (
@@ -212,8 +211,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
 
 def test_all_agents_tested() -> None:
     assert set(TESTED_SA_MODULES) == {
-        agent_file.split("/agent_")[-1]
-        for agent_file in glob(f"{cmk_path()}/agents/special/agent_*")
+        agent_file.name.split("agent_")[-1]
+        for agent_file in (repo_path() / "agents" / "special").glob("agent_*")
     }
 
 

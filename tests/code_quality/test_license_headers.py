@@ -8,7 +8,7 @@ import os
 import re
 from collections.abc import Sequence
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 LOGGER = logging.getLogger()
 
@@ -165,7 +165,7 @@ def test_license_headers(python_files: Sequence[str]) -> None:
     def generator():
         for path in python_files:
             abs_path = os.path.realpath(path)
-            rel_path = os.path.relpath(abs_path, cmk_path())
+            rel_path = os.path.relpath(abs_path, repo_path())
 
             if rel_path in ignored_files:
                 continue

@@ -8,7 +8,7 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 from ..conftest import ChangedFiles
 
@@ -74,8 +74,7 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
 
 def test_permissions(changed_files: ChangedFiles) -> None:
     for pattern, check_func, explicit_excludes, exclude_patterns in _PERMISSIONS:
-        git_dir = Path(cmk_path())
-        for f in git_dir.glob(pattern):
+        for f in repo_path().glob(pattern):
             if not f.is_file() or not changed_files.is_changed(f):
                 continue
             if f.name in explicit_excludes or f.name in _GLOBAL_EXCLUDES:

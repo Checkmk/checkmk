@@ -9,6 +9,7 @@ for further information.
 """
 
 from contextlib import suppress
+from pathlib import Path
 from typing import NewType
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
@@ -16,7 +17,7 @@ from pylint.checkers import BaseChecker
 from pylint.checkers.utils import only_required_for_messages
 from pylint.lint.pylinter import PyLinter
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 ModuleName = NewType("ModuleName", str)
 ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
@@ -28,8 +29,9 @@ def register(linter: PyLinter) -> None:
 
 
 # https://www.python.org/dev/peps/pep-0616/
-def removeprefix(text: str, prefix: str) -> str:
-    return text[len(prefix) :] if text.startswith(prefix) else text
+def removeprefix(text: str, prefix: Path) -> str:
+    prefix_as_string = str(prefix) + "/"
+    return text[len(prefix_as_string) :] if text.startswith(prefix_as_string) else text
 
 
 def removesuffix(text: str, suffix: str) -> str:
@@ -557,7 +559,7 @@ class CMKModuleLayerChecker(BaseChecker):
     }
 
     # This doesn't change during a pylint run, so let's save a realpath() call per import.
-    cmk_path_cached = cmk_path() + "/"
+    cmk_path_cached = repo_path()
 
     @only_required_for_messages("cmk-module-layer-violation")
     def visit_import(self, node: Import) -> None:
@@ -605,7 +607,7 @@ class CMKModuleLayerChecker(BaseChecker):
         parts = importing_path.split("/")
         parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
-        parts[-1] = removeprefix(parts[-1], "flycheck_")
+        parts[-1] = removeprefix(parts[-1], Path("flycheck_"))
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         if parts[0] not in ("cmk", "tests"):
             parts = [parts[-1]]

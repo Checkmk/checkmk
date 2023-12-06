@@ -61,40 +61,36 @@ def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
-def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
-    return str(repo_path())
+def cmc_path() -> Path:
+    return repo_path() / "enterprise"
 
 
-def cmc_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "enterprise")
+def cme_path() -> Path:
+    return repo_path() / "managed"
 
 
-def cme_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "managed")
+def cce_path() -> Path:
+    return repo_path() / "cloud"
 
 
-def cce_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "cloud")
-
-
-def cse_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "saas")
+def cse_path() -> Path:
+    return repo_path() / "saas"
 
 
 def is_enterprise_repo() -> bool:
-    return os.path.exists(cmc_path())
+    return cmc_path().exists()
 
 
 def is_managed_repo() -> bool:
-    return os.path.exists(cme_path())
+    return cme_path().exists()
 
 
 def is_cloud_repo() -> bool:
-    return os.path.exists(cce_path())
+    return cce_path().exists()
 
 
 def is_saas_repo() -> bool:
-    return os.path.exists(cse_path())
+    return cse_path().exists()
 
 
 def is_containerized() -> bool:
@@ -107,7 +103,7 @@ def is_containerized() -> bool:
 
 def virtualenv_path() -> Path:
     venv = subprocess.check_output(
-        [str(repo_path() / "scripts/run-pipenv"), "--bare", "--venv"], encoding="utf-8"
+        [repo_path() / "scripts/run-pipenv", "--bare", "--venv"], encoding="utf-8"
     )
     return Path(venv.rstrip("\n"))
 
@@ -239,11 +235,11 @@ def site_id() -> str:
 
 
 def add_python_paths() -> None:
-    sys.path.insert(0, cmk_path())
+    sys.path.insert(0, str(repo_path()))
     if is_enterprise_repo():
         sys.path.insert(0, os.path.join(cmc_path()))
-    sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
-    sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
+    sys.path.insert(0, os.path.join(repo_path(), "livestatus/api/python"))
+    sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
 
 
 def package_hash_path(version: str, edition: Edition) -> Path:
@@ -517,7 +513,9 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     if write_cognito_config:
         write_file(
             cognito_config,
-            check_output([f"{cmk_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]),
+            check_output(
+                [f"{repo_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]
+            ),
             sudo=True,
         )
     else:
@@ -525,7 +523,7 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     assert os.path.exists(cognito_config)
 
     if write_global_config:
-        with open(f"{cmk_path()}/tests/etc/cse/global-config.json") as f:
+        with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
             write_file(
                 global_config,
                 f.read(),
@@ -538,7 +536,7 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     idp = urlparse(idp_url)
     auth_provider_proc = execute(
         [
-            f"{cmk_path()}/scripts/run-pipenv",
+            f"{repo_path()}/scripts/run-pipenv",
             "run",
             "uvicorn",
             "tests.testlib.cse.openid_oauth_provider:application",
@@ -548,7 +546,7 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
             f"{idp.port}",
         ],
         sudo=False,
-        cwd=cmk_path(),
+        cwd=repo_path(),
         env=dict(os.environ, URL=idp_url),
         shell=False,
     )

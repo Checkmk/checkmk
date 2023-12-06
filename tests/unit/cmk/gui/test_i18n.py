@@ -12,7 +12,7 @@ from pathlib import Path
 import flask
 import pytest
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 import cmk.utils.paths
 
@@ -21,8 +21,8 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(scope="session")
-def locale_base_dir():
-    return Path("%s/locale" % cmk_path())
+def locale_base_dir() -> Path:
+    return repo_path() / "locale"
 
 
 @pytest.fixture(autouse=True)

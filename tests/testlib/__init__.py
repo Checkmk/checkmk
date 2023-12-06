@@ -31,7 +31,6 @@ from tests.testlib.utils import (
     add_python_paths,
     cmc_path,
     cme_path,
-    cmk_path,
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
@@ -121,13 +120,13 @@ def fake_version_and_paths() -> None:
         except ValueError:
             pass  # path is outside of omd_root
 
-    # these use cmk_path
-    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
+    # these use repo_path
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % repo_path())
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -142,7 +141,7 @@ def import_module_hack(pathname: str) -> ModuleType:
     See: https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     """
     name = os.path.splitext(os.path.basename(pathname))[0]
-    location = os.path.join(cmk_path(), pathname)
+    location = os.path.join(repo_path(), pathname)
     loader = importlib.machinery.SourceFileLoader(name, location)
     spec = importlib.machinery.ModuleSpec(name, loader, origin=location)
     spec.has_location = True
@@ -445,7 +444,7 @@ def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> It
 __all__ = [
     "cmc_path",
     "cme_path",
-    "cmk_path",
+    "repo_path",
     "add_python_paths",
     "create_linux_test_host",
     "fake_version_and_paths",
@@ -466,7 +465,6 @@ __all__ = [
     "compare_html",
     "current_branch_name",
     "get_cmk_download_credentials",
-    "repo_path",
     "site_id",
     "virtualenv_path",
 ]

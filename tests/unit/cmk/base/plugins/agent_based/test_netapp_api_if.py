@@ -466,14 +466,14 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     from pathlib import Path
 
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
         [
             "-T=unit",
             "-vvsx",
             "--doctest-modules",
-            str(Path(cmk_path()) / "cmk/base/plugins/agent_based/netapp_api_if.py"),
+            str(Path(repo_path()) / "cmk/base/plugins/agent_based/netapp_api_if.py"),
             __file__,
         ]
     )

@@ -2916,7 +2916,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(MKGeneralException):
-        config._extract_check_plugins(validate_creation_kwargs=False, contexts={})
+        config._extract_check_plugins(validate_creation_kwargs=False)
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:

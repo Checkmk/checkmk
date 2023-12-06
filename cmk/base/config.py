@@ -1434,7 +1434,6 @@ def load_checks(  # pylint: disable=too-many-branches
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
-    contexts: dict[str, CheckContext] = {}
 
     did_compile = False
     for f in filelist:
@@ -1447,9 +1446,6 @@ def load_checks(  # pylint: disable=too-many-branches
 
         try:
             check_context = new_check_context(get_check_api_context)
-
-            # Make a copy of known check plugin names
-            known_checks = set(check_info)
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1464,15 +1460,10 @@ def load_checks(  # pylint: disable=too-many-branches
                 raise
             continue
 
-        new_checks = set(check_info).difference(known_checks)
-        # Now store the check context for all checks found in this file
-        for check_plugin_name in new_checks:
-            contexts[check_plugin_name] = check_context
-
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
     return _extract_agent_and_snmp_sections() + _extract_check_plugins(
-        validate_creation_kwargs=did_compile, contexts=contexts
+        validate_creation_kwargs=did_compile
     )
 
 
@@ -1625,9 +1616,7 @@ def _extract_agent_and_snmp_sections() -> list[str]:
     return errors
 
 
-def _extract_check_plugins(
-    *, validate_creation_kwargs: bool, contexts: dict[str, dict[str, object]]
-) -> list[str]:
+def _extract_check_plugins(*, validate_creation_kwargs: bool) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -1655,7 +1644,6 @@ def _extract_check_plugins(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
                     check_info_dict,
-                    contexts[check_plugin_name],
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )

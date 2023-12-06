@@ -40,14 +40,11 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         assert info == ["info"]
         return [
             ("foo", {}),
-            ("foo", "params_string"),
             "some string",
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        "norris",
         {"discovery_function": insane_discovery},
-        {"params_string": {"levels": "default"}},
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -57,7 +54,6 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
     result = list(new_function(["info"]))
     expected: list = [
         Service(item="foo"),
-        Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally
     ]
     assert result == expected
@@ -207,7 +203,6 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
-        {},  # get_check_context
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -230,7 +225,6 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         check_info_element,
-        {},
     )
 
     assert plugin.name == CheckPluginName("norris")

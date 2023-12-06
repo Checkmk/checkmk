@@ -27,7 +27,6 @@ def test_plugin(
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
 ) -> None:
-    """Atomic execution (done if --bulk-mode is not set)"""
     with setup_host(test_site, host_name) if not pytestconfig.getoption(
         name="--bulk-mode"
     ) else nullcontext():

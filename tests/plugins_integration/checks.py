@@ -240,6 +240,8 @@ def _verify_check_result(
     Optionally update the stored canon if it does not match."""
     if mode == CheckModes.DEFAULT and not canon_data:
         logger.error("[%s] Canon not found!", check_id)
+        return False, ""
+
     safe_name = check_id.replace("$", "_").replace(" ", "_").replace("/", "#")
     with open(
         json_result_file_path := str(output_dir / f"{safe_name}.result.json"),

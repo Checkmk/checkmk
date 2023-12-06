@@ -70,8 +70,8 @@ fn check_verify_chain(
     if ok {
         SimpleCheckResult::ok("Certificate chain verification OK")
     } else if reason.as_raw() == 18 && allow_self_signed {
-        SimpleCheckResult::ok(&format!("Certificate chain verification OK: {reason}"))
+        SimpleCheckResult::ok(format!("Certificate chain verification OK: {reason}"))
     } else {
-        SimpleCheckResult::warn(&format!("Certificate chain verification failed: {reason}",))
+        SimpleCheckResult::warn(format!("Certificate chain verification failed: {reason}",))
     }
 }

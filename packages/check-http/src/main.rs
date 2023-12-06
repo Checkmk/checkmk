@@ -9,7 +9,7 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
-use reqwest::{Method, Version};
+use reqwest::{tls::Version as TlsVersion, Method, Version};
 
 mod cli;
 mod pwstore;
@@ -49,6 +49,12 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 Some(cli::ForceIP::Ipv4) => Some(http::ForceIP::Ipv4),
                 Some(cli::ForceIP::Ipv6) => Some(http::ForceIP::Ipv6),
             },
+            min_tls_version: args
+                .min_tls_version
+                .as_ref()
+                .map(map_tls_version)
+                .or(args.tls_version.as_ref().map(map_tls_version)),
+            max_tls_version: args.tls_version.as_ref().map(map_tls_version),
         },
         RequestConfig {
             url: args.url,
@@ -117,6 +123,15 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 .collect(),
         },
     )
+}
+
+fn map_tls_version(tls_version: &cli::TlsVersion) -> TlsVersion {
+    match *tls_version {
+        cli::TlsVersion::Tls10 => TlsVersion::TLS_1_0,
+        cli::TlsVersion::Tls11 => TlsVersion::TLS_1_1,
+        cli::TlsVersion::Tls12 => TlsVersion::TLS_1_2,
+        cli::TlsVersion::Tls13 => TlsVersion::TLS_1_3,
+    }
 }
 
 #[cfg(test)]

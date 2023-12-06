@@ -4,6 +4,7 @@
 
 use reqwest::{
     redirect::{Action, Attempt, Policy},
+    tls::Version as TlsVersion,
     Client, Result as ReqwestResult, Version,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
@@ -31,13 +32,32 @@ pub struct ClientConfig {
     pub onredirect: OnRedirect,
     pub max_redirs: usize,
     pub force_ip: Option<ForceIP>,
+    pub min_tls_version: Option<TlsVersion>,
+    pub max_tls_version: Option<TlsVersion>,
 }
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
-    let client = reqwest::Client::builder()
-        // rustls (or native-tls with native-tls-alpn feature) backend is needed to establish
-        // a HTTP/2 connection via TLS.
-        .use_rustls_tls();
+    let client = reqwest::Client::builder();
+
+    let client = if let Some(version) = cfg.min_tls_version {
+        match version {
+            TlsVersion::TLS_1_0 | TlsVersion::TLS_1_1 => {
+                // Caveat: Enforcing TLS 1.0 or 1.1 may still fail, even with native_tls!
+                // The availability of TLS versions + required cipher suites relies on the
+                // system's OpenSSL version and config.
+                client.use_native_tls().min_tls_version(version)
+            }
+            _ => client.use_rustls_tls().min_tls_version(version),
+        }
+    } else {
+        client.use_rustls_tls()
+    };
+
+    let client = if let Some(version) = cfg.max_tls_version {
+        client.max_tls_version(version)
+    } else {
+        client
+    };
 
     let client = match cfg.version {
         // See IETF RFC 9113, Section 3:

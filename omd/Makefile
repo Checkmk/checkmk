@@ -294,6 +294,7 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="NEXUS_*" \
 	    --preserve-envvar="BAZEL_*" \
 	    --preserve-envvar="MAKE" \
+	    --preserve-envvar="CI" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \

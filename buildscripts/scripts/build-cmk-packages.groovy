@@ -251,6 +251,7 @@ def main() {
 
                     def distro_dir = "${WORKSPACE}/checkout";
 
+                    lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         docker.image("${distro}:${docker_tag}").inside(
                                 "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
@@ -276,6 +277,7 @@ def main() {
                                     }
                                 }
                             }
+                        }
                         }
 
                         docker_image_from_alias("IMAGE_TESTING").inside(

@@ -267,7 +267,7 @@ MetricOpOperator.model_rebuild()
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: MetricOperation
+    operation: Annotated[MetricOperation, PlainValidator(parse_metric_operation)]
     unit: str
     color: str
     visible: bool

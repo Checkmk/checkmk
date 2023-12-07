@@ -58,9 +58,9 @@ def _check_test(params: Params, test: Test) -> CheckResult:
 
     yield Result(state=State.OK, summary=test.name)
     yield Result(state=_remap_state(test.status.status), summary=f"{test.status.status.value}")
-    if test.status.status is Outcome.PASS and (runtime := test.status.runtime()) is not None:
+    if test.status.status is Outcome.PASS and test.status.runtime is not None:
         yield from check_levels(
-            runtime,
+            test.status.runtime,
             label="Test runtime",
             levels_upper=params["test_runtime"],
             metric_name="robotmk_test_runtime",

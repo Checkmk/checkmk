@@ -116,7 +116,7 @@ def _check_runtime(
     config: AttemptsConfig,
     upper_levels_percentage: tuple[float, float] | None,
 ) -> CheckResult:
-    if (runtime := status.runtime()) is None:
+    if status.runtime is None:
         yield Result(
             state=State.OK,
             summary="Runtime not available",
@@ -124,7 +124,7 @@ def _check_runtime(
         return
 
     yield from check_levels(
-        value=runtime,
+        value=status.runtime,
         levels_upper=(
             config.timeout * config.n_attempts_max * upper_levels_percentage[0] / 100,
             config.timeout * config.n_attempts_max * upper_levels_percentage[1] / 100,

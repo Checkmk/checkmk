@@ -34,7 +34,7 @@ pub struct Config {
     signature_algorithm: Option<String>,
     subject: Option<String>,
     issuer: Option<String>,
-    not_after_levels_checker: Option<LevelsChecker<Duration>>,
+    not_after: Option<LevelsChecker<Duration>>,
 }
 
 pub fn check(der: &[u8], config: Config) -> Collection {
@@ -52,7 +52,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
-            config.not_after_levels_checker,
+            config.not_after,
             cert.tbs_certificate.validity().not_after,
         )
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize))),

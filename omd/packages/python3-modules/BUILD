@@ -144,5 +144,4 @@ genrule(
         done
         cd -
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
-    visibility = ["//visibility:public"],
 )

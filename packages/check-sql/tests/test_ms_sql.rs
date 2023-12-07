@@ -31,11 +31,13 @@ fn expected_instances() -> Vec<String> {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    assert!(
-        client::create_local(None, check_sql::ms_sql::defaults::STANDARD_PORT)
-            .await
-            .is_ok()
-    );
+    let mut client = client::create_local(None, check_sql::ms_sql::defaults::STANDARD_PORT)
+        .await
+        .unwrap();
+    let properties = api::SqlInstanceProperties::obtain_by_query(&mut client)
+        .await
+        .unwrap();
+    assert_eq!(properties.name, "MSSQLSERVER");
 }
 
 fn is_instance_good(i: &SqlInstance) -> bool {
@@ -76,7 +78,17 @@ async fn test_validate_all_instances_local() {
     for name in names {
         let c = client::create_instance_local(&name, None, None).await;
         match c {
-            Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
+            Ok(mut c) => {
+                assert!(tools::run_get_version(&mut c).await.is_some());
+                let properties = api::SqlInstanceProperties::obtain_by_query(&mut c)
+                    .await
+                    .unwrap();
+                assert!(
+                    expected_instances().contains(&properties.name),
+                    "{:?}",
+                    properties
+                );
+            }
             Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
                 // we may not have valid credentials to connect - it's normal
             }
@@ -93,9 +105,13 @@ async fn test_validate_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        assert!(client::create_from_config(&endpoint.make_ep())
+        let mut client = client::create_from_config(&endpoint.make_ep())
             .await
-            .is_ok());
+            .unwrap();
+        let properties = api::SqlInstanceProperties::obtain_by_query(&mut client)
+            .await
+            .unwrap();
+        assert_eq!(properties.name, "MSSQLSERVER");
     } else {
         panic!(
             "Skipping remote connection test: environment variable {} not set",

@@ -230,7 +230,7 @@ class CascadingDropdown:
     def __post_init__(self) -> None:
         avail_idents = [elem.ident for elem in self.elements]
         if self.prefill_selection is not None and self.prefill_selection not in avail_idents:
-            raise ValueError(Localizable("Default element is not one of the specified elements"))
+            raise ValueError("Default element is not one of the specified elements")
 
 
 @dataclass(frozen=True)
@@ -370,7 +370,7 @@ class FixedValue:
             MemoryError,
             RecursionError,
         ) as exc:
-            raise ValueError(Localizable("FixedValue value is not serializable.")) from exc
+            raise ValueError("FixedValue value is not serializable.") from exc
 
 
 class DisplayUnits(enum.Enum):

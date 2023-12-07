@@ -5,14 +5,7 @@
 import logging
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    current_branch_version,
-    get_services_with_status,
-)
-from tests.testlib.version import CMKVersion, get_min_version, version_from_env
-
-from cmk.utils.version import Edition
+from tests.testlib.utils import get_services_with_status
 
 from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-imports
     get_host_names,
@@ -44,23 +37,7 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
 
-    target_version = version_from_env(
-        fallback_version_spec=CMKVersion.DAILY,
-        fallback_edition=Edition.CEE,
-        fallback_branch=current_base_branch_name(),
-    )
-
-    min_version = CMKVersion(
-        get_min_version(),
-        Edition.CEE,
-        current_base_branch_name(),
-        current_branch_version(),
-    )
-
-    # todo: consider moving min_version and target_version as defaults in update_as_site_user
-    test_site_update = site_factory_update.update_as_site_user(
-        test_site_update, target_version=target_version, min_version=min_version
-    )
+    test_site_update = site_factory_update.update_as_site_user(test_site_update)
 
     target_data = {}
     target_data_status_0 = {}

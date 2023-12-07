@@ -1624,7 +1624,6 @@ class CommandScheduleDowntimes(Command):
             html.open_div(class_="down_advanced_option")
             if what == "host":
                 self._vs_host_downtime().render_input("_include_children", None)
-                html.close_div()
 
             self._vs_flexible_options().render_input("_down_duration", None)
             html.close_div()

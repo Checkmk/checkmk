@@ -6,7 +6,7 @@ def heirloommailx(version_str, sha256):
     http_archive(
         name = "heirloom-mailx",
         urls = [
-            "https://ftp.debian.org/debian/pool/main/h/heirloom-mailx/" + filename,
+            "https://ftp.nl.debian.org/debian-archive/debian/pool/main/h/heirloom-mailx/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,

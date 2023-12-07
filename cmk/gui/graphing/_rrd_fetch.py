@@ -9,14 +9,17 @@ import collections
 import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping
+from functools import lru_cache
 
 import livestatus
 from livestatus import livestatus_lql, SiteId
 
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
+from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
@@ -27,12 +30,7 @@ from ._graph_specification import GraphDataRange, GraphRecipe, NeededElementForR
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
 from ._unit_info import unit_info
-from ._utils import (
-    CheckMetricEntry,
-    find_matching_translation,
-    metric_info,
-    reverse_translate_into_all_potentially_relevant_metrics_cached,
-)
+from ._utils import check_metrics, CheckMetricEntry, find_matching_translation, metric_info
 
 
 def fetch_rrd_data_for_graph(
@@ -189,6 +187,48 @@ def rrd_columns(
         yield f"rrddata:{perfvar}:{rpn}:{data_range}"
 
 
+def _reverse_translate_into_all_potentially_relevant_metrics(
+    canonical_name: MetricName,
+    current_version: int,
+    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
+) -> set[MetricName]:
+    return {
+        canonical_name,
+        *(
+            metric_name
+            for trans in all_translations
+            for metric_name, options in trans.items()
+            if canonical_name == options.get("name")
+            and (
+                # From version check used unified metric, and thus deprecates old translation
+                # added a complete stable release, that gives the customer about a year of data
+                # under the appropriate metric name.
+                # We should however get all metrics unified before Cmk 2.1
+                parse_check_mk_version(deprecated) + 10000000
+                if (deprecated := options.get("deprecated"))
+                else current_version
+            )
+            >= current_version
+            # Note: Reverse translations only work for 1-to-1-mappings, entries such as
+            # "~.*rta": {"name": "rta", "scale": m},
+            # cannot be reverse-translated, since multiple metric names are apparently mapped to a
+            # single new name. This is a design flaw we currently have to live with.
+            and not metric_name.startswith("~")
+        ),
+    }
+
+
+@lru_cache
+def _reverse_translate_into_all_potentially_relevant_metrics_cached(
+    canonical_name: MetricName,
+) -> set[MetricName]:
+    return _reverse_translate_into_all_potentially_relevant_metrics(
+        canonical_name,
+        parse_check_mk_version(cmk_version.__version__),
+        check_metrics.values(),
+    )
+
+
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
     consolidation_func_name: GraphConsoldiationFunction,
@@ -204,7 +244,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
                 # translations
                 1,
             )
-            for metric_name in reverse_translate_into_all_potentially_relevant_metrics_cached(
+            for metric_name in _reverse_translate_into_all_potentially_relevant_metrics_cached(
                 metric_name
             )
         ),

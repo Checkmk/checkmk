@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -207,99 +207,6 @@ def test__normalize_perf_data(
     perf_data: PerfDataTuple, check_command: str, result: tuple[str, _NormalizedPerfData]
 ) -> None:
     assert utils._normalize_perf_data(perf_data, check_command) == result
-
-
-@pytest.mark.parametrize(
-    ["canonical_name", "current_version", "all_translations", "expected_result"],
-    [
-        pytest.param(
-            MetricName("my_metric"),
-            123,
-            [
-                {
-                    MetricName("some_metric_1"): {"scale": 10},
-                    MetricName("some_metric_2"): {
-                        "scale": 10,
-                        "name": MetricName("new_metric_name"),
-                    },
-                }
-            ],
-            {MetricName("my_metric")},
-            id="no applicable translations",
-        ),
-        pytest.param(
-            MetricName("my_metric"),
-            2030020100,
-            [
-                {
-                    MetricName("some_metric_1"): {"scale": 10},
-                    MetricName("old_name_1"): {
-                        "scale": 10,
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    MetricName("old_name_1"): {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    MetricName("old_name_2"): {
-                        "name": MetricName("my_metric"),
-                    },
-                    MetricName("irrelevant"): {"name": MetricName("still_irrelevant")},
-                },
-                {
-                    MetricName("old_name_deprecated"): {
-                        "name": MetricName("my_metric"),
-                        "deprecated": "2.0.0i1",
-                    },
-                },
-            ],
-            {
-                MetricName("my_metric"),
-                MetricName("old_name_1"),
-                MetricName("old_name_2"),
-            },
-            id="some applicable and one deprecated translation",
-        ),
-        pytest.param(
-            MetricName("my_metric"),
-            2030020100,
-            [
-                {
-                    MetricName("old_name_1"): {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-                {
-                    "~.*expr": {
-                        "name": MetricName("my_metric"),
-                    },
-                },
-            ],
-            {
-                MetricName("my_metric"),
-                MetricName("old_name_1"),
-            },
-            id="regex translation",
-        ),
-    ],
-)
-def test_reverse_translate_into_all_potentially_relevant_metrics(
-    canonical_name: MetricName,
-    current_version: int,
-    all_translations: Iterable[Mapping[MetricName, utils.CheckMetricEntry]],
-    expected_result: frozenset[MetricName],
-) -> None:
-    assert (
-        utils.reverse_translate_into_all_potentially_relevant_metrics(
-            canonical_name,
-            current_version,
-            all_translations,
-        )
-        == expected_result
-    )
 
 
 @pytest.mark.parametrize(

@@ -149,7 +149,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
             f"target-version: "
             f"{not_ok_services}"
         )
-        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+        assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
 @pytest.mark.cce

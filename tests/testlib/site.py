@@ -29,6 +29,8 @@ from tests.testlib.utils import (
     cme_path,
     cmk_path,
     cse_openid_oauth_provider,
+    current_base_branch_name,
+    current_branch_version,
     execute,
     is_containerized,
     makedirs,
@@ -37,7 +39,7 @@ from tests.testlib.utils import (
     spawn_expect_process,
     write_file,
 )
-from tests.testlib.version import CMKVersion, version_from_env, version_gte
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env, version_gte
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -1542,8 +1544,17 @@ class SiteFactory:
     def update_as_site_user(
         self,
         test_site: Site,
-        target_version: CMKVersion,
-        min_version: CMKVersion,
+        target_version: CMKVersion = version_from_env(
+            fallback_version_spec=CMKVersion.DAILY,
+            fallback_edition=Edition.CEE,
+            fallback_branch=current_base_branch_name(),
+        ),
+        min_version: CMKVersion = CMKVersion(
+            get_min_version(),
+            Edition.CEE,
+            current_base_branch_name(),
+            current_branch_version(),
+        ),
         conflict_mode: str = "keepold",
     ) -> Site:
         version_supported = self._version_supported(test_site.version.version, min_version.version)

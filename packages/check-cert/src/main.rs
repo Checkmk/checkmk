@@ -3,10 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{
-    self, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real,
-};
+use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
 use check_cert::checker::certificate::{self, Config as CertChecks};
+use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
@@ -183,19 +182,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         check::abort("Empty or invalid certificate chain on host")
     }
 
-    let mut collection = Collection::from(&mut vec![response_time_levels_checker
-        .check(
-            response_time,
-            format!(
-                "Certificate obtained in {} ms",
-                response_time.whole_milliseconds()
-            ),
-            LevelsCheckerArgs::builder()
-                .label("response_time")
-                .uom("ms")
-                .build(),
-        )
-        .map(|x| Real::from(x.whole_milliseconds() as isize))]);
+    let mut collection = fetcher_check::check(
+        response_time,
+        FetcherChecks::builder()
+            .response_time(Some(response_time_levels_checker))
+            .build(),
+    );
     collection.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
@@ -208,7 +200,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
-            .not_after_levels_checker(Some(not_after_levels_checker))
+            .not_after(Some(not_after_levels_checker))
             .build(),
     ));
     collection.join(&mut verification::check(

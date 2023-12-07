@@ -72,7 +72,17 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             }),
             body: args.body,
             auth_user: args.auth_user,
-            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pw_pwstore),
+            token_auth: if let (Some(token_header), Some(token_key)) = (
+                args.token_header,
+                args.token_key
+                    .token_key_plain
+                    .or(args.token_key.token_key_pwstore),
+            ) {
+                Some((token_header, token_key))
+            } else {
+                None
+            },
             content_type: args.content_type,
             without_body: args.without_body,
         },

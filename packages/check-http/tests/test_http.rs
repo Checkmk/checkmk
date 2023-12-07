@@ -87,6 +87,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             auth_user: None,
             auth_pw: None,
             without_body: false,
+            token_auth: None,
         },
         CheckParameters {
             onredirect: OnRedirect::Follow,

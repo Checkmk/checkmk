@@ -433,6 +433,24 @@ class GraphTemplate:
             omit_zero_metrics=False,
         )
 
+    def compute_range(
+        self, translated_metrics: Mapping[str, TranslatedMetric]
+    ) -> tuple[float | None, float | None]:
+        if self.range is None:
+            return None, None
+
+        try:
+            from_ = self.range[0].evaluate(translated_metrics).value
+        except Exception:
+            from_ = None
+
+        try:
+            to = self.range[1].evaluate(translated_metrics).value
+        except Exception:
+            to = None
+
+        return from_, to
+
 
 class MetricUnitColor(TypedDict):
     unit: str
@@ -992,25 +1010,6 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
         if template_id not in graph_templates:
             graph_templates[template_id] = GraphTemplate.from_template(template_id, template)
     return graph_templates
-
-
-def get_graph_range(
-    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric]
-) -> tuple[float | None, float | None]:
-    if graph_template.range is None:
-        return None, None
-
-    try:
-        from_ = graph_template.range[0].evaluate(translated_metrics).value
-    except Exception:
-        from_ = None
-
-    try:
-        to = graph_template.range[1].evaluate(translated_metrics).value
-    except Exception:
-        to = None
-
-    return from_, to
 
 
 def get_graph_template_choices() -> list[tuple[str, str]]:

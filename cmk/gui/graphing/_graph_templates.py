@@ -47,7 +47,6 @@ from ._graph_specification import (
 from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 from ._utils import (
     get_graph_data_from_livestatus,
-    get_graph_range,
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
@@ -248,7 +247,7 @@ def create_graph_recipe_from_template(
         title=title,
         metrics=metrics,
         unit=units.pop(),
-        explicit_vertical_range=get_graph_range(graph_template, translated_metrics),
+        explicit_vertical_range=graph_template.compute_range(translated_metrics),
         horizontal_rules=_horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT

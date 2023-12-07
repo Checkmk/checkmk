@@ -10,7 +10,7 @@ from tests.testlib.utils import (
     current_branch_version,
     get_services_with_status,
 )
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env
 
 from cmk.utils.version import Edition
 
@@ -50,9 +50,8 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
         fallback_branch=current_base_branch_name(),
     )
 
-    # todo: use a common min_version for the update-tests and this test
     min_version = CMKVersion(
-        "2.2.0p8",
+        get_min_version(),
         Edition.CEE,
         current_base_branch_name(),
         current_branch_version(),

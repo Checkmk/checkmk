@@ -240,10 +240,11 @@ impl SqlInstance {
     }
 
     pub async fn generate_details_entry(&self, client: &mut Client, sep: char) -> String {
-        match run_query(client, &queries::get_details_query()).await {
-            Ok(rows) => self.process_details_rows(rows, sep),
+        let r = SqlInstanceProperties::obtain_by_query(client).await;
+        match r {
+            Ok(properties) => self.process_details_rows(&properties, sep),
             Err(err) => {
-                log::error!("Failed to get details: {}", err);
+                log::error!("Failed to get sql instance properties: {}", err);
                 format!("{}{:?}", sep.to_string().repeat(4), err).to_string()
             }
         }
@@ -710,25 +711,14 @@ impl SqlInstance {
             .collect::<Vec<String>>()
     }
 
-    fn process_details_rows(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
-        if rows.is_empty() || rows[0].is_empty() {
-            const ERROR: &str = "No output from query";
-            log::warn!("{}", ERROR);
-            format!("{}{}", sep.to_string().repeat(4), ERROR).to_string()
-        } else {
-            let row = &rows[0];
-            let version = get_row_value(&row[0], queries::QUERY_DETAILS_VERSION_PARAM);
-            let level = get_row_value(&row[0], queries::QUERY_DETAILS_LEVEL_PARAM);
-            let edition = get_row_value(&row[0], queries::QUERY_DETAILS_EDITION_PARAM);
-
-            format!(
-                "{}{sep}details{sep}{}{sep}{}{sep}{}\n",
-                self.mssql_name(),
-                version,
-                level,
-                edition
-            )
-        }
+    fn process_details_rows(&self, properties: &SqlInstanceProperties, sep: char) -> String {
+        format!(
+            "{}{sep}details{sep}{}{sep}{}{sep}{}\n",
+            self.mssql_name(),
+            properties.version,
+            properties.product_level,
+            properties.edition
+        )
     }
 
     fn process_backup_rows(&self, rows: &Vec<Vec<Row>>, databases: &[String], sep: char) -> String {
@@ -779,6 +769,53 @@ impl SqlInstance {
 
     pub fn port(&self) -> Option<u16> {
         self.port.or(self.dynamic_port)
+    }
+}
+
+#[derive(Debug)]
+pub struct SqlInstanceProperties {
+    pub name: String,
+    pub version: String,
+    pub machine_name: String,
+    pub edition: String,
+    pub product_level: String,
+    pub net_bios: String,
+}
+
+impl From<&Vec<Row>> for SqlInstanceProperties {
+    fn from(row: &Vec<Row>) -> Self {
+        let row = &row[0];
+        let name = row.get_value_by_name("InstanceName");
+        let version = row.get_value_by_name("ProductVersion");
+        let machine_name = row.get_value_by_name("MachineName");
+        let edition = row.get_value_by_name("Edition");
+        let product_level = row.get_value_by_name("ProductLevel");
+        let net_bios = row.get_value_by_name("NetBios");
+        Self {
+            name: if name.is_empty() {
+                "MSSQLSERVER".to_string()
+            } else {
+                name
+            },
+            version,
+            machine_name,
+            edition,
+            product_level,
+            net_bios,
+        }
+    }
+}
+
+impl SqlInstanceProperties {
+    pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
+        let r = run_query(client, queries::QUERY_INSTANCE_PROPERTIES).await?;
+        if r.is_empty() {
+            anyhow::bail!(
+                "Empty answer from server on query {}",
+                queries::QUERY_INSTANCE_PROPERTIES
+            );
+        }
+        Ok(Self::from(&r[0]))
     }
 }
 
@@ -987,13 +1024,6 @@ fn to_blocked_session_entry(instance_name: &str, row: &Row, sep: char) -> String
     let wait_type = row.get_value_by_idx(2).trim().to_string();
     let blocking_session_id = row.get_value_by_idx(3).trim().to_string();
     format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
-}
-
-fn get_row_value(row: &Row, idx: &str) -> String {
-    row.get_optional_value_by_name(idx).unwrap_or_else(|| {
-        log::warn!("Failed to get {idx} from query");
-        String::new()
-    })
 }
 
 impl<'a> Column<'a> for Row {

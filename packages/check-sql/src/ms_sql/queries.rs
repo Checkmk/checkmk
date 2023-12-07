@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+// TODO(sk): replace with "SELECT SERVERPROPERTY( 'MachineName' ) as MachineName"
 pub const QUERY_COMPUTER_NAME: &str = r"DECLARE @ComputerName NVARCHAR(200);
 DECLARE @main_key NVARCHAR(200) = 'SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName';
 EXECUTE xp_regread
@@ -122,10 +123,6 @@ pub const QUERY_WAITING_TASKS: &str = "SELECT cast(session_id as varchar) as ses
             cast(blocking_session_id as varchar) as blocking_session_id \
     FROM sys.dm_os_waiting_tasks";
 
-pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
-pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
-pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
-
 pub const QUERY_DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
 pub const QUERY_SPACE_USED: &str = "EXEC sp_spaceused";
 pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";
@@ -231,6 +228,14 @@ pub const QUERY_AVAILABILITY_GROUP: &str = "SELECT \
 FROM sys.dm_hadr_availability_group_states Groups \
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
+pub const QUERY_INSTANCE_PROPERTIES: &str = "SELECT \
+    cast(SERVERPROPERTY( 'InstanceName' ) as varchar)as InstanceName, \
+    cast(SERVERPROPERTY( 'ProductVersion' ) as varchar) as ProductVersion, \
+    cast(SERVERPROPERTY( 'MachineName' ) as varchar) as MachineName, \
+    cast(SERVERPROPERTY( 'Edition' ) as varchar) as Edition, \
+    cast(SERVERPROPERTY( 'ProductLevel' ) as varchar) as ProductLevel, \
+    cast(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) as varchar) as NetBios";
+
 pub fn get_win_registry_instances_query() -> String {
     QUERY_WINDOWS_REGISTRY_INSTANCES_BASE.to_string()
 }
@@ -238,21 +243,6 @@ pub fn get_win_registry_instances_query() -> String {
 // production
 pub fn get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", QUERY_WAITING_TASKS).to_string()
-}
-
-pub fn get_details_query() -> String {
-    format!(
-        "SELECT cast(SERVERPROPERTY('{}') as varchar) as {}, \
-         cast(SERVERPROPERTY ('{}') as varchar) as {}, \
-         cast(SERVERPROPERTY ('{}') as varchar) as {}",
-        "productversion",
-        QUERY_DETAILS_VERSION_PARAM,
-        "productlevel",
-        QUERY_DETAILS_LEVEL_PARAM,
-        "edition",
-        QUERY_DETAILS_EDITION_PARAM,
-    )
-    .to_string()
 }
 
 pub fn get_wow64_32_registry_instances_query() -> String {

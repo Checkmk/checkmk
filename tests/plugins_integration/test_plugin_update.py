@@ -57,8 +57,7 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             f"The following services are found in {host_name} in base-version but not in "
             f"target-version: {not_found_services}"
         )
-        # todo: return a set inside the get_service_with_status helper
-        assert set(base_data_status_0[host_name]).issubset(set(target_data_status_0[host_name])), (
+        assert base_data_status_0[host_name].issubset(target_data_status_0[host_name]), (
             f"The following services are found in state=0 in {host_name} in base-version but not "
             f"in target-version: {not_found_status_0_services}"
         )
@@ -86,9 +85,7 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             f"The following services are found in {host_name} in target-version before "
             f"service-discovery but not after: {not_found_services_sd}"
         )
-        assert set(target_data_status_0[host_name]).issubset(
-            set(target_data_sd_status_0[host_name])
-        ), (
+        assert target_data_status_0[host_name].issubset(target_data_sd_status_0[host_name]), (
             f"The following services are found in state=0 in {host_name} target-version before "
             f"service-discovery but not after: {not_found_status_0_services_sd}"
         )

@@ -156,4 +156,4 @@ def test_update(  # pylint: disable=too-many-branches
             f"target-version: "
             f"{not_ok_services}"
         )
-        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+        assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

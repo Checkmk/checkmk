@@ -488,12 +488,12 @@ def restart_httpd() -> None:
 
 def get_services_with_status(
     host_data: dict, service_status: int, skipped_services: list | tuple = ()
-) -> list:
-    """Return a list of services in the given status which are not in the 'skipped' list."""
-    services_list = []
+) -> set:
+    """Return a set of services in the given status which are not in the 'skipped' list."""
+    services_list = set()
     for service in host_data:
         if host_data[service] == service_status and service not in skipped_services:
-            services_list.append(service)
+            services_list.add(service)
 
     LOGGER.debug(
         "%s service(s) found in state %s:\n%s",

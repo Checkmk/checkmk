@@ -5,13 +5,12 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 import http
-import re
 import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Literal, NamedTuple, NewType, NotRequired, Self
+from typing import Literal, NamedTuple, NewType, NotRequired, Self
 
 from typing_extensions import TypedDict
 
@@ -20,20 +19,17 @@ from livestatus import livestatus_lql
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.metrics import MetricName as MetricName_
+from cmk.utils.metrics import MetricName
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKHTTPException, MKUserError
+from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
-from cmk.gui.type_defs import Choice, Choices, Perfdata, PerfDataTuple, Row, VisualContext
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
-from cmk.gui.visuals import livestatus_query_bare
 
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import graph as graph_api
@@ -459,7 +455,7 @@ class MetricUnitColor(TypedDict):
 
 class CheckMetricEntry(TypedDict, total=False):
     scale: float
-    name: MetricName_
+    name: MetricName
     auto_graph: bool
     deprecated: str
 
@@ -527,8 +523,8 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
         ]
 
 
-metric_info: dict[MetricName_, MetricInfo] = {}
-check_metrics: dict[str, dict[MetricName_, CheckMetricEntry]] = {}
+metric_info: dict[MetricName, MetricInfo] = {}
+check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -595,7 +591,7 @@ def add_graphing_plugins(
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metric_api.Metric):
-            metric_info[MetricName_(plugin.name)] = {
+            metric_info[MetricName(plugin.name)] = {
                 "title": plugin.title.localize(_),
                 "unit": _parse_or_add_unit(plugin.unit),
                 "color": parse_color(plugin.color),
@@ -604,7 +600,7 @@ def add_graphing_plugins(
         elif isinstance(plugin, translation_api.Translation):
             for check_command in plugin.check_commands:
                 check_metrics[_parse_check_command(check_command)] = {
-                    MetricName_(old_name): _parse_translation(translation)
+                    MetricName(old_name): _parse_translation(translation)
                     for old_name, translation in plugin.translations.items()
                 }
 
@@ -770,7 +766,7 @@ def perfvar_translation(
 ) -> TranslationInfo:
     """Get translation info for one performance var."""
     translation_entry = find_matching_translation(
-        MetricName_(perfvar_name),
+        MetricName(perfvar_name),
         lookup_metric_translations_for_check_command(check_metrics, check_command) or {},
     )
     return TranslationInfo(
@@ -781,9 +777,9 @@ def perfvar_translation(
 
 
 def lookup_metric_translations_for_check_command(
-    all_translations: Mapping[str, Mapping[MetricName_, CheckMetricEntry]],
+    all_translations: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     check_command: str | None,  # None due to CMK-13883
-) -> Mapping[MetricName_, CheckMetricEntry] | None:
+) -> Mapping[MetricName, CheckMetricEntry] | None:
     if not check_command:
         return None
     return all_translations.get(
@@ -801,8 +797,8 @@ def lookup_metric_translations_for_check_command(
 
 
 def find_matching_translation(
-    metric_name: MetricName_,
-    translations: Mapping[MetricName_, CheckMetricEntry],
+    metric_name: MetricName,
+    translations: Mapping[MetricName, CheckMetricEntry],
 ) -> CheckMetricEntry:
     if translation := translations.get(metric_name):
         return translation
@@ -931,7 +927,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     return translated_metrics
 
 
-def _perf_data_string_from_metric_names(metric_names: list[MetricName_]) -> str:
+def _perf_data_string_from_metric_names(metric_names: list[MetricName]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -950,7 +946,7 @@ def _perf_data_string_from_metric_names(metric_names: list[MetricName_]) -> str:
 
 def available_metrics_translated(
     perf_data_string: str,
-    rrd_metrics: list[MetricName_],
+    rrd_metrics: list[MetricName],
     check_command: str,
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
@@ -1137,7 +1133,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     return info
 
 
-def metric_title(metric_name: MetricName_) -> str:
+def metric_title(metric_name: MetricName) -> str:
     if metric_name in metric_info:
         return str(metric_info[metric_name]["title"])
     return metric_name.title()
@@ -1157,10 +1153,10 @@ def metric_title(metric_name: MetricName_) -> str:
 
 
 def reverse_translate_into_all_potentially_relevant_metrics(
-    canonical_name: MetricName_,
+    canonical_name: MetricName,
     current_version: int,
-    all_translations: Iterable[Mapping[MetricName_, CheckMetricEntry]],
-) -> set[MetricName_]:
+    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
+) -> set[MetricName]:
     return {
         canonical_name,
         *(
@@ -1189,102 +1185,13 @@ def reverse_translate_into_all_potentially_relevant_metrics(
 
 @lru_cache
 def reverse_translate_into_all_potentially_relevant_metrics_cached(
-    canonical_name: MetricName_,
-) -> set[MetricName_]:
+    canonical_name: MetricName,
+) -> set[MetricName]:
     return reverse_translate_into_all_potentially_relevant_metrics(
         canonical_name,
         parse_check_mk_version(cmk_version.__version__),
         check_metrics.values(),
     )
-
-
-def metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
-    for perfvar in perfvars:
-        metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, metric_title(metric_name)
-
-
-def metrics_of_query(
-    context: VisualContext,
-) -> Iterator[Choice]:
-    # Fetch host data with the *same* query. This saves one round trip. And head
-    # host has at least one service
-    columns = [
-        "service_description",
-        "service_check_command",
-        "service_perf_data",
-        "service_metrics",
-        "host_check_command",
-        "host_metrics",
-    ]
-
-    row = {}
-    for row in livestatus_query_bare("service", context, columns):
-        perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"]
-        )
-        known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
-        yield from metric_choices(str(check_command), tuple(map(str, known_metrics)))
-
-    if row.get("host_check_command"):
-        yield from metric_choices(
-            str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
-        )
-
-
-def registered_metrics() -> Iterator[Choice]:
-    for metric_id, metric_detail in metric_info.items():
-        yield metric_id, str(metric_detail["title"])
-
-
-class MetricName(DropdownChoiceWithHostAndServiceHints):
-    """Factory of a Dropdown menu from all known metric names"""
-
-    ident = "monitored_metrics"
-
-    def __init__(self, **kwargs: Any) -> None:
-        # Customer's metrics from local checks or other custom plugins will now appear as metric
-        # options extending the registered metric names on the system. Thus assuming the user
-        # only selects from available options we skip the input validation(invalid_choice=None)
-        # Since it is not possible anymore on the backend to collect the host & service hints
-        kwargs_with_defaults: Mapping[str, Any] = {
-            "css_spec": ["ajax-vals"],
-            "hint_label": _("metric"),
-            "title": _("Metric"),
-            "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
-            "regex_error": _(
-                "Metric names must only consist of letters, digits and "
-                "underscores and they must start with a letter."
-            ),
-            "autocompleter": ContextAutocompleterConfig(
-                ident=self.ident,
-                show_independent_of_context=True,
-                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
-            ),
-            **kwargs,
-        }
-        super().__init__(**kwargs_with_defaults)
-
-    def _validate_value(self, value: str | None, varprefix: str) -> None:
-        if value == "":
-            raise MKUserError(varprefix, self._regex_error)
-        # dropdown allows empty values by default
-        super()._validate_value(value, varprefix)
-
-    def _choices_from_value(self, value: str | None) -> Choices:
-        if value is None:
-            return list(self.choices())
-        # Need to create an on the fly metric option
-        return [
-            next(
-                (
-                    (metric_id, str(metric_detail["title"]))
-                    for metric_id, metric_detail in metric_info.items()
-                    if metric_id == value
-                ),
-                (value, value.title()),
-            )
-        ]
 
 
 # .

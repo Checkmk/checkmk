@@ -17,10 +17,9 @@ from cmk.gui.graphing._utils import (
     get_graph_templates,
     graph_templates_internal,
     metric_title,
-    metrics_of_query,
-    registered_metrics,
     translated_metrics_from_row,
 )
+from cmk.gui.graphing._valuespecs import metrics_of_query, registered_metrics
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices

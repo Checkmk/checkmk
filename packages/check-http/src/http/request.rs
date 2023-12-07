@@ -14,7 +14,7 @@ pub struct RequestConfig {
     pub url: String,
     pub method: Method,
     pub version: Option<Version>,
-    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub headers: Vec<(HeaderName, HeaderValue)>,
     pub body: Option<String>,
     pub content_type: Option<HeaderValue>,
     pub auth_user: Option<String>,
@@ -57,7 +57,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
 }
 
 fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder {
-    let mut headers = HeaderMap::new();
+    let mut headers = HeaderMap::from_iter(request_cfg.headers);
     if let Some(content_type) = request_cfg.content_type {
         headers.insert(CONTENT_TYPE, content_type);
     }

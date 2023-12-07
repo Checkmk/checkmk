@@ -163,18 +163,20 @@ def execute_check_discovery(
     parsing_errors_results = check_parsing_errors(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     )
+    failed_sources = [r for r in summarizer(host_sections) if r.state != 0]
 
     return ActiveCheckResult.from_subresults(
         *itertools.chain(
             services_result,
             host_labels_result,
-            (r for r in summarizer(host_sections) if r.state != 0),
+            failed_sources,
             parsing_errors_results,
             [
                 _schedule_rediscovery(
                     host_name,
                     is_cluster=is_cluster,
                     cluster_nodes=cluster_nodes,
+                    sources_failed=bool(failed_sources),
                     need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
                     and all(r.state == 0 for r in parsing_errors_results),
                 )
@@ -316,10 +318,18 @@ def _schedule_rediscovery(
     *,
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
+    sources_failed: bool,
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
         return ActiveCheckResult()
+
+    if sources_failed:
+        error_message = (
+            "Automatic rediscovery currently not possible due to failing data source(s)."
+            " Please run service discovery manually"
+        )
+        return ActiveCheckResult(1, error_message)
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
     if is_cluster:
@@ -328,4 +338,4 @@ def _schedule_rediscovery(
     else:
         autodiscovery_queue.add(host_name)
 
-    return ActiveCheckResult(0, "rediscovery scheduled")
+    return ActiveCheckResult(0, "Rediscovery scheduled")

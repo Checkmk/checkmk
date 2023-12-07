@@ -35,7 +35,6 @@ mssql:
       cache_age: 600 # optional, default: 600
     instances: # optional
       detect: yes # optional, default
-      all: yes # optional, default: yes / prio 1; ignore include/exclude if yes
       include: ["foo", "bar"] # optional, no default /prio 2; use instance even if excluded
       exclude: ["baz"] # optional, no default / prio 3
     mode: "port" # optional, default: "port" / can be "socket", "port" or "special"

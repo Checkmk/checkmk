@@ -6,8 +6,8 @@ use anyhow::Result;
 use check_cert::check::{
     self, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real,
 };
-use check_cert::checker::certificate::{self, Config as CertConfig};
-use check_cert::checker::verification::{self, Config as VerifConfig};
+use check_cert::checker::certificate::{self, Config as CertChecks};
+use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
@@ -198,7 +198,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|x| Real::from(x.whole_milliseconds() as isize))]);
     collection.join(&mut certificate::check(
         &chain[0],
-        CertConfig::builder()
+        CertChecks::builder()
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
@@ -213,7 +213,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
     collection.join(&mut verification::check(
         &chain,
-        VerifConfig::builder()
+        VerifChecks::builder()
             .trust_store(&trust_store)
             .allow_self_signed(args.allow_self_signed)
             .build(),

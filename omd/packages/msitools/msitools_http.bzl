@@ -2,7 +2,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def msitools(version_str, sha256):
-    filename = "msitools-" + version_str + ".tar.gz"
+    filename = "msitools-" + version_str + ".tar.xz"
     http_archive(
         name = "msitools",
         build_file = "@omd_packages//omd/packages/msitools:BUILD.msitools.bazel",

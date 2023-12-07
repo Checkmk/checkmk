@@ -472,13 +472,13 @@ pub fn exit_code(collection: &Collection) -> i32 {
 
 pub fn bail_out(message: impl Into<String>) -> ! {
     let out = Collection::from(SimpleCheckResult::unknown(message));
-    eprintln!("{}", out);
+    println!("{}", out);
     std::process::exit(exit_code(&out))
 }
 
 pub fn abort(message: impl Into<String>) -> ! {
     let out = Collection::from(SimpleCheckResult::crit(message));
-    eprintln!("{}", out);
+    println!("{}", out);
     std::process::exit(exit_code(&out))
 }
 

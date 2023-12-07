@@ -9,7 +9,6 @@ import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Literal, NamedTuple, NewType, NotRequired, Self
 
 from typing_extensions import TypedDict
@@ -17,10 +16,8 @@ from typing_extensions import TypedDict
 from livestatus import livestatus_lql
 
 import cmk.utils.regex
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
-from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -1137,61 +1134,6 @@ def metric_title(metric_name: MetricName) -> str:
     if metric_name in metric_info:
         return str(metric_info[metric_name]["title"])
     return metric_name.title()
-
-
-# .
-#   .--Colors--------------------------------------------------------------.
-#   |                      ____      _                                     |
-#   |                     / ___|___ | | ___  _ __ ___                      |
-#   |                    | |   / _ \| |/ _ \| '__/ __|                     |
-#   |                    | |__| (_) | | (_) | |  \__ \                     |
-#   |                     \____\___/|_|\___/|_|  |___/                     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Functions and constants dealing with colors                         |
-#   '----------------------------------------------------------------------'
-
-
-def reverse_translate_into_all_potentially_relevant_metrics(
-    canonical_name: MetricName,
-    current_version: int,
-    all_translations: Iterable[Mapping[MetricName, CheckMetricEntry]],
-) -> set[MetricName]:
-    return {
-        canonical_name,
-        *(
-            metric_name
-            for trans in all_translations
-            for metric_name, options in trans.items()
-            if canonical_name == options.get("name")
-            and (
-                # From version check used unified metric, and thus deprecates old translation
-                # added a complete stable release, that gives the customer about a year of data
-                # under the appropriate metric name.
-                # We should however get all metrics unified before Cmk 2.1
-                parse_check_mk_version(deprecated) + 10000000
-                if (deprecated := options.get("deprecated"))
-                else current_version
-            )
-            >= current_version
-            # Note: Reverse translations only work for 1-to-1-mappings, entries such as
-            # "~.*rta": {"name": "rta", "scale": m},
-            # cannot be reverse-translated, since multiple metric names are apparently mapped to a
-            # single new name. This is a design flaw we currently have to live with.
-            and not metric_name.startswith("~")
-        ),
-    }
-
-
-@lru_cache
-def reverse_translate_into_all_potentially_relevant_metrics_cached(
-    canonical_name: MetricName,
-) -> set[MetricName]:
-    return reverse_translate_into_all_potentially_relevant_metrics(
-        canonical_name,
-        parse_check_mk_version(cmk_version.__version__),
-        check_metrics.values(),
-    )
 
 
 # .

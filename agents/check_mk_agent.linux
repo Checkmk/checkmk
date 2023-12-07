@@ -1174,14 +1174,22 @@ section_omd_core() {
     (
         cd /omd/sites || return
 
+        # The files within a site are site-user writable! Therefore we must not use them!
+        # The version files are only root writable so we can use them instead.
+        site_version="$(realpath "${1}/version" | sed 's|.*/||')"
+
         site_cmd() {
             # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
             # bin might point anywhere -> priv escalation.
-            printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+            printf "/omd/versions/%s/bin/%s" "${site_version}" "${2}"
+        }
+
+        site_lib() {
+            printf "/omd/versions/%s/lib" "${site_version}"
         }
 
         waitmax_for_unixcat_with_site_ld_library_path() {
-            LD_LIBRARY_PATH="/omd/sites/${2}/lib:${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
+            LD_LIBRARY_PATH="$(site_lib "${2}"):${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
         }
 
         echo '<<<livestatus_status:sep(59)>>>'

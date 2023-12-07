@@ -31,9 +31,7 @@ build_cmd = """
     export HOME=$$PWD
 
     # Path to external dependencies
-    # SRCS contains a whitespace seperated list of paths to dependencies.
-    # We pick one containing 'external' and cut the path after the keyword.
-    EXT_DEPS_PATH=$$(echo $(SRCS) | sed 's/.*\\s\\(.*external\\).*\\s.*/\\1/')
+    EXT_DEPS_PATH='bazel-out/k8-fastbuild/bin/external'
 
     # This is where the Python Modules should be found
     export LD_LIBRARY_PATH="$$PWD/$$EXT_DEPS_PATH/python/python/lib/:$$PWD/$$EXT_DEPS_PATH/openssl/openssl/lib/"

@@ -7,7 +7,7 @@ import typing
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._utils import MetricName
+from cmk.gui.graphing._valuespecs import MetricName
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,

@@ -4,23 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
+import re
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
-from cmk.utils.metrics import MetricName
+from cmk.utils.metrics import MetricName as MetricName_
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import GraphTitleFormatVS
+from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,
     Checkbox,
     Dictionary,
     DropdownChoice,
+    DropdownChoiceWithHostAndServiceHints,
     Float,
     Fontsize,
     ListChoice,
@@ -29,10 +33,11 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
+from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_render_config import GraphRenderConfigBase
 from ._unit_info import unit_info
-from ._utils import metric_info
+from ._utils import metric_info, metric_title, parse_perf_data, perfvar_translation
 
 
 def migrate_graph_render_options_title_format(
@@ -271,7 +276,7 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(metric_name: MetricName) -> PageResult:
+    def resolve_units(metric_name: MetricName_) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
@@ -301,3 +306,92 @@ class ValuesWithUnits(CascadingDropdown):
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         return ValuesWithUnits.resolve_units(self.webapi_request()["metric"])
+
+
+class MetricName(DropdownChoiceWithHostAndServiceHints):
+    """Factory of a Dropdown menu from all known metric names"""
+
+    ident = "monitored_metrics"
+
+    def __init__(self, **kwargs: Any) -> None:
+        # Customer's metrics from local checks or other custom plugins will now appear as metric
+        # options extending the registered metric names on the system. Thus assuming the user
+        # only selects from available options we skip the input validation(invalid_choice=None)
+        # Since it is not possible anymore on the backend to collect the host & service hints
+        kwargs_with_defaults: Mapping[str, Any] = {
+            "css_spec": ["ajax-vals"],
+            "hint_label": _("metric"),
+            "title": _("Metric"),
+            "regex": re.compile("^[a-zA-Z][a-zA-Z0-9_]*$"),
+            "regex_error": _(
+                "Metric names must only consist of letters, digits and "
+                "underscores and they must start with a letter."
+            ),
+            "autocompleter": ContextAutocompleterConfig(
+                ident=self.ident,
+                show_independent_of_context=True,
+                dynamic_params_callback_name="host_and_service_hinted_autocompleter",
+            ),
+            **kwargs,
+        }
+        super().__init__(**kwargs_with_defaults)
+
+    def _validate_value(self, value: str | None, varprefix: str) -> None:
+        if value == "":
+            raise MKUserError(varprefix, self._regex_error)
+        # dropdown allows empty values by default
+        super()._validate_value(value, varprefix)
+
+    def _choices_from_value(self, value: str | None) -> Choices:
+        if value is None:
+            return list(self.choices())
+        # Need to create an on the fly metric option
+        return [
+            next(
+                (
+                    (metric_id, str(metric_detail["title"]))
+                    for metric_id, metric_detail in metric_info.items()
+                    if metric_id == value
+                ),
+                (value, value.title()),
+            )
+        ]
+
+
+def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
+    for perfvar in perfvars:
+        metric_name = perfvar_translation(perfvar, check_command)["name"]
+        yield metric_name, metric_title(metric_name)
+
+
+def metrics_of_query(
+    context: VisualContext,
+) -> Iterator[Choice]:
+    # Fetch host data with the *same* query. This saves one round trip. And head
+    # host has at least one service
+    columns = [
+        "service_description",
+        "service_check_command",
+        "service_perf_data",
+        "service_metrics",
+        "host_check_command",
+        "host_metrics",
+    ]
+
+    row = {}
+    for row in livestatus_query_bare("service", context, columns):
+        perf_data, check_command = parse_perf_data(
+            row["service_perf_data"], row["service_check_command"]
+        )
+        known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
+        yield from _metric_choices(str(check_command), tuple(map(str, known_metrics)))
+
+    if row.get("host_check_command"):
+        yield from _metric_choices(
+            str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
+        )
+
+
+def registered_metrics() -> Iterator[Choice]:
+    for metric_id, metric_detail in metric_info.items():
+        yield metric_id, str(metric_detail["title"])

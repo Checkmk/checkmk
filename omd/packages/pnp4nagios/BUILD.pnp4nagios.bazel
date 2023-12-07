@@ -113,6 +113,7 @@ genrule(
     ],
     cmd = """
         cp -r --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:skel) $$(realpath $(RULEDIR))
+        find $$(realpath $(RULEDIR)) -name ".gitignore" -delete
         mkdir -p $$(realpath $(RULEDIR))/share
         cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/pnp4nagios
         mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks/

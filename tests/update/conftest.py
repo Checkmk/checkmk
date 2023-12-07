@@ -20,7 +20,7 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, current_branch_version
-from tests.testlib.version import CMKVersion, version_gte
+from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
 
@@ -57,8 +57,7 @@ def pytest_configure(config):
 class BaseVersions:
     """Get all base versions used for the test."""
 
-    # minimal version supported for an update that can merge the configuration
-    MIN_VERSION = os.getenv("MIN_VERSION", "2.2.0p8")
+    MIN_VERSION = get_min_version()
 
     with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
         BASE_VERSIONS_STR = json.load(f)

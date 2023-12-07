@@ -128,3 +128,8 @@ def version_gte(version: str, min_version: str) -> bool:
         if int(cmp_version_values[i]) < int(min_val):
             return False
     return True
+
+
+def get_min_version() -> str:
+    """Minimal version supported for an update to the daily version of this branch."""
+    return os.getenv("MIN_VERSION", "2.2.0p8")

@@ -35,10 +35,11 @@ class Outcome(enum.Enum):
 
 class StatusV6(BaseModel, frozen=True):
     status: Outcome = Field(alias="@status")
-    starttime: DateTimeFormatV6 = Field(alias="@starttime")
-    endtime: DateTimeFormatV6 = Field(alias="@endtime")
-    elapsed: float | None = Field(alias="@elapsed", default=None)
+    starttime: DateTimeFormatV6 = Field(default=None, alias="@starttime")
+    endtime: DateTimeFormatV6 = Field(default=None, alias="@endtime")
+    elapsed: float | None = Field(default=None, alias="@elapsed")
 
+    @property
     def runtime(self) -> float | None:
         return (
             self.elapsed
@@ -49,11 +50,7 @@ class StatusV6(BaseModel, frozen=True):
 
 class StatusV7(BaseModel, frozen=True):
     status: Outcome = Field(alias="@status")
-    start: datetime = Field(alias="@start")
-    elapsed: float = Field(alias="@elapsed")
-
-    def runtime(self) -> float:
-        return self.elapsed
+    runtime: float | None = Field(default=None, alias="@elapsed")
 
 
 class Test(BaseModel, frozen=True):

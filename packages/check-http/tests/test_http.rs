@@ -81,7 +81,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             url: format!("http://{}:{}", LOCALHOST_DNS, port),
             method: Method::GET,
             version: None,
-            headers: None,
+            headers: vec![],
             body: None,
             content_type: None,
             auth_user: None,

@@ -24,7 +24,7 @@ pub struct Cli {
 
     /// Additional header in the form NAME:VALUE. Use multiple times for additional headers.
     #[arg(short = 'k', long="header", value_parser=split_header::<HeaderName, HeaderValue>)]
-    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub headers: Vec<(HeaderName, HeaderValue)>,
 
     /// URL to check
     #[arg(short, long)]

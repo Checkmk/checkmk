@@ -36,7 +36,6 @@ mod keys {
 
     pub const DISCOVERY: &str = "discovery";
     pub const DETECT: &str = "detect";
-    pub const ALL: &str = "all";
     pub const INCLUDE: &str = "include";
     pub const EXCLUDE: &str = "exclude";
 
@@ -95,7 +94,6 @@ mod defaults {
     pub const SECTIONS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
     pub const DISCOVERY_DETECT: bool = true;
-    pub const DISCOVERY_ALL: bool = true;
 }
 
 #[derive(PartialEq, Debug)]
@@ -201,10 +199,6 @@ impl Config {
     }
 
     pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
-        if self.discovery.all() {
-            return true;
-        }
-
         if !self.discovery.include().is_empty() {
             return self.discovery.include().contains(&name.to_string());
         }
@@ -213,7 +207,7 @@ impl Config {
             return false;
         }
 
-        false
+        true
     }
 }
 
@@ -500,7 +494,6 @@ impl Sections {
 #[derive(PartialEq, Debug)]
 pub struct Discovery {
     detect: bool,
-    all: bool,
     include: Vec<String>,
     exclude: Vec<String>,
 }
@@ -509,7 +502,6 @@ impl Default for Discovery {
     fn default() -> Self {
         Self {
             detect: defaults::DISCOVERY_DETECT,
-            all: defaults::DISCOVERY_ALL,
             include: vec![],
             exclude: vec![],
         }
@@ -524,16 +516,12 @@ impl Discovery {
         }
         Ok(Self {
             detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
-            all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
             include: discovery.get_string_vector(keys::INCLUDE, &[]),
             exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
         })
     }
     pub fn detect(&self) -> bool {
         self.detect
-    }
-    pub fn all(&self) -> bool {
-        self.all
     }
     pub fn include(&self) -> &Vec<String> {
         &self.include
@@ -776,7 +764,6 @@ mssql:
       cache_age: 600 # optional(default:600)
     discovery: # optional
       detect: yes # optional(default:yes)
-      all: no # optional(default:no) prio 1; ignore include/exclude if yes
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
@@ -852,7 +839,6 @@ sections:
         pub const DISCOVERY_FULL: &str = r#"
 discovery:
   detect: no
-  all: yes
   include: ["a", "b" ]
   exclude: ["c", "d" ]
 "#;
@@ -1048,7 +1034,6 @@ sections:
     fn test_discovery_from_yaml_full() {
         let discovery = Discovery::from_yaml(&create_yaml(data::DISCOVERY_FULL)).unwrap();
         assert!(!discovery.detect());
-        assert!(discovery.all());
         assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
         assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
     }
@@ -1057,7 +1042,6 @@ sections:
     fn test_discovery_from_yaml_default() {
         let discovery = Discovery::from_yaml(&create_discovery_yaml_default()).unwrap();
         assert!(discovery.detect());
-        assert!(discovery.all());
         assert!(discovery.include().is_empty());
         assert!(discovery.exclude().is_empty());
     }
@@ -1171,7 +1155,6 @@ discovery:
             &vec!["foo".to_string(), "bar".to_string()]
         );
         assert_eq!(c.discovery().exclude(), &vec!["baz".to_string()]);
-        assert!(!c.discovery().all());
         assert!(c.discovery().detect());
         assert_eq!(c.auth().username(), "foo");
         assert_eq!(c.auth().password().unwrap(), "bar");
@@ -1201,17 +1184,15 @@ discovery:
 
     #[test]
     fn test_config_discovery() {
-        let c = make_detect_config(true, &[], &[]);
+        let c = make_detect_config(&[], &[]);
         assert!(c.is_instance_allowed(&"weird"));
-        let c = make_detect_config(false, &[], &[]);
-        assert!(!c.is_instance_allowed(&"weird"));
-        let c = make_detect_config(false, &["a", "b"], &["a", "b"]);
+        let c = make_detect_config(&["a", "b"], &["a", "b"]);
         assert!(!c.is_instance_allowed(&"weird"));
         assert!(c.is_instance_allowed(&"a"));
         assert!(c.is_instance_allowed(&"b"));
     }
 
-    fn make_detect_config(all: bool, include: &[&str], exclude: &[&str]) -> Config {
+    fn make_detect_config(include: &[&str], exclude: &[&str]) -> Config {
         let source = format!(
             r"---
 mssql:
@@ -1220,7 +1201,6 @@ mssql:
       username: foo
     discovery:
       detect: true # doesnt matter for us
-      all: {}
       include: {include:?}
       exclude: {exclude:?}
     custom:
@@ -1228,8 +1208,7 @@ mssql:
       - sid: sid2
         connection:
           hostname: ab
-",
-            if all { "yes" } else { "no" }
+"
         );
         Config::from_string(&source).unwrap().unwrap()
     }

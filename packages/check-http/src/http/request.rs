@@ -20,6 +20,7 @@ pub struct RequestConfig {
     pub auth_user: Option<String>,
     pub auth_pw: Option<String>,
     pub without_body: bool,
+    pub token_auth: Option<(HeaderName, HeaderValue)>,
 }
 
 pub struct ProcessedResponse {
@@ -58,6 +59,9 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
 
 fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder {
     let mut headers = HeaderMap::from_iter(request_cfg.headers);
+    if let Some((token_header, token_key)) = request_cfg.token_auth {
+        headers.insert(token_header, token_key);
+    }
     if let Some(content_type) = request_cfg.content_type {
         headers.insert(CONTENT_TYPE, content_type);
     }

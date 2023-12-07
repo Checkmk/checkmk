@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::pwstore;
+use crate::pwstore::password_from_store;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
@@ -21,6 +21,13 @@ pub struct Cli {
 
     #[command(flatten)]
     pub auth_pw: AuthPw,
+
+    /// Header name for token based authentication, e.g. "Authorization"
+    #[arg(long, requires = "TokenKey")]
+    pub token_header: Option<HeaderName>,
+
+    #[command(flatten)]
+    pub token_key: TokenKey,
 
     /// Additional header in the form NAME:VALUE. Use multiple times for additional headers.
     #[arg(short = 'k', long="header", value_parser=split_header::<HeaderName, HeaderValue>)]
@@ -207,8 +214,24 @@ pub struct AuthPw {
     pub auth_pw_plain: Option<String>,
 
     /// Password for HTTP Basic Auth, provided as ID for password store lookup
-    #[arg(long, requires = "auth_user", value_parser=pwstore::password_from_store)]
-    pub auth_pwstore: Option<String>,
+    #[arg(long, requires = "auth_user", value_parser=password_from_store)]
+    pub auth_pw_pwstore: Option<String>,
+}
+
+#[derive(Args, Debug)]
+#[group(multiple = false)]
+pub struct TokenKey {
+    /// Plain key for token based authentication, e.g., "Bearer XYZ123"
+    #[arg(long, requires = "token_header")]
+    pub token_key_plain: Option<HeaderValue>,
+
+    /// Key for token based authentication, provided as ID for password store lookup
+    #[arg(long, requires = "token_header", value_parser=header_value_from_store)]
+    pub token_key_pwstore: Option<HeaderValue>,
+}
+
+fn header_value_from_store(value: &str) -> AnyhowResult<HeaderValue> {
+    Ok(HeaderValue::from_str(&password_from_store(value)?)?)
 }
 
 fn split_header<T, U>(header: &str) -> AnyhowResult<(T, U)>

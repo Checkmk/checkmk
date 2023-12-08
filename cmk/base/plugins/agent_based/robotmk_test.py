@@ -17,7 +17,16 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
 from cmk.plugins.lib.robotmk_rebot_xml import Outcome, Test
 from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResults,
+    register,
+    render,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -56,6 +65,7 @@ def check(
 
 def _check_test(params: Params, test: Test) -> CheckResult:
     if test.robot_exit:
+        yield IgnoreResults("Test has `robot:exit` tag")
         return
 
     yield Result(state=State.OK, summary=test.name)

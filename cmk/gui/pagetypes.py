@@ -506,6 +506,13 @@ class PageRenderer(Base):
             filename="%s.py" % self.type_name(),
         )
 
+    def view_url(self):
+        return makeuri_contextless(
+            request,
+            [(self.ident_attr(), self.name())],
+            filename="%s.py" % self.type_name(),
+        )
+
     def render_title(self):
         if self._can_be_linked():
             return html.render_a(self.title(), href=self.page_url())
@@ -700,7 +707,6 @@ class Overridable(Base):
         http_vars: HTTPVariables = [("load_name", self.name())]
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
-
         return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self):
@@ -1182,7 +1188,7 @@ class Overridable(Base):
 
                     # View
                     if isinstance(instance, PageRenderer):
-                        html.icon_button(instance.page_url(), _("View"), cls.type_name())
+                        html.icon_button(instance.view_url(), _("View"), cls.type_name())
 
                     # Clone / Customize
                     html.icon_button(

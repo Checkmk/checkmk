@@ -8,6 +8,7 @@ from datetime import datetime
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
     Metric,
     Result,
     Service,
@@ -220,7 +221,7 @@ def test_discover_robotmk_test() -> None:
         pytest.param(
             "skipped_test",
             Params(test_runtime=None, runtime_thresholds_keywords=[]),
-            [],
+            [IgnoreResults("Test has `robot:exit` tag")],
             id="Skipped test with robot:exit tag",
         ),
     ],

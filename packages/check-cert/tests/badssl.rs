@@ -5,6 +5,7 @@
 // Integration tests, run with `cargo test -- --ignored`
 
 use assert_cmd::Command;
+use assertor::*;
 use std::process::Output;
 
 fn cmd(host: &str) -> Command {
@@ -25,7 +26,7 @@ fn failure(reason: &str) -> String {
 #[ignore]
 fn test_expired() {
     let mut cmd = cmd("expired.badssl.com");
-    assert!(stdout(cmd.output()).contains(&failure("certificate has expired")));
+    assert_that!(stdout(cmd.output())).contains(failure("certificate has expired"));
 }
 
 #[test]
@@ -35,15 +36,13 @@ fn test_wrong_host() {
     let mut cmd = cmd("wrong.host.badssl.com");
 
     todo!("should fail");
-    // assert!(stdout(cmd.output()).contains(...));
 }
 
 #[test]
 #[ignore]
 fn test_self_signed() {
     let mut cmd = cmd("self-signed.badssl.com");
-
-    assert!(stdout(cmd.output()).contains(&failure("self-signed certificate")));
+    assert_that!(stdout(cmd.output())).contains(failure("self-signed certificate"));
 }
 
 #[test]
@@ -52,9 +51,8 @@ fn test_allow_self_signed() {
     let mut cmd = cmd("self-signed.badssl.com");
     cmd.arg("--allow-self-signed");
 
-    assert!(
-        stdout(cmd.output()).contains("Certificate chain verification OK: self-signed certificate")
-    );
+    assert_that!(stdout(cmd.output()))
+        .contains("Certificate chain verification OK: self-signed certificate");
 }
 
 #[test]
@@ -62,7 +60,7 @@ fn test_allow_self_signed() {
 fn test_untrusted_root() {
     let mut cmd = cmd("self-signed.badssl.com");
 
-    assert!(stdout(cmd.output()).contains(&failure("self-signed certificate")));
+    assert_that!(stdout(cmd.output())).contains(failure("self-signed certificate"));
 }
 
 #[test]
@@ -70,7 +68,7 @@ fn test_untrusted_root() {
 fn test_revoked() {
     let mut cmd = cmd("revoked.badssl.com");
 
-    assert!(stdout(cmd.output()).contains("certificate has expired"));
+    assert_that!(stdout(cmd.output())).contains("certificate has expired");
 }
 
 #[test]
@@ -80,5 +78,4 @@ fn test_pinning_test() {
     let mut cmd = cmd("pinning-test.badssl.com");
 
     todo!("should fail");
-    // assert!(stdout(cmd.output()).contains(...));
 }

@@ -19,6 +19,9 @@ class ActiveCheckCommand:
 
     One ActiveCheckCommand results in one Checkmk service.
 
+    Command arguments will be shell-escaped during constructing the command line.
+    That means that any string can be safely passed as a command argument.
+
     Args:
         service_description: Description of the created service
         command_arguments: Arguments that are passed to the active checks command-line interface
@@ -34,7 +37,7 @@ class ActiveCheckCommand:
         ...         "--password",
         ...         StoredSecret("stored_password_id")
         ...     ]
-        ...     )
+        ... )
         ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \
 'example-user', '--password', StoredSecret(value='stored_password_id', format='%s')])
     """

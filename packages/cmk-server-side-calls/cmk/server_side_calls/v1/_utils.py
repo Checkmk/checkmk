@@ -32,13 +32,15 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     If the IP family is configured as IPv4/IPv6 dual-stack, it will be resolved using the
     `Primary IP address family of dual-stack hosts` rule.
 
+    Address can be None only in case `No IP` has been configured as host's IP address family.
+
     Args:
         name: Host name
-        address: IPv4 or IPv6 address, depending on the IP family
+        address: Equal to the IPv4 or IPv6 address, depending on the IP family of the host
         alias: Host alias
         ip_family: Resolved IP address family
-        ipv4address: Resolved IPv4 address
-        ipv6address: Resolved IPv6 address
+        ipv4address: Resolved IPv4 address, None if IP family is IPv6
+        ipv6address: Resolved IPv6 address, None if IP family is IPv4
         additional_ipv4addresses: Additional IPv4 addresses
         additional_ipv6addresses: Additional IPv6 addresses
 

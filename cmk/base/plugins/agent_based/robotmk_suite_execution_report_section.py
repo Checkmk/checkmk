@@ -7,7 +7,6 @@ from collections.abc import Sequence
 
 from cmk.plugins.lib.robotmk_rebot_xml import Suite, Test
 from cmk.plugins.lib.robotmk_suite_execution_report import (
-    ExecutionReportAlreadyRunning,
     RebotOutcomeResult,
     Section,
     SuiteExecutionReport,
@@ -38,14 +37,12 @@ def parse(string_table: StringTable) -> Section:
 
 def _post_process_suite_execution_report(
     suite_execution_report: SuiteExecutionReport,
-) -> tuple[SuiteReport | ExecutionReportAlreadyRunning, dict[str, TestReport]]:
-    if isinstance(outcome := suite_execution_report.outcome, ExecutionReportAlreadyRunning):
-        return outcome, {}
-    if isinstance(rebot := outcome.Executed.rebot, RebotOutcomeResult):
+) -> tuple[SuiteReport, dict[str, TestReport]]:
+    if isinstance(rebot := suite_execution_report.rebot, RebotOutcomeResult):
         return (
             SuiteReport(
-                attempts=outcome.Executed.attempts,
-                config=outcome.Executed.config,
+                attempts=suite_execution_report.attempts,
+                config=suite_execution_report.config,
                 rebot=SuiteRebotReport(
                     top_level_suite=rebot.Ok.xml.robot.suite,
                     timestamp=rebot.Ok.timestamp,
@@ -55,7 +52,7 @@ def _post_process_suite_execution_report(
                 test_name: TestReport(
                     test=test,
                     html=rebot.Ok.html,
-                    attempts_config=outcome.Executed.config,
+                    attempts_config=suite_execution_report.config,
                     rebot_timestamp=rebot.Ok.timestamp,
                 )
                 for test_name, test in _extract_tests_with_full_names(
@@ -66,8 +63,8 @@ def _post_process_suite_execution_report(
         )
     return (
         SuiteReport(
-            attempts=outcome.Executed.attempts,
-            config=outcome.Executed.config,
+            attempts=suite_execution_report.attempts,
+            config=suite_execution_report.config,
             rebot=rebot,
         ),
         {},

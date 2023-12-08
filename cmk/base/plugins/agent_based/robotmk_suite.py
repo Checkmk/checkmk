@@ -12,7 +12,6 @@ from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
     AttemptsConfig,
-    ExecutionReportAlreadyRunning,
     RebotOutcomeError,
     Section,
     SuiteRebotReport,
@@ -42,14 +41,10 @@ def check(
 
 
 def _check_suite_execution_report(
-    report: SuiteReport | ExecutionReportAlreadyRunning,
+    report: SuiteReport,
     params: CheckParameters,
     now: float,
 ) -> CheckResult:
-    if isinstance(report, ExecutionReportAlreadyRunning):
-        yield Result(state=State.CRIT, summary="Suite already running, execution skipped")
-        return
-
     yield from _check_rebot(
         rebot=report.rebot,
         config=report.config,

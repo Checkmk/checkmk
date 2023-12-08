@@ -56,23 +56,11 @@ class AttemptsConfig(BaseModel, frozen=True):
     n_attempts_max: int
 
 
-class AttemptsOutcome(BaseModel, frozen=True):
+class SuiteExecutionReport(BaseModel, frozen=True):
+    suite_id: str
     attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
     rebot: RebotOutcomeResult | RebotOutcomeError | None
     config: AttemptsConfig
-
-
-class ExecutionReport(BaseModel, frozen=True):
-    Executed: AttemptsOutcome
-
-
-class ExecutionReportAlreadyRunning(Enum):
-    AlreadyRunning = "AlreadyRunning"
-
-
-class SuiteExecutionReport(BaseModel, frozen=True):
-    suite_id: str
-    outcome: ExecutionReport | ExecutionReportAlreadyRunning
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -98,5 +86,5 @@ class TestReport:
 
 @dataclass(frozen=True, kw_only=True)
 class Section:
-    suites: Mapping[str, SuiteReport | ExecutionReportAlreadyRunning]
+    suites: Mapping[str, SuiteReport]
     tests: Mapping[str, TestReport]

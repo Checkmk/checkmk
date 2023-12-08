@@ -13,6 +13,7 @@ from tests.testlib import set_timezone
 from cmk.gui.graphing._artwork import (
     _areastack,
     _compute_graph_t_axis,
+    _compute_v_axis_min_max,
     _halfstep_interpolation,
     _purge_min_max,
     _t_axis_labels_seconds,
@@ -20,6 +21,7 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
+from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
 
@@ -40,6 +42,138 @@ def test_min(
     result: tuple[int, int],
 ) -> None:
     assert _purge_min_max(_min, _max, mirrored) == result
+
+
+@pytest.mark.parametrize(
+    "explicit_vertical_range, layouted_curves_range, graph_data_vrange, mirrored, expected_v_axis_min_max",
+    [
+        pytest.param(
+            (None, None),
+            (None, None),
+            None,
+            False,
+            ((0.0, 1.0), 1.0, 0.0, 1.5),
+            id="default",
+        ),
+        pytest.param(
+            (None, None),
+            (None, None),
+            None,
+            True,
+            ((-1.0, 1.0), 2.0, -2.0, 2.0),
+            id="default-mirrored",
+        ),
+        pytest.param(
+            (-5.0, 10.0),
+            (None, None),
+            None,
+            False,
+            ((-5.0, 10.0), 15.0, -12.5, 17.5),
+            id="explicit_vertical_range",
+        ),
+        pytest.param(
+            (-5.0, 10.0),
+            (None, None),
+            None,
+            True,
+            ((-5.0, 10.0), 20.0, -20.0, 20.0),
+            id="explicit_vertical_range-mirrored",
+        ),
+        pytest.param(
+            (None, None),
+            (-5.0, 10.0),
+            None,
+            False,
+            ((-5.0, 10.0), 15.0, -12.5, 17.5),
+            id="layouted_curves_range",
+        ),
+        pytest.param(
+            (None, None),
+            (-5.0, 10.0),
+            None,
+            True,
+            ((-5.0, 10.0), 20.0, -20.0, 20.0),
+            id="layouted_curves_range-mirrored",
+        ),
+        pytest.param(
+            (None, None),
+            (None, None),
+            (-5.0, 10.0),
+            False,
+            ((0.0, 1.0), 15.0, -5.0, 10.0),
+            id="graph_data_vrange",
+        ),
+        pytest.param(
+            (None, None),
+            (None, None),
+            (-5.0, 10.0),
+            True,
+            ((-1.0, 1.0), 20.0, -10.0, 10.0),
+            id="graph_data_vrange-mirrored",
+        ),
+    ],
+)
+def test__compute_v_axis_min_max(
+    explicit_vertical_range: tuple[float | None, float | None],
+    layouted_curves_range: tuple[float | None, float | None],
+    graph_data_vrange: tuple[float, float] | None,
+    mirrored: bool,
+    expected_v_axis_min_max: tuple[tuple[float, float], float, float, float],
+) -> None:
+    assert (
+        _compute_v_axis_min_max(
+            explicit_vertical_range,
+            graph_data_vrange,
+            SizeEx(1),
+            layouted_curves_range,
+            mirrored,
+        )
+        == expected_v_axis_min_max
+    )
+
+
+@pytest.mark.parametrize(
+    "explicit_vertical_range, layouted_curves_range, graph_data_vrange, expected_v_axis_min_max",
+    [
+        pytest.param(
+            (-500.0, 1000.0),
+            (-5.0, 10.0),
+            None,
+            ((-500.0, 1000.0), 1500.0, -1250.0, 1750.0),
+            id="explicit_vertical_range-and-layouted_curves_range",
+        ),
+        pytest.param(
+            (-500.0, 1000.0),
+            (None, None),
+            (-5.0, 10.0),
+            ((-500.0, 1000.0), 15.0, -5.0, 10.0),
+            id="graph_data_vrange-precedence-over-explicit_vertical_range",
+        ),
+        pytest.param(
+            (None, None),
+            (-500.0, 1000.0),
+            (-5.0, 10.0),
+            ((-500.0, 1000.0), 15.0, -5.0, 10.0),
+            id="graph_data_vrange-precedence-over-layouted_curves_range",
+        ),
+    ],
+)
+def test__compute_v_axis_min_max_precedence(
+    explicit_vertical_range: tuple[float | None, float | None],
+    layouted_curves_range: tuple[float | None, float | None],
+    graph_data_vrange: tuple[float, float] | None,
+    expected_v_axis_min_max: tuple[tuple[float, float], float, float, float],
+) -> None:
+    assert (
+        _compute_v_axis_min_max(
+            explicit_vertical_range,
+            graph_data_vrange,
+            SizeEx(1),
+            layouted_curves_range,
+            False,
+        )
+        == expected_v_axis_min_max
+    )
 
 
 def test_t_axis_labels_seconds() -> None:

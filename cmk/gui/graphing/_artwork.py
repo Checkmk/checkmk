@@ -503,7 +503,11 @@ def _compute_graph_v_axis(
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
     real_range, vrange, min_value, max_value = _compute_v_axis_min_max(
-        graph_recipe, graph_data_range, height_ex, layouted_curves, mirrored
+        graph_recipe.explicit_vertical_range,
+        graph_data_range.vertical_range,
+        height_ex,
+        _get_min_max_from_curves(layouted_curves),
+        mirrored,
     )
 
     # Guestimate a useful number of vertical labels
@@ -597,17 +601,17 @@ def _compute_graph_v_axis(
 
 
 def _compute_v_axis_min_max(
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
+    explicit_vertical_range: tuple[float | None, float | None],
+    graph_data_vrange: tuple[float, float] | None,
     height: SizeEx,
-    layouted_curves: Sequence[LayoutedCurve],
+    layouted_curves_range: tuple[float | None, float | None],
     mirrored: bool,
 ) -> tuple[tuple[float, float], float, float, float]:
-    opt_min_value, opt_max_value = _get_min_max_from_curves(layouted_curves)
+    opt_min_value, opt_max_value = layouted_curves_range
     min_value, max_value = _purge_min_max(opt_min_value, opt_max_value, mirrored)
 
     # Apply explicit range if defined in graph
-    explicit_min_value, explicit_max_value = graph_recipe.explicit_vertical_range
+    explicit_min_value, explicit_max_value = explicit_vertical_range
     if explicit_min_value is not None:
         min_value = explicit_min_value
     if explicit_max_value is not None:
@@ -618,8 +622,8 @@ def _compute_v_axis_min_max(
 
     # An explizit range set by user zoom has always
     # precedence!
-    if graph_data_range.vertical_range:
-        min_value, max_value = graph_data_range.vertical_range
+    if graph_data_vrange:
+        min_value, max_value = graph_data_vrange
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
@@ -640,7 +644,7 @@ def _compute_v_axis_min_max(
 
     # Make range a little bit larger, approx by 0.5 ex. But only if no zooming
     # is being done.
-    if not graph_data_range.vertical_range:
+    if not graph_data_vrange:
         vrange_per_ex = vrange / height
 
         # Let displayed range have a small border

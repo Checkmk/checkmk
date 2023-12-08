@@ -109,6 +109,21 @@ _Section = Section(
             attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
             rebot_timestamp=1701098145,
         ),
+        "test_result_too_old": TestReport(
+            test=Test.model_construct(
+                name="Test Result Too Old",
+                status=StatusV6.model_construct(
+                    status=Outcome.FAIL,
+                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                    endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                    elapsed=None,
+                ),
+                robot_exit=False,
+            ),
+            html=b"irrelevant",
+            attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
+            rebot_timestamp=1701088000,
+        ),
     },
 )
 
@@ -152,6 +167,13 @@ def test_discover_robotmk_test() -> None:
         ),
         Service(
             item="skipped_test",
+            labels=[
+                ServiceLabel("robotmk/html_last_error_log", "yes"),
+                ServiceLabel("robotmk/html_last_log", "yes"),
+            ],
+        ),
+        Service(
+            item="test_result_too_old",
             labels=[
                 ServiceLabel("robotmk/html_last_error_log", "yes"),
                 ServiceLabel("robotmk/html_last_log", "yes"),
@@ -224,6 +246,16 @@ def test_discover_robotmk_test() -> None:
             [IgnoreResults("Test has `robot:exit` tag")],
             id="Skipped test with robot:exit tag",
         ),
+        pytest.param(
+            "test_result_too_old",
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
+            [
+                IgnoreResults(
+                    "Data is too old (age: 2 hours 49 minutes, execution interval: 8 minutes 20 seconds)"
+                )
+            ],
+            id="Rebot age too old",
+        ),
     ],
 )
 def test_check_robotmk_test(
@@ -231,7 +263,18 @@ def test_check_robotmk_test(
     params: Params,
     expected_result: CheckResult,
 ) -> None:
-    assert list(_check_test(params=params, test=_Section.tests[item].test)) == expected_result
+    assert (
+        list(
+            _check_test(
+                params=params,
+                test=_Section.tests[item].test,
+                rebot_timestamp=_Section.tests[item].rebot_timestamp,
+                execution_interval=500,
+                now=1701098145,
+            )
+        )
+        == expected_result
+    )
 
 
 def test_check_robotmk_test_item_not_found() -> None:

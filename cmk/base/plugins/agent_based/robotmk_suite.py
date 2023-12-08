@@ -8,6 +8,7 @@ from time import time
 from typing import TypedDict
 
 from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, StatusV7
+from cmk.plugins.lib.robotmk_suite_and_test_checking import message_if_rebot_is_too_old
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
@@ -67,11 +68,17 @@ def _check_rebot(
 ) -> CheckResult:
     match rebot:
         case SuiteRebotReport():
-            yield from _check_rebot_age(
-                rebot_timestamp=rebot.timestamp,
-                execution_interval=config.interval,
-                now=now,
-            )
+            if (
+                rebot_too_old_message := message_if_rebot_is_too_old(
+                    rebot_timestamp=rebot.timestamp,
+                    execution_interval=config.interval,
+                    now=now,
+                )
+            ) is not None:
+                yield Result(
+                    state=State.CRIT,
+                    summary=rebot_too_old_message,
+                )
             yield from _check_runtime(
                 status=rebot.top_level_suite.status,
                 config=config,
@@ -88,22 +95,6 @@ def _check_rebot(
                 state=State.CRIT,
                 summary="No data available because none of the attempts produced any output",
             )
-
-
-def _check_rebot_age(
-    *,
-    rebot_timestamp: int,
-    execution_interval: int,
-    now: float,
-) -> CheckResult:
-    if (rebot_age := now - rebot_timestamp) > 2 * execution_interval:
-        yield Result(
-            state=State.CRIT,
-            summary=(
-                f"Data is too old (age: {render.timespan(rebot_age)}, "
-                f"execution interval: {render.timespan(execution_interval)})"
-            ),
-        )
 
 
 def _check_runtime(

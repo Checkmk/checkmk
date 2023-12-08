@@ -838,6 +838,13 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
                         default_value=False,
                     ),
                 ),
+                (
+                    "inject_js_profiling_code",
+                    Checkbox(
+                        title=_("Inject JavaScript profiling code"),
+                        default_value=False,
+                    ),
+                ),
             ],
             optional_keys=False,
         )

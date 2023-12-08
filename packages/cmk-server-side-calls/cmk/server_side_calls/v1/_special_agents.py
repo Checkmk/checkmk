@@ -19,6 +19,9 @@ class SpecialAgentCommand:
 
     One SpecialAgentCommand results in one call of the special agent.
 
+    Command arguments will be shell-escaped during constructing the command line.
+    That means that any string can be safely passed as a command argument.
+
     Args:
         command_arguments: Arguments that are passed to the special agent command-line interface
         stdin: String given to the special agent script's standard input.
@@ -28,7 +31,7 @@ class SpecialAgentCommand:
     Example:
         >>> SpecialAgentCommand(
         ...     command_arguments=["--services", "logs", "errors", "stats"]
-        ...     )
+        ... )
         SpecialAgentCommand(command_arguments=['--services', 'logs', 'errors', 'stats'], stdin=None)
     """
 

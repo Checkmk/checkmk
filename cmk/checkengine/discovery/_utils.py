@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import enum
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass
@@ -103,6 +104,12 @@ class _Discoverable(Protocol):
 _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
 
 
+@dataclasses.dataclass
+class DiscoveredItem(Generic[_DiscoveredItem]):
+    previous: _DiscoveredItem | None
+    new: _DiscoveredItem | None
+
+
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
     """Classify items into "new", "old" and "vanished" ones."""
 
@@ -115,15 +122,42 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         current_dict = {v.id(): v for v in current}
         preexisting_dict = {v.id(): v for v in preexisting}
 
-        self.vanished: Final = [v for k, v in preexisting_dict.items() if k not in current_dict]
-        self.old: Final = [v for k, v in preexisting_dict.items() if k in current_dict]
-        self.new: Final = [v for k, v in current_dict.items() if k not in preexisting_dict]
-        self.present: Final = self.old + self.new
+        self._vanished: Final = [
+            DiscoveredItem(previous=v, new=None)
+            for k, v in preexisting_dict.items()
+            if k not in current_dict
+        ]
+        self._old: Final = [
+            DiscoveredItem(previous=v, new=current_dict[k])
+            for k, v in preexisting_dict.items()
+            if k in current_dict
+        ]
+        self._new: Final = [
+            DiscoveredItem(previous=None, new=v)
+            for k, v in current_dict.items()
+            if k not in preexisting_dict
+        ]
 
     @classmethod
     def empty(cls) -> QualifiedDiscovery:
         """create an empty instance"""
         return cls(preexisting=(), current=())
+
+    @property
+    def vanished(self) -> list[_DiscoveredItem]:
+        return [item.previous for item in self._vanished if item.previous is not None]
+
+    @property
+    def old(self) -> list[_DiscoveredItem]:
+        return [item.previous for item in self._old if item.previous is not None]
+
+    @property
+    def new(self) -> list[_DiscoveredItem]:
+        return [item.new for item in self._new if item.new is not None]
+
+    @property
+    def present(self) -> list[_DiscoveredItem]:
+        return self.old + self.new
 
     def chain_with_qualifier(
         self,

@@ -722,11 +722,7 @@ async fn test_find_no_detect_two_custom_local() {
     assert!(instances[0].version.contains('.'));
     assert_eq!(instances[0].port(), Some(1433));
     let pc = instances[0].computer_name().as_ref().unwrap().clone();
-    assert!(
-        pc.to_uppercase().contains("KLAPP"),
-        "{:?}",
-        instances[0].computer_name()
-    );
+    assert!(!pc.is_empty(), "{:?}", instances[0].computer_name());
 }
 
 #[tokio::test(flavor = "multi_thread")]

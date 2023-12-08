@@ -100,3 +100,60 @@ function reschedule_check_response_handler(
         img.title = response.result.message;
     }
 }
+
+export function add_to_visual(
+    visual_type: string,
+    visual_name: string,
+    context: Record<string, any>
+) {
+    const target_visual = document.getElementById(
+        "select2-_add_to_" + visual_type + "-container"
+    );
+
+    if (!target_visual) {
+        console.error("Missing target visual");
+        return;
+    }
+
+    const target_title = target_visual.title;
+
+    if (!target_title) {
+        console.error("Missing target visual title (empty selection)");
+        return;
+    }
+
+    const target_parts = target_title.split("(").pop();
+    const target_id = target_parts!.slice(0, -1);
+
+    const create_info = {
+        context: context,
+        params: {name: visual_name},
+    };
+    const create_info_json = JSON.stringify(create_info);
+
+    const url =
+        "ajax_add_visual.py" +
+        "?visual_type=" +
+        visual_type +
+        "s" +
+        "&visual_name=" +
+        // Select2 only transports the title so we have to get the ID
+        // from it. target_visual is e.g. "AWS EC2 instances
+        // (aws_ec2_overview)"
+        target_id +
+        "&type=view";
+
+    ajax.call_ajax(url, {
+        method: "POST",
+        post_data: "create_info=" + encodeURIComponent(create_info_json),
+        plain_error: true,
+        response_handler: function (_handler_data: any, response_body: string) {
+            // After adding a dashlet, go to the choosen dashboard
+            if (response_body.substr(0, 2) == "OK") {
+                window.location.href = response_body.substr(3);
+            } else {
+                console.error("Failed to add element: " + response_body);
+            }
+        },
+    });
+}

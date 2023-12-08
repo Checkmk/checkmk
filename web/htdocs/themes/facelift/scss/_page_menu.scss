@@ -1085,3 +1085,8 @@ div#page_menu_popups div.side_popup {
     }
   }
 }
+
+div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
+  // valuespec has 250px hard coded
+  width: 400px !important;
+}

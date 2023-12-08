@@ -1213,9 +1213,15 @@ function select2_vs_autocomplete(
             const autocompleter = JSON.parse(elem.dataset.autocompleter);
             // TODO: move placeholder_title to python autocompleter config!
             const field_element =
-                ["hostname", "service", "metric", "graph", "label"].find(el =>
-                    autocompleter.ident.includes(el)
-                ) || "item";
+                [
+                    "hostname",
+                    "service",
+                    "metric",
+                    "graph",
+                    "label",
+                    "dashboard",
+                    "report",
+                ].find(el => autocompleter.ident.includes(el)) || "item";
             let placeholder_title = `(Select ${field_element})`;
             if (autocompleter.ident === "wato_folder_choices")
                 placeholder_title = "(Select target folder)";

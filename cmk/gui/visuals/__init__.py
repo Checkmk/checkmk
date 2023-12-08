@@ -3,12 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
+
 from cmk.gui import utils
 from cmk.gui.pages import PageRegistry
+from cmk.gui.valuespec import autocompleter_registry
 
 from . import _filters, info
-from ._add_to_visual import ajax_add_visual, ajax_popup_add
+from ._add_to_visual import (
+    add_to_dashboard_choices_autocompleter,
+    add_to_report_choices_autocompleter,
+    ajax_add_visual,
+    ajax_popup_add,
+)
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
+from ._add_to_visual import page_menu_topic_add_to as page_menu_topic_add_to
 from ._add_to_visual import set_page_context as set_page_context
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
 from ._filter_context import active_context_from_request as active_context_from_request
@@ -86,6 +95,13 @@ def register(
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
     info.register(_visual_info_registry)
     _filters.register(page_registry, filter_registry)
+    autocompleter_registry.register_autocompleter(
+        "add_to_dashboard_choices", add_to_dashboard_choices_autocompleter
+    )
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
+        autocompleter_registry.register_autocompleter(
+            "add_to_report_choices", add_to_report_choices_autocompleter
+        )
 
 
 def load_plugins() -> None:

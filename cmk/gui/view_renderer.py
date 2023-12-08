@@ -331,7 +331,8 @@ class GUIViewRenderer(ABCViewRenderer):
             PageMenuDropdown(
                 name="export",
                 title=_("Export"),
-                topics=[
+                topics=self._page_menu_topic_add_to()
+                + [
                     PageMenuTopic(
                         title=_("Data"),
                         entries=list(self._page_menu_entries_export_data()),
@@ -347,7 +348,6 @@ class GUIViewRenderer(ABCViewRenderer):
         page_menu_dropdowns = (
             self._page_menu_dropdown_commands()
             + self._page_menu_dropdowns_context(rows)
-            + self._page_menu_dropdown_add_to()
             + export_dropdown
         )
 
@@ -581,8 +581,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                 )
 
-    def _page_menu_dropdown_add_to(self) -> list[PageMenuDropdown]:
-        return visuals.page_menu_dropdown_add_to_visual(add_type="view", name=self.view.name)
+    def _page_menu_topic_add_to(self) -> list[PageMenuTopic]:
+        return visuals.page_menu_topic_add_to(visual_type="view", name=self.view.name)
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F) or not show_filters:

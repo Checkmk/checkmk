@@ -5,6 +5,9 @@
 
 """Add a visual to other visuals (dashboard, report)"""
 
+import re
+from typing import Literal
+
 from pydantic import BaseModel
 
 import cmk.utils.version as cmk_version
@@ -19,11 +22,16 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuLink,
+    PageMenuPopup,
     PageMenuTopic,
 )
 from cmk.gui.pagetypes import page_menu_add_to_topics
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import Choices, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.valuespec import AjaxDropdownChoice
+from cmk.gui.visuals._filter_context import get_context_from_uri_vars
 from cmk.gui.visuals.type import visual_type_registry
 
 
@@ -155,3 +163,83 @@ def ajax_add_visual() -> None:
         create_info.context,
         create_info.params,
     )
+
+
+def page_menu_topic_add_to(visual_type: str, name: str) -> list[PageMenuTopic]:
+    entries = [
+        PageMenuEntry(
+            title=_("Add to dashboard"),
+            name="add_to_dashboard",
+            icon_name="dashboard",
+            item=PageMenuPopup(
+                content=_render_add_to_popup(add_to_type="dashboard"),
+            ),
+        )
+    ]
+
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
+        entries.append(
+            PageMenuEntry(
+                title=_("Add to report"),
+                name="add_to_report",
+                icon_name="report",
+                item=PageMenuPopup(
+                    content=_render_add_to_popup(add_to_type="report"),
+                ),
+            )
+        )
+
+    return [
+        PageMenuTopic(
+            title=_("%s") % visual_type.title(),
+            entries=entries,
+        )
+    ]
+
+
+def add_to_dashboard_choices_autocompleter(value: str, params: dict) -> Choices:
+    return _get_visual_choices(
+        visual_type="dashboards",
+        value=value,
+    )
+
+
+def add_to_report_choices_autocompleter(value: str, params: dict) -> Choices:
+    return _get_visual_choices(
+        visual_type="reports",
+        value=value,
+    )
+
+
+def _get_visual_choices(visual_type: str, value: str) -> Choices:
+    match_pattern = re.compile(value, re.IGNORECASE)
+    matching_visuals = []
+    for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
+        if match_pattern.search(content["title"]) is not None:
+            matching_visuals.append((name, f'{content["title"]} ({name})'))
+    return matching_visuals
+
+
+class AddToDashboardChoices(AjaxDropdownChoice):
+    ident = "add_to_dashboard_choices"
+
+
+class AddToReportChoices(AjaxDropdownChoice):
+    ident = "add_to_report_choices"
+
+
+def _render_add_to_popup(add_to_type: Literal["dashboard", "report"]) -> HTML:
+    with output_funnel.plugged():
+        dropdown = AddToDashboardChoices() if add_to_type == "dashboard" else AddToReportChoices()
+        dropdown.render_input(f"_add_to_{add_to_type}", "")
+        html.jsbutton(
+            varname="_add_to",
+            text=_("Add to"),
+            onclick=f"cmk.views.add_to_visual("
+            f'"{add_to_type}",'
+            f'"{request.var("view_name")}",'
+            f"{get_context_from_uri_vars()}"
+            f")",
+            cssclass="hot",
+        )
+        return HTML(output_funnel.drain())

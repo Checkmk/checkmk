@@ -65,6 +65,12 @@ def use_vue_rendering():
     )
 
 
+def inject_js_profiling_code():
+    return active_config.experimental_features.get(
+        "inject_js_profiling_code"
+    ) or html.request.has_var("inject_js_profiling_code")
+
+
 EncType = typing.Literal[
     "application/x-url-encoded",
     "application/x-www-form-urlencoded",
@@ -214,6 +220,259 @@ class HTMLGenerator(HTMLWriter):
         javascripts = javascripts if javascripts else []
 
         self.open_head()
+
+        if inject_js_profiling_code():
+            self.javascript(
+                """
+
+// NOTE:
+// This code is meant to be temporary and is used to investigate the runtime performance of the
+// user-interface on a continuous basis while developing it, without requiring too much infra-
+// structure.
+
+// We set this as early as possible.
+var startTime = Date.now();
+const currentUrl = window.location.pathname + window.location.search;
+
+const repeatUrlsTable = "repeatUrls";
+const metricsTable = "metrics";
+
+// We use a database!
+function openDatabase() {
+    // Whenever we need to change the schema, increment the version here.
+    const dbVersion = 1;
+    const dbName = 'PageMetricsDB';
+
+    return new Promise((resolve, reject) => {
+        const openRequest = indexedDB.open(dbName, dbVersion);
+
+        openRequest.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(metricsTable)) {
+                const objectStore = db.createObjectStore(metricsTable, { autoIncrement: true });
+                objectStore.createIndex('url', 'url', { unique: false });
+                objectStore.createIndex('metricName', 'metricName', { unique: false });
+            }
+            if (!db.objectStoreNames.contains(repeatUrlsTable)) {
+                const objectStore = db.createObjectStore(repeatUrlsTable, { keyPath: "url" });
+            }
+        };
+
+        openRequest.onsuccess = (event) => resolve(event.target.result);
+        openRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
+function addRecord(store, object) {
+    return new Promise((resolve, reject) => {
+        const addRequest = store.add(object);
+
+        addRequest.onsuccess = (event) => resolve(event.target.result);
+        addRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
+function putRecord(store, object) {
+    return new Promise((resolve, reject) => {
+        const putRequest = store.put(object);
+
+        putRequest.onsuccess = (event) => resolve(event.target.result);
+        putRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
+function getRecord(store, key) {
+  return new Promise((resolve, reject) => {
+        let getRequest = store.get(key);
+
+        getRequest.onsuccess = (event) => resolve(event.target.result);
+        getRequest.onerror = (event) => reject(event.target.error);
+  });
+}
+
+
+async function storePageLoadMetric(db, url, metricName, loadTime) {
+    // console.info(`Metric: ${metricName}: ${loadTime}ms (${url})`);
+
+    const transaction = db.transaction([metricsTable], 'readwrite');
+    const store = transaction.objectStore(metricsTable);
+
+    return await addRecord(store, {
+        url: url,
+        metricName: metricName,
+        timestamp: new Date().getTime(),
+        loadTime: loadTime,
+    });
+}
+
+
+async function repeat(times) {
+    const db = await openDatabase();
+
+    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
+    const store = transaction.objectStore(repeatUrlsTable);
+
+    return await putRecord(store, {
+        url: currentUrl,
+        times: times,
+    });
+}
+
+
+async function decreaseUrl(db, url) {
+    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
+    const store = transaction.objectStore(repeatUrlsTable);
+
+    let record = await getRecord(store, url);
+
+    if (record && typeof record.times === 'number' && record.times > 0) {
+        record.times -= 1;
+        return await putRecord(store, record);
+    }
+
+}
+
+
+async function decrease() {
+    const db = await openDatabase();
+    return await decreaseUrl(db, currentUrl);
+}
+
+
+function isMouseoverMutation(mutationRecords) {
+    for (const record of mutationRecords) {
+        // Ignore mouseovers over the graph in index.py
+        if (record.target.className == "graph" || record.target.className == "hover_menu") {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+async function shouldRepeat(db, url) {
+    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
+    const store = transaction.objectStore(repeatUrlsTable);
+
+    let record = await getRecord(store, currentUrl);
+
+    if (record && typeof record.times === 'number' && record.times > 0) {
+        return true;
+    }
+    return false;
+}
+
+
+function waitForMutationsToStop(observedElement, timeoutDuration, isIgnoredMutation) {
+    return new Promise((resolve) => {
+        let lastMutationTime = Date.now();
+        let timer;
+
+        // console.log(`Setting up observer after ${lastMutationTime - startTime}ms`);
+        timer = setTimeout(() => {
+            resolve(lastMutationTime - startTime);
+        }, timeoutDuration);
+
+        const observer = new MutationObserver((mutations) => {
+            lastMutationTime = Date.now();
+            // console.log(`Got mutations after ${lastMutationTime - startTime}ms`);
+            if (isIgnoredMutation(mutations)) return;
+
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                observer.disconnect();
+                resolve(lastMutationTime - startTime);
+            }, timeoutDuration);
+        });
+
+        observer.observe(observedElement, { childList: true, subtree: true });
+    });
+}
+
+
+async function onDomContentLoaded() {
+    const fullyLoaded = Date.now() - startTime;
+    // We set up the observer earlier so that its internal timing won't be delayed by our
+    // following database work, etc.
+    let mutationWaiter = waitForMutationsToStop(document.body, 2000, isMouseoverMutation);
+
+    const db = await openDatabase();
+    await storePageLoadMetric(db, currentUrl, "fullyLoaded", fullyLoaded);
+
+    const lastMutation = await mutationWaiter;
+    await storePageLoadMetric(db, currentUrl, "fullyRendered", lastMutation);
+
+    if (await shouldRepeat(db, currentUrl)) {
+        await decreaseUrl(db, currentUrl);
+        document.location.reload();
+    }
+}
+
+
+async function nukeDataFromOrbit() {
+    console.warn("Nuking data: started")
+    let db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([metricsTable], 'readwrite');
+        const store = transaction.objectStore(metricsTable);
+
+        const clearRequest = store.clear();
+        clearRequest.onsuccess = (event) => {
+            console.warn("Nuking data: done.")
+            resolve(event.target.result);
+        };
+        clearRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
+async function clearData() {
+    console.warn("Clearing all data: started")
+    let db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([metricsTable], 'readwrite');
+        const store = transaction.objectStore(metricsTable);
+
+        let deletedRows = 0;
+        const cursorRequest = store.openCursor();
+        cursorRequest.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (cursor.value.url === currentUrl) {
+                    deletedRows += 1;
+                    cursor.delete();
+                }
+                cursor.continue();
+            } else {
+                console.warn(`Clearing all data: ${deletedRows} records deleted.`);
+                resolve(deletedRows);
+            }
+        };
+        cursorRequest.onerror = (event) => reject(event.target.error);
+    });
+}
+
+
+function help() {
+    console.warn(`Available commands:
+help()              - Show this help.
+clearData()         - Clear all performance data for the current url.
+nukeDataFromOrbit() - Clear all performance data for ALL(!) urls.
+repeat(integer)     - Repeat the current page $integer times. First reload needs to be done manually.
+                      After every reload, the counter is decreased by 1. Once it reaches 0, the
+                      reloads will stop.`);
+}
+
+
+document.addEventListener('DOMContentLoaded', onDomContentLoaded);
+
+"""
+            )
 
         self.default_html_headers()
         self.title(title)

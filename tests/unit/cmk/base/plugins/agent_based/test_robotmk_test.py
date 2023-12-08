@@ -26,6 +26,7 @@ _Section = Section(
     tests={
         "ok_passed": TestReport(
             test=Test.model_construct(
+                id="s1-t1",
                 name="Count My Veggies",
                 status=StatusV6.model_construct(
                     status=Outcome.PASS,
@@ -40,6 +41,7 @@ _Section = Section(
         ),
         "warn_passed_with_long_runtime": TestReport(
             test=Test.model_construct(
+                id="s1-t2",
                 name="Count My Veggies",
                 status=StatusV6.model_construct(
                     status=Outcome.PASS,
@@ -54,6 +56,7 @@ _Section = Section(
         ),
         "warn_not_run": TestReport(
             test=Test.model_construct(
+                id="s1-t3",
                 name="Execute Google image search and store the first result image",
                 status=StatusV6.model_construct(
                     status=Outcome.NOT_RUN,
@@ -68,6 +71,7 @@ _Section = Section(
         ),
         "warn_skip": TestReport(
             test=Test.model_construct(
+                id="s1-t4",
                 name="Addition 1",
                 status=StatusV6.model_construct(
                     status=Outcome.SKIP,
@@ -82,6 +86,7 @@ _Section = Section(
         ),
         "crit_fail": TestReport(
             test=Test.model_construct(
+                id="s1-t5",
                 name="Addition 2",
                 status=StatusV6.model_construct(
                     status=Outcome.FAIL,
@@ -96,6 +101,7 @@ _Section = Section(
         ),
         "skipped_test": TestReport(
             test=Test.model_construct(
+                id="s1-t6",
                 name="Skipped Test",
                 status=StatusV6.model_construct(
                     status=Outcome.FAIL,

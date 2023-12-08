@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import re
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Union
 
@@ -53,10 +55,31 @@ class StatusV7(BaseModel, frozen=True):
     runtime: float | None = Field(default=None, alias="@elapsed")
 
 
+class KeywordStatus(BaseModel, frozen=True):
+    status: StatusV6 | StatusV7
+
+
+@dataclass(frozen=True, kw_only=True)
+class Keyword:
+    name: str
+    id: str
+    status: KeywordStatus
+
+    @property
+    def metric_name(self) -> str:
+        return f"{self.id}-{self.name.lower().replace(' ', '_')}"
+
+    @property
+    def parent_test_id(self) -> str | None:
+        return match.group(0) if (match := re.search(r"^(s\d-)+(t\d)", self.id)) else None
+
+
 class Test(BaseModel, frozen=True):
+    id: str = Field(alias="@id")
     name: str = Field(alias="@name")
     status: StatusV6 | StatusV7
     robot_exit: Annotated[bool, BeforeValidator(_is_robot_exit)] = Field(alias="tag", default=False)
+    keywords: list[Keyword] = Field(default=[])
 
 
 def _ensure_sequence(

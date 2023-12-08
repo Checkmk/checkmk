@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from time import time
 from typing import assert_never, Literal, TypedDict
 
 from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
@@ -15,6 +16,7 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
 )
 
 from cmk.plugins.lib.robotmk_rebot_xml import Outcome, Test
+from cmk.plugins.lib.robotmk_suite_and_test_checking import message_if_rebot_is_too_old
 from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
 from .agent_based_api.v1 import (
@@ -60,10 +62,32 @@ def check(
     if test_report.test.status.status is Outcome.FAIL:
         _transmit_to_livestatus(test_report.html, "suite_last_error_log.html")
 
-    yield from _check_test(params, test_report.test)
+    yield from _check_test(
+        params,
+        test_report.test,
+        rebot_timestamp=test_report.rebot_timestamp,
+        execution_interval=test_report.attempts_config.interval,
+        now=time(),
+    )
 
 
-def _check_test(params: Params, test: Test) -> CheckResult:
+def _check_test(
+    params: Params,
+    test: Test,
+    *,
+    rebot_timestamp: int,
+    execution_interval: int,
+    now: float,
+) -> CheckResult:
+    if (
+        rebot_too_old_message := message_if_rebot_is_too_old(
+            rebot_timestamp=rebot_timestamp,
+            execution_interval=execution_interval,
+            now=now,
+        )
+    ) is not None:
+        yield IgnoreResults(rebot_too_old_message)
+        return
     if test.robot_exit:
         yield IgnoreResults("Test has `robot:exit` tag")
         return

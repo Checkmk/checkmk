@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from datetime import datetime
 
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -12,7 +13,7 @@ from cmk.base.plugins.agent_based.robotmk_suite_execution_report_section import 
     parse,
 )
 
-from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, Suite, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Keyword, Outcome, StatusV6, Suite, Test
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptsConfig,
@@ -50,6 +51,7 @@ def test_parse() -> None:
                         suite=[],
                         test=[
                             Test.model_construct(
+                                id="s1-t1",
                                 name="Count My Veggies",
                                 status=StatusV6.model_construct(
                                     status=Outcome.PASS,
@@ -78,6 +80,7 @@ def test_parse() -> None:
                         suite=[],
                         test=[
                             Test.model_construct(
+                                id="s1-t1",
                                 name="Addition 1",
                                 status=StatusV6.model_construct(
                                     status=Outcome.PASS,
@@ -87,6 +90,7 @@ def test_parse() -> None:
                                 ),
                             ),
                             Test.model_construct(
+                                id="s1-t2",
                                 name="Addition 2",
                                 status=StatusV6.model_construct(
                                     status=Outcome.PASS,
@@ -115,6 +119,7 @@ def test_parse() -> None:
                         suite=[],
                         test=[
                             Test.model_construct(
+                                id="s1-t1",
                                 name="Execute Google image search and store the first result image",
                                 status=StatusV6.model_construct(
                                     status=Outcome.PASS,
@@ -143,6 +148,7 @@ def test_parse() -> None:
                         suite=[],
                         test=[
                             Test.model_construct(
+                                id="s1-t1",
                                 name="Main Test One",
                                 status=StatusV6.model_construct(
                                     status=Outcome.FAIL,
@@ -153,6 +159,7 @@ def test_parse() -> None:
                                 robot_exit=False,
                             ),
                             Test.model_construct(
+                                id="s1-t2",
                                 name="Main Test Two",
                                 status=StatusV6.model_construct(
                                     status=Outcome.FAIL,
@@ -163,6 +170,7 @@ def test_parse() -> None:
                                 robot_exit=True,
                             ),
                             Test.model_construct(
+                                id="s1-t3",
                                 name="Main Test Three",
                                 status=StatusV6.model_construct(
                                     status=Outcome.FAIL,
@@ -187,6 +195,7 @@ def test_parse() -> None:
         tests={
             "calc-Tasks-Count My Veggies": TestReport(
                 test=Test.model_construct(
+                    id="s1-t1",
                     name="Count My Veggies",
                     status=StatusV6.model_construct(
                         status=Outcome.PASS,
@@ -201,6 +210,7 @@ def test_parse() -> None:
             ),
             "google_imagesearch-Tasks-Execute Google image search and store the first result image": TestReport(
                 test=Test.model_construct(
+                    id="s1-t1",
                     name="Execute Google image search and store the first result image",
                     status=StatusV6.model_construct(
                         status=Outcome.PASS,
@@ -215,6 +225,7 @@ def test_parse() -> None:
             ),
             "math-Tasks-Addition 1": TestReport(
                 test=Test.model_construct(
+                    id="s1-t1",
                     name="Addition 1",
                     status=StatusV6.model_construct(
                         status=Outcome.PASS,
@@ -229,6 +240,7 @@ def test_parse() -> None:
             ),
             "math-Tasks-Addition 2": TestReport(
                 test=Test.model_construct(
+                    id="s1-t2",
                     name="Addition 2",
                     status=StatusV6.model_construct(
                         status=Outcome.PASS,
@@ -243,6 +255,7 @@ def test_parse() -> None:
             ),
             "skipped_tests-Tasks-Main Test One": TestReport(
                 test=Test.model_construct(
+                    id="s1-t1",
                     name="Main Test One",
                     status=StatusV6.model_construct(
                         status=Outcome.FAIL,
@@ -258,6 +271,7 @@ def test_parse() -> None:
             ),
             "skipped_tests-Tasks-Main Test Three": TestReport(
                 test=Test.model_construct(
+                    id="s1-t3",
                     name="Main Test Three",
                     status=StatusV6.model_construct(
                         status=Outcome.FAIL,
@@ -273,6 +287,7 @@ def test_parse() -> None:
             ),
             "skipped_tests-Tasks-Main Test Two": TestReport(
                 test=Test.model_construct(
+                    id="s1-t2",
                     name="Main Test Two",
                     status=StatusV6.model_construct(
                         status=Outcome.FAIL,
@@ -314,6 +329,7 @@ class _TestFactory(ModelFactory[Test]):
         starttime=datetime(2023, 11, 14, 13, 29, 33),
         endtime=datetime(2023, 11, 14, 13, 31, 34),
     )
+    keywords: Sequence[Keyword] = []
 
 
 def test_extract_tests_empty() -> None:
@@ -326,12 +342,16 @@ def test_extract_single_test() -> None:
     single_test_suite = _SuiteFactory.build(
         factory_use_construct=True,
         name="SingleTestSuite",
-        test=[_TestFactory.build(factory_use_construct=True, name="Test1", robot_exit=False)],
+        test=[
+            _TestFactory.build(
+                factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
+            )
+        ],
         suite=[],
     )
     assert _extract_tests_with_full_names(single_test_suite) == {
         "SingleTestSuite-Test1": _TestFactory.build(
-            factory_use_construct=True, name="Test1", robot_exit=False
+            factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
         )
     }
 
@@ -341,17 +361,21 @@ def test_extract_multiple_tests() -> None:
         factory_use_construct=True,
         name="MultipleTestsSuite",
         test=[
-            _TestFactory.build(factory_use_construct=True, name="Test1", robot_exit=False),
-            _TestFactory.build(factory_use_construct=True, name="Test2", robot_exit=False),
+            _TestFactory.build(
+                factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
+            ),
+            _TestFactory.build(
+                factory_use_construct=True, id="s1-t2", name="Test2", robot_exit=False
+            ),
         ],
         suite=[],
     )
     assert _extract_tests_with_full_names(multiple_tests_suite) == {
         "MultipleTestsSuite-Test1": _TestFactory.build(
-            factory_use_construct=True, name="Test1", robot_exit=False
+            factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
         ),
         "MultipleTestsSuite-Test2": _TestFactory.build(
-            factory_use_construct=True, name="Test2", robot_exit=False
+            factory_use_construct=True, id="s1-t2", name="Test2", robot_exit=False
         ),
     }
 
@@ -360,13 +384,19 @@ def test_extract_tests_from_nested_suites() -> None:
     nested_suites = _SuiteFactory.build(
         factory_use_construct=True,
         name="TopSuite",
-        test=[_TestFactory.build(factory_use_construct=True, name="Test4", robot_exit=False)],
+        test=[
+            _TestFactory.build(
+                factory_use_construct=True, id="s1-t1", name="Test4", robot_exit=False
+            )
+        ],
         suite=[
             _SuiteFactory.build(
                 factory_use_construct=True,
                 name="SubSuite1",
                 test=[
-                    _TestFactory.build(factory_use_construct=True, name="Test1", robot_exit=False)
+                    _TestFactory.build(
+                        factory_use_construct=True, id="s1-s1-t1", name="Test1", robot_exit=False
+                    )
                 ],
                 suite=[
                     _SuiteFactory.build(
@@ -374,7 +404,10 @@ def test_extract_tests_from_nested_suites() -> None:
                         name="SubSubSuite",
                         test=[
                             _TestFactory.build(
-                                factory_use_construct=True, name="Test2", robot_exit=True
+                                factory_use_construct=True,
+                                id="s1-s1-s1-t1",
+                                name="Test2",
+                                robot_exit=True,
                             )
                         ],
                         suite=[],
@@ -385,7 +418,9 @@ def test_extract_tests_from_nested_suites() -> None:
                 factory_use_construct=True,
                 name="SubSuite2",
                 test=[
-                    _TestFactory.build(factory_use_construct=True, name="Test3", robot_exit=False)
+                    _TestFactory.build(
+                        factory_use_construct=True, id="s1-s2-t1", name="Test3", robot_exit=False
+                    )
                 ],
                 suite=[],
             ),
@@ -393,15 +428,15 @@ def test_extract_tests_from_nested_suites() -> None:
     )
     assert _extract_tests_with_full_names(nested_suites) == {
         "TopSuite-Test4": _TestFactory.build(
-            factory_use_construct=True, name="Test4", robot_exit=False
+            factory_use_construct=True, id="s1-t1", name="Test4", robot_exit=False
         ),
         "TopSuite-SubSuite1-Test1": _TestFactory.build(
-            factory_use_construct=True, name="Test1", robot_exit=False
+            factory_use_construct=True, id="s1-s1-t1", name="Test1", robot_exit=False
         ),
         "TopSuite-SubSuite1-SubSubSuite-Test2": _TestFactory.build(
-            factory_use_construct=True, name="Test2", robot_exit=True
+            factory_use_construct=True, id="s1-s1-s1-t1", name="Test2", robot_exit=True
         ),
         "TopSuite-SubSuite2-Test3": _TestFactory.build(
-            factory_use_construct=True, name="Test3", robot_exit=False
+            factory_use_construct=True, id="s1-s2-t1", name="Test3", robot_exit=False
         ),
     }

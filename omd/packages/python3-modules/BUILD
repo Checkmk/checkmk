@@ -32,13 +32,13 @@ config_setting(
             git_ssl_no_verify = "",
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
+            requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
+            requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
     }),
 ) for module in all_requirements]

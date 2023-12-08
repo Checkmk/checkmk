@@ -25,6 +25,16 @@ macro_rules! unwrap_into {
     };
 }
 
+macro_rules! check_eq {
+    ($name:tt, $left:expr, $right:expr $(,)?) => {
+        if &$left == &$right {
+            SimpleCheckResult::ok(format!("{}: {}", $name, $left))
+        } else {
+            SimpleCheckResult::warn(format!("{} is {} but expected {}", $name, $left, $right))
+        }
+    };
+}
+
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
@@ -60,24 +70,13 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| {
-        if serial == expected {
-            SimpleCheckResult::ok(format!("Serial {}", serial))
-        } else {
-            SimpleCheckResult::warn(format!("Serial is {} but expected {}", serial, expected))
-        }
-    })
+    expected.map(|expected| check_eq!("Serial", serial, expected))
 }
 
 fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let subject = subject.to_string();
         // subject string has the form: `CN=domain`
-        if subject == expected {
-            SimpleCheckResult::ok(subject)
-        } else {
-            SimpleCheckResult::warn(format!("Subject is {} but expected {}", subject, expected))
-        }
+        check_eq!("Subject", subject.to_string(), expected)
     })
 }
 
@@ -95,15 +94,7 @@ fn check_signature_algorithm(
             Ok(SignatureAlgorithm::ED25519) => "ED25519",
             Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
         };
-
-        if signature_algorithm == expected {
-            SimpleCheckResult::ok(format!("Signature algorithm: {}", signature_algorithm))
-        } else {
-            SimpleCheckResult::warn(format!(
-                "Signature algorithm is {} but expected {}",
-                signature_algorithm, expected
-            ))
-        }
+        check_eq!("Signature algorithm", signature_algorithm, expected)
     })
 }
 
@@ -121,15 +112,7 @@ fn check_pubkey_algorithm(
             Ok(PublicKey::Unknown(_)) => "Unknown",
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
-
-        if pubkey_alg == expected {
-            SimpleCheckResult::ok(format!("Public key algorithm: {}", pubkey_alg))
-        } else {
-            SimpleCheckResult::warn(format!(
-                "Public key algorithm is {} but expected {}",
-                pubkey_alg, expected
-            ))
-        }
+        check_eq!("Public key algorithm", pubkey_alg, expected)
     })
 }
 
@@ -148,28 +131,12 @@ fn check_pubkey_size(
             | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
             Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
-
-        if pubkey_size == expected {
-            SimpleCheckResult::ok(format!("Public key size: {}", pubkey_size))
-        } else {
-            SimpleCheckResult::warn(format!(
-                "Public key size is {} but expected {}",
-                pubkey_size, expected
-            ))
-        }
+        check_eq!("Public key size", pubkey_size, expected)
     })
 }
 
 fn check_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| {
-        let issuer = issuer.to_string();
-
-        if issuer == expected {
-            SimpleCheckResult::ok(format!("Issuer {}", issuer))
-        } else {
-            SimpleCheckResult::warn(format!("Issuer is {} but expected {}", issuer, expected))
-        }
-    })
+    expected.map(|expected| check_eq!("Issuer", issuer.to_string(), expected))
 }
 
 fn check_validity_not_after(

@@ -32,9 +32,9 @@ fn test_cert_ok() {
         out.to_string(),
         format!(
             "OK - \
-            Serial {SERIAL}, \
-            {SUBJECT}, \
-            Issuer {ISSUER}, \
+            Serial: {SERIAL}, \
+            Subject: {SUBJECT}, \
+            Issuer: {ISSUER}, \
             Signature algorithm: {SIG_ALG}, \
             Public key algorithm: {PUBKEY_ALG}, \
             Public key size: {PUBKEY_SZ}"
@@ -58,8 +58,8 @@ fn test_cert_wrong_serial() {
         format!(
             "WARNING - \
             Serial is {SERIAL} but expected {serial} (!), \
-            {SUBJECT}, \
-            Issuer {ISSUER}"
+            Subject: {SUBJECT}, \
+            Issuer: {ISSUER}"
         )
     );
 }

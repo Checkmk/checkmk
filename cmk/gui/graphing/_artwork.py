@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, TypeVar
+from typing import assert_never, Literal, NamedTuple, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -499,15 +499,15 @@ def _compute_graph_v_axis(
     # Calculate the the value range
     # real_range -> physical range, without extra margin or zooming
     #               tuple of (min_value, max_value)
-    # vrange     -> amount of values visible in vaxis (max_value - min_value)
+    # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
-    real_range, vrange, min_value, max_value = _compute_v_axis_min_max(
+    v_axis_min_max = _compute_v_axis_min_max(
         graph_recipe.explicit_vertical_range,
-        graph_data_range.vertical_range,
-        height_ex,
         _get_min_max_from_curves(layouted_curves),
+        graph_data_range.vertical_range,
         mirrored,
+        height_ex,
     )
 
     # Guestimate a useful number of vertical labels
@@ -517,7 +517,7 @@ def _compute_graph_v_axis(
     num_v_labels = max(2, (height_ex - 2) / math.log(height_ex) * 1.6)
 
     # The value range between single labels
-    label_distance_at_least = float(vrange) / max(num_v_labels, 1)
+    label_distance_at_least = float(v_axis_min_max.distance) / max(num_v_labels, 1)
 
     # The stepping of the labels is not always decimal, where
     # we choose distances like 10, 20, 50. It can also be "binary", where
@@ -540,11 +540,11 @@ def _compute_graph_v_axis(
         ]
 
     elif stepping == "time":
-        if max_value > 3600 * 24:
+        if v_axis_min_max.max_value > 3600 * 24:
             divide_by = 86400.0
             base = 10
             steps = [(2, 0.5), (5, 1), (10, 2)]
-        elif max_value >= 10:
+        elif v_axis_min_max.max_value >= 10:
             base = 60
             steps = [(2, 0.5), (3, 0.5), (5, 1), (10, 2), (20, 5), (30, 5), (60, 10)]
         else:  # ms
@@ -581,12 +581,17 @@ def _compute_graph_v_axis(
     # Adds "labels", "max_label_length" and updates "axis_label" in case
     # of units which use a graph global unit
     rendered_labels, max_label_length, graph_unit = _create_vertical_axis_labels(
-        min_value, max_value, unit, label_distance, sub_distance, mirrored
+        v_axis_min_max.min_value,
+        v_axis_min_max.max_value,
+        unit,
+        label_distance,
+        sub_distance,
+        mirrored,
     )
 
     v_axis = VerticalAxis(
-        range=(min_value, max_value),
-        real_range=real_range,
+        range=(v_axis_min_max.min_value, v_axis_min_max.max_value),
+        real_range=v_axis_min_max.real_range,
         label_distance=label_distance,
         sub_distance=sub_distance,
         axis_label=None,
@@ -600,22 +605,53 @@ def _compute_graph_v_axis(
     return v_axis
 
 
-def _compute_v_axis_min_max(
+def _compute_min_max(
     explicit_vertical_range: tuple[float | None, float | None],
-    graph_data_vrange: tuple[float, float] | None,
-    height: SizeEx,
     layouted_curves_range: tuple[float | None, float | None],
     mirrored: bool,
-) -> tuple[tuple[float, float], float, float, float]:
-    opt_min_value, opt_max_value = layouted_curves_range
-    min_value, max_value = _purge_min_max(opt_min_value, opt_max_value, mirrored)
+) -> tuple[float, float]:
+    if mirrored:
+        min_values = [-1.0]
+        max_values = [1.0]
+    else:
+        min_values = [0.0]
+        max_values = [1.0]
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = explicit_vertical_range
     if explicit_min_value is not None:
-        min_value = explicit_min_value
+        min_values.append(explicit_min_value)
     if explicit_max_value is not None:
-        max_value = explicit_max_value
+        max_values.append(explicit_max_value)
+
+    lc_min_value, lc_max_value = layouted_curves_range
+    if lc_min_value is not None:
+        min_values.append(lc_min_value)
+    if lc_max_value is not None:
+        max_values.append(lc_max_value)
+
+    return min(min_values), max(max_values)
+
+
+class _VAxisMinMax(NamedTuple):
+    real_range: tuple[float, float]
+    distance: float
+    min_value: float
+    max_value: float
+
+
+def _compute_v_axis_min_max(
+    explicit_vertical_range: tuple[float | None, float | None],
+    layouted_curves_range: tuple[float | None, float | None],
+    graph_data_vrange: tuple[float, float] | None,
+    mirrored: bool,
+    height: SizeEx,
+) -> _VAxisMinMax:
+    min_value, max_value = _compute_min_max(
+        explicit_vertical_range,
+        layouted_curves_range,
+        mirrored,
+    )
 
     # physical range, without extra margin or zooming
     real_range = min_value, max_value
@@ -627,7 +663,7 @@ def _compute_v_axis_min_max(
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
-        abs_limit = max(abs(min_value), max_value)
+        abs_limit = max(abs(min_value), abs(max_value))
         min_value = -abs_limit
         max_value = abs_limit
 
@@ -640,56 +676,20 @@ def _compute_v_axis_min_max(
         else:
             max_value = min_value + 1
 
-    vrange = max_value - min_value
+    distance = max_value - min_value
 
     # Make range a little bit larger, approx by 0.5 ex. But only if no zooming
     # is being done.
     if not graph_data_vrange:
-        vrange_per_ex = vrange / height
+        distance_per_ex = distance / height
 
         # Let displayed range have a small border
         if min_value != 0:
-            min_value -= 0.5 * vrange_per_ex
+            min_value -= 0.5 * distance_per_ex
         if max_value != 0:
-            max_value += 0.5 * vrange_per_ex
+            max_value += 0.5 * distance_per_ex
 
-    return real_range, vrange, min_value, max_value
-
-
-def _purge_min_max(
-    min_value: float | None, max_value: float | None, mirrored: bool
-) -> tuple[float, float]:
-    # If all of our data points are None, then we have no
-    # min/max values. In this case we assume 0 as a minimum
-    # value and 1 as a maximum. Otherwise we will run into
-    # an exception
-    if min_value is None and max_value is None:
-        min_value = -1.0 if mirrored else 0.0
-        max_value = 1.0
-        return min_value, max_value
-
-    if min_value is None and max_value is not None:
-        if max_value > 0:
-            min_value = -1 * max_value if mirrored else 0.0
-            return min_value, max_value
-
-        if mirrored:
-            min_value = -1 * max_value
-        else:
-            min_value = max_value - 1.0
-        return min_value, max_value
-
-    if max_value is None and min_value is not None:
-        if min_value < 0:
-            max_value = 1.0
-            return min_value, max_value
-
-        max_value = min_value + 1.0
-        return min_value, max_value
-
-    assert min_value is not None
-    assert max_value is not None
-    return min_value, max_value
+    return _VAxisMinMax(real_range, distance, min_value, max_value)
 
 
 def _get_min_max_from_curves(

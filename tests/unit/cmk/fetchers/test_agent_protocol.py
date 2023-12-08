@@ -212,6 +212,22 @@ class TestMessageV1:
     "protocol,encrypted",
     [
         (
+            TransportProtocol.PBKDF2_MAC,
+            # printf "<<<cmk_test>>>" | ./doc/treasures/agent_legacy_encryption/encrypt.sh "v05" "cmk"
+            b"ea0e2c10f91aef7e"  # salt
+            b"64ad79f9ae130ac80ad544b891738aa8f5b6317167e78a706864a819656f75db"  # MAC
+            b"5f1aacfa62eef34dd84fb737009b3892",  # ciphertext
+        ),
+        (
+            TransportProtocol.SHA256_MAC,
+            # printf "<<<cmk_test>>>" | ./doc/treasures/agent_legacy_encryption/encrypt.sh "v04" "cmk"
+            #   derived key: B11D9A5029133215984108B580A57F320FE4FE937D31DEAC7DC85020C4A4BE23
+            #            iv: 2E651B40ABF797EE95969BDFAC2BF8FF
+            b"212907e4f781ebed"  # salt
+            b"fa3e85c041618b2dece0d1cb76392995a2d655b9faa94681149c572832b22b0d"  # MAC
+            b"7b139a80d12c1bcb3a13a0fa80288ef2",  # ciphertext
+        ),
+        (
             TransportProtocol.PBKDF2,
             # printf "<<<cmk_test>>>" | openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "cmk"
             b"53616c7465645f5f5474944b9c6f675a14a8c05ca120a284c4f04760ad60e8f2",
@@ -231,6 +247,23 @@ class TestMessageV1:
 def test_characterization_legacy_encryption(protocol: TransportProtocol, encrypted: bytes) -> None:
     """A characterization test to ensure we can still decrypt the deprecated encrypted agent output"""
     assert decrypt_by_agent_protocol("cmk", protocol, unhexlify(encrypted)) == b"<<<cmk_test>>>"
+
+
+@pytest.mark.parametrize(
+    "protocol,encrypted",
+    [
+        (
+            TransportProtocol.PBKDF2_MAC,
+            # same as in test above, but with broken MAC
+            b"ea0e2c10f91aef7e"  # salt
+            b"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"  # wrong MAC
+            b"5f1aacfa62eef34dd84fb737009b3892",  # ciphertext
+        ),
+    ],
+)
+def test_legacy_encryption_mac_mismatch(protocol: TransportProtocol, encrypted: bytes) -> None:
+    with pytest.raises(ValueError):
+        decrypt_by_agent_protocol("cmk", protocol, unhexlify(encrypted))
 
 
 class TestValidateAgentProtocol:

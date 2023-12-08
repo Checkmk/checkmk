@@ -11,6 +11,7 @@ from cmk.gui.valuespec import autocompleter_registry
 def test_builtin_autocompleters_registered() -> None:
     registered = autocompleter_registry.keys()
     expected = [
+        "add_to_dashboard_choices",
         "allgroups",
         "available_graphs",
         "check_cmd",
@@ -30,5 +31,6 @@ def test_builtin_autocompleters_registered() -> None:
 
     if is_enterprise_repo():
         expected.append("combined_graphs")
+        expected.append("add_to_report_choices")
 
     assert sorted(registered) == sorted(expected)

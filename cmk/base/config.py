@@ -1583,13 +1583,14 @@ def _extract_agent_and_snmp_sections() -> list[str]:
     """
     errors = []
     # start with the "main"-checks, the ones without '.' in their names:
-    for check_plugin_name in sorted(check_info, key=lambda name: ("." in name, name)):
-        section_name = section_name_of(check_plugin_name)
+    main_checks = [name for name in check_info if "." not in name]
+    subchecks = [name for name in check_info if "." in name]
 
+    for section_name in main_checks:
         if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
             continue
 
-        check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
+        check_info_dict = check_info[section_name]
         try:
             if "fetch" in check_info_dict:
                 agent_based_register.add_section_plugin(
@@ -1611,7 +1612,13 @@ def _extract_agent_and_snmp_sections() -> list[str]:
             #       passed un-parsed data unexpectedly.
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", check_plugin_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
+
+    if cmk.utils.debug.enabled():
+        for subcheck in subchecks:
+            assert agent_based_register.is_registered_section_plugin(
+                SectionName(section_name_of(subcheck))
+            )
 
     return errors
 

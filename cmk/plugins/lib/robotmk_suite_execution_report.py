@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
 from base64 import b64decode
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -35,8 +36,20 @@ def _decode_b64(encoded: str) -> bytes:
     return b64decode(encoded)
 
 
+class XML(BaseModel, frozen=True):
+    raw_xml: str
+    rebot: Rebot
+
+    @classmethod
+    def from_raw_xml(cls, raw_xml: str) -> typing.Self:
+        return cls(
+            raw_xml=raw_xml,
+            rebot=_parse_xml(raw_xml),
+        )
+
+
 class RebotResult(BaseModel, frozen=True):
-    xml: Annotated[Rebot, BeforeValidator(_parse_xml)]
+    xml: Annotated[XML, BeforeValidator(XML.from_raw_xml)]
     # Note: pydantic complains if we replace _decode_b64 --> b64decode
     html: Annotated[bytes, BeforeValidator(_decode_b64)] = Field(alias="html_base64")
     timestamp: int

@@ -9,11 +9,18 @@ from datetime import datetime
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based.robotmk_suite_execution_report_section import (
-    _extract_tests_with_full_names,
+    _tests_by_items,
     parse,
 )
 
-from cmk.plugins.lib.robotmk_rebot_xml import Keyword, Outcome, RFTest, StatusV6, Suite
+from cmk.plugins.lib.robotmk_rebot_xml import (
+    Keyword,
+    KeywordStatus,
+    Outcome,
+    RFTest,
+    StatusV6,
+    Suite,
+)
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptsConfig,
@@ -59,6 +66,1533 @@ def test_parse() -> None:
                                     endtime=datetime(2023, 11, 27, 7, 14, 41, 432000),
                                     elapsed=None,
                                 ),
+                                robot_exit=False,
+                                keywords=[
+                                    Keyword(
+                                        name="Check Veggies Excel And Start Calculator",
+                                        id="s1-t1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Does File Exist",
+                                        id="s1-t1-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Fail",
+                                        id="s1-t1-k1-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 668000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 668000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Windows Search",
+                                        id="s1-t1-k1-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Read Veggies Excel",
+                                        id="s1-t1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Open Workbook",
+                                        id="s1-t1-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Read Worksheet As Table",
+                                        id="s1-t1-k2-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Close Workbook",
+                                        id="s1-t1-k2-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Count Veggie Totals",
+                                        id="s1-t1-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Create List",
+                                        id="s1-t1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k1-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k1-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k1-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 13, 79000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 13, 79000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k1-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k1-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k1-k1-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 13, 81000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 13, 734000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k1-k1-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 13, 734000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 14, 376000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k1-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k1-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k1-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k1-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k1-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k1-k3-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 16, 909000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Result From Calc",
+                                        id="s1-t1-k3-k2-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Attribute",
+                                        id="s1-t1-k3-k2-k1-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Remove String",
+                                        id="s1-t1-k3-k2-k1-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To Integer",
+                                        id="s1-t1-k3-k2-k1-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Append To List",
+                                        id="s1-t1-k3-k2-k1-k6",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k2-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k2-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k2-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k2-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k2-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k1-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 19, 453000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k1-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 19, 453000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 20, 110000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k2-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k2-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k2-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k2-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k2-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k2-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k3-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 22, 593000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k3-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 22, 593000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 23, 208000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k2-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Result From Calc",
+                                        id="s1-t1-k3-k2-k2-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Attribute",
+                                        id="s1-t1-k3-k2-k2-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Remove String",
+                                        id="s1-t1-k3-k2-k2-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To Integer",
+                                        id="s1-t1-k3-k2-k2-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Append To List",
+                                        id="s1-t1-k3-k2-k2-k6",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k3-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k3-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k3-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k3-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k3-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k3-k1-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 25, 712000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k3-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k3-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k3-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k3-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k3-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k3-k3-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 28, 190000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Result From Calc",
+                                        id="s1-t1-k3-k2-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Attribute",
+                                        id="s1-t1-k3-k2-k3-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Remove String",
+                                        id="s1-t1-k3-k2-k3-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To Integer",
+                                        id="s1-t1-k3-k2-k3-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Append To List",
+                                        id="s1-t1-k3-k2-k3-k6",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k4-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k4-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k4-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k4-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k4-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k4-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k4-k1-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 30, 690000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k4-k1-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 30, 690000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 31, 327000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k4-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k4-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k4-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k4-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k4-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k4-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k4-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k4-k3-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 33, 796000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k4-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Result From Calc",
+                                        id="s1-t1-k3-k2-k4-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Attribute",
+                                        id="s1-t1-k3-k2-k4-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Remove String",
+                                        id="s1-t1-k3-k2-k4-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To Integer",
+                                        id="s1-t1-k3-k2-k4-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Append To List",
+                                        id="s1-t1-k3-k2-k4-k6",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k5-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k5-k1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k5-k1-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k5-k1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k5-k1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k1-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 36, 300000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k1-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 36, 301000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 36, 936000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Input Number To Calc",
+                                        id="s1-t1-k3-k2-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Control Window",
+                                        id="s1-t1-k3-k2-k5-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k5-k3-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click If Available",
+                                        id="s1-t1-k3-k2-k5-k3-k3-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.NOT_RUN,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 38, 776000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 38, 776000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To String",
+                                        id="s1-t1-k3-k2-k5-k3-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Split String To Characters",
+                                        id="s1-t1-k3-k2-k5-k3-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k3-k6-k1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 38, 778000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 39, 439000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k3-k6-k2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 39, 439000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 66000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Click",
+                                        id="s1-t1-k3-k2-k5-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Result From Calc",
+                                        id="s1-t1-k3-k2-k5-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Get Attribute",
+                                        id="s1-t1-k3-k2-k5-k5-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Remove String",
+                                        id="s1-t1-k3-k2-k5-k5-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Convert To Integer",
+                                        id="s1-t1-k3-k2-k5-k5-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Append To List",
+                                        id="s1-t1-k3-k2-k5-k6",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Set Table Column",
+                                        id="s1-t1-k3-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Save Veggie Results Excel",
+                                        id="s1-t1-k4",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Create Workbook",
+                                        id="s1-t1-k4-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Create Worksheet",
+                                        id="s1-t1-k4-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Save Workbook",
+                                        id="s1-t1-k4-k3",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Close Window",
+                                        id="s1-t1-k5",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                                endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                ],
                             )
                         ],
                         status=StatusV6.model_construct(
@@ -88,6 +1622,33 @@ def test_parse() -> None:
                                     endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
                                     elapsed=None,
                                 ),
+                                robot_exit=False,
+                                keywords=[
+                                    Keyword(
+                                        name="Add",
+                                        id="s1-t1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Should Be Equal As Integers",
+                                        id="s1-t1-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                ],
                             ),
                             RFTest.model_construct(
                                 id="s1-t2",
@@ -98,6 +1659,33 @@ def test_parse() -> None:
                                     endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
                                     elapsed=None,
                                 ),
+                                robot_exit=False,
+                                keywords=[
+                                    Keyword(
+                                        name="Add",
+                                        id="s1-t2-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                    Keyword(
+                                        name="Should Be Equal As Integers",
+                                        id="s1-t2-k2",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                                endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    ),
+                                ],
                             ),
                         ],
                         status=StatusV6.model_construct(
@@ -127,6 +1715,21 @@ def test_parse() -> None:
                                     endtime=datetime(2023, 11, 27, 7, 10, 20, 164000),
                                     elapsed=None,
                                 ),
+                                robot_exit=False,
+                                keywords=[
+                                    Keyword(
+                                        name="Close Browser",
+                                        id="s1-t1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.PASS,
+                                                starttime=datetime(2023, 11, 27, 7, 10, 4, 395000),
+                                                endtime=datetime(2023, 11, 27, 7, 10, 4, 396000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    )
+                                ],
                             )
                         ],
                         status=StatusV6.model_construct(
@@ -157,6 +1760,20 @@ def test_parse() -> None:
                                     elapsed=None,
                                 ),
                                 robot_exit=False,
+                                keywords=[
+                                    Keyword(
+                                        name="Fail",
+                                        id="s1-t1-k1",
+                                        status=KeywordStatus.model_construct(
+                                            status=StatusV6.model_construct(
+                                                status=Outcome.FAIL,
+                                                starttime=datetime(2023, 11, 30, 6, 40, 53, 348000),
+                                                endtime=datetime(2023, 11, 30, 6, 40, 53, 349000),
+                                                elapsed=None,
+                                            )
+                                        ),
+                                    )
+                                ],
                             ),
                             RFTest.model_construct(
                                 id="s1-t2",
@@ -168,6 +1785,7 @@ def test_parse() -> None:
                                     elapsed=None,
                                 ),
                                 robot_exit=True,
+                                keywords=[],
                             ),
                             RFTest.model_construct(
                                 id="s1-t3",
@@ -179,6 +1797,7 @@ def test_parse() -> None:
                                     elapsed=None,
                                 ),
                                 robot_exit=False,
+                                keywords=[],
                             ),
                         ],
                         status=StatusV6.model_construct(
@@ -203,25 +1822,1537 @@ def test_parse() -> None:
                         endtime=datetime(2023, 11, 27, 7, 14, 41, 432000),
                         elapsed=None,
                     ),
+                    robot_exit=False,
+                    keywords=[
+                        Keyword(
+                            name="Check Veggies Excel And Start Calculator",
+                            id="s1-t1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Does File Exist",
+                            id="s1-t1-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Fail",
+                            id="s1-t1-k1-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 668000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 668000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Windows Search",
+                            id="s1-t1-k1-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Read Veggies Excel",
+                            id="s1-t1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Open Workbook",
+                            id="s1-t1-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Read Worksheet As Table",
+                            id="s1-t1-k2-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Close Workbook",
+                            id="s1-t1-k2-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 518000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Count Veggie Totals",
+                            id="s1-t1-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Create List",
+                            id="s1-t1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k1-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k1-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k1-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 13, 79000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 13, 79000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k1-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k1-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k1-k1-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 13, 81000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 13, 734000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k1-k1-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 13, 734000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 14, 376000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k1-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k1-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k1-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k1-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k1-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 15, 24000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 15, 660000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k1-k3-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 16, 273000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 16, 909000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Result From Calc",
+                            id="s1-t1-k3-k2-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Attribute",
+                            id="s1-t1-k3-k2-k1-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Remove String",
+                            id="s1-t1-k3-k2-k1-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To Integer",
+                            id="s1-t1-k3-k2-k1-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 538000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Append To List",
+                            id="s1-t1-k3-k2-k1-k6",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 12, 440000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k2-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k2-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k2-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k2-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k2-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k1-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 18, 802000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 19, 453000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k1-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 19, 453000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 20, 110000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k2-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k2-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k2-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k2-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k2-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k2-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 20, 727000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 21, 345000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k3-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 21, 949000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 22, 593000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k3-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 22, 593000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 23, 208000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k2-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Result From Calc",
+                            id="s1-t1-k3-k2-k2-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Attribute",
+                            id="s1-t1-k3-k2-k2-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Remove String",
+                            id="s1-t1-k3-k2-k2-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To Integer",
+                            id="s1-t1-k3-k2-k2-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 812000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Append To List",
+                            id="s1-t1-k3-k2-k2-k6",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 17, 564000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 18, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k3-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k3-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k3-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k3-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k3-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k3-k1-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 25, 71000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 25, 712000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k3-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k3-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k3-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k3-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k3-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 26, 327000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 26, 946000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k3-k3-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 27, 544000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 28, 190000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Result From Calc",
+                            id="s1-t1-k3-k2-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Attribute",
+                            id="s1-t1-k3-k2-k3-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Remove String",
+                            id="s1-t1-k3-k2-k3-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To Integer",
+                            id="s1-t1-k3-k2-k3-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 824000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Append To List",
+                            id="s1-t1-k3-k2-k3-k6",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 23, 831000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 24, 464000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k4-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k4-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k4-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k4-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k4-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k4-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k4-k1-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 30, 76000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 30, 690000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k4-k1-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 30, 690000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 31, 327000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k4-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k4-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k4-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k4-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k4-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k4-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k4-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 31, 955000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 32, 574000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k4-k3-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 33, 177000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 33, 796000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k4-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Result From Calc",
+                            id="s1-t1-k3-k2-k4-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Attribute",
+                            id="s1-t1-k3-k2-k4-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Remove String",
+                            id="s1-t1-k3-k2-k4-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To Integer",
+                            id="s1-t1-k3-k2-k4-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 412000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Append To List",
+                            id="s1-t1-k3-k2-k4-k6",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 28, 847000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 29, 472000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k5-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k5-k1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k5-k1-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k5-k1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k5-k1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k1-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 35, 679000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 36, 300000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k1-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 36, 301000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 36, 936000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Input Number To Calc",
+                            id="s1-t1-k3-k2-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Control Window",
+                            id="s1-t1-k3-k2-k5-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k5-k3-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click If Available",
+                            id="s1-t1-k3-k2-k5-k3-k3-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.NOT_RUN,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 38, 776000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 38, 776000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To String",
+                            id="s1-t1-k3-k2-k5-k3-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Split String To Characters",
+                            id="s1-t1-k3-k2-k5-k3-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 37, 562000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 38, 177000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k3-k6-k1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 38, 778000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 39, 439000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k3-k6-k2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 39, 439000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 66000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Click",
+                            id="s1-t1-k3-k2-k5-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Result From Calc",
+                            id="s1-t1-k3-k2-k5-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Get Attribute",
+                            id="s1-t1-k3-k2-k5-k5-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Remove String",
+                            id="s1-t1-k3-k2-k5-k5-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Convert To Integer",
+                            id="s1-t1-k3-k2-k5-k5-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 703000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Append To List",
+                            id="s1-t1-k3-k2-k5-k6",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 34, 428000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 35, 78000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Set Table Column",
+                            id="s1-t1-k3-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 11, 532000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Save Veggie Results Excel",
+                            id="s1-t1-k4",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Create Workbook",
+                            id="s1-t1-k4-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Create Worksheet",
+                            id="s1-t1-k4-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Save Workbook",
+                            id="s1-t1-k4-k3",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 40, 719000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Close Window",
+                            id="s1-t1-k5",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 14, 6, 659000),
+                                    endtime=datetime(2023, 11, 27, 7, 14, 6, 665000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                    ],
                 ),
                 html=b"irrelevant",
                 attempts_config=AttemptsConfig(interval=120, timeout=90, n_attempts_max=1),
                 rebot_timestamp=1701098081,
-            ),
-            "google_imagesearch-Tasks-Execute Google image search and store the first result image": TestReport(
-                test=RFTest.model_construct(
-                    id="s1-t1",
-                    name="Execute Google image search and store the first result image",
-                    status=StatusV6.model_construct(
-                        status=Outcome.PASS,
-                        starttime=datetime(2023, 11, 27, 7, 10, 4, 392000),
-                        endtime=datetime(2023, 11, 27, 7, 10, 20, 164000),
-                        elapsed=None,
-                    ),
-                ),
-                html=b"irrelevant",
-                attempts_config=AttemptsConfig(interval=120, timeout=90, n_attempts_max=1),
-                rebot_timestamp=1701097844,
             ),
             "math-Tasks-Addition 1": TestReport(
                 test=RFTest.model_construct(
@@ -233,6 +3364,33 @@ def test_parse() -> None:
                         endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
                         elapsed=None,
                     ),
+                    robot_exit=False,
+                    keywords=[
+                        Keyword(
+                            name="Add",
+                            id="s1-t1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Should Be Equal As Integers",
+                            id="s1-t1-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    endtime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                    ],
                 ),
                 html=b"irrelevant",
                 attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
@@ -248,10 +3406,67 @@ def test_parse() -> None:
                         endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
                         elapsed=None,
                     ),
+                    robot_exit=False,
+                    keywords=[
+                        Keyword(
+                            name="Add",
+                            id="s1-t2-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                        Keyword(
+                            name="Should Be Equal As Integers",
+                            id="s1-t2-k2",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                    endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                                    elapsed=None,
+                                )
+                            ),
+                        ),
+                    ],
                 ),
                 html=b"irrelevant",
                 attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
                 rebot_timestamp=1701098145,
+            ),
+            "google_imagesearch-Tasks-Execute Google image search and store the first result image": TestReport(
+                test=RFTest.model_construct(
+                    id="s1-t1",
+                    name="Execute Google image search and store the first result image",
+                    status=StatusV6.model_construct(
+                        status=Outcome.PASS,
+                        starttime=datetime(2023, 11, 27, 7, 10, 4, 392000),
+                        endtime=datetime(2023, 11, 27, 7, 10, 20, 164000),
+                        elapsed=None,
+                    ),
+                    robot_exit=False,
+                    keywords=[
+                        Keyword(
+                            name="Close Browser",
+                            id="s1-t1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.PASS,
+                                    starttime=datetime(2023, 11, 27, 7, 10, 4, 395000),
+                                    endtime=datetime(2023, 11, 27, 7, 10, 4, 396000),
+                                    elapsed=None,
+                                )
+                            ),
+                        )
+                    ],
+                ),
+                html=b"irrelevant",
+                attempts_config=AttemptsConfig(interval=120, timeout=90, n_attempts_max=1),
+                rebot_timestamp=1701097844,
             ),
             "skipped_tests-Tasks-Main Test One": TestReport(
                 test=RFTest.model_construct(
@@ -264,22 +3479,20 @@ def test_parse() -> None:
                         elapsed=None,
                     ),
                     robot_exit=False,
-                ),
-                html=b"irrelevant",
-                attempts_config=AttemptsConfig(interval=10, timeout=5, n_attempts_max=1),
-                rebot_timestamp=1701355253,
-            ),
-            "skipped_tests-Tasks-Main Test Three": TestReport(
-                test=RFTest.model_construct(
-                    id="s1-t3",
-                    name="Main Test Three",
-                    status=StatusV6.model_construct(
-                        status=Outcome.FAIL,
-                        starttime=datetime(2023, 11, 30, 6, 40, 53, 351000),
-                        endtime=datetime(2023, 11, 30, 6, 40, 53, 351000),
-                        elapsed=None,
-                    ),
-                    robot_exit=False,
+                    keywords=[
+                        Keyword(
+                            name="Fail",
+                            id="s1-t1-k1",
+                            status=KeywordStatus.model_construct(
+                                status=StatusV6.model_construct(
+                                    status=Outcome.FAIL,
+                                    starttime=datetime(2023, 11, 30, 6, 40, 53, 348000),
+                                    endtime=datetime(2023, 11, 30, 6, 40, 53, 349000),
+                                    elapsed=None,
+                                )
+                            ),
+                        )
+                    ],
                 ),
                 html=b"irrelevant",
                 attempts_config=AttemptsConfig(interval=10, timeout=5, n_attempts_max=1),
@@ -296,6 +3509,24 @@ def test_parse() -> None:
                         elapsed=None,
                     ),
                     robot_exit=True,
+                    keywords=[],
+                ),
+                html=b"irrelevant",
+                attempts_config=AttemptsConfig(interval=10, timeout=5, n_attempts_max=1),
+                rebot_timestamp=1701355253,
+            ),
+            "skipped_tests-Tasks-Main Test Three": TestReport(
+                test=RFTest.model_construct(
+                    id="s1-t3",
+                    name="Main Test Three",
+                    status=StatusV6.model_construct(
+                        status=Outcome.FAIL,
+                        starttime=datetime(2023, 11, 30, 6, 40, 53, 351000),
+                        endtime=datetime(2023, 11, 30, 6, 40, 53, 351000),
+                        elapsed=None,
+                    ),
+                    robot_exit=False,
+                    keywords=[],
                 ),
                 html=b"irrelevant",
                 attempts_config=AttemptsConfig(interval=10, timeout=5, n_attempts_max=1),
@@ -333,7 +3564,7 @@ class _TestFactory(ModelFactory[RFTest]):
 
 
 def test_extract_tests_empty() -> None:
-    assert not _extract_tests_with_full_names(
+    assert not _tests_by_items(
         _SuiteFactory.build(factory_use_construct=True, name="EmptySuite", test=[], suite=[])
     )
 
@@ -349,7 +3580,7 @@ def test_extract_single_test() -> None:
         ],
         suite=[],
     )
-    assert _extract_tests_with_full_names(single_test_suite) == {
+    assert _tests_by_items(single_test_suite) == {
         "SingleTestSuite-Test1": _TestFactory.build(
             factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
         )
@@ -370,7 +3601,7 @@ def test_extract_multiple_tests() -> None:
         ],
         suite=[],
     )
-    assert _extract_tests_with_full_names(multiple_tests_suite) == {
+    assert _tests_by_items(multiple_tests_suite) == {
         "MultipleTestsSuite-Test1": _TestFactory.build(
             factory_use_construct=True, id="s1-t1", name="Test1", robot_exit=False
         ),
@@ -396,7 +3627,7 @@ def test_extract_tests_from_nested_suites() -> None:
                 test=[
                     _TestFactory.build(
                         factory_use_construct=True, id="s1-s1-t1", name="Test1", robot_exit=False
-                    )
+                    ),
                 ],
                 suite=[
                     _SuiteFactory.build(
@@ -426,7 +3657,7 @@ def test_extract_tests_from_nested_suites() -> None:
             ),
         ],
     )
-    assert _extract_tests_with_full_names(nested_suites) == {
+    assert _tests_by_items(nested_suites) == {
         "TopSuite-Test4": _TestFactory.build(
             factory_use_construct=True, id="s1-t1", name="Test4", robot_exit=False
         ),

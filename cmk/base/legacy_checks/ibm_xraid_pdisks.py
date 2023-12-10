@@ -27,13 +27,12 @@ def parse_ibm_xraid_pdisks(info):
     return data
 
 
-def inventory_ibm_xraid_pdisks(info):
-    return [(disk_id, None) for disk_id in parse_ibm_xraid_pdisks(info)]
+def inventory_ibm_xraid_pdisks(section):
+    return [(disk_id, None) for disk_id in section]
 
 
-def check_ibm_xraid_pdisks(item, _no_params, info):
-    data = parse_ibm_xraid_pdisks(info)
-    for disk_path, disk_entry in data.items():
+def check_ibm_xraid_pdisks(item, _no_params, section):
+    for disk_path, disk_entry in section.items():
         if disk_path == item:
             _slot_label, _disk_id, _disk_type, disk_state, slot_desc = disk_entry
             if disk_state == "3":
@@ -57,6 +56,7 @@ check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.795.14.1",
         oids=["503.1.1.4", "400.1.1.1", "400.1.1.5", "400.1.1.11", "400.1.1.12"],
     ),
+    parse_function=parse_ibm_xraid_pdisks,
     service_name="RAID PDisk %s",
     discovery_function=inventory_ibm_xraid_pdisks,
     # there is no information about the ext mib in the right place

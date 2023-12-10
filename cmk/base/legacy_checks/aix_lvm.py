@@ -80,28 +80,25 @@ def parse_aix_lvm(info):
     return lvmconf
 
 
-def inventory_aix_lvm(info):
+def inventory_aix_lvm(section):
     inventory = []
-    for vg, volumes in parse_aix_lvm(info).items():
+    for vg, volumes in section.items():
         for lv in volumes:
             # inventory.append(("%s/%s" % (vg, lv), ('%s' % volumes[lv][4],)))
             inventory.append((f"{vg}/{lv}", None))
     return inventory
 
 
-def check_aix_lvm(item, _no_params, info):
+def check_aix_lvm(item, _no_params, section):
     # Get ready to find our item and settings.
     # target_activation = params
     target_vg, target_lv = item.split("/")
 
-    # Get structured LVM info
-    lvmconf = parse_aix_lvm(info)
-
-    if target_vg in lvmconf and target_lv in lvmconf[target_vg]:
+    if target_vg in section and target_lv in section[target_vg]:
         msgtxt = []
         state = 0
 
-        lvtype, num_lp, num_pp, num_pv, activation, mirror, _mountpoint = lvmconf[target_vg][
+        lvtype, num_lp, num_pp, num_pv, activation, mirror, _mountpoint = section[target_vg][
             target_lv
         ]
 
@@ -138,6 +135,7 @@ def check_aix_lvm(item, _no_params, info):
 
 check_info["aix_lvm"] = LegacyCheckDefinition(
     service_name="Logical Volume %s",
+    parse_function=parse_aix_lvm,
     # "group"              : "",
     # "default_levels_variable" : "services_default_levels",
     # first check we have a vendor mib from W&T, then check for the model in their MIB.,

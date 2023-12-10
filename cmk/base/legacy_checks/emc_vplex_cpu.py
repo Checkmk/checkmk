@@ -36,6 +36,7 @@ check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.1139.21.2.2",
         oids=["1.1.3", "3.1.1"],
     ),
+    parse_function=parse_emc_vplex_cpu,
     service_name="CPU Utilization %s",
     discovery_function=discover_emc_vplex_cpu,
     check_function=check_emc_vplex_cpu,

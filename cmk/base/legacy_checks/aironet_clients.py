@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 aironet_default_strength_levels = (-25, -20)
 aironet_default_quality_levels = (40, 35)
 
@@ -70,7 +72,12 @@ def check_aironet_clients(item, _no_params, info):
     return (0, infotxt, perfdata)
 
 
+def parse_aironet_clients(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["aironet_clients"] = LegacyCheckDefinition(
+    parse_function=parse_aironet_clients,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),

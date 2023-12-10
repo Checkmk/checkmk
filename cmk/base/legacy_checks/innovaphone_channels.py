@@ -30,7 +30,12 @@ def check_innovaphone_channels(item, params, info):
             return
 
 
+def parse_innovaphone_channels(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_channels"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_channels,
     service_name="Channel %s",
     discovery_function=inventory_innovaphone_channels,
     check_function=check_innovaphone_channels,

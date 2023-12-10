@@ -9,9 +9,16 @@ from cmk.base.check_legacy_includes.perle import check_perle_cm_modules, invento
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.perle import DETECT_PERLE
 
+
+def parse_perle_modules_cm1000(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["perle_modules_cm1000"] = LegacyCheckDefinition(
+    parse_function=parse_perle_modules_cm1000,
     detect=DETECT_PERLE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1966.21.1.1.1.1.4.1",

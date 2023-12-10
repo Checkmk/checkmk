@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.1 Logical_Library: 1 --> SNIA-SML-MIB::changerDevice-ElementName.1
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.2 Logical_Library: LTO6 --> SNIA-SML-MIB::changerDevice-ElementName.2
 # .1.3.6.1.4.1.14851.3.1.11.2.1.8.1 3 --> SNIA-SML-MIB::changerDevice-Availability.1
@@ -28,7 +30,12 @@ def check_ibm_tl_changer_devices(item, params, info):
     return None
 
 
+def parse_ibm_tl_changer_devices(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_tl_changer_devices,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14851.3.1.11.2.1",

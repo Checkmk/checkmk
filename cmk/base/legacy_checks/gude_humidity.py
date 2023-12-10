@@ -10,7 +10,8 @@ from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMPTree, startswith
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.3.1 498 --> GUDEADS-EPC****-MIB::epc****HygroSensor.1

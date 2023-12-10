@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 qlogic_sanbox_status_map = [
     "undefined",  # 0
     "unknown",  # 1
@@ -17,9 +19,13 @@ qlogic_sanbox_status_map = [
     "failed",  # 5
 ]
 
+
+def parse_qlogic_sanbox(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qlogic_sanbox"] = LegacyCheckDefinition(
-    # .1.3.6.1.4.1.3873.1.14 Qlogic-Switch
-    # .1.3.6.1.4.1.3873.1.8  Qlogic-4Gb SAN Switch Module for IBM BladeCenter
+    parse_function=parse_qlogic_sanbox,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),

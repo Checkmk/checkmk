@@ -8,9 +8,16 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, 
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
+
+def parse_viprinet_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["viprinet_mem"] = LegacyCheckDefinition(
+    parse_function=parse_viprinet_mem,
     detect=DETECT_VIPRINET,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.2",

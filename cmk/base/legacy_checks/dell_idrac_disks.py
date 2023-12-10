@@ -8,6 +8,7 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.2.1 Physical Disk 0:1:0 --> IDRAC-MIB::physicalDiskName.1
@@ -102,7 +103,12 @@ def check_dell_idrac_disks(item, _no_params, info):
                 yield state, "%s" % (state_readable)
 
 
+def parse_dell_idrac_disks(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_idrac_disks"] = LegacyCheckDefinition(
+    parse_function=parse_dell_idrac_disks,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",

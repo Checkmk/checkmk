@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.detection import DETECT_NEVER
 
 # snmp_scan_function
@@ -50,9 +51,12 @@ def check_carel_uniflair_cooling(item, _no_params, info):
     return (0, output, perfdata)
 
 
+def parse_carel_uniflair_cooling(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["carel_uniflair_cooling"] = LegacyCheckDefinition(
-    # All the OIDs of this checks seems to be wrong for the current version
-    # of this device, so the detection is disbaled until we have better information
+    parse_function=parse_carel_uniflair_cooling,
     detect=DETECT_NEVER,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",

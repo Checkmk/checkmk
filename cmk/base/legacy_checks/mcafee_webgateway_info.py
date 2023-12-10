@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib import mcafee_gateway
 
 
@@ -22,7 +23,12 @@ def check_mcafee_webgateway_info(_no_item, _no_params, info):
     return 0, f"Product version: {version}, Revision: {revision}"
 
 
+def parse_mcafee_webgateway_info(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mcafee_webgateway_info"] = LegacyCheckDefinition(
+    parse_function=parse_mcafee_webgateway_info,
     detect=mcafee_gateway.DETECT_WEB_GATEWAY,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.1",

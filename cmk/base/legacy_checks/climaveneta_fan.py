@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_climaveneta_fan(info):
     if len(info[0]) == 2:
@@ -21,7 +23,12 @@ def check_climaveneta_fan(item, params, info):
     return check_fan(rpm, params)
 
 
+def parse_climaveneta_fan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["climaveneta_fan"] = LegacyCheckDefinition(
+    parse_function=parse_climaveneta_fan,
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1.2",

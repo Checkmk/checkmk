@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.blade import DETECT_BLADE_BX
 
 
@@ -35,7 +36,12 @@ def check_blade_bx_powermod(item, _no_param, info):
     return state, f"{product_name} Status is {state_readable}"
 
 
+def parse_blade_bx_powermod(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["blade_bx_powermod"] = LegacyCheckDefinition(
+    parse_function=parse_blade_bx_powermod,
     detect=DETECT_BLADE_BX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.2.4.1",

@@ -21,6 +21,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, IgnoreResultsError, SNMPTree
 
 from cmk.agent_based.v2 import render
+from cmk.agent_based.v2.type_defs import StringTable
 
 
 # Inventory of dell power connect CPU details.
@@ -62,7 +63,12 @@ def check_dell_powerconnect_cpu(item, params, info):
     ]
 
 
+def parse_dell_powerconnect_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_dell_powerconnect_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.1",

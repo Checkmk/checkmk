@@ -15,6 +15,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 
@@ -44,7 +45,12 @@ def check_netscaler_cpu(item, params, info):
     return None
 
 
+def parse_netscaler_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netscaler_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_netscaler_cpu,
     detect=SNMP_DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41.6.1",

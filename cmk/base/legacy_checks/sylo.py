@@ -32,6 +32,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_sylo(info):
     if len(info) > 0 and len(info[0]) == 4:
@@ -103,7 +105,12 @@ def check_sylo(item, params, info):
     return (3, "Invalid hint file contents: %s" % info)
 
 
+def parse_sylo(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sylo"] = LegacyCheckDefinition(
+    parse_function=parse_sylo,
     service_name="Sylo",
     discovery_function=inventory_sylo,
     check_function=check_sylo,

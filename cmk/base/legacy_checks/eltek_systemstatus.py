@@ -10,6 +10,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.eltek import DETECT_ELTEK
 
 
@@ -28,7 +29,12 @@ def check_eltek_systemstatus(_no_item, _no_params, info):
     return state, "Operational status: %s" % state_readable
 
 
+def parse_eltek_systemstatus(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["eltek_systemstatus"] = LegacyCheckDefinition(
+    parse_function=parse_eltek_systemstatus,
     detect=DETECT_ELTEK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.2",

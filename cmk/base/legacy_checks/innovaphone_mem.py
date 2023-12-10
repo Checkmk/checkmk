@@ -8,6 +8,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_innovaphone_mem(info):
     yield None, {}
@@ -23,7 +25,12 @@ def check_innovaphone_mem(_no_item, params, info):
     )
 
 
+def parse_innovaphone_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["innovaphone_mem"] = LegacyCheckDefinition(
+    parse_function=parse_innovaphone_mem,
     service_name="Memory",
     discovery_function=inventory_innovaphone_mem,
     check_function=check_innovaphone_mem,

@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gatew
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 # TODO together with 'mcafee_emailgateway_agent'
@@ -24,7 +25,12 @@ def check_mcafee_emailgateway_av_mcafee(item, params, info):
     )
 
 
+def parse_mcafee_emailgateway_av_mcafee(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mcafee_emailgateway_av_mcafee"] = LegacyCheckDefinition(
+    parse_function=parse_mcafee_emailgateway_av_mcafee,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.3.6",

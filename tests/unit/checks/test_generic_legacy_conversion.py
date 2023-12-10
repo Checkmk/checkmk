@@ -11,6 +11,7 @@ from cmk.utils.check_utils import section_name_of
 from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 pytestmark = pytest.mark.checks
 
@@ -47,6 +48,39 @@ def test_snmp_info_snmp_detect_equal(fix_plugin_legacy: FixPluginLegacy) -> None
         assert (check_info_element.get("detect") is None) is (
             check_info_element.get("fetch") is None
         )
+
+
+def _defines_section(check_info_element: LegacyCheckDefinition) -> bool:
+    if check_info_element.get("parse_function") is not None:
+        return True
+
+    assert check_info_element.get("detect") is None
+    assert check_info_element.get("fetch") is None
+    return False
+
+
+def _is_section_migrated(name: str, fix_register: FixRegister) -> bool:
+    sname = SectionName(name)
+    return (
+        section := fix_register.snmp_sections.get(sname, fix_register.agent_sections.get(sname))
+    ) is not None and section.location is not None
+
+
+def test_sections_definitions_exactly_in_mainchecks(
+    fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister
+) -> None:
+    """Test where section definitions occur.
+
+    Make sure that sections are defined if and only if it is a main check
+    for which no migrated section exists.
+    """
+    for name, check_info_element in fix_plugin_legacy.check_info.items():
+        if section_name_of(name) != name:  # subcheck
+            assert not _defines_section(check_info_element)
+        else:
+            assert _is_section_migrated(name, fix_register) is not _defines_section(
+                check_info_element
+            )
 
 
 def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:

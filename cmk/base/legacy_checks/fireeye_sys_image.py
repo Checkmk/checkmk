@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.5.1.1.0 eMPS (eMPS) 7.6.5.442663 --> FE-FIREEYE-MIB::feInstalledSystemImage.0
@@ -29,7 +30,12 @@ def check_fireeye_sys_image(_no_item, _no_params, info):
     return state, infotext
 
 
+def parse_fireeye_sys_image(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_sys_image"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_sys_image,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",

@@ -4,12 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
+
+def parse_wagner_titanus_topsense(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(
+    parse_function=parse_wagner_titanus_topsense,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.21501"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34187.74195"),

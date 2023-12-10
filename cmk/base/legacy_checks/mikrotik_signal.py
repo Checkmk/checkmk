@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_mikrotik_signal(info):
     yield from ((network, {}) for network, _strength, _mode in info)
@@ -34,7 +36,12 @@ def check_mikrotik_signal(item, params, info):
     return 3, "Network not found"
 
 
+def parse_mikrotik_signal(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mikrotik_signal"] = LegacyCheckDefinition(
+    parse_function=parse_mikrotik_signal,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14988.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14988.1.1.1.1.1",

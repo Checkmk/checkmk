@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
 
 # Example Agent Output:
@@ -122,7 +125,12 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
     return (state, output)
 
 
+def parse_genua_carp(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["genua_carp"] = LegacyCheckDefinition(
+    parse_function=parse_genua_carp,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(

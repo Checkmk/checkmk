@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_packeteer_fan_status(info):
     for nr, fan_status in enumerate(info[0]):
@@ -26,7 +28,12 @@ def check_packeteer_fan_status(item, _no_params, info):
     return None
 
 
+def parse_packeteer_fan_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["packeteer_fan_status"] = LegacyCheckDefinition(
+    parse_function=parse_packeteer_fan_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",

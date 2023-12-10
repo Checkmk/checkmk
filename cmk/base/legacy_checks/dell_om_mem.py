@@ -8,6 +8,7 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
@@ -53,7 +54,12 @@ def check_dell_om_mem(item, _no_params, info):
             yield 0, "Size: %s" % get_bytes_human_readable(int(size) * 1024)
 
 
+def parse_dell_om_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_om_mem"] = LegacyCheckDefinition(
+    parse_function=parse_dell_om_mem,
     detect=DETECT_OPENMANAGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100.50.1",

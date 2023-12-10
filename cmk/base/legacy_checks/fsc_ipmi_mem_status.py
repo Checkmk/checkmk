@@ -22,6 +22,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 fsc_ipmi_mem_status_levels = [
     # Status Code, Label
     (0, "Empty slot"),
@@ -53,7 +55,12 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
     return (3, "item %s not found" % name)
 
 
+def parse_fsc_ipmi_mem_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fsc_ipmi_mem_status"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_ipmi_mem_status,
     service_name="IPMI Memory status %s",
     discovery_function=inventory_fsc_ipmi_mem_status,
     check_function=check_fsc_ipmi_mem_status,

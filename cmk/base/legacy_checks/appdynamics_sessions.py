@@ -15,6 +15,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_appdynamics_sessions(info):
     for line in info:
@@ -55,7 +57,12 @@ def check_appdynamics_sessions(item, params, info):
             yield 0, "Maximum active: %d" % max_active
 
 
+def parse_appdynamics_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_appdynamics_sessions,
     service_name="AppDynamics Sessions %s",
     discovery_function=inventory_appdynamics_sessions,
     check_function=check_appdynamics_sessions,

@@ -10,6 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def check_wmic_process(item, params, info):
     name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
@@ -87,7 +89,12 @@ def check_wmic_process(item, params, info):
     return (state, ", ".join(messages), perfdata)
 
 
+def parse_wmic_process(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["wmic_process"] = LegacyCheckDefinition(
+    parse_function=parse_wmic_process,
     service_name="Process %s",
     check_function=check_wmic_process,
     check_ruleset_name="wmic_process",

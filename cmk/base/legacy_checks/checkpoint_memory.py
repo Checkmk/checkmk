@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 # FIXME
@@ -43,7 +44,12 @@ def check_checkpoint_memory(item, params, info):
     )
 
 
+def parse_checkpoint_memory(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_memory"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_memory,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.4",

@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.48 Amount Documents Count --> ARTEC-MIB::artecDocumentsName.1.48
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.49 Replicate Count        --> ARTEC-MIB::artecDocumentsName.1.49
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.50 Sign count             --> ARTEC-MIB::artecDocumentsName.1.50
@@ -39,7 +41,12 @@ def check_artec_documents(_no_item, _no_params, info):
             yield 0, "%s: %d (%.2f/s)" % (name, documents, rate)
 
 
+def parse_artec_documents(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["artec_documents"] = LegacyCheckDefinition(
+    parse_function=parse_artec_documents,
     detect=all_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         contains(".1.3.6.1.2.1.1.1.0", "version"),

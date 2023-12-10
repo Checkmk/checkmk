@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.1.1.4.0 32 --> FE-FIREEYE-MIB::feTemperatureValue.0
@@ -42,7 +43,12 @@ def check_fireeye_temp(item, params, info):
     )
 
 
+def parse_fireeye_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_temp"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.1.1",

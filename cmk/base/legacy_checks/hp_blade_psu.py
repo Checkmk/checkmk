@@ -20,6 +20,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.hp import DETECT_HP_BLADE
 
 # GENERAL MAPS:
@@ -104,7 +105,12 @@ def check_hp_blade_psu(item, params, info):
     return (3, "item not found in snmp data")
 
 
+def parse_hp_blade_psu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_blade_psu"] = LegacyCheckDefinition(
+    parse_function=parse_hp_blade_psu,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.5.1.1.1",

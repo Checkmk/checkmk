@@ -14,6 +14,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
 
@@ -45,7 +46,12 @@ def check_barracuda_mailqueues(_no_item, params, info):
         yield 0, "Daily sent: %s" % daily_sent
 
 
+def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
+    parse_function=parse_barracuda_mailqueues,
     detect=DETECT_BARRACUDA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20632.2",

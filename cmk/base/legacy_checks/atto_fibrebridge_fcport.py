@@ -16,6 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_atto_fibrebridge_fcport(info):
     for line in info:
@@ -40,7 +42,12 @@ def check_atto_fibrebridge_fcport(item, params, info):
         yield check_levels(fc_rx_words, "fc_rx_words", params["fc_rx_words"], infoname="RX")
 
 
+def parse_atto_fibrebridge_fcport(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["atto_fibrebridge_fcport"] = LegacyCheckDefinition(
+    parse_function=parse_atto_fibrebridge_fcport,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.3.2.1",

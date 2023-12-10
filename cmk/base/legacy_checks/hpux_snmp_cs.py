@@ -45,6 +45,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_hpux_snmp_cpu(info):
     if len(info) > 0:
@@ -79,7 +81,12 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     return (0, ", ".join(infos), perfdata)
 
 
+def parse_hpux_snmp_cs(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
+    parse_function=parse_hpux_snmp_cs,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "HP-UX"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.3.1",

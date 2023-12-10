@@ -23,6 +23,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # Taken from connUnitPortState
 # user selected state of the port hardware
 fc_port_admstates = {
@@ -325,7 +327,12 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     yield 0, porttype_list[int(porttype)]
 
 
+def parse_fc_port(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fc_port"] = LegacyCheckDefinition(
+    parse_function=parse_fc_port,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         not_exists(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*"),

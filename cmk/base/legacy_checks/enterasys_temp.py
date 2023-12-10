@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
 
 
@@ -31,7 +32,12 @@ def check_enterasys_temp(item, params, info):
     return check_temperature(temp, params, "enterasys_temp_%s" % item, dev_unit="f")
 
 
+def parse_enterasys_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["enterasys_temp"] = LegacyCheckDefinition(
+    parse_function=parse_enterasys_temp,
     detect=DETECT_ENTERASYS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.1.1.8.1",

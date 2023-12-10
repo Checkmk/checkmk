@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
 
 # .1.3.6.1.4.1.1916.1.32.1.2.0 59 --> EXTREME-SOFTWARE-MONITOR-MIB::extremeCpuMonitorTotalUtilization.0$
@@ -25,7 +26,12 @@ def check_netextreme_cpu_util(_no_item, params, info):
     return check_cpu_util(float(info[0][0]), params)
 
 
+def parse_netextreme_cpu_util(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netextreme_cpu_util"] = LegacyCheckDefinition(
+    parse_function=parse_netextreme_cpu_util,
     detect=DETECT_NETEXTREME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.32.1.2",

@@ -52,7 +52,12 @@ def check_decru_perf(item: str, _no_params: Mapping[str, object], info: StringTa
             return
 
 
+def parse_decru_perf(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["decru_perf"] = LegacyCheckDefinition(
+    parse_function=parse_decru_perf,
     detect=DETECT_DECRU,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.1.2.1.1",

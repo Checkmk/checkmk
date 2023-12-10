@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_hitachi_hus_status(info):
     return [(None, None)]
@@ -44,7 +46,12 @@ def check_hitachi_hus_status(_no_item, _no_params, info):
                 yield state, message
 
 
+def parse_hitachi_hus_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hus_status"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hus_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.1.2.2",

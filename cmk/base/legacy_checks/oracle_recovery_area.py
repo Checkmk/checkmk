@@ -14,6 +14,8 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_oracle_recovery_area(info):
     return [(line[0], {}) for line in info]
@@ -60,7 +62,12 @@ def check_oracle_recovery_area(item, params, info):
     raise IgnoreResultsError("Login into database failed")
 
 
+def parse_oracle_recovery_area(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_recovery_area"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_recovery_area,
     service_name="ORA %s Recovery Area",
     discovery_function=inventory_oracle_recovery_area,
     check_function=check_oracle_recovery_area,

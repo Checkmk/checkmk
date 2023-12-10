@@ -9,13 +9,20 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, exists, SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def check_netapp_cpu(item, params, info):
     util = float(info[0][0])
     return check_cpu_util(util, params)
 
 
+def parse_netapp_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_cpu,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.2.1.3.0")
     ),

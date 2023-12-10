@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
@@ -38,7 +39,12 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
     return None
 
 
+def parse_emc_datadomain_nvbat(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emc_datadomain_nvbat"] = LegacyCheckDefinition(
+    parse_function=parse_emc_datadomain_nvbat,
     detect=DETECT_DATADOMAIN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.2.3.1.1",

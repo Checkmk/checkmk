@@ -13,6 +13,8 @@
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_appdynamics_memory(info):
     for line in info:
@@ -100,7 +102,12 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
             yield 0, "Committed: %s" % get_bytes_human_readable(committed), perfdata
 
 
+def parse_appdynamics_memory(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["appdynamics_memory"] = LegacyCheckDefinition(
+    parse_function=parse_appdynamics_memory,
     service_name="AppDynamics Memory %s",
     discovery_function=inventory_appdynamics_memory,
     check_function=check_appdynamics_memory,

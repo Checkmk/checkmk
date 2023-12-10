@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_arris_cmts_cpu(info):
     for oid_id, cpu_id, _cpu_idle_util in info:
@@ -42,7 +44,12 @@ def check_arris_cmts_cpu(item, params, info):
             return
 
 
+def parse_arris_cmts_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_arris_cmts_cpu,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.1.1.1",

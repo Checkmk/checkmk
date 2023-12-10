@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.qnap import DETECT_QNAP
 
 
@@ -37,7 +38,12 @@ def check_qnap_disks(item, _no_params, info):
             yield 0, f"Model: {model}, Temperature: {temp}, Size: {size}"
 
 
+def parse_qnap_disks(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qnap_disks"] = LegacyCheckDefinition(
+    parse_function=parse_qnap_disks,
     detect=DETECT_QNAP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",

@@ -15,6 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 online_mapping = {"1": "online", "0": "offline"}
 
 active_mapping = {"1": "passive", "2": "active"}
@@ -86,7 +88,12 @@ def check_stormshield_cluster_node(item, params, info):
             yield 0, infotext
 
 
+def parse_stormshield_cluster_node(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_cluster_node,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),

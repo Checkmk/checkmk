@@ -7,6 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.intel import DETECT_INTEL_TRUE_SCALE
 
 # .1.3.6.1.4.1.10222.2.1.5.1.0 1 --> ICS-CHASSIS-MIB::icsChassisTemperatureStatus.0
@@ -43,7 +44,12 @@ def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
     )
 
 
+def parse_intel_true_scale_chassis_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["intel_true_scale_chassis_temp"] = LegacyCheckDefinition(
+    parse_function=parse_intel_true_scale_chassis_temp,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.5",

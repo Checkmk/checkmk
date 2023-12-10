@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.stulz import DETECT_STULZ
 
 
@@ -23,7 +24,12 @@ def check_stulz_humidity(item, params, info):
     return None
 
 
+def parse_stulz_humidity(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stulz_humidity"] = LegacyCheckDefinition(
+    parse_function=parse_stulz_humidity,
     detect=DETECT_STULZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194",

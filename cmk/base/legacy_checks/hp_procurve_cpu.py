@@ -28,7 +28,12 @@ def check_hp_procurve_cpu(item, params, info):
     return None
 
 
+def parse_hp_procurve_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_procurve_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_hp_procurve_cpu,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),

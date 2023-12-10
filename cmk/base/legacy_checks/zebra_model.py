@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 
 def inventory_zebra_model(info):
@@ -38,7 +42,12 @@ def check_zebra_model(_no_item, _no_params, info):
         yield 0, "Firmware release: %s" % release
 
 
+def parse_zebra_model(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["zebra_model"] = LegacyCheckDefinition(
+    parse_function=parse_zebra_model,
     detect=contains(".1.3.6.1.2.1.1.1.0", "zebra"),
     fetch=[
         SNMPTree(

@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.cmctc import DETECT_CMCTC
 
 # .1.3.6.1.4.1.2606.4.3.1.1.0 1
@@ -65,7 +66,12 @@ def check_cmctc_config(_no_item, _no_params, info):
     return 0, infotext
 
 
+def parse_cmctc_config(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cmctc_config"] = LegacyCheckDefinition(
+    parse_function=parse_cmctc_config,
     detect=DETECT_CMCTC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.4.3.1",

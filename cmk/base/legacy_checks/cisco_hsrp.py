@@ -60,6 +60,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
 
 
@@ -113,7 +115,12 @@ def check_cisco_hsrp(item, params, info):
     return 3, "HSRP Group not found in Agent output"
 
 
+def parse_cisco_hsrp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_hsrp"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_hsrp,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.106.1.1.1.0")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.106.1.2.1.1",

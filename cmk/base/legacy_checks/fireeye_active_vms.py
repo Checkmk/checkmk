@@ -8,6 +8,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib import fireeye
 
 
@@ -27,7 +28,12 @@ def check_fireeye_active_vms(_no_item, params, info):
     )
 
 
+def parse_fireeye_active_vms(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_active_vms"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_active_vms,
     detect=fireeye.DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.9",

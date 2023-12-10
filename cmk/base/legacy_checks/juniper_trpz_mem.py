@@ -12,8 +12,8 @@ from cmk.base.check_legacy_includes.juniper_mem import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
 
 

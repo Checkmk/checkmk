@@ -8,6 +8,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_db2_mem(info):
     return [(x[1], {}) for x in info if x[0] == "Instance"]
@@ -53,7 +55,12 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     )
 
 
+def parse_db2_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["db2_mem"] = LegacyCheckDefinition(
+    parse_function=parse_db2_mem,
     service_name="Memory %s",
     discovery_function=inventory_db2_mem,
     check_function=check_db2_mem,

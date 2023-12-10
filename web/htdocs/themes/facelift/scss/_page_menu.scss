@@ -742,8 +742,9 @@ div.page_menu_popup {
       }
 
       &.active,
+      &:hover,
       &:focus {
-        background-color: $input-button-hover-bg-color;
+        background-color: darken($input-button-hover-bg-color, 7%);
       }
     }
 

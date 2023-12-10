@@ -15,6 +15,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def vxvm_objstatus_disks(info):
     groups = {}
@@ -58,7 +60,12 @@ def check_vxvm_objstatus(item, _no_params, info):
     return (2, "Group not found")
 
 
+def parse_vxvm_objstatus(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["vxvm_objstatus"] = LegacyCheckDefinition(
+    parse_function=parse_vxvm_objstatus,
     service_name="VXVM objstatus %s",
     discovery_function=inventory_vxvm_objstatus,
     check_function=check_vxvm_objstatus,

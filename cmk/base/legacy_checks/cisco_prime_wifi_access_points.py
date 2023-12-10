@@ -16,7 +16,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 Section = Mapping
 

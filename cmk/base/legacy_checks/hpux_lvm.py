@@ -24,6 +24,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_hpux_lvm(info):
     inventory = []
@@ -50,7 +52,12 @@ def check_hpux_lvm(item, params, info):
     return (3, "no such volume found")
 
 
+def parse_hpux_lvm(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hpux_lvm"] = LegacyCheckDefinition(
+    parse_function=parse_hpux_lvm,
     service_name="Logical Volume %s",
     discovery_function=inventory_hpux_lvm,
     check_function=check_hpux_lvm,

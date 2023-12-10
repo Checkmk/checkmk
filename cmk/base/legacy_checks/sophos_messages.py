@@ -29,6 +29,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_sophos_messages(info):
     return [(line[0].replace("InvalidRecipient", "Invalid Recipient"), None) for line in info]
@@ -55,7 +57,12 @@ def check_sophos_messages(item, params, info):
     return None
 
 
+def parse_sophos_messages(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["sophos_messages"] = LegacyCheckDefinition(
+    parse_function=parse_sophos_messages,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604.1.1.1.4.1",

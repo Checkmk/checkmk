@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 mbg_lantime_refclock_refmode_map = {
     "0": "notavailable",
     "1": "normalOperation",
@@ -84,7 +86,12 @@ def check_mbg_lantime_refclock(item, params, info):
     return (3, "Got no state information")
 
 
+def parse_mbg_lantime_refclock(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_refclock,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.2",

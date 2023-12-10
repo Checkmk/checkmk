@@ -8,9 +8,16 @@ from cmk.base.check_legacy_includes.alcatel import check_alcatel_fans, inventory
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
 
+
+def parse_alcatel_fans_aos7(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["alcatel_fans_aos7"] = LegacyCheckDefinition(
+    parse_function=parse_alcatel_fans_aos7,
     detect=DETECT_ALCATEL_AOS7,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.11.1",

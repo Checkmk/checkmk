@@ -7,6 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 
@@ -29,7 +30,12 @@ def check_mbg_lantime_ng_power(item, _no_params, info):
     return None
 
 
+def parse_mbg_lantime_ng_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_ng_power"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_ng_power,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.0.2.1",

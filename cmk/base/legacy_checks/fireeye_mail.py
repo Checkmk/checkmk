@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 
@@ -68,7 +69,12 @@ def check_fireeye_mail(_no_item, params, info):
         yield fireeye_counter_generic(int(mail_info[index]), mail_type, average)
 
 
+def parse_fireeye_mail(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_mail"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_mail,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",

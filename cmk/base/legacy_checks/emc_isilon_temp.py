@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
@@ -55,7 +56,13 @@ def isilon_temp_item_name(sensor_name):
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
 
+
+def parse_emc_isilon_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
+    parse_function=parse_emc_isilon_temp,
     detect=DETECT_ISILON,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.54.1",

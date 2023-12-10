@@ -30,6 +30,8 @@ import time
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_jar_signature(info):
     inventory = []
@@ -109,7 +111,12 @@ def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-bra
     return state, status_text
 
 
+def parse_jar_signature(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["jar_signature"] = LegacyCheckDefinition(
+    parse_function=parse_jar_signature,
     service_name="Jar-Signature %s",
     discovery_function=inventory_jar_signature,
     check_function=check_jar_signature,

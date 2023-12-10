@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, savefloat, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_apc_mod_pdu_modules(info):
     return [(x[0], None) for x in info if x[0] != ""]
@@ -38,7 +40,12 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
     return 3, "Module not found"
 
 
+def parse_apc_mod_pdu_modules(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_mod_pdu_modules"] = LegacyCheckDefinition(
+    parse_function=parse_apc_mod_pdu_modules,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.24.1"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.22.2.6.1",

@@ -10,6 +10,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.bluecat import DETECT_BLUECAT
 
 
@@ -28,7 +29,12 @@ def check_bluecat_dns_queries(item, _no_params, info):
         yield 0, f"{name}: {rate}", [(name, rate)]
 
 
+def parse_bluecat_dns_queries(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bluecat_dns_queries"] = LegacyCheckDefinition(
+    parse_function=parse_bluecat_dns_queries,
     detect=DETECT_BLUECAT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.2.2.2.1",

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import (
     check_levels,
     DiscoveryResult,
@@ -70,7 +72,12 @@ def check_genua_pfstate(item, params, info):
     yield 0, f"States max: {pfstateMax}"
 
 
+def parse_genua_pfstate(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["genua_pfstate"] = LegacyCheckDefinition(
+    parse_function=parse_genua_pfstate,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(

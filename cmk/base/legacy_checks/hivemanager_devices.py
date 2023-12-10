@@ -13,6 +13,8 @@
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_hivemanager_devices(info):
     for line in info:
@@ -86,7 +88,12 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
             )
 
 
+def parse_hivemanager_devices(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hivemanager_devices"] = LegacyCheckDefinition(
+    parse_function=parse_hivemanager_devices,
     service_name="Client %s",
     discovery_function=inventory_hivemanager_devices,
     check_function=check_hivemanager_devices,

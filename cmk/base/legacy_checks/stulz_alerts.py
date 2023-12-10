@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.stulz import DETECT_STULZ
 
 
@@ -24,7 +25,12 @@ def check_stulz_alerts(item, _no_params, info):
     return 3, "No information found about the device"
 
 
+def parse_stulz_alerts(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stulz_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_stulz_alerts,
     detect=DETECT_STULZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.4.4.1.1.1.1010",

@@ -34,7 +34,12 @@ def check_hitachi_hnas_cpu(item, params, info):
     return 3, "No CPU utilization found"
 
 
+def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_cpu,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.2.1",

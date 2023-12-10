@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
 
 
@@ -23,7 +24,12 @@ def check_steelhead_status(item, params, info):
     return (2, f"Status is {health} and {status}")
 
 
+def parse_steelhead_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["steelhead_status"] = LegacyCheckDefinition(
+    parse_function=parse_steelhead_status,
     detect=DETECT_STEELHEAD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2",

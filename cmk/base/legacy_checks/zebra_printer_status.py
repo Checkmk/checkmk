@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_zebra_printer_status(info):
     if info[0][0]:
@@ -29,7 +31,12 @@ def check_zebra_printer_status(item, params, info):
     return 3, "Unknown printer status"
 
 
+def parse_zebra_printer_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["zebra_printer_status"] = LegacyCheckDefinition(
+    parse_function=parse_zebra_printer_status,
     detect=contains(".1.3.6.1.2.1.1.1.0", "zebra"),
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.5.1.1",

@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.41.0 0
@@ -28,7 +29,12 @@ def check_fireeye_bypass(_no_item, params, info):
         yield 2, " (was %d before)" % expected_value
 
 
+def parse_fireeye_bypass(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_bypass"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_bypass,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",

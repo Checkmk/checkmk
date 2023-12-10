@@ -4,13 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
+
+def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["emc_isilon"] = LegacyCheckDefinition(
+    parse_function=parse_emc_isilon,
     detect=DETECT_ISILON,
     fetch=[
         SNMPTree(

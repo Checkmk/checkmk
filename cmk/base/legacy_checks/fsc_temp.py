@@ -43,7 +43,12 @@ def check_fsc_temp(item, params, info):
     return None
 
 
+def parse_fsc_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fsc_temp"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_temp,
     detect=all_of(
         all_of(
             any_of(

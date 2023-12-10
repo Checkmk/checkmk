@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # comNET GmbH, Fabian Binder - 2018-05-07
 
 # .1.3.6.1.4.1.9.9.719.1.45.8.1.14 cucsStorageLocalLunType
@@ -45,7 +47,12 @@ def check_cisco_ucs_lun(_no_item, _no_params, info):
     yield mode_state, "Mode: %s" % mode_state_readable
 
 
+def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_ucs_lun,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.8.1",

@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_blade_powerfan(info):
     return [(line[0], {}) for line in info if line[0] != "" and line[1] == "1"]
@@ -39,7 +41,12 @@ def check_blade_powerfan(item, _no_params, info):
     return (3, "Device %s not found in SNMP data" % item)
 
 
+def parse_blade_powerfan(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["blade_powerfan"] = LegacyCheckDefinition(
+    parse_function=parse_blade_powerfan,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Management Module"),
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Advanced Management Module"),

@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.ispro import DETECT_ISPRO_SENSORS
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.2.1 "Temperature-R" --> ISPRO-MIB::isDeviceMonitorTemperatureName
@@ -41,7 +42,12 @@ def check_ispro_sensors_temp(item, params, info):
     return None
 
 
+def parse_ispro_sensors_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
+    parse_function=parse_ispro_sensors_temp,
     detect=DETECT_ISPRO_SENSORS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",

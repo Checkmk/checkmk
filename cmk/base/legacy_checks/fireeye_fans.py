@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, invento
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.1 1 --> FE-FIREEYE-MIB::feFanIndex.1
@@ -56,7 +57,12 @@ def check_fireeye_fans(item, params, info):
             yield 0, "Speed: %s RPM" % speed_str
 
 
+def parse_fireeye_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fireeye_fans"] = LegacyCheckDefinition(
+    parse_function=parse_fireeye_fans,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.4.1.3.1",

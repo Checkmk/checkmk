@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 tunnel_states = {
@@ -33,7 +34,12 @@ def check_checkpoint_tunnels(item, params, info):
     return None
 
 
+def parse_checkpoint_tunnels(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_tunnels,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.500.9002.1",

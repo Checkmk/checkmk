@@ -8,6 +8,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.domino import DETECT
 
 
@@ -27,7 +28,12 @@ def check_domino_transactions(_no_item, params, info):
         )
 
 
+def parse_domino_transactions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["domino_transactions"] = LegacyCheckDefinition(
+    parse_function=parse_domino_transactions,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",

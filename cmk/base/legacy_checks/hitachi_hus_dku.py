@@ -9,7 +9,15 @@ from cmk.base.check_legacy_includes.hitachi_hus import check_hitachi_hus, invent
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
+
+def parse_hitachi_hus_dku(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hus_dku"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hus_dku,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "hm700"),
         contains(".1.3.6.1.2.1.1.1.0", "hm800"),

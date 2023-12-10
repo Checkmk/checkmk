@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 # Description of OIDs used from RFC 1628
@@ -123,7 +126,12 @@ def check_ups_test(_no_item, params, info):
     )
 
 
+def parse_ups_test(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["ups_test"] = LegacyCheckDefinition(
+    parse_function=parse_ups_test,
     detect=DETECT_UPS_GENERIC,
     fetch=[
         SNMPTree(

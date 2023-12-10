@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.casa import DETECT_CASA
 
 
@@ -29,7 +30,12 @@ def check_casa_power(item, _no_params, info):
     }.get(info[unit_nr][0])
 
 
+def parse_casa_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["casa_power"] = LegacyCheckDefinition(
+    parse_function=parse_casa_power,
     detect=DETECT_CASA,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20858.10.33.1.5.1",

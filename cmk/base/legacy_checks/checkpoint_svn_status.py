@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 
@@ -27,7 +28,12 @@ def check_checkpoint_svn_status(item, params, info):
     return None
 
 
+def parse_checkpoint_svn_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_svn_status"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_svn_status,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6",

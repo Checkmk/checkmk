@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 
@@ -69,7 +70,12 @@ def check_fortigate_ipsecvpn(item, params, info):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
+def parse_fortigate_ipsecvpn(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
+    parse_function=parse_fortigate_ipsecvpn,
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.12.2.2.1",

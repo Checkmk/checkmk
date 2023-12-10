@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_qmail_stats(info):
     if len(info) > 0:
@@ -35,7 +37,12 @@ def check_qmail_stats(_no_item, params, info):
     return state, message, perf
 
 
+def parse_qmail_stats(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qmail_stats"] = LegacyCheckDefinition(
+    parse_function=parse_qmail_stats,
     service_name="Qmail Queue %s",
     discovery_function=inventory_qmail_stats,
     check_function=check_qmail_stats,

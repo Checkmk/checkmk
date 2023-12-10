@@ -16,6 +16,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_cpsecure_sessions(info):
     for service, enabled, _sessions in info:
@@ -41,7 +43,12 @@ def check_cpsecure_sessions(item, _no_params, info):
     return 3, "service not found"
 
 
+def parse_cpsecure_sessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cpsecure_sessions"] = LegacyCheckDefinition(
+    parse_function=parse_cpsecure_sessions,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.26546.1.1.2"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.26546.3.1.2.1.1.1",

@@ -14,6 +14,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_adva_fsp_current(info):
     for _current_str, _upper_threshold_str, power_str, _unit_name, index_aid in info:
@@ -46,7 +48,12 @@ def check_adva_fsp_current(item, _no_params, info):
     return None
 
 
+def parse_adva_fsp_current(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["adva_fsp_current"] = LegacyCheckDefinition(
+    parse_function=parse_adva_fsp_current,
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",

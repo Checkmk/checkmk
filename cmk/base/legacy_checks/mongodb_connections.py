@@ -17,6 +17,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_mongodb_connections(info):
     return [("Connections", {})]
@@ -74,7 +76,12 @@ def _is_int(key_list, info_dict) -> bool:
     return True
 
 
+def parse_mongodb_connections(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mongodb_connections"] = LegacyCheckDefinition(
+    parse_function=parse_mongodb_connections,
     service_name="MongoDB %s",
     discovery_function=inventory_mongodb_connections,
     check_function=check_mongodb_connections,

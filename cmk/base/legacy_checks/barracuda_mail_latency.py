@@ -10,6 +10,7 @@ from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheck
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
 
@@ -27,7 +28,12 @@ def check_barracuda_mail_latency(_no_item, params, info):
     )
 
 
+def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(
+    parse_function=parse_barracuda_mail_latency,
     detect=DETECT_BARRACUDA,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying

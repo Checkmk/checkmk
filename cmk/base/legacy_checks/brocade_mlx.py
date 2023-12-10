@@ -7,12 +7,14 @@
 # mypy: disable-error-code="var-annotated"
 
 import re
+from collections.abc import Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.brocade import DETECT_MLX
 
 # TODO refactoring: use parse-function
@@ -28,7 +30,13 @@ brocade_mlx_states = {
     11: (0, "Blocked for full height card"),
 }
 
+
+def parse_brocade_mlx(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["brocade_mlx"] = LegacyCheckDefinition(
+    parse_function=parse_brocade_mlx,
     detect=DETECT_MLX,
     fetch=[
         SNMPTree(

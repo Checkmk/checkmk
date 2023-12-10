@@ -39,7 +39,12 @@ def check_fsc_subsystems(item, _no_params, info):
         return (3, "unknown status %d" % status)
 
 
+def parse_fsc_subsystems(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fsc_subsystems"] = LegacyCheckDefinition(
+    parse_function=parse_fsc_subsystems,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.231"),

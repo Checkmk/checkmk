@@ -11,6 +11,8 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_arc_raid_status(info):
     return [(x[0], {"n_disks": int(x[-5])}) for x in info]
@@ -52,7 +54,12 @@ def check_arc_raid_status(item, params, info):
     return 3, "Array not found"
 
 
+def parse_arc_raid_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["arc_raid_status"] = LegacyCheckDefinition(
+    parse_function=parse_arc_raid_status,
     service_name="Raid Array #%s",
     discovery_function=inventory_arc_raid_status,
     check_function=check_arc_raid_status,

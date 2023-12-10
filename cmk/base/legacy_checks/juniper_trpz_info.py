@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
 
 
@@ -21,7 +22,12 @@ def check_juniper_trpz_info(_no_item, _no_params, info):
     return 0, message
 
 
+def parse_juniper_trpz_info(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["juniper_trpz_info"] = LegacyCheckDefinition(
+    parse_function=parse_juniper_trpz_info,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.2.1",

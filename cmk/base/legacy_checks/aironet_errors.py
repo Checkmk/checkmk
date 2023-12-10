@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_aironet_errors(info):
     yield from ((line[0], {}) for line in info)
@@ -42,7 +44,12 @@ def check_aironet_errors(item, params, info):
             return
 
 
+def parse_aironet_errors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["aironet_errors"] = LegacyCheckDefinition(
+    parse_function=parse_aironet_errors,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.525"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.618"),

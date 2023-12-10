@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate

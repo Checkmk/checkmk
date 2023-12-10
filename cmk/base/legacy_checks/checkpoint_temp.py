@@ -10,6 +10,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 
@@ -42,7 +43,12 @@ def check_checkpoint_temp(item, params, info):
     return None
 
 
+def parse_checkpoint_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_temp"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_temp,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.1.1",

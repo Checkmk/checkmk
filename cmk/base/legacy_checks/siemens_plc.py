@@ -290,7 +290,12 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
     return 3, "CPU is in unknown state"
 
 
+def parse_siemens_plc_cpu_state(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    parse_function=parse_siemens_plc_cpu_state,
     service_name="CPU state",
     discovery_function=inventory_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,

@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.genua import DETECT_GENUA
 
 
@@ -47,7 +47,12 @@ def check_genua_fan(item, params, info):
         yield check_fan(rpm, params)
 
 
+def parse_genua_fan(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["genua_fan"] = LegacyCheckDefinition(
+    parse_function=parse_genua_fan,
     detect=DETECT_GENUA,
     fetch=[
         SNMPTree(

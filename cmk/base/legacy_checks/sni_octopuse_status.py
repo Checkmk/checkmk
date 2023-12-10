@@ -9,10 +9,13 @@
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
@@ -41,7 +44,12 @@ def check_octopus_status(_no_item, _no_params_info, info):
     return (state, msg)
 
 
+def parse_sni_octopuse_status(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["sni_octopuse_status"] = LegacyCheckDefinition(
+    parse_function=parse_sni_octopuse_status,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=[
         SNMPTree(

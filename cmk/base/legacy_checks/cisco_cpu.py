@@ -21,6 +21,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_cisco_cpu(info):
     if info and (info[0][0].isdigit() or info[0][1].isdigit()):
@@ -49,7 +51,12 @@ def check_cisco_cpu(item, params, info):
     )
 
 
+def parse_cisco_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         any_of(

@@ -4,10 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
@@ -23,7 +26,12 @@ def check_octopus_cpu(_no_item, _no_params_info, info):
     return 0, "CPU utilization is %d%%" % cpu_perc, perfdata
 
 
+def parse_sni_octopuse_cpu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["sni_octopuse_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_sni_octopuse_cpu,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=[
         SNMPTree(

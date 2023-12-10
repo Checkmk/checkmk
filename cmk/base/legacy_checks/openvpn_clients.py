@@ -10,6 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # Example output from agent:
 # <<<openvpn_clients:sep(44)>>>
 # wilhelmshilfe-hups1,84.161.206.33:58371,11267978,8134524,Sun Mar 10 14:02:27 2013
@@ -50,7 +52,12 @@ def check_openvpn_clients(item, _no_params, info):
     return 3, "Client connection not found"
 
 
+def parse_openvpn_clients(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["openvpn_clients"] = LegacyCheckDefinition(
+    parse_function=parse_openvpn_clients,
     service_name="OpenVPN Client %s",
     discovery_function=inventory_openvpn_clients,
     check_function=check_openvpn_clients,

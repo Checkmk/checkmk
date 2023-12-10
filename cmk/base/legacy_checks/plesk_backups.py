@@ -11,6 +11,8 @@ import time
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_plesk_backups(info):
     inventory = []
@@ -100,7 +102,12 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
     return (3, "Domain not found")
 
 
+def parse_plesk_backups(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["plesk_backups"] = LegacyCheckDefinition(
+    parse_function=parse_plesk_backups,
     service_name="Plesk Backup %s",
     discovery_function=inventory_plesk_backups,
     check_function=check_plesk_backups,

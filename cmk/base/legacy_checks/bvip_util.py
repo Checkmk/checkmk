@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.bvip import DETECT_BVIP
 
 
@@ -31,7 +32,12 @@ def check_bvip_util(item, params, info):
     return check_cpu_util(usage, params["levels"])
 
 
+def parse_bvip_util(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bvip_util"] = LegacyCheckDefinition(
+    parse_function=parse_bvip_util,
     detect=DETECT_BVIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.9.1",

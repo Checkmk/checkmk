@@ -8,6 +8,8 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_dell_eql_storage(info):
     for line in info:
@@ -82,7 +84,12 @@ def check_dell_eql_storage(item, _no_params, info):
             ), perfdata
 
 
+def parse_dell_eql_storage(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_eql_storage"] = LegacyCheckDefinition(
+    parse_function=parse_dell_eql_storage,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.1.0", "EQL-SUP"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740.17"),

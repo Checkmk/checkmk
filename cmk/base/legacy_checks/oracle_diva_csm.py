@@ -32,9 +32,13 @@
 #   '----------------------------------------------------------------------'
 
 
+from collections.abc import Sequence
+
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 
 def item_name_oracle_diva_csm(name, element_id):
@@ -74,7 +78,12 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
     return None
 
 
+def parse_oracle_diva_csm(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
+    return string_table
+
+
 check_info["oracle_diva_csm"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_diva_csm,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.311.1.1.3.1.2"),
     fetch=[
         SNMPTree(

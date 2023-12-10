@@ -14,6 +14,8 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_oracle_longactivesessions(info):
     return [(line[0], {}) for line in info]
@@ -75,7 +77,12 @@ def check_oracle_longactivesessions(item, params, info):
     raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
 
 
+def parse_oracle_longactivesessions(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
     discovery_function=inventory_oracle_longactivesessions,
     check_function=check_oracle_longactivesessions,

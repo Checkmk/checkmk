@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.apc import DETECT
 
 
@@ -48,7 +49,12 @@ def check_apc_inrow_airflow(_no_item, params, info):
     return state, f"Current: {flow:.0f} l/s {message}", perf
 
 
+def parse_apc_inrow_airflow(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
+    parse_function=parse_apc_inrow_airflow,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",

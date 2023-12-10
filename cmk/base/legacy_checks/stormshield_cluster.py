@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 sync_name_mapping = {
     "1": "Synced",
     "0": "Not Synced",
@@ -57,7 +59,12 @@ def check_stormshield_cluster(item, params, info):
         yield status, "Faulty: %s" % faulty_links
 
 
+def parse_stormshield_cluster(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["stormshield_cluster"] = LegacyCheckDefinition(
+    parse_function=parse_stormshield_cluster,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.8"),

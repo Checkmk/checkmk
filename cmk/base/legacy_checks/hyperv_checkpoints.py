@@ -12,6 +12,8 @@
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_hyperv_checkpoints(info):
     return [(None, {})]
@@ -52,7 +54,12 @@ def check_hyperv_checkpoints(item, params, info):
         yield 0, "No Checkpoints found"
 
 
+def parse_hyperv_checkpoints(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
+    parse_function=parse_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
     discovery_function=inventory_hyperv_checkpoints,
     check_function=check_hyperv_checkpoints,

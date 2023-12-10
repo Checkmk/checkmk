@@ -38,7 +38,12 @@ def check_hitachi_hnas_fpga(item, params, info):
     return 3, "No utilization found for FPGA %s" % item
 
 
+def parse_hitachi_hnas_fpga(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hitachi_hnas_fpga"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hnas_fpga,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.4.1",

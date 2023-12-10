@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
 # .1.3.6.1.4.1.2620.1.5.2.0 1
@@ -56,7 +57,12 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
             yield 2, "Problem: %s" % stat_long
 
 
+def parse_checkpoint_ha_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["checkpoint_ha_status"] = LegacyCheckDefinition(
+    parse_function=parse_checkpoint_ha_status,
     detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.5",

@@ -15,6 +15,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_cisco_redundancy(info):
     try:
@@ -99,7 +101,12 @@ def check_cisco_redundancy(_no_item, params, info):
     return state, infotext
 
 
+def parse_cisco_redundancy(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_redundancy"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_redundancy,
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.176.1.1.*")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.176.1.1",

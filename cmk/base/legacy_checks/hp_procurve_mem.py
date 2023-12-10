@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
 # have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
@@ -45,7 +47,12 @@ def check_hp_procurve_mem(item, params, info):
     )
 
 
+def parse_hp_procurve_mem(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+    parse_function=parse_hp_procurve_mem,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),

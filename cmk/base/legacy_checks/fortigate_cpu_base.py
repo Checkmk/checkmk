@@ -12,7 +12,15 @@ from cmk.base.check_legacy_includes.fortigate_cpu import (
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
+
+def parse_fortigate_cpu_base(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
+    parse_function=parse_fortigate_cpu_base,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         exists(".1.3.6.1.4.1.12356.101.4.1.3.0"),

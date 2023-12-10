@@ -18,6 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # settings for inventory: which ports should be inventorized
 qlogic_fcport_inventory_opstates = ["1", "3"]
 qlogic_fcport_inventory_admstates = ["1", "3"]
@@ -248,7 +250,12 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
     return 3, "Port %s not found" % item
 
 
+def parse_qlogic_fcport(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["qlogic_fcport"] = LegacyCheckDefinition(
+    parse_function=parse_qlogic_fcport,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1663.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),

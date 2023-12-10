@@ -7,6 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
@@ -338,7 +339,12 @@ def check_lantime_ng_refclock(item, _no_params, info):
                 yield 0, "Correlation: %d%%" % correlation, perfdata
 
 
+def parse_mbg_lantime_ng_refclock(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
+    parse_function=parse_mbg_lantime_ng_refclock,
     detect=DETECT_MBG_LANTIME_NG,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.1.2.1",

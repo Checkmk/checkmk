@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_superstack3_sensors(info):
     return [(line[0], None) for line in info if line[1] != "not present"]
@@ -24,7 +26,12 @@ def check_superstack3_sensors(item, params, info):
     return (3, "UNKOWN - sensor not found")
 
 
+def parse_superstack3_sensors(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["superstack3_sensors"] = LegacyCheckDefinition(
+    parse_function=parse_superstack3_sensors,
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com superstack 3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.43.43.1.1",

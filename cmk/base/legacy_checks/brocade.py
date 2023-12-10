@@ -10,6 +10,8 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # Example output from agent:
 # [['1', '24', 'SLOT #0: TEMP #1'],
 # ['2', '12', 'SLOT #0: TEMP #2'],
@@ -20,7 +22,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMP
 # ['7', '1', 'Power Supply #1'],
 # ['8', '1', 'Power Supply #2']]
 
+
+def parse_brocade(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["brocade"] = LegacyCheckDefinition(
+    parse_function=parse_brocade,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.24.1.1588.2.1.1"),

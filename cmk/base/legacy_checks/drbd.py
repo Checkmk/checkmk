@@ -131,6 +131,8 @@ from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 _drbd_block_start_match = re.compile("^[0-9]+:")
 
 drbd_general_map = ["cs", "ro", "ds"]
@@ -336,7 +338,12 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     return (3, "Undefined state")
 
 
+def parse_drbd(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["drbd"] = LegacyCheckDefinition(
+    parse_function=parse_drbd,
     service_name="DRBD %s status",
     discovery_function=lambda info: inventory_drbd(info, "drbd"),
     check_function=check_drbd_general,

@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def check_netapp_fcpio(item, params, info):
     read, write = map(int, info[0])
@@ -45,7 +47,12 @@ def check_netapp_fcpio(item, params, info):
     )
 
 
+def parse_netapp_fcpio(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_fcpio"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_fcpio,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.1.0", "NetApp Release"), exists(".1.3.6.1.4.1.789.1.17.20.0")
     ),

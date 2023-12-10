@@ -72,7 +72,12 @@ def check_emerson_stat(_no_item, _no_params, info):
     yield state, infotext
 
 
+def parse_emerson_stat(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emerson_stat"] = LegacyCheckDefinition(
+    parse_function=parse_emerson_stat,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2.1",

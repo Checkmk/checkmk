@@ -7,6 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.15.0 X.X.X.X --> IB-PLATFORMONE-MIB::ibGridMasterVIP.0
@@ -28,7 +29,12 @@ def check_infoblox_grid_status(_no_item, _no_params, info):
     return state, f"Status: {status_readable}, Master virtual IP: {master_vip}"
 
 
+def parse_infoblox_grid_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(
+    parse_function=parse_infoblox_grid_status,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.2.1",

@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_avaya_45xx_temp(info):
     for idx, _line in enumerate(info):
@@ -22,7 +24,12 @@ def check_avaya_45xx_temp(item, params, info):
     return None
 
 
+def parse_avaya_45xx_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["avaya_45xx_temp"] = LegacyCheckDefinition(
+    parse_function=parse_avaya_45xx_temp,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.7.1.1.5",

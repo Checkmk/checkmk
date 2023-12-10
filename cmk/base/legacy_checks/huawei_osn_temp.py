@@ -8,6 +8,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The laser should not get hotter than 70°C
@@ -25,7 +26,12 @@ def check_huawei_osn_temp(item, params, info):
             yield check_temperature(temp, params, "huawei_osn_temp_%s" % item)
 
 
+def parse_huawei_osn_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["huawei_osn_temp"] = LegacyCheckDefinition(
+    parse_function=parse_huawei_osn_temp,
     detect=DETECT_HUAWEI_OSN,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.76.10.1",

@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.dell_poweredge import (
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 
@@ -22,7 +23,12 @@ def inventory_dell_poweredge_temp(info):
             yield item, {}
 
 
+def parse_dell_poweredge_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["dell_poweredge_temp"] = LegacyCheckDefinition(
+    parse_function=parse_dell_poweredge_temp,
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.4.700.20.1",

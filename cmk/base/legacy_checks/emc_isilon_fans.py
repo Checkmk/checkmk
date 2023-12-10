@@ -9,6 +9,7 @@ from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
@@ -34,7 +35,12 @@ def check_emc_isilon_fans(item, params, info):
     return None
 
 
+def parse_emc_isilon_fans(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["emc_isilon_fans"] = LegacyCheckDefinition(
+    parse_function=parse_emc_isilon_fans,
     detect=DETECT_ISILON,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.53.1",

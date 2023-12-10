@@ -7,6 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_netapp_api_connection(info):
     yield None, {}
@@ -44,7 +46,12 @@ def check_netapp_api_connection(_no_item, params, info):
     return 0, "The agent was able to retrieve all data from the filer"
 
 
+def parse_netapp_api_connection(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["netapp_api_connection"] = LegacyCheckDefinition(
+    parse_function=parse_netapp_api_connection,
     service_name="NetApp filer connection",
     discovery_function=inventory_netapp_api_connection,
     check_function=check_netapp_api_connection,

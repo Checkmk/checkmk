@@ -15,6 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_fast_lta_silent_cubes_status(info):
     if len(info) > 0 and len(info[0]) > 1:
@@ -32,7 +34,12 @@ def check_fast_lta_silent_cubes_status(item, params, info):
     return df_check_filesystem_list(item, params, fslist)
 
 
+def parse_fast_lta_silent_cubes(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
+    parse_function=parse_fast_lta_silent_cubes,
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         any_of(

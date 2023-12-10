@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 
@@ -26,7 +28,12 @@ def check_cisco_nexus_cpu(_no_item, params, info):
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
+def parse_cisco_nexus_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_cisco_nexus_cpu,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"),
         contains(".1.3.6.1.2.1.1.1.0", "nx-os"),

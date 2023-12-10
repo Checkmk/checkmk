@@ -10,6 +10,7 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca
@@ -58,7 +59,12 @@ def check_acme_certificates(item, params, info):
             yield 0, f"Start: {start}, Issuer: {issuer}"
 
 
+def parse_acme_certificates(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["acme_certificates"] = LegacyCheckDefinition(
+    parse_function=parse_acme_certificates,
     detect=DETECT_ACME,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.9.1.10.1",

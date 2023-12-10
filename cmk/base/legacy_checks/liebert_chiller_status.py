@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_liebert_chiller_status(info):
     return [(None, None)]
@@ -20,7 +22,12 @@ def check_liebert_chiller_status(_no_item, _no_params, info):
     return 0, "Device is in a OK state"
 
 
+def parse_liebert_chiller_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["liebert_chiller_status"] = LegacyCheckDefinition(
+    parse_function=parse_liebert_chiller_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42.4.3.20"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.4.3.20.1.1.20",

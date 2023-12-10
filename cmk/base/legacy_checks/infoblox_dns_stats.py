@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.infoblox import (
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 
@@ -36,7 +37,12 @@ def check_infoblox_dns_stats(_no_item, _no_params, info):
     )
 
 
+def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
+    parse_function=parse_infoblox_dns_stats,
     detect=DETECT_INFOBLOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.3.1.1.1",

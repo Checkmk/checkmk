@@ -19,6 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_brocade_vdx_status(info):
     return [(None, None)]
@@ -43,7 +45,12 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
     return None
 
 
+def parse_brocade_vdx_status(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["brocade_vdx_status"] = LegacyCheckDefinition(
+    parse_function=parse_brocade_vdx_status,
     detect=all_of(
         any_of(
             startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588"),

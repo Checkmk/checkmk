@@ -10,8 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
 
 # Nikolas Hagemann, comNET GmbH - nikolas.hagemann@comnetgmbh.com
@@ -34,7 +34,12 @@ def check_fortisandbox_cpu_util(_no_item, params, info):
     return check_cpu_util(util, params)
 
 
+def parse_fortisandbox_cpu_util(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
+    parse_function=parse_fortisandbox_cpu_util,
     detect=DETECT_FORTISANDBOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.3.1",

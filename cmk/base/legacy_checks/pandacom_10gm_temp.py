@@ -12,6 +12,7 @@ from cmk.base.check_legacy_includes.pandacom_temp import (
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 
 # .1.3.6.1.4.1.3652.3.3.4.1.1.2.4 4 --> SPEED-DUALLINE-10G::speedDualline10GMSlot.4
@@ -24,7 +25,12 @@ from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 # .1.3.6.1.4.1.3652.3.3.4.2.1.14.5 60 --> SPEED-DUALLINE-10G::speedDualline10GMTempAlarmLevel.5
 
 
+def parse_pandacom_10gm_temp(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["pandacom_10gm_temp"] = LegacyCheckDefinition(
+    parse_function=parse_pandacom_10gm_temp,
     detect=DETECT_PANDACOM,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.3.4",

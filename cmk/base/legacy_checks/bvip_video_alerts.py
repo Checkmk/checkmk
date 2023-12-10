@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.bvip import DETECT_BVIP
 
 
@@ -25,7 +26,12 @@ def check_bvip_video_alerts(item, _no_params, info):
     return None
 
 
+def parse_bvip_video_alerts(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["bvip_video_alerts"] = LegacyCheckDefinition(
+    parse_function=parse_bvip_video_alerts,
     detect=DETECT_BVIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1",

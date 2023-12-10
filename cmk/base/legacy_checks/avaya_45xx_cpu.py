@@ -11,6 +11,8 @@ from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def inventory_avaya_45xx_cpu(info):
     for idx, _line in enumerate(info):
@@ -25,7 +27,12 @@ def check_avaya_45xx_cpu(item, params, info):
     return None
 
 
+def parse_avaya_45xx_cpu(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
+    parse_function=parse_avaya_45xx_cpu,
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.8.1.1.5",

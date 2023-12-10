@@ -8,6 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.2.1.2.1 Web-Processes  --> UCD-SNMP-MIB::prNames.1
@@ -57,7 +58,12 @@ def check_ucd_processes(item, _no_params, info):
     return None
 
 
+def parse_ucd_processes(string_table: StringTable) -> StringTable:
+    return string_table
+
+
 check_info["ucd_processes"] = LegacyCheckDefinition(
+    parse_function=parse_ucd_processes,
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.2.1",

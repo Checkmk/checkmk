@@ -102,20 +102,19 @@ def parse_emcvnx_hwstatus(info):
     return parsed
 
 
-def inventory_emcvnx_hwstatus(info):
-    parsed = parse_emcvnx_hwstatus(info)
+def inventory_emcvnx_hwstatus(section):
     inventory = []
-    for enclosure in parsed:
-        for device in parsed[enclosure]:
-            if parsed[enclosure][device] != "Empty":
+    for enclosure in section:
+        for device in section[enclosure]:
+            if section[enclosure][device] != "Empty":
                 inventory.append((enclosure + " " + device, None))
     return inventory
 
 
-def check_emcvnx_hwstatus(item, _no_params, info):
+def check_emcvnx_hwstatus(item, _no_params, section):
     enc, device = item.split(" ", 1)
     try:
-        devstate = parse_emcvnx_hwstatus(info)[enc][device]
+        devstate = section[enc][device]
         if devstate in ("Present", "Valid", "No Errors Reported"):
             nagstate = 0
         else:
@@ -128,6 +127,7 @@ def check_emcvnx_hwstatus(item, _no_params, info):
 
 check_info["emcvnx_hwstatus"] = LegacyCheckDefinition(
     service_name="Enclosure %s",  # Example for Item: "0/1 Power A",
+    parse_function=parse_emcvnx_hwstatus,
     discovery_function=inventory_emcvnx_hwstatus,
     check_function=check_emcvnx_hwstatus,
 )

@@ -53,6 +53,7 @@ check_info["juniper_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2636.3.1.13.1",
         oids=["5.9", "11.9"],
     ),
+    parse_function=parse_juniper_mem,
     service_name="Memory %s",
     discovery_function=inventory_juniper_mem,
     check_function=check_juniper_mem,

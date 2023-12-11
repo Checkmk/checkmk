@@ -6,14 +6,14 @@
 #include "livestatus/ParsedQuery.h"
 
 #include <algorithm>
-#include <cctype>
+#include <charconv>
 #include <cmath>
 #include <compare>
 #include <cstdint>
-#include <cstdlib>
 #include <map>
 #include <ratio>
 #include <stdexcept>
+#include <system_error>
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"

@@ -35,7 +35,7 @@ from tests.testlib import SpecialAgent
                 "30",
                 "--log-cutoff-weeks",
                 "4",
-                "1.2.3.4",
+                "testhost",
             ],
             id="explicit_password",
         ),
@@ -52,7 +52,7 @@ from tests.testlib import SpecialAgent
                 ("store", "passwd", "%s"),
                 "--timeout",
                 "40",
-                "1.2.3.4",
+                "testhost",
             ],
             id="password_from_store",
         ),
@@ -70,23 +70,3 @@ def test_agent_proxmox_ve_arguments(
         )
         == expected_result
     )
-
-
-def test_agent_proxmox_ve_no_ip_address() -> None:
-    assert SpecialAgent("agent_proxmox_ve").argument_func(
-        {
-            "username": "user",
-            "password": ("store", "passwd"),
-            "timeout": "40",
-        },
-        "testhost",
-        None,
-    ) == [
-        "-u",
-        "user",
-        "-p",
-        ("store", "passwd", "%s"),
-        "--timeout",
-        "40",
-        "testhost",
-    ]

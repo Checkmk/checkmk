@@ -24,29 +24,34 @@
 #include "livestatus/StringUtils.h"
 #include "livestatus/Table.h"
 #include "livestatus/opids.h"
-#include "livestatus/strutil.h"
 
 using namespace std::chrono_literals;
+using namespace std::string_view_literals;
 
 namespace {
-std::string nextStringArgument(char **line) {
-    if (auto *value = next_field(line)) {
-        return value;
+std::string_view nextStringArgument(std::string_view &str) {
+    str.remove_prefix(
+        std::min(str.size(), str.find_first_not_of(mk::whitespace)));
+    if (str.empty()) {
+        throw std::runtime_error("missing argument");
     }
-    throw std::runtime_error("missing argument");
+    auto argument = str.substr(0, str.find_first_of(mk::whitespace));
+    str.remove_prefix(argument.size());
+    return argument;
 }
 
-int nextNonNegativeIntegerArgument(char **line) {
-    auto value = nextStringArgument(line);
-    const int number = atoi(value.c_str());
-    if (isdigit(value[0]) == 0 || number < 0) {
+int nextNonNegativeIntegerArgument(std::string_view &str) {
+    auto argument = nextStringArgument(str);
+    int value{};
+    auto [ptr, ec] = std::from_chars(argument.begin(), argument.end(), value);
+    if (ec != std::errc{} || ptr != argument.end() || value < 0) {
         throw std::runtime_error("expected non-negative integer");
     }
-    return number;
+    return value;
 }
 
-void checkNoArguments(const char *line) {
-    if (line[0] != 0) {
+void checkNoArguments(std::string_view str) {
+    if (!str.empty()) {
         throw std::runtime_error("superfluous argument(s)");
     }
 }
@@ -57,89 +62,82 @@ ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
     : user{std::make_unique<NoAuthUser>()} {
     FilterStack filters;
     FilterStack wait_conditions;
-    auto make_column = [&table](const std::string &colname) {
-        return table.column(colname);
+    auto make_column = [&table](std::string_view colname) {
+        return table.column(std::string{colname});
     };
-    auto find_user = [&table](const std::string &name) {
-        return table.core()->find_user(name);
+    auto find_user = [&table](std::string_view name) {
+        return table.core()->find_user(std::string{name});
     };
-    auto get = [&table](const std::string &primary_key) {
-        return table.get(primary_key);
+    auto get = [&table](std::string_view primary_key) {
+        return table.get(std::string{primary_key});
     };
-    for (const auto &line : lines) {
-        auto pos = line.find(':');
-        std::string header;
-        std::string rest;
-        if (pos == std::string::npos) {
-            header = line;
-        } else {
-            header = line.substr(0, pos);
-            rest = mk::lstrip(line.substr(pos + 1));
-        }
-        std::vector<char> rest_copy(rest.begin(), rest.end());
-        rest_copy.push_back('\0');
-        char *arguments = rest_copy.data();
+    for (const auto &line_str : lines) {
+        std::string_view line{line_str};
+        auto header = line.substr(0, line.find(':'));
+        line.remove_prefix(std::min(line.size(), header.size() + 1));
+        line.remove_prefix(
+            std::min(line.size(), line.find_first_not_of(mk::whitespace)));
         try {
-            if (header == "Filter") {
-                parseFilterLine(arguments, filters, make_column);
-            } else if (header == "Or") {
-                parseAndOrLine(arguments, Filter::Kind::row, OringFilter::make,
+            if (header == "Filter"sv) {
+                parseFilterLine(line, filters, make_column);
+            } else if (header == "Or"sv) {
+                parseAndOrLine(line, Filter::Kind::row, OringFilter::make,
                                filters);
-            } else if (header == "And") {
-                parseAndOrLine(arguments, Filter::Kind::row, AndingFilter::make,
+            } else if (header == "And"sv) {
+                parseAndOrLine(line, Filter::Kind::row, AndingFilter::make,
                                filters);
-            } else if (header == "Negate") {
-                parseNegateLine(arguments, filters);
-            } else if (header == "StatsOr") {
-                parseStatsAndOrLine(arguments, OringFilter::make);
-            } else if (header == "StatsAnd") {
-                parseStatsAndOrLine(arguments, AndingFilter::make);
-            } else if (header == "StatsNegate") {
-                parseStatsNegateLine(arguments);
-            } else if (header == "Stats") {
-                parseStatsLine(arguments, make_column);
-            } else if (header == "Columns") {
-                parseColumnsLine(arguments, make_column);
-            } else if (header == "ColumnHeaders") {
-                parseColumnHeadersLine(arguments);
-            } else if (header == "Limit") {
-                parseLimitLine(arguments);
-            } else if (header == "Timelimit") {
-                parseTimelimitLine(arguments);
-            } else if (header == "AuthUser") {
-                parseAuthUserHeader(arguments, find_user);
-            } else if (header == "Separators") {
-                parseSeparatorsLine(arguments);
-            } else if (header == "OutputFormat") {
-                parseOutputFormatLine(arguments);
-            } else if (header == "ResponseHeader") {
-                parseResponseHeaderLine(arguments);
-            } else if (header == "KeepAlive") {
-                parseKeepAliveLine(arguments);
-            } else if (header == "WaitCondition") {
-                parseFilterLine(arguments, wait_conditions, make_column);
-            } else if (header == "WaitConditionAnd") {
-                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+            } else if (header == "Negate"sv) {
+                parseNegateLine(line, filters);
+            } else if (header == "StatsOr"sv) {
+                parseStatsAndOrLine(line, OringFilter::make);
+            } else if (header == "StatsAnd"sv) {
+                parseStatsAndOrLine(line, AndingFilter::make);
+            } else if (header == "StatsNegate"sv) {
+                parseStatsNegateLine(line);
+            } else if (header == "Stats"sv) {
+                parseStatsLine(line, make_column);
+            } else if (header == "Columns"sv) {
+                parseColumnsLine(line, make_column);
+            } else if (header == "ColumnHeaders"sv) {
+                parseColumnHeadersLine(line);
+            } else if (header == "Limit"sv) {
+                parseLimitLine(line);
+            } else if (header == "Timelimit"sv) {
+                parseTimelimitLine(line);
+            } else if (header == "AuthUser"sv) {
+                parseAuthUserHeader(line, find_user);
+            } else if (header == "Separators"sv) {
+                parseSeparatorsLine(line);
+            } else if (header == "OutputFormat"sv) {
+                parseOutputFormatLine(line);
+            } else if (header == "ResponseHeader"sv) {
+                parseResponseHeaderLine(line);
+            } else if (header == "KeepAlive"sv) {
+                parseKeepAliveLine(line);
+            } else if (header == "WaitCondition"sv) {
+                parseFilterLine(line, wait_conditions, make_column);
+            } else if (header == "WaitConditionAnd"sv) {
+                parseAndOrLine(line, Filter::Kind::wait_condition,
                                AndingFilter::make, wait_conditions);
-            } else if (header == "WaitConditionOr") {
-                parseAndOrLine(arguments, Filter::Kind::wait_condition,
+            } else if (header == "WaitConditionOr"sv) {
+                parseAndOrLine(line, Filter::Kind::wait_condition,
                                OringFilter::make, wait_conditions);
-            } else if (header == "WaitConditionNegate") {
-                ParsedQuery::parseNegateLine(arguments, wait_conditions);
-            } else if (header == "WaitTrigger") {
-                parseWaitTriggerLine(arguments);
-            } else if (header == "WaitObject") {
-                parseWaitObjectLine(arguments, get);
-            } else if (header == "WaitTimeout") {
-                parseWaitTimeoutLine(arguments);
-            } else if (header == "Localtime") {
-                parseLocaltimeLine(arguments);
+            } else if (header == "WaitConditionNegate"sv) {
+                ParsedQuery::parseNegateLine(line, wait_conditions);
+            } else if (header == "WaitTrigger"sv) {
+                parseWaitTriggerLine(line);
+            } else if (header == "WaitObject"sv) {
+                parseWaitObjectLine(line, get);
+            } else if (header == "WaitTimeout"sv) {
+                parseWaitTimeoutLine(line);
+            } else if (header == "Localtime"sv) {
+                parseLocaltimeLine(line);
             } else {
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
             output.setError(OutputBuffer::ResponseCode::bad_request,
-                            "while processing header '" + header +
+                            "while processing header '" + std::string{header} +
                                 "' for table '" + table.name() +
                                 "': " + e.what());
         }
@@ -172,10 +170,10 @@ namespace {
 }  // namespace
 
 // static
-void ParsedQuery::parseAndOrLine(char *line, Filter::Kind kind,
+void ParsedQuery::parseAndOrLine(std::string_view line, Filter::Kind kind,
                                  const LogicalConnective &connective,
                                  FilterStack &filters) {
-    auto number = nextNonNegativeIntegerArgument(&line);
+    auto number = nextNonNegativeIntegerArgument(line);
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (filters.empty()) {
@@ -189,7 +187,7 @@ void ParsedQuery::parseAndOrLine(char *line, Filter::Kind kind,
 }
 
 // static
-void ParsedQuery::parseNegateLine(char *line, FilterStack &filters) {
+void ParsedQuery::parseNegateLine(std::string_view line, FilterStack &filters) {
     checkNoArguments(line);
     if (filters.empty()) {
         stack_underflow(1, 0);
@@ -199,9 +197,9 @@ void ParsedQuery::parseNegateLine(char *line, FilterStack &filters) {
     filters.push_back(top->negate());
 }
 
-void ParsedQuery::parseStatsAndOrLine(char *line,
+void ParsedQuery::parseStatsAndOrLine(std::string_view line,
                                       const LogicalConnective &connective) {
-    auto number = nextNonNegativeIntegerArgument(&line);
+    auto number = nextNonNegativeIntegerArgument(line);
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (stats_columns.empty()) {
@@ -215,7 +213,7 @@ void ParsedQuery::parseStatsAndOrLine(char *line,
         connective(Filter::Kind::stats, subfilters)));
 }
 
-void ParsedQuery::parseStatsNegateLine(char *line) {
+void ParsedQuery::parseStatsNegateLine(std::string_view line) {
     checkNoArguments(line);
     if (stats_columns.empty()) {
         stack_underflow(1, 0);
@@ -328,31 +326,33 @@ private:
     double sum_{0};
 };
 
-const std::map<std::string, AggregationFactory> stats_ops{
-    {"sum", []() { return std::make_unique<SumAggregation>(); }},
-    {"min", []() { return std::make_unique<MinAggregation>(); }},
-    {"max", []() { return std::make_unique<MaxAggregation>(); }},
-    {"avg", []() { return std::make_unique<AvgAggregation>(); }},
-    {"std", []() { return std::make_unique<StdAggregation>(); }},
-    {"suminv", []() { return std::make_unique<SumInvAggregation>(); }},
-    {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
+const std::map<std::string_view, AggregationFactory> stats_ops{
+    {"sum"sv, []() { return std::make_unique<SumAggregation>(); }},
+    {"min"sv, []() { return std::make_unique<MinAggregation>(); }},
+    {"max"sv, []() { return std::make_unique<MaxAggregation>(); }},
+    {"avg"sv, []() { return std::make_unique<AvgAggregation>(); }},
+    {"std"sv, []() { return std::make_unique<StdAggregation>(); }},
+    {"suminv"sv, []() { return std::make_unique<SumInvAggregation>(); }},
+    {"avginv"sv, []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
-void ParsedQuery::parseStatsLine(char *line, const ColumnCreator &make_column) {
+void ParsedQuery::parseStatsLine(std::string_view line,
+                                 const ColumnCreator &make_column) {
     // first token is either aggregation operator or column name
     std::string column_name;
     std::unique_ptr<StatsColumn> sc;
-    auto col_or_op = nextStringArgument(&line);
+    auto col_or_op = nextStringArgument(line);
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
         column_name = col_or_op;
-        auto rel_op = relationalOperatorForName(nextStringArgument(&line));
-        auto operand = mk::lstrip(line);
+        auto rel_op = relationalOperatorForName(nextStringArgument(line));
+        line.remove_prefix(
+            std::min(line.size(), line.find_first_not_of(mk::whitespace)));
         sc = std::make_unique<StatsColumnCount>(
             make_column(column_name)
-                ->createFilter(Filter::Kind::stats, rel_op, operand));
+                ->createFilter(Filter::Kind::stats, rel_op, std::string{line}));
     } else {
-        column_name = nextStringArgument(&line);
+        column_name = nextStringArgument(line);
         sc = std::make_unique<StatsColumnOp>(it->second,
                                              make_column(column_name));
     }
@@ -363,33 +363,33 @@ void ParsedQuery::parseStatsLine(char *line, const ColumnCreator &make_column) {
     show_column_headers = false;
 }
 
-void ParsedQuery::parseFilterLine(char *line, FilterStack &filters,
+void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
                                   const ColumnCreator &make_column) {
-    auto column_name = nextStringArgument(&line);
-    auto rel_op = relationalOperatorForName(nextStringArgument(&line));
-    auto operand = mk::lstrip(line);
-    auto sub_filter = make_column(column_name)
-                          ->createFilter(Filter::Kind::row, rel_op, operand);
+    auto column_name = nextStringArgument(line);
+    auto rel_op = relationalOperatorForName(nextStringArgument(line));
+    line.remove_prefix(
+        std::min(line.size(), line.find_first_not_of(mk::whitespace)));
+    auto sub_filter =
+        make_column(column_name)
+            ->createFilter(Filter::Kind::row, rel_op, std::string{line});
     filters.push_back(std::move(sub_filter));
-    all_column_names.insert(column_name);
+    all_column_names.insert(std::string{column_name});
 }
 
 void ParsedQuery::parseAuthUserHeader(
-    const char *line,
-    const std::function<std::unique_ptr<const User>(const std::string &)>
+    std::string_view line,
+    const std::function<std::unique_ptr<const User>(std::string_view)>
         &find_user) {
     user = find_user(line);
 }
 
-void ParsedQuery::parseColumnsLine(const char *line,
+void ParsedQuery::parseColumnsLine(std::string_view line,
                                    const ColumnCreator &make_column) {
-    const std::string str = line;
-    const std::string sep = " \t\n\v\f\r";
-    for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
-        auto space = str.find_first_of(sep, pos);
-        auto column_name =
-            str.substr(pos, space - (space == std::string::npos ? 0 : pos));
-        pos = str.find_first_not_of(sep, space);
+    while (!line.empty()) {
+        auto column_name = line.substr(0, line.find_first_of(mk::whitespace));
+        line.remove_prefix(std::min(
+            line.size(),
+            line.find_first_not_of(mk::whitespace, column_name.size())));
         std::shared_ptr<Column> column;
         try {
             column = make_column(column_name);
@@ -397,116 +397,113 @@ void ParsedQuery::parseColumnsLine(const char *line,
             // TODO(sp): Do we still need this fallback now that we require the
             // remote sites to be updated before the central site? We don't do
             // this for stats/filter lines, either.
-            column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", ColumnOffsets{});
+            column = std::make_shared<NullColumn>(std::string{column_name},
+                                                  "non-existing column",
+                                                  ColumnOffsets{});
         }
         columns.push_back(column);
-        all_column_names.insert(column_name);
+        all_column_names.insert(std::string{column_name});
     }
     show_column_headers = false;
 }
 
-void ParsedQuery::parseSeparatorsLine(char *line) {
-    const std::string dsep = std::string(
-        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    const std::string fsep = std::string(
-        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    const std::string lsep = std::string(
-        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    const std::string hsep = std::string(
-        1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
+void ParsedQuery::parseSeparatorsLine(std::string_view line) {
+    const std::string dsep =
+        std::string(1, static_cast<char>(nextNonNegativeIntegerArgument(line)));
+    const std::string fsep =
+        std::string(1, static_cast<char>(nextNonNegativeIntegerArgument(line)));
+    const std::string lsep =
+        std::string(1, static_cast<char>(nextNonNegativeIntegerArgument(line)));
+    const std::string hsep =
+        std::string(1, static_cast<char>(nextNonNegativeIntegerArgument(line)));
     separators = CSVSeparators{dsep, fsep, lsep, hsep};
 }
 
 namespace {
-const std::map<std::string, OutputFormat> formats{
-    {"CSV", OutputFormat::csv},
-    {"csv", OutputFormat::broken_csv},
-    {"json", OutputFormat::json},
-    {"python", OutputFormat::python3},  // just an alias, deprecate?
-    {"python3", OutputFormat::python3}};
+const std::map<std::string_view, OutputFormat> formats{
+    {"CSV"sv, OutputFormat::csv},
+    {"csv"sv, OutputFormat::broken_csv},
+    {"json"sv, OutputFormat::json},
+    {"python"sv, OutputFormat::python3},  // just an alias, deprecate?
+    {"python3"sv, OutputFormat::python3}};
 }  // namespace
 
-void ParsedQuery::parseOutputFormatLine(const char *line) {
-    auto format_and_rest = mk::nextField(line);
-    auto it = formats.find(format_and_rest.first);
+void ParsedQuery::parseOutputFormatLine(std::string_view line) {
+    auto value = nextStringArgument(line);
+    auto it = formats.find(value);
     if (it == formats.end()) {
         std::string msg;
         for (const auto &entry : formats) {
-            msg +=
-                std::string(msg.empty() ? "" : ", ") + "'" + entry.first + "'";
+            msg += std::string{msg.empty() ? "" : ", "} + "'" +
+                   std::string{entry.first} + "'";
         }
         throw std::runtime_error("missing/invalid output format, use one of " +
                                  msg);
     }
-    if (!mk::strip(format_and_rest.second).empty()) {
-        throw std::runtime_error("only 1 argument expected");
-    }
     output_format = it->second;
 }
 
-void ParsedQuery::parseColumnHeadersLine(char *line) {
-    auto value = nextStringArgument(&line);
-    if (value == "on") {
+void ParsedQuery::parseColumnHeadersLine(std::string_view line) {
+    auto value = nextStringArgument(line);
+    if (value == "on"sv) {
         show_column_headers = true;
-    } else if (value == "off") {
+    } else if (value == "off"sv) {
         show_column_headers = false;
     } else {
         throw std::runtime_error("expected 'on' or 'off'");
     }
 }
 
-void ParsedQuery::parseKeepAliveLine(char *line) {
-    auto value = nextStringArgument(&line);
-    if (value == "on") {
+void ParsedQuery::parseKeepAliveLine(std::string_view line) {
+    auto value = nextStringArgument(line);
+    if (value == "on"sv) {
         keepalive = true;
-    } else if (value == "off") {
+    } else if (value == "off"sv) {
         keepalive = false;
     } else {
         throw std::runtime_error("expected 'on' or 'off'");
     }
 }
 
-void ParsedQuery::parseResponseHeaderLine(char *line) {
-    auto value = nextStringArgument(&line);
-    if (value == "off") {
+void ParsedQuery::parseResponseHeaderLine(std::string_view line) {
+    auto value = nextStringArgument(line);
+    if (value == "off"sv) {
         response_header = OutputBuffer::ResponseHeader::off;
-    } else if (value == "fixed16") {
+    } else if (value == "fixed16"sv) {
         response_header = OutputBuffer::ResponseHeader::fixed16;
     } else {
         throw std::runtime_error("expected 'off' or 'fixed16'");
     }
 }
 
-void ParsedQuery::parseLimitLine(char *line) {
-    limit = nextNonNegativeIntegerArgument(&line);
+void ParsedQuery::parseLimitLine(std::string_view line) {
+    limit = nextNonNegativeIntegerArgument(line);
 }
 
-void ParsedQuery::parseTimelimitLine(char *line) {
-    auto duration = std::chrono::seconds{nextNonNegativeIntegerArgument(&line)};
+void ParsedQuery::parseTimelimitLine(std::string_view line) {
+    auto duration = std::chrono::seconds{nextNonNegativeIntegerArgument(line)};
     time_limit = {duration, std::chrono::steady_clock::now() + duration};
 }
 
-void ParsedQuery::parseWaitTimeoutLine(char *line) {
+void ParsedQuery::parseWaitTimeoutLine(std::string_view line) {
     wait_timeout =
-        std::chrono::milliseconds(nextNonNegativeIntegerArgument(&line));
+        std::chrono::milliseconds(nextNonNegativeIntegerArgument(line));
 }
 
-void ParsedQuery::parseWaitTriggerLine(char *line) {
-    wait_trigger = Triggers::find(nextStringArgument(&line));
+void ParsedQuery::parseWaitTriggerLine(std::string_view line) {
+    wait_trigger = Triggers::find(std::string{nextStringArgument(line)});
 }
 
 void ParsedQuery::parseWaitObjectLine(
-    const char *line, const std::function<Row(const std::string &)> &get) {
-    auto primary_key = mk::lstrip(line);
-    wait_object = get(primary_key);
+    std::string_view line, const std::function<Row(std::string_view)> &get) {
+    wait_object = get(line);
     if (wait_object.isNull()) {
-        throw std::runtime_error("primary key '" + primary_key +
+        throw std::runtime_error("primary key '" + std::string{line} +
                                  "' not found or not supported by this table");
     }
 }
 
-void ParsedQuery::parseLocaltimeLine(char *line) {
+void ParsedQuery::parseLocaltimeLine(std::string_view line) {
     // Compute the offset to be *added* each time we output our time and
     // *subtracted* from reference value by filter headers. We round the
     // difference to half an hour because we assume that both clocks are more or
@@ -514,7 +511,7 @@ void ParsedQuery::parseLocaltimeLine(char *line) {
     // different time zones.
     using namespace std::chrono;
     auto offset{round<duration<seconds::rep, std::ratio<1800>>>(
-        system_clock::from_time_t(nextNonNegativeIntegerArgument(&line)) -
+        system_clock::from_time_t(nextNonNegativeIntegerArgument(line)) -
         system_clock::now())};
     if (abs(offset) >= 24h) {
         throw std::runtime_error{

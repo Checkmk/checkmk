@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -55,38 +56,42 @@ public:
 
 private:
     using ColumnCreator =
-        std::function<std::shared_ptr<Column>(const std::string &)>;
+        std::function<std::shared_ptr<Column>(std::string_view)>;
 
     using FilterStack = Filters;
 
     using LogicalConnective =
         std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
 
-    void parseFilterLine(char *line, FilterStack &filters,
+    void parseFilterLine(std::string_view line, FilterStack &filters,
                          const ColumnCreator &make_column);
-    void parseStatsLine(char *line, const ColumnCreator &make_column);
-    static void parseAndOrLine(char *line, Filter::Kind kind,
+    void parseStatsLine(std::string_view line,
+                        const ColumnCreator &make_column);
+    static void parseAndOrLine(std::string_view line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
-    static void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
-    void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line, const ColumnCreator &make_column);
-    void parseColumnHeadersLine(char *line);
-    void parseLimitLine(char *line);
-    void parseTimelimitLine(char *line);
-    void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(const char *line);
-    void parseKeepAliveLine(char *line);
-    void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(const char *line,
-                             const std::function<std::unique_ptr<const User>(
-                                 const std::string &name)> &find_user);
-    void parseWaitTimeoutLine(char *line);
-    void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(
-        const char *line, const std::function<Row(const std::string &)> &get);
-    void parseLocaltimeLine(char *line);
+    static void parseNegateLine(std::string_view line, FilterStack &filters);
+    void parseStatsAndOrLine(std::string_view line,
+                             const LogicalConnective &connective);
+    void parseStatsNegateLine(std::string_view line);
+    void parseColumnsLine(std::string_view line,
+                          const ColumnCreator &make_column);
+    void parseColumnHeadersLine(std::string_view line);
+    void parseLimitLine(std::string_view line);
+    void parseTimelimitLine(std::string_view line);
+    void parseSeparatorsLine(std::string_view line);
+    void parseOutputFormatLine(std::string_view line);
+    void parseKeepAliveLine(std::string_view line);
+    void parseResponseHeaderLine(std::string_view line);
+    void parseAuthUserHeader(
+        std::string_view line,
+        const std::function<std::unique_ptr<const User>(std::string_view name)>
+            &find_user);
+    void parseWaitTimeoutLine(std::string_view line);
+    void parseWaitTriggerLine(std::string_view line);
+    void parseWaitObjectLine(std::string_view line,
+                             const std::function<Row(std::string_view)> &get);
+    void parseLocaltimeLine(std::string_view line);
 };
 
 #endif  // ParsedQuery_h

@@ -174,7 +174,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
     )
 
 
-def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
+def _allowed_by_cmk_base(
     *,
     imported: ModuleName,
     component: Component,
@@ -194,6 +194,7 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
             ),
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
         )
     )
 
@@ -476,6 +477,20 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
     )
 
 
+def _allowed_by_robotmk(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_gui_and_base(imported=imported, component=component),
+            _is_allowed_for_plugins(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -504,7 +519,7 @@ _COMPONENTS = (
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
-    (Component("cmk.base"), _allow_default_plus_fetchers_checkers_snmplib_and_bakery),
+    (Component("cmk.base"), _allowed_by_cmk_base),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
@@ -533,6 +548,7 @@ _COMPONENTS = (
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
+    (Component("cmk.cee.robotmk"), _allowed_by_robotmk),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

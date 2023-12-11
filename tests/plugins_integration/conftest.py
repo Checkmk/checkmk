@@ -144,10 +144,7 @@ def pytest_collection_modifyitems(config, items):
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     skip_cleanup = request.config.getoption("--skip-cleanup")
-    for site in get_site_factory(prefix="plugins_").get_test_site(
-        auto_cleanup=not skip_cleanup,
-        save_results=False,  # currently broken in the CI. Todo: investigate
-    ):
+    for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 
@@ -167,7 +164,7 @@ def _get_sf_update():
         branch_version=current_branch_version(),
         edition=Edition.CEE,
     )
-    return get_site_factory(prefix="plugins_", version=base_version)
+    return get_site_factory(prefix="update_", version=base_version)
 
 
 @pytest.fixture(name="test_site_update", scope="session")
@@ -176,9 +173,7 @@ def _get_site_update(
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     skip_cleanup = request.config.getoption("--skip-cleanup")
-    for site in site_factory_update.get_test_site(
-        auto_cleanup=not skip_cleanup, save_results=False
-    ):
+    for site in site_factory_update.get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 

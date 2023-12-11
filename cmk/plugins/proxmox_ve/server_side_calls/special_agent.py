@@ -45,7 +45,7 @@ def commands_function(
         command_arguments += ["--timeout", str(params.timeout)]
     if params.log_cutoff_weeks is not None:
         command_arguments += ["--log-cutoff-weeks", str(params.log_cutoff_weeks)]
-    command_arguments.append(host_config.address or host_config.name)
+    command_arguments.append(host_config.name)
     yield SpecialAgentCommand(command_arguments=command_arguments)
 
 

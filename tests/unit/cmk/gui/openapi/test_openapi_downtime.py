@@ -70,16 +70,11 @@ def test_openapi_schedule_hostgroup_downtime(
     )
     mock_livestatus.expect_query("GET hostgroups\nColumns: members\nFilter: name = windows")
     mock_livestatus.expect_query(
-        "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
-    )
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
-    mock_livestatus.expect_query(
-        "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
+        "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
     )
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query(
-        "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
+        "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
     )
     with mock_livestatus:
@@ -96,7 +91,6 @@ def test_openapi_schedule_host_downtime(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query(
@@ -129,7 +123,6 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
         ],
     )
 
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
     mock_livestatus.expect_query(
@@ -166,21 +159,12 @@ def test_openapi_schedule_servicegroup_downtime(
     )
     mock_livestatus.expect_query("GET servicegroups\nColumns: members\nFilter: name = routers")
     mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = example.com\nAnd: 2"
-    )
-    mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = example.com\nAnd: 2"
-    )
-    mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
-    )
-    mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = heute\nAnd: 2"
     )
     mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
@@ -202,14 +186,11 @@ def test_openapi_schedule_service_downtime(
 ) -> None:
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = example.com\nAnd: 2"
+        "GET services\nColumns: description\nFilter: host_name = example.com\nFilter: description = Memory\nFilter: description = CPU load\nOr: 2\nAnd: 2"
     )
     mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
-    )
-    mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = example.com\nAnd: 2"
     )
     mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
@@ -451,8 +432,6 @@ def test_openapi_create_host_downtime_with_query(
     )
 
     mock_livestatus.expect_query(["GET hosts", "Columns: name", "Filter: name ~ heute"])
-    mock_livestatus.expect_query(["GET hosts", "Columns: name", "Filter: name = heute"])
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
@@ -497,9 +476,6 @@ def test_openapi_create_service_downtime_with_query(
 
     mock_livestatus.expect_query(
         ["GET services", "Columns: description host_name", "Filter: host_name ~ heute"],
-    )
-    mock_livestatus.expect_query(
-        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = heute\nAnd: 2"
     )
     mock_livestatus.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Memory;1577836800;1577923200;1;0;0;...;Downtime for service Memory@heute",
@@ -893,11 +869,10 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     )
 
     mock_livestatus.expect_query(
-        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {username}", match_type="loose"
+        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {username}"
     )
-
     mock_livestatus.expect_query(
-        f"GET services\nColumns: description\nFilter: description = Filesystem /opt/omd/sites/heute/tmp\nFilter: host_name = heute\nAnd: 2\nAuthUser: {username}"
+        f"GET services\nColumns: description\nFilter: host_name = heute\nFilter: description = Filesystem /opt/omd/sites/heute/tmp\nAnd: 2\nAuthUser: {username}"
     )
 
     mock_livestatus.expect_query(

@@ -9,7 +9,7 @@ perfometer_aws_overall_hosts_health_perc = perfometer.Perfometer(
     "aws_overall_hosts_health_perc",
     perfometer.FocusRange(
         perfometer.Closed(0),
-        perfometer.Open(10000),
+        perfometer.Closed(100),
     ),
     ["aws_overall_hosts_health_perc"],
 )
@@ -18,7 +18,7 @@ perfometer_aws_bucket_size = perfometer.Perfometer(
     "aws_bucket_size",
     perfometer.FocusRange(
         perfometer.Closed(0),
-        perfometer.Open(1152921504606846976),
+        perfometer.Open(12148001999),
     ),
     ["aws_bucket_size"],
 )
@@ -27,7 +27,7 @@ perfometer_aws_s3_buckets = perfometer.Perfometer(
     "aws_s3_buckets",
     perfometer.FocusRange(
         perfometer.Closed(0),
-        perfometer.Open(2500),
+        perfometer.Open(565),
     ),
     ["aws_s3_buckets"],
 )

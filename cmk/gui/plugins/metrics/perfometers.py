@@ -1736,15 +1736,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "aws_overall_hosts_health_perc",
-        "half_value": 100,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "elapsed_time",
         "half_value": 1.0,
         "exponent": 2.0,
@@ -1961,23 +1952,6 @@ perfometer_info.append(
         "type": "logarithmic",
         "metric": "mobileiron_policyviolationcount",
         "half_value": 4.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "aws_bucket_size",
-        "half_value": GB,
-        "exponent": 2,
-    }
-)
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "aws_s3_buckets",
-        "half_value": 50,
         "exponent": 2,
     }
 )

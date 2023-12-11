@@ -75,6 +75,7 @@ def _create_or_update_rule(
                 title=_("Not found"),
                 detail=_("The rule_id %s does not exist.") % rule_id,
             )
+        rule_from_request.rule_id = rule_id
 
     try:
         all_rules[rule_from_request.rule_id] = rule_from_request

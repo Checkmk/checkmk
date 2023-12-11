@@ -7,6 +7,5 @@
 #define strutil_h
 
 char *next_token(char **c, char delim);
-const char *safe_next_token(char **c, char delim);
 
 #endif  // strutil_h

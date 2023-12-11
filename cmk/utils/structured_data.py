@@ -348,7 +348,14 @@ class StructuredDataNode:
         node = StructuredDataNode(name=self.name, path=self.path)
 
         node.add_attributes(self.attributes.merge_with(other.attributes))
-        node.add_table(self.table.merge_with(other.table))
+        self_table_is_empty = self.table.is_empty()
+        other_table_is_empty = other.table.is_empty()
+        if self_table_is_empty and not other_table_is_empty:
+            node.add_table(other.table)
+        elif not self_table_is_empty and other_table_is_empty:
+            node.add_table(self.table)
+        elif not self_table_is_empty and not other_table_is_empty:
+            node.add_table(self.table.merge_with(other.table))
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 

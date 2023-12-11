@@ -273,6 +273,12 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.Integer():
             return _convert_to_legacy_integer(to_convert, localizer)
 
+        case ruleset_api_v1.Float():
+            return _convert_to_legacy_float(to_convert, localizer)
+
+        case ruleset_api_v1.DataSize():
+            return _convert_to_legacy_filesize(to_convert, localizer)
+
         case ruleset_api_v1.Percentage():
             return _convert_to_legacy_percentage(to_convert, localizer)
 
@@ -371,6 +377,52 @@ def _convert_to_legacy_integer(
         )
 
     return legacy_valuespecs.Integer(**converted_kwargs)
+
+
+def _convert_to_legacy_float(
+    to_convert: ruleset_api_v1.Float, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Float:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+    converted_kwargs["unit"] = ""
+    if to_convert.unit is not None:
+        converted_kwargs["unit"] = to_convert.unit.localize(localizer)
+
+    if to_convert.display_precision is not None:
+        converted_kwargs["display_format"] = f"%.{to_convert.display_precision}f"
+
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Float(**converted_kwargs)
+
+
+def _convert_to_legacy_filesize(
+    to_convert: ruleset_api_v1.DataSize, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Filesize:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Filesize(**converted_kwargs)
 
 
 def _convert_to_legacy_percentage(
@@ -635,7 +687,12 @@ def _get_fixed_level_titles(
     return warn_title, crit_title
 
 
-_TNumericSpec = ruleset_api_v1.Integer | ruleset_api_v1.Percentage
+_TNumericSpec = (
+    ruleset_api_v1.Integer
+    | ruleset_api_v1.Float
+    | ruleset_api_v1.DataSize
+    | ruleset_api_v1.Percentage
+)
 
 
 def _get_legacy_level_spec(
@@ -643,11 +700,27 @@ def _get_legacy_level_spec(
     title: str,
     unit: str,
     prefill: float | legacy_valuespecs.Sentinel,
-) -> legacy_valuespecs.Integer | legacy_valuespecs.Percentage:
+) -> (
+    legacy_valuespecs.Integer
+    | legacy_valuespecs.Float
+    | legacy_valuespecs.Filesize
+    | legacy_valuespecs.Percentage
+):
     if issubclass(form_spec, ruleset_api_v1.Integer):
         return legacy_valuespecs.Integer(
             title=title,
             unit=unit,
+            default_value=int(prefill) if isinstance(prefill, float) else prefill,
+        )
+    if issubclass(form_spec, ruleset_api_v1.Float):
+        return legacy_valuespecs.Float(
+            title=title,
+            unit=unit,
+            default_value=int(prefill) if isinstance(prefill, float) else prefill,
+        )
+    if issubclass(form_spec, ruleset_api_v1.DataSize):
+        return legacy_valuespecs.Filesize(
+            title=title,
             default_value=int(prefill) if isinstance(prefill, float) else prefill,
         )
 

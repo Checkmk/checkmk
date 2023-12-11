@@ -267,6 +267,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
                 f"Downtime for services {', '.join(body['service_descriptions'])!r}@{body['host_name']!r}",
             ),
         )
+
     elif downtime_type == "servicegroup":
         downtime_commands.schedule_servicegroup_service_downtime(
             live,

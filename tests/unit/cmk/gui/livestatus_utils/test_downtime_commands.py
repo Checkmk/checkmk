@@ -99,14 +99,11 @@ def test_hostgroup_host_downtime(
             ]
         )
         live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
-        )
-        live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
 
@@ -137,18 +134,15 @@ def test_hostgroup_host_downtime_with_services(
             ]
         )
         live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            match_type="ellipsis",
         )
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
-            match_type="ellipsis",
-        )
-        live.expect_query(
-            "GET services\nColumns: host_name description\nFilter: host_name = heute\nFilter: host_name = example.com\nOr: 2"
+            "GET services\nColumns: host_name description\nFilter: host_name = example.com\nFilter: host_name = heute\nOr: 2"
         )
         live.expect_query(
             "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom",
@@ -241,9 +235,6 @@ def test_servicegroup_service_downtime_and_hosts(
             match_type="ellipsis",
         )
 
-        live.expect_query(
-            "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
-        )
         live.expect_query(
             "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
             match_type="ellipsis",

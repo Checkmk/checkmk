@@ -1154,6 +1154,40 @@ def test_merge_trees_2() -> None:
     assert len(table.rows) == 5
 
 
+def test_merge_with_empty_tables() -> None:
+    assert ImmutableTree().merge(ImmutableTree()) == ImmutableTree()
+
+
+def test_merge_with_empty_left_table() -> None:
+    assert ImmutableTree().merge(
+        ImmutableTree(
+            table=ImmutableTable(
+                key_columns=["key-column"],
+                rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+            )
+        )
+    ) == ImmutableTree(
+        table=ImmutableTable(
+            key_columns=["key-column"],
+            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+        )
+    )
+
+
+def test_merge_with_empty_right_table() -> None:
+    assert ImmutableTree(
+        table=ImmutableTable(
+            key_columns=["key-column"],
+            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+        )
+    ).merge(ImmutableTree()) == ImmutableTree(
+        table=ImmutableTable(
+            key_columns=["key-column"],
+            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+        )
+    )
+
+
 @pytest.mark.parametrize(
     "filters, unavail",
     [

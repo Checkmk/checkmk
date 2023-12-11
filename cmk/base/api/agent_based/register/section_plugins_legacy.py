@@ -33,13 +33,9 @@ def get_section_name(check_plugin_name: str) -> str:
     return check_plugin_name.split(".", 1)[0]
 
 
-def _create_agent_parse_function(
-    original_parse_function: Callable | None,
-) -> AgentParseFunction:
+def _create_agent_parse_function(original_parse_function: Callable) -> AgentParseFunction:
     """Wrap parse function to comply to signature requirement"""
 
-    if original_parse_function is None:
-        return lambda string_table: string_table
     original_parse_function_not_none = original_parse_function
 
     # do not use functools.wraps, the point is the new argument name!
@@ -51,7 +47,7 @@ def _create_agent_parse_function(
 
 
 def _create_snmp_parse_function(
-    original_parse_function: Callable | None,
+    original_parse_function: Callable,
 ) -> Callable[[Any], object]:  # sorry, but this is what we know.
     """Wrap parse function to comply to new API
 
@@ -67,9 +63,6 @@ def _create_snmp_parse_function(
     def parse_function(string_table: Any) -> object:
         if not any(string_table):
             return None
-
-        if original_parse_function is None:
-            return string_table or None
 
         return original_parse_function(string_table) or None
 
@@ -89,9 +82,7 @@ def create_agent_section_plugin_from_legacy(
         # Affected Plugins must be migrated manually after CMK-4240 is done.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
-    parse_function = _create_agent_parse_function(
-        check_info_element.get("parse_function"),
-    )
+    parse_function = _create_agent_parse_function(check_info_element["parse_function"])
 
     return create_agent_section_plugin(
         AgentSection(
@@ -115,7 +106,7 @@ def create_snmp_section_plugin_from_legacy(
     fetch = check_info_element["fetch"]
     detect = cast(SNMPDetectSpecification, check_info_element["detect"])
 
-    parse_function = _create_snmp_parse_function(check_info_element.get("parse_function"))
+    parse_function = _create_snmp_parse_function(check_info_element["parse_function"])
 
     return create_snmp_section_plugin(
         SimpleSNMPSection(  # ty#pe: ignore[call-overload]

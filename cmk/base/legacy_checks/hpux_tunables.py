@@ -39,9 +39,6 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# For legacy reasons we need to keep the old format:
-
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
@@ -61,20 +58,20 @@ def parse_hpux_tunables(info):
     return parsed
 
 
-def inventory_hpux_tunables(info, tunable):
-    if tunable in parse_hpux_tunables(info):
+check_info["hpux_tunables"] = LegacyCheckDefinition(
+    parse_function=parse_hpux_tunables,
+)
+
+
+def inventory_hpux_tunables(section, tunable):
+    if tunable in section:
         return [(None, {})]
     return []
 
 
-def check_hpux_tunables(info, params, tunable, descr):
-    # Since the original author forgot to implement a
-    # main check (without dot) we cannot declare parse
-    # function in check_info...
-    parsed = parse_hpux_tunables(info)
-
-    if tunable in parsed:
-        usage, threshold = parsed[tunable]
+def check_hpux_tunables(section, params, tunable, descr):
+    if tunable in section:
+        usage, threshold = section[tunable]
         perc = float(usage) / float(threshold) * 100
 
         if isinstance(params, tuple):
@@ -116,15 +113,15 @@ def check_hpux_tunables(info, params, tunable, descr):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_nkthread(info):
+def inventory_hpux_tunables_nkthread(section):
     tunable = "nkthread"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_nkthread(_no_item, params, info):
+def check_hpux_tunables_nkthread(_no_item, params, section):
     tunable = "nkthread"
     descr = "threads"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
@@ -150,15 +147,15 @@ check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_nproc(info):
+def inventory_hpux_tunables_nproc(section):
     tunable = "nproc"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_nproc(_no_item, params, info):
+def check_hpux_tunables_nproc(_no_item, params, section):
     tunable = "nproc"
     descr = "processes"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
@@ -182,15 +179,15 @@ check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_maxfiles_lim(info):
+def inventory_hpux_tunables_maxfiles_lim(section):
     tunable = "maxfiles_lim"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_maxfiles_lim(_no_item, params, info):
+def check_hpux_tunables_maxfiles_lim(_no_item, params, section):
     tunable = "maxfiles_lim"
     descr = "files"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
@@ -214,15 +211,15 @@ check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_semmni(info):
+def inventory_hpux_tunables_semmni(section):
     tunable = "semmni"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_semmni(_no_item, params, info):
+def check_hpux_tunables_semmni(_no_item, params, section):
     tunable = "semmni"
     descr = "semaphore_ids"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
@@ -246,15 +243,15 @@ check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_shmseg(info):
+def inventory_hpux_tunables_shmseg(section):
     tunable = "shmseg"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_shmseg(_no_item, params, info):
+def check_hpux_tunables_shmseg(_no_item, params, section):
     tunable = "shmseg"
     descr = "segments"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
@@ -278,15 +275,15 @@ check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_hpux_tunables_semmns(info):
+def inventory_hpux_tunables_semmns(section):
     tunable = "semmns"
-    return inventory_hpux_tunables(info, tunable)
+    return inventory_hpux_tunables(section, tunable)
 
 
-def check_hpux_tunables_semmns(_no_item, params, info):
+def check_hpux_tunables_semmns(_no_item, params, section):
     tunable = "semmns"
     descr = "entries"
-    return check_hpux_tunables(info, params, tunable, descr)
+    return check_hpux_tunables(section, params, tunable, descr)
 
 
 check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(

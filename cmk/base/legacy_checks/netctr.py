@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 linux_nic_check = "lnx_if"
 
 netctr_counters = [
@@ -96,6 +98,14 @@ def check_netctr_combined(nic, params, info):
 
     return (3, "NIC is not present")
 
+
+def parse_netctr(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["netctr"] = LegacyCheckDefinition(
+    parse_function=parse_netctr,
+)
 
 check_info["netctr.combined"] = LegacyCheckDefinition(
     service_name="NIC %s counters",

@@ -99,6 +99,20 @@
 # SeedingNetwork                   :
 # ActiveCopy                       : False
 
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.config import check_info
+
+from cmk.agent_based.v2.type_defs import StringTable
+
+
+def parse_msexch_dag(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["msexch_dag"] = LegacyCheckDefinition(
+    parse_function=parse_msexch_dag,
+)
+
 #   .--dbcopy--------------------------------------------------------------.
 #   |                      _ _                                             |
 #   |                   __| | |__   ___ ___  _ __  _   _                   |
@@ -107,10 +121,6 @@
 #   |                  \__,_|_.__/ \___\___/| .__/ \__, |                  |
 #   |                                       |_|    |___/                   |
 #   +----------------------------------------------------------------------+
-
-
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
 
 
 def inventory_msexch_dag_dbcopy(info):

@@ -21,6 +21,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # Example output from agent:
 # <<<jolokia_metrics>>>
 # 8080 NonHeapMemoryUsage 101078952
@@ -34,6 +36,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # 8080 Uptime 572011375
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
 
+
+def parse_jolokia_metrics(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["jolokia_metrics"] = LegacyCheckDefinition(
+    parse_function=parse_jolokia_metrics,
+)
 
 # .
 #   .--Arcane helpers------------------------------------------------------.

@@ -6,16 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-
-from cmk.agent_based.v2.type_defs import StringTable
-
-# Note: This file is almost identical with ibm_svc_nodestats. We should
-# create an include file for sharing common code!
 
 # newer Firmware versions may return decimal values, not just integer
 # <<<ibm_svc_nodestats:sep(58)>>>
@@ -162,6 +157,10 @@ def parse_ibm_svc_nodestats(info):
     return parsed
 
 
+check_info["ibm_svc_nodestats"] = LegacyCheckDefinition(
+    parse_function=parse_ibm_svc_nodestats,
+)
+
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -172,16 +171,16 @@ def parse_ibm_svc_nodestats(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_diskio(info):
+def inventory_ibm_svc_nodestats_diskio(section):
     return [
         (node_name, None)
-        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        for node_name, data in section.items()
         if "r_mb" in data and "w_mb" in data
     ]
 
 
-def check_ibm_svc_nodestats_diskio(item, _no_params, info):
-    data = parse_ibm_svc_nodestats(info).get(item)
+def check_ibm_svc_nodestats_diskio(item, _no_params, section):
+    data = section.get(item)
     if data is None:
         return None
 
@@ -214,16 +213,16 @@ check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_iops(info):
+def inventory_ibm_svc_nodestats_iops(section):
     return [
         (node_name, None)
-        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        for node_name, data in section.items()
         if "r_io" in data and "w_io" in data
     ]
 
 
-def check_ibm_svc_nodestats_iops(item, _no_params, info):
-    data = parse_ibm_svc_nodestats(info).get(item)
+def check_ibm_svc_nodestats_iops(item, _no_params, section):
+    data = section.get(item)
     if data is None:
         return None
 
@@ -252,16 +251,16 @@ check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_disk_latency(info):
+def inventory_ibm_svc_nodestats_disk_latency(section):
     return [
         (node_name, None)
-        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        for node_name, data in section.items()
         if "r_ms" in data and "w_ms" in data
     ]
 
 
-def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
-    data = parse_ibm_svc_nodestats(info).get(item)
+def check_ibm_svc_nodestats_disk_latency(item, _no_params, section):
+    data = section.get(item)
     if data is None:
         return None
 
@@ -291,16 +290,12 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_cpu(string_table: StringTable) -> DiscoveryResult:
-    yield from (
-        Service(item=node_name)
-        for node_name, data in parse_ibm_svc_nodestats(string_table).items()
-        if "cpu_pc" in data
-    )
+def inventory_ibm_svc_nodestats_cpu(section):
+    yield from (Service(item=node_name) for node_name, data in section.items() if "cpu_pc" in data)
 
 
-def check_ibm_svc_nodestats_cpu(item, params, info):
-    data = parse_ibm_svc_nodestats(info).get(item)
+def check_ibm_svc_nodestats_cpu(item, params, section):
+    data = section.get(item)
     if data is None:
         return None
     return check_cpu_util(data["cpu_pc"], params)
@@ -326,16 +321,16 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ibm_svc_nodestats_cache(info):
+def inventory_ibm_svc_nodestats_cache(section):
     return [
         (node_name, None)
-        for node_name, data in parse_ibm_svc_nodestats(info).items()
+        for node_name, data in section.items()
         if "write_cache_pc" in data and "total_cache_pc" in data
     ]
 
 
-def check_ibm_svc_nodestats_cache(item, _no_params, info):
-    data = parse_ibm_svc_nodestats(info).get(item)
+def check_ibm_svc_nodestats_cache(item, _no_params, section):
+    data = section.get(item)
     if data is None:
         return None
 

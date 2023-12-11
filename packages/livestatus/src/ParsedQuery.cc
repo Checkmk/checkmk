@@ -67,18 +67,14 @@ ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
         return table.get(primary_key);
     };
     for (const auto &line : lines) {
-        auto stripped_line = mk::rstrip(line);
-        if (stripped_line.empty()) {
-            break;
-        }
-        auto pos = stripped_line.find(':');
+        auto pos = line.find(':');
         std::string header;
         std::string rest;
         if (pos == std::string::npos) {
-            header = stripped_line;
+            header = line;
         } else {
-            header = stripped_line.substr(0, pos);
-            rest = mk::lstrip(stripped_line.substr(pos + 1));
+            header = line.substr(0, pos);
+            rest = mk::lstrip(line.substr(pos + 1));
         }
         std::vector<char> rest_copy(rest.begin(), rest.end());
         rest_copy.push_back('\0');

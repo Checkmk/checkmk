@@ -169,6 +169,6 @@ TEST_F(CrashReportTableFixture, TestListCrashReports) {
 TEST_F(CrashReportTableFixture, TestGetOneCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
     EXPECT_EQ(json + "\n", query(table, {"Columns: file:f0:" + component + "/" +
-                                             uuid + "/" + crash_info + "\n",
-                                         "Filter: id = " + uuid + "\n"}));
+                                             uuid + "/" + crash_info,
+                                         "Filter: id = " + uuid}));
 }

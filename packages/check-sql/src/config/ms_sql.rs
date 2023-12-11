@@ -515,7 +515,7 @@ impl Discovery {
             return Ok(Discovery::default());
         }
         Ok(Self {
-            detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
+            detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT),
             include: discovery.get_string_vector(keys::INCLUDE, &[]),
             exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
         })
@@ -763,7 +763,7 @@ mssql:
         - "someOtherSQL"
       cache_age: 600 # optional(default:600)
     discovery: # optional
-      detect: yes # optional(default:yes)
+      detect: true # optional(default:yes)
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
@@ -838,7 +838,7 @@ sections:
 "#;
         pub const DISCOVERY_FULL: &str = r#"
 discovery:
-  detect: no
+  detect: false
   include: ["a", "b" ]
   exclude: ["c", "d" ]
 "#;

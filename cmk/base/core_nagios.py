@@ -682,27 +682,29 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     if ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK:
         if config_cache.default_address_family(hostname) is socket.AF_INET6:
-            _add_ping_service(
-                cfg,
-                config_cache,
-                hostname,
-                host_attrs["_ADDRESS_4"],
-                socket.AF_INET,
-                "PING IPv4",
-                host_attrs.get("_NODEIPS_4"),
-                license_counter,
-            )
+            if "PING IPv4" not in used_descriptions:
+                _add_ping_service(
+                    cfg,
+                    config_cache,
+                    hostname,
+                    host_attrs["_ADDRESS_4"],
+                    socket.AF_INET,
+                    "PING IPv4",
+                    host_attrs.get("_NODEIPS_4"),
+                    license_counter,
+                )
         else:
-            _add_ping_service(
-                cfg,
-                config_cache,
-                hostname,
-                host_attrs["_ADDRESS_6"],
-                socket.AF_INET6,
-                "PING IPv6",
-                host_attrs.get("_NODEIPS_6"),
-                license_counter,
-            )
+            if "PING IPv6" not in used_descriptions:
+                _add_ping_service(
+                    cfg,
+                    config_cache,
+                    hostname,
+                    host_attrs["_ADDRESS_6"],
+                    socket.AF_INET6,
+                    "PING IPv6",
+                    host_attrs.get("_NODEIPS_6"),
+                    license_counter,
+                )
 
     return service_labels
 

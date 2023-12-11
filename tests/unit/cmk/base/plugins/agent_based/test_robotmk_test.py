@@ -16,9 +16,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.robotmk_test import _check_test, check, discover, Params
+from cmk.base.plugins.agent_based.robotmk_test import (
+    _check_test_and_keywords,
+    check,
+    discover,
+    Params,
+)
 
-from cmk.plugins.lib.robotmk_rebot_xml import Outcome, RFTest, StatusV6
+from cmk.plugins.lib.robotmk_rebot_xml import Keyword, KeywordStatus, Outcome, RFTest, StatusV6
 from cmk.plugins.lib.robotmk_suite_execution_report import AttemptsConfig, Section, TestReport
 
 _Section = Section(
@@ -131,6 +136,35 @@ _Section = Section(
             attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
             rebot_timestamp=1701088000,
         ),
+        "test_with_keyword": TestReport(
+            test=RFTest.model_construct(
+                id="s1-t8",
+                name="Test with keyword",
+                status=StatusV6.model_construct(
+                    status=Outcome.PASS,
+                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                    endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                    elapsed=None,
+                ),
+                robot_exit=False,
+                keywords=[
+                    Keyword(
+                        id="s1-t8-k1",
+                        name="MyLogKeyword",
+                        status=KeywordStatus.model_construct(
+                            status=StatusV6.model_construct(
+                                status=Outcome.PASS,
+                                starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                                endtime=datetime(2023, 11, 27, 7, 15, 46, 518000),
+                            )
+                        ),
+                    )
+                ],
+            ),
+            html=b"irrelevant",
+            attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
+            rebot_timestamp=1701098145,
+        ),
     },
 )
 
@@ -181,6 +215,13 @@ def test_discover_robotmk_test() -> None:
         ),
         Service(
             item="test_result_too_old",
+            labels=[
+                ServiceLabel("robotmk/html_last_error_log", "yes"),
+                ServiceLabel("robotmk/html_last_log", "yes"),
+            ],
+        ),
+        Service(
+            item="test_with_keyword",
             labels=[
                 ServiceLabel("robotmk/html_last_error_log", "yes"),
                 ServiceLabel("robotmk/html_last_log", "yes"),
@@ -263,16 +304,84 @@ def test_discover_robotmk_test() -> None:
             ],
             id="Rebot age too old",
         ),
+        pytest.param(
+            "test_with_keyword",
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
+            [
+                Result(state=State.OK, summary="Test with keyword"),
+                Result(state=State.OK, summary="PASS"),
+                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
+                Metric("robotmk_test_runtime", 0.003),
+            ],
+            id="Test with a keyword but no pattern and threshold set",
+        ),
+        pytest.param(
+            "test_with_keyword",
+            Params(test_runtime=None, runtime_thresholds_keywords=[("MyLogKey*", None)]),
+            [
+                Result(state=State.OK, summary="Test with keyword"),
+                Result(state=State.OK, summary="PASS"),
+                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
+                Metric("robotmk_test_runtime", 0.003),
+                Metric("robotmk_s1-t8-k1-mylogkeyword_runtime", 1.003),
+            ],
+            id="Test with a keyword but no thresholds set",
+        ),
+        pytest.param(
+            "test_with_keyword",
+            Params(test_runtime=None, runtime_thresholds_keywords=[("MyLogKey*", (30, 60))]),
+            [
+                Result(state=State.OK, summary="Test with keyword"),
+                Result(state=State.OK, summary="PASS"),
+                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
+                Metric("robotmk_test_runtime", 0.003),
+                Result(state=State.OK, summary="Keyword MyLogKeyword runtime: 1 second"),
+                Metric("robotmk_s1-t8-k1-mylogkeyword_runtime", 1.003, levels=(30.0, 60.0)),
+            ],
+            id="Test with a keyword and thresholds set",
+        ),
+        pytest.param(
+            "test_with_keyword",
+            Params(
+                test_runtime=None,
+                runtime_thresholds_keywords=[("NoMatchRegex.*", None), ("MyLogKey*", (30, 60))],
+            ),
+            [
+                Result(state=State.OK, summary="Test with keyword"),
+                Result(state=State.OK, summary="PASS"),
+                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
+                Metric("robotmk_test_runtime", 0.003),
+                Result(state=State.OK, summary="Keyword MyLogKeyword runtime: 1 second"),
+                Metric("robotmk_s1-t8-k1-mylogkeyword_runtime", 1.003, levels=(30.0, 60.0)),
+            ],
+            id="Test with a keyword and second pattern is matching",
+        ),
+        pytest.param(
+            "test_with_keyword",
+            Params(
+                test_runtime=None,
+                runtime_thresholds_keywords=[("MyLogKey*", (20, 40)), ("MyL*", (30, 60))],
+            ),
+            [
+                Result(state=State.OK, summary="Test with keyword"),
+                Result(state=State.OK, summary="PASS"),
+                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
+                Metric("robotmk_test_runtime", 0.003),
+                Result(state=State.OK, summary="Keyword MyLogKeyword runtime: 1 second"),
+                Metric("robotmk_s1-t8-k1-mylogkeyword_runtime", 1.003, levels=(20.0, 40.0)),
+            ],
+            id="Multiple keyword patterns match, but only first is considered",
+        ),
     ],
 )
-def test_check_robotmk_test(
+def test_check_test_and_keywords(
     item: str,
     params: Params,
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            _check_test(
+            _check_test_and_keywords(
                 params=params,
                 test=_Section.tests[item].test,
                 rebot_timestamp=_Section.tests[item].rebot_timestamp,

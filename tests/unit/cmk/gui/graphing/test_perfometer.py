@@ -120,8 +120,8 @@ def test__perfometer_possible(
             perfometer_api.Perfometer(
                 name="active_connections",
                 focus_range=perfometer_api.FocusRange(
-                    lower=perfometer_api.Closed(value=0),
-                    upper=perfometer_api.Open(value=2500.0),
+                    lower=perfometer_api.Closed(0),
+                    upper=perfometer_api.Open(565),
                 ),
                 segments=["active_connections"],
             ),

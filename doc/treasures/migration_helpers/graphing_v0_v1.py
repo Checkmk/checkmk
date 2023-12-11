@@ -659,6 +659,10 @@ def _parse_legacy_linear_perfometer(
     )
 
 
+def _compute_85_border(base: int | float, half_value: int | float) -> int:
+    return int(pow(base, 3.5) * half_value)
+
+
 def _parse_legacy_logarithmic_perfometer(
     legacy_logarithmic_perfometer: LogarithmicPerfometerSpec,
 ) -> perfometer_api.Perfometer:
@@ -668,9 +672,9 @@ def _parse_legacy_logarithmic_perfometer(
         perfometer_api.FocusRange(
             perfometer_api.Closed(0),
             perfometer_api.Open(
-                pow(
-                    legacy_logarithmic_perfometer["half_value"],
+                _compute_85_border(
                     legacy_logarithmic_perfometer["exponent"],
+                    legacy_logarithmic_perfometer["half_value"],
                 )
             ),
         ),

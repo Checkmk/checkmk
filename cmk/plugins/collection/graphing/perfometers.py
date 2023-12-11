@@ -7,6 +7,6 @@ from cmk.graphing.v1 import perfometer
 
 perfometer_active_connections = perfometer.Perfometer(
     "active_connections",
-    perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
+    perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(565)),
     ["active_connections"],
 )

@@ -158,7 +158,7 @@ export function metric_value_component<GType extends d3.BaseType, Data>(
 
     const unit = text
         .selectAll("tspan")
-        .data(d => [d])
+        .data(d => (d.unit ? [d] : []))
         .join("tspan")
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")

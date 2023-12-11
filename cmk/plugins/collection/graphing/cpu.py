@@ -9,21 +9,21 @@ metric_load1 = metric.Metric(
     "load1",
     Localizable("CPU load average of last minute"),
     Unit.COUNT,
-    Color.DEEP_SKYBLUE,
+    Color.LIGHT_BLUE,
 )
 
 metric_load5 = metric.Metric(
     "load5",
     Localizable("CPU load average of last 5 minutes"),
     Unit.COUNT,
-    Color.STEEL_BLUE,
+    Color.BLUE,
 )
 
 metric_load15 = metric.Metric(
     "load15",
     Localizable("CPU load average of last 15 minutes"),
     Unit.COUNT,
-    Color.DARK_SLATE_GRAY,
+    Color.DARK_BLUE,
 )
 
 graph_cpu_load = graph.Graph(

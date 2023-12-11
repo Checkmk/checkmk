@@ -10,7 +10,7 @@ from typing import Literal, Self
 from cmk.gui.i18n import _
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.graphing.v1 import Color, metric, perfometer
+from cmk.graphing.v1 import metric, perfometer
 
 from ._parser import parse_color, parse_unit
 from ._type_defs import TranslatedMetric, UnitInfo
@@ -182,7 +182,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Warning of ") + metric_["title"],
                 metric_["unit"],
-                parse_color(Color.YELLOW),
+                "#ffff00",
                 translated_metrics[quantity.name]["scalar"]["warn"],
             )
         case metric.CriticalOf():
@@ -190,7 +190,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Critical of ") + metric_["title"],
                 metric_["unit"],
-                parse_color(Color.RED),
+                "#ff0000",
                 translated_metrics[quantity.name]["scalar"]["crit"],
             )
         case metric.MinimumOf():

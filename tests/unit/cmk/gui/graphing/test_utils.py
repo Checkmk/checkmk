@@ -901,32 +901,32 @@ def test_graph_template_from_template(
                 Localizable("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metric.Constant(Localizable("Constant"), Unit.COUNT, Color.ALICE_BLUE, 10),
+                    metric.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
                     metric.WarningOf("metric-name-2"),
                     metric.CriticalOf("metric-name-3"),
-                    metric.MinimumOf("metric-name-4", Color.ANTIQUE_WHITE),
-                    metric.MaximumOf("metric-name-5", Color.AQUA),
+                    metric.MinimumOf("metric-name-4", Color.BLUE),
+                    metric.MaximumOf("metric-name-5", Color.BLUE),
                     metric.Sum(
                         Localizable("Sum"),
-                        Color.AQUAMARINE,
+                        Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metric.Product(
                         Localizable("Product"),
                         Unit.COUNT,
-                        Color.AZURE,
+                        Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metric.Difference(
                         Localizable("Difference"),
-                        Color.BEIGE,
+                        Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metric.Fraction(
                         Localizable("Fraction"),
                         Unit.COUNT,
-                        Color.BISQUE,
+                        Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -963,7 +963,7 @@ def test_graph_template_from_template(
                         Constant(
                             value=10,
                             explicit_unit_name="COUNT",
-                            explicit_color="#f0f8ff",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "Constant",
@@ -981,7 +981,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color="#faebd7",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "metric-name-4",
@@ -989,7 +989,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color="#00ffff",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "metric-name-5",
@@ -997,7 +997,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color="#7fffd4",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "Sum",
@@ -1006,7 +1006,7 @@ def test_graph_template_from_template(
                         Product(
                             [Metric("metric-name-7")],
                             explicit_unit_name="COUNT",
-                            explicit_color="#f0ffff",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "Product",
@@ -1015,7 +1015,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color="#f5f5dc",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "Difference",
@@ -1025,7 +1025,7 @@ def test_graph_template_from_template(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
                             explicit_unit_name="COUNT",
-                            explicit_color="#ffe4c4",
+                            explicit_color="#0000ff",
                         ),
                         "stack",
                         "Fraction",
@@ -1040,32 +1040,32 @@ def test_graph_template_from_template(
                 Localizable("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metric.Constant(Localizable("Constant"), Unit.COUNT, Color.ALICE_BLUE, 10),
+                    metric.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
                     metric.WarningOf("metric-name-2"),
                     metric.CriticalOf("metric-name-3"),
-                    metric.MinimumOf("metric-name-4", Color.ANTIQUE_WHITE),
-                    metric.MaximumOf("metric-name-5", Color.AQUA),
+                    metric.MinimumOf("metric-name-4", Color.BLUE),
+                    metric.MaximumOf("metric-name-5", Color.BLUE),
                     metric.Sum(
                         Localizable("Sum"),
-                        Color.AQUAMARINE,
+                        Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metric.Product(
                         Localizable("Product"),
                         Unit.COUNT,
-                        Color.AZURE,
+                        Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metric.Difference(
                         Localizable("Difference"),
-                        Color.BEIGE,
+                        Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metric.Fraction(
                         Localizable("Fraction"),
                         Unit.COUNT,
-                        Color.BISQUE,
+                        Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -1098,14 +1098,14 @@ def test_graph_template_from_template(
                     utils.ScalarDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color="#faebd7",
+                            explicit_color="#0000ff",
                         ),
                         "metric-name-4",
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color="#00ffff",
+                            explicit_color="#0000ff",
                         ),
                         "metric-name-5",
                     ),
@@ -1125,7 +1125,7 @@ def test_graph_template_from_template(
                         Constant(
                             value=10,
                             explicit_unit_name="COUNT",
-                            explicit_color="#f0f8ff",
+                            explicit_color="#0000ff",
                         ),
                         "line",
                         "Constant",
@@ -1133,7 +1133,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color="#7fffd4",
+                            explicit_color="#0000ff",
                         ),
                         "line",
                         "Sum",
@@ -1142,7 +1142,7 @@ def test_graph_template_from_template(
                         Product(
                             [Metric("metric-name-7")],
                             explicit_unit_name="COUNT",
-                            explicit_color="#f0ffff",
+                            explicit_color="#0000ff",
                         ),
                         "line",
                         "Product",
@@ -1151,7 +1151,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color="#f5f5dc",
+                            explicit_color="#0000ff",
                         ),
                         "line",
                         "Difference",
@@ -1161,7 +1161,7 @@ def test_graph_template_from_template(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
                             explicit_unit_name="COUNT",
-                            explicit_color="#ffe4c4",
+                            explicit_color="#0000ff",
                         ),
                         "line",
                         "Fraction",
@@ -1238,8 +1238,8 @@ def test_graph_template_from_graph(
                         "metric-name-l2",
                         metric.WarningOf("metric-name-l3"),
                         metric.CriticalOf("metric-name-l4"),
-                        metric.MinimumOf("metric-name-l5", Color.ANTIQUE_WHITE),
-                        metric.MaximumOf("metric-name-l6", Color.AQUA),
+                        metric.MinimumOf("metric-name-l5", Color.BLUE),
+                        metric.MaximumOf("metric-name-l6", Color.BLUE),
                     ],
                     optional=["metric-name-opt-l"],
                     conflicting=["metric-name-confl-l"],
@@ -1252,8 +1252,8 @@ def test_graph_template_from_graph(
                         "metric-name-u2",
                         metric.WarningOf("metric-name-u3"),
                         metric.CriticalOf("metric-name-u4"),
-                        metric.MinimumOf("metric-name-u5", Color.ANTIQUE_WHITE),
-                        metric.MaximumOf("metric-name-u6", Color.AQUA),
+                        metric.MinimumOf("metric-name-u5", Color.BLUE),
+                        metric.MaximumOf("metric-name-u6", Color.BLUE),
                     ],
                     optional=["metric-name-opt-u"],
                     conflicting=["metric-name-confl-u"],
@@ -1287,11 +1287,11 @@ def test_graph_template_from_graph(
                         "metric-name-l4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color="#faebd7"),
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color="#0000ff"),
                         "metric-name-l5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color="#00ffff"),
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color="#0000ff"),
                         "metric-name-l6",
                     ),
                     utils.ScalarDefinition(
@@ -1303,11 +1303,11 @@ def test_graph_template_from_graph(
                         "metric-name-u4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color="#faebd7"),
+                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color="#0000ff"),
                         "metric-name-u5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color="#00ffff"),
+                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color="#0000ff"),
                         "metric-name-u6",
                     ),
                 ],

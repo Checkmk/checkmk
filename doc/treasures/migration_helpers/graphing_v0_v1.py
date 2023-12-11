@@ -17,6 +17,7 @@ taken into account.
 from __future__ import annotations
 
 import argparse
+import colorsys
 import importlib.util
 import logging
 import math
@@ -30,6 +31,7 @@ from typing import Literal, TextIO
 
 from cmk.utils.metrics import MetricName
 
+from cmk.gui.graphing._parser import color_to_rgb, RGB  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.graphing._perfometer import (  # pylint: disable=cmk-module-layer-violation
     _DualPerfometerSpec,
     _LinearPerfometerSpec,
@@ -50,7 +52,7 @@ from cmk.graphing.v1 import graph as graph_api
 from cmk.graphing.v1 import Localizable
 from cmk.graphing.v1 import metric as metric_api
 from cmk.graphing.v1 import perfometer as perfometer_api
-from cmk.graphing.v1 import PhysicalUnit, RGB, ScientificUnit
+from cmk.graphing.v1 import PhysicalUnit, ScientificUnit
 from cmk.graphing.v1 import translation as translation_api
 from cmk.graphing.v1 import Unit
 
@@ -110,63 +112,6 @@ _UNIT_MAP = {
     "RCU": Unit.READ_CAPACITY_UNIT,
     "WCU": Unit.WRITE_CAPACITY_UNIT,
 }
-# The following colors are calculated by minimum distance.
-_COLOR_MAP = {
-    "11/a": Color.DARK_VIOLET,
-    "11/b": Color.ORCHID,
-    "12/a": Color.FUCHSIA,
-    "12/b": Color.VIOLET,
-    "13/a": Color.FUCHSIA,
-    "13/b": Color.VIOLET,
-    "14/a": Color.ORANGE_RED,
-    "14/b": Color.SANDY_BROWN,
-    "15/a": Color.DARK_ORANGE,
-    "15/b": Color.SANDY_BROWN,
-    "16/a": Color.ORANGE,
-    "16/b": Color.SANDY_BROWN,
-    "21/a": Color.GOLD,
-    "21/b": Color.DARK_GOLDENROD,
-    "22/a": Color.GOLD,
-    "22/b": Color.GOLDENROD,
-    "23/a": Color.YELLOW,
-    "23/b": Color.GOLDENROD,
-    "24/a": Color.YELLOW,
-    "24/b": Color.YELLOW_GREEN,
-    "25/a": Color.GREEN_YELLOW,
-    "25/b": Color.YELLOW_GREEN,
-    "26/a": Color.CHARTREUSE,
-    "26/b": Color.LAWN_GREEN,
-    "31/a": Color.MEDIUM_SPRING_GREEN,
-    "31/b": Color.MEDIUM_SPRING_GREEN,
-    "32/a": Color.AQUA,
-    "32/b": Color.DARK_TURQUOISE,
-    "33/a": Color.AQUA,
-    "33/b": Color.DARK_TURQUOISE,
-    "34/a": Color.DEEP_SKYBLUE,
-    "34/b": Color.DARK_TURQUOISE,
-    "35/a": Color.DEEP_SKYBLUE,
-    "35/b": Color.LIGHT_SEA_GREEN,
-    "36/a": Color.DODGER_BLUE,
-    "36/b": Color.DODGER_BLUE,
-    "41/a": Color.DODGER_BLUE,
-    "41/b": Color.CORNFLOWER_BLUE,
-    "42/a": Color.BLUE,
-    "42/b": Color.CORNFLOWER_BLUE,
-    "43/a": Color.BLUE,
-    "43/b": Color.MEDIUM_SLATE_BLUE,
-    "44/a": Color.BLUE,
-    "44/b": Color.MEDIUM_SLATE_BLUE,
-    "45/a": Color.BLUE_VIOLET,
-    "45/b": Color.MEDIUM_PURPLE,
-    "46/a": Color.DARK_VIOLET,
-    "46/b": Color.MEDIUM_ORCHID,
-    "51/a": Color.GRAY,
-    "51/b": Color.GRAY,
-    "52/a": Color.SADDLE_BROWN,
-    "52/b": Color.DIM_GRAY,
-    "53/a": Color.SADDLE_BROWN,
-    "53/b": Color.SIENNA,
-}
 
 
 def _parse_legacy_unit(legacy_unit: str) -> Unit | PhysicalUnit:
@@ -176,44 +121,86 @@ def _parse_legacy_unit(legacy_unit: str) -> Unit | PhysicalUnit:
     return PhysicalUnit(Localizable(legacy_unit), legacy_unit)
 
 
+def _rgb_from_hexstr(hexstr: str) -> RGB:
+    return RGB(*(int(hexstr.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)))
+
+
+_LEGACY_COLOR_WHEEL = {
+    "11": (0.775, 1, 1),
+    "12": (0.8, 1, 1),
+    "13": (0.83, 1, 1),
+    "14": (0.05, 1, 1),
+    "15": (0.08, 1, 1),
+    "16": (0.105, 1, 1),
+    # yellow area
+    "21": (0.13, 1, 1),
+    "22": (0.14, 1, 1),
+    "23": (0.155, 1, 1),
+    "24": (0.185, 1, 1),
+    "25": (0.21, 1, 1),
+    "26": (0.25, 1, 1),
+    # green area
+    "31": (0.45, 1, 1),
+    "32": (0.5, 1, 1),
+    "33": (0.515, 1, 1),
+    "34": (0.53, 1, 1),
+    "35": (0.55, 1, 1),
+    "36": (0.57, 1, 1),
+    # blue area
+    "41": (0.59, 1, 1),
+    "42": (0.62, 1, 1),
+    "43": (0.66, 1, 1),
+    "44": (0.71, 1, 1),
+    "45": (0.73, 1, 1),
+    "46": (0.75, 1, 1),
+    # special colors
+    "51": (0, 0, 0.5),
+    "52": (0.067, 0.7, 0.5),
+    "53": (0.083, 0.8, 0.55),
+}
+
+
+def _rgb_from_legacy_wheel(legacy_color_name: str) -> RGB:
+    name, nuance = legacy_color_name.split("/", 1)
+    hsv = _LEGACY_COLOR_WHEEL[name]
+    if nuance == "b":
+        factors = (1.0, 1.0, 0.8) if name[0] in ["2", "3"] else (1.0, 0.6, 1.0)
+        hsv = (hsv[0] * factors[0], hsv[1] * factors[1], hsv[2] * factors[2])
+    rgb = colorsys.hsv_to_rgb(*hsv)
+    return RGB(int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
+
+
 @dataclass(frozen=True)
 class _Distance:
     distance: float
     color: Color
 
     @classmethod
-    def from_colors(cls, legacy: RGB, new: Color) -> _Distance:
+    def from_rgb(cls, legacy_rgb: RGB, new: Color) -> _Distance:
+        new_rgb = color_to_rgb(new)
         return cls(
             math.sqrt(
-                pow(legacy.red - new.value.red, 2)
-                + pow(legacy.green - new.value.green, 2)
-                + pow(legacy.blue - new.value.blue, 2)
+                pow(legacy_rgb.red - new_rgb.red, 2)
+                + pow(legacy_rgb.green - new_rgb.green, 2)
+                + pow(legacy_rgb.blue - new_rgb.blue, 2)
             ),
             new,
         )
 
 
-def _color_from_hexstr(hexstr: str) -> Color:
-    rgb = RGB(*(int(hexstr.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4)))
-    return min(
-        (_Distance.from_colors(rgb, color) for color in Color),
-        key=lambda d: d.distance,
-    ).color
-
-
 def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metric_api.Metric:
-    if (legacy_color := info["color"]) in _COLOR_MAP:
-        color = _COLOR_MAP[legacy_color]
-    elif legacy_color.startswith("#"):
-        color = _color_from_hexstr(legacy_color)
+    if (legacy_color := info["color"]).startswith("#"):
+        rgb = _rgb_from_hexstr(legacy_color)
     else:
-        raise ValueError(legacy_color)
-
+        rgb = _rgb_from_legacy_wheel(legacy_color)
     return metric_api.Metric(
         name,
         Localizable(str(info["title"])),
         _parse_legacy_unit(info["unit"]),
-        color,
+        min(
+            (_Distance.from_rgb(rgb, color) for color in Color),
+            key=lambda d: d.distance,
+        ).color,
     )
 
 
@@ -353,13 +340,13 @@ def _make_percent(
             # Title, unit, color have no impact
             Localizable(""),
             Unit.NUMBER,
-            Color.BLACK,
+            Color.GRAY,
             [
                 metric_api.Constant(
                     # Title, unit, color have no impact
                     Localizable(""),
                     Unit.NUMBER,
-                    Color.BLACK,
+                    Color.GRAY,
                     100.0,
                 ),
                 percent_value,
@@ -368,7 +355,7 @@ def _make_percent(
         divisor=metric_api.MaximumOf(
             # Color has no impact
             metric_name,
-            color=Color.BLACK,
+            color=Color.GRAY,
         ),
     )
 
@@ -509,14 +496,14 @@ def _resolve_stack(
                         divisor=metric_api.Sum(
                             # Title, color have no impact
                             Localizable(""),
-                            Color.BLACK,
+                            Color.GRAY,
                             [
                                 right,
                                 metric_api.Constant(
                                     # Title, unit, color have no impact
                                     Localizable(""),
                                     Unit.NUMBER,
-                                    Color.BLACK,
+                                    Color.GRAY,
                                     1e-16,
                                 ),
                             ],
@@ -543,7 +530,13 @@ def _parse_expression(
 ):
     if "#" in expression:
         expression, explicit_hexstr_color = expression.rsplit("#", 1)
-        explicit_color = _color_from_hexstr(f"#{explicit_hexstr_color}")
+        explicit_color = min(
+            (
+                _Distance.from_rgb(_rgb_from_hexstr(f"#{explicit_hexstr_color}"), color)
+                for color in Color
+            ),
+            key=lambda d: d.distance,
+        ).color
     else:
         explicit_color = Color.GRAY
 

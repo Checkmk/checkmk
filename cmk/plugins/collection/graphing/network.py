@@ -9,14 +9,14 @@ metric_active_connections = metric.Metric(
     "active_connections",
     Localizable("Active connections"),
     Unit.COUNT,
-    Color.DARK_ORCHID,
+    Color.PURPLE,
 )
 
 metric_idle_connections = metric.Metric(
     "idle_connections",
     Localizable("Idle connections"),
     Unit.COUNT,
-    Color.MEDIUM_PURPLE,
+    Color.DARK_PURPLE,
 )
 
 graph_db_connections = graph.Graph(

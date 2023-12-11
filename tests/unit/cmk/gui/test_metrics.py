@@ -23,14 +23,14 @@ def test_add_graphing_plugins() -> None:
     assert metric_info["idle_connections"] == {
         "title": "Idle connections",
         "unit": "COUNT",
-        "color": "#9370db",
+        "color": "#5200a3",
     }
 
     assert "active_connections" in metric_info
     assert metric_info["active_connections"] == {
         "title": "Active connections",
         "unit": "COUNT",
-        "color": "#9932cc",
+        "color": "#7f00ff",
     }
 
     assert "check_mk-citrix_serverload" in check_metrics

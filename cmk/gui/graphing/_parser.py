@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
+
 import cmk.utils.render as render
 
 from cmk.gui.i18n import _
@@ -474,5 +476,91 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
             )
 
 
+@dataclass(frozen=True)
+class RGB:
+    red: int
+    green: int
+    blue: int
+
+
+def color_to_rgb(color: Color) -> RGB:
+    match color:
+        case Color.LIGHT_RED:
+            return RGB(255, 51, 51)
+        case Color.RED:
+            return RGB(204, 0, 0)
+        case Color.DARK_RED:
+            return RGB(122, 0, 0)
+
+        case Color.LIGHT_ORANGE:
+            return RGB(255, 163, 71)
+        case Color.ORANGE:
+            return RGB(255, 127, 0)
+        case Color.DARK_ORANGE:
+            return RGB(204, 102, 0)
+
+        case Color.LIGHT_YELLOW:
+            return RGB(255, 255, 112)
+        case Color.YELLOW:
+            return RGB(245, 245, 0)
+        case Color.DARK_YELLOW:
+            return RGB(204, 204, 0)
+
+        case Color.LIGHT_GREEN:
+            return RGB(112, 255, 112)
+        case Color.GREEN:
+            return RGB(0, 255, 0)
+        case Color.DARK_GREEN:
+            return RGB(0, 143, 0)
+
+        case Color.LIGHT_BLUE:
+            return RGB(71, 71, 255)
+        case Color.BLUE:
+            return RGB(0, 0, 255)
+        case Color.DARK_BLUE:
+            return RGB(0, 0, 163)
+
+        case Color.LIGHT_CYAN:
+            return RGB(153, 255, 255)
+        case Color.CYAN:
+            return RGB(0, 255, 255)
+        case Color.DARK_CYAN:
+            return RGB(0, 184, 184)
+
+        case Color.LIGHT_PURPLE:
+            return RGB(163, 71, 255)
+        case Color.PURPLE:
+            return RGB(127, 0, 255)
+        case Color.DARK_PURPLE:
+            return RGB(82, 0, 163)
+
+        case Color.LIGHT_PINK:
+            return RGB(255, 214, 220)
+        case Color.PINK:
+            return RGB(255, 192, 203)
+        case Color.DARK_PINK:
+            return RGB(255, 153, 170)
+
+        case Color.LIGHT_BROWN:
+            return RGB(184, 92, 0)
+        case Color.BROWN:
+            return RGB(143, 71, 0)
+        case Color.DARK_BROWN:
+            return RGB(102, 51, 0)
+
+        case Color.LIGHT_GRAY:
+            return RGB(153, 153, 153)
+        case Color.GRAY:
+            return RGB(127, 127, 127)
+        case Color.DARK_GRAY:
+            return RGB(92, 92, 92)
+
+        case Color.BLACK:
+            return RGB(0, 0, 0)
+        case Color.WHITE:
+            return RGB(255, 255, 255)
+
+
 def parse_color(color: Color) -> str:
-    return f"#{color.value.red:02x}{color.value.green:02x}{color.value.blue:02x}"
+    rgb = color_to_rgb(color)
+    return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

@@ -65,7 +65,7 @@ def test_openapi_get_graph_graph(
     expected = {
         "metrics": [
             {
-                "color": "#00bfff",
+                "color": "#4747ff",
                 "line_type": "stack",
                 "data_points": [None],
                 "title": "CPU load average of last minute",
@@ -124,7 +124,7 @@ def test_openapi_get_graph_metric(
     expected = {
         "metrics": [
             {
-                "color": "#00bfff",
+                "color": "#4747ff",
                 "line_type": "area",
                 "data_points": [None],
                 "title": "CPU load average of last minute",
@@ -174,7 +174,7 @@ def test_openapi_get_graph_metric_without_site(
     expected = {
         "metrics": [
             {
-                "color": "#00bfff",
+                "color": "#4747ff",
                 "line_type": "area",
                 "data_points": [None],
                 "title": "CPU load average of last minute",

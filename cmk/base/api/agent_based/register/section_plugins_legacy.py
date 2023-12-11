@@ -52,7 +52,6 @@ def _create_agent_parse_function(
 
 def _create_snmp_parse_function(
     original_parse_function: Callable | None,
-    handle_empty_info: bool,
 ) -> Callable[[Any], object]:  # sorry, but this is what we know.
     """Wrap parse function to comply to new API
 
@@ -66,7 +65,7 @@ def _create_snmp_parse_function(
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table: Any) -> object:
-        if not handle_empty_info and not any(string_table):
+        if not any(string_table):
             return None
 
         if original_parse_function is None:
@@ -116,10 +115,7 @@ def create_snmp_section_plugin_from_legacy(
     fetch = check_info_element["fetch"]
     detect = cast(SNMPDetectSpecification, check_info_element["detect"])
 
-    parse_function = _create_snmp_parse_function(
-        check_info_element.get("parse_function"),
-        handle_empty_info=bool(check_info_element.get("handle_empty_info")),
-    )
+    parse_function = _create_snmp_parse_function(check_info_element.get("parse_function"))
 
     return create_snmp_section_plugin(
         SimpleSNMPSection(  # ty#pe: ignore[call-overload]

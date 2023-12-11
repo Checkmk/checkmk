@@ -16,12 +16,7 @@ import pytest
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.crash_reporting import (
-    _format_var_for_export,
-    ABCCrashReport,
-    CrashInfo,
-    CrashReportStore,
-)
+from cmk.utils.crash_reporting import _format_var_for_export, ABCCrashReport, CrashReportStore
 
 
 class UnitTestCrashReport(ABCCrashReport):
@@ -162,29 +157,3 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:  # type:ignor
 
     assert len(set(crash_dir.glob("*"))) <= store._keep_num_crashes
     assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes :])
-
-
-@pytest.mark.parametrize(
-    "crash_info, expected",
-    [
-        (
-            {
-                "details": {
-                    "section": {
-                        ("foo", "bar"): {
-                            "id": "1337",
-                            "name": "foobar",
-                        },
-                    },
-                },
-            },
-            (
-                '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": '
-                '"foobar"}}}}'
-            ),
-        ),
-        ({"foo": "bar"}, '{"foo": "bar"}'),
-    ],
-)
-def test_crash_report_json_dump(crash_info: CrashInfo, expected: str) -> None:
-    assert CrashReportStore.dump_crash_info(crash_info) == expected

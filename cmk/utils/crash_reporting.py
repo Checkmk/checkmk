@@ -56,23 +56,13 @@ class CrashReportStore:
 
             if fname == "crash.info":
                 store.save_text_to_file(
-                    crash.crash_dir() / fname,
-                    self.dump_crash_info(value) + "\n",
+                    crash.crash_dir() / fname, str(json.dumps(value, cls=RobustJSONEncoder)) + "\n"
                 )
             else:
                 assert isinstance(value, bytes)
                 store.save_bytes_to_file(crash.crash_dir() / fname, value)
 
         self._cleanup_old_crashes(crash.crash_dir().parent)
-
-    @staticmethod
-    def dump_crash_info(crash_info: CrashInfo | bytes) -> str:
-        if isinstance(crash_info, dict) and (m := crash_info.get("details", {}).get("section")):
-            if isinstance(m, dict):
-                crash_info["details"]["section"] = {
-                    json.dumps(k, cls=RobustJSONEncoder): v for k, v in m.items()
-                }
-        return json.dumps(crash_info, cls=RobustJSONEncoder)
 
     def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
         crash_dir = crash.crash_dir()

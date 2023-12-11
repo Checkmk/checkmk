@@ -98,7 +98,7 @@ def _convert_to_generic(bonds: Mapping[str, _ParsedBlocks]) -> bonding.Section:
 
         this_bond: bonding.Bond = {
             "status": main["MII Status"],
-            "mode": main["Bonding Mode"].strip(),
+            "mode": main["Bonding Mode"].split("(")[0].strip(),
             "interfaces": new_interfaces,
         }
         if "Aggregator ID" in info8023ad:
@@ -119,6 +119,7 @@ def parse_lnx_bonding(string_table: StringTable) -> bonding.Section:
 
 
 register.agent_section(
-    name="bonding",
+    name="lnx_bonding",
+    parsed_section_name="bonding",
     parse_function=parse_lnx_bonding,
 )

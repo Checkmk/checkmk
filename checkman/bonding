@@ -1,5 +1,5 @@
-title: Network interface bonds (Linux)
-agents: linux
+title: Bonding Network Interface (Open vSwitch, Linux, Windows)
+agents: windows/linux
 catalog: os/networking
 license: GPLv2
 distribution: check_mk
@@ -14,8 +14,8 @@ description:
  aggregation), the aggregation IDs are compared. A mismatch
  results in the configured state (default {WARN}).
 
- If the bonding mode does not match the expected bonding mode
- then the check goes to {CRIT} by default.
+ For this check to work on Windows you may have to install the
+ agent plugin windows_os_bonding.ps1 on the target machine.
 
 item:
  The team name of the bonding interface

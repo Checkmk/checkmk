@@ -1176,16 +1176,18 @@ section_omd_core() {
 
         # The files within a site are site-user writable! Therefore we must not use them!
         # The version files are only root writable so we can use them instead.
-        site_version="$(realpath "${1}/version" | sed 's|.*/||')"
+        site_version() {
+            printf "%s" "$(realpath "${1}/version" | sed 's|.*/||')"
+        }
 
         site_cmd() {
             # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
             # bin might point anywhere -> priv escalation.
-            printf "/omd/versions/%s/bin/%s" "${site_version}" "${2}"
+            printf "/omd/versions/%s/bin/%s" "$(site_version "${1}")" "${2}"
         }
 
         site_lib() {
-            printf "/omd/versions/%s/lib" "${site_version}"
+            printf "/omd/versions/%s/lib" "$(site_version "${1}")"
         }
 
         waitmax_for_unixcat_with_site_ld_library_path() {

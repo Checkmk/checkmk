@@ -67,7 +67,7 @@ def all_rule_pack_files(ec_path: Path) -> set[Path]:
 def all_packable_files(path_config: PathConfig) -> Mapping[PackagePart, set[Path]]:
     """Collect all files that can be in a package in principle
 
-    Incudes already packaged files and EC expoted rule packs.
+    Incudes already packaged files and EC exported rule packs.
     Excludes rogue files (not belonging to a package part).
     """
     return {

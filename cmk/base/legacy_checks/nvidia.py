@@ -8,6 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 
 def format_nvidia_name(identifier):
     identifier = identifier.replace("Temp", "")
@@ -33,6 +35,15 @@ def check_nvidia_temp(item, params, info):
         ):  # compatibility code for "old discovered" services
             return check_temperature(int(line[1]), params, "nvidia_%s" % item)
     return None
+
+
+def parse_nvidia(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["nvidia"] = LegacyCheckDefinition(
+    parse_function=parse_nvidia,
+)
 
 
 check_info["nvidia.temp"] = LegacyCheckDefinition(

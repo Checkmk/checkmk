@@ -111,10 +111,14 @@ def parse_emcvnx_raidgroups(info):
     return parsed
 
 
-def inventory_emcvnx_raidgroups(info):
-    parsed = parse_emcvnx_raidgroups(info)
+check_info["emcvnx_raidgroups"] = LegacyCheckDefinition(
+    parse_function=parse_emcvnx_raidgroups,
+)
+
+
+def inventory_emcvnx_raidgroups(section):
     inventory = []
-    for rg in parsed:
+    for rg in section:
         inventory.append((rg, None))
     return inventory
 
@@ -129,11 +133,10 @@ def inventory_emcvnx_raidgroups(info):
 #   '----------------------------------------------------------------------'
 
 
-def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
-    parsed = parse_emcvnx_raidgroups(info)
-    if item not in parsed:
+def check_emcvnx_raidgroups_list_luns(item, _no_params, section):
+    if item not in section:
         return 3, "RAID Group %s not found in agent output" % item
-    return 0, "List of LUNs: " + parsed[item]["luns"]
+    return 0, "List of LUNs: " + section[item]["luns"]
 
 
 check_info["emcvnx_raidgroups.list_luns"] = LegacyCheckDefinition(
@@ -154,14 +157,13 @@ check_info["emcvnx_raidgroups.list_luns"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
-    parsed = parse_emcvnx_raidgroups(info)
-    if item not in parsed:
+def check_emcvnx_raidgroups_list_disks(item, _no_params, section):
+    if item not in section:
         return 3, "RAID Group %s not found in agent output" % item
 
     message = ""
     enc = ""
-    for disk in sorted(parsed[item]["disks"]):
+    for disk in sorted(section[item]["disks"]):
         if message != "":
             message += ", "
         enc_id, disk_id = disk.split(" ", 1)
@@ -192,25 +194,23 @@ check_info["emcvnx_raidgroups.list_disks"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emcvnx_raidgroups_capacity(info):
-    parsed = parse_emcvnx_raidgroups(info)
+def inventory_emcvnx_raidgroups_capacity(section):
     inventory = []
-    for rg in parsed:
+    for rg in section:
         inventory.append((rg, {}))
     return inventory
 
 
-def check_emcvnx_raidgroups_capacity(item, params, info):
-    parsed = parse_emcvnx_raidgroups(info)
-    if item not in parsed:
+def check_emcvnx_raidgroups_capacity(item, params, section):
+    if item not in section:
         return 3, "RAID Group %s not found in agent output" % item
 
     fslist = []
     # Blocksize in Bytes, seems to be fix
     # (is not listed in the naviseccli output anywhere)
     blocksize = 512
-    size_mb = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
-    avail_mb = int(parsed[item]["capacity_free_total_blocks"]) * blocksize / 1048576.0
+    size_mb = int(section[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
+    avail_mb = int(section[item]["capacity_free_total_blocks"]) * blocksize / 1048576.0
     fslist.append((item, size_mb, avail_mb, 0))
 
     # variable name in perfdata is not allowed to be just a number
@@ -249,25 +249,23 @@ check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_emcvnx_raidgroups_capacity_contiguous(info):
-    parsed = parse_emcvnx_raidgroups(info)
+def inventory_emcvnx_raidgroups_capacity_contiguous(section):
     inventory = []
-    for rg in parsed:
+    for rg in section:
         inventory.append((rg, {}))
     return inventory
 
 
-def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
-    parsed = parse_emcvnx_raidgroups(info)
-    if item not in parsed:
+def check_emcvnx_raidgroups_capacity_contiguous(item, params, section):
+    if item not in section:
         return 3, "RAID Group %s not found in agent output" % item
 
     fslist = []
     # Blocksize in Bytes, seems to be fix
     # (is not listed in the naviseccli output anywhere)
     blocksize = 512
-    size_mb = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
-    avail_mb = int(parsed[item]["capacity_free_contiguous_blocks"]) * blocksize / 1048576.0
+    size_mb = int(section[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
+    avail_mb = int(section[item]["capacity_free_contiguous_blocks"]) * blocksize / 1048576.0
     fslist.append((item, size_mb, avail_mb, 0))
 
     # variable name in perfdata is not allowed to be just a number

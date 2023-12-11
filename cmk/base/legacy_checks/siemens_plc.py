@@ -9,6 +9,8 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
 # PFT01 flag Testbit True
@@ -28,6 +30,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 # RGB01 seconds Service 109
 # RGB01 seconds Serviceintervall 700
 # RGB01 text Testtext HRL01-0001-0010-02-07
+
+
+def parse_siemens_plc(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+check_info["siemens_plc"] = LegacyCheckDefinition(parse_function=parse_siemens_plc)
+
 
 # .
 #   .--Temperature---------------------------------------------------------.

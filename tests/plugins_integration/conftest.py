@@ -144,7 +144,10 @@ def pytest_collection_modifyitems(config, items):
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     skip_cleanup = request.config.getoption("--skip-cleanup")
-    for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
+    for site in get_site_factory(prefix="plugins_").get_test_site(
+        auto_cleanup=not skip_cleanup,
+        save_results=False,  # currently broken in the CI. Todo: investigate
+    ):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 

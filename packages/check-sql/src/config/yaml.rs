@@ -27,7 +27,7 @@ pub trait Get {
 
     /// load a string from using key with default.
     /// If obtained string is not bool-like -> error
-    fn get_bool(&self, key: &str, default: bool) -> Result<bool>;
+    fn get_bool(&self, key: &str, default: bool) -> bool;
 }
 
 impl Get for Yaml {
@@ -92,11 +92,20 @@ impl Get for Yaml {
         self[key].as_vec().unwrap_or(&vec![]).to_vec()
     }
 
-    fn get_bool(&self, key: &str, default: bool) -> Result<bool> {
-        if let Some(v) = self[key].as_str() {
-            to_bool(v)
+    fn get_bool(&self, key: &str, default: bool) -> bool {
+        let result = &self[key];
+        if self[key].is_badvalue() {
+            return default;
+        }
+        if let Some(v) = result.as_bool() {
+            return v;
+        }
+        // for some reason yaml rust doesn't accept yes/no either True/False as bool
+        if let Some(v) = result.as_str().map(to_bool).transpose().ok().flatten() {
+            v
         } else {
-            Ok(default)
+            log::warn!("{key} is not bool like, using default {default:?}");
+            default
         }
     }
 }

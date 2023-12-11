@@ -619,7 +619,7 @@ mssql:
       detect: {}
 {}
 "#,
-        if detect { "yes" } else { "no" },
+        if detect { "yes" } else { "false" },
         if custom {
             make_remote_custom_config_sub_string(user, pwd, host)
         } else {

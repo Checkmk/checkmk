@@ -236,8 +236,9 @@ void WinPerf::loadFromMainConfig() {
     }
 }
 
-void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
-                          const std::vector<YAML::Node> &yaml_node) noexcept {
+std::vector<Plugins::ExeUnit> LoadExeUnitsFromYaml(
+    const std::vector<YAML::Node> &yaml_node) noexcept {
+    std::vector<Plugins::ExeUnit> exe_unit;
     for (const auto &entry : yaml_node) {
         try {
             auto pattern = entry[vars::kPluginPattern].as<std::string>();
@@ -279,6 +280,7 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
                     vars::kPluginsExecution, e);
         }
     }
+    return exe_unit;
 }
 
 void Plugins::ExeUnit::assign(const YAML::Node &entry) {
@@ -350,13 +352,14 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
             GetVal(group_name, vars::kEnabled, exist_in_cfg_.load());
         exe_name_ = GetVal(group_name, vars::kPluginExe,
                            std::string{"plugin_player.exe"});
-        auto units = GetArray<YAML::Node>(group_name, vars::kPluginsExecution);
-        LoadExeUnitsFromYaml(units_, units);
+        const auto units =
+            GetArray<YAML::Node>(group_name, vars::kPluginsExecution);
+        units_ = LoadExeUnitsFromYaml(units);
         folders_.clear();
         if (local_) {
             folders_.push_back(GetLocalDir());
         } else {
-            auto folders =
+            const auto folders =
                 GetArray<std::string>(group_name, vars::kPluginsFolders);
             for (const auto &folder : folders) {
                 auto f = ReplacePredefinedMarkers(folder);

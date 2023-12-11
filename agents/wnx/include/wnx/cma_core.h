@@ -678,9 +678,11 @@ inline void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
 void UpdatePluginMapCmdLine(PluginMap &plugin_map, srv::ServiceProcessor *sp);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap &plugins, int &total, int timeout);
-std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
-                                  bool start_immediately);
+std::pair<std::vector<char>, int> RunSyncPlugins(PluginMap &plugins,
+                                                 int timeout);
+std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
+
+                                                  bool start_immediately);
 
 constexpr std::chrono::seconds kRestartInterval{60};
 

@@ -1,0 +1,19 @@
+Title: Improvement of "Schedule downtimes" command dialog
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1702297650
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The command dialog for setting downtimes in views was reworked to improve
+usability.
+
+The different options can now be set from the top to the bottom and only one
+submit button is used to schedule a downtime.
+
+Preset durations can be set within the section "Duration". Own presets can be
+set via the "Edit presets" link.
+The start and end time can no optionally be set via a time- and datepicker.
+Advanced options are bundled within an own section.

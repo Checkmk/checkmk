@@ -677,6 +677,8 @@ def _command_package(
     try:
         package_bytes = create_mkp(package, path_config.get_path, version_packaged=_VERSION_STR)
     except PackageError as exc:
+        if args.debug:
+            raise
         sys.stderr.write(f"{exc}\n")
         return 1
     _logger.info("Successfully created %s %s", package.name, package.version)

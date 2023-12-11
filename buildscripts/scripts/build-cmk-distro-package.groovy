@@ -49,6 +49,7 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_BUILD);
+    def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
 
     print(
         """
@@ -61,14 +62,9 @@ def main() {
         |docker_tag:............... │${docker_tag}│
         |docker_args:.............. │${docker_args}│
         |checkout_dir:............. │${checkout_dir}│
+        |container_name:........... │${checkout_dir}│
         |===================================================
         """.stripMargin());
-
-    currentBuild.description += (
-        """
-        |Distro: <b>${distro}</b><br>
-        |Edition: <b>${edition}</b><br>
-        |""".stripMargin());
 
     stage("Prepare workspace") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -180,7 +176,7 @@ def main() {
         shout("Prepare environment");
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image("${distro}:${docker_tag}").inside(
-                    "--name build-cmk-package-${distro}" +
+                    "--name ${container_name}" +
                     " ${docker_args} " +
                     "-v ${checkout_dir}:${checkout_dir} " +
                     "--hostname ${distro}") {

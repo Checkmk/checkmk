@@ -5,7 +5,7 @@ Component: checks
 Date: 1701879932
 Edition: cre
 Level: 1
-Version: 2.2.0p18
+Version: 2.2.0p17
 
 The Python 2-version of the NGINX agent plugin crashed with a SyntaxError:
 

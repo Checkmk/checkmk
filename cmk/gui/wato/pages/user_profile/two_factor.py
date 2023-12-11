@@ -28,6 +28,7 @@ from fido2.webauthn import (
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.jsontype import JsonSerializable
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.totp import TOTP, TotpVersion
 
@@ -41,7 +42,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
+from cmk.gui.log import AuthenticationFailureEvent, logger, TwoFactorEvent, TwoFactorEventType
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -97,6 +98,27 @@ def make_fido2_server() -> Fido2Server:
     )
 
 
+def log_event_usermanagement(event: TwoFactorEventType) -> None:
+    assert user.id is not None
+    log_security_event(
+        TwoFactorEvent(
+            event=event,
+            username=user.id,
+        )
+    )
+
+
+def log_event_auth(two_factor_method: str) -> None:
+    log_security_event(
+        AuthenticationFailureEvent(
+            user_error="Failed two factor authentication",
+            auth_method=two_factor_method,
+            username=user.id,
+            remote_ip=request.remote_ip,
+        )
+    )
+
+
 overview_page_name: str = "user_two_factor_overview"
 
 
@@ -125,8 +147,10 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         if credential_id := request.get_ascii_input("_delete_credential"):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
+                log_event_usermanagement(TwoFactorEventType.webauthn_remove)
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
+                log_event_usermanagement(TwoFactorEventType.totp_remove)
             else:
                 return
             save_two_factor_credentials(user.id, credentials)
@@ -134,12 +158,14 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
         if request.has_var("_delete_codes"):
             credentials["backup_codes"] = []
+            log_event_usermanagement(TwoFactorEventType.backup_remove)
             save_two_factor_credentials(user.id, credentials)
             flash(_("All backup codes have been deleted"))
 
         if request.has_var("_backup_codes"):
             codes = make_two_factor_backup_codes()
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
+            log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
             flash(
                 _(
@@ -327,6 +353,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 "alias": "",
             }
             save_two_factor_credentials(user.id, credentials)
+            log_event_usermanagement(TwoFactorEventType.totp_add)
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             origtarget = "user_two_factor_overview.py"
@@ -602,6 +629,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
             }
         )
         save_two_factor_credentials(user.id, credentials)
+        log_event_usermanagement(TwoFactorEventType.webauthn_add_)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         return {"status": "OK"}
@@ -687,6 +715,7 @@ class UserLoginTwoFactor(Page):
                         ):
                             session.session_info.two_factor_completed = True
                             raise HTTPRedirect(origtarget)
+                    log_event_auth("Authenticator application (TOTP)")
 
                 with foldable_container(
                     treename="authenticator_app",
@@ -738,8 +767,10 @@ class UserLoginTwoFactor(Page):
 
                 if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                     if is_two_factor_backup_code_valid(user.id, backup_code):
+                        log_event_usermanagement(TwoFactorEventType.backup_used)
                         session.session_info.two_factor_completed = True
                         raise HTTPRedirect(origtarget)
+                    log_event_auth("Backup code")
 
                 html.open_div(class_=backup_style["div"])
                 with foldable_container(
@@ -782,7 +813,6 @@ class UserWebAuthnLoginBegin(JsonPage):
 
         if not is_two_factor_login_enabled(user.id):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
-
         auth_data, state = make_fido2_server().authenticate_begin(
             [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
@@ -807,17 +837,22 @@ class UserWebAuthnLoginComplete(JsonPage):
         logger.debug("ClientData: %r", data.client_data)
         logger.debug("AuthenticatorData: %r", data.authenticator_data)
 
-        make_fido2_server().authenticate_complete(
-            state=session.session_info.webauthn_action_state,
-            credentials=[
-                AttestedCredentialData.unpack_from(v["credential_data"])[0]
-                for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
-            ],
-            credential_id=data.credential_id,
-            client_data=data.client_data,
-            auth_data=data.authenticator_data,
-            signature=data.signature,
-        )
+        try:
+            make_fido2_server().authenticate_complete(
+                state=session.session_info.webauthn_action_state,
+                credentials=[
+                    AttestedCredentialData.unpack_from(v["credential_data"])[0]
+                    for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
+                ],
+                credential_id=data.credential_id,
+                client_data=data.client_data,
+                auth_data=data.authenticator_data,
+                signature=data.signature,
+            )
+        except:
+            log_event_auth("Webauthn")
+            raise
+
         session.session_info.webauthn_action_state = None
         session.session_info.two_factor_completed = True
         return {"status": "OK"}

@@ -5,6 +5,7 @@
 
 import logging
 from dataclasses import dataclass
+from enum import Enum
 from typing import Literal
 
 import cmk.utils.log
@@ -13,6 +14,16 @@ from cmk.utils.log.security_event import SecurityEvent
 from cmk.utils.user import UserId
 
 logger = logging.getLogger("cmk.web")
+
+
+class TwoFactorEventType(Enum):
+    totp_add = "Authenticator application key added"
+    totp_remove = "Authenticator application key revoked"
+    webauthn_add_ = "Webauthn key added"
+    webauthn_remove = "Webauthn key revoked"
+    backup_add = "New backup codes generated, previous revoked"
+    backup_remove = "All backup codes revoked"
+    backup_used = "Backup code used for authentication"
 
 
 def init_logging() -> None:
@@ -87,6 +98,25 @@ class UserManagementEvent(SecurityEvent):
             {
                 "affected_user": str(affected_user),
                 "acting_user": str(acting_user or "Unknown user"),
+            },
+            SecurityEvent.Domain.user_management,
+        )
+
+
+@dataclass
+class TwoFactorEvent(SecurityEvent):
+    """Indicates a user has added, or removed two factor controls"""
+
+    def __init__(
+        self,
+        *,
+        event: TwoFactorEventType,
+        username: UserId,
+    ) -> None:
+        super().__init__(
+            event.value,
+            {
+                "user": str(username),
             },
             SecurityEvent.Domain.user_management,
         )

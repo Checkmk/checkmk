@@ -8,9 +8,8 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.utils import run
-from tests.testlib.version import CMKVersion, Edition
-from tests.testlib.utils import current_base_branch_name, current_branch_version
+from tests.testlib.utils import current_base_branch_name, current_branch_version, run
+from tests.testlib.version import CMKVersion, Edition, get_min_version
 
 from tests.plugins_integration import checks
 
@@ -160,7 +159,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
     base_version = CMKVersion(
-        "2.2.0p8",  # todo: retrieve this version number from a common utils module
+        get_min_version(),
         branch=current_base_branch_name(),
         branch_version=current_branch_version(),
         edition=Edition.CEE,

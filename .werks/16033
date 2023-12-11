@@ -5,7 +5,7 @@ Component: checks
 Date: 1701086091
 Edition: cre
 Level: 1
-Version: 2.2.0p16
+Version: 2.2.0p17
 
 When custom check plugins that used tuples as dictionary keys in the section crashed,
 the crash creation failed and crashed itself.

@@ -21,7 +21,11 @@ from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE
 class LocatorHelper(ABC):
     """base class for helper classes for certain page elements"""
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self, page: Page, timeout: float = 30000) -> None:
+        # explicitly set all default timeouts
+        page.set_default_timeout(timeout)
+        page.set_default_navigation_timeout(timeout)
+        expect.set_options(timeout=timeout)
         self.page = page
 
     @abstractmethod

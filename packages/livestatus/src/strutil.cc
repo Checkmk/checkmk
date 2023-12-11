@@ -25,13 +25,3 @@ char *next_token(char **c, char delim) {
     }
     return begin;
 }
-
-/* same as next_token() but returns "" instead of 0 if
-   no tokens has been found */
-const char *safe_next_token(char **c, char delim) {
-    if (*c == nullptr) {
-        return "";
-    }
-    char *result = next_token(c, delim);
-    return result != nullptr ? result : "";
-}

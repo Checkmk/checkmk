@@ -59,8 +59,7 @@ def test_create_agent_parse_function() -> None:
 
 def test_create_snmp_parse_function() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
-        original_parse_function=old_school_parse_function,
-        handle_empty_info=False,
+        original_parse_function=old_school_parse_function
     )
 
     with pytest.raises(ValueError):
@@ -75,15 +74,6 @@ def test_create_snmp_parse_function() -> None:
     assert compliant_parse_function(arbitrary_non_empty_input) == old_school_parse_function(
         arbitrary_non_empty_input
     )
-
-
-def test_create_snmp_parse_function_handle_empty() -> None:
-    compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
-        original_parse_function=old_school_parse_function,
-        handle_empty_info=True,
-    )
-
-    assert compliant_parse_function([[]]) == old_school_parse_function([[]])
 
 
 def test_create_snmp_section_plugin_from_legacy() -> None:

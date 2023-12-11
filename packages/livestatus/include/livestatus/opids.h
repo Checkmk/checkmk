@@ -9,6 +9,8 @@
 #include <iosfwd>
 #include <memory>
 #include <string>
+#include <string_view>
+
 class RegExp;
 
 enum class RelationalOperator {
@@ -28,7 +30,7 @@ enum class RelationalOperator {
 
 std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp);
 
-RelationalOperator relationalOperatorForName(const std::string &name);
+RelationalOperator relationalOperatorForName(std::string_view name);
 
 RelationalOperator negateRelationalOperator(RelationalOperator relOp);
 

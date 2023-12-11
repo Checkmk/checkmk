@@ -176,7 +176,7 @@ class PluginConfig:
     """
 
     def __init__(
-        self, *, base_os: OS, lines: list[str], target: Path, include_header: bool = False
+        self, *, base_os: OS, lines: Iterable[str], target: Path, include_header: bool = False
     ) -> None:
         _validate_base_os(base_os)
         _validate_lines(lines)

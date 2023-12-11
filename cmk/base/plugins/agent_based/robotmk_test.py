@@ -15,13 +15,15 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from cmk.plugins.lib.robotmk_rebot_xml import Outcome, RFTest
+from cmk.plugins.lib.robotmk_rebot_xml import Keyword, Outcome, RFTest
 from cmk.plugins.lib.robotmk_suite_and_test_checking import message_if_rebot_is_too_old
 from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResults,
+    Metric,
+    regex,
     register,
     render,
     Result,
@@ -62,7 +64,7 @@ def check(
     if test_report.test.status.status is Outcome.FAIL:
         _transmit_to_livestatus(test_report.html, "suite_last_error_log.html")
 
-    yield from _check_test(
+    yield from _check_test_and_keywords(
         params,
         test_report.test,
         rebot_timestamp=test_report.rebot_timestamp,
@@ -71,7 +73,7 @@ def check(
     )
 
 
-def _check_test(
+def _check_test_and_keywords(
     params: Params,
     test: RFTest,
     *,
@@ -88,6 +90,7 @@ def _check_test(
     ) is not None:
         yield IgnoreResults(rebot_too_old_message)
         return
+
     if test.robot_exit:
         yield IgnoreResults("Test has `robot:exit` tag")
         return
@@ -102,6 +105,39 @@ def _check_test(
             metric_name="robotmk_test_runtime",
             render_func=render.timespan,
         )
+
+    for keyword in test.keywords:
+        if (
+            keyword.status.status.status is Outcome.PASS
+            and (runtime := keyword.status.status.runtime) is not None
+        ):
+            yield from _check_keyword(
+                runtime_thresholds=params["runtime_thresholds_keywords"],
+                keyword=keyword,
+                runtime=runtime,
+            )
+
+
+def _check_keyword(
+    *,
+    runtime_thresholds: Sequence[tuple[str, tuple[int, int] | None]],
+    keyword: Keyword,
+    runtime: float,
+) -> CheckResult:
+    for pattern, thresholds in runtime_thresholds:
+        if regex(pattern).match(keyword.name):
+            if thresholds:
+                yield from check_levels(
+                    runtime,
+                    label=f"Keyword {keyword.name} runtime",
+                    levels_upper=thresholds,
+                    metric_name=f"robotmk_{keyword.metric_name}_runtime",
+                    render_func=render.timespan,
+                )
+                return
+
+            yield Metric(f"robotmk_{keyword.metric_name}_runtime", runtime)
+            return
 
 
 def _transmit_to_livestatus(

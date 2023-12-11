@@ -1274,11 +1274,11 @@ class ImmutableTree:
     def filter(self, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
         return _filter_tree(self, _make_filter_tree(filters))
 
-    def merge(self, rhs: ImmutableTree) -> ImmutableTree:
-        return _merge_nodes(self, rhs)
+    def merge(self, right: ImmutableTree) -> ImmutableTree:
+        return _merge_nodes(self, right)
 
-    def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
-        return _compare_trees(self, rhs)
+    def difference(self, right: ImmutableTree) -> ImmutableDeltaTree:
+        return _compare_trees(self, right)
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return self.get_tree(path).attributes.pairs.get(key)

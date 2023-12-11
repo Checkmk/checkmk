@@ -156,36 +156,35 @@ std::vector<std::string> PluginsBaseProvider::gatherAllowedExtensions() const {
 }
 
 void PluginsBaseProvider::loadConfig() {
-    auto folder_vector = exec_type_ == ExecType::local
-                             ? cfg::groups::g_local_group.folders()
-                             : cfg::groups::g_plugins.folders();
+    const auto folder_vector = exec_type_ == ExecType::local
+                                   ? cfg::groups::g_local_group.folders()
+                                   : cfg::groups::g_plugins.folders();
 
     PathVector pv;
-    for (auto &folder : folder_vector) {
+    for (auto &&folder : folder_vector) {
         pv.emplace_back(folder);
     }
 
     // linking all files, execute and extensions
     auto files = cma::GatherAllFiles(pv);
     XLOG::t("Found [{}] files to execute", files.size());
-    auto exts = gatherAllowedExtensions();
+    const auto extensions = gatherAllowedExtensions();
 
-    LogExecuteExtensions("Allowed Extensions:", exts);
-    if (exts.empty()) {
+    LogExecuteExtensions("Allowed Extensions:", extensions);
+    if (extensions.empty()) {
         XLOG::l("There are no allowed extensions in config. This is strange.");
     }
 
-    FilterPathByExtension(files, exts);
+    FilterPathByExtension(files, extensions);
     RemoveForbiddenNames(files);
 
     XLOG::d.t("Left [{}] files to execute", files.size());
 
-    auto yaml_units =
+    const auto yaml_units =
         cfg::GetArray<YAML::Node>(cfg_name_, cfg::vars::kPluginsExecution);
 
     // linking exe units with all plugins in map
-    std::vector<cfg::Plugins::ExeUnit> exe_units;
-    cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
+    const auto  exe_units  = cfg::LoadExeUnitsFromYaml(yaml_units);
     UpdatePluginMap(
         getHostSp() == nullptr ? nullptr : getHostSp()->getInternalUsers(), pm_,
         exec_type_, files, exe_units, true);
@@ -202,21 +201,16 @@ std::string ToString(const std::vector<char> &v) {
 }  // namespace
 
 void PluginsBaseProvider::gatherAllData(std::string &out) {
-    int last_count = 0;
-    const auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
-    last_count_ += last_count;
-
-    const auto data_async = RunAsyncPlugins(pm_, last_count, true);
-    last_count_ += last_count;
-
+    const auto [data_sync, sync_count] = RunSyncPlugins(pm_, timeout());
+    const auto [data_async, async_count] = RunAsyncPlugins(pm_, true);
+    last_count_ += sync_count + async_count;
     out += ToString(data_sync);
     out += ToString(data_async);
 }
 
 void PluginsBaseProvider::preStart() {
     loadConfig();
-    int last_count = 0;
-    RunAsyncPlugins(pm_, last_count, true);
+    RunAsyncPlugins(pm_, true);
 }
 
 void PluginsBaseProvider::detachedStart() {

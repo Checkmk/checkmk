@@ -1515,7 +1515,8 @@ void StartSyncPlugins(PluginMap &plugins,
     }
 }
 
-DataBlock RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
+std::pair<std::vector<char>, int> RunSyncPlugins(PluginMap &plugins,
+                                                 int timeout) {
     XLOG::d.t("To start [{}] sync plugins", plugins.size());
 
     std::vector<std::future<DataBlock>> results;
@@ -1531,8 +1532,7 @@ DataBlock RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
         }
     }
 
-    total = delivered_count;
-    return out;
+    return {out, delivered_count};
 }
 
 void RunDetachedPlugins(const PluginMap & /*plugins_map*/,
@@ -1570,10 +1570,8 @@ void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
     }
 }
 
-std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
-                                  bool start_immediately) {
-    total = 0;
-
+std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
+                                                  bool start_immediately) {
     std::vector<char> out;
 
     int count = 0;
@@ -1587,8 +1585,7 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
         }
         tools::AddVector(out, ret);
     }
-    total = count;
-    return out;
+    return {out, count};
 }
 }  // namespace cma
 

@@ -71,6 +71,64 @@ class Integer:
 
 
 @dataclass(frozen=True)
+class Float:
+    """Specifies an input field for floating point numbers
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
+        unit: Unit of the input (only for display)
+        display_precision: How many decimal places to display
+        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
+                       whether to leave the field empty or to prefill it with a canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+    unit: Localizable | None = None
+    display_precision: int | None = None
+
+    prefill_value: float | None = None
+
+    transform: Transform[float] | Migrate[float] | None = None
+
+    custom_validate: Callable[[float], object] | None = None
+
+
+@dataclass(frozen=True)
+class DataSize:
+    """Specifies an input field for data storage capacity
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
+        prefill_value: Value in bytes to pre-populate the form field with. If None, the backend will
+                       decide whether to leave the field empty or to prefill it with a canonical
+                       value.
+        transform: Specify if/how the raw input value in bytes should be changed when loaded into
+                   the form/saved from the form
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+    prefill_value: int | None = None
+
+    transform: Transform[int] | Migrate[int] | None = None
+
+    custom_validate: Callable[[int], object] | None = None
+
+
+@dataclass(frozen=True)
 class Percentage:
     """Specifies an input field for percentages
 
@@ -455,7 +513,7 @@ class Levels:
         transform: Transformation of the stored level configuration
     """
 
-    form_spec: type[Integer | Percentage]  # TODO: any numeric FormSpec
+    form_spec: type[Integer | Float | DataSize | Percentage]  # TODO: any numeric FormSpec
     lower: tuple[FixedLevels, PredictiveLevels | None] | None
     upper: tuple[FixedLevels, PredictiveLevels | None] | None
 
@@ -471,6 +529,8 @@ ItemFormSpec = TextInput | DropdownChoice
 
 FormSpec = (
     Integer
+    | Float
+    | DataSize
     | Percentage
     | TextInput
     | Tuple

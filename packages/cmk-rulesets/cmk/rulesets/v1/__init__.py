@@ -6,6 +6,7 @@
 from cmk.rulesets.v1._form_spec import (
     CascadingDropdown,
     CascadingDropdownElement,
+    DataSize,
     DictElement,
     Dictionary,
     DisplayUnits,
@@ -13,6 +14,7 @@ from cmk.rulesets.v1._form_spec import (
     DropdownChoiceElement,
     FixedLevels,
     FixedValue,
+    Float,
     FormSpec,
     Integer,
     InvalidElementMode,
@@ -99,4 +101,6 @@ __all__ = [
     "Levels",
     "FixedLevels",
     "PredictiveLevels",
+    "DataSize",
+    "Float",
 ]

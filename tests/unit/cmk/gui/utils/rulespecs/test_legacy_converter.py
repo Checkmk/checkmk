@@ -124,6 +124,54 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Integer",
         ),
         pytest.param(
+            api_v1.Float(),
+            legacy_valuespecs.Float(),
+            id="minimal Float",
+        ),
+        pytest.param(
+            api_v1.Float(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                unit=api_v1.Localizable("1/s"),
+                display_precision=2,
+                prefill_value=-1.0,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Float(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                display_format="%.2f",
+                unit=_("1/s"),
+                default_value=-1.0,
+                validate=lambda x, y: None,
+            ),
+            id="Float",
+        ),
+        pytest.param(
+            api_v1.DataSize(),
+            legacy_valuespecs.Filesize(),
+            id="minimal DataSize",
+        ),
+        pytest.param(
+            api_v1.DataSize(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                prefill_value=-1,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Filesize(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                default_value=-1,
+                validate=lambda x, y: None,
+            ),
+            id="DataSize",
+        ),
+        pytest.param(
             api_v1.Percentage(),
             legacy_valuespecs.Percentage(),
             id="minimal Percentage",
@@ -844,6 +892,8 @@ def test_transform(
     "form_spec",
     [
         api_v1.Integer(),
+        api_v1.Float(),
+        api_v1.DataSize(),
         api_v1.Percentage(),
         api_v1.TextInput(),
         api_v1.Tuple(elements=[]),

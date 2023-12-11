@@ -1071,6 +1071,46 @@ def test_real_merge_with_table() -> None:
     assert len(table.rows) == 5
 
 
+def test_merge_with_empty_tables() -> None:
+    left_node = StructuredDataNode()
+    left_node.add_table(Table())
+    right_node = StructuredDataNode()
+    right_node.add_table(Table())
+    assert left_node.merge_with(right_node).is_equal(StructuredDataNode())
+
+
+def test_merge_with_empty_left_table() -> None:
+    left_node = StructuredDataNode()
+    left_node.add_table(Table())
+
+    right_table = Table(key_columns=["key-column"])
+    right_table.add_rows([{"key-column": "Key Column", "value": "Value"}])
+    right_node = StructuredDataNode()
+    right_node.add_table(right_table)
+
+    expected_table = Table(key_columns=["key-column"])
+    expected_table.add_rows([{"key-column": "Key Column", "value": "Value"}])
+    expected_node = StructuredDataNode()
+    expected_node.add_table(expected_table)
+    assert left_node.merge_with(right_node).is_equal(expected_node)
+
+
+def test_merge_with_empty_right_table() -> None:
+    left_table = Table(key_columns=["key-column"])
+    left_table.add_rows([{"key-column": "Key Column", "value": "Value"}])
+    left_node = StructuredDataNode()
+    left_node.add_table(left_table)
+
+    right_node = StructuredDataNode()
+    right_node.add_table(Table())
+
+    expected_table = Table(key_columns=["key-column"])
+    expected_table.add_rows([{"key-column": "Key Column", "value": "Value"}])
+    expected_node = StructuredDataNode()
+    expected_node.add_table(expected_table)
+    assert left_node.merge_with(right_node).is_equal(expected_node)
+
+
 @pytest.mark.parametrize(
     "paths, unavail",
     [

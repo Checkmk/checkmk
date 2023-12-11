@@ -1,0 +1,10 @@
+Title: downtimes: Fix performance issues when creating downtimes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1703062568
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+This Werk fixes a performance issue that occurred when creating downtimes for services in a distributed monitoring environment.

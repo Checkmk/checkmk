@@ -25112,7 +25112,7 @@ msgid "Hostname (exact match)"
 msgstr "Hostname (exakte Übereinstimmung)"
 
 msgid "Hostname (regex)"
-msgstr "Host-Kontakt (regex)"
+msgstr "Host-Name (regex)"
 
 msgid "Hostname / IP address"
 msgstr "Hostname / IP-Adresse"

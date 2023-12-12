@@ -13,25 +13,13 @@ from tests.testlib.utils import wait_until
 
 @pytest.fixture(name="disable_checks")
 def fixture_disable_checks(site: Site) -> Iterator[None]:
-    site.live.command("STOP_EXECUTING_HOST_CHECKS")
-    wait_until(lambda: site.is_global_flag_disabled("execute_host_checks"), timeout=60, interval=1)
-
-    site.live.command("STOP_EXECUTING_SVC_CHECKS")
-    wait_until(
-        lambda: site.is_global_flag_disabled("execute_service_checks"), timeout=60, interval=1
-    )
-
+    site.stop_host_checks()
+    site.stop_active_services()
     try:
         yield
     finally:
-        site.live.command("START_EXECUTING_HOST_CHECKS")
-        wait_until(
-            lambda: site.is_global_flag_enabled("execute_host_checks"), timeout=60, interval=1
-        )
-        site.live.command("START_EXECUTING_SVC_CHECKS")
-        wait_until(
-            lambda: site.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
-        )
+        site.start_host_checks()
+        site.start_active_services()
 
 
 @pytest.fixture(name="disable_flap_detection")

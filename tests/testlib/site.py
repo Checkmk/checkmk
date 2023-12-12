@@ -37,6 +37,7 @@ from tests.testlib.utils import (
     repo_path,
     restart_httpd,
     spawn_expect_process,
+    wait_until,
     write_file,
 )
 from tests.testlib.version import CMKVersion, get_min_version, version_from_env, version_gte
@@ -1271,6 +1272,34 @@ class Site:
 
     def _get_global_flag(self, column: str) -> bool:
         return bool(self.live.query_value(f"GET status\nColumns: {column}\n") == 1)
+
+    def stop_host_checks(self) -> None:
+        logger.info("Stopping execution of host-checks...")
+        self.live.command("STOP_EXECUTING_HOST_CHECKS")
+        wait_until(
+            lambda: self.is_global_flag_disabled("execute_host_checks"), timeout=60, interval=1
+        )
+
+    def start_host_checks(self) -> None:
+        logger.info("Starting execution of host-checks...")
+        self.live.command("START_EXECUTING_HOST_CHECKS")
+        wait_until(
+            lambda: self.is_global_flag_enabled("execute_host_checks"), timeout=60, interval=1
+        )
+
+    def stop_active_services(self) -> None:
+        logger.info("Stopping execution of active services...")
+        self.live.command("STOP_EXECUTING_SVC_CHECKS")
+        wait_until(
+            lambda: self.is_global_flag_disabled("execute_service_checks"), timeout=60, interval=1
+        )
+
+    def start_active_services(self) -> None:
+        logger.info("Starting execution of active services...")
+        self.live.command("START_EXECUTING_SVC_CHECKS")
+        wait_until(
+            lambda: self.is_global_flag_enabled("execute_service_checks"), timeout=60, interval=1
+        )
 
 
 class SiteFactory:

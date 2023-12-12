@@ -7,6 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.testlib import wait_until
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name, current_branch_version, run
 from tests.testlib.version import CMKVersion, Edition, get_min_version
@@ -48,6 +49,12 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Enable bulk mode execution",
+    )
+    parser.addoption(
+        "--enable-core-scheduling",
+        action="store_true",
+        default=False,
+        help="Enable core scheduling (disabled by default)",
     )
     parser.addoption(
         "--chunk-index",
@@ -149,6 +156,27 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         checks.setup_site(site, dump_path)
 
         yield site
+
+        if not request.config.getoption("--enable-core-scheduling"):
+            logger.info("Stopping execution of host-checks...")
+            site.live.command("STOP_EXECUTING_HOST_CHECKS")
+            wait_until(
+                lambda: site.is_global_flag_disabled(  # pylint: disable=cell-var-from-loop
+                    "execute_host_checks"
+                ),
+                timeout=60,
+                interval=1,
+            )
+
+            logger.info("Stopping execution of active services...")
+            site.live.command("STOP_EXECUTING_SVC_CHECKS")
+            wait_until(
+                lambda: site.is_global_flag_disabled(  # pylint: disable=cell-var-from-loop
+                    "execute_service_checks"
+                ),
+                timeout=60,
+                interval=1,
+            )
 
         if not skip_cleanup:
             # cleanup existing agent-output folder in the test site

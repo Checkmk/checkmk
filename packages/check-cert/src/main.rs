@@ -63,6 +63,21 @@ impl PubKeyAlgorithm {
     }
 }
 
+fn parse_levels<F, T1, T2, U>(strat: LevelsStrategy, lvl: Vec<T1>, mut conv: F) -> LevelsChecker<U>
+where
+    T1: std::fmt::Debug,
+    T2: std::fmt::Debug + std::convert::From<T1>,
+    U: Clone + std::default::Default + std::cmp::PartialOrd,
+    F: FnMut(T2) -> U,
+{
+    let lvl: [_; 2] = lvl.try_into().expect("invalid arg count");
+    let Ok(lvl_chk) = LevelsChecker::try_new(strat, Levels::from(&mut lvl.map(|x| conv(x.into()))))
+    else {
+        check::bail_out("invalid args")
+    };
+    lvl_chk
+}
+
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
 struct Args {
@@ -135,27 +150,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args = Args::parse();
 
-    let not_after: [_; 2] = args
-        .not_after
-        .try_into()
-        .expect("invalid arg count for not_after");
-    let Ok(not_after_levels_checker) = LevelsChecker::try_new(
-        LevelsStrategy::Lower,
-        Levels::from(&mut not_after.map(|v| v * Duration::DAY)),
-    ) else {
-        check::bail_out("invalid args: not after crit level larger than warn")
-    };
-
-    let response_time: [_; 2] = args
-        .response_time
-        .try_into()
-        .expect("invalid arg count for response_time");
-    let Ok(response_time_levels_checker) = LevelsChecker::try_new(
+    let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::days);
+    let response_time = parse_levels(
         LevelsStrategy::Upper,
-        Levels::from(&mut response_time.map(|v| v * Duration::MILLISECOND)),
-    ) else {
-        check::bail_out("invalid args: response time crit higher than warn")
-    };
+        args.response_time,
+        Duration::milliseconds,
+    );
 
     let Ok(trust_store) = (match args.ca_store {
         Some(ca_store) => truststore::load_store(&ca_store),
@@ -176,16 +176,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(chain) => chain,
         Err(err) => check::abort(format!("{:?}", err)),
     };
-    let response_time = start.elapsed();
+    let elapsed = start.elapsed();
 
     if chain.is_empty() {
         check::abort("Empty or invalid certificate chain on host")
     }
 
     let mut collection = fetcher_check::check(
-        response_time,
+        elapsed,
         FetcherChecks::builder()
-            .response_time(Some(response_time_levels_checker))
+            .response_time(Some(response_time))
             .build(),
     );
     collection.join(&mut certificate::check(
@@ -200,7 +200,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
-            .not_after(Some(not_after_levels_checker))
+            .not_after(Some(not_after))
             .build(),
     ));
     collection.join(&mut verification::check(

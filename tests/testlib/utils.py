@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import dataclasses
 import logging
 import os
@@ -13,6 +11,9 @@ import shlex
 import subprocess
 import sys
 import textwrap
+
+# pylint: disable=redefined-outer-name
+import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
@@ -562,3 +563,13 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
             execute(["rm", cognito_config])
         if write_global_config:
             execute(["rm", global_config])
+
+
+def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
+    start = time.time()
+    while time.time() - start < timeout:
+        if condition():
+            return  # Success. Stop waiting...
+        time.sleep(interval)
+
+    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))

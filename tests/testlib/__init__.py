@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Collection, Iterator, Mapping
+from collections.abc import Collection, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -41,6 +41,7 @@ from tests.testlib.utils import (
     repo_path,
     site_id,
     virtualenv_path,
+    wait_until,
 )
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
@@ -149,16 +150,6 @@ def import_module_hack(pathname: str) -> ModuleType:
     sys.modules[name] = module
     loader.exec_module(module)
     return module
-
-
-def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
-    start = time.time()
-    while time.time() - start < timeout:
-        if condition():
-            return  # Success. Stop waiting...
-        time.sleep(interval)
-
-    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
@@ -450,7 +441,6 @@ __all__ = [
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "wait_until",
     "on_time",
     "set_timezone",
     "Site",

@@ -20,7 +20,7 @@ from docker.models.images import Image  # type: ignore[import]
 from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
-from tests.testlib.utils import repo_path
+from tests.testlib.utils import repo_path, wait_until
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
@@ -261,7 +261,7 @@ def _start(
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
+        wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
         output = c.logs().decode("utf-8")
 
         if not is_update:

@@ -34,7 +34,7 @@ fn check_response_time(
             ),
             LevelsCheckerArgs::builder()
                 .label("response_time")
-                .uom("ms")
+                .uom("ms".parse().unwrap())
                 .build(),
         )
     })

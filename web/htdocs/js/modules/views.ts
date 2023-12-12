@@ -104,6 +104,7 @@ function reschedule_check_response_handler(
 export function add_to_visual(
     visual_type: string,
     visual_name: string,
+    source_type: string,
     context: Record<string, any>
 ) {
     const target_visual = document.getElementById(
@@ -141,7 +142,8 @@ export function add_to_visual(
         // from it. target_visual is e.g. "AWS EC2 instances
         // (aws_ec2_overview)"
         target_id +
-        "&type=view";
+        "&type=" +
+        source_type;
 
     ajax.call_ajax(url, {
         method: "POST",

@@ -1175,9 +1175,9 @@ async fn add_custom_instances(
     ms_sql: &config::ms_sql::Config,
     detected: &[SqlInstance],
 ) -> Result<Vec<SqlInstance>> {
-    let (mut sql_instances, name_to_custom_map) = process_detected(ms_sql, detected);
+    let (mut sql_instances, name_to_custom_instance_map) = process_detected(ms_sql, detected);
 
-    for (name, instance) in name_to_custom_map.into_iter() {
+    for (name, instance) in name_to_custom_instance_map.into_iter() {
         match create_from_config(&instance.endpoint()).await {
             Ok(mut client) => {
                 if let Some(properties) = ensure_required_instance(&mut client, name).await {
@@ -1236,19 +1236,19 @@ fn process_detected<'a>(
     ms_sql: &'a config::ms_sql::Config,
     detected: &[SqlInstance],
 ) -> (Vec<SqlInstance>, HashMap<&'a String, &'a CustomInstance>) {
-    let mut name_to_custom_map: HashMap<&String, &CustomInstance> =
+    let mut name_to_custom_instance_map: HashMap<&String, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
     let sql_instances = detected
         .iter()
         .filter_map(
-            |sql_instance| match name_to_custom_map.get(&sql_instance.name) {
+            |sql_instance| match name_to_custom_instance_map.get(&sql_instance.name) {
                 None => {
                     log::info!("Add detected instance {} as absent", sql_instance.name);
                     Some(sql_instance.clone())
                 }
                 Some(instance) if instance.endpoint() == sql_instance.endpoint => {
                     log::info!("Add detected instance {}: as same", sql_instance.name);
-                    name_to_custom_map.remove(&sql_instance.name);
+                    name_to_custom_instance_map.remove(&sql_instance.name);
                     Some(sql_instance.clone())
                 }
                 _ => {
@@ -1258,7 +1258,7 @@ fn process_detected<'a>(
             },
         )
         .collect::<Vec<SqlInstance>>();
-    (sql_instances, name_to_custom_map)
+    (sql_instances, name_to_custom_instance_map)
 }
 
 /// Intelligent async processing of the data

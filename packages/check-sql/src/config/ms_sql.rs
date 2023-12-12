@@ -41,7 +41,7 @@ mod keys {
 
     pub const MODE: &str = "mode";
 
-    pub const CUSTOM: &str = "custom";
+    pub const INSTANCES: &str = "instances";
 
     pub const SID: &str = "sid";
     pub const ALIAS: &str = "alias";
@@ -152,7 +152,7 @@ impl Config {
         let conn = Connection::from_yaml(main)?.unwrap_or_default();
         let sections = Sections::from_yaml(main)?.unwrap_or_default();
         let custom_instances: Result<Vec<CustomInstance>> = main
-            .get_yaml_vector(keys::CUSTOM)
+            .get_yaml_vector(keys::INSTANCES)
             .into_iter()
             .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &sections))
             .collect();
@@ -767,7 +767,7 @@ mssql:
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
-    custom: # optional
+    instances: # optional
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
         connection: # optional,  same as above
@@ -1203,7 +1203,7 @@ mssql:
       detect: true # doesnt matter for us
       include: {include:?}
       exclude: {exclude:?}
-    custom:
+    instances:
       - sid: sid1
       - sid: sid2
         connection:

@@ -5,14 +5,14 @@
 
 from __future__ import annotations
 
-import abc
 import argparse
 import logging
+from abc import abstractmethod
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import meraki  # type: ignore[import]
 from typing_extensions import TypedDict
@@ -47,6 +47,9 @@ _SECTION_NAME_MAP = {
     _SEC_NAME_DEVICE_STATUSES: "device_status",
     _SEC_NAME_SENSOR_READINGS: "sensor_readings",
 }
+
+_DEFAULT_CACHE_INTERVAL = 86400
+_MIN_CACHE_INTERVAL = 300
 
 MerakiAPIData = Mapping[str, object]
 
@@ -100,15 +103,12 @@ class Section:
         return "_".join(["cisco_meraki", self.api_data_source.name, self.name])
 
 
-# .
-#   .--caches--------------------------------------------------------------.
-#   |                                  _                                   |
-#   |                    ___ __ _  ___| |__   ___  ___                     |
-#   |                   / __/ _` |/ __| '_ \ / _ \/ __|                    |
-#   |                  | (_| (_| | (__| | | |  __/\__ \                    |
-#   |                   \___\__,_|\___|_| |_|\___||___/                    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
+@dataclass(frozen=True)
+class MerakiConfig:
+    dashboard: meraki.DashboardAPI
+    hostname: str
+    section_names: Sequence[str]
+    use_cache: bool = False
 
 
 class _Organisation(TypedDict):
@@ -118,56 +118,153 @@ class _Organisation(TypedDict):
     name: str
 
 
-class _ABCGetOrganisationsCache(DataCache):
-    def __init__(self, config: MerakiConfig) -> None:
-        super().__init__(_BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
-        self._dashboard = config.dashboard
+# .
+#   .--caches--------------------------------------------------------------.
+#   |                                  _                                   |
+#   |                    ___ __ _  ___| |__   ___  ___                     |
+#   |                   / __/ _` |/ __| '_ \ / _ \/ __|                    |
+#   |                  | (_| (_| | (__| | | |  __/\__ \                    |
+#   |                   \___\__,_|\___|_| |_|\___||___/                    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+#
+# --\ DataCache
+#   |
+#   |--\ MerakiSection
+#      |  - adds cache_interval = _DEFAULT_CACHE_INTERVAL
+#      |  - adds get_validity_from_args = True
+#      |
+#      |--> MerakiGetOrganizations
+#      |
+#      |--\ MerakiSectionOrg
+#      |  |  - adds org_id parameter
+#      |  |
+#      |  |--> MerakiGetOrganization
+#      |  |--> MerakiGetOrganizationLicensesOverview
+#      |  |--> MerakiGetOrganizationDevices
+#      |  |--> MerakiGetOrganizationDevicesStatuses
+#      |  |--> MerakiGetOrganizationSensorReadingsLatest
+
+
+class MerakiSection(DataCache):
+    def __init__(
+        self,
+        config: MerakiConfig,
+        cache_interval: int = _DEFAULT_CACHE_INTERVAL,
+    ):
+        self._config = config
+        self._cache_dir = _BASE_CACHE_FILE_DIR / self._config.hostname
+        self._cache_interval = cache_interval
+        super().__init__(self._cache_dir, self.name)
 
     @property
-    def cache_interval(self) -> int:
-        # Once per day
-        return 86400
-
-    def get_validity_from_args(self, *args: object) -> bool:
-        return True
-
-    @abc.abstractmethod
-    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+    @abstractmethod
+    def name(self):
         raise NotImplementedError()
 
+    @property
+    def cache_interval(self):
+        return self._cache_interval
 
-class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
-    def __init__(self, config: MerakiConfig, org_ids: Sequence[str]) -> None:
-        super().__init__(config)
-        self._org_ids = org_ids
-
-    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
-        def _get_organisation(org_id: str) -> _Organisation:
-            try:
-                org = self._dashboard.organizations.getOrganization(org_id)
-            except meraki.exceptions.APIError as e:
-                _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
-                return _Organisation(id_=org_id, name="")
-            return _Organisation(
-                id_=org[_API_NAME_ORGANISATION_ID],
-                name=org[_API_NAME_ORGANISATION_NAME],
-            )
-
-        return [_get_organisation(org_id) for org_id in self._org_ids]
+    def get_validity_from_args(self, *args: Any) -> bool:
+        # always True. For now there are no changing arguments, related to the cache
+        return True
 
 
-class GetOrganisationsCache(_ABCGetOrganisationsCache):
-    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+class MerakiSectionOrg(MerakiSection):
+    def __init__(
+        self,
+        config: MerakiConfig,
+        org_id: str,
+        cache_interval: int = _DEFAULT_CACHE_INTERVAL,
+    ):
+        self._org_id = org_id
+        super().__init__(config=config, cache_interval=cache_interval)
+
+
+class MerakiGetOrganizations(MerakiSection):
+    @property
+    def name(self):
+        return "getOrganizations"
+
+    def get_live_data(self, *args):
         try:
-            return [
-                _Organisation(
-                    id_=organisation[_API_NAME_ORGANISATION_ID],
-                    name=organisation[_API_NAME_ORGANISATION_NAME],
-                )
-                for organisation in self._dashboard.organizations.getOrganizations()
-            ]
+            return self._config.dashboard.organizations.getOrganizations()
         except meraki.exceptions.APIError as e:
             _LOGGER.debug("Get organisations: %r", e)
+            return []
+
+
+class MerakiGetOrganization(MerakiSectionOrg):
+    @property
+    def name(self):
+        return f"getOrganization_{self._org_id}"
+
+    def get_live_data(self, *args):
+        try:
+            return self._config.dashboard.organizations.getOrganization(self._org_id)
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Get organisation by id %r: %r", self._org_id, e)
+            return {}
+
+
+class MerakiGetOrganizationLicensesOverview(MerakiSectionOrg):
+    @property
+    def name(self):
+        return f"getOrganizationLicensesOverview_{self._org_id}"
+
+    def get_live_data(self, *args):
+        try:
+            return self._config.dashboard.organizations.getOrganizationLicensesOverview(
+                self._org_id
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self._org_id, e)
+            return []
+
+
+class MerakiGetOrganizationDevices(MerakiSectionOrg):
+    @property
+    def name(self):
+        return f"getOrganizationDevices_{self._org_id}"
+
+    def get_live_data(self, *args):
+        try:
+            return self._config.dashboard.organizations.getOrganizationDevices(
+                self._org_id, total_pages="all"
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get devices: %r", self._org_id, e)
+            return {}
+
+
+class MerakiGetOrganizationDevicesStatuses(MerakiSectionOrg):
+    @property
+    def name(self):
+        return f"getOrganizationDevicesStatuses_{self._org_id}"
+
+    def get_live_data(self, *args):
+        try:
+            return self._config.dashboard.organizations.getOrganizationDevicesStatuses(
+                self._org_id, total_pages="all"
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self._org_id, e)
+            return []
+
+
+class MerakiGetOrganizationSensorReadingsLatest(MerakiSectionOrg):
+    @property
+    def name(self):
+        return f"getOrganizationSensorReadingsLatest_{self._org_id}"
+
+    def get_live_data(self, *args):
+        try:
+            return self._config.dashboard.sensor.getOrganizationSensorReadingsLatest(
+                self._org_id, total_pages="all"
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self._org_id, e)
             return []
 
 
@@ -220,7 +317,11 @@ class MerakiOrganisation:
             )
 
         if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
-            for device_status in self._get_device_statuses():
+            for device_status in MerakiGetOrganizationDevicesStatuses(
+                config=self.config,
+                org_id=self.organisation_id,
+                cache_interval=_MIN_CACHE_INTERVAL,
+            ).get_data(use_cache=self.config.use_cache):
                 if piggyback := self._get_device_piggyback(device_status, devices_by_serial):
                     yield self._make_section(
                         name=_SEC_NAME_DEVICE_STATUSES,
@@ -229,7 +330,11 @@ class MerakiOrganisation:
                     )
 
         if _SEC_NAME_SENSOR_READINGS in self.config.section_names:
-            for sensor_reading in self._get_sensor_readings():
+            for sensor_reading in MerakiGetOrganizationSensorReadingsLatest(
+                config=self.config,
+                org_id=self.organisation_id,
+                cache_interval=_MIN_CACHE_INTERVAL,
+            ).get_data(use_cache=self.config.use_cache):
                 if piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial):
                     yield self._make_section(
                         name=_SEC_NAME_SENSOR_READINGS,
@@ -251,15 +356,11 @@ class MerakiOrganisation:
             )
             return licenses_overview
 
-        try:
-            return _update_licenses_overview(
-                self.config.dashboard.organizations.getOrganizationLicensesOverview(
-                    self.organisation_id,
-                )
-            )
-        except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
-            return None
+        return _update_licenses_overview(
+            MerakiGetOrganizationLicensesOverview(
+                config=self.config, org_id=self.organisation_id
+            ).get_data(use_cache=self.config.use_cache)
+        )
 
     def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
         def _update_device(device: dict[str, object]) -> MerakiAPIData:
@@ -271,34 +372,12 @@ class MerakiOrganisation:
             )
             return device
 
-        try:
-            return {
-                str(device[_API_NAME_DEVICE_SERIAL]): _update_device(device)
-                for device in self.config.dashboard.organizations.getOrganizationDevices(
-                    self.organisation_id, total_pages="all"
-                )
-            }
-        except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get devices: %r", self.organisation_id, e)
-            return {}
-
-    def _get_device_statuses(self) -> Sequence[MerakiAPIData]:
-        try:
-            return self.config.dashboard.organizations.getOrganizationDevicesStatuses(
-                self.organisation_id, total_pages="all"
-            )
-        except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self.organisation_id, e)
-            return []
-
-    def _get_sensor_readings(self) -> Sequence[MerakiAPIData]:
-        try:
-            return self.config.dashboard.sensor.getOrganizationSensorReadingsLatest(
-                self.organisation_id, total_pages="all"
-            )
-        except meraki.exceptions.APIError as e:
-            _LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self.organisation_id, e)
-            return []
+        return {
+            str(device[_API_NAME_DEVICE_SERIAL]): _update_device(device)
+            for device in MerakiGetOrganizationDevices(
+                config=self.config, org_id=self.organisation_id
+            ).get_data(use_cache=self.config.use_cache)
+        }
 
     def _get_device_piggyback(
         self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
@@ -376,23 +455,26 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         default=[],
         help="Explicit organisation IDs that are checked.",
     )
-
     return parser.parse_args(argv)
-
-
-@dataclass(frozen=True)
-class MerakiConfig:
-    dashboard: meraki.DashboardAPI
-    hostname: str
-    section_names: Sequence[str]
 
 
 def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
     if not _need_organisations(config.section_names):
         return []
-    return (
-        GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
-    ).get_live_data()
+    organisations = [
+        _Organisation(
+            id_=organisation[_API_NAME_ORGANISATION_ID],
+            name=organisation[_API_NAME_ORGANISATION_NAME],
+        )
+        for organisation in MerakiGetOrganizations(config=config).get_data(
+            use_cache=config.use_cache
+        )
+    ]
+    if org_ids:
+        organisations = [
+            organisation for organisation in organisations if organisation["id_"] in org_ids
+        ]
+    return organisations
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:
@@ -426,11 +508,10 @@ def agent_cisco_meraki_main(args: Args) -> int:
         hostname=args.hostname,
         section_names=args.sections,
     )
-
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, organisation)
-            for organisation in _get_organisations(config, args.orgs)
+            MerakiOrganisation(config=config, organisation=organisation)
+            for organisation in _get_organisations(config=config, org_ids=args.orgs)
         ]
     )
 

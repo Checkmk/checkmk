@@ -16,21 +16,11 @@ _ORGANISATIONS = [
 ]
 
 
-class FakeGetOrganisationsByIDCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
-        return _ORGANISATIONS
-
-
-class FakeGetOrganisationsCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
-        return _ORGANISATIONS
-
-
 class FakeOrganisations:
     def getOrganizations(self) -> Sequence[Mapping]:
         return [
-            {"id": "123"},
-            {"id": "456"},
+            {"id": "123", "name": "org-name1"},
+            {"id": "456", "name": "org-name2"},
         ]
 
     def getOrganizationLicensesOverview(self, organisation_id: str) -> Mapping | None:
@@ -74,6 +64,15 @@ class FakeOrganisations:
 
         return []
 
+    def getOrganization(self, organisation_id: str) -> Mapping:
+        if organisation_id == "123":
+            return {"id": "123", "name": "org-name1"}
+        if organisation_id == "456":
+            return {"id": "456", "name": "org-name2"}
+        if organisation_id == "789":
+            return {"id": "789", "name": "org-name3"}
+        return {}
+
 
 class FakeSensor:
     def getOrganizationSensorReadingsLatest(
@@ -94,6 +93,11 @@ class FakeSensor:
 class FakeDashboard:
     organizations = FakeOrganisations()
     sensor = FakeSensor()
+
+
+class FakeMerakiSection:
+    def __init__(self):
+        return None
 
 
 @pytest.mark.parametrize(
@@ -210,15 +214,11 @@ def test_agent_cisco_meraki_main(
         "_configure_meraki_dashboard",
         lambda a, b, c: FakeDashboard(),
     )
+
     monkeypatch.setattr(
         agent_cisco_meraki,
-        "GetOrganisationsByIDCache",
-        lambda *args, **kwargs: FakeGetOrganisationsByIDCache(),
-    )
-    monkeypatch.setattr(
-        agent_cisco_meraki,
-        "GetOrganisationsCache",
-        lambda *args, **kwargs: FakeGetOrganisationsCache(),
+        "MerakiSection",
+        lambda a, b: FakeMerakiSection(),
     )
 
     agent_cisco_meraki.agent_cisco_meraki_main(

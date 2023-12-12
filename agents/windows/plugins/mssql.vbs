@@ -723,15 +723,16 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  ''True'' as is_primary_replica, " & _
             "  ''1'' as is_local, " & _
             "  '''' as replica_id, " & _
-            "  database_name " & _
+            "  sys.databases.name AS database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset " & _
+            "  LEFT OUTER JOIN sys.databases ON sys.databases.name = msdb.dbo.backupset.database_name " & _
             "WHERE " & _
             "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
             "  machine_name, " & _
-            "  database_name " & _
+            "  sys.databases.name " & _
         "' " & _
         "END " & _
         "ELSE " & _
@@ -744,7 +745,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  isnull(rep.is_primary_replica, 0) as is_primary_replica, " & _
             "  rep.is_local, " & _
             "  isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id, " & _
-            "  database_name " & _
+            "  db.name AS database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset b " & _
             "  LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
@@ -758,7 +759,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  rep.replica_id, " & _
             "  rep.is_primary_replica, " & _
             "  rep.is_local, " & _
-            "  b.database_name, " & _
+            "  db.name, " & _
             "  b.machine_name, " & _
             "  rep.synchronization_state, " & _
             "  rep.synchronization_health " & _

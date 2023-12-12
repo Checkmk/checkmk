@@ -9,7 +9,7 @@ astroid = "*"  # used by testlib.pylint_checker_localization
 autoflake = "*"  # used to remove unused import statements
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
-boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
+boto3-stubs = {extras = ["logs"], version = "==1.26.105"}  # used for type checking, keep version in sync with boto3
 botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
 bson = "*"  # used by test_mk_mongodb unit test
 checkmk-dev-tools = "~=0.1.39"  # provides tooling for build artifacts

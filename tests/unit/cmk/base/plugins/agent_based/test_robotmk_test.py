@@ -117,6 +117,7 @@ _Section = Section(
         ),
         "test_result_too_old": TestReport(
             test=Test.model_construct(
+                id="s1-t7",
                 name="Test Result Too Old",
                 status=StatusV6.model_construct(
                     status=Outcome.FAIL,

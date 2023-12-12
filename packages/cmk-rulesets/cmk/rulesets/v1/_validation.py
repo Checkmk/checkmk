@@ -2,9 +2,10 @@
 #  Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 #  This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 #  conditions defined in the file COPYING, which is part of this source code package.
+
 import re
-from collections.abc import Callable, Sequence
-from typing import Sized
+from collections.abc import Sequence
+from typing import Final, Sized
 
 from cmk.rulesets.v1._localize import Localizable
 
@@ -25,55 +26,58 @@ class ValidationError(ValueError):
         return self._message
 
 
-def disallow_empty(
-    error_msg: Localizable = Localizable("An empty value is not allowed here."),
-) -> Callable[[Sequence[object]], None]:
-    def validator(value: Sequence[object]) -> None:
+class DisallowEmpty:  # pylint: disable=too-few-public-methods
+    """Custom validator that makes sure the validated value is not empty."""
+
+    def __init__(self, error_msg: Localizable | None = None) -> None:
+        self.error_msg: Final = error_msg or Localizable("An empty value is not allowed here.")
+
+    def __call__(self, value: Sequence[object]) -> None:
         if value is None or (isinstance(value, Sized) and len(value) == 0):
-            raise ValidationError(error_msg)
-
-    return validator
+            raise ValidationError(self.error_msg)
 
 
-def in_range(
-    min_value: int | float = float("-inf"),
-    max_value: int | float = float("inf"),
-    error_msg: Localizable | None = None,
-) -> Callable[[int | float], None]:
-    def validator(value: int | float) -> None:
-        def _get_error_msg(value_too: str, limit_type: str, limit: int | float) -> Localizable:
-            return (
-                Localizable("%s is too %s. The %s allowed value is %s.")
-                % (str(value), value_too, limit_type, str(limit))
-                if error_msg is None
-                else error_msg
-            )
+class InRange:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated value is in a given interval."""
 
-        if min_value is not None and value < min_value:
-            raise ValidationError(_get_error_msg("low", "minimum", min_value))
-        if max_value is not None and value > max_value:
-            raise ValidationError(_get_error_msg("high", "maximum", max_value))
-
-    return validator
-
-
-def match_regex(
-    regex: str | re.Pattern[str], error_msg: Localizable | None = None
-) -> Callable[[str], None]:
-    def validator(value: str) -> None:
-        if isinstance(regex, re.Pattern):
-            pattern = regex.pattern
-            if regex.match(value):
-                return
-        elif re.match(pattern := regex, value):
-            return
-
-        msg = (
-            Localizable("Your input '%s' does not match the required format '%s'.")
-            % (value, pattern)
-            if error_msg is None
-            else error_msg
+    def __init__(
+        self,
+        min_value: int | float | None = None,
+        max_value: int | float | None = None,
+        error_msg: Localizable | None = None,
+    ) -> None:
+        self.range: Final = (min_value, max_value)
+        self.error_msg: Final = (
+            self._get_default_errmsg(min_value, max_value) if error_msg is None else error_msg
         )
-        raise ValidationError(msg)
 
-    return validator
+    @staticmethod
+    def _get_default_errmsg(min_: float | None, max_: float | None) -> Localizable:
+        if min_ is None:
+            if max_ is None:
+                return Localizable("This message is not supposed to be used. Ever.")
+            return Localizable("The maximum allowed value is %s.") % str(max_)
+
+        if max_ is None:
+            return Localizable("The minimum allowed value is %s.") % str(min_)
+        return Localizable("Allowed values range from %s to %s.") % (str(min_), str(max_))
+
+    def __call__(self, value: int | float) -> None:
+        if self.range[0] is not None and value < self.range[0]:
+            raise ValidationError(self.error_msg)
+        if self.range[1] is not None and self.range[1] < value:
+            raise ValidationError(self.error_msg)
+
+
+class MatchRegex:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated value matches the given regular expression."""
+
+    def __init__(self, regex: re.Pattern[str] | str, error_msg: Localizable | None = None) -> None:
+        self.regex: Final = re.compile(regex) if isinstance(regex, str) else regex
+        self.error_msg: Final = error_msg or (
+            Localizable("Your input does not match the required format '%s'.") % self.regex.pattern
+        )
+
+    def __call__(self, value: str) -> None:
+        if not self.regex.match(value):
+            raise ValidationError(self.error_msg)

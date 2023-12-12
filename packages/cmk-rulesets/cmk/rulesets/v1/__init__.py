@@ -57,7 +57,7 @@ from cmk.rulesets.v1._rule_spec import (
     SNMPRuleSpec,
     SpecialAgentRuleSpec,
 )
-from cmk.rulesets.v1._validation import disallow_empty, in_range, match_regex, ValidationError
+from cmk.rulesets.v1._validation import DisallowEmpty, InRange, MatchRegex, ValidationError
 
 __all__ = [
     "ActiveChecksRuleSpec",
@@ -71,7 +71,7 @@ __all__ = [
     "DataSize",
     "DictElement",
     "Dictionary",
-    "disallow_empty",
+    "DisallowEmpty",
     "DisplayUnits",
     "DropdownChoice",
     "DropdownChoiceElement",
@@ -85,7 +85,7 @@ __all__ = [
     "Float",
     "FormSpec",
     "HostMonitoringRuleSpec",
-    "in_range",
+    "InRange",
     "Integer",
     "InvalidElementMode",
     "InvalidElementValidator",
@@ -94,7 +94,7 @@ __all__ = [
     "Levels",
     "List",
     "Localizable",
-    "match_regex",
+    "MatchRegex",
     "Migrate",
     "MonitoringState",
     "NotificationParametersRuleSpec",

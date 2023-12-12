@@ -150,8 +150,9 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    skip_cleanup = request.config.getoption("--skip-cleanup")
-    for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
+    for site in get_site_factory(prefix="plugins_").get_test_site(
+        auto_cleanup=not checks.config.skip_cleanup
+    ):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 
@@ -178,7 +179,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
                 interval=1,
             )
 
-        if not skip_cleanup:
+        if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
             assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
@@ -200,14 +201,13 @@ def _get_site_update(
     site_factory_update: SiteFactory, request: pytest.FixtureRequest
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    skip_cleanup = request.config.getoption("--skip-cleanup")
-    for site in site_factory_update.get_test_site(auto_cleanup=not skip_cleanup):
+    for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 
         yield site
 
-        if not skip_cleanup:
+        if not checks.config.skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
             assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
@@ -222,5 +222,5 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
     checks.setup_hosts(test_site, host_names)
     yield
-    if os.getenv("CLEANUP", "1") == "1" and not pytestconfig.getoption("--skip-cleanup"):
+    if os.getenv("CLEANUP", "1") == "1" and not checks.config.skip_cleanup:
         checks.cleanup_hosts(test_site, host_names)

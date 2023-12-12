@@ -74,7 +74,8 @@ class Keyword:
         return match.group(0) if (match := re.search(r"^(s\d-)+(t\d)", self.id)) else None
 
 
-class Test(BaseModel, frozen=True):
+# Don't call `Test` only, otherwise, pytest will attempt to collect and produce a warning.
+class RFTest(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
     status: StatusV6 | StatusV7
@@ -91,7 +92,7 @@ def _ensure_sequence(
 class Suite(BaseModel, frozen=True):
     name: str = Field(alias="@name")
     suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_sequence)] = Field(default=[])
-    test: Annotated[Sequence[Test], BeforeValidator(_ensure_sequence)] = Field(default=[])
+    test: Annotated[Sequence[RFTest], BeforeValidator(_ensure_sequence)] = Field(default=[])
     status: StatusV6 | StatusV7
 
 

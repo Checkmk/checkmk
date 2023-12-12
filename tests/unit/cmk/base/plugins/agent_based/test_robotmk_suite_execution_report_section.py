@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.robotmk_suite_execution_report_section import 
     parse,
 )
 
-from cmk.plugins.lib.robotmk_rebot_xml import Keyword, Outcome, StatusV6, Suite, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Keyword, Outcome, RFTest, StatusV6, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptsConfig,
@@ -50,7 +50,7 @@ def test_parse() -> None:
                         name="Tasks",
                         suite=[],
                         test=[
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t1",
                                 name="Count My Veggies",
                                 status=StatusV6.model_construct(
@@ -79,7 +79,7 @@ def test_parse() -> None:
                         name="Tasks",
                         suite=[],
                         test=[
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t1",
                                 name="Addition 1",
                                 status=StatusV6.model_construct(
@@ -89,7 +89,7 @@ def test_parse() -> None:
                                     elapsed=None,
                                 ),
                             ),
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t2",
                                 name="Addition 2",
                                 status=StatusV6.model_construct(
@@ -118,7 +118,7 @@ def test_parse() -> None:
                         name="Tasks",
                         suite=[],
                         test=[
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t1",
                                 name="Execute Google image search and store the first result image",
                                 status=StatusV6.model_construct(
@@ -147,7 +147,7 @@ def test_parse() -> None:
                         name="Tasks",
                         suite=[],
                         test=[
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t1",
                                 name="Main Test One",
                                 status=StatusV6.model_construct(
@@ -158,7 +158,7 @@ def test_parse() -> None:
                                 ),
                                 robot_exit=False,
                             ),
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t2",
                                 name="Main Test Two",
                                 status=StatusV6.model_construct(
@@ -169,7 +169,7 @@ def test_parse() -> None:
                                 ),
                                 robot_exit=True,
                             ),
-                            Test.model_construct(
+                            RFTest.model_construct(
                                 id="s1-t3",
                                 name="Main Test Three",
                                 status=StatusV6.model_construct(
@@ -194,7 +194,7 @@ def test_parse() -> None:
         },
         tests={
             "calc-Tasks-Count My Veggies": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t1",
                     name="Count My Veggies",
                     status=StatusV6.model_construct(
@@ -209,7 +209,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701098081,
             ),
             "google_imagesearch-Tasks-Execute Google image search and store the first result image": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t1",
                     name="Execute Google image search and store the first result image",
                     status=StatusV6.model_construct(
@@ -224,7 +224,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701097844,
             ),
             "math-Tasks-Addition 1": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t1",
                     name="Addition 1",
                     status=StatusV6.model_construct(
@@ -239,7 +239,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701098145,
             ),
             "math-Tasks-Addition 2": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t2",
                     name="Addition 2",
                     status=StatusV6.model_construct(
@@ -254,7 +254,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701098145,
             ),
             "skipped_tests-Tasks-Main Test One": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t1",
                     name="Main Test One",
                     status=StatusV6.model_construct(
@@ -270,7 +270,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701355253,
             ),
             "skipped_tests-Tasks-Main Test Three": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t3",
                     name="Main Test Three",
                     status=StatusV6.model_construct(
@@ -286,7 +286,7 @@ def test_parse() -> None:
                 rebot_timestamp=1701355253,
             ),
             "skipped_tests-Tasks-Main Test Two": TestReport(
-                test=Test.model_construct(
+                test=RFTest.model_construct(
                     id="s1-t2",
                     name="Main Test Two",
                     status=StatusV6.model_construct(
@@ -320,8 +320,8 @@ class _SuiteFactory(ModelFactory[Suite]):
     )
 
 
-class _TestFactory(ModelFactory[Test]):
-    __model__ = Test
+class _TestFactory(ModelFactory[RFTest]):
+    __model__ = RFTest
 
     status = _StatusV6Factory.build(
         factory_use_construct=True,

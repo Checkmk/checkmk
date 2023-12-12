@@ -18,14 +18,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.robotmk_test import _check_test, check, discover, Params
 
-from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Outcome, RFTest, StatusV6
 from cmk.plugins.lib.robotmk_suite_execution_report import AttemptsConfig, Section, TestReport
 
 _Section = Section(
     suites={},
     tests={
         "ok_passed": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t1",
                 name="Count My Veggies",
                 status=StatusV6.model_construct(
@@ -40,7 +40,7 @@ _Section = Section(
             rebot_timestamp=1701098081,
         ),
         "warn_passed_with_long_runtime": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t2",
                 name="Count My Veggies",
                 status=StatusV6.model_construct(
@@ -55,7 +55,7 @@ _Section = Section(
             rebot_timestamp=1701098081,
         ),
         "warn_not_run": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t3",
                 name="Execute Google image search and store the first result image",
                 status=StatusV6.model_construct(
@@ -70,7 +70,7 @@ _Section = Section(
             rebot_timestamp=1701097844,
         ),
         "warn_skip": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t4",
                 name="Addition 1",
                 status=StatusV6.model_construct(
@@ -85,7 +85,7 @@ _Section = Section(
             rebot_timestamp=1701098145,
         ),
         "crit_fail": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t5",
                 name="Addition 2",
                 status=StatusV6.model_construct(
@@ -100,7 +100,7 @@ _Section = Section(
             rebot_timestamp=1701098145,
         ),
         "skipped_test": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t6",
                 name="Skipped Test",
                 status=StatusV6.model_construct(
@@ -116,7 +116,7 @@ _Section = Section(
             rebot_timestamp=1701098145,
         ),
         "test_result_too_old": TestReport(
-            test=Test.model_construct(
+            test=RFTest.model_construct(
                 id="s1-t7",
                 name="Test Result Too Old",
                 status=StatusV6.model_construct(

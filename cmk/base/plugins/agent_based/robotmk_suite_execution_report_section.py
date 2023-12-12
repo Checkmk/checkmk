@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.plugins.lib.robotmk_rebot_xml import Suite, Test
+from cmk.plugins.lib.robotmk_rebot_xml import RFTest, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     RebotOutcomeResult,
     Section,
@@ -74,7 +74,7 @@ def _post_process_suite_execution_report(
 def _extract_tests_with_full_names(
     suite: Suite,
     parent_names: Sequence[str] = (),
-) -> dict[str, Test]:
+) -> dict[str, RFTest]:
     tests_with_full_names = {}
 
     for test in suite.test:

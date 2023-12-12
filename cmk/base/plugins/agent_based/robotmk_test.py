@@ -15,7 +15,7 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from cmk.plugins.lib.robotmk_rebot_xml import Outcome, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Outcome, RFTest
 from cmk.plugins.lib.robotmk_suite_and_test_checking import message_if_rebot_is_too_old
 from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
@@ -73,7 +73,7 @@ def check(
 
 def _check_test(
     params: Params,
-    test: Test,
+    test: RFTest,
     *,
     rebot_timestamp: int,
     execution_interval: int,

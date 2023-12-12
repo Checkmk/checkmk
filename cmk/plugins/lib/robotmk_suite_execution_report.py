@@ -12,7 +12,7 @@ import xmltodict
 from pydantic import BaseModel, BeforeValidator, Field
 from typing_extensions import Annotated
 
-from .robotmk_rebot_xml import Rebot, Suite, Test
+from .robotmk_rebot_xml import Rebot, RFTest, Suite
 
 
 class AttemptOutcome(Enum):
@@ -78,7 +78,7 @@ class SuiteReport:
 
 @dataclass(frozen=True, kw_only=True)
 class TestReport:
-    test: Test
+    test: RFTest
     html: bytes
     attempts_config: AttemptsConfig
     rebot_timestamp: int

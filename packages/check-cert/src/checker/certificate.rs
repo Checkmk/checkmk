@@ -16,7 +16,7 @@ use x509_parser::time::ASN1Time;
 use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
 
 macro_rules! unwrap_into {
-    ( $($e:expr),* $(,)?) => {
+    ($($e:expr),* $(,)?) => {
         {
             vec![
             $( $e.unwrap_or_default().into(), )*

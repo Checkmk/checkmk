@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 
@@ -12,11 +12,9 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def inventory_f5_bigip_apm(info):
-    discovered = []
-    if info[0][0]:
-        discovered.append((None, None))
-    return discovered
+def inventory_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_f5_bigip_apm(item, _no_params, info):

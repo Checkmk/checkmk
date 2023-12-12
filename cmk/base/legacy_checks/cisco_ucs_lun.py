@@ -47,8 +47,8 @@ def check_cisco_ucs_lun(_no_item, _no_params, info):
     yield mode_state, "Mode: %s" % mode_state_readable
 
 
-def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_ucs_lun(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(

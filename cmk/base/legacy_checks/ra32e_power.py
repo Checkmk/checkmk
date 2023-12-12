@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -12,10 +12,9 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.ra32e import DETECT_RA32E
 
 
-def inventory_ra32e_power(info):
-    if info[0][0]:
-        return [(None, {})]
-    return None
+def inventory_ra32e_power(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_ra32e_power(item, params, info):

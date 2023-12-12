@@ -33,8 +33,8 @@ def check_bluecat_command_server(item, params, info):
     yield state, "Command Server is %s" % oper_states[oper_state]
 
 
-def parse_bluecat_command_server(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_bluecat_command_server(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["bluecat_command_server"] = LegacyCheckDefinition(

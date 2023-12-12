@@ -20,7 +20,7 @@ Section = Mapping[str, int]
 KEY_PULSE_SECURE_CPU = "cpu_util"
 
 
-def parse_pulse_secure_cpu_util(string_table: StringTable) -> Section:
+def parse_pulse_secure_cpu_util(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, KEY_PULSE_SECURE_CPU)
 
 

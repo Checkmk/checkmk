@@ -13,6 +13,8 @@ from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 def parse_ups_modulys_inphase(string_table):
+    if not string_table:
+        return None
     parsed = {}
     parsed["Phase 1"] = {
         "frequency": int(string_table[0][1]) / 10.0,

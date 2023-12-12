@@ -20,6 +20,9 @@ janitza_umg_device_map = {
 
 
 def parse_janitza_umg_inphase(string_table):
+    if not string_table[0] or not string_table[0][0]:
+        return None
+
     def flatten(line):
         return [x[0] for x in line]
 

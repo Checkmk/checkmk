@@ -20,7 +20,7 @@ def parse_brocade_sys(string_table):
             "mem_used_percent": int(string_table[0][1]),
         }
     except (IndexError, ValueError):
-        return {}
+        return None
 
 
 #   .--Memory--------------------------------------------------------------.

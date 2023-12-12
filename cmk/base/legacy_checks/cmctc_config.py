@@ -66,8 +66,8 @@ def check_cmctc_config(_no_item, _no_params, info):
     return 0, infotext
 
 
-def parse_cmctc_config(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cmctc_config(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cmctc_config"] = LegacyCheckDefinition(

@@ -30,6 +30,8 @@ from cmk.plugins.lib.eltek import DETECT_ELTEK
 
 
 def parse_eltek_battery(string_table):
+    if not string_table:
+        return None
     voltage, current, temp, breaker_status = string_table[0]
     return {
         "supply": {

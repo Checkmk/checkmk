@@ -37,8 +37,8 @@ def check_infoblox_dns_stats(_no_item, _no_params, info):
     )
 
 
-def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["infoblox_dns_stats"] = LegacyCheckDefinition(

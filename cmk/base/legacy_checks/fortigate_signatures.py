@@ -18,6 +18,9 @@ from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 
 def parse_fortigate_signatures(string_table):
+    if not string_table:
+        return None
+
     def parse_version(ver):
         # sample: 27.00768(2015-09-01 15:10)
         ver_regex = regex(r"([0-9.]*)\(([0-9-: ]*)\)")

@@ -27,15 +27,19 @@ class Phase(TypedDict):
 Section = Mapping[Literal["1"], Phase]
 
 
-def parse_ups_cps_outphase(string_table: list[str]) -> Section:
-    return {
-        "1": Phase(
-            voltage=float(string_table[0][0]) / 10,
-            frequency=float(string_table[0][1]) / 10,
-            output_load=float(string_table[0][2]),
-            current=float(string_table[0][3]) / 10,
-        )
-    }
+def parse_ups_cps_outphase(string_table: list[str]) -> Section | None:
+    return (
+        {
+            "1": Phase(
+                voltage=float(string_table[0][0]) / 10,
+                frequency=float(string_table[0][1]) / 10,
+                output_load=float(string_table[0][2]),
+                current=float(string_table[0][3]) / 10,
+            )
+        }
+        if string_table
+        else None
+    )
 
 
 def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:

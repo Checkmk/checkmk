@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int]:
+def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int] | None:
     return pulse_secure.parse_pulse_secure(string_table, "IVE")
 
 

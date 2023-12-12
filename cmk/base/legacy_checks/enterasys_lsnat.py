@@ -37,8 +37,8 @@ def check_enterasys_lsnat(_no_item, params, info):
     return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
 
 
-def parse_enterasys_lsnat(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_enterasys_lsnat(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["enterasys_lsnat"] = LegacyCheckDefinition(

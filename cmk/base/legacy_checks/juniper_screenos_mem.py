@@ -17,6 +17,8 @@ from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
 
 
 def parse_juniper_screenos_mem(string_table):
+    if not string_table:
+        return None
     used = int(string_table[0][0])
     free = int(string_table[0][1])
     return Section(used, used + free)

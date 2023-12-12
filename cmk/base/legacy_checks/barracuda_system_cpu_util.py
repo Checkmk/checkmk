@@ -25,8 +25,8 @@ def check_barracuda_system_cpu_util(_no_item, params, info):
     return check_cpu_util(int(info[0][0]), params)
 
 
-def parse_barracuda_system_cpu_util(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_barracuda_system_cpu_util(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["barracuda_system_cpu_util"] = LegacyCheckDefinition(

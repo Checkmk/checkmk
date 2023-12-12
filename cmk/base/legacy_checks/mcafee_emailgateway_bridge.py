@@ -61,8 +61,8 @@ def check_mcafee_emailgateway_bridge(item, params, info):
         yield state, infotext, [tuple(perfdata)]
 
 
-def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(

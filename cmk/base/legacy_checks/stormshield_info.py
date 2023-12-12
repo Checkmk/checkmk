@@ -28,8 +28,8 @@ def check_stormshield_info(item, params, info):
         )
 
 
-def parse_stormshield_info(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_stormshield_info(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["stormshield_info"] = LegacyCheckDefinition(

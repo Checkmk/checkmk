@@ -13,14 +13,18 @@ from cmk.agent_based.v2 import any_of, get_rate, get_value_store, SNMPTree, star
 
 
 def parse_safenet_ntls(string_table):
-    return {
-        "operation_status": string_table[0][0],
-        "connected_clients": int(string_table[0][1]),
-        "links": int(string_table[0][2]),
-        "successful_connections": int(string_table[0][3]),
-        "failed_connections": int(string_table[0][4]),
-        "expiration_date": string_table[0][5],
-    }
+    return (
+        {
+            "operation_status": string_table[0][0],
+            "connected_clients": int(string_table[0][1]),
+            "links": int(string_table[0][2]),
+            "successful_connections": int(string_table[0][3]),
+            "failed_connections": int(string_table[0][4]),
+            "expiration_date": string_table[0][5],
+        }
+        if string_table
+        else None
+    )
 
 
 # .

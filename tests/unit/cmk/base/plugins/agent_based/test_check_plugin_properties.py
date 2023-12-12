@@ -43,7 +43,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
 
-    From version 2.0 on, the parse function will be called allways.
+    From version 2.0 on, the parse function will be called always.
     In case no further processing is desired, the parse functions should return `None`.
 
     (Returning something falsey usually means nothing will be discovered!)
@@ -53,7 +53,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
 
     However: There is nothing wrong with not returning None, in principle.
     If you whish to do that (see one of the listed exceptions for examples),
-    just add an exception below. If maintaining this test becvomes too tedious,
+    just add an exception below. If maintaining this test becomes too tedious,
     we can probably just remove it.
     """
     plugins_expected_to_discover_upon_empty = {
@@ -64,7 +64,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
     }
 
     plugins_discovering_upon_empty = set()
-    for plugin in fix_register.check_plugins.values():
+    for _name, plugin in sorted(fix_register.check_plugins.items()):
         for sections in _section_permutations(plugin.sections):
             kwargs = {str(section.name): _get_empty_parsed_result(section) for section in sections}
             if all(v is None for v in kwargs.values()):

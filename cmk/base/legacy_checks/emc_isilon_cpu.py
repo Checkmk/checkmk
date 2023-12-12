@@ -50,8 +50,8 @@ def check_emc_isilon_cpu_utilization(item, params, info):
         )
 
 
-def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_emc_isilon_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["emc_isilon_cpu"] = LegacyCheckDefinition(

@@ -52,8 +52,8 @@ def check_stormshield_cluster(item, params, info):
         yield status, "Faulty: %s" % faulty_links
 
 
-def parse_stormshield_cluster(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_stormshield_cluster(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["stormshield_cluster"] = LegacyCheckDefinition(

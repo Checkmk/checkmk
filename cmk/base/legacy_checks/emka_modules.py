@@ -16,6 +16,9 @@ _TABLES = ["1", "2", "3", "4"]
 
 
 def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
+    if not all(string_table):
+        return None
+
     # basModuleCoIx == 0
     map_module_types = {
         "0": "vacant",

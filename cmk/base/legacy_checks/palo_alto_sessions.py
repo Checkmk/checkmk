@@ -60,8 +60,8 @@ def check_palo_alto_sessions(_no_item, params, info):
     return status, infotext, perfdata
 
 
-def parse_palo_alto_sessions(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_palo_alto_sessions(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(

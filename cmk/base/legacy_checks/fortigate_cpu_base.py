@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def parse_fortigate_cpu_base(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_fortigate_cpu_base(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["fortigate_cpu_base"] = LegacyCheckDefinition(

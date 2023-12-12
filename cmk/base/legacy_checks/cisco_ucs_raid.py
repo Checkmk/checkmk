@@ -25,7 +25,9 @@ class Section(NamedTuple):
     vendor: str
 
 
-def parse_cisco_ucs_raid(string_table) -> Section:
+def parse_cisco_ucs_raid(string_table) -> Section | None:
+    if not string_table:
+        return None
     return Section(
         string_table[0][0],
         *map_operability[string_table[0][1]],

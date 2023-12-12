@@ -27,6 +27,9 @@ from cmk.agent_based.v2 import contains, SNMPTree
 
 
 def parse_f5_bigip_mem(string_table):
+    if not string_table:
+        return None
+
     parsed = {}
     try:
         parsed["total"] = (float(string_table[0][0]), float(string_table[0][1]))

@@ -46,6 +46,10 @@ def parse_pandacom_psu(string_table):
         "3": (0, "pass"),
         "255": (3, "not available"),
     }
+
+    if not string_table:
+        return None
+
     parsed = {}
     for psu_nr, type_index, state_index in [
         ("1", 5, 2),

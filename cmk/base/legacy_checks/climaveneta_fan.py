@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 
@@ -12,10 +12,10 @@ from cmk.agent_based.v2 import equals, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def inventory_climaveneta_fan(info):
-    if len(info[0]) == 2:
-        return [("1", {}), ("2", {})]
-    return []
+def inventory_climaveneta_fan(section: StringTable) -> DiscoveryResult:
+    if section and len(section[0]) == 2:
+        yield Service(item="1")
+        yield Service(item="2")
 
 
 def check_climaveneta_fan(item, params, info):

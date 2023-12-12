@@ -46,9 +46,11 @@ severity_to_states = {
 
 
 def parse_silverpeak(string_table):
-    parsed = {}
-
     alarm_count, alarms = string_table
+    if not alarm_count:
+        return None
+
+    parsed = {}
 
     # We currently do not know if any (alarm) OIDs will be delivered in case no alarm is active.
     # Therefore acquire the alarm count in any case.

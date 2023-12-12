@@ -24,8 +24,8 @@ def parse_liebert_float_without_unit(string_table: StringTable) -> dict[str, flo
     return parse_liebert_without_unit([string_table], float)
 
 
-def parse_liebert_int_without_unit(string_table: StringTable) -> dict[str, int]:
-    return parse_liebert_without_unit([string_table], int)
+def parse_liebert_int_without_unit(string_table: StringTable) -> dict[str, int] | None:
+    return parse_liebert_without_unit([string_table], int) or None
 
 
 def parse_liebert_str_without_unit(string_table: StringTable) -> dict[str, str]:

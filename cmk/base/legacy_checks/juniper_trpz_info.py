@@ -22,8 +22,8 @@ def check_juniper_trpz_info(_no_item, _no_params, info):
     return 0, message
 
 
-def parse_juniper_trpz_info(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_trpz_info(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["juniper_trpz_info"] = LegacyCheckDefinition(

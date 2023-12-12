@@ -31,8 +31,8 @@ def check_zebra_printer_status(item, params, info):
     return 3, "Unknown printer status"
 
 
-def parse_zebra_printer_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_zebra_printer_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["zebra_printer_status"] = LegacyCheckDefinition(

@@ -24,6 +24,9 @@ airlaser_default_levels = {
 
 
 def parse_cbl_airlaser(string_table):
+    if not all(string_table):
+        return None
+
     airlaser_status_names = {
         0: "undefined",
         1: "active",

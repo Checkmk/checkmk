@@ -30,8 +30,8 @@ def check_cmctc_state(_no_item, _no_params, info):
     return state, infotext
 
 
-def parse_cmctc_state(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cmctc_state(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cmctc_state"] = LegacyCheckDefinition(

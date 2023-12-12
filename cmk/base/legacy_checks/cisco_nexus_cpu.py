@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
@@ -14,10 +14,9 @@ from cmk.agent_based.v2.type_defs import StringTable
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 
-def inventory_cisco_nexus_cpu(info):
-    if info[0][0]:
-        return [(None, {})]
-    return []
+def inventory_cisco_nexus_cpu(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_cisco_nexus_cpu(_no_item, params, info):

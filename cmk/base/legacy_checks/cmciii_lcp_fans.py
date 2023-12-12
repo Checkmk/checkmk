@@ -63,8 +63,8 @@ def check_cmciii_lcp_fans(item, params, info):
     return None
 
 
-def parse_cmciii_lcp_fans(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cmciii_lcp_fans(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cmciii_lcp_fans"] = LegacyCheckDefinition(

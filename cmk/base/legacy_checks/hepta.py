@@ -38,6 +38,8 @@ def get_time(timefromdevice):
 
 
 def parse_hepta(string_table):
+    if not any(string_table):
+        return None
     (
         (
             device_type,

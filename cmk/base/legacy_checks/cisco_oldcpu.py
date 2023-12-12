@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
@@ -14,9 +14,9 @@ from cmk.agent_based.v2.type_defs import StringTable
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 
 
-def inventory_cisco_oldcpu(info):
-    if info[0][0]:
-        yield None, {}
+def inventory_cisco_oldcpu(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0]:
+        yield Service()
 
 
 def check_cisco_oldcpu(_no_item, params, info):

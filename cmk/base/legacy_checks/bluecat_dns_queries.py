@@ -29,8 +29,8 @@ def check_bluecat_dns_queries(item, _no_params, info):
         yield 0, f"{name}: {rate}", [(name, rate)]
 
 
-def parse_bluecat_dns_queries(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_bluecat_dns_queries(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["bluecat_dns_queries"] = LegacyCheckDefinition(

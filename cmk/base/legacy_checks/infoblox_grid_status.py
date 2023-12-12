@@ -29,8 +29,8 @@ def check_infoblox_grid_status(_no_item, _no_params, info):
     return state, f"Status: {status_readable}, Master virtual IP: {master_vip}"
 
 
-def parse_infoblox_grid_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_infoblox_grid_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(

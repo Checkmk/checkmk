@@ -32,8 +32,8 @@ def check_cisco_srst_state(_no_item, _no_params, info):
     yield check_uptime_seconds(None, int(uptime_text) * 60)
 
 
-def parse_cisco_srst_state(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_srst_state(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_srst_state"] = LegacyCheckDefinition(

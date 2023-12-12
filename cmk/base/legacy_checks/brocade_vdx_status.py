@@ -38,8 +38,8 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
     return None
 
 
-def parse_brocade_vdx_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_brocade_vdx_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["brocade_vdx_status"] = LegacyCheckDefinition(

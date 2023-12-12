@@ -38,8 +38,8 @@ def check_hitachi_hnas_quorumdevice(item, _no_params, info):
     return rc, "Quorum Device reports status %s" % statusmap[status]
 
 
-def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_hitachi_hnas_quorumdevice(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["hitachi_hnas_quorumdevice"] = LegacyCheckDefinition(

@@ -18,7 +18,9 @@ from cmk.plugins.lib.kentix import DETECT_KENTIX
 Section = Mapping[str, float]
 
 
-def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section:
+def parse_kentix_dewpoint(string_table: list[list[str]]) -> Section | None:
+    if not string_table:
+        return None
     for item, reading in zip(("LAN", "Rack"), string_table[0]):
         try:
             return {item: float(reading) / 10}

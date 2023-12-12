@@ -28,11 +28,41 @@ class UpdateBIConfig(UpdateAction):
 
 def _migrate_bi_rule_label_conditions(aggregation_packs: BIAggregationPacks) -> None:
     for pack in aggregation_packs.packs.values():
+        # aggregation search conditions
+        for aggregation in pack.aggregations.values():
+            if isinstance(aggregation.node.search, (BIHostSearch, BIServiceSearch)):
+                aggregation.node.search.conditions = transform_condition_labels_to_label_groups(
+                    aggregation.node.search.conditions
+                )
+
+                # handle 'refer_to' in aggregations
+                if (
+                    isinstance(aggregation.node.search, BIHostSearch)
+                    and not isinstance(aggregation.node.search.refer_to, str)
+                    and aggregation.node.search.refer_to.get("type") == "child_with"
+                ):
+                    aggregation.node.search.refer_to[
+                        "conditions"
+                    ] = transform_condition_labels_to_label_groups(
+                        aggregation.node.search.refer_to["conditions"]
+                    )
+
+        # rule search conditions
         for rule in pack.rules.values():
             for node in rule.nodes:
                 if isinstance(node.search, (BIHostSearch, BIServiceSearch)):
                     node.search.conditions = transform_condition_labels_to_label_groups(
                         node.search.conditions
+                    )
+
+                # handle 'refer_to' in rules
+                if (
+                    isinstance(node.search, BIHostSearch)
+                    and not isinstance(node.search.refer_to, str)
+                    and node.search.refer_to.get("type") == "child_with"
+                ):
+                    node.search.refer_to["conditions"] = transform_condition_labels_to_label_groups(
+                        node.search.refer_to["conditions"]
                     )
 
 

@@ -709,27 +709,62 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' which have at least one backup
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
-    sqlString = "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
-                "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-                "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-                "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-                    "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
-                    "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-                    "GROUP BY type, machine_name,database_name ' " & _
-                "END " & _
-                "ELSE " & _
-                "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                    "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
-                    "FROM msdb.dbo.backupset b  " & _
-                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
-                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
-                    "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
-                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
-                "END " & _
-                "EXEC (@SQLCommand)"
+    sqlString = "" & _
+        "DECLARE @HADRStatus sql_variant; " & _
+        "DECLARE @SQLCommand nvarchar(max); " & _
+        "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+        "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+        "BEGIN " & _
+        "SET @SQLCommand = ' " & _
+            "SELECT " & _
+            "  CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+            "  type, " & _
+            "  machine_name, " & _
+            "  ''True'' as is_primary_replica, " & _
+            "  ''1'' as is_local, " & _
+            "  '''' as replica_id, " & _
+            "  database_name " & _
+            "FROM " & _
+            "  msdb.dbo.backupset " & _
+            "WHERE " & _
+            "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
+            "GROUP BY " & _
+            "  type, " & _
+            "  machine_name, " & _
+            "  database_name " & _
+        "' " & _
+        "END " & _
+        "ELSE " & _
+        "BEGIN " & _
+        "SET @SQLCommand = ' " & _
+            "SELECT " & _
+            "  CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+            "  b.type, " & _
+            "  b.machine_name, " & _
+            "  isnull(rep.is_primary_replica, 0) as is_primary_replica, " & _
+            "  rep.is_local, " & _
+            "  isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id, " & _
+            "  database_name " & _
+            "FROM " & _
+            "  msdb.dbo.backupset b " & _
+            "  LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
+            "  LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
+            "WHERE " & _
+            "  (rep.is_local is null or rep.is_local = 1) " & _
+            "  AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') " & _
+            "  AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
+            "GROUP BY " & _
+            "  type, " & _
+            "  rep.replica_id, " & _
+            "  rep.is_primary_replica, " & _
+            "  rep.is_local, " & _
+            "  b.database_name, " & _
+            "  b.machine_name, " & _
+            "  rep.synchronization_state, " & _
+            "  rep.synchronization_health " & _
+        "' " & _
+        "END " & _
+        "EXEC (@SQLCommand)"
     Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 
     Set found_db_backups = CreateObject("Scripting.Dictionary")

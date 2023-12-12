@@ -1029,7 +1029,12 @@ def get_graph_templates(
         yield from ()
         return
 
-    explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
+    explicit_templates = list(
+        _get_explicit_graph_templates(
+            graph_templates_internal().values(),
+            translated_metrics,
+        )
+    )
     yield from explicit_templates
     yield from _get_implicit_graph_templates(
         translated_metrics,
@@ -1043,9 +1048,10 @@ def get_graph_templates(
 
 
 def _get_explicit_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric]
+    graph_templates: Iterable[GraphTemplate],
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[GraphTemplate]:
-    for graph_template in graph_templates_internal().values():
+    for graph_template in graph_templates:
         if metrics := applicable_metrics(
             metrics_to_consider=graph_template.metrics,
             conflicting_metrics=graph_template.conflicting_metrics,

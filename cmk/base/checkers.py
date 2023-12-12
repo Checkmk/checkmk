@@ -12,7 +12,7 @@ import itertools
 import logging
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final
+from typing import Final, TypeVar
 
 import livestatus
 
@@ -740,7 +740,7 @@ def _final_read_only_check_parameters(
         # For auto-migrated plugins expecting tuples, they will be
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
-            _inject_prediction_callback(
+            _inject_prediction_callback_recursively(
                 host_name,
                 service_name,
                 params,
@@ -763,21 +763,40 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
     return False
 
 
-def _inject_prediction_callback(
-    host_name: HostName, service_name: ServiceName, params: LegacyCheckParameters
-) -> LegacyCheckParameters:
-    if not isinstance(params, dict):
-        return params
+_TParams = TypeVar("_TParams", object, list[object], tuple[object, ...], dict[str, object])
 
-    if "__get_predictive_levels__" in params:
-        params["__get_predictive_levels__"] = PredictionUpdater(
-            host_name,
-            service_name,
-            PredictionParameters.model_validate(params),
-            partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
-        ).get_predictive_levels
 
-    return {k: _inject_prediction_callback(host_name, service_name, v) for k, v in params.items()}
+def _inject_prediction_callback_recursively(
+    host_name: HostName, service_name: ServiceName, params: _TParams
+) -> _TParams:
+    match params:
+        case tuple():
+            return tuple(_inject_prediction_callback_iterable(host_name, service_name, params))
+        case list():
+            return list(_inject_prediction_callback_iterable(host_name, service_name, params))
+        case dict():
+            if "__get_predictive_levels__" in params:
+                params["__get_predictive_levels__"] = PredictionUpdater(
+                    host_name,
+                    service_name,
+                    PredictionParameters.model_validate(params),
+                    partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
+                ).get_predictive_levels
+                return params
+            return dict(
+                zip(
+                    params.keys(),
+                    _inject_prediction_callback_iterable(host_name, service_name, params.values()),
+                )
+            )
+
+    return params
+
+
+def _inject_prediction_callback_iterable(
+    host_name: HostName, service_name: ServiceName, params: Iterable[_TParams]
+) -> Iterable[_TParams]:
+    return (_inject_prediction_callback_recursively(host_name, service_name, v) for v in params)
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

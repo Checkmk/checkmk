@@ -1,0 +1,14 @@
+Title: Rework of "Add to" option in views
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1702393252
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The option to add views to e.g. dashboards can now be found within the "Export"
+dropdown.
+
+A popup will show an autocompleter dropdown where you can select the target.
+

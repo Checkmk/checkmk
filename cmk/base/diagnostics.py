@@ -992,10 +992,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         return requests.post(  # nosec B113 # BNS:773085
             url,
-            data={
-                "_username": "automation",
-                "_secret": automation_secret,
-            },
+            auth=("automation", automation_secret),
         )
 
 

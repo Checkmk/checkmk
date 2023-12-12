@@ -31,7 +31,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import AjaxDropdownChoice
-from cmk.gui.visuals._filter_context import get_context_from_uri_vars
 from cmk.gui.visuals.type import visual_type_registry
 
 
@@ -238,7 +237,7 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"]) -> HTML:
             onclick=f"cmk.views.add_to_visual("
             f'"{add_to_type}",'
             f'"{request.var("view_name")}",'
-            f"{get_context_from_uri_vars()}"
+            f'{g.get("page_context", {})}'
             f")",
             cssclass="hot",
         )

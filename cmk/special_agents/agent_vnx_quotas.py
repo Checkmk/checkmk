@@ -28,7 +28,7 @@ def get_client_connection(args):
         import paramiko  # pylint: disable=import-outside-toplevel
 
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B511
         client.connect(args.hostname, username=args.username, password=args.password, timeout=5)
         return client
 

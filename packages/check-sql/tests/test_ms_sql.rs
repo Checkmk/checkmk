@@ -602,7 +602,7 @@ fn make_remote_config_string(
     user: &str,
     pwd: &str,
     host: &str,
-    custom: bool,
+    custom_instances: bool,
     detect: bool,
 ) -> String {
     format!(
@@ -620,8 +620,8 @@ mssql:
 {}
 "#,
         if detect { "yes" } else { "false" },
-        if custom {
-            make_remote_custom_config_sub_string(user, pwd, host)
+        if custom_instances {
+            make_remote_instances_config_sub_string(user, pwd, host)
         } else {
             "".to_string()
         }
@@ -629,7 +629,7 @@ mssql:
 }
 
 #[cfg(windows)]
-fn make_local_config_string(custom: &str, detect: bool) -> String {
+fn make_local_config_string(instances: &str, detect: bool) -> String {
     format!(
         r#"
 mssql:
@@ -641,16 +641,16 @@ mssql:
       hostname: localhost
     discovery:
       detect: {}
-{custom}
+{instances}
 "#,
         if detect { "yes" } else { "no" }
     )
 }
 
-fn make_remote_custom_config_sub_string(user: &str, pwd: &str, host: &str) -> String {
+fn make_remote_instances_config_sub_string(user: &str, pwd: &str, host: &str) -> String {
     format!(
         r#"
-    custom:
+    instances:
       - sid: MSSQLSERVER
         authentication:
           username: {user}
@@ -672,9 +672,9 @@ fn make_remote_custom_config_sub_string(user: &str, pwd: &str, host: &str) -> St
 }
 
 #[cfg(windows)]
-fn make_local_custom_config_sub_string() -> String {
+fn make_local_custom_instances_config_sub_string() -> String {
     r#"
-    custom:
+    instances:
       - sid: MSSQLSERVER
         authentication:
           username: user
@@ -705,12 +705,12 @@ async fn test_find_no_detect_local() {
     assert_eq!(instances.len(), 0);
 }
 
-// no detect plus one custom = 1 instance
+// no detect plus two custom instances
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_find_no_detect_two_custom_local() {
+async fn test_find_no_detect_two_custom_instances_local() {
     let mssql = check_sql::config::ms_sql::Config::from_string(&make_local_config_string(
-        &make_local_custom_config_sub_string(),
+        &make_local_custom_instances_config_sub_string(),
         false,
     ))
     .unwrap()
@@ -745,10 +745,10 @@ async fn test_find_no_detect_remote() {
     }
 }
 
-// no detect plus two custom but one ok instance
+// no detect plus two custom instances but one ok instance
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_find_no_detect_two_custom_remote() {
+async fn test_find_no_detect_two_custom_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mssql = check_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
             &endpoint.user,

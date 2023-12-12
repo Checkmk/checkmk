@@ -19,7 +19,7 @@ mssql:
   # 2. Structured Monitoring Process. The checks follow a structured process that includes:
   #    a. Connection and Authentication: Establishes connection to a SQL host using specific rules and credentials.
   #    b. Instance Discovery: Detects SQL instances on the host as per the `discovery` rule.
-  #    c. Instance Customization: Adapts monitoring of SQL instances with custom rules.
+  #    c. Instance Customization: Adapts monitoring of SQL instances with instances rules.
   #    d. Sections Generation: Executes specified sections(also internally known as SQL queries).
   #
   # Check Configuration Components:
@@ -27,7 +27,7 @@ mssql:
   # - Authentication: Specifies authentication methods, including credentials like username and password.
   # - Sections: Determines which SQL queries (sections) are to be executed during the check.
   # - Discovery: Identifies *which* SQL instances are to be monitored.
-  # - Custom: Describes *how* the SQL instances are to be monitored.
+  # - Instances: Describes *how* the SQL instances are to be monitored.
   #
   # Configuration Keys:
   # - Mandatory: `mssql.main` for primary configuration.
@@ -35,9 +35,9 @@ mssql:
   #
   # Notes:
   # 1. If some SQL instance is not discoverable, then to monitor this instance you must describe
-  #    it in `main.custom`
+  #    it in `main.instances`
   # 2. If some SQL instance monitoring differs from the default one (for example piggyback is required),
-  #    then you must also describe it in `main.custom`
+  #    then you must also describe it in `main.instances`
   #
   main: # mandatory, defines main SQL check to be executed
     authentication: # mandatory
@@ -74,10 +74,10 @@ mssql:
         - "someOtherSQL"
       cache_age: 600 # optional, default: 600
     discovery: # optional, defines which instances are to be monitored
-      detect: yes # optional, default, if no then valid only instances in `custom` subsection
+      detect: yes # optional, default, if no then valid only instances in `instances` subsection
       include: ["foo", "bar", "inst1"] # optional, no default /prio 2; use only those instance, ignore exclude
       exclude: ["baz"] # optional, no default / prio 3, exclude those instances from the detected list
-    custom: # optional, defines how instances are to be accessed and monitored
+    instances: # optional, defines how instances are to be accessed and monitored
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
         connection: # optional,  same as above
@@ -94,5 +94,5 @@ mssql:
         username: "foo" # mandatory
       connection: # optional, if absent will use main
         hostname: "agent" # optional, default: "localhost"
-      custom: # optional, describes how to monitor/access instances, both detected and non-detectable
+      instances: # optional, describes how to monitor/access instances, both detected and non-detectable
         - sid: "SQLEXPRESS" # mandatory

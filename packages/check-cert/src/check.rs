@@ -4,6 +4,7 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::mem;
+use std::str::FromStr;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone)]
@@ -121,12 +122,28 @@ impl LevelsStrategy {
     }
 }
 
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct Uom(String);
+
+impl FromStr for Uom {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.to_string()))
+    }
+}
+
+impl Display for Uom {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        self.0.fmt(f)
+    }
+}
+
 #[derive(Debug, TypedBuilder)]
 pub struct LevelsCheckerArgs {
     #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
     label: String,
-    #[builder(default, setter(transform = |x: impl Into<String>| Some(x.into()) ))]
-    uom: Option<String>,
+    #[builder(default, setter(strip_option))]
+    uom: Option<Uom>,
 }
 
 #[derive(Debug)]
@@ -207,8 +224,8 @@ where
     #[builder(setter(transform = |x: impl Into<String>| x.into() ))]
     label: String,
     value: T,
-    #[builder(default, setter(transform = |x: impl Into<String>| Some(x.into()) ))]
-    uom: Option<String>,
+    #[builder(default, setter(strip_option))]
+    uom: Option<Uom>,
     #[builder(default, setter(strip_option))]
     levels: Option<Levels<T>>,
     #[builder(default, setter(strip_option))]
@@ -484,7 +501,11 @@ pub fn abort(message: impl Into<String>) -> ! {
 
 #[cfg(test)]
 mod test_metrics_map {
-    use super::{Bounds, Levels, Metric};
+    use super::{Bounds, Levels, Metric, Uom};
+
+    fn u(x: &str) -> Uom {
+        x.parse().unwrap()
+    }
 
     #[test]
     fn test_bounds() {
@@ -522,7 +543,7 @@ mod test_metrics_map {
             Metric::builder()
                 .label("Label")
                 .value(42)
-                .uom("unit")
+                .uom(u("unit"))
                 .levels(Levels { warn: 5, crit: 10 })
                 .bounds(Bounds { min: 1, max: 10 })
                 .build()
@@ -530,7 +551,7 @@ mod test_metrics_map {
             Metric::builder()
                 .label("Label")
                 .value(420)
-                .uom("unit")
+                .uom(u("unit"))
                 .levels(Levels {
                     warn: 50,
                     crit: 100,
@@ -543,7 +564,7 @@ mod test_metrics_map {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Bounds, Levels, Metric, Real};
+    use super::{Bounds, Levels, Metric, Real, Uom};
 
     fn i(x: isize) -> Real {
         Real::Integer(x)
@@ -551,6 +572,10 @@ mod test_metrics_display {
 
     fn d(x: f64) -> Real {
         Real::Double(x)
+    }
+
+    fn u(x: &str) -> Uom {
+        x.parse().unwrap()
     }
 
     #[test]
@@ -572,7 +597,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(i(42))
-                    .uom("ms")
+                    .uom(u("ms"))
                     .build()
             ),
             "name=42ms;;;;"
@@ -605,7 +630,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(i(42))
-                    .uom("ms")
+                    .uom(u("ms"))
                     .levels(Levels {
                         warn: i(24),
                         crit: i(42)
@@ -628,7 +653,7 @@ mod test_metrics_display {
                 Metric::<Real>::builder()
                     .label("name")
                     .value(d(42.0))
-                    .uom("ms")
+                    .uom(u("ms"))
                     .levels(Levels {
                         warn: d(24.0),
                         crit: d(42.0)

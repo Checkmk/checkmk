@@ -14,8 +14,8 @@ pub struct Config {
     use_sni: bool,
 }
 
-pub fn fetch_server_cert(server: &str, port: &u16, config: Config) -> Result<Vec<Vec<u8>>> {
-    let stream = TcpStream::connect(format!("{server}:{port}"))?;
+pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<Vec<u8>>> {
+    let stream = TcpStream::connect((server, port))?;
     stream.set_read_timeout(config.timeout)?;
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
     connector_builder.set_verify(SslVerifyMode::NONE);

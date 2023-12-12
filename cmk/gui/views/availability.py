@@ -73,7 +73,7 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.view import View
-from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
+from cmk.gui.visuals import page_menu_topic_add_to, view_title
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -398,12 +398,14 @@ def _page_menu_availability(  # type: ignore[no-untyped-def]
                 ],
             )
         ]
-        + page_menu_dropdown_add_to_visual(add_type="availability", name=view.name)
         + [
             PageMenuDropdown(
                 name="export",
                 title=_("Export"),
-                topics=[
+                topics=page_menu_topic_add_to(
+                    visual_type="availability", name=view.name, source_type="availability"
+                )
+                + [
                     PageMenuTopic(
                         title=_("Data"),
                         entries=list(_page_menu_entries_export_data()),

@@ -582,7 +582,9 @@ class GUIViewRenderer(ABCViewRenderer):
                 )
 
     def _page_menu_topic_add_to(self) -> list[PageMenuTopic]:
-        return visuals.page_menu_topic_add_to(visual_type="view", name=self.view.name)
+        return visuals.page_menu_topic_add_to(
+            visual_type="view", name=self.view.name, source_type="view"
+        )
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F) or not show_filters:

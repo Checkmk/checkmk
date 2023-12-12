@@ -164,17 +164,22 @@ def ajax_add_visual() -> None:
     )
 
 
-def page_menu_topic_add_to(visual_type: str, name: str) -> list[PageMenuTopic]:
-    entries = [
-        PageMenuEntry(
-            title=_("Add to dashboard"),
-            name="add_to_dashboard",
-            icon_name="dashboard",
-            item=PageMenuPopup(
-                content=_render_add_to_popup(add_to_type="dashboard"),
-            ),
-        )
-    ]
+def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> list[PageMenuTopic]:
+    entries: list[PageMenuEntry] = []
+    if visual_type != "availability":
+        entries = [
+            PageMenuEntry(
+                title=_("Add to dashboard"),
+                name="add_to_dashboard",
+                icon_name="dashboard",
+                item=PageMenuPopup(
+                    content=_render_add_to_popup(
+                        add_to_type="dashboard",
+                        source_type=source_type,
+                    ),
+                ),
+            )
+        ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         entries.append(
@@ -183,7 +188,10 @@ def page_menu_topic_add_to(visual_type: str, name: str) -> list[PageMenuTopic]:
                 name="add_to_report",
                 icon_name="report",
                 item=PageMenuPopup(
-                    content=_render_add_to_popup(add_to_type="report"),
+                    content=_render_add_to_popup(
+                        add_to_type="report",
+                        source_type=source_type,
+                    ),
                 ),
             )
         )
@@ -227,7 +235,7 @@ class AddToReportChoices(AjaxDropdownChoice):
     ident = "add_to_report_choices"
 
 
-def _render_add_to_popup(add_to_type: Literal["dashboard", "report"]) -> HTML:
+def _render_add_to_popup(add_to_type: Literal["dashboard", "report"], source_type: str) -> HTML:
     with output_funnel.plugged():
         dropdown = AddToDashboardChoices() if add_to_type == "dashboard" else AddToReportChoices()
         dropdown.render_input(f"_add_to_{add_to_type}", "")
@@ -237,6 +245,7 @@ def _render_add_to_popup(add_to_type: Literal["dashboard", "report"]) -> HTML:
             onclick=f"cmk.views.add_to_visual("
             f'"{add_to_type}",'
             f'"{request.var("view_name")}",'
+            f'"{source_type}",'
             f'{g.get("page_context", {})}'
             f")",
             cssclass="hot",

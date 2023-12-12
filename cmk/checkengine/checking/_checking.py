@@ -7,7 +7,6 @@
 import itertools
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 
-import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.everythingtype import EVERYTHING

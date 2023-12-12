@@ -14,7 +14,6 @@ from typing import final, Final, NamedTuple
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
-import cmk.utils.misc
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import REGEX_HOST_NAME_CHARS

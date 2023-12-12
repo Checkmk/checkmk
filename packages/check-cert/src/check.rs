@@ -262,7 +262,7 @@ where
             "{}={}{};{};{};{};{}",
             self.label,
             self.value,
-            self.uom.clone().unwrap_or_default(),
+            self.uom.as_ref().map_or(String::new(), ToString::to_string),
             self.levels
                 .as_ref()
                 .map_or(String::new(), |v| v.warn.to_string()),

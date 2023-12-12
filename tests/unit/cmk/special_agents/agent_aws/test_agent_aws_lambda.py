@@ -9,7 +9,8 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pytest
-from pytest import MonkeyPatch
+from mypy_boto3_logs.client import CloudWatchLogsClient
+from mypy_boto3_logs.type_defs import GetQueryResultsResponseTypeDef
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -26,7 +27,6 @@ from cmk.special_agents.agent_aws import (
 
 from .agent_aws_fake_clients import (
     Entity,
-    FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
     FakeCloudwatchClientLogsClient,
     LambdaListFunctionsIB,
@@ -270,22 +270,30 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
             assert len(metrics) == 4  # all metrics
 
 
-@pytest.mark.skip("hangs forever")
-def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:
-    client = FakeCloudwatchClientLogsClient()
-    # disable warning: "Argument 1 to "setitem" of "MonkeyPatch" has incompatible type "QueryResults"; expected "MutableMapping[str, str]"mypy(error)"
-    monkeypatch.setitem(
-        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
-        "status",
-        "Running",
+def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
+    class CloudWatchLogsClientStub(CloudWatchLogsClient):
+        def __init__(self):  # pylint: disable=super-init-not-called
+            pass
+
+        def get_query_results(self, *, queryId: str) -> GetQueryResultsResponseTypeDef:
+            return {
+                "results": [[]],
+                "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
+                "status": "Running",
+                "ResponseMetadata": {
+                    "RequestId": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
+                    "HostId": "I made this up to make mypy happy",
+                    "HTTPStatusCode": 200,
+                    "HTTPHeaders": {},
+                    "RetryAttempts": 0,
+                },
+            }
+
+    client = CloudWatchLogsClientStub()
+    result = LambdaCloudwatchInsights.query_results(
+        client=client,
+        query_id="FakeQueryId",
+        timeout_seconds=0.001,
+        sleep_duration=0.001,
     )
-    # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient.
-    assert (
-        LambdaCloudwatchInsights.query_results(
-            client=client,  # type: ignore[arg-type]
-            query_id="FakeQueryId",
-            timeout_seconds=0.001,
-            sleep_duration=0.001,
-        )
-        is None
-    )
+    assert result is None

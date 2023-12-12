@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypeVar
+from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TYPE_CHECKING, TypeVar
 
 import boto3
 import botocore
@@ -53,6 +53,9 @@ from cmk.special_agents.v0_unstable.misc import (
     get_seconds_since_midnight,
     vcrtrace,
 )
+
+if TYPE_CHECKING:
+    from mypy_boto3_logs.client import CloudWatchLogsClient
 
 NOW = datetime.now()
 
@@ -5030,7 +5033,7 @@ class LambdaCloudwatchInsights(AWSSection):
     @staticmethod
     def query_results(
         *,
-        client: BaseClient,
+        client: "CloudWatchLogsClient",
         query_id: str,
         timeout_seconds: float,
         sleep_duration: float = 0.5,
@@ -5039,9 +5042,9 @@ class LambdaCloudwatchInsights(AWSSection):
         response_results: dict = {"status": "Scheduled"}
         query_start = datetime.now().timestamp()
         while response_results["status"] != "Complete":
-            response_results = client.get_query_results(queryId=query_id)  # type: ignore[attr-defined]
+            response_results = client.get_query_results(queryId=query_id)  # type: ignore[assignment]
             if datetime.now().timestamp() - query_start >= timeout_seconds:
-                client.stop_query(queryId=query_id)  # type: ignore[attr-defined]
+                client.stop_query(queryId=query_id)
                 logging.error(
                     "LambdaCloudwatchInsights: query_results failed"
                     " or timed out with the following results: %s ",
@@ -5146,7 +5149,7 @@ class LambdaCloudwatchInsights(AWSSection):
         cloudwatch_data: dict[str, LambdaMetricStats] = {}
         for query_id in queries:
             query_results = self.query_results(
-                client=self._client,
+                client=self._client,  # type: ignore[arg-type]
                 query_id=query_id,
                 timeout_seconds=60,
             )

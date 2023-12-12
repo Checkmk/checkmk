@@ -10,9 +10,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Literal, Self, TypeVar
 
-import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError

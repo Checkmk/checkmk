@@ -7,8 +7,6 @@ import itertools
 from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
 
 import cmk.utils.debug
-import cmk.utils.misc
-import cmk.utils.paths
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console

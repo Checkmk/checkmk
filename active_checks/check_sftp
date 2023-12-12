@@ -40,7 +40,7 @@ OPTIONS:
 
 def connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for_keys):
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
     client.connect(
         opt_host,
         username=opt_user,

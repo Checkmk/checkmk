@@ -729,6 +729,11 @@ def _final_read_only_check_parameters(
     service_name: ServiceName,
     entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
+    params = (
+        entries.evaluate(timeperiod_active)
+        if isinstance(entries, TimespecificParameters)
+        else entries
+    )
     return Parameters(
         # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
         # wrap_parameters is a no-op for dictionaries.
@@ -738,12 +743,24 @@ def _final_read_only_check_parameters(
             _inject_prediction_callback(
                 host_name,
                 service_name,
-                entries.evaluate(timeperiod_active)
-                if isinstance(entries, TimespecificParameters)
-                else entries,
-            ),
+                params,
+            )
+            if _contains_predictive_levels(params)
+            else params,
         )
     )
+
+
+def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
+    if isinstance(params, (list, tuple)):
+        return any(_contains_predictive_levels(p) for p in params)
+
+    if isinstance(params, dict):
+        return "__get_predictive_levels__" in params or any(
+            _contains_predictive_levels(p) for p in params.values()
+        )
+
+    return False
 
 
 def _inject_prediction_callback(

@@ -1,0 +1,11 @@
+Title: host_tag_group: add help field to the response schema
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1702382101
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+
+

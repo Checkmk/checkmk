@@ -30,7 +30,7 @@ from cmk.gui.openapi.endpoints.host_tag_group.response_schemas import (
     ConcreteHostTagGroup,
     HostTagGroupCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
@@ -96,7 +96,7 @@ HOST_TAG_GROUP_NAME = {
     method="post",
     etag="output",
     request_schema=InputHostTagGroup,
-    response_schema=response_schemas.DomainObject,
+    response_schema=ConcreteHostTagGroup,
     permissions_required=RW_PERMISSIONS,
 )
 def create_host_tag_group(params: Mapping[str, Any]) -> Response:
@@ -267,6 +267,13 @@ def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
 
 
 def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
+    extensions = {
+        "topic": details.get("topic", "Tags"),
+        "tags": details["tags"],
+    }
+    if details.get("help") is not None:
+        extensions.update({"help": details["help"]})
+
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],
@@ -279,7 +286,7 @@ def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
                 base=constructors.object_href("host_tag_group", details["id"]),
             )
         },
-        extensions={"topic": details.get("topic", "Tags"), "tags": details["tags"]},
+        extensions=extensions,
     )
 
 

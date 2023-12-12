@@ -9,8 +9,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class AlertSeverity(StrEnum):
@@ -41,7 +41,7 @@ def parse_alerts(string_table: StringTable) -> InternalAlerts:
     )
 
 
-register.agent_section(
+agent_section_pure_storage_fa_alerts = AgentSection(
     name="pure_storage_fa_alerts",
     parse_function=parse_alerts,
 )
@@ -73,7 +73,7 @@ def check_internal_alerts(section: InternalAlerts) -> CheckResult:
         yield Result(state=State.OK, notice=f'Info alerts: {", ".join(section.info_alerts)}')
 
 
-register.check_plugin(
+check_plugin_pure_storage_fa_alerts = CheckPlugin(
     name="pure_storage_fa_alerts",
     service_name="Internal Alerts",
     discovery_function=discover_internal_alerts,

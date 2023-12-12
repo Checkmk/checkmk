@@ -349,6 +349,10 @@ msgstr "%H:%M:%S"
 msgid "%Y-%m-%d"
 msgstr "%Y-%m-%d"
 
+#, fuzzy
+msgid "%a, %d. %B %Y at %H:%M"
+msgstr "%s, %s. %s %s à %s"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d Paramètres du filtre"
@@ -693,10 +697,6 @@ msgstr "%s a été arrêté après %s à %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s écrire %s"
-
-#, python-format
-msgid "%s, %s. %s %s at %s"
-msgstr "%s, %s. %s %s à %s"
 
 #, python-format
 msgid ""
@@ -1283,6 +1283,14 @@ msgstr ""
 "services.<br><br><b>Noms de services explicites et ignorer les balises "
 "globales:</b><br>Utilisez cette option pour spécifier des noms explicites. "
 "Les balises globales seront ignorées pour ces services."
+
+#, fuzzy
+msgid "<b>Keyword</b> monitoring"
+msgstr "Surveillance du réseau"
+
+#, fuzzy
+msgid "<b>Keyword</b> thresholds"
+msgstr "Seuil du capteur"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3090,6 +3098,14 @@ msgstr "Accuser réception du dernier résultat %s"
 msgid "Acknowledge problems"
 msgstr "Reconnaître les problèmes"
 
+#, fuzzy
+msgid "Acknowledge problems datepicker"
+msgstr "Reconnaître les problèmes"
+
+#, fuzzy
+msgid "Acknowledge problems timepicker"
+msgstr "Reconnaître les problèmes"
+
 msgid "Acknowledge problems?"
 msgstr "Reconnaître les problèmes?"
 
@@ -3128,6 +3144,14 @@ msgstr "Reconnaissance du problème"
 
 msgid "Acknowledging problems"
 msgstr "Reconnaître les problèmes"
+
+#, fuzzy
+msgid "Acknowledgment expires:"
+msgstr "Reconnaître les problèmes"
+
+#, fuzzy
+msgid "Acknowledgments: "
+msgstr "Remerciements"
 
 msgid "Act."
 msgstr "Agir."
@@ -3473,6 +3497,18 @@ msgstr "Utilisation réelle de l'aide"
 msgid "Actual traffic"
 msgstr "Trafic réel"
 
+#, fuzzy
+msgid "Ad hoc comment"
+msgstr "Commentaire ad hoc"
+
+#, fuzzy
+msgid "Ad hoc downtime"
+msgstr "Temps d'arrêt ponctuel"
+
+#, fuzzy, python-format
+msgid "Ad hoc for %d minutes"
+msgstr "Adhoc pendant %d minutes"
+
 msgid "Add"
 msgstr "Ajouter"
 
@@ -3748,9 +3784,6 @@ msgstr "Ajouter une liste"
 msgid "Add macro"
 msgstr "Ajouter une macro"
 
-msgid "Add mapping"
-msgstr "Ajouter la cartographie"
-
 msgid "Add message pattern"
 msgstr "Ajouter un modèle de message"
 
@@ -3862,6 +3895,10 @@ msgstr "Ajouter un nouveau statut"
 
 msgid "Add new tag"
 msgstr "Ajouter un nouveau tag"
+
+#, fuzzy
+msgid "Add new threshold"
+msgstr "Ajouter un nouveau rôle"
 
 msgid "Add new time"
 msgstr "Ajouter une nouvelle heure"
@@ -4052,6 +4089,10 @@ msgstr "Ajouter à la liste des signets"
 msgid "Add to condition"
 msgstr "Ajouter une condition d'étiquetage"
 
+#, fuzzy
+msgid "Add to dashboard"
+msgstr "Lien vers le tableau de bord"
+
 msgid "Add to graph collection"
 msgstr "Ajouter à la collection de graphiques"
 
@@ -4060,6 +4101,10 @@ msgstr "Ajouter à la configuration de surveillance"
 
 msgid "Add to query"
 msgstr "Ajouter à la requête"
+
+#, fuzzy
+msgid "Add to report"
+msgstr "Ajouter un rapport stocké"
 
 msgid "Add to trusted CAs"
 msgstr "Ajouter aux CA de confiance"
@@ -4152,6 +4197,9 @@ msgstr "Ajout d'un utilisateur %s"
 #, python-format
 msgid "Added: %s"
 msgstr "Ajouté : %s"
+
+msgid "Additional Checkmk plugins by third parties"
+msgstr ""
 
 msgid "Additional Host Names"
 msgstr "Noms d'hôtes supplémentaires"
@@ -4273,16 +4321,6 @@ msgstr ""
 "groupe dans LDAP. Ce plugin ajoute l'utilisateur uniquement aux groupes de "
 "contact existants. Le nom du groupe de contact doit correspondre au nom "
 "commun (cn) du groupe LDAP."
-
-msgid "Adhoc comment"
-msgstr "Commentaire ad hoc"
-
-msgid "Adhoc downtime"
-msgstr "Temps d'arrêt ponctuel"
-
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "Adhoc pendant %d minutes"
 
 msgid "Admin"
 msgstr "Admin"
@@ -4700,7 +4738,8 @@ msgstr "Cuisson et signature de l'agent"
 msgid "Agent baking finished."
 msgstr "La cuisson de l'agent est terminée."
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (deprecated)"
 msgstr "Plugins basés sur les agents (Contrôles, Inventaire)"
 
 msgid "Agent controller"
@@ -5019,7 +5058,8 @@ msgstr "Gestionnaires d'alerte à déployer"
 msgid "Alert handlers will handle state changes."
 msgstr "Les gestionnaires d'alertes gèrent les changements d'état."
 
-msgid "Alert mangager rule state"
+#, fuzzy
+msgid "Alert manager rule state"
 msgstr "État de la règle du gestionnaire d'alerte"
 
 msgid "Alert on excessive CPU utilization"
@@ -7102,6 +7142,10 @@ msgstr "Disponibilité ("
 msgid "Availability Timeline"
 msgstr "Calendrier de disponibilité"
 
+#, fuzzy
+msgid "Availability groups"
+msgstr "Disponibilité de"
+
 msgid "Availability is unknown"
 msgstr "La disponibilité est inconnue"
 
@@ -7977,6 +8021,10 @@ msgstr ""
 "Bloqué à cause de changements non-réversibles. Activer ces changements pour "
 "débloquer le retour arrière."
 
+#, fuzzy
+msgid "Blocked sessions"
+msgstr "Sessions MSSQL bloquées"
+
 msgid "Blocking rate"
 msgstr "Taux de blocage"
 
@@ -8019,10 +8067,6 @@ msgstr "Queue de corps pour les notifications de service"
 msgid "Bold"
 msgstr "Gras"
 
-#, fuzzy
-msgid "Bonding interface status"
-msgstr "Interfaces de liaison"
-
 msgid "Bonding interfaces"
 msgstr "Interfaces de liaison"
 
@@ -8050,6 +8094,9 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Fond"
+
+msgid "Bottom (lowest) N"
+msgstr ""
 
 msgid "Bounce buffers"
 msgstr "Tampons de rebondissement"
@@ -9429,6 +9476,10 @@ msgstr "Cache %s"
 msgid "Cache Size"
 msgstr "Taille du cache"
 
+#, fuzzy
+msgid "Cache age"
+msgstr "Taille du cache"
+
 msgid "Cache age for background checks"
 msgstr "Âge de cache pour les vérifications d'antécédents"
 
@@ -10486,6 +10537,9 @@ msgstr ""
 "d'accès à un hôte, par exemple via un agent, SNMPv1, SNMPv2 pour trouver la "
 "bonne configuration de surveillance pour cet hôte."
 
+msgid "Check-Sql plugin uses different methods to find MS SQL instances"
+msgstr ""
+
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -10887,7 +10941,8 @@ msgstr "Contrôles des hôtes réguliers"
 msgid "Checks via SSH. "
 msgstr "Vérifications via SSH. "
 
-msgid "Checks' man pages"
+#, fuzzy
+msgid "Checks' man pages (deprecated)"
 msgstr "Pages de manuel des vérifications"
 
 msgid "Checktype"
@@ -11865,6 +11920,12 @@ msgstr "Type de commentaire"
 
 msgid "Comment type (host/service)"
 msgstr "Type de commentaire (hôte/service)"
+
+msgid "Comment will be kept after acknowledgment expires."
+msgstr ""
+
+msgid "Comment will be removed after acknowledgment expires."
+msgstr ""
 
 #, python-format
 msgid "Comment: %s"
@@ -13420,6 +13481,10 @@ msgstr ""
 msgid "Counter-object name or number"
 msgstr "Nom ou numéro du contre-objet"
 
+#, fuzzy
+msgid "Counters"
+msgstr "Compteur"
+
 msgid "Counting & Timing"
 msgstr "Comptage et chronométrage"
 
@@ -14813,6 +14878,10 @@ msgstr "Répertoire principal"
 msgid "Data engress"
 msgstr "Prise de données"
 
+#, fuzzy
+msgid "Data files"
+msgstr "Fichier de données"
+
 msgid "Data files size"
 msgstr "Taille des fichiers de données"
 
@@ -15286,8 +15355,9 @@ msgstr "Configuration par défaut"
 msgid "Default credentials"
 msgstr "Informations d'identification par défaut"
 
-msgid "Default element is not one of the specified elements"
-msgstr ""
+#, fuzzy
+msgid "Default expiration time (relative)"
+msgstr "Plage de temps par défaut pour les rapports"
 
 msgid "Default is 22."
 msgstr "La valeur par défaut est 22."
@@ -16055,6 +16125,9 @@ msgstr "Démonstration"
 msgid "Demonstration"
 msgstr "Démonstration"
 
+msgid "Deny"
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -16487,6 +16560,10 @@ msgstr "Détails des notifications de service"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "Détecter et utiliser les proxies configurés sur le système cible"
+
+#, fuzzy
+msgid "Detect instances"
+msgstr "Autodétection des instances"
 
 msgid "Detect network parent hosts"
 msgstr "Détecter les hôtes parents du réseau"
@@ -17361,6 +17438,10 @@ msgstr ""
 
 msgid "Displays a single metric of a specific host and service."
 msgstr "Affiche une seule métrique d'un hôte et d'un service spécifique."
+
+#, fuzzy
+msgid "Displays a sorted list of services according to a selected metric."
+msgstr "Affiche la quantité de services dans un état sélectionné."
 
 msgid "Displays a static text to the user."
 msgstr "Affiche un texte statique à l'utilisateur."
@@ -18784,6 +18865,10 @@ msgstr "Modifier le client %s"
 msgid "Edit dashboards"
 msgstr "Modifier les tableaux de bord"
 
+#, fuzzy
+msgid "Edit defaults"
+msgstr "Est par défaut"
+
 msgid "Edit element"
 msgstr "Élément d'édition"
 
@@ -19294,7 +19379,8 @@ msgstr "Activer TLS"
 msgid "Enable active checks"
 msgstr "Activer les contrôles actifs"
 
-msgid "Enable adhoc downtime"
+#, fuzzy
+msgid "Enable ad hoc downtime"
 msgstr "Permettre les temps d'arrêt adhoc"
 
 msgid "Enable all"
@@ -19725,6 +19811,14 @@ msgstr ""
 
 msgid "Enter"
 msgstr "Entrez"
+
+#, fuzzy
+msgid "Enter a comment to acknowledge problems"
+msgstr "Reconnaître les problèmes"
+
+#, fuzzy
+msgid "Enter a comment to schedule downtime"
+msgstr "Début ou fin d'un temps d'arrêt programmé"
 
 msgid ""
 "Enter a list of user IDs to be notified here. These users need to be members "
@@ -20372,6 +20466,9 @@ msgstr "Exemple de configuration pour systemd"
 msgid "Example for parameters"
 msgstr "Exemple de paramètres"
 
+msgid "Example:"
+msgstr ""
+
 msgid "Exc."
 msgstr "Exc."
 
@@ -20731,9 +20828,6 @@ msgstr "Intervalle de mise à jour prévu"
 msgid "Experimental features"
 msgstr "Fonctionnalité d'entreprise"
 
-msgid "Expire acknowledgement after"
-msgstr "Expiration de l'accusé de réception après"
-
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr ""
 "Expiration des événements qui sont dans l'état <i>accusé de réception</i>"
@@ -20743,6 +20837,10 @@ msgstr "Expiration des événements qui sont dans l'état <i>ouvert</i>"
 
 msgid "Expire message"
 msgstr "Message d'expiration"
+
+#, fuzzy
+msgid "Expire on"
+msgstr "Expiration"
 
 msgid "Expire time"
 msgstr "Temps d'expiration"
@@ -21895,9 +21993,6 @@ msgstr "Taille fixe"
 msgid "Fixed string to expect in the content"
 msgstr "Chaîne fixe à attendre dans le contenu"
 
-msgid "FixedValue value is not serializable."
-msgstr ""
-
 msgid "Flap"
 msgstr "Rabat"
 
@@ -22882,7 +22977,8 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Conception de l'interface utilisateur graphique"
 
-msgid "GUI extensions"
+#, fuzzy
+msgid "GUI extensions (deprecated)"
 msgstr "Extensions de l'interface graphique"
 
 msgid ""
@@ -23566,18 +23662,42 @@ msgstr "Sortie HTML"
 msgid "HTTP"
 msgstr "HTTP"
 
-#, python-format
-msgid "HTTP %s errors"
+#, fuzzy
+msgid "HTTP 2XX errors"
 msgstr "Erreurs HTTP %s"
 
 msgid "HTTP 3/4/5XX Errors"
 msgstr "Erreurs HTTP 3/4/5XX"
+
+#, fuzzy
+msgid "HTTP 3XX errors"
+msgstr "Erreurs HTTP %s"
+
+#, fuzzy
+msgid "HTTP 4XX errors"
+msgstr "Erreurs HTTP %s"
 
 msgid "HTTP 500 errors"
 msgstr "Erreurs HTTP 500"
 
 msgid "HTTP 500/2/3/4 Errors"
 msgstr "Erreurs HTTP 500/2/3/4"
+
+#, fuzzy
+msgid "HTTP 502 errors"
+msgstr "Erreurs HTTP 500"
+
+#, fuzzy
+msgid "HTTP 503 errors"
+msgstr "Erreurs HTTP 500"
+
+#, fuzzy
+msgid "HTTP 504 errors"
+msgstr "Erreurs HTTP 500"
+
+#, fuzzy
+msgid "HTTP 5XX errors"
+msgstr "Erreurs HTTP 500"
 
 msgid "HTTP 5xx Responses"
 msgstr "Réponses HTTP 5xx"
@@ -23610,6 +23730,10 @@ msgstr "Données HTTP POST"
 msgid "HTTP Parameters"
 msgstr "Paramètres HTTP"
 
+#, fuzzy
+msgid "HTTP Proxy"
+msgstr "Proxy HTTP"
+
 msgid "HTTP Redirects"
 msgstr "Redirections HTTP"
 
@@ -23639,6 +23763,10 @@ msgstr "HTTP, TCP, Email, ..."
 
 msgid "HTTPS"
 msgstr "HTTPS"
+
+#, fuzzy
+msgid "HTTPS Proxy"
+msgstr "Proxy HTTP"
 
 msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
@@ -26680,6 +26808,11 @@ msgstr ""
 "atteint, le compte est remis à zéro."
 
 msgid ""
+"If include is not defined then exclude following SIDs (if found and /or "
+"defined)"
+msgstr ""
+
+msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
 msgstr ""
@@ -26777,6 +26910,9 @@ msgstr ""
 "affichés dans une vue d'état Multisite si cette vue a été configurée pour "
 "les sons. Dans les vues livrées avec Multisite, toutes les vues de problèmes "
 "ont des sons activés."
+
+msgid "If state changes OR core restarts OR on recovery (OK/UP)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -28081,6 +28217,9 @@ msgstr "Ignorer la limite d'interrogation douce"
 msgid "Ignore specific alert rules"
 msgstr "Ignorer les règles d'alerte spécifiques"
 
+msgid "Ignore status changes until services/hosts are OK/UP again (sticky)"
+msgstr ""
+
 msgid "Ignore styles specified in rules"
 msgstr "Ignorer les styles spécifiés dans les règles"
 
@@ -29372,9 +29511,6 @@ msgstr "Groupes d'interface"
 msgid "Interface id"
 msgstr "Identifiant de l'interface"
 
-msgid "Interface known in Ntop"
-msgstr "Interface connue dans Ntop"
-
 msgid "Interface settings"
 msgstr "Paramètres de l'interface"
 
@@ -30347,6 +30483,9 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "Paramètres de temps de Kaspersky Anti-Virus"
 
+msgid "Keep comment after acknowledgment expires (persistent comment)"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "Conserver les connexions existantes"
 
@@ -30982,16 +31121,19 @@ msgstr ""
 "pouvez soit désactiver le groupage des notifications, soit choisir un autre "
 "plugin de notification qui permet le groupage."
 
-msgid "Legacy GUI extensions"
+#, fuzzy
+msgid "Legacy GUI extensions (deprecated)"
 msgstr "Extensions de l'interface graphique héritée"
 
 msgid "Legacy agent management"
 msgstr "Gestion des anciens agents"
 
-msgid "Legacy check plugins"
+#, fuzzy
+msgid "Legacy check plugins (deprecated)"
 msgstr "Plugins de vérification de l'héritage"
 
-msgid "Legacy inventory plugins"
+#, fuzzy
+msgid "Legacy inventory plugins (deprecated)"
 msgstr "Anciens plugins d'inventaire"
 
 msgid "Legacy run"
@@ -31893,6 +32035,10 @@ msgstr "Limiter le nombre de lignes dans les tableaux de visualisation"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limiter le nombre de lignes affichées dans les tableaux"
+
+#, fuzzy
+msgid "Limit to"
+msgstr "Limite"
 
 msgid "Limit width"
 msgstr "Largeur de la limite"
@@ -34584,6 +34730,10 @@ msgid "Maximum run duration for last execution"
 msgstr "Durée maximale de la dernière exécution"
 
 #, fuzzy
+msgid "Maximum runtime of a keyword run"
+msgstr "Âge maximum de la dernière sauvegarde"
+
+#, fuzzy
 msgid "Maximum runtime of a test run"
 msgstr "Âge maximum de la dernière sauvegarde"
 
@@ -35107,15 +35257,6 @@ msgstr ""
 msgid "Metric not found"
 msgstr "Métrique non trouvé"
 
-msgid ""
-"Metric transformations and combinations like Forecasts calculations, "
-"aggregations and filtering are only available with the Checkmk Enterprise "
-"Editions"
-msgstr ""
-"Les transformations et combinaisons métriques telles que les calculs de "
-"prévisions, les agrégations et le filtrage ne sont disponibles qu'avec les "
-"éditions Checkmk Enterprise"
-
 msgid "Metrics"
 msgstr "Métriques"
 
@@ -35318,6 +35459,10 @@ msgstr "Ligne miroir"
 
 msgid "Mirrored Stacked"
 msgstr "Miroir empilé"
+
+#, fuzzy
+msgid "Mirroring"
+msgstr "Surveillance"
 
 msgid "Mirroring state criticality"
 msgstr "Criticité de l'état miroir"
@@ -35665,6 +35810,10 @@ msgstr "Surveiller Route53"
 
 msgid "Monitor all files in folder"
 msgstr "Surveiller tous les fichiers du dossier"
+
+#, fuzzy
+msgid "Monitor all instances detected and defined"
+msgstr "Surveiller toutes les instances trouvées"
 
 msgid "Monitor all instances found"
 msgstr "Surveiller toutes les instances trouvées"
@@ -37102,6 +37251,10 @@ msgstr "Aucune entrée."
 msgid "No exclude range configured"
 msgstr "Aucune plage d'exclusion configurée"
 
+#, fuzzy
+msgid "No expiration date"
+msgstr "État d'enregistrement"
+
 msgid "No explicit credentials"
 msgstr "Pas d'accréditation explicite"
 
@@ -37232,6 +37385,10 @@ msgid "No performance data: %s"
 msgstr "Aucune donnée de performance : %s"
 
 #, fuzzy
+msgid "No proxy"
+msgstr "Utiliser un proxy"
+
+#, fuzzy
 msgid "No re-executions"
 msgstr "Exécutions simultanées"
 
@@ -37357,6 +37514,14 @@ msgstr "Aucune limitation de version"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Aucune vue n'est définie avec le nom '%s'."
+
+#, fuzzy
+msgid "No, adjust settings"
+msgstr "Paramètres de l'hôte"
+
+#, fuzzy
+msgid "No, discard"
+msgstr "rejette"
 
 #, fuzzy
 msgid "No, keep current name"
@@ -37989,6 +38154,14 @@ msgstr "Événements notifiés pour les hôtes"
 msgid "Notified events for services"
 msgstr "Événements notifiés pour les services"
 
+#, python-format
+msgid "Notify affected users if %s are in place (send notifications)"
+msgstr ""
+
+msgid ""
+"Notify affected users if notification rules are in place (send notifications)"
+msgstr ""
+
 msgid "Notify all contacts of the notified host or service."
 msgstr "Notifier tous les contacts de l'hôte ou du service notifié."
 
@@ -38038,6 +38211,10 @@ msgstr "Ntop : Alertes"
 
 msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng (supplément payant)"
+
+#, fuzzy
+msgid "Ntopng host"
+msgstr "Hôte Ntop"
 
 msgid "Ntopng integration"
 msgstr "Intégration de Ntopng"
@@ -38991,6 +39168,10 @@ msgstr "OSN Atténuation du laser"
 msgid "OTP code"
 msgstr "Connexion TCP"
 
+#, fuzzy
+msgid "OVS bonding interface status"
+msgstr "Interfaces de liaison"
+
 msgid "Object"
 msgstr "Objet"
 
@@ -39100,11 +39281,18 @@ msgstr "Omettre les lignes où toutes les colonnes sont identiques"
 msgid "On"
 msgstr "O"
 
+#, fuzzy, python-format
+msgid "On %s (server time)."
+msgstr "Heure du serveur"
+
 msgid "On Hold"
 msgstr "En attente"
 
 msgid "On all sites"
 msgstr "Sur tous les sites"
+
+msgid "On core restart OR recovery (OK/UP)"
+msgstr ""
 
 msgid "On down host"
 msgstr "L'hôte en bas"
@@ -39366,6 +39554,10 @@ msgstr ""
 "groupes de contact surveillent automatiquement les contacts. L'affectation "
 "des hôtes aux groupes de contact peut également être définie par des <a "
 "href='%s'>règles</a>."
+
+#, fuzzy
+msgid "Only monitor following SIDs (if found and /or defined)"
+msgstr "N'interrogez que les SID suivants (s'ils sont trouvés)"
 
 msgid "Only needed if you have multiple MySQL Instances on one server"
 msgstr ""
@@ -41054,15 +41246,43 @@ msgid "Percentage levels of current thread count in threadpool"
 msgstr ""
 "Niveaux de pourcentage du nombre actuel de threads dans le pool de threads"
 
-#, python-format
-msgid "Percentage of HTTP %s errors"
+#, fuzzy
+msgid "Percentage of HTTP 2XX errors"
 msgstr "Pourcentage d'erreurs HTTP %s"
 
 msgid "Percentage of HTTP 3/4/5XX Errors"
 msgstr "Pourcentage d'erreurs HTTP 3/4/5XX"
 
+#, fuzzy
+msgid "Percentage of HTTP 3XX errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
+#, fuzzy
+msgid "Percentage of HTTP 4XX errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
+#, fuzzy
+msgid "Percentage of HTTP 500 errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
 msgid "Percentage of HTTP 500/2/3/4 Errors"
 msgstr "Pourcentage d'erreurs HTTP 500/2/3/4"
+
+#, fuzzy
+msgid "Percentage of HTTP 502 errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
+#, fuzzy
+msgid "Percentage of HTTP 503 errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
+#, fuzzy
+msgid "Percentage of HTTP 504 errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
+
+#, fuzzy
+msgid "Percentage of HTTP 5XX errors"
+msgstr "Pourcentage d'erreurs HTTP %s"
 
 msgid "Percentage of Lambda user errors"
 msgstr "Pourcentage d'erreurs des utilisateurs de Lambda"
@@ -41373,9 +41593,6 @@ msgstr "Volume persistant Nom de la réclamation"
 msgid "Persistent Volume Claims"
 msgstr "Réclamations relatives aux volumes persistants"
 
-msgid "Persistent comment"
-msgstr "Commentaire persistant"
-
 msgid "Persistent connections"
 msgstr "Connexions persistantes"
 
@@ -41516,6 +41733,10 @@ msgid "Piggyback creation options"
 msgstr "Options de création par ferroutage"
 
 msgid "Piggyback data"
+msgstr "Données de ferroutage"
+
+#, fuzzy
+msgid "Piggyback host"
 msgstr "Données de ferroutage"
 
 msgid "Piggyback information for other hosts"
@@ -43428,6 +43649,10 @@ msgstr "RAM utilisée"
 msgid "RAM used %"
 msgstr "RAM utilisée (%)"
 
+#, fuzzy
+msgid "RCC profile configuration"
+msgstr "Configuration à distance"
+
 msgid "RCU"
 msgstr "UCR"
 
@@ -43648,6 +43873,10 @@ msgstr "Limites de la gamme"
 
 msgid "Range of values (min/max)"
 msgstr "Plage de valeurs (min/max)"
+
+#, fuzzy
+msgid "Ranking order"
+msgstr "Avertissement si plus de"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack : Température"
@@ -44496,10 +44725,15 @@ msgstr "Supprimer l'enregistrement TLS des hôtes sélectionnés"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Supprimez la configuration du Pare-feu Windows si elle est présente"
 
-msgid "Remove acknowledgement"
+#, fuzzy
+msgid "Remove acknowledgments"
 msgstr "Supprimer l'accusé de réception"
 
-msgid "Remove acknowledgement?"
+msgid "Remove all"
+msgstr "Supprimer tout"
+
+#, fuzzy
+msgid "Remove all acknowledgments?"
 msgstr "Supprimer l'accusé de réception?"
 
 msgid "Remove all and find new"
@@ -47461,9 +47695,6 @@ msgstr "Envoyer les métriques à InfluxDB"
 msgid "Send monitoring notification"
 msgstr "Envoyer une notification de suivi"
 
-msgid "Send notification"
-msgstr "Envoyer une notification"
-
 msgid "Send notifications to Event Console"
 msgstr "Envoyer des notifications à la console d'événements"
 
@@ -48067,6 +48298,9 @@ msgstr "Balises de service"
 
 msgid "Service tags (with titles)"
 msgstr "Balises de service (avec titres)"
+
+msgid "Service was WARN and goes CRIT - acknowledgment doesn't expire."
+msgstr ""
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "Service dont l'état a changé au cours des 60 dernières minutes"
@@ -48793,6 +49027,10 @@ msgstr "Taille de la piscine partagée"
 msgid "Shared with"
 msgstr "Partagé avec"
 
+#, fuzzy
+msgid "Shipped Checkmk plugins"
+msgstr "Vérifier le plugin"
+
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr ""
 "Court - Utilisez les 12 premiers caractères de l'ID du conteneur docker"
@@ -48911,6 +49149,10 @@ msgstr "Afficher tous les sujets"
 
 msgid "Show analysis"
 msgstr "Montrer l'analyse"
+
+#, fuzzy
+msgid "Show bar visualization"
+msgstr "Visualisation de la BI"
 
 msgid "Show bulks"
 msgstr "Montrer les bulks"
@@ -49127,6 +49369,10 @@ msgstr "Afficher les règles utilisant ce %s"
 
 msgid "Show separate result for each SLA period"
 msgstr "Afficher un résultat distinct pour chaque période de SLA"
+
+#, fuzzy
+msgid "Show service description"
+msgstr "Description du service"
 
 msgid "Show service status"
 msgstr "Afficher l'état du service"
@@ -52019,9 +52265,6 @@ msgstr "Connexion d'état"
 msgid "Status data inventory"
 msgstr "Inventaire des données d'état"
 
-msgid "Status detail"
-msgstr "Détail du statut"
-
 msgid "Status downtimes"
 msgstr "Temps d'arrêt du statut"
 
@@ -52152,9 +52395,6 @@ msgstr "L'étape a été lancée"
 
 msgid "Steps"
 msgstr "Étapes"
-
-msgid "Sticky"
-msgstr "Sticky"
 
 msgid "Still nothing happened."
 msgstr "Il ne s'est toujours rien passé."
@@ -53121,6 +53361,10 @@ msgstr "Options de la table"
 
 msgid "Table percentage bloat levels"
 msgstr "Niveaux de ballonnement en pourcentage du tableau"
+
+#, fuzzy
+msgid "Table spaces"
+msgstr "Tablespaces"
 
 msgid "Table with availability figures"
 msgstr "Tableau avec chiffres de disponibilité"
@@ -54786,7 +55030,8 @@ msgstr ""
 msgid "The comment must not contain semicolons."
 msgstr "Le commentaire ne doit pas contenir de point-virgule."
 
-msgid "The comment which is automatically sent with an adhoc downtime"
+#, fuzzy
+msgid "The comment which is automatically sent with an ad hoc downtime"
 msgstr ""
 "Le commentaire qui est automatiquement envoyé avec un temps d'arrêt adhoc"
 
@@ -55194,7 +55439,8 @@ msgstr ""
 msgid "The domain \"%s\" does not support activation."
 msgstr "Le domaine \"%s\" ne prend pas en charge l'activation."
 
-msgid "The duration in minutes of the adhoc downtime."
+#, fuzzy
+msgid "The duration in minutes of the ad hoc downtime."
 msgstr "La durée en minutes du temps d'arrêt adhoc."
 
 msgid ""
@@ -61890,9 +62136,10 @@ msgstr ""
 "pour les graphiques et les perfomètres est possible via le profil de "
 "l'utilisateur."
 
+#, fuzzy
 msgid ""
-"This setting allows to set an adhoc downtime comment and its duration. When "
-"enabled a new button <i>Adhoc downtime for __ minutes</i> will be available "
+"This setting allows to set an ad hoc downtime comment and its duration. When "
+"enabled a new button <i>Ad hoc downtime for __ minutes</i> will be available "
 "in the command form."
 msgstr ""
 "Ce paramètre permet de définir un commentaire de temps d'arrêt adhoc et sa "
@@ -63366,6 +63613,9 @@ msgstr "Info-bulle"
 msgid "Top"
 msgstr "Top"
 
+msgid "Top (highest) N"
+msgstr ""
+
 msgid "Top Talkers"
 msgstr "Les plus grands parleurs"
 
@@ -63377,6 +63627,10 @@ msgstr "Trafic des applications principales : vue du dernier jour"
 
 msgid "Top application traffic: last hour view"
 msgstr "Trafic des applications principales : vue de la dernière heure"
+
+#, fuzzy
+msgid "Top list"
+msgstr "Les plus grands parleurs"
 
 msgid "Top local talkers"
 msgstr "Les principaux intervenants locaux"
@@ -63415,10 +63669,6 @@ msgstr "Profondeur du maillage topologique"
 msgid "Total"
 msgstr "Total"
 
-#, python-format
-msgid "Total %s vCPUs"
-msgstr "Total %s vCPUs"
-
 msgid "Total Active Sessions"
 msgstr "Total des sessions actives"
 
@@ -63446,6 +63696,32 @@ msgstr "Total des opérations d'E/S par seconde"
 
 msgid "Total Index Size"
 msgstr "Taille totale de l'indice"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand F instances') vCPUs"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand G instances') vCPUs"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand P instances') vCPUs"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid ""
+"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
+"instances') vCPUs"
+msgstr "Instances standard à la demande (A, C, D, H, I, M, R, T, Z)"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand X instances') vCPUs"
+msgstr "Total des instances à la demande en cours d'exécution"
 
 msgid "Total Magnetic volumes space"
 msgstr "Espace total des volumes magnétiques"
@@ -63820,11 +64096,1687 @@ msgstr "Délai total d'interrogation"
 msgid "Total restarts"
 msgstr "Total des redémarrages"
 
-#, python-format
-msgid "Total running On-Demand %s Instances"
+msgid "Total running On-Demand Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand a1.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c1.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c1.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c3.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c3.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c4.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c4.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c4.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c4.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c4.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.18xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.9xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.18xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.9xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.18xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.9xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand cc1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand cc2.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand cg1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand cr1.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d2.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d2.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d2.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d2.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand f1.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand f1.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand f1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g2.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g2.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g3.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g3.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g3s.xlarge Instances"
 msgstr "Total des Instances On-Demand en cours d'exécution %s"
 
-msgid "Total running On-Demand Instances"
+#, fuzzy
+msgid "Total running On-Demand g4ad.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand h1.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand h1.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand h1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand h1.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand hi1.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand hs1.8xlarge Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand i2.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i2.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i2.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i2.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.3xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m1.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m1.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m1.small Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand m1.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m2.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m2.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m2.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m3.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m3.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.10xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m4.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.3xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.32xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand mac1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p2.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p2.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p2.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p3.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p3dn.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand p4d.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r3.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r3.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r3.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r4.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t1.micro Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.micro Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.nano Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t2.small Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand t2.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.micro Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.nano Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3.small Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand t3.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.micro Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.nano Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.small Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.micro Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.nano Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.small Instances"
+msgstr "Total des Instances On-Demand en cours d'exécution %s"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.112xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-18tb1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-24tb1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.112xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.56xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.112xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.24xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.3xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1.32xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.32xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.16xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.4xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.8xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.medium Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.12xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.2xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.3xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.6xlarge Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.large Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.metal Instances"
+msgstr "Total des instances à la demande en cours d'exécution"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "Total des instances à la demande en cours d'exécution"
 
 msgid "Total service problems"
@@ -63904,6 +65856,10 @@ msgstr "Trafic reçu"
 
 msgid "Traffic Sent"
 msgstr "Trafic envoyé"
+
+#, fuzzy
+msgid "Transaction Logs"
+msgstr "Journal des transactions"
 
 msgid "Transaction Logs Disk Usage"
 msgstr "Journaux de transactions Utilisation du disque"
@@ -64062,6 +66018,9 @@ msgstr "Essayer"
 
 msgid "Try pattern match"
 msgstr "Essayer de faire correspondre les motifs"
+
+msgid "Try to detect MS SQL instances presented on Server"
+msgstr ""
 
 msgid "Try to fit text to the available space."
 msgstr "Essayez d'adapter le texte à l'espace disponible."
@@ -66230,6 +68189,9 @@ msgstr ""
 msgid "Use procedure call instead of SQL statement"
 msgstr "Utiliser un appel de procédure au lieu d'une déclaration SQL"
 
+msgid "Use proxy"
+msgstr "Utiliser un proxy"
+
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 "Utiliser les paramètres de proxy de l'environnement du processus. Il s'agit "
@@ -67615,9 +69577,6 @@ msgstr "Voir le gestionnaire de paquets d'extension"
 
 msgid "View Properties"
 msgstr "Voir les propriétés"
-
-msgid "View action defaults"
-msgstr "Afficher les valeurs par défaut des actions"
 
 msgid "View all maps"
 msgstr "Voir toutes les cartes"
@@ -70199,8 +72158,16 @@ msgid "Yes"
 msgstr "Oui"
 
 #, fuzzy
+msgid "Yes, acknowledge"
+msgstr "a reconnu"
+
+#, fuzzy
 msgid "Yes, rename"
 msgstr "Nom du serveur Redis"
+
+#, fuzzy
+msgid "Yes, schedule"
+msgstr "Reprogrammer"
 
 msgid "Yes, that is exactly what I want."
 msgstr "Oui, c'est exactement ce que je veux."
@@ -71429,6 +73396,12 @@ msgid ""
 msgstr ""
 "Vous ne pouvez pas définir un temps d'arrêt qui se termine dans le passé. "
 "Cet incident sera signalé."
+
+#, fuzzy
+msgid "You cannot set an expiration date and time that is in the past:"
+msgstr ""
+"Vous ne pouvez pas utiliser les termes \"compter\" et \"attendre\" en même "
+"temps dans la même règle."
 
 msgid ""
 "You cannot use counting and expecting at the same time in the same rule."
@@ -72764,6 +74737,9 @@ msgstr "en bas"
 msgid "e.g. 'My_Project/Closed'"
 msgstr "Par exemple, \"Mon_Projet/Closed\""
 
+msgid "e.g. ticket ID"
+msgstr ""
+
 msgid "eWON SNMP Proxy"
 msgstr "Proxy SNMP eWON"
 
@@ -72809,6 +74785,9 @@ msgstr "activer"
 
 msgid "entries"
 msgstr "entrées"
+
+msgid "entries (max. 50)"
+msgstr ""
 
 msgid "estimated duration"
 msgstr "durée estimée"
@@ -72874,6 +74853,10 @@ msgstr "fichiers"
 
 msgid "filesystem"
 msgstr "système de fichiers"
+
+#, fuzzy
+msgid "firing"
+msgstr "Chaîne de caractères"
 
 msgid "first level"
 msgstr "premier niveau"
@@ -73525,6 +75508,10 @@ msgstr "notifier."
 msgid "notification rule"
 msgstr "règle de notification"
 
+#, fuzzy
+msgid "notification rules"
+msgstr "règle de notification"
+
 msgid "notifications within last"
 msgstr "notifications dans les derniers"
 
@@ -73711,9 +75698,6 @@ msgstr "période"
 
 msgid "period(s)"
 msgstr "période(s)"
-
-msgid "persistent comment"
-msgstr "commentaire persistant"
 
 msgid "pfSense Firewall Packet Rates"
 msgstr "Taux de paquets du pare-feu pfSense"
@@ -73911,9 +75895,6 @@ msgstr "secondes par seconde"
 msgid "secs"
 msgstr "secs"
 
-msgid "send notification"
-msgstr "envoyer une notification"
-
 msgid "send notifications of contactgroup:"
 msgstr "envoyer les notifications du groupe de contact :"
 
@@ -73992,9 +75973,6 @@ msgstr "s"
 
 msgid "status entries"
 msgstr "entrées de statut"
-
-msgid "sticky"
-msgstr "collant"
 
 msgid "stopped"
 msgstr "arrêté"
@@ -74316,6 +76294,52 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Expire acknowledgement after"
+#~ msgstr "Expiration de l'accusé de réception après"
+
+#~ msgid ""
+#~ "Metric transformations and combinations like Forecasts calculations, "
+#~ "aggregations and filtering are only available with the Checkmk Enterprise "
+#~ "Editions"
+#~ msgstr ""
+#~ "Les transformations et combinaisons métriques telles que les calculs de "
+#~ "prévisions, les agrégations et le filtrage ne sont disponibles qu'avec "
+#~ "les éditions Checkmk Enterprise"
+
+#~ msgid "Persistent comment"
+#~ msgstr "Commentaire persistant"
+
+#~ msgid "Send notification"
+#~ msgstr "Envoyer une notification"
+
+#~ msgid "Sticky"
+#~ msgstr "Sticky"
+
+#, python-format
+#~ msgid "Total %s vCPUs"
+#~ msgstr "Total %s vCPUs"
+
+#~ msgid "View action defaults"
+#~ msgstr "Afficher les valeurs par défaut des actions"
+
+#~ msgid "persistent comment"
+#~ msgstr "commentaire persistant"
+
+#~ msgid "send notification"
+#~ msgstr "envoyer une notification"
+
+#~ msgid "sticky"
+#~ msgstr "collant"
+
+#~ msgid "Interface known in Ntop"
+#~ msgstr "Interface connue dans Ntop"
+
+#~ msgid "Add mapping"
+#~ msgstr "Ajouter la cartographie"
+
+#~ msgid "Status detail"
+#~ msgstr "Détail du statut"
+
 #~ msgid "Critical (active connections)"
 #~ msgstr "Critique (connexions actives)"
 
@@ -74491,9 +76515,6 @@ msgstr ""
 
 #~ msgid "Please enter a positive number of minutes."
 #~ msgstr "Veuillez saisir un nombre positif de minutes."
-
-#~ msgid "Remove all"
-#~ msgstr "Supprimer tout"
 
 #~ msgid "Repeat this downtime on a regular basis every"
 #~ msgstr "Répétez ce temps d'arrêt sur une base régulière chaque"
@@ -75760,9 +77781,6 @@ msgstr ""
 #~ "contact avec la source de piggyback. Pour éviter de perdre les hôtes "
 #~ "basés sur le ferroutage dans cette situation, la suppression des hôtes "
 #~ "est désactivée pendant un certain temps après l'initialisation du site."
-
-#~ msgid "discards"
-#~ msgstr "rejette"
 
 #, fuzzy
 #~| msgid "In Progress"
@@ -77728,9 +79746,6 @@ msgstr ""
 
 #~ msgid "Proxy basic authorization"
 #~ msgstr "Autorisation de base du proxy"
-
-#~ msgid "Use proxy"
-#~ msgstr "Utiliser un proxy"
 
 #~ msgid "Backplane"
 #~ msgstr "Fond de panier"

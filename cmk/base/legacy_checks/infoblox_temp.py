@@ -9,8 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
+from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.39 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu1-temp

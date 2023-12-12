@@ -12,8 +12,8 @@ from cmk.base.check_legacy_includes.didactum import (
     parse_didactum_sensors,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 # .1.3.6.1.4.1.46501.6.2.1.5.201007 alpha-bravo_doppelboden_frischluft --> DIDACTUM-SYSTEM-MIB::ctlCANSensorsAnalogName.201007

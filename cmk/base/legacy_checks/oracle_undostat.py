@@ -11,7 +11,8 @@
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError
 
 
 def parse_oracle_undostat(string_table):

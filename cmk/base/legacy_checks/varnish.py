@@ -11,7 +11,8 @@ import time
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)

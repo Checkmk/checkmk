@@ -20,8 +20,8 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
+from cmk.agent_based.v2 import get_value_store
 from cmk.plugins.lib.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)

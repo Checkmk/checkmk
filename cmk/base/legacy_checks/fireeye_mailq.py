@@ -6,8 +6,8 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.44.0 0

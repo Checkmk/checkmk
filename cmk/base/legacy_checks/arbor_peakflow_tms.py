@@ -12,8 +12,8 @@ from cmk.base.check_legacy_includes.arbor import (
     inventory_arbor_host_fault,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.arbor import DETECT_PEAKFLOW_TMS
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 

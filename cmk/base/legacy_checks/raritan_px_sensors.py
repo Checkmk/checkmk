@@ -51,7 +51,8 @@ from cmk.base.check_legacy_includes.raritan import (
     parse_raritan_sensors,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+
+from cmk.agent_based.v2 import equals, SNMPTree
 
 
 def parse_raritan_px_sensors(string_table):

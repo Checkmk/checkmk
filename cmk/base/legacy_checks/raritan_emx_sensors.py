@@ -26,7 +26,8 @@ from cmk.base.check_legacy_includes.raritan import (
     parse_raritan_sensors,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
 
 check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8"),

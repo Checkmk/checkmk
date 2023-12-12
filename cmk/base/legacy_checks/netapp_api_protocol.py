@@ -9,7 +9,8 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+
+from cmk.agent_based.v2 import get_rate, get_value_store
 
 # <<<netapp_api_protocol:sep(9)>>>
 # protocol nfs nfsv3_write_ops 0   instance_name nfs   nfsv3_read_ops 0

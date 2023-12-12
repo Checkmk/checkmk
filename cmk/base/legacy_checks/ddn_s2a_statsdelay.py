@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
+
+from cmk.agent_based.v2 import get_value_store, IgnoreResultsError
 
 
 def parse_ddn_s2a_statsdelay(string_table):

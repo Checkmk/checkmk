@@ -10,8 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.cmctc import DETECT_CMCTC
 

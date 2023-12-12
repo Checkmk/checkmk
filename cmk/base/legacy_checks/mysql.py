@@ -14,7 +14,8 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
+
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 
 # <<<mysql>>>
 # [[mysql]]

@@ -9,8 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import check_fireeye_states, inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.11.2.1.1.0 Good --> FE-FIREEYE-MIB::feRaidStatus.0

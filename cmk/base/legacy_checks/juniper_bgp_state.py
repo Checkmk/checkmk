@@ -6,8 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 
+from cmk.agent_based.v2 import OIDBytes, SNMPTree
 from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 from cmk.plugins.lib.juniper import DETECT_JUNIPER
 

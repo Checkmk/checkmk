@@ -9,8 +9,8 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
+from cmk.agent_based.v2 import get_rate, get_value_store, render
 from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]

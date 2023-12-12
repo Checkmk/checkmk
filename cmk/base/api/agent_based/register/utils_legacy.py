@@ -4,19 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, NotRequired
+from typing import Any, NotRequired, TypedDict
 
-from typing_extensions import TypedDict
-
-from cmk.snmplib import SNMPDetectBaseType
-
-from cmk.agent_based.v1 import Service, SNMPTree
+from cmk.agent_based.v2 import Service, SNMPDetectSpecification, SNMPTree
 
 _DiscoveredParameters = Mapping | tuple | str | None
 
 
 class LegacyCheckDefinition(TypedDict):
-    detect: NotRequired[SNMPDetectBaseType]
+    detect: NotRequired[SNMPDetectSpecification]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
     sections: NotRequired[list[str]]
     check_function: NotRequired[Callable]

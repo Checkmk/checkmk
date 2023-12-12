@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+from cmk.agent_based.v2 import IgnoreResultsError
 
 # <<<db2_connections>>>
 # [[[db2taddm:CMDBS1]]]

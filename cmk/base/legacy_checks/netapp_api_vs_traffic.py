@@ -11,12 +11,8 @@ import time
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    render,
-)
+
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...

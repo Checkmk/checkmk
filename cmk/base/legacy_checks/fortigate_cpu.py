@@ -10,14 +10,8 @@ from cmk.base.check_legacy_includes.fortigate_cpu import (
     inventory_fortigate_cpu,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    not_exists,
-    SNMPTree,
-)
 
+from cmk.agent_based.v2 import all_of, contains, exists, not_exists, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 

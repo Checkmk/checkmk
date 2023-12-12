@@ -342,6 +342,10 @@ msgstr "%H:%M:%S"
 msgid "%Y-%m-%d"
 msgstr "%Y-%m-%d"
 
+#, fuzzy
+msgid "%a, %d. %B %Y at %H:%M"
+msgstr "%s は %s後に%sで停止しました。"
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d フィルター設定"
@@ -685,10 +689,6 @@ msgstr "%s は %s後に%sで停止しました。"
 #, python-format
 msgid "%s write %s"
 msgstr "%s 書き込み %s"
-
-#, fuzzy, python-format
-msgid "%s, %s. %s %s at %s"
-msgstr "%s は %s後に%sで停止しました。"
 
 #, python-format
 msgid ""
@@ -1263,6 +1263,14 @@ msgstr ""
 "れます<br><br><b>明示的なサービス名を使用し、タグ全体を無視する：</b><br>この"
 "オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
 "す。"
+
+#, fuzzy
+msgid "<b>Keyword</b> monitoring"
+msgstr "ネットワーク監視"
+
+#, fuzzy
+msgid "<b>Keyword</b> thresholds"
+msgstr "センサーのしきい値"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -2976,6 +2984,14 @@ msgstr "最後の %s 結果を確認する"
 msgid "Acknowledge problems"
 msgstr "問題を認知"
 
+#, fuzzy
+msgid "Acknowledge problems datepicker"
+msgstr "問題を認知"
+
+#, fuzzy
+msgid "Acknowledge problems timepicker"
+msgstr "問題を認知"
+
 msgid "Acknowledge problems?"
 msgstr "問題を認知しますか?"
 
@@ -3014,6 +3030,14 @@ msgstr "問題の確認"
 
 msgid "Acknowledging problems"
 msgstr "問題の認知"
+
+#, fuzzy
+msgid "Acknowledgment expires:"
+msgstr "問題を認知"
+
+#, fuzzy
+msgid "Acknowledgments: "
+msgstr "了承"
 
 msgid "Act."
 msgstr "Act."
@@ -3352,6 +3376,18 @@ msgstr "実際のヘルパー使用状況"
 msgid "Actual traffic"
 msgstr "実際のトラフィック"
 
+#, fuzzy
+msgid "Ad hoc comment"
+msgstr "アドホックコメント"
+
+#, fuzzy
+msgid "Ad hoc downtime"
+msgstr "アドホックダウンタイム"
+
+#, fuzzy, python-format
+msgid "Ad hoc for %d minutes"
+msgstr "アドホック %d 分間"
+
 msgid "Add"
 msgstr "追加"
 
@@ -3620,9 +3656,6 @@ msgstr "リストの追加"
 msgid "Add macro"
 msgstr "マクロを追加"
 
-msgid "Add mapping"
-msgstr "マッピングを追加"
-
 msgid "Add message pattern"
 msgstr "メッセージパターンの追加"
 
@@ -3733,6 +3766,10 @@ msgstr "ステータスを追加"
 
 msgid "Add new tag"
 msgstr "新しいタグを追加する"
+
+#, fuzzy
+msgid "Add new threshold"
+msgstr "役割を追加"
 
 msgid "Add new time"
 msgstr "新しい時間を追加する"
@@ -3923,6 +3960,10 @@ msgstr "ブックマークリストに追加"
 msgid "Add to condition"
 msgstr "タグ条件を追加"
 
+#, fuzzy
+msgid "Add to dashboard"
+msgstr "ダッシュボードにリンクする"
+
 msgid "Add to graph collection"
 msgstr "グラフコレクションに追加"
 
@@ -3931,6 +3972,10 @@ msgstr "監視構成に追加"
 
 msgid "Add to query"
 msgstr "クエリに追加"
+
+#, fuzzy
+msgid "Add to report"
+msgstr "保存レポートの追加"
 
 msgid "Add to trusted CAs"
 msgstr "信頼できるCAに追加する"
@@ -4020,6 +4065,9 @@ msgstr "ユーザー %sを追加"
 #, python-format
 msgid "Added: %s"
 msgstr "追加: %s"
+
+msgid "Additional Checkmk plugins by third parties"
+msgstr ""
 
 msgid "Additional Host Names"
 msgstr "追加のホスト名"
@@ -4137,16 +4185,6 @@ msgstr ""
 "LDAPのグループメンバーシップに基づいて、ユーザーを連絡先グループに追加しま"
 "す。このプラグインは、既存の連絡先グループにのみユーザーを追加しますが、連絡"
 "先グループの名前はLDAPグループの共通名(cn)と一致する必要があります。"
-
-msgid "Adhoc comment"
-msgstr "アドホックコメント"
-
-msgid "Adhoc downtime"
-msgstr "アドホックダウンタイム"
-
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "アドホック %d 分間"
 
 msgid "Admin"
 msgstr "管理者"
@@ -4534,7 +4572,8 @@ msgstr "エージェントのベーキングと署名"
 msgid "Agent baking finished."
 msgstr "エージェントのベーキングが終了しました。"
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (deprecated)"
 msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
 
 msgid "Agent controller"
@@ -4851,7 +4890,8 @@ msgstr "デプロイするアラートハンドラー"
 msgid "Alert handlers will handle state changes."
 msgstr "アラートハンドラーは状態の変化を処理します。"
 
-msgid "Alert mangager rule state"
+#, fuzzy
+msgid "Alert manager rule state"
 msgstr "アラートマネージャのルール状況"
 
 msgid "Alert on excessive CPU utilization"
@@ -6847,6 +6887,10 @@ msgstr "可用性("
 msgid "Availability Timeline"
 msgstr "可用性のタイムライン"
 
+#, fuzzy
+msgid "Availability groups"
+msgstr "可用性"
+
 msgid "Availability is unknown"
 msgstr "可用性は不明です"
 
@@ -7714,6 +7758,10 @@ msgstr ""
 "復帰不可能な変更によりブロックされました。\n"
 "これらの変更を有効にして、差し戻しのブロックを解除してくだｄさい。"
 
+#, fuzzy
+msgid "Blocked sessions"
+msgstr "MSSQLブロックセッション"
+
 msgid "Blocking rate"
 msgstr "ブロック率"
 
@@ -7756,10 +7804,6 @@ msgstr "サービス通知用のボディテール"
 msgid "Bold"
 msgstr "ボールド"
 
-#, fuzzy
-msgid "Bonding interface status"
-msgstr "ボンディングインターフェース"
-
 msgid "Bonding interfaces"
 msgstr "ボンディングインターフェース"
 
@@ -7786,6 +7830,9 @@ msgstr "両方-Podとコンテナの両方のレベルの情報を表示しま�
 
 msgid "Bottom"
 msgstr "ボトム"
+
+msgid "Bottom (lowest) N"
+msgstr ""
 
 msgid "Bounce buffers"
 msgstr "バウンスバッファ"
@@ -9096,6 +9143,10 @@ msgstr "キャッシュ %s"
 msgid "Cache Size"
 msgstr "キャッシュサイズ"
 
+#, fuzzy
+msgid "Cache age"
+msgstr "キャッシュサイズ"
+
 msgid "Cache age for background checks"
 msgstr "バックグラウンドチェックのキャッシュ経過時間"
 
@@ -10126,6 +10177,9 @@ msgstr ""
 "例えばエージェント経由、SNMPv1経由、SNMPv2経由をテストし、そのホストの正しい"
 "監視設定を見つけます。"
 
+msgid "Check-Sql plugin uses different methods to find MS SQL instances"
+msgstr ""
+
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -10510,7 +10564,8 @@ msgstr "通常のホストをチェックします"
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
 
-msgid "Checks' man pages"
+#, fuzzy
+msgid "Checks' man pages (deprecated)"
 msgstr "チェックのマニュアルページ"
 
 msgid "Checktype"
@@ -11453,6 +11508,12 @@ msgstr "コメントタイプ"
 
 msgid "Comment type (host/service)"
 msgstr "コメントタイプ(ホスト/サービス)"
+
+msgid "Comment will be kept after acknowledgment expires."
+msgstr ""
+
+msgid "Comment will be removed after acknowledgment expires."
+msgstr ""
 
 #, python-format
 msgid "Comment: %s"
@@ -12934,6 +12995,10 @@ msgstr ""
 msgid "Counter-object name or number"
 msgstr "カウンターオブジェクトの名前または番号"
 
+#, fuzzy
+msgid "Counters"
+msgstr "カウンター"
+
 msgid "Counting & Timing"
 msgstr "カウントとタイミング"
 
@@ -14300,6 +14365,10 @@ msgstr "データディレクトリ"
 msgid "Data engress"
 msgstr "データ入力"
 
+#, fuzzy
+msgid "Data files"
+msgstr "データファイル"
+
 msgid "Data files size"
 msgstr "データファイルのサイズ"
 
@@ -14766,8 +14835,9 @@ msgstr "デフォルト設定"
 msgid "Default credentials"
 msgstr "デフォルトの資格情報"
 
-msgid "Default element is not one of the specified elements"
-msgstr ""
+#, fuzzy
+msgid "Default expiration time (relative)"
+msgstr "デフォルトのレポート時間範囲"
 
 msgid "Default is 22."
 msgstr "デフォルトは22です。"
@@ -15512,6 +15582,9 @@ msgstr "デモ"
 msgid "Demonstration"
 msgstr "デモンストレーション"
 
+msgid "Deny"
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -15938,6 +16011,10 @@ msgstr "サービス通知詳細"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr "ターゲットシステム上に設定されたプロキシを検出し、使用する"
+
+#, fuzzy
+msgid "Detect instances"
+msgstr "インスタンスの自動検出"
 
 msgid "Detect network parent hosts"
 msgstr "ネットワークの親ホストを検出する"
@@ -16780,6 +16857,10 @@ msgstr "選択したサービスの散布図と平均線を表示します。"
 
 msgid "Displays a single metric of a specific host and service."
 msgstr "特定のホストとサービスの単一のメトリックを表示します。"
+
+#, fuzzy
+msgid "Displays a sorted list of services according to a selected metric."
+msgstr "選択した状態のサービス量を表示します。"
 
 msgid "Displays a static text to the user."
 msgstr "静的テキストをユーザーに表示します。"
@@ -18162,6 +18243,10 @@ msgstr "顧客%sを編集する"
 msgid "Edit dashboards"
 msgstr "ダッシュボードを編集する"
 
+#, fuzzy
+msgid "Edit defaults"
+msgstr "デフォルトです"
+
 msgid "Edit element"
 msgstr "要素を編集する"
 
@@ -18667,7 +18752,8 @@ msgstr "TLSを有効にする"
 msgid "Enable active checks"
 msgstr "アクティブチェックを有効にする"
 
-msgid "Enable adhoc downtime"
+#, fuzzy
+msgid "Enable ad hoc downtime"
 msgstr "アドホックダウンタイムを有効にする"
 
 msgid "Enable all"
@@ -19080,6 +19166,14 @@ msgstr ".rpmと.debのバージョンを常に増やすようにする。"
 
 msgid "Enter"
 msgstr "入る"
+
+#, fuzzy
+msgid "Enter a comment to acknowledge problems"
+msgstr "問題を認知"
+
+#, fuzzy
+msgid "Enter a comment to schedule downtime"
+msgstr "スケジュールされたダウンタイムの開始または終了"
 
 msgid ""
 "Enter a list of user IDs to be notified here. These users need to be members "
@@ -19707,6 +19801,9 @@ msgstr "systemdの設定例"
 msgid "Example for parameters"
 msgstr "パラメータの例"
 
+msgid "Example:"
+msgstr ""
+
 msgid "Exc."
 msgstr "Exc."
 
@@ -20061,9 +20158,6 @@ msgstr "予想される更新間隔"
 msgid "Experimental features"
 msgstr "実験的機能"
 
-msgid "Expire acknowledgement after"
-msgstr "承認の有効期限が切れます"
-
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "<i>確認済み</i> の状態にあるイベントを期限切れにします"
 
@@ -20072,6 +20166,10 @@ msgstr "<i>開いている</i>状態のイベントを期限切れにします"
 
 msgid "Expire message"
 msgstr "メッセージの有効期限"
+
+#, fuzzy
+msgid "Expire on"
+msgstr "有効期限が切れます"
 
 msgid "Expire time"
 msgstr "有効期限"
@@ -21205,9 +21303,6 @@ msgstr "固定サイズ"
 msgid "Fixed string to expect in the content"
 msgstr "コンテンツで期待される文字列を修正しました"
 
-msgid "FixedValue value is not serializable."
-msgstr ""
-
 msgid "Flap"
 msgstr "フラップ"
 
@@ -22158,7 +22253,8 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
-msgid "GUI extensions"
+#, fuzzy
+msgid "GUI extensions (deprecated)"
 msgstr "GUI拡張機能"
 
 msgid ""
@@ -22834,18 +22930,42 @@ msgstr "HTML出力"
 msgid "HTTP"
 msgstr "HTTP"
 
-#, python-format
-msgid "HTTP %s errors"
+#, fuzzy
+msgid "HTTP 2XX errors"
 msgstr "HTTP %s エラー"
 
 msgid "HTTP 3/4/5XX Errors"
 msgstr "HTTP 3/4/5XXエラー"
+
+#, fuzzy
+msgid "HTTP 3XX errors"
+msgstr "HTTP %s エラー"
+
+#, fuzzy
+msgid "HTTP 4XX errors"
+msgstr "HTTP %s エラー"
 
 msgid "HTTP 500 errors"
 msgstr "HTTP 500エラー"
 
 msgid "HTTP 500/2/3/4 Errors"
 msgstr "HTTP 500/2/3/4エラー"
+
+#, fuzzy
+msgid "HTTP 502 errors"
+msgstr "HTTP 500エラー"
+
+#, fuzzy
+msgid "HTTP 503 errors"
+msgstr "HTTP 500エラー"
+
+#, fuzzy
+msgid "HTTP 504 errors"
+msgstr "HTTP 500エラー"
+
+#, fuzzy
+msgid "HTTP 5XX errors"
+msgstr "HTTP 500エラー"
 
 msgid "HTTP 5xx Responses"
 msgstr "HTTP5xx 応答"
@@ -22878,6 +22998,10 @@ msgstr "HTTP POSTデータ"
 msgid "HTTP Parameters"
 msgstr "HTTPパラメータ"
 
+#, fuzzy
+msgid "HTTP Proxy"
+msgstr "HTTPプロキシ"
+
 msgid "HTTP Redirects"
 msgstr "HTTPリダイレクト"
 
@@ -22907,6 +23031,10 @@ msgstr "HTTP、TCP、Eメール、..。"
 
 msgid "HTTPS"
 msgstr "HTTPS"
+
+#, fuzzy
+msgid "HTTPS Proxy"
+msgstr "HTTPプロキシ"
 
 msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
@@ -25831,6 +25959,11 @@ msgstr ""
 "す。"
 
 msgid ""
+"If include is not defined then exclude following SIDs (if found and /or "
+"defined)"
+msgstr ""
+
+msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
 msgstr ""
@@ -25920,6 +26053,9 @@ msgstr ""
 "構成されていると、そのビューに表示される問題によってユーザーに警告が表示され"
 "ます。マルチサイトに同梱されているビューから、すべての問題のあるビューでサウ"
 "ンドが有効になっています。"
+
+msgid "If state changes OR core restarts OR on recovery (OK/UP)"
+msgstr ""
 
 msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
@@ -27128,6 +27264,9 @@ msgstr "ソフトクエリ制限を無視する"
 
 msgid "Ignore specific alert rules"
 msgstr "特定のアラートルールを無視する"
+
+msgid "Ignore status changes until services/hosts are OK/UP again (sticky)"
+msgstr ""
 
 msgid "Ignore styles specified in rules"
 msgstr "ルールで指定されたスタイルを無視する"
@@ -28371,9 +28510,6 @@ msgstr "インターフェイスグループ"
 msgid "Interface id"
 msgstr "インターフェイス id"
 
-msgid "Interface known in Ntop"
-msgstr "Ntopで知られているインターフェース"
-
 msgid "Interface settings"
 msgstr "インターフェース設定"
 
@@ -29313,6 +29449,9 @@ msgstr "カスペルスキーアンチウイルス(Linux)"
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "カスペルスキーアンチウイルス時間設定"
 
+msgid "Keep comment after acknowledgment expires (persistent comment)"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "既存の接続を維持"
 
@@ -29937,16 +30076,19 @@ msgstr ""
 "従来のASCIIメールはバルキングをサポートしていません。通知のバルキングを無効に"
 "するか、バルキングを許可する別の通知プラグインを選択できます。"
 
-msgid "Legacy GUI extensions"
+#, fuzzy
+msgid "Legacy GUI extensions (deprecated)"
 msgstr "レガシーGUI拡張機能"
 
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
 
-msgid "Legacy check plugins"
+#, fuzzy
+msgid "Legacy check plugins (deprecated)"
 msgstr "レガシーチェックプラグイン"
 
-msgid "Legacy inventory plugins"
+#, fuzzy
+msgid "Legacy inventory plugins (deprecated)"
 msgstr "レガシーインベントリプラグイン"
 
 msgid "Legacy run"
@@ -30818,6 +30960,10 @@ msgstr "ビューテーブルの行数を制限する"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "表に表示される行数を制限する"
+
+#, fuzzy
+msgid "Limit to"
+msgstr "制限"
 
 msgid "Limit width"
 msgstr "幅を制限する"
@@ -33433,6 +33579,10 @@ msgstr ""
 msgid "Maximum run duration for last execution"
 msgstr "最後の実行の最大実行時間"
 
+#, fuzzy
+msgid "Maximum runtime of a keyword run"
+msgstr "テスト実行の最大実行時間"
+
 msgid "Maximum runtime of a test run"
 msgstr "テスト実行の最大実行時間"
 
@@ -33938,14 +34088,6 @@ msgstr ""
 msgid "Metric not found"
 msgstr "メトリックが見つかりません"
 
-msgid ""
-"Metric transformations and combinations like Forecasts calculations, "
-"aggregations and filtering are only available with the Checkmk Enterprise "
-"Editions"
-msgstr ""
-"メトリック変換と、予測計算、集計、フィルタリングなどの組み合わせは、Checkmk "
-"Enterprise Editionsでのみ使用できます"
-
 msgid "Metrics"
 msgstr "メトリクス"
 
@@ -34145,6 +34287,10 @@ msgstr "ミラーライン"
 
 msgid "Mirrored Stacked"
 msgstr "ミラーリングスタック"
+
+#, fuzzy
+msgid "Mirroring"
+msgstr "モニタリング"
 
 msgid "Mirroring state criticality"
 msgstr "ミラーリング状態の重要性"
@@ -34490,6 +34636,10 @@ msgstr "モニターRoute53"
 
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
+
+#, fuzzy
+msgid "Monitor all instances detected and defined"
+msgstr "見つかったすべてのインスタンスを監視する"
 
 msgid "Monitor all instances found"
 msgstr "見つかったすべてのインスタンスを監視する"
@@ -35891,6 +36041,10 @@ msgstr "エントリはありません。"
 msgid "No exclude range configured"
 msgstr "除外範囲が構成されていません"
 
+#, fuzzy
+msgid "No expiration date"
+msgstr "登録状態"
+
 msgid "No explicit credentials"
 msgstr "明示的な資格情報はありません"
 
@@ -36015,6 +36169,10 @@ msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
 
 #, fuzzy
+msgid "No proxy"
+msgstr "プロキシを使う"
+
+#, fuzzy
 msgid "No re-executions"
 msgstr "同時実行"
 
@@ -36137,6 +36295,14 @@ msgstr "バージョン制限なし"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "%s'という名前で定義されたビューはありません。"
+
+#, fuzzy
+msgid "No, adjust settings"
+msgstr "ホスト設定"
+
+#, fuzzy
+msgid "No, discard"
+msgstr "廃棄"
 
 msgid "No, keep current name"
 msgstr "いいえ、現在の名前を維持します"
@@ -36741,6 +36907,14 @@ msgstr "ホストに通知されたイベント"
 msgid "Notified events for services"
 msgstr "サービスの通知イベント"
 
+#, python-format
+msgid "Notify affected users if %s are in place (send notifications)"
+msgstr ""
+
+msgid ""
+"Notify affected users if notification rules are in place (send notifications)"
+msgstr ""
+
 msgid "Notify all contacts of the notified host or service."
 msgstr "通知されたホストまたはサービスのすべての連絡先に通知します。"
 
@@ -36788,6 +36962,10 @@ msgstr "Ntop: アラート"
 
 msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng(有料アドオン)"
+
+#, fuzzy
+msgid "Ntopng host"
+msgstr "Ntopホスト"
 
 msgid "Ntopng integration"
 msgstr "Ntopng統合"
@@ -37705,6 +37883,10 @@ msgstr "OSNレーザー減衰"
 msgid "OTP code"
 msgstr "OTPコード"
 
+#, fuzzy
+msgid "OVS bonding interface status"
+msgstr "ボンディングインターフェース"
+
 msgid "Object"
 msgstr "オブジェクト"
 
@@ -37809,11 +37991,18 @@ msgstr "すべての列が同一である行を省略します"
 msgid "On"
 msgstr "On"
 
+#, fuzzy, python-format
+msgid "On %s (server time)."
+msgstr "サーバー時間"
+
 msgid "On Hold"
 msgstr "保留"
 
 msgid "On all sites"
 msgstr "すべてのサイトで"
+
+msgid "On core restart OR recovery (OK/UP)"
+msgstr ""
 
 msgid "On down host"
 msgstr "ダウンホスト上"
@@ -38063,6 +38252,10 @@ msgstr ""
 "を持ちます。オプションで、これらの連絡先グループに自動的に連絡先を監視させる"
 "ことができます。ホストの連絡先グループへの割り当ては、<a href='%s'>ルール</a>"
 "で定義することもできます。"
+
+#, fuzzy
+msgid "Only monitor following SIDs (if found and /or defined)"
+msgstr "次のSIDのみをクエリします(見つかった場合)"
 
 msgid "Only needed if you have multiple MySQL Instances on one server"
 msgstr "1つのサーバーに複数のMySQLインスタンスがある場合にのみ必要"
@@ -39687,15 +39880,43 @@ msgstr "パーセンテージレベル"
 msgid "Percentage levels of current thread count in threadpool"
 msgstr "スレッドプール内の現在のスレッド数のパーセンテージレベル"
 
-#, python-format
-msgid "Percentage of HTTP %s errors"
+#, fuzzy
+msgid "Percentage of HTTP 2XX errors"
 msgstr "HTTP %s エラーの割合"
 
 msgid "Percentage of HTTP 3/4/5XX Errors"
 msgstr "HTTP 3/4/5XXエラーの割合"
 
+#, fuzzy
+msgid "Percentage of HTTP 3XX errors"
+msgstr "HTTP %s エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 4XX errors"
+msgstr "HTTP %s エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 500 errors"
+msgstr "HTTP %s エラーの割合"
+
 msgid "Percentage of HTTP 500/2/3/4 Errors"
 msgstr "HTTP500/2/3/4エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 502 errors"
+msgstr "HTTP %s エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 503 errors"
+msgstr "HTTP %s エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 504 errors"
+msgstr "HTTP %s エラーの割合"
+
+#, fuzzy
+msgid "Percentage of HTTP 5XX errors"
+msgstr "HTTP %s エラーの割合"
 
 msgid "Percentage of Lambda user errors"
 msgstr "Lambdaユーザーエラーの割合"
@@ -40000,9 +40221,6 @@ msgstr "持続的なボリューム要求名"
 msgid "Persistent Volume Claims"
 msgstr "持続的なボリューム要求"
 
-msgid "Persistent comment"
-msgstr "持続的なコメント"
-
 msgid "Persistent connections"
 msgstr "持続的接続"
 
@@ -40138,6 +40356,10 @@ msgid "Piggyback creation options"
 msgstr "ピギーバック作成オプション"
 
 msgid "Piggyback data"
+msgstr "ピギーバックデータ"
+
+#, fuzzy
+msgid "Piggyback host"
 msgstr "ピギーバックデータ"
 
 msgid "Piggyback information for other hosts"
@@ -41975,6 +42197,10 @@ msgstr "使用されるRAM"
 msgid "RAM used %"
 msgstr "RAM使用%"
 
+#, fuzzy
+msgid "RCC profile configuration"
+msgstr "リモート設定"
+
 msgid "RCU"
 msgstr "RCU"
 
@@ -42192,6 +42418,10 @@ msgstr "範囲制限"
 
 msgid "Range of values (min/max)"
 msgstr "値の範囲（最小／最大）"
+
+#, fuzzy
+msgid "Ranking order"
+msgstr "終わったら警告"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMXラック: 温度"
@@ -43017,10 +43247,15 @@ msgstr "選択したホストのTLS登録を削除する"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "存在する場合は、Windowsファイアウォール構成を削除します"
 
-msgid "Remove acknowledgement"
+#, fuzzy
+msgid "Remove acknowledgments"
 msgstr "承認を削除する"
 
-msgid "Remove acknowledgement?"
+msgid "Remove all"
+msgstr "すべて削除する"
+
+#, fuzzy
+msgid "Remove all acknowledgments?"
 msgstr "承認を削除しますか?"
 
 msgid "Remove all and find new"
@@ -45893,9 +46128,6 @@ msgstr "InfluxDBにメトリクスを送信する"
 msgid "Send monitoring notification"
 msgstr "監視通知を送信する"
 
-msgid "Send notification"
-msgstr "通知を送信する"
-
 msgid "Send notifications to Event Console"
 msgstr "イベントコンソールに通知を送信する"
 
@@ -46487,6 +46719,9 @@ msgstr "サービスタグ"
 
 msgid "Service tags (with titles)"
 msgstr "サービスタグ（タイトル付）"
+
+msgid "Service was WARN and goes CRIT - acknowledgment doesn't expire."
+msgstr ""
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "過去60分間に状態が変化したサービス"
@@ -47174,6 +47409,10 @@ msgstr "共有プールサイズ"
 msgid "Shared with"
 msgstr "と共有"
 
+#, fuzzy
+msgid "Shipped Checkmk plugins"
+msgstr "プラグインを確認する"
+
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "短い - DockerコンテナIDの最初の12文字を使用します"
 
@@ -47289,6 +47528,10 @@ msgstr "全てのトピックを表示"
 
 msgid "Show analysis"
 msgstr "分析を表示"
+
+#, fuzzy
+msgid "Show bar visualization"
+msgstr "BIの視覚化"
 
 msgid "Show bulks"
 msgstr "バルクを表示"
@@ -47500,6 +47743,10 @@ msgstr "この %s を使用してルールを表示する"
 
 msgid "Show separate result for each SLA period"
 msgstr "SLA期間ごとに個別の結果を表示する"
+
+#, fuzzy
+msgid "Show service description"
+msgstr "サービスの説明"
 
 msgid "Show service status"
 msgstr "サービスステータスを表示する"
@@ -50275,9 +50522,6 @@ msgstr "ステータス接続"
 msgid "Status data inventory"
 msgstr "ステータスデータインベントリ"
 
-msgid "Status detail"
-msgstr "ステータスの詳細"
-
 msgid "Status downtimes"
 msgstr "ステータスのダウンタイム"
 
@@ -50408,9 +50652,6 @@ msgstr "ステップが開始されました"
 
 msgid "Steps"
 msgstr "ステップ"
-
-msgid "Sticky"
-msgstr "スティッキー"
 
 msgid "Still nothing happened."
 msgstr "それでも何も起こりませんでした。"
@@ -51343,6 +51584,10 @@ msgstr "テーブルオプション"
 
 msgid "Table percentage bloat levels"
 msgstr "テーブルパーセンテージ膨張レベル"
+
+#, fuzzy
+msgid "Table spaces"
+msgstr "テーブルスペース"
 
 msgid "Table with availability figures"
 msgstr "可用性の数値を含む表"
@@ -52880,7 +53125,8 @@ msgstr ""
 msgid "The comment must not contain semicolons."
 msgstr "コメントにセミコロンを含めることはできません。"
 
-msgid "The comment which is automatically sent with an adhoc downtime"
+#, fuzzy
+msgid "The comment which is automatically sent with an ad hoc downtime"
 msgstr "アドホックダウンタイムで自動的に送信されるコメント"
 
 msgid "The complete hardware- and software inventory of a host"
@@ -53261,7 +53507,8 @@ msgstr ""
 msgid "The domain \"%s\" does not support activation."
 msgstr "ドメイン \"%s\" はアクティベーションをサポートしていません。"
 
-msgid "The duration in minutes of the adhoc downtime."
+#, fuzzy
+msgid "The duration in minutes of the ad hoc downtime."
 msgstr "アドホックダウンタイムの分単位の期間。"
 
 msgid ""
@@ -59524,9 +59771,10 @@ msgstr ""
 "この設定は、サービスのサマリーおよび詳細にのみ影響し、ユーザーに依存しませ"
 "ん。グラフとperfometerの温度単位は、ユーザープロファイルで変更できます。"
 
+#, fuzzy
 msgid ""
-"This setting allows to set an adhoc downtime comment and its duration. When "
-"enabled a new button <i>Adhoc downtime for __ minutes</i> will be available "
+"This setting allows to set an ad hoc downtime comment and its duration. When "
+"enabled a new button <i>Ad hoc downtime for __ minutes</i> will be available "
 "in the command form."
 msgstr ""
 "この設定により、アドホックダウンタイムコメントとその期間を設定できます。有効"
@@ -60930,6 +61178,9 @@ msgstr "ヒント"
 msgid "Top"
 msgstr "トップ"
 
+msgid "Top (highest) N"
+msgstr ""
+
 msgid "Top Talkers"
 msgstr "トップトーカー"
 
@@ -60941,6 +61192,10 @@ msgstr "アプリケーショントップトラフィック：最終日表示"
 
 msgid "Top application traffic: last hour view"
 msgstr "上位のアプリケーショントラフィック: 過去1時間のビュー"
+
+#, fuzzy
+msgid "Top list"
+msgstr "トップトーカー"
 
 msgid "Top local talkers"
 msgstr "トップローカルトーカー"
@@ -60979,10 +61234,6 @@ msgstr "トポロジーマップの深さ"
 msgid "Total"
 msgstr "合計"
 
-#, python-format
-msgid "Total %s vCPUs"
-msgstr "合計 %s vCPU"
-
 msgid "Total Active Sessions"
 msgstr "合計アクティブセッション"
 
@@ -61009,6 +61260,33 @@ msgstr "1秒あたりの合計IO操作"
 
 msgid "Total Index Size"
 msgstr "インデックスの合計サイズ"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand F instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand G instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand P instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid ""
+"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
+"instances') vCPUs"
+msgstr ""
+"オンデマンドスタンダード（A, C, D, H, I, M, R, T, Z）インスタンスを起動する"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand X instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
 
 msgid "Total Magnetic volumes space"
 msgstr "合計磁気ボリュームスペース"
@@ -61376,11 +61654,1687 @@ msgstr "合計クエリタイムアウト"
 msgid "Total restarts"
 msgstr "合計再起動回数"
 
-#, python-format
-msgid "Total running On-Demand %s Instances"
+msgid "Total running On-Demand Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand a1.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c1.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c1.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c3.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c3.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c4.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c4.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c4.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c4.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c4.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.18xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.9xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.18xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.9xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.18xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.9xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand cc1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand cc2.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand cg1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand cr1.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d2.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d2.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d2.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d2.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand f1.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand f1.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand f1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g2.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g2.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g3.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g3.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g3s.xlarge Instances"
 msgstr "実行中のオンデマンド%sインスタンスの合計"
 
-msgid "Total running On-Demand Instances"
+#, fuzzy
+msgid "Total running On-Demand g4ad.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand h1.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand h1.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand h1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand h1.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand hi1.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand hs1.8xlarge Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i2.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i2.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i2.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i2.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.3xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m1.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m1.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m1.small Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m1.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m2.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m2.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m2.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m3.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m3.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.10xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m4.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.3xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.32xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand mac1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p2.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p2.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p2.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p3.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p3dn.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand p4d.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r3.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r3.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r3.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r4.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t1.micro Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.micro Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.nano Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.small Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t2.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.micro Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.nano Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.small Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.micro Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.nano Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.small Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.micro Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.nano Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.small Instances"
+msgstr "実行中のオンデマンド%sインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.112xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-18tb1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-24tb1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.112xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.56xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.112xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.24xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.3xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1.32xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.32xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.16xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.4xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.8xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.medium Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.12xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.2xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.3xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.6xlarge Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.large Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.metal Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "実行中のオンデマンドインスタンスの合計"
 
 msgid "Total service problems"
@@ -61460,6 +63414,10 @@ msgstr "受信したトラフィック"
 
 msgid "Traffic Sent"
 msgstr "送信されたトラフィック"
+
+#, fuzzy
+msgid "Transaction Logs"
+msgstr "トランザクションログ"
 
 msgid "Transaction Logs Disk Usage"
 msgstr "トランザクションログディスク使用量"
@@ -61616,6 +63574,9 @@ msgstr "試してみる"
 
 msgid "Try pattern match"
 msgstr "パターン一致を試す"
+
+msgid "Try to detect MS SQL instances presented on Server"
+msgstr ""
 
 msgid "Try to fit text to the available space."
 msgstr "利用可能なスペースにテキストを収めるようにしてください。"
@@ -63701,6 +65662,9 @@ msgstr "事前定義された条件を使用して、ルールセットの条件
 msgid "Use procedure call instead of SQL statement"
 msgstr "SQLステートメントの代わりにプロシージャコールを使用する"
 
+msgid "Use proxy"
+msgstr "プロキシを使う"
+
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "プロセス環境からのプロキシ設定を使用する。デフォルト設定です。"
 
@@ -65008,9 +66972,6 @@ msgstr "拡張パッケージマネージャを見る"
 
 msgid "View Properties"
 msgstr "プロパティを表示"
-
-msgid "View action defaults"
-msgstr "アクションのデフォルトを表示する"
 
 msgid "View all maps"
 msgstr "全てのマップを表示"
@@ -67432,8 +69393,16 @@ msgstr "年"
 msgid "Yes"
 msgstr "はい"
 
+#, fuzzy
+msgid "Yes, acknowledge"
+msgstr "認められた"
+
 msgid "Yes, rename"
 msgstr "はい、名前を変更します"
+
+#, fuzzy
+msgid "Yes, schedule"
+msgstr "再スケジュール"
 
 msgid "Yes, that is exactly what I want."
 msgstr "はい、それこそが私の望みです。"
@@ -68554,6 +70523,10 @@ msgid ""
 msgstr ""
 "過去に終了したダウンタイムを設定することはできません。このインシデントは報告"
 "されます。"
+
+#, fuzzy
+msgid "You cannot set an expiration date and time that is in the past:"
+msgstr "同じルールの中で、カウントとExpectingを同時に使うことはできません。"
 
 msgid ""
 "You cannot use counting and expecting at the same time in the same rule."
@@ -69840,6 +71813,9 @@ msgstr "ダウン"
 msgid "e.g. 'My_Project/Closed'"
 msgstr "例\"My_Project/Closed\""
 
+msgid "e.g. ticket ID"
+msgstr ""
+
 msgid "eWON SNMP Proxy"
 msgstr "eWON SNMPプロキシ"
 
@@ -69884,6 +71860,9 @@ msgstr "有効"
 
 msgid "entries"
 msgstr "エントリ"
+
+msgid "entries (max. 50)"
+msgstr ""
 
 msgid "estimated duration"
 msgstr "推定期間"
@@ -69948,6 +71927,10 @@ msgstr "ファイル"
 
 msgid "filesystem"
 msgstr "ファイルシステム"
+
+#, fuzzy
+msgid "firing"
+msgstr "ストリング"
 
 msgid "first level"
 msgstr "最初のレベル"
@@ -70592,6 +72575,10 @@ msgstr "notif."
 msgid "notification rule"
 msgstr "通知ルール"
 
+#, fuzzy
+msgid "notification rules"
+msgstr "通知ルール"
+
 msgid "notifications within last"
 msgstr "最後の内の通知"
 
@@ -70776,9 +72763,6 @@ msgstr "限目"
 
 msgid "period(s)"
 msgstr "期間(s)"
-
-msgid "persistent comment"
-msgstr "持続的なコメント"
 
 msgid "pfSense Firewall Packet Rates"
 msgstr "pfSenseファイアウォールのパケットレート"
@@ -70970,9 +72954,6 @@ msgstr "秒単位"
 msgid "secs"
 msgstr "秒"
 
-msgid "send notification"
-msgstr "通知を送信する"
-
 msgid "send notifications of contactgroup:"
 msgstr "コンタクトグループの通知を送信します。"
 
@@ -71048,9 +73029,6 @@ msgstr "s"
 
 msgid "status entries"
 msgstr "ステータスエントリ"
-
-msgid "sticky"
-msgstr "スティッキー"
 
 msgid "stopped"
 msgstr "停止"
@@ -71373,6 +73351,51 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Expire acknowledgement after"
+#~ msgstr "承認の有効期限が切れます"
+
+#~ msgid ""
+#~ "Metric transformations and combinations like Forecasts calculations, "
+#~ "aggregations and filtering are only available with the Checkmk Enterprise "
+#~ "Editions"
+#~ msgstr ""
+#~ "メトリック変換と、予測計算、集計、フィルタリングなどの組み合わせは、"
+#~ "Checkmk Enterprise Editionsでのみ使用できます"
+
+#~ msgid "Persistent comment"
+#~ msgstr "持続的なコメント"
+
+#~ msgid "Send notification"
+#~ msgstr "通知を送信する"
+
+#~ msgid "Sticky"
+#~ msgstr "スティッキー"
+
+#, python-format
+#~ msgid "Total %s vCPUs"
+#~ msgstr "合計 %s vCPU"
+
+#~ msgid "View action defaults"
+#~ msgstr "アクションのデフォルトを表示する"
+
+#~ msgid "persistent comment"
+#~ msgstr "持続的なコメント"
+
+#~ msgid "send notification"
+#~ msgstr "通知を送信する"
+
+#~ msgid "sticky"
+#~ msgstr "スティッキー"
+
+#~ msgid "Interface known in Ntop"
+#~ msgstr "Ntopで知られているインターフェース"
+
+#~ msgid "Add mapping"
+#~ msgstr "マッピングを追加"
+
+#~ msgid "Status detail"
+#~ msgstr "ステータスの詳細"
+
 #~ msgid "Critical (active connections)"
 #~ msgstr "クリティカル(アクティブな接続)"
 
@@ -71525,9 +73548,6 @@ msgstr ""
 
 #~ msgid "Please enter a positive number of minutes."
 #~ msgstr "正の分数を入力してください。"
-
-#~ msgid "Remove all"
-#~ msgstr "すべて削除する"
 
 #~ msgid "Repeat this downtime on a regular basis every"
 #~ msgstr "このダウンタイムを定期的に繰り返します"
@@ -72716,9 +74736,6 @@ msgstr ""
 #~ "に欠落している可能性があります。この状況でピギーバックベースのホストが失わ"
 #~ "れるのを防ぐために、サイトの初期化後しばらくの間、ホストの削除は無効になり"
 #~ "ます。"
-
-#~ msgid "discards"
-#~ msgstr "廃棄"
 
 #, fuzzy
 #~| msgid "In Progress"
@@ -74363,9 +76380,6 @@ msgstr ""
 
 #~ msgid "Proxy basic authorization"
 #~ msgstr "プロキシの基本認証"
-
-#~ msgid "Use proxy"
-#~ msgstr "プロキシを使う"
 
 #~ msgid "Backplane"
 #~ msgstr "バックプレーン"

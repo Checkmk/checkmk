@@ -347,6 +347,10 @@ msgstr "%H:%M:%S"
 msgid "%Y-%m-%d"
 msgstr "%Y-%m-%d"
 
+#, fuzzy
+msgid "%a, %d. %B %Y at %H:%M"
+msgstr "%s is gestopt na %s om %s."
+
 #, python-format
 msgid "%d Filter settings"
 msgstr "%d Filter instellingen"
@@ -690,10 +694,6 @@ msgstr "%s is gestopt na %s om %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s schrijf %s"
-
-#, fuzzy, python-format
-msgid "%s, %s. %s %s at %s"
-msgstr "%s is gestopt na %s om %s."
 
 #, python-format
 msgid ""
@@ -1270,6 +1270,14 @@ msgstr ""
 "worden voor deze diensten genegeerd.<br><br><b>Expliciete dienstnamen en "
 "algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
 "geven. De algemene tags worden voor deze diensten genegeerd."
+
+#, fuzzy
+msgid "<b>Keyword</b> monitoring"
+msgstr "Netwerkbewaking"
+
+#, fuzzy
+msgid "<b>Keyword</b> thresholds"
+msgstr "Sensordrempel"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -3050,6 +3058,14 @@ msgid "Acknowledge problems"
 msgstr "Erken problemen"
 
 #, fuzzy
+msgid "Acknowledge problems datepicker"
+msgstr "Erken problemen"
+
+#, fuzzy
+msgid "Acknowledge problems timepicker"
+msgstr "Erken problemen"
+
+#, fuzzy
 msgid "Acknowledge problems?"
 msgstr "Erken problemen"
 
@@ -3088,6 +3104,14 @@ msgstr "Erkenning van het probleem"
 
 msgid "Acknowledging problems"
 msgstr "Problemen erkennen"
+
+#, fuzzy
+msgid "Acknowledgment expires:"
+msgstr "Erken problemen"
+
+#, fuzzy
+msgid "Acknowledgments: "
+msgstr "Erkenning"
 
 msgid "Act."
 msgstr "Act."
@@ -3434,6 +3458,18 @@ msgstr "Werkelijk gebruik van helper"
 msgid "Actual traffic"
 msgstr "Werkelijk verkeer"
 
+#, fuzzy
+msgid "Ad hoc comment"
+msgstr "Adhoc commentaar"
+
+#, fuzzy
+msgid "Ad hoc downtime"
+msgstr "Adhoc-uitvaltijd"
+
+#, fuzzy, python-format
+msgid "Ad hoc for %d minutes"
+msgstr "Adhoc voor %d minuten"
+
 msgid "Add"
 msgstr "Toevoegen"
 
@@ -3706,9 +3742,6 @@ msgstr "Lijst toevoegen"
 msgid "Add macro"
 msgstr "Macro toevoegen"
 
-msgid "Add mapping"
-msgstr "Mapping toevoegen"
-
 msgid "Add message pattern"
 msgstr "Bericht patroon toevoegen"
 
@@ -3820,6 +3853,10 @@ msgstr "Nieuwe status toevoegen"
 
 msgid "Add new tag"
 msgstr "Nieuwe tag toevoegen"
+
+#, fuzzy
+msgid "Add new threshold"
+msgstr "Nieuwe rol toevoegen"
 
 msgid "Add new time"
 msgstr "Nieuwe tijd toevoegen"
@@ -4010,6 +4047,10 @@ msgstr "Toevoegen aan favorietenlijst"
 msgid "Add to condition"
 msgstr "Voeg tag voorwaarde toe"
 
+#, fuzzy
+msgid "Add to dashboard"
+msgstr "Link naar dashboard"
+
 msgid "Add to graph collection"
 msgstr "Toevoegen aan grafiekverzameling"
 
@@ -4018,6 +4059,10 @@ msgstr "Toevoegen aan bewakingsconfiguratie"
 
 msgid "Add to query"
 msgstr "Toevoegen aan zoekopdracht"
+
+#, fuzzy
+msgid "Add to report"
+msgstr "Opgeslagen rapport toevoegen"
 
 msgid "Add to trusted CAs"
 msgstr "Toevoegen aan vertrouwde CA's"
@@ -4107,6 +4152,9 @@ msgstr "Gebruiker toegevoegd %s"
 #, python-format
 msgid "Added: %s"
 msgstr "Toegevoegd: %s"
+
+msgid "Additional Checkmk plugins by third parties"
+msgstr ""
 
 msgid "Additional Host Names"
 msgstr "Extra hostnamen"
@@ -4231,16 +4279,6 @@ msgstr ""
 "groepslidmaatschappen in LDAP. Deze plugin voegt de gebruiker alleen toe aan "
 "bestaande contactgroepen, terwijl de naam van de contactgroep overeen moet "
 "komen met de gemeenschappelijke naam (cn) van de LDAP groep."
-
-msgid "Adhoc comment"
-msgstr "Adhoc commentaar"
-
-msgid "Adhoc downtime"
-msgstr "Adhoc-uitvaltijd"
-
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "Adhoc voor %d minuten"
 
 msgid "Admin"
 msgstr "Admin"
@@ -4651,7 +4689,8 @@ msgstr "Agent bakken en ondertekenen"
 msgid "Agent baking finished."
 msgstr "Agent bakte af."
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (deprecated)"
 msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
 
 msgid "Agent controller"
@@ -4968,7 +5007,8 @@ msgstr "Waarschuwings handlers in te zetten"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 
-msgid "Alert mangager rule state"
+#, fuzzy
+msgid "Alert manager rule state"
 msgstr "Waarschuwing mangager regel staat"
 
 msgid "Alert on excessive CPU utilization"
@@ -7031,6 +7071,10 @@ msgstr "Beschikbaarheid ("
 msgid "Availability Timeline"
 msgstr "Tijdlijn beschikbaarheid"
 
+#, fuzzy
+msgid "Availability groups"
+msgstr "Beschikbaarheid van"
+
 msgid "Availability is unknown"
 msgstr "Beschikbaarheid is onbekend"
 
@@ -7902,6 +7946,10 @@ msgid ""
 "reverting."
 msgstr ""
 
+#, fuzzy
+msgid "Blocked sessions"
+msgstr "MSSQL Geblokkeerde Sessies"
+
 msgid "Blocking rate"
 msgstr "Blokkeringspercentage"
 
@@ -7944,10 +7992,6 @@ msgstr "Body tail voor dienstmeldingen"
 msgid "Bold"
 msgstr "Bold"
 
-#, fuzzy
-msgid "Bonding interface status"
-msgstr "Koppelvlakken"
-
 msgid "Bonding interfaces"
 msgstr "Koppelvlakken"
 
@@ -7974,6 +8018,9 @@ msgstr "Beide - Toon de informatie voor beide, pod en container, niveaus"
 
 msgid "Bottom"
 msgstr "Bodem"
+
+msgid "Bottom (lowest) N"
+msgstr ""
 
 msgid "Bounce buffers"
 msgstr "Stuiterbuffers"
@@ -9344,6 +9391,10 @@ msgstr "Cache %s"
 msgid "Cache Size"
 msgstr "Cachegrootte"
 
+#, fuzzy
+msgid "Cache age"
+msgstr "Cachegrootte"
+
 msgid "Cache age for background checks"
 msgstr "Cache leeftijd voor achtergrond controles"
 
@@ -10392,6 +10443,9 @@ msgstr ""
 "SNMPv1, SNMPv2 om de juiste bewakingsconfiguratie voor die host te "
 "achterhalen."
 
+msgid "Check-Sql plugin uses different methods to find MS SQL instances"
+msgstr ""
+
 msgid ""
 "Check_MK Livestatus usually listens only on a local UNIX socket - for "
 "reasons of performance and security. This option is used to make it "
@@ -10791,7 +10845,8 @@ msgstr "Controles op regelmatige gastheren"
 msgid "Checks via SSH. "
 msgstr "Controles via SSH. "
 
-msgid "Checks' man pages"
+#, fuzzy
+msgid "Checks' man pages (deprecated)"
 msgstr "De man pagina's van de controles"
 
 msgid "Checktype"
@@ -11754,6 +11809,12 @@ msgstr "Type commentaar"
 
 msgid "Comment type (host/service)"
 msgstr "Type opmerking (host/dienst)"
+
+msgid "Comment will be kept after acknowledgment expires."
+msgstr ""
+
+msgid "Comment will be removed after acknowledgment expires."
+msgstr ""
 
 #, python-format
 msgid "Comment: %s"
@@ -13295,6 +13356,10 @@ msgstr ""
 msgid "Counter-object name or number"
 msgstr "Naam of nummer van het tegenobject"
 
+#, fuzzy
+msgid "Counters"
+msgstr "Tegen"
+
 msgid "Counting & Timing"
 msgstr "Tellen & Timing"
 
@@ -14672,6 +14737,10 @@ msgstr "Hoofdmap"
 msgid "Data engress"
 msgstr "Gegevens engress"
 
+#, fuzzy
+msgid "Data files"
+msgstr "Databestand"
+
 msgid "Data files size"
 msgstr "Grootte gegevensbestanden"
 
@@ -15141,8 +15210,9 @@ msgstr "Standaard configuratie"
 msgid "Default credentials"
 msgstr "Standaard inloggegevens"
 
-msgid "Default element is not one of the specified elements"
-msgstr ""
+#, fuzzy
+msgid "Default expiration time (relative)"
+msgstr "Standaard timerbereik voor rapportage"
 
 msgid "Default is 22."
 msgstr "De standaardwaarde is 22."
@@ -15902,6 +15972,9 @@ msgstr "Demo"
 msgid "Demonstration"
 msgstr "Demonstratie"
 
+msgid "Deny"
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -16334,6 +16407,10 @@ msgstr "Details voor servicemeldingen"
 msgid "Detect and use proxies configured on the target system"
 msgstr ""
 "Proxies detecteren en gebruiken die op het doelsysteem zijn geconfigureerd"
+
+#, fuzzy
+msgid "Detect instances"
+msgstr "Autodetect instanties"
 
 msgid "Detect network parent hosts"
 msgstr "Detecteer netwerk moeder hosts"
@@ -17195,6 +17272,10 @@ msgstr ""
 
 msgid "Displays a single metric of a specific host and service."
 msgstr "Geeft een enkele metric weer van een specifieke host en service."
+
+#, fuzzy
+msgid "Displays a sorted list of services according to a selected metric."
+msgstr "Toont het aantal diensten in een geselecteerde staat."
 
 msgid "Displays a static text to the user."
 msgstr "Geeft een statische tekst weer aan de gebruiker."
@@ -18600,6 +18681,10 @@ msgstr "Klant %s bewerken"
 msgid "Edit dashboards"
 msgstr "dashboards bewerken"
 
+#, fuzzy
+msgid "Edit defaults"
+msgstr "Is standaard"
+
 msgid "Edit element"
 msgstr "Element bewerken"
 
@@ -19104,7 +19189,8 @@ msgstr "TLS inschakelen"
 msgid "Enable active checks"
 msgstr "Actieve controles inschakelen"
 
-msgid "Enable adhoc downtime"
+#, fuzzy
+msgid "Enable ad hoc downtime"
 msgstr "Adhoc uitvaltijd mogelijk maken"
 
 msgid "Enable all"
@@ -19532,6 +19618,14 @@ msgstr ""
 
 msgid "Enter"
 msgstr "Ga naar"
+
+#, fuzzy
+msgid "Enter a comment to acknowledge problems"
+msgstr "Erken problemen"
+
+#, fuzzy
+msgid "Enter a comment to schedule downtime"
+msgstr "Begin of einde van een geplande downtime"
 
 msgid ""
 "Enter a list of user IDs to be notified here. These users need to be members "
@@ -20170,6 +20264,9 @@ msgstr "Voorbeeld configuratie voor systemd"
 msgid "Example for parameters"
 msgstr "Voorbeeld voor parameters"
 
+msgid "Example:"
+msgstr ""
+
 msgid "Exc."
 msgstr "Exc."
 
@@ -20528,9 +20625,6 @@ msgstr "Verwacht update-interval"
 msgid "Experimental features"
 msgstr "Ondernemingsfunctie"
 
-msgid "Expire acknowledgement after"
-msgstr "Bevestiging vervallen na"
-
 msgid "Expire events that are in the state <i>acknowledged</i>"
 msgstr "Verlopen gebeurtenissen die in de status <i>erkend</i>"
 
@@ -20539,6 +20633,10 @@ msgstr "Verlopen gebeurtenissen die in de status <i>open</i> staan"
 
 msgid "Expire message"
 msgstr "Bericht vervallen"
+
+#, fuzzy
+msgid "Expire on"
+msgstr "Verloopt op"
 
 msgid "Expire time"
 msgstr "Verlooptijd"
@@ -21679,9 +21777,6 @@ msgstr "Vaste grootte"
 msgid "Fixed string to expect in the content"
 msgstr "Vaste tekenreeks te verwachten in de inhoud"
 
-msgid "FixedValue value is not serializable."
-msgstr ""
-
 msgid "Flap"
 msgstr "Flap"
 
@@ -22659,7 +22754,8 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
-msgid "GUI extensions"
+#, fuzzy
+msgid "GUI extensions (deprecated)"
 msgstr "GUI-uitbreidingen"
 
 msgid ""
@@ -23340,18 +23436,42 @@ msgstr "HTML-uitvoer"
 msgid "HTTP"
 msgstr "HTTP"
 
-#, python-format
-msgid "HTTP %s errors"
+#, fuzzy
+msgid "HTTP 2XX errors"
 msgstr "HTTP %s fouten"
 
 msgid "HTTP 3/4/5XX Errors"
 msgstr "HTTP 3/4/5XX Fouten"
+
+#, fuzzy
+msgid "HTTP 3XX errors"
+msgstr "HTTP %s fouten"
+
+#, fuzzy
+msgid "HTTP 4XX errors"
+msgstr "HTTP %s fouten"
 
 msgid "HTTP 500 errors"
 msgstr "HTTP 500 fouten"
 
 msgid "HTTP 500/2/3/4 Errors"
 msgstr "HTTP 500/2/3/4 Fouten"
+
+#, fuzzy
+msgid "HTTP 502 errors"
+msgstr "HTTP 500 fouten"
+
+#, fuzzy
+msgid "HTTP 503 errors"
+msgstr "HTTP 500 fouten"
+
+#, fuzzy
+msgid "HTTP 504 errors"
+msgstr "HTTP 500 fouten"
+
+#, fuzzy
+msgid "HTTP 5XX errors"
+msgstr "HTTP 500 fouten"
 
 msgid "HTTP 5xx Responses"
 msgstr "HTTP 5xx antwoorden"
@@ -23384,6 +23504,10 @@ msgstr "HTTP POST gegevens"
 msgid "HTTP Parameters"
 msgstr "HTTP Parameters"
 
+#, fuzzy
+msgid "HTTP Proxy"
+msgstr "HTTP proxy"
+
 msgid "HTTP Redirects"
 msgstr "HTTP doorverwijzingen"
 
@@ -23413,6 +23537,10 @@ msgstr "HTTP, TCP, E-mail, ..."
 
 msgid "HTTPS"
 msgstr "HTTPS"
+
+#, fuzzy
+msgid "HTTPS Proxy"
+msgstr "HTTP proxy"
 
 msgid ""
 "HTTPS is the suggested setting here. It requires a valid SSL setup of your "
@@ -26407,6 +26535,11 @@ msgstr ""
 "wordt bereikt, wordt de telling op nul gezet."
 
 msgid ""
+"If include is not defined then exclude following SIDs (if found and /or "
+"defined)"
+msgstr ""
+
+msgid ""
 "If limits are enabled, all instances will be fetched regardless of any name "
 "or tag restrictions that may have been configured."
 msgstr ""
@@ -26503,6 +26636,9 @@ msgstr ""
 "problemen die in een Multisite-statusweergave worden getoond, indien die "
 "weergave voor geluiden is geconfigureerd. Van de views die met Multisite "
 "worden meegeleverd, zijn voor alle probleemviews geluiden ingeschakeld."
+
+msgid "If state changes OR core restarts OR on recovery (OK/UP)"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -27790,6 +27926,9 @@ msgstr "Soft query limiet negeren"
 msgid "Ignore specific alert rules"
 msgstr "Negeer specifieke waarschuwingsregels"
 
+msgid "Ignore status changes until services/hosts are OK/UP again (sticky)"
+msgstr ""
+
 msgid "Ignore styles specified in rules"
 msgstr "Negeer stijlen in regels"
 
@@ -29061,9 +29200,6 @@ msgstr "Interface groepen"
 msgid "Interface id"
 msgstr "Interface-id"
 
-msgid "Interface known in Ntop"
-msgstr "Interface bekend in Ntop"
-
 msgid "Interface settings"
 msgstr "Interface-instellingen"
 
@@ -30029,6 +30165,9 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "Kaspersky Anti-Virus Tijd Instellingen"
 
+msgid "Keep comment after acknowledgment expires (persistent comment)"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "Bestaande verbindingen behouden"
 
@@ -30659,16 +30798,19 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
-msgid "Legacy GUI extensions"
+#, fuzzy
+msgid "Legacy GUI extensions (deprecated)"
 msgstr "Verouderde GUI-uitbreidingen"
 
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
 
-msgid "Legacy check plugins"
+#, fuzzy
+msgid "Legacy check plugins (deprecated)"
 msgstr "Plugins voor oudere controles"
 
-msgid "Legacy inventory plugins"
+#, fuzzy
+msgid "Legacy inventory plugins (deprecated)"
 msgstr "Verouderde inventaris plugins"
 
 msgid "Legacy run"
@@ -31567,6 +31709,10 @@ msgstr "Het aantal rijen in View-tabellen beperken"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Het aantal rijen in tabellen beperken"
+
+#, fuzzy
+msgid "Limit to"
+msgstr "Limiet"
 
 msgid "Limit width"
 msgstr "Grensbreedte"
@@ -34230,6 +34376,10 @@ msgid "Maximum run duration for last execution"
 msgstr "Maximale duur van de laatste uitvoering"
 
 #, fuzzy
+msgid "Maximum runtime of a keyword run"
+msgstr "Maximale leeftijd van de laatste back-up"
+
+#, fuzzy
 msgid "Maximum runtime of a test run"
 msgstr "Maximale leeftijd van de laatste back-up"
 
@@ -34746,15 +34896,6 @@ msgstr ""
 msgid "Metric not found"
 msgstr "Metriek niet gevonden"
 
-msgid ""
-"Metric transformations and combinations like Forecasts calculations, "
-"aggregations and filtering are only available with the Checkmk Enterprise "
-"Editions"
-msgstr ""
-"Metrische transformaties en combinaties zoals prognoseberekeningen, "
-"aggregaties en filtering zijn alleen beschikbaar met de Checkmk Enterprise "
-"Editions"
-
 msgid "Metrics"
 msgstr "Metriek"
 
@@ -34957,6 +35098,10 @@ msgstr "Gespiegelde lijn"
 
 msgid "Mirrored Stacked"
 msgstr "Gespiegeld Gestapeld"
+
+#, fuzzy
+msgid "Mirroring"
+msgstr "Toezicht"
 
 msgid "Mirroring state criticality"
 msgstr "Spiegeltoestand kriticiteit"
@@ -35301,6 +35446,10 @@ msgstr "Bewaak Route53"
 
 msgid "Monitor all files in folder"
 msgstr "Bewaak alle bestanden in de map"
+
+#, fuzzy
+msgid "Monitor all instances detected and defined"
+msgstr "Controleer alle gevonden gevallen"
 
 msgid "Monitor all instances found"
 msgstr "Controleer alle gevonden gevallen"
@@ -36725,6 +36874,10 @@ msgstr "Geen inzendingen."
 msgid "No exclude range configured"
 msgstr "Geen uitsluitingsbereik geconfigureerd"
 
+#, fuzzy
+msgid "No expiration date"
+msgstr "Registratie Staat"
+
 msgid "No explicit credentials"
 msgstr "Geen expliciete geloofsbrieven"
 
@@ -36853,6 +37006,10 @@ msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
 
 #, fuzzy
+msgid "No proxy"
+msgstr "Gebruik proxy"
+
+#, fuzzy
 msgid "No re-executions"
 msgstr "Gelijktijdige uitvoeringen"
 
@@ -36977,6 +37134,14 @@ msgstr "Geen versiebeperking"
 #, python-format
 msgid "No view defined with the name '%s'."
 msgstr "Geen view gedefinieerd met de naam '%s'."
+
+#, fuzzy
+msgid "No, adjust settings"
+msgstr "Host instellingen"
+
+#, fuzzy
+msgid "No, discard"
+msgstr "werpt"
 
 #, fuzzy
 msgid "No, keep current name"
@@ -37600,6 +37765,14 @@ msgstr "Aangemelde gebeurtenissen voor hosts"
 msgid "Notified events for services"
 msgstr "Aangemelde gebeurtenissen voor diensten"
 
+#, python-format
+msgid "Notify affected users if %s are in place (send notifications)"
+msgstr ""
+
+msgid ""
+"Notify affected users if notification rules are in place (send notifications)"
+msgstr ""
+
 msgid "Notify all contacts of the notified host or service."
 msgstr ""
 "Breng alle contactpersonen van de host of dienst in kwestie op de hoogte."
@@ -37650,6 +37823,10 @@ msgstr "Ntop: Waarschuwingen"
 
 msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng (tegen betaling)"
+
+#, fuzzy
+msgid "Ntopng host"
+msgstr "Ntop gastheer"
 
 msgid "Ntopng integration"
 msgstr "Ntopng integratie"
@@ -38595,6 +38772,10 @@ msgstr "OSN Laserdemping"
 msgid "OTP code"
 msgstr "TCP verbinding"
 
+#, fuzzy
+msgid "OVS bonding interface status"
+msgstr "Koppelvlakken"
+
 msgid "Object"
 msgstr "Object"
 
@@ -38701,11 +38882,18 @@ msgstr "Laat rijen weg waar alle kolommen identiek zijn"
 msgid "On"
 msgstr "O"
 
+#, fuzzy, python-format
+msgid "On %s (server time)."
+msgstr "Server tijd"
+
 msgid "On Hold"
 msgstr "On Hold"
 
 msgid "On all sites"
 msgstr "Op alle sites"
+
+msgid "On core restart OR recovery (OK/UP)"
+msgstr ""
 
 msgid "On down host"
 msgstr "Op down host"
@@ -38960,6 +39148,10 @@ msgstr ""
 "voor de host/map. Optioneel kun je deze contactgroepen automatisch contacten "
 "laten bewaken. De toewijzing van hosts aan contactgroepen kan ook worden "
 "gedefinieerd door <a href='%s'>regels</a>."
+
+#, fuzzy
+msgid "Only monitor following SIDs (if found and /or defined)"
+msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 
 msgid "Only needed if you have multiple MySQL Instances on one server"
 msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
@@ -40627,15 +40819,43 @@ msgstr "Procentuele niveaus"
 msgid "Percentage levels of current thread count in threadpool"
 msgstr "Percentage van het huidige aantal threads in de threadpool"
 
-#, python-format
-msgid "Percentage of HTTP %s errors"
+#, fuzzy
+msgid "Percentage of HTTP 2XX errors"
 msgstr "Percentage HTTP %s fouten"
 
 msgid "Percentage of HTTP 3/4/5XX Errors"
 msgstr "Percentage HTTP 3/4/5XX Fouten"
 
+#, fuzzy
+msgid "Percentage of HTTP 3XX errors"
+msgstr "Percentage HTTP %s fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 4XX errors"
+msgstr "Percentage HTTP %s fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 500 errors"
+msgstr "Percentage HTTP %s fouten"
+
 msgid "Percentage of HTTP 500/2/3/4 Errors"
 msgstr "Percentage HTTP 500/2/3/4 fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 502 errors"
+msgstr "Percentage HTTP %s fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 503 errors"
+msgstr "Percentage HTTP %s fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 504 errors"
+msgstr "Percentage HTTP %s fouten"
+
+#, fuzzy
+msgid "Percentage of HTTP 5XX errors"
+msgstr "Percentage HTTP %s fouten"
 
 msgid "Percentage of Lambda user errors"
 msgstr "Percentage gebruikersfouten bij Lambda"
@@ -40946,9 +41166,6 @@ msgstr "Persistent Volume Claimnaam"
 msgid "Persistent Volume Claims"
 msgstr "Persistente volumeclaims"
 
-msgid "Persistent comment"
-msgstr "Aanhoudend commentaar"
-
 msgid "Persistent connections"
 msgstr "Persistente verbindingen"
 
@@ -41086,6 +41303,10 @@ msgid "Piggyback creation options"
 msgstr "Piggyback creatie opties"
 
 msgid "Piggyback data"
+msgstr "Piggyback gegevens"
+
+#, fuzzy
+msgid "Piggyback host"
 msgstr "Piggyback gegevens"
 
 msgid "Piggyback information for other hosts"
@@ -42956,6 +43177,10 @@ msgstr "Gebruikte RAM"
 msgid "RAM used %"
 msgstr "RAM gebruikt %"
 
+#, fuzzy
+msgid "RCC profile configuration"
+msgstr "Configuratie op afstand"
+
 msgid "RCU"
 msgstr "RCU"
 
@@ -43176,6 +43401,10 @@ msgstr "Bereik grenzen"
 
 msgid "Range of values (min/max)"
 msgstr "Bereik van de waarden (min/max)"
+
+#, fuzzy
+msgid "Ranking order"
+msgstr "Waarschuwing indien meer dan"
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatuur"
@@ -44011,11 +44240,15 @@ msgstr "TLS-registratie van geselecteerde hosts verwijderen"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Verwijder Windows Firewall configuratie indien aanwezig"
 
-msgid "Remove acknowledgement"
+#, fuzzy
+msgid "Remove acknowledgments"
 msgstr "Bevestiging verwijderen"
 
+msgid "Remove all"
+msgstr "Verwijder alle"
+
 #, fuzzy
-msgid "Remove acknowledgement?"
+msgid "Remove all acknowledgments?"
 msgstr "Bevestiging verwijderen"
 
 msgid "Remove all and find new"
@@ -46923,9 +47156,6 @@ msgstr "Metriek verzenden naar InfluxDB"
 msgid "Send monitoring notification"
 msgstr "Bewaking versturen"
 
-msgid "Send notification"
-msgstr "Bericht verzenden"
-
 msgid "Send notifications to Event Console"
 msgstr "Meldingen naar gebeurtenissen Console sturen"
 
@@ -47525,6 +47755,9 @@ msgstr "Dienstmarkeringen"
 
 msgid "Service tags (with titles)"
 msgstr "Dienstmarkeringen (met titels)"
+
+msgid "Service was WARN and goes CRIT - acknowledgment doesn't expire."
+msgstr ""
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "Dienst waarvan de status in de laatste 60 minuten is veranderd"
@@ -48238,6 +48471,10 @@ msgstr "Gedeelde zwembadgrootte"
 msgid "Shared with"
 msgstr "Gedeeld met"
 
+#, fuzzy
+msgid "Shipped Checkmk plugins"
+msgstr "Controleer plugin"
+
 msgid "Short - Use the first 12 characters of the docker container ID"
 msgstr "Kort - Gebruik de eerste 12 karakters van de docker container ID"
 
@@ -48353,6 +48590,10 @@ msgstr "Toon alle onderwerpen"
 
 msgid "Show analysis"
 msgstr "Analyse tonen"
+
+#, fuzzy
+msgid "Show bar visualization"
+msgstr "BI-visualisatie"
 
 msgid "Show bulks"
 msgstr "Bulken tonen"
@@ -48565,6 +48806,10 @@ msgstr "Toon regels met behulp van deze %s"
 
 msgid "Show separate result for each SLA period"
 msgstr "Toon afzonderlijk resultaat voor elke SLA periode"
+
+#, fuzzy
+msgid "Show service description"
+msgstr "Beschrijving van de dienst"
 
 msgid "Show service status"
 msgstr "Toon dienst status"
@@ -51426,9 +51671,6 @@ msgstr "Status verbinding"
 msgid "Status data inventory"
 msgstr "Inventarisatie statusgegevens"
 
-msgid "Status detail"
-msgstr "Statusgegevens"
-
 msgid "Status downtimes"
 msgstr "Statusonderbrekingen"
 
@@ -51559,9 +51801,6 @@ msgstr "Stap is begonnen"
 
 msgid "Steps"
 msgstr "Stappen"
-
-msgid "Sticky"
-msgstr "Sticky"
 
 msgid "Still nothing happened."
 msgstr "Er gebeurde nog steeds niets."
@@ -52516,6 +52755,10 @@ msgstr "Tabel opties"
 
 msgid "Table percentage bloat levels"
 msgstr "Tabel bloat percentages"
+
+#, fuzzy
+msgid "Table spaces"
+msgstr "Tafelspaces"
 
 msgid "Table with availability figures"
 msgstr "Tabel met beschikbaarheidscijfers"
@@ -54159,7 +54402,8 @@ msgstr ""
 msgid "The comment must not contain semicolons."
 msgstr "Het commentaar mag geen puntkomma's bevatten."
 
-msgid "The comment which is automatically sent with an adhoc downtime"
+#, fuzzy
+msgid "The comment which is automatically sent with an ad hoc downtime"
 msgstr "Het commentaar dat automatisch wordt verzonden met een adhoc downtime"
 
 msgid "The complete hardware- and software inventory of a host"
@@ -54565,7 +54809,8 @@ msgstr ""
 msgid "The domain \"%s\" does not support activation."
 msgstr "Het domein \"%s\" ondersteunt geen activering."
 
-msgid "The duration in minutes of the adhoc downtime."
+#, fuzzy
+msgid "The duration in minutes of the ad hoc downtime."
 msgstr "De duur in minuten van de adhoc downtime."
 
 msgid ""
@@ -61158,9 +61403,10 @@ msgstr ""
 "gebruikersonafhankelijk zijn. Het wijzigen van de temperatuureenheid voor "
 "grafieken en perfometers is mogelijk via het gebruikersprofiel."
 
+#, fuzzy
 msgid ""
-"This setting allows to set an adhoc downtime comment and its duration. When "
-"enabled a new button <i>Adhoc downtime for __ minutes</i> will be available "
+"This setting allows to set an ad hoc downtime comment and its duration. When "
+"enabled a new button <i>Ad hoc downtime for __ minutes</i> will be available "
 "in the command form."
 msgstr ""
 "Deze instelling maakt het mogelijk om een adhoc downtime commentaar en de "
@@ -62622,6 +62868,9 @@ msgstr "Tooltip"
 msgid "Top"
 msgstr "Top"
 
+msgid "Top (highest) N"
+msgstr ""
+
 msgid "Top Talkers"
 msgstr "Top praters"
 
@@ -62633,6 +62882,10 @@ msgstr "Top applicatie verkeer: laatste dag weergave"
 
 msgid "Top application traffic: last hour view"
 msgstr "Top applicatieverkeer: weergave laatste uur"
+
+#, fuzzy
+msgid "Top list"
+msgstr "Top praters"
 
 msgid "Top local talkers"
 msgstr "Top lokale praters"
@@ -62671,10 +62924,6 @@ msgstr "Topologie maaswijdte"
 msgid "Total"
 msgstr "Totaal"
 
-#, python-format
-msgid "Total %s vCPUs"
-msgstr "Totaal %s vCPU's"
-
 msgid "Total Active Sessions"
 msgstr "Totaal actieve sessies"
 
@@ -62702,6 +62951,32 @@ msgstr "Totaal IO operaties per seconde"
 
 msgid "Total Index Size"
 msgstr "Totale indexomvang"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand F instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand G instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand P instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid ""
+"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
+"instances') vCPUs"
+msgstr "Lopende On-Demand Standaard (A, C, D, H, I, M, R, T, Z) instanties"
+
+#, fuzzy
+msgid "Total Localizable('Running On-Demand X instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
 
 msgid "Total Magnetic volumes space"
 msgstr "Totale magnetische volumes ruimte"
@@ -63075,11 +63350,1687 @@ msgstr "Totale query timeout"
 msgid "Total restarts"
 msgstr "Totaal herstarts"
 
-#, python-format
-msgid "Total running On-Demand %s Instances"
+msgid "Total running On-Demand Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand a1.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c1.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c1.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c3.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c3.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c4.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c4.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c4.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c4.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c4.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.18xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.9xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5a.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5ad.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.18xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.9xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5d.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.18xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.9xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c5n.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6g.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gd.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand c6gn.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand cc1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand cc2.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand cg1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand cr1.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d2.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d2.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d2.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d2.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand d3en.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand f1.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand f1.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand f1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g2.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g2.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g3.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g3.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g3s.xlarge Instances"
 msgstr "Totaal aantal lopende On-Demand %s Instances"
 
-msgid "Total running On-Demand Instances"
+#, fuzzy
+msgid "Total running On-Demand g4ad.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4ad.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand g4dn.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand h1.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand h1.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand h1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand h1.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand hi1.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand hs1.8xlarge Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i2.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i2.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i2.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i2.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.3xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand i3en.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand inf1.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m1.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m1.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m1.small Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m1.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m2.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m2.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m2.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m3.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m3.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.10xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m4.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5a.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5ad.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5d.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5dn.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5n.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.3xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m5zn.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6g.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6gd.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.32xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand m6i.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand mac1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p2.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p2.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p2.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p3.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p3dn.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand p4d.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r3.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r3.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r3.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r4.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5a.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5ad.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5b.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5d.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5dn.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r5n.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6g.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand r6gd.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t1.micro Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.micro Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.nano Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.small Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t2.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.micro Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.nano Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.small Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.micro Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.nano Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.small Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t3a.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.micro Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.nano Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.small Instances"
+msgstr "Totaal aantal lopende On-Demand %s Instances"
+
+#, fuzzy
+msgid "Total running On-Demand t4g.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.112xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-12tb1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-18tb1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-24tb1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.112xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.56xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-6tb1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.112xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand u-9tb1.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.24xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.3xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand vt1.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1.32xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.32xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x1e.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.16xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.4xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.8xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.medium Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand x2gd.xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.12xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.2xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.3xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.6xlarge Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.large Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.metal Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "Totaal draaiende On-Demand Instances"
 
 msgid "Total service problems"
@@ -63159,6 +65110,10 @@ msgstr "Ontvangen verkeer"
 
 msgid "Traffic Sent"
 msgstr "Verkeer Verzonden"
+
+#, fuzzy
+msgid "Transaction Logs"
+msgstr "Transactielog"
 
 msgid "Transaction Logs Disk Usage"
 msgstr "Transactie Logs Schijf Gebruik"
@@ -63316,6 +65271,9 @@ msgstr "Uitproberen"
 #, fuzzy
 msgid "Try pattern match"
 msgstr "Probeer Patroon Overeenstemming"
+
+msgid "Try to detect MS SQL instances presented on Server"
+msgstr ""
 
 msgid "Try to fit text to the available space."
 msgstr "Probeer de tekst in de beschikbare ruimte te passen."
@@ -65452,6 +67410,9 @@ msgstr ""
 msgid "Use procedure call instead of SQL statement"
 msgstr "Gebruik procedure-aanroep in plaats van SQL-instructie"
 
+msgid "Use proxy"
+msgstr "Gebruik proxy"
+
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 "Gebruik proxy-instellingen van de procesomgeving. Dit is de "
@@ -66804,9 +68765,6 @@ msgstr "Bekijk uitbreiding pakketbeheer"
 
 msgid "View Properties"
 msgstr "Eigenschappen bekijken"
-
-msgid "View action defaults"
-msgstr "Actie standaardinstellingen bekijken"
 
 msgid "View all maps"
 msgstr "Bekijk alle kaarten"
@@ -69357,8 +71315,16 @@ msgid "Yes"
 msgstr "Ja"
 
 #, fuzzy
+msgid "Yes, acknowledge"
+msgstr "erkend"
+
+#, fuzzy
 msgid "Yes, rename"
 msgstr "Redis server naam"
+
+#, fuzzy
+msgid "Yes, schedule"
+msgstr "Herschikken"
 
 msgid "Yes, that is exactly what I want."
 msgstr "Ja, dat is precies wat ik wil."
@@ -70557,6 +72523,11 @@ msgid ""
 msgstr ""
 "U kunt geen uitvaltijd instellen die eindigt in het verleden. Dit incident "
 "zal worden gerapporteerd."
+
+#, fuzzy
+msgid "You cannot set an expiration date and time that is in the past:"
+msgstr ""
+"Je kunt tellen en verwachten niet tegelijk gebruiken in dezelfde regel."
 
 msgid ""
 "You cannot use counting and expecting at the same time in the same rule."
@@ -71869,6 +73840,9 @@ msgstr "naar beneden"
 msgid "e.g. 'My_Project/Closed'"
 msgstr "b.v. \"Mijn_Project/Gesloten"
 
+msgid "e.g. ticket ID"
+msgstr ""
+
 msgid "eWON SNMP Proxy"
 msgstr "eWON SNMP Proxy"
 
@@ -71914,6 +73888,9 @@ msgstr "inschakelen"
 
 msgid "entries"
 msgstr "inzendingen"
+
+msgid "entries (max. 50)"
+msgstr ""
 
 msgid "estimated duration"
 msgstr "geschatte looptijd"
@@ -71979,6 +73956,10 @@ msgstr "bestanden"
 
 msgid "filesystem"
 msgstr "bestandssysteem"
+
+#, fuzzy
+msgid "firing"
+msgstr "String"
 
 msgid "first level"
 msgstr "eerste niveau"
@@ -72631,6 +74612,10 @@ msgstr "notif."
 msgid "notification rule"
 msgstr "kennisgevingsregel"
 
+#, fuzzy
+msgid "notification rules"
+msgstr "kennisgevingsregel"
+
 msgid "notifications within last"
 msgstr "kennisgevingen binnen de laatste"
 
@@ -72817,9 +74802,6 @@ msgstr "periode"
 
 msgid "period(s)"
 msgstr "periode(n)"
-
-msgid "persistent comment"
-msgstr "aanhoudend commentaar"
 
 msgid "pfSense Firewall Packet Rates"
 msgstr "pfSense Firewall Pakkettarieven"
@@ -73016,9 +74998,6 @@ msgstr "seconden per seconde"
 msgid "secs"
 msgstr "secs"
 
-msgid "send notification"
-msgstr "bericht verzenden"
-
 msgid "send notifications of contactgroup:"
 msgstr "meldingen van contactgroep verzenden:"
 
@@ -73097,9 +75076,6 @@ msgstr "s"
 
 msgid "status entries"
 msgstr "statusvermeldingen"
-
-msgid "sticky"
-msgstr "kleverig"
 
 msgid "stopped"
 msgstr "gestopt"
@@ -73421,6 +75397,52 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Expire acknowledgement after"
+#~ msgstr "Bevestiging vervallen na"
+
+#~ msgid ""
+#~ "Metric transformations and combinations like Forecasts calculations, "
+#~ "aggregations and filtering are only available with the Checkmk Enterprise "
+#~ "Editions"
+#~ msgstr ""
+#~ "Metrische transformaties en combinaties zoals prognoseberekeningen, "
+#~ "aggregaties en filtering zijn alleen beschikbaar met de Checkmk "
+#~ "Enterprise Editions"
+
+#~ msgid "Persistent comment"
+#~ msgstr "Aanhoudend commentaar"
+
+#~ msgid "Send notification"
+#~ msgstr "Bericht verzenden"
+
+#~ msgid "Sticky"
+#~ msgstr "Sticky"
+
+#, python-format
+#~ msgid "Total %s vCPUs"
+#~ msgstr "Totaal %s vCPU's"
+
+#~ msgid "View action defaults"
+#~ msgstr "Actie standaardinstellingen bekijken"
+
+#~ msgid "persistent comment"
+#~ msgstr "aanhoudend commentaar"
+
+#~ msgid "send notification"
+#~ msgstr "bericht verzenden"
+
+#~ msgid "sticky"
+#~ msgstr "kleverig"
+
+#~ msgid "Interface known in Ntop"
+#~ msgstr "Interface bekend in Ntop"
+
+#~ msgid "Add mapping"
+#~ msgstr "Mapping toevoegen"
+
+#~ msgid "Status detail"
+#~ msgstr "Statusgegevens"
+
 #~ msgid "Critical (active connections)"
 #~ msgstr "Kritisch (actieve verbindingen)"
 
@@ -73586,9 +75608,6 @@ msgstr ""
 
 #~ msgid "Please enter a positive number of minutes."
 #~ msgstr "Voer een positief aantal minuten in."
-
-#~ msgid "Remove all"
-#~ msgstr "Verwijder alle"
 
 #~ msgid "Repeat this downtime on a regular basis every"
 #~ msgstr "Herhaal deze onderbreking op regelmatige basis elke"
@@ -74863,9 +76882,6 @@ msgstr ""
 #~ "bron. Om te voorkomen dat piggyback gebaseerde hosts in deze situatie "
 #~ "verloren gaan, is het verwijderen van hosts enige tijd na de site "
 #~ "initialisatie uitgeschakeld."
-
-#~ msgid "discards"
-#~ msgstr "werpt"
 
 #, fuzzy
 #~| msgid "In Progress"
@@ -76795,9 +78811,6 @@ msgstr ""
 
 #~ msgid "Proxy basic authorization"
 #~ msgstr "Proxy basis machtiging"
-
-#~ msgid "Use proxy"
-#~ msgstr "Gebruik proxy"
 
 #~ msgid "Backplane"
 #~ msgstr "Backplane"

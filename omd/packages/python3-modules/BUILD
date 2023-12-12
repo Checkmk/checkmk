@@ -32,13 +32,13 @@ config_setting(
             git_ssl_no_verify = "",
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
+            requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             pypi_mirror = INTERNAL_PYPI_MIRROR,
-            requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
+            requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
     }),
 ) for module in all_requirements]
@@ -47,9 +47,15 @@ config_setting(
     name = "%s_compile" % module,
     srcs = [
         "@freetds",
-        "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
-        "@omd_packages//packages:werks",
+        "@omd_packages//packages:cmk-agent-based",
+        "@omd_packages//packages:cmk-agent-receiver",
+        "@omd_packages//packages:cmk-graphing",
+        "@omd_packages//packages:cmk-livestatus-client",
+        "@omd_packages//packages:cmk-mkp-tool",
+        "@omd_packages//packages:cmk-rulesets",
+        "@omd_packages//packages:cmk-server-side-calls",
+        "@omd_packages//packages:cmk-werks",
         "@openssl",
         "@python",
     ],
@@ -71,8 +77,14 @@ config_setting(
         ),
     }),
 ) for module, dep in [
-    ("agent-receiver", "$(execpath @omd_packages//:agent-receiver)"),
-    ("werks", "$(execpath @omd_packages//packages:werks)"),
+    ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
+    ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
+    ("rulesets", "$(execpath @omd_packages//packages:cmk-rulesets)"),
+    ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
+    ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
+    ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
+    ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),
+    ("livestatus-client", "$(execpath @omd_packages//packages:cmk-livestatus-client)"),
 ]]
 
 genrule(
@@ -80,8 +92,14 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
+            "agent-based",
             "agent-receiver",
+            "graphing",
+            "mkp-tool",
+            "rulesets",
+            "server-side-calls",
             "werks",
+            "livestatus-client",
         ]
     ],
     outs = [
@@ -126,4 +144,5 @@ genrule(
         done
         cd -
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
+    visibility = ["//visibility:public"],
 )

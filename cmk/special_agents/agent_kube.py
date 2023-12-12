@@ -32,11 +32,8 @@ import urllib3
 from pydantic import TypeAdapter
 
 import cmk.utils.password_store
-import cmk.utils.paths
 import cmk.utils.profile
 
-from cmk.special_agents.utils import vcrtrace
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.agent_handlers import (
     cluster_handler,
@@ -83,6 +80,8 @@ from cmk.special_agents.utils_kubernetes.common import (
     RawMetrics,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 
 class MonitoredObject(enum.Enum):
@@ -400,7 +399,7 @@ def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]
     for section_name, section_call in sections.items():
         if section_output := section_call():
             with SectionWriter(section_name) as writer:
-                writer.append(section_output.json())
+                writer.append(section_output.model_dump_json())
 
 
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
@@ -704,7 +703,7 @@ def _group_metadata_by_node(
     for node_collector in node_collectors_metadata:
         components = nodes_components.setdefault(node_collector.node, {})
 
-        for component, version in node_collector.components.dict().items():
+        for component, version in node_collector.components.model_dump().items():
             if version is not None:
                 components[component] = section.NodeComponent(
                     collector_type=node_collector.collector_type,
@@ -730,7 +729,7 @@ def write_cluster_collector_info_section(
                 processing_log=processing_log,
                 cluster_collector=cluster_collector,
                 nodes=node_collectors_metadata,
-            ).json()
+            ).model_dump_json()
         )
 
 
@@ -1137,7 +1136,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 metadata = request_cluster_collector(
                     query.CollectorPath.metadata,
                     usage_config,
-                    section.Metadata.parse_raw,
+                    section.Metadata.model_validate_json,
                 )
 
                 supported_collector_version = 1
@@ -1281,7 +1280,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     section.CollectorProcessingLogs(
                         container=collector_container_logs[-1],
                         machine=collector_machine_logs[-1],
-                    ).json()
+                    ).model_dump_json()
                 )
     except Exception as e:
         if arguments.debug:

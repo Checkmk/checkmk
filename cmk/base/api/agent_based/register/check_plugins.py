@@ -14,23 +14,18 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    CheckPlugin,
-    DiscoveryFunction,
-    IgnoreResults,
-    Metric,
-    Result,
-    Service,
-)
+from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
-    RuleSetType,
     validate_default_parameters,
     validate_function_arguments,
     validate_ruleset_type,
 )
+
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.discover_plugins import PluginLocation
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -172,7 +167,7 @@ def create_check_plugin(
     check_default_parameters: ParametersTypeAlias | None = None,
     check_ruleset_name: str | None = None,
     cluster_check_function: Callable | None = None,
-    module: str | None = None,
+    location: PluginLocation | None = None,
     validate_item: bool = True,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -224,7 +219,7 @@ def create_check_plugin(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
         cluster_check_function=cluster_check_function,
-        module=module,
+        location=location,
     )
 
 
@@ -241,5 +236,5 @@ def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
         original_plugin.check_default_parameters,
         original_plugin.check_ruleset_name,
         original_plugin.cluster_check_function,
-        original_plugin.module,
+        original_plugin.location,
     )

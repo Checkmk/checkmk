@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.netapp_api_luns import (
     discover_netapp_api_luns,
     parse_netapp_api_luns,
 )
-from cmk.base.plugins.agent_based.utils.netapp_api import SectionSingleInstance
+
+from cmk.plugins.lib.netapp_api import SectionSingleInstance
 
 STRING_TABLE = [
     [
@@ -78,6 +79,8 @@ def test_checks(section: SectionSingleInstance) -> None:
             60.0,
         )
     ) == [
+        Result(state=State.OK, summary="Volume: iscsi_crm_dblogs"),
+        Result(state=State.OK, summary="Vserver: ISCSI_CRM"),
         Metric(
             "fs_used",
             513958.37890625,

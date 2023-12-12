@@ -9,9 +9,9 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.base.api.agent_based.type_defs import AgentParseFunction, AgentSectionPlugin
-from cmk.base.plugins.agent_based.utils import kube as check
+from cmk.base.api.agent_based.plugin_classes import AgentParseFunction, AgentSectionPlugin
 
+from cmk.plugins.lib import kube as check
 from cmk.special_agents.utils_kubernetes.schemata import section as agent
 
 
@@ -77,7 +77,7 @@ def get_kube_check_section_models(
     is also returned by the parse_function. The exception to this rule are
     maintained in _KNOWN_EXCEPTIONS.
     """
-    result = kube_parsed_section_types | _KNOWN_EXCEPTIONS
+    result = dict(kube_parsed_section_types) | _KNOWN_EXCEPTIONS
     # make sure signature is not lying, also mypy is happier this way
     assert all(issubclass(model, check.Section) for model in result.values())
     return result

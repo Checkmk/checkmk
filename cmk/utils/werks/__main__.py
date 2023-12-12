@@ -6,9 +6,9 @@
 import argparse
 from pathlib import Path
 
-from werks.models import Edition, Werk
-
 from cmk.utils.version import __version__, Version
+
+from cmk.werks.models import Edition, Werk
 
 from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks
 from .announce import main as main_announce
@@ -89,7 +89,6 @@ def parse_arguments() -> argparse.Namespace:
     parser_announce.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
     parser_announce.add_argument("version")
     parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
-    parser_announce.add_argument("--feedback-mail", default="feedback@checkmk.com")
     parser_announce.set_defaults(func=main_announce)
 
     parser_collect = subparsers.add_parser(
@@ -118,6 +117,11 @@ def parse_arguments() -> argparse.Namespace:
     parser_mail.add_argument(
         "ref",
         help="reference for git notes, should be werk_mail for production.",
+    )
+    parser_mail.add_argument(
+        "--ref-fixup",
+        default="werk_mail_fixup",
+        help="reference for git notes for fixing broken werk commits",
     )
     parser_mail.add_argument(
         "--do-fetch-git-notes",

@@ -8,13 +8,14 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     check_filesystem_levels,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Volume(BaseModel, frozen=True):
@@ -30,7 +31,7 @@ def parse_volume(string_table: StringTable) -> Mapping[str, Volume] | None:
     if not (volumes := json_data.get("items")):
         return None
 
-    return {item["name"]: Volume.parse_obj(item["space"]) for item in volumes}
+    return {item["name"]: Volume.model_validate(item["space"]) for item in volumes}
 
 
 register.agent_section(

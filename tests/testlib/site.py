@@ -9,14 +9,13 @@ import glob
 import inspect
 import logging
 import os
-import shlex
 import shutil
 import subprocess
 import sys
 import time
 import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
 from typing import Final, Literal
@@ -25,15 +24,22 @@ import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
+    check_output,
     cmc_path,
     cme_path,
-    cmk_path,
+    cse_openid_oauth_provider,
+    current_base_branch_name,
+    current_branch_version,
+    execute,
     is_containerized,
+    makedirs,
     PExpectDialog,
+    repo_path,
     restart_httpd,
     spawn_expect_process,
+    write_file,
 )
-from tests.testlib.version import CMKVersion, version_from_env, version_gte
+from tests.testlib.version import CMKVersion, get_min_version, version_from_env, version_gte
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -44,15 +50,6 @@ from cmk.utils.version import Edition, Version
 logger = logging.getLogger(__name__)
 
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
-
-
-class SiteCalledProcessError(subprocess.CalledProcessError):
-    def __str__(self) -> str:
-        return (
-            super().__str__()
-            if self.stderr is None
-            else f"{super().__str__()[:-1]} ({self.stderr!r})."
-        )
 
 
 class Site:
@@ -98,7 +95,7 @@ class Site:
     @property
     def apache_port(self) -> int:
         if self._apache_port is None:
-            self._apache_port = int(self.get_config("APACHE_TCP_PORT"))
+            self._apache_port = int(self.get_config("APACHE_TCP_PORT", "5000"))
         return self._apache_port
 
     @property
@@ -293,6 +290,21 @@ class Site:
             services[service["extensions"]["description"]] = service["extensions"]["state"]
         return services
 
+    def set_timezone(self, timezone: str) -> None:
+        """Set the timezone of the site."""
+        if not timezone:
+            return
+        restart_site = self.is_running()
+        self.stop()
+        environment = [
+            _
+            for _ in self.read_file("etc/environment").splitlines()
+            if not _.strip().startswith("TZ=")
+        ] + [f"TZ={timezone}"]
+        self.write_text_file("etc/environment", "\n".join(environment) + "\n")
+        if restart_site:
+            self.start()
+
     @staticmethod
     def _command_timestamp(last_check_before: float) -> float:
         # Ensure the next check result is not in same second as the previous check
@@ -410,52 +422,24 @@ class Site:
         return state
 
     def execute(  # type: ignore[no-untyped-def]
-        self, cmd: list[str], *args, preserve_env: list[str] | None = None, **kwargs
+        self,
+        cmd: list[str],
+        *args,
+        preserve_env: list[str] | None = None,
+        **kwargs,
     ) -> subprocess.Popen:
-        assert isinstance(cmd, list), "The command must be given as list"
-
-        if preserve_env:
-            # Skip the test cases calling this for some distros
-            if os.environ.get("DISTRO") in ("centos-8",):
-                pytest.skip("preserve env not possible in this environment")
-            sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
-            su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
-        else:
-            sudo_env_args = []
-            su_env_args = []
-
-        kwargs.setdefault("encoding", "utf-8")
-        cmd_txt = " ".join(
-            ["sudo"]
-            + sudo_env_args
-            + ["su", "-l", self.id]
-            + su_env_args
-            + ["-c", shlex.quote(shlex.join(cmd))]
+        return execute(
+            cmd, *args, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs
         )
-        logger.info("Executing: %s", cmd_txt)
-        kwargs["shell"] = True
-        return subprocess.Popen(cmd_txt, *args, **kwargs)
 
     def check_output(
         self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
     ) -> str:
-        """Mimics behavior of subprocess.check_output
+        """Mimics subprocess.check_output while running a process as the site user.
 
-        Seems to be OK for now but we should find a better abstraction than just
-        wrapping self.execute().
+        Returns the stdout of the process.
         """
-        p = self.execute(
-            cmd,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE if input else None,
-        )
-        stdout, stderr = p.communicate(input)
-        if p.returncode != 0:
-            raise SiteCalledProcessError(p.returncode, p.args, stdout, stderr)
-        assert isinstance(stdout, str)
-        return stdout
+        return check_output(cmd=cmd, input=input, sudo=True, substitute_user=self.id)
 
     @contextmanager
     def copy_file(self, name: str, target: str) -> Iterator[None]:
@@ -475,7 +459,7 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "/usr/bin/omd", mode, self.id] + list(args)
+        cmd = ["sudo", "omd", mode, self.id] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         completed_process = subprocess.run(
             cmd,
@@ -522,33 +506,11 @@ class Site:
         if p.wait() != 0:
             raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
 
-    def _call_tee(self, rel_target_path: str, content: bytes | str) -> None:
-        with self.execute(
-            ["tee", self.path(rel_target_path)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            encoding=None
-            if isinstance(
-                content,
-                bytes,
-            )
-            else "utf-8",
-        ) as p:
-            p.communicate(content)
-        if p.returncode != 0:
-            raise Exception(
-                "Failed to write file %s. Exit-Code: %d"
-                % (
-                    rel_target_path,
-                    p.returncode,
-                )
-            )
-
     def write_text_file(self, rel_path: str, content: str) -> None:
-        self._call_tee(rel_path, content)
+        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
-        self._call_tee(rel_path, content)
+        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         with self.execute(
@@ -588,8 +550,7 @@ class Site:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
 
     def makedirs(self, rel_path: str) -> bool:
-        p = self.execute(["mkdir", "-p", self.path(rel_path)])
-        return p.wait() == 0
+        return makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
 
     def reset_admin_password(self, new_password: str | None = None) -> None:
         self.check_output(
@@ -638,9 +599,9 @@ class Site:
             logger.info("Installing Checkmk version %s", self.version.version_directory())
             completed_process = subprocess.run(
                 [
-                    f"{cmk_path()}/scripts/run-pipenv",
+                    f"{repo_path()}/scripts/run-pipenv",
                     "run",
-                    f"{cmk_path()}/tests/scripts/install-cmk.py",
+                    f"{repo_path()}/tests/scripts/install-cmk.py",
                 ],
                 env=dict(
                     os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
@@ -664,7 +625,7 @@ class Site:
             completed_process = subprocess.run(
                 [
                     "/usr/bin/sudo",
-                    "/usr/bin/omd",
+                    "omd",
                     "-f",
                     "-V",
                     self.version.version_directory(),
@@ -675,7 +636,7 @@ class Site:
                 if self.update
                 else [
                     "/usr/bin/sudo",
-                    "/usr/bin/omd",
+                    "omd",
                     "-V",
                     self.version.version_directory(),
                     "create",
@@ -720,6 +681,8 @@ class Site:
         self.openapi.set_authentication_header(
             user="automation", password=self.get_automation_secret()
         )
+        # set the sites timezone according to TZ
+        self.set_timezone(os.getenv("TZ", ""))
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -744,44 +707,49 @@ class Site:
         return missing
 
     def _update_with_f12_files(self) -> None:
-        paths = [
-            cmk_path() + "/omd/packages/omd",
-            cmk_path() + "/omd/packages/maintenance",
-            cmk_path() + "/omd/packages/check_mk/skel/etc/init.d",
-            cmk_path() + "/livestatus/api/python",
-            cmk_path() + "/bin",
-            cmk_path() + "/agents/special",
-            cmk_path() + "/agents/plugins",
-            cmk_path() + "/agents/windows/plugins",
-            cmk_path() + "/agents",
-            cmk_path() + "/cmk/base",
-            cmk_path() + "/cmk",
-            cmk_path() + "/checkman",
-            cmk_path() + "/web",
-            cmk_path() + "/inventory",
-            cmk_path() + "/notifications",
-            cmk_path() + "/.werks",
-            cmk_path() + "/agent-receiver",
-            cmk_path() + "/active_checks",
-            cmk_path() + "/packages/werks",
+        paths: list[Path] = [
+            repo_path() / "omd/packages/omd",
+            repo_path() / "omd/packages/maintenance",
+            repo_path() / "omd/packages/check_mk/skel/etc/init.d",
+            repo_path() / "livestatus/api/python",
+            repo_path() / "bin",
+            repo_path() / "agents/special",
+            repo_path() / "agents/plugins",
+            repo_path() / "agents/windows/plugins",
+            repo_path() / "agents",
+            repo_path() / "cmk/base",
+            repo_path() / "cmk",
+            repo_path() / "web",
+            repo_path() / "inventory",
+            repo_path() / "notifications",
+            repo_path() / ".werks",
+            repo_path() / "active_checks",
+            repo_path() / "packages/cmk-agent-based",
+            repo_path() / "packages/cmk-agent-receiver",
+            repo_path() / "packages/cmk-graphing",
+            repo_path() / "packages/cmk-mkp-tool",
+            repo_path() / "packages/cmk-rulesets",
+            repo_path() / "packages/cmk-server-side-calls",
+            repo_path() / "packages/cmk-werks",
+            repo_path() / "packages/cmk-livestatus-client",
         ]
 
         if self.version.is_raw_edition():
             # The module is only used in CRE
             paths += [
-                cmk_path() + "/livestatus",
+                repo_path() / "livestatus",
             ]
 
         if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
-                cmc_path() + "/bin",
-                cmc_path() + "/agents/plugins",
-                cmc_path() + "/web",
-                cmc_path() + "/alert_handlers",
-                cmc_path() + "/core",
+                cmc_path() / "bin",
+                cmc_path() / "agents/plugins",
+                cmc_path() / "web",
+                cmc_path() / "alert_handlers",
+                cmc_path() / "core",
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
-                # cmc_path() + "/agents",
+                # cmc_path() / "agents",
             ]
 
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
@@ -958,7 +926,7 @@ class Site:
         completed_process = subprocess.run(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-f",
                 "rm",
                 "--apache-reload",
@@ -980,7 +948,7 @@ class Site:
             while not self.is_running():
                 i += 1
                 if i > 10:
-                    self.execute(["/usr/bin/omd", "status"]).wait()
+                    self.execute(["omd", "status"]).wait()
                     # print("= BEGIN PROCESSES FAIL ==============================")
                     # self.execute(["ps", "aux"]).wait()
                     # print("= END PROCESSES FAIL ==============================")
@@ -1029,10 +997,22 @@ class Site:
 
     def ensure_running(self) -> None:
         if not self.is_running():
-            stdout = subprocess.check_output(["ps", "-ef"], text=True)
+            omd_status_output = self.execute(
+                ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ).communicate()[0]
+            ps_output_file = os.path.join(self.result_dir(), "processes.out")
+            self.write_text_file(
+                ps_output_file,
+                self.execute(
+                    ["ps", "-ef"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                ).communicate()[0],
+            )
+            self.save_results()
+
             pytest.exit(
-                "Site was not running completely while it should. Enforcing stop. "
-                f"Output of ps -ef:\n{stdout}"
+                "Site was not running completely while it should be! Enforcing stop.\n\n"
+                f"Output of omd status:\n{omd_status_output}\n\n"
+                f'See "{ps_output_file}" for full "ps -ef" output!',
             )
 
     def is_running(self) -> bool:
@@ -1049,7 +1029,7 @@ class Site:
             return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
 
         try:
-            self.check_output(["/usr/bin/omd", "status", "--bare"])
+            self.check_output(["omd", "status", "--bare"])
             return 0
         except subprocess.CalledProcessError as e:
             logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
@@ -1116,7 +1096,8 @@ class Site:
 
         if self.enforce_english_gui:
             web = CMKWebSession(self)
-            web.login()
+            if not self.version.is_saas_edition():
+                web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
 
@@ -1198,8 +1179,7 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-
-        os.makedirs(self.result_dir(), exist_ok=True)
+        self.makedirs(self.result_dir())
 
         with suppress(FileNotFoundError):
             shutil.copy(self.path("junit.xml"), self.result_dir())
@@ -1317,20 +1297,27 @@ class SiteFactory:
         return self._sites
 
     def get_site(
-        self, name: str, init_livestatus: bool = True, activate_changes: bool = True
+        self,
+        name: str,
+        start: bool = True,
+        init_livestatus: bool = True,
+        prepare_for_tests: bool = True,
+        activate_changes: bool = True,
     ) -> Site:
         site = self._site_obj(name)
 
         site.create()
 
-        # refresh the site object after creating the site
-        site = self.get_existing_site(name)
-
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
 
+        if not start:
+            return site
+
         site.start()
-        site.prepare_for_tests()
+
+        if prepare_for_tests:
+            site.prepare_for_tests()
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
@@ -1339,15 +1326,22 @@ class SiteFactory:
         logger.debug("Created site %s", site.id)
         return site
 
-    def get_existing_site(self, name: str, init_livestatus: bool = True) -> Site:
+    def get_existing_site(
+        self,
+        name: str,
+        start: bool = True,
+        init_livestatus: bool = True,
+    ) -> Site:
         site = self._site_obj(name)
 
-        if not site.exists():
+        if site.exists() and init_livestatus:
+            site.gather_livestatus_port(from_config=True)
+
+        if not (site.exists() and start):
             return site
 
-        if init_livestatus:
-            site.gather_livestatus_port(from_config=True)
         site.start()
+
         logger.debug("Reused site %s", site.id)
         return site
 
@@ -1364,9 +1358,7 @@ class SiteFactory:
         logger.info("Creating %s site from backup...", name)
 
         omd_restore_cmd = (
-            ["sudo", "/usr/bin/omd", "restore"]
-            + (["--reuse", "--kill"] if reuse else [])
-            + [backup_path]
+            ["sudo", "omd", "restore"] + (["--reuse", "--kill"] if reuse else []) + [backup_path]
         )
 
         completed_process = subprocess.run(
@@ -1394,7 +1386,7 @@ class SiteFactory:
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-V",
                 self.version.version_directory(),
                 "create",
@@ -1453,7 +1445,8 @@ class SiteFactory:
         )
 
         pexpect_dialogs = []
-        if self._version_supported(test_site.version.version, min_version.version):
+        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
                 [
@@ -1473,6 +1466,7 @@ class SiteFactory:
                 min_version,
                 target_version,
             )
+
             pexpect_dialogs.extend(
                 [
                     PExpectDialog(
@@ -1493,7 +1487,7 @@ class SiteFactory:
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-V",
                 target_version.version_directory(),
                 "update",
@@ -1503,10 +1497,18 @@ class SiteFactory:
             dialogs=pexpect_dialogs,
             logfile_path=logfile_path,
         )
-        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+        if version_supported:
+            assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+        else:
+            assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
+            pytest.skip(f"{test_site.version} is not a supported version for {target_version}")
 
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
+
+        # refresh the site object after creating the site
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id)
 
         # restoring the tmpfs was broken and has been fixed with
         # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
@@ -1520,10 +1522,6 @@ class SiteFactory:
             assert os.path.exists(site.path(counters_dir))
             assert os.path.exists(site.path(str(piggyback_dir)))
             assert os.path.exists(site.path(str(piggyback_source_dir)))
-
-        # refresh the site object after creating the site
-        self._base_ident = ""
-        site = self.get_existing_site(test_site.id)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
@@ -1542,6 +1540,73 @@ class SiteFactory:
         ), "Edition mismatch during update!"
 
         return site
+
+    def update_as_site_user(
+        self,
+        test_site: Site,
+        target_version: CMKVersion = version_from_env(
+            fallback_version_spec=CMKVersion.DAILY,
+            fallback_edition=Edition.CEE,
+            fallback_branch=current_base_branch_name(),
+        ),
+        min_version: CMKVersion = CMKVersion(
+            get_min_version(),
+            Edition.CEE,
+            current_base_branch_name(),
+            current_branch_version(),
+        ),
+        conflict_mode: str = "keepold",
+    ) -> Site:
+        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        if not version_supported:
+            pytest.skip(
+                f"{test_site.version} is not a supported version for {target_version.version}"
+            )
+        self.version = target_version
+        site = self.get_existing_site("central", init_livestatus=False)
+        site.install_cmk()
+        site.stop()
+
+        logger.info(
+            "Updating %s site from %s version to %s version...",
+            test_site.id,
+            test_site.version.version,
+            target_version.version_directory(),
+        )
+
+        cmd = [
+            "omd",
+            "-f",
+            "-V",
+            target_version.version_directory(),
+            "update",
+            f"--conflict={conflict_mode}",
+        ]
+        test_site.stop()
+        process = test_site.execute(cmd)
+        rc = process.wait()
+        assert rc == 0, process.stderr
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site("central")
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Site %s is up", site.id)
+
+        restart_httpd()
+
+        assert site.version.version == target_version.version, "Version mismatch during update!"
+        assert (
+            site.version.edition.short == target_version.edition.short
+        ), "Edition mismatch during update!"
+
+        site.openapi.activate_changes_and_wait_for_completion()
+
+        return test_site
 
     @staticmethod
     def _version_supported(version: str, min_version: str) -> bool:
@@ -1566,7 +1631,7 @@ class SiteFactory:
             if os.environ.get("CLEANUP") is None
             else os.environ.get("CLEANUP") == "1"
         )
-        site = self.get_existing_site(name)
+        site = self.get_existing_site(name, start=reuse_site)
         if site.exists():
             if reuse_site:
                 logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
@@ -1574,26 +1639,34 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(name, init_livestatus)
-
+            site = self.get_site(
+                name,
+                init_livestatus=init_livestatus,
+                prepare_for_tests=not self.version.is_saas_edition(),
+            )
+        site.start()
         if auto_restart_httpd:
             restart_httpd()
-
         logger.info(
             'Site "%s" is ready!%s',
             site.id,
             f" [{description}]" if description else "",
         )
-
-        try:
-            yield site
-        finally:
-            # teardown: saving results and removing site
-            if save_results:
-                site.save_results()
-            if auto_cleanup and cleanup_site:
-                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
-                site.rm()
+        with cse_openid_oauth_provider(
+            f"http://localhost:{site.apache_port}"
+        ) if self.version.is_saas_edition() else nullcontext():
+            if self.version.is_saas_edition():
+                site.prepare_for_tests()
+                site.activate_changes_and_wait_for_core_reload()
+            try:
+                yield site
+            finally:
+                # teardown: saving results and removing site
+                if save_results:
+                    site.save_results()
+                if auto_cleanup and cleanup_site:
+                    logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                    site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:

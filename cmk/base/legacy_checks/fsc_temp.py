@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -16,6 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
+from cmk.agent_based.v2.type_defs import StringTable
+
 # We fetch the following columns from SNMP:
 # 13: name of the temperature sensor (used as item)
 # 11: current temperature in C
@@ -23,11 +25,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # 8:  critical level
 
 
-def inventory_fsc_temp(info):
-    for line in info:
-        # Ignore non-connected sensors
-        if int(line[1]) < 500:
-            yield (line[0], None)
+def inventory_fsc_temp(string_table: StringTable) -> DiscoveryResult:
+    # Ignore non-connected sensors
+    yield from (Service(item=line[0]) for line in string_table if int(line[1]) < 500)
 
 
 def check_fsc_temp(item, params, info):

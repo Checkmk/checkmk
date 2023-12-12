@@ -6,36 +6,8 @@
 # fmt: off
 # mypy: disable-error-code=var-annotated
 
-from typing import Any
 
-_defaults: dict[str, Any] = {
-    "FastSaved": 0,
-    "FastSavedCritical": 2,
-    "FastSaving": 0,
-    "FastSavingCritical": 2,
-    "Off": 1,
-    "OffCritical": 2,
-    "Other": 3,
-    "Paused": 0,
-    "PausedCritical": 2,
-    "Pausing": 0,
-    "PausingCritical": 2,
-    "Reset": 1,
-    "ResetCritical": 2,
-    "Resuming": 0,
-    "ResumingCritical": 2,
-    "Running": 0,
-    "RunningCritical": 2,
-    "Saved": 0,
-    "SavedCritical": 2,
-    "Saving": 0,
-    "SavingCritical": 2,
-    "Starting": 0,
-    "StartingCritical": 2,
-    "Stopping": 1,
-    "StoppingCritical": 2,
-}
-
+from cmk.base.legacy_checks.hyperv_vms import DEFAULT_PARAMETERS
 
 checkname = "hyperv_vms"
 
@@ -56,13 +28,13 @@ info = [
 
 discovery = {
     "": [
-        ("Q-WSUS", {"state": "Running"}),
-        ("AUN-CAA", {"state": "Off"}),
-        ("weg-ca-webserver", {"state": "Wrong"}),
-        ("z4058044_snap (23.05.2014 - 09:29:29)", {"state": "Running"}),
-        ("z230897", {"state": "Stopping"}),
-        ("hlv2", {"state": "UnknownState"}),
-        ("hlv3", {"state": "Running"}),
+        ("Q-WSUS", {"discovered_state": "Running"}),
+        ("AUN-CAA", {"discovered_state": "Off"}),
+        ("weg-ca-webserver", {"discovered_state": "Wrong"}),
+        ("z4058044_snap (23.05.2014 - 09:29:29)", {"discovered_state": "Running"}),
+        ("z230897", {"discovered_state": "Stopping"}),
+        ("hlv2", {"discovered_state": "UnknownState"}),
+        ("hlv3", {"discovered_state": "Running"}),
     ]
 }
 
@@ -71,33 +43,33 @@ checks = {
     "": [
         (
             "Q-WSUS",
-            {"state": "Running", **_defaults},
+            {"discovered_state": "Running", **DEFAULT_PARAMETERS},
             [(0, "State is Running (Operating normally)")],
         ),
-        ("AUN-CAA", {"state": "Off", **_defaults}, [(1, "State is Off (Operating normally)")]),
+        ("AUN-CAA", {"state": "Off", **DEFAULT_PARAMETERS}, [(1, "State is Off (Operating normally)")]),
         (
             "weg-ca-webserver",
-            {"state": "Wrong", **_defaults},
+            {"discovered_state": "Wrong", **DEFAULT_PARAMETERS},
             [(3, "Unknown state Wrong (Operating normally)")],
         ),
         (
             "z4058044_snap (23.05.2014 - 09:29:29)",
-            {"state": "Running", **_defaults, "compare_discovery": True},
+            {"discovered_state": "Running", **DEFAULT_PARAMETERS, "vm_target_state": ("discovery", True)},
             [(0, "State Running (Operating normally) matches discovery")],
         ),
         (
             "z230897",
-            {"state": "Running", **_defaults, "compare_discovery": True},
+            {"discovered_state": "Running", **DEFAULT_PARAMETERS, "vm_target_state": ("discovery", True)},
             [(2, "State Stopping (VM crashed) does not match discovery (Running)")],
         ),
         (
             "hlv2",
-            {"state": "UnknownState", **_defaults, "compare_discovery": True},
+            {"discovered_state": "UnknownState", **DEFAULT_PARAMETERS, "vm_target_state": ("discovery", True)},
             [(0, "State UnknownState (Totally normal) matches discovery")],
         ),
         (
             "hlv3",
-            {**_defaults, "compare_discovery": True},
+            {**DEFAULT_PARAMETERS, "vm_target_state": ("discovery", True)},
             [(3, "State is Running (Operating normally), discovery state is not available")],
         ),
     ]

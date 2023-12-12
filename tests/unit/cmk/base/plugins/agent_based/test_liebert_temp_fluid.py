@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.liebert_temp_fluid import (
     parse_liebert_temp_fluid,
     Section,
 )
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
+
+from cmk.plugins.lib.temperature import TempParamDict
 
 
 @pytest.fixture(name="section", scope="module")

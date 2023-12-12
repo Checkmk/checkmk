@@ -7,7 +7,8 @@ import time
 import typing
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils import mcafee_gateway
+
+from cmk.plugins.lib import mcafee_gateway
 
 
 class Section(typing.NamedTuple):

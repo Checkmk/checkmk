@@ -15,9 +15,10 @@
 # .1.3.6.1.4.1.14685.3.1.12.10.0 24 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummarylisten.0
 # .1.3.6.1.4.1.14685.3.1.12.11.0 0 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummaryclosing.0
 
+from cmk.plugins.lib import datapower, tcp_connections
+
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import datapower, tcp_connections
 
 
 def parse_datapower_tcp(string_table: list[StringTable]) -> tcp_connections.TCPConnections:

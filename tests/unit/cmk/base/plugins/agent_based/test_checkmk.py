@@ -7,9 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, parse_checkmk_labels
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(
@@ -26,7 +27,11 @@ from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, pa
                 ["PluginsDirectory:", "/usr/lib/check_mk_agent/plugins"],
                 ["LocalDirectory:", "/usr/lib/check_mk_agent/local"],
             ],
-            [HostLabel("cmk/os_family", "linux")],
+            [
+                HostLabel("cmk/os_family", "linux"),
+                HostLabel("cmk/os_type", "linux"),
+                HostLabel("cmk/os_platform", "linux"),
+            ],
         ),
     ],
 )

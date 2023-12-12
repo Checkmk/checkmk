@@ -8,7 +8,8 @@ from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.hr_fs import check_hr_fs, discover_hr_fs, parse_hr_fs, Section
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.fixture(name="section", scope="module")

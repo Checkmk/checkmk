@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     parse_hitachi_hnas_volume,
     Section,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)

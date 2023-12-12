@@ -6,7 +6,7 @@
 import contextlib
 import dataclasses
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Self
 
@@ -20,59 +20,93 @@ class _ExtensionName(str):
     ...
 
 
-_EXPECTED_BASE_IMPORT_ERRORS: Mapping[_ExtensionName, frozenset[str]] = {}
-_EXPECTED_GUI_IMPORT_ERRORS: Mapping[_ExtensionName, frozenset[str]] = {
-    _ExtensionName("MSTeams"): frozenset(
-        {
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _ImportErrors:
+    base_errors: set[str] = dataclasses.field(default_factory=set)
+    gui_errors: set[str] = dataclasses.field(default_factory=set)
+
+    @classmethod
+    def collect_from_site(cls, site: Site) -> Self:
+        return cls(
+            base_errors=set(
+                json.loads(site.python_helper("_helper_failed_base_plugins.py").check_output())
+            ),
+            gui_errors=set(
+                json.loads(site.python_helper("_helper_failed_gui_plugins.py").check_output())
+            ),
+        )
+
+
+_DOWNLOAD_URL_BASE = "https://exchange.checkmk.com/api/packages/download/"
+
+
+_EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
+    "MSTeams-2.1.mkp": _ImportErrors(
+        gui_errors={
             "wato/msteams: name 'socket' is not defined",
         }
+    ),
+    "apcaccess-5.2.2.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin apcaccess: cannot import name 'temperature' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+        }
+    ),
+    "kentix_devices-3.0.1.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin kentix_devices: No module named 'cmk.base.plugins.agent_based.utils.temperature'\n",
+        }
+    ),
+    "ceph-11.17.2.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin cephosd: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephosdbluefs: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephstatus: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephdf: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+        }
+    ),
+    "cve_2021_44228_log4j_cmk20.mkp": _ImportErrors(
+        gui_errors={
+            "views/inv_cve_2021_22448_log4j: No module named 'cmk.gui.plugins.views.inventory'",
+        },
+    ),
+    "veeam_o365-2.6.1.mkp": _ImportErrors(
+        gui_errors={
+            "metrics/veeam_o365jobs: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
+            "metrics/veeam_o365licenses: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
+        },
     ),
 }
 
 
+def _get_tested_extensions() -> Iterable[tuple[str, str]]:
+    return [
+        (url, url.rsplit("/", 1)[-1])
+        for url in (Path(__file__).resolve().parent / "current_extensions_under_test.txt")
+        .read_text()
+        .strip()
+        .splitlines()
+    ]
+
+
 @pytest.mark.parametrize(
-    "extension_download_url",
-    (Path(__file__).resolve().parent / "current_extensions_under_test.txt")
-    .read_text()
-    .strip()
-    .splitlines(),
+    "extension_download_url, name",
+    [pytest.param(url, name, id=name) for url, name in _get_tested_extensions()],
 )
 def test_extension_compatibility(
     site: Site,
     extension_download_url: str,
+    name: str,
 ) -> None:
     site.write_binary_file(
         extension_filename := "tmp.mkp",
         _download_extension(extension_download_url),
     )
-    with _install_extension(site, site.resolve_path(Path(extension_filename))) as extension_name:
-        import_errors = _ImportErrors.collect_from_site(site)
-        errors_human_readable = [
-            *_errors_human_readable(
-                component_name="base",
-                encountered_import_errors=frozenset(import_errors.base_errors),
-                expected_import_errors=_EXPECTED_BASE_IMPORT_ERRORS.get(
-                    extension_name,
-                    frozenset(),
-                ),
-            ),
-            *_errors_human_readable(
-                component_name="gui",
-                encountered_import_errors=frozenset(import_errors.gui_errors),
-                expected_import_errors=_EXPECTED_GUI_IMPORT_ERRORS.get(
-                    extension_name,
-                    frozenset(),
-                ),
-            ),
-        ]
-        assert (
-            not errors_human_readable
-        ), "Extension {} encountered the following issues:\n{}".format(
-            extension_name,
-            "\n".join(
-                errors_human_readable,
-            ),
-        )
+    with _install_extension(site, site.resolve_path(Path(extension_filename))):
+        encountered_errors = _ImportErrors.collect_from_site(site)
+        expected_errors = _EXPECTED_IMPORT_ERRORS.get(name, _ImportErrors())
+
+    assert encountered_errors.base_errors == expected_errors.base_errors
+    assert encountered_errors.gui_errors == expected_errors.gui_errors
 
 
 def _download_extension(url: str) -> bytes:
@@ -119,38 +153,3 @@ def _disable_extension(site: Site, name: str) -> None:
 
 def _remove_extension(site: Site, name: str) -> None:
     site.check_output(["mkp", "remove", name])
-
-
-@dataclasses.dataclass(frozen=True)
-class _ImportErrors:
-    base_errors: Sequence[str]
-    gui_errors: Sequence[str]
-
-    @classmethod
-    def collect_from_site(cls, site: Site) -> Self:
-        return cls(
-            base_errors=json.loads(
-                site.python_helper("_helper_failed_base_plugins.py").check_output()
-            ),
-            gui_errors=json.loads(
-                site.python_helper("_helper_failed_gui_plugins.py").check_output()
-            ),
-        )
-
-
-def _errors_human_readable(
-    *,
-    component_name: str,
-    encountered_import_errors: frozenset[str],
-    expected_import_errors: frozenset[str],
-) -> Iterator[str]:
-    if encountered_but_not_expected_errors := encountered_import_errors - expected_import_errors:
-        yield "Unexpectedly encountered import errors in {}:\n{}".format(
-            component_name,
-            "\n".join(encountered_but_not_expected_errors),
-        )
-    if expected_but_not_encountered_errors := expected_import_errors - encountered_import_errors:
-        yield "Expected but unencountered import errors in {}:\n{}".format(
-            component_name,
-            "\n".join(expected_but_not_encountered_errors),
-        )

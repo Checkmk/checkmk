@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.kube_persistent_volume_claim import (
     _check_kube_pvc,
     VOLUME_DEFAULT_PARAMS,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     AttachedVolume,
     PersistentVolume,
     PersistentVolumeClaim,

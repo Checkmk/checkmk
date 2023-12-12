@@ -5,6 +5,7 @@
 
 #include "livestatus/TableServicesByGroup.h"
 
+#include <functional>
 #include <optional>
 
 #include "livestatus/Column.h"

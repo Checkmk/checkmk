@@ -49,6 +49,7 @@ from cmk.gui.openapi.endpoints.comment.request_schemas import (
 )
 from cmk.gui.openapi.endpoints.comment.response_schemas import CommentCollection, CommentObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 
@@ -361,3 +362,11 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
 
     comment_cmds.delete_comments(sites.live(), query_expr, SiteId(site_id))
     return Response(status=204)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_comment)
+    endpoint_registry.register(show_comments)
+    endpoint_registry.register(create_host_comment)
+    endpoint_registry.register(create_service_comment)
+    endpoint_registry.register(delete_comments)

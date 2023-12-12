@@ -31,14 +31,14 @@ class PredictionQuerier:
             self._filter_prediction_files_by_metric(self._query_prediction_files())
         )
         yield from (
-            PredictionInfo.parse_raw(self._query_prediction_file_content(prediction_file))
+            PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
             for prediction_file in available_prediction_files
             if prediction_file.suffix == INFO_FILE_SUFFIX
             and prediction_file.with_suffix(DATA_FILE_SUFFIX) in available_prediction_files
         )
 
     def query_prediction_data(self, time_group: Timegroup) -> PredictionData:
-        return PredictionData.parse_raw(
+        return PredictionData.model_validate_json(
             self._query_prediction_file_content(
                 Path(pnp_cleanup(self.metric_name), time_group),
             )

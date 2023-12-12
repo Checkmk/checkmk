@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import cast
 
 from cmk.utils.crypto.password import Password, PasswordPolicy
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.user import UserId
 
@@ -14,6 +15,7 @@ from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
+from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.userdb import add_internal_attributes, get_user_attributes
@@ -51,6 +53,13 @@ def delete_users(users_to_delete: Sequence[UserId]) -> None:
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
             )
+            log_security_event(
+                UserManagementEvent(
+                    event="user deleted",
+                    affected_user=user_id,
+                    acting_user=user.id,
+                )
+            )
         add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
 
@@ -83,6 +92,14 @@ def edit_users(changed_users: UserObject) -> None:
             ),
             diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
             object_ref=make_user_object_ref(user_id),
+        )
+
+        log_security_event(
+            UserManagementEvent(
+                event="user created" if is_new_user else "user modified",
+                affected_user=user_id,
+                acting_user=user.id,
+            )
         )
 
         all_users[user_id] = user_attrs
@@ -249,12 +266,12 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
-def notification_script_choices() -> list[tuple[str | None, str]]:
+def notification_script_choices() -> list[tuple[str, str]]:
     # Ensure the required dynamic permissions are registered
     declare_notification_plugin_permissions()
 
-    choices: list[tuple[str | None, str]] = []
-    for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
+    choices: list[tuple[str, str]] = []
+    for choice in user_script_choices("notifications"):
         notificaton_plugin_name, _notification_plugin_title = choice
         if user.may("notification_plugin.%s" % notificaton_plugin_name):
             choices.append(choice)

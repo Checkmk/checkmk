@@ -5,10 +5,12 @@
 use crate::config::yaml::{Get, Yaml};
 use anyhow::{anyhow, bail, Context, Result};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
+use yaml_rust::YamlLoader;
 
 mod keys {
     pub const MSSQL: &str = "mssql";
-    pub const STANDARD: &str = "standard";
+    pub const MAIN: &str = "main";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
@@ -26,7 +28,7 @@ mod keys {
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
 
-    pub const SQLS: &str = "sqls";
+    pub const SECTIONS: &str = "sections";
     pub const ALWAYS: &str = "always";
     pub const CACHED: &str = "cached";
     pub const CACHE_AGE: &str = "cache_age";
@@ -34,25 +36,28 @@ mod keys {
 
     pub const DISCOVERY: &str = "discovery";
     pub const DETECT: &str = "detect";
-    pub const ALL: &str = "all";
     pub const INCLUDE: &str = "include";
     pub const EXCLUDE: &str = "exclude";
 
     pub const MODE: &str = "mode";
 
-    pub const INSTANCES: &str = "instances";
+    pub const CUSTOM: &str = "custom";
 
     pub const SID: &str = "sid";
     pub const ALIAS: &str = "alias";
     pub const PIGGYBACK: &str = "piggyback";
+
+    pub const CONFIGS: &str = "configs";
 }
 
 mod values {
     /// AuthType::System
     pub const SQL_SERVER: &str = "sql_server";
     /// AuthType::Windows
+    #[cfg(windows)]
     pub const WINDOWS: &str = "windows";
     /// AuthType::Integrated
+    #[cfg(windows)]
     pub const INTEGRATED: &str = "integrated";
     /// AuthType::Token
     pub const TOKEN: &str = "token";
@@ -66,13 +71,16 @@ mod values {
 
 mod defaults {
     use crate::config::ms_sql::values;
+    #[cfg(windows)]
     pub const AUTH_TYPE: &str = values::INTEGRATED;
+    #[cfg(unix)]
+    pub const AUTH_TYPE: &str = values::SQL_SERVER;
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
-    pub const CONNECTION_TIMEOUT: u32 = 5;
-    pub const SQLS_CACHE_AGE: u32 = 600;
-    pub const SQLS_ALWAYS: &[&str] = &[
+    pub const CONNECTION_TIMEOUT: u64 = 5;
+    pub const SECTIONS_CACHE_AGE: u32 = 600;
+    pub const SECTIONS_ALWAYS: &[&str] = &[
         "instance",
         "databases",
         "counters",
@@ -83,20 +91,20 @@ mod defaults {
         "availability_groups",
         "connections",
     ];
-    pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
+    pub const SECTIONS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
     pub const DISCOVERY_DETECT: bool = true;
-    pub const DISCOVERY_ALL: bool = true;
 }
 
 #[derive(PartialEq, Debug)]
 pub struct Config {
     auth: Authentication,
     conn: Connection,
-    sqls: Sqls,
+    sections: Sections,
     discovery: Discovery,
     mode: Mode,
-    instances: Vec<Instance>,
+    custom_instances: Vec<CustomInstance>,
+    configs: Vec<Config>,
 }
 
 impl Default for Config {
@@ -104,42 +112,69 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
-            sqls: Sqls::default(),
+            sections: Sections::default(),
             discovery: Discovery::default(),
             mode: Mode::Port,
-            instances: vec![],
+            custom_instances: vec![],
+            configs: vec![],
         }
     }
 }
 
 impl Config {
+    pub fn from_string(source: &str) -> Result<Option<Self>> {
+        YamlLoader::load_from_str(source)?
+            .get(0)
+            .and_then(|e| Config::from_yaml(e).transpose())
+            .transpose()
+    }
+
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let mssql = yaml.get(keys::MSSQL);
-        if mssql.is_badvalue() {
+        let root = yaml.get(keys::MSSQL);
+        if root.is_badvalue() {
             return Ok(None);
         }
-        let standard = mssql.get(keys::STANDARD);
-        if standard.is_badvalue() {
-            bail!("standard key is absent");
+        let c = Config::parse_main_from_yaml(root);
+        match c {
+            Ok(Some(c)) if c.auth().username().is_empty() => {
+                anyhow::bail!("Bad/absent user name");
+            }
+            _ => c,
         }
+    }
 
-        let auth = Authentication::from_yaml(standard)?;
-        let conn = Connection::from_yaml(standard)?.unwrap_or_default();
-        let sqls = Sqls::from_yaml(standard)?.unwrap_or_default();
-        let instances: Result<Vec<Instance>> = mssql
-            .get_yaml_vector(keys::INSTANCES)
+    fn parse_main_from_yaml(root: &Yaml) -> Result<Option<Self>> {
+        let main = root.get(keys::MAIN);
+        if main.is_badvalue() {
+            bail!("main key is absent");
+        }
+        let auth = Authentication::from_yaml(main)?;
+        let conn = Connection::from_yaml(main)?.unwrap_or_default();
+        let sections = Sections::from_yaml(main)?.unwrap_or_default();
+        let custom_instances: Result<Vec<CustomInstance>> = main
+            .get_yaml_vector(keys::CUSTOM)
             .into_iter()
-            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sqls))
+            .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &sections))
+            .collect();
+
+        let configs: Result<Vec<Config>> = root
+            .get_yaml_vector(keys::CONFIGS)
+            .into_iter()
+            .filter_map(|v| Config::parse_main_from_yaml(&v).transpose())
             .collect();
 
         Ok(Some(Self {
             auth,
             conn,
-            sqls,
-            discovery: Discovery::from_yaml(standard)?,
-            mode: Mode::from_yaml(standard)?,
-            instances: instances?,
+            sections,
+            discovery: Discovery::from_yaml(main)?,
+            mode: Mode::from_yaml(main)?,
+            custom_instances: custom_instances?,
+            configs: configs?,
         }))
+    }
+    pub fn endpoint(&self) -> Endpoint {
+        Endpoint::new(&self.auth, &self.conn)
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -147,8 +182,8 @@ impl Config {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
-    pub fn sqls(&self) -> &Sqls {
-        &self.sqls
+    pub fn sections(&self) -> &Sections {
+        &self.sections
     }
     pub fn discovery(&self) -> &Discovery {
         &self.discovery
@@ -156,8 +191,23 @@ impl Config {
     pub fn mode(&self) -> &Mode {
         &self.mode
     }
-    pub fn instances(&self) -> &Vec<Instance> {
-        &self.instances
+    pub fn instances(&self) -> &Vec<CustomInstance> {
+        &self.custom_instances
+    }
+    pub fn configs(&self) -> &Vec<Config> {
+        &self.configs
+    }
+
+    pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
+        if !self.discovery.include().is_empty() {
+            return self.discovery.include().contains(&name.to_string());
+        }
+
+        if self.discovery.exclude().contains(&name.to_string()) {
+            return false;
+        }
+
+        true
     }
 }
 
@@ -174,7 +224,7 @@ impl Default for Authentication {
         Self {
             username: "".to_owned(),
             password: None,
-            auth_type: AuthType::Integrated,
+            auth_type: AuthType::default(),
             access_token: None,
         }
     }
@@ -183,9 +233,7 @@ impl Authentication {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
         let auth = yaml.get(keys::AUTHENTICATION);
         Ok(Self {
-            username: auth
-                .get_string(keys::USERNAME)
-                .context("bad/absent username")?,
+            username: auth.get_string(keys::USERNAME).unwrap_or_default(),
             password: auth.get_string(keys::PASSWORD),
             auth_type: AuthType::try_from(
                 auth.get_string(keys::TYPE)
@@ -217,16 +265,29 @@ pub enum AuthType {
     Token,
 }
 
+impl Default for AuthType {
+    #[cfg(unix)]
+    fn default() -> Self {
+        Self::SqlServer
+    }
+    #[cfg(windows)]
+    fn default() -> Self {
+        Self::Integrated
+    }
+}
+
 impl TryFrom<&str> for AuthType {
     type Error = anyhow::Error;
 
     fn try_from(val: &str) -> Result<Self> {
         match str::to_ascii_lowercase(val).as_ref() {
             values::SQL_SERVER => Ok(AuthType::SqlServer),
+            #[cfg(windows)]
             values::WINDOWS => Ok(AuthType::Windows),
+            #[cfg(windows)]
             values::INTEGRATED => Ok(AuthType::Integrated),
             values::TOKEN => Ok(AuthType::Token),
-            _ => Err(anyhow!("unsupported auth type")),
+            _ => Err(anyhow!("unsupported auth type `{val}`")),
         }
     }
 }
@@ -238,7 +299,7 @@ pub struct Connection {
     port: u16,
     socket: Option<PathBuf>,
     tls: Option<ConnectionTls>,
-    timeout: u32,
+    timeout: u64,
 }
 
 impl Connection {
@@ -250,12 +311,13 @@ impl Connection {
         Ok(Some(Self {
             hostname: conn
                 .get_string(keys::HOSTNAME)
-                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string()),
+                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
+                .to_lowercase(),
             fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
             port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
             socket: conn.get_pathbuf(keys::SOCKET),
             tls: ConnectionTls::from_yaml(conn)?,
-            timeout: conn.get_int::<u32>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
+            timeout: conn.get_int::<u64>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
         }))
     }
     pub fn hostname(&self) -> &str {
@@ -267,14 +329,17 @@ impl Connection {
     pub fn port(&self) -> u16 {
         self.port
     }
+    pub fn sql_browser_port(&self) -> Option<u16> {
+        None
+    }
     pub fn socket(&self) -> Option<&PathBuf> {
         self.socket.as_ref()
     }
     pub fn tls(&self) -> Option<&ConnectionTls> {
         self.tls.as_ref()
     }
-    pub fn timeout(&self) -> u32 {
-        self.timeout
+    pub fn timeout(&self) -> Duration {
+        Duration::from_secs(self.timeout)
     }
 }
 
@@ -318,42 +383,77 @@ impl ConnectionTls {
     }
 }
 
+#[derive(PartialEq, Debug, Clone, Default)]
+pub struct Endpoint {
+    auth: Authentication,
+    conn: Connection,
+}
+
+impl Endpoint {
+    pub fn new(auth: &Authentication, conn: &Connection) -> Self {
+        Self {
+            auth: auth.clone(),
+            conn: conn.clone(),
+        }
+    }
+    pub fn auth(&self) -> &Authentication {
+        &self.auth
+    }
+
+    pub fn conn(&self) -> &Connection {
+        &self.conn
+    }
+
+    pub fn split(&self) -> (&Authentication, &Connection) {
+        (self.auth(), self.conn())
+    }
+
+    pub fn hostname(&self) -> String {
+        if self.auth().auth_type() == &AuthType::Integrated {
+            "localhost"
+        } else {
+            self.conn().hostname()
+        }
+        .to_string()
+    }
+}
+
 #[derive(PartialEq, Debug, Clone)]
-pub struct Sqls {
+pub struct Sections {
     always: Vec<String>,
     cached: Vec<String>,
     disabled: Vec<String>,
     cache_age: u32,
 }
 
-impl Default for Sqls {
+impl Default for Sections {
     fn default() -> Self {
         Self {
-            always: defaults::SQLS_ALWAYS
+            always: defaults::SECTIONS_ALWAYS
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
-            cached: defaults::SQLS_CACHED
+            cached: defaults::SECTIONS_CACHED
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
             disabled: vec![],
-            cache_age: defaults::SQLS_CACHE_AGE,
+            cache_age: defaults::SECTIONS_CACHE_AGE,
         }
     }
 }
 
-impl Sqls {
+impl Sections {
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let sqls = yaml.get(keys::SQLS);
-        if sqls.is_badvalue() {
+        let sections = yaml.get(keys::SECTIONS);
+        if sections.is_badvalue() {
             return Ok(None);
         }
         Ok(Some(Self {
-            always: sqls.get_string_vector(keys::ALWAYS, defaults::SQLS_ALWAYS)?,
-            cached: sqls.get_string_vector(keys::CACHED, defaults::SQLS_CACHED)?,
-            disabled: sqls.get_string_vector(keys::DISABLED, &[])?,
-            cache_age: sqls.get_int(keys::CACHE_AGE, defaults::SQLS_CACHE_AGE),
+            always: sections.get_string_vector(keys::ALWAYS, defaults::SECTIONS_ALWAYS),
+            cached: sections.get_string_vector(keys::CACHED, defaults::SECTIONS_CACHED),
+            disabled: sections.get_string_vector(keys::DISABLED, &[]),
+            cache_age: sections.get_int(keys::CACHE_AGE, defaults::SECTIONS_CACHE_AGE),
         }))
     }
     pub fn always(&self) -> &Vec<String> {
@@ -377,8 +477,9 @@ impl Sqls {
         self.get_filtered(self.cached())
     }
 
-    fn get_filtered(&self, sqls: &[String]) -> Vec<String> {
-        sqls.iter()
+    fn get_filtered(&self, sections: &[String]) -> Vec<String> {
+        sections
+            .iter()
             .filter_map(|sql| {
                 if self.disabled().iter().any(|s| s == sql) {
                     None
@@ -393,7 +494,6 @@ impl Sqls {
 #[derive(PartialEq, Debug)]
 pub struct Discovery {
     detect: bool,
-    all: bool,
     include: Vec<String>,
     exclude: Vec<String>,
 }
@@ -402,7 +502,6 @@ impl Default for Discovery {
     fn default() -> Self {
         Self {
             detect: defaults::DISCOVERY_DETECT,
-            all: defaults::DISCOVERY_ALL,
             include: vec![],
             exclude: vec![],
         }
@@ -417,16 +516,12 @@ impl Discovery {
         }
         Ok(Self {
             detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
-            all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
-            include: discovery.get_string_vector(keys::INCLUDE, &[])?,
-            exclude: discovery.get_string_vector(keys::EXCLUDE, &[])?,
+            include: discovery.get_string_vector(keys::INCLUDE, &[]),
+            exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
         })
     }
     pub fn detect(&self) -> bool {
         self.detect
-    }
-    pub fn all(&self) -> bool {
-        self.all
     }
     pub fn include(&self) -> &Vec<String> {
         &self.include
@@ -466,8 +561,8 @@ impl TryFrom<&str> for Mode {
     }
 }
 
-#[derive(PartialEq, Debug)]
-pub struct Instance {
+#[derive(PartialEq, Debug, Clone)]
+pub struct CustomInstance {
     sid: String,
     auth: Authentication,
     conn: Connection,
@@ -475,23 +570,76 @@ pub struct Instance {
     piggyback: Option<Piggyback>,
 }
 
-impl Instance {
+impl CustomInstance {
     pub fn from_yaml(
         yaml: &Yaml,
-        auth: &Authentication,
-        conn: &Connection,
-        sqls: &Sqls,
+        main_auth: &Authentication,
+        main_conn: &Connection,
+        sections: &Sections,
     ) -> Result<Self> {
+        let sid = yaml
+            .get_string(keys::SID)
+            .context("Bad/Missing sid in instance")?
+            .to_uppercase();
+        let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &sid)?;
         Ok(Self {
-            sid: yaml
-                .get_string(keys::SID)
-                .context("Bad/Missing sid in instance")?,
-            auth: Authentication::from_yaml(yaml).unwrap_or(auth.clone()),
-            conn: Connection::from_yaml(yaml)?.unwrap_or(conn.clone()),
+            sid,
+            auth,
+            conn,
             alias: yaml.get_string(keys::ALIAS),
-            piggyback: Piggyback::from_yaml(yaml, sqls)?,
+            piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
     }
+
+    /// Make auth and conn for custom instance using yaml
+    /// - fallback on main_auth and main_conn if not defined in yaml
+    /// - correct connection hostname if needed
+    fn make_auth_and_conn(
+        yaml: &Yaml,
+        main_auth: &Authentication,
+        main_conn: &Connection,
+        sid: &str,
+    ) -> Result<(Authentication, Connection)> {
+        let mut auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
+        let mut conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
+        let instance_host = calc_real_host(&auth, &conn);
+        let main_host = calc_real_host(main_auth, main_conn);
+        if instance_host != main_host {
+            log::error!("Host {instance_host} defined in {sid} doesn't match to main host {main_host}. Try to fall back");
+            if main_auth.auth_type() == auth.auth_type()
+                || main_auth.auth_type() == &AuthType::Integrated
+            {
+                log::warn!("Fall back to main conn host {main_host}");
+                conn = Connection {
+                    hostname: main_host.to_string(),
+                    ..conn
+                };
+            } else if auth.auth_type() == &AuthType::Integrated {
+                log::warn!(
+                    "Instance auth is `integrated`: fall back to main auth type {:?}",
+                    main_auth.auth_type()
+                );
+                auth = Authentication {
+                    auth_type: main_auth.auth_type().clone(),
+                    ..auth
+                };
+            } else {
+                log::error!(
+                    "Fall back is impossible {:?} {:?}",
+                    main_auth.auth_type(),
+                    auth.auth_type()
+                );
+            }
+        }
+        if auth.auth_type() == &AuthType::Integrated {
+            conn = Connection {
+                hostname: "localhost".to_string(),
+                ..conn
+            };
+        }
+        Ok((auth, conn))
+    }
+
     pub fn sid(&self) -> &String {
         &self.sid
     }
@@ -501,22 +649,36 @@ impl Instance {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
+    pub fn endpoint(&self) -> Endpoint {
+        Endpoint::new(&self.auth, &self.conn)
+    }
     pub fn alias(&self) -> Option<&String> {
         self.alias.as_ref()
     }
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
     }
+    pub fn calc_real_host(&self) -> String {
+        calc_real_host(&self.auth, &self.conn)
+    }
 }
 
-#[derive(PartialEq, Debug)]
+pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> String {
+    if auth.auth_type() == &AuthType::Integrated {
+        "localhost".to_string()
+    } else {
+        conn.hostname().to_owned().to_lowercase()
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct Piggyback {
     hostname: String,
-    sqls: Sqls,
+    sections: Sections,
 }
 
 impl Piggyback {
-    pub fn from_yaml(yaml: &Yaml, sqls: &Sqls) -> Result<Option<Self>> {
+    pub fn from_yaml(yaml: &Yaml, sections: &Sections) -> Result<Option<Self>> {
         let piggyback = yaml.get(keys::PIGGYBACK);
         if piggyback.is_badvalue() {
             return Ok(None);
@@ -525,7 +687,7 @@ impl Piggyback {
             hostname: piggyback
                 .get_string(keys::HOSTNAME)
                 .context("Bad/Missing hostname in piggyback")?,
-            sqls: Sqls::from_yaml(piggyback)?.unwrap_or(sqls.clone()),
+            sections: Sections::from_yaml(piggyback)?.unwrap_or(sections.clone()),
         }))
     }
 
@@ -533,8 +695,27 @@ impl Piggyback {
         &self.hostname
     }
 
-    pub fn sqls(&self) -> &Sqls {
-        &self.sqls
+    pub fn sections(&self) -> &Sections {
+        &self.sections
+    }
+}
+
+pub mod trace_tools {
+    use std::io::{self, Write};
+    use yaml_rust::{Yaml, YamlEmitter};
+    #[allow(dead_code)]
+    pub fn dump_yaml(yaml: &Yaml) -> String {
+        let mut writer = String::new();
+
+        let mut emitter = YamlEmitter::new(&mut writer);
+        emitter.dump(yaml).unwrap();
+        writer
+    }
+
+    #[allow(dead_code)]
+    pub fn write_stdout(s: &impl ToString) {
+        #[allow(clippy::explicit_write)]
+        write!(io::stdout(), "{}", s.to_string()).unwrap();
     }
 }
 
@@ -547,7 +728,7 @@ mod tests {
         pub const TEST_CONFIG: &str = r#"
 ---
 mssql:
-  standard: # mandatory, to be used if no specific config
+  main: # mandatory, to be used if no specific config
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -562,7 +743,7 @@ mssql:
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory
       timeout: 5 # optional(default: 5)
-    sqls: # optional
+    sections: # optional
       always: # optional(default)
         - "instance"
         - "databases"
@@ -583,25 +764,45 @@ mssql:
       cache_age: 600 # optional(default:600)
     discovery: # optional
       detect: yes # optional(default:yes)
-      all: no # optional(default:no) prio 1; ignore include/exclude if yes
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
-  instances: # optional
-    - sid: "INST1" # mandatory
-      authentication: # optional, same as above
-      connection: # optional,  same as above
-      alias: "someApplicationName" # optional
-      piggyback: # optional
-        hostname: "myPiggybackHost" # mandatory
-        sqls: # optional, same as above
-    - sid: "INST2" # mandatory
-"#;
+    custom: # optional
+      - sid: "INST1" # mandatory
+        authentication: # optional, same as above
+        connection: # optional,  same as above
+        alias: "someApplicationName" # optional
+        piggyback: # optional
+          hostname: "myPiggybackHost" # mandatory
+          sections: # optional, same as above
+      - sid: "INST2" # mandatory
+  configs:
+    - main:
+        authentication: # mandatory
+          username: "f" # mandatory
+          password: "b"
+          type: "sql_server"
+        connection: # optional
+          hostname: "localhost" # optional(default: "localhost")
+          timeout: 5 # optional(default: 5)
+        discovery: # optional
+          detect: yes # optional(default:yes)
+    - main:
+        authentication: # mandatory
+          username: "f"
+          password: "b"
+          type: "sql_server"
+        connection: # optional
+          hostname: "localhost" # optional(default: "localhost")
+          timeout: 5 # optional(default: 5)
+        discovery: # optional
+          detect: yes # optional(default:yes)
+  "#;
         pub const AUTHENTICATION_FULL: &str = r#"
 authentication:
   username: "foo"
   password: "bar"
-  type: "windows"
+  type: "sql_server"
   access_token: "baz"
 "#;
         pub const AUTHENTICATION_MINI: &str = r#"
@@ -623,8 +824,8 @@ connection:
     client_certificate: 'C:\path\to\file_client'
   timeout: 341
 "#;
-        pub const SQLS_FULL: &str = r#"
-sqls:
+        pub const SECTIONS_FULL: &str = r#"
+sections:
   always:
     - "aaa"
     - "bbb"
@@ -638,14 +839,13 @@ sqls:
         pub const DISCOVERY_FULL: &str = r#"
 discovery:
   detect: no
-  all: yes
   include: ["a", "b" ]
   exclude: ["c", "d" ]
 "#;
         pub const PIGGYBACK_FULL: &str = r#"
 piggyback:
   hostname: "piggy_host"
-  sqls:
+  sections:
     always:
       - "alw1"
       - "alw2"
@@ -665,19 +865,19 @@ connection:
 alias: "a1"
 piggyback:
   hostname: "piggy"
-  sqls:
+  sections:
     cache_age: 123
 "#;
         pub const PIGGYBACK_NO_HOSTNAME: &str = r#"
 piggyback:
   _hostname: "piggy_host"
-  sqls:
+  sections:
     cache_age: 111
 "#;
-        pub const PIGGYBACK_NO_SQLS: &str = r#"
+        pub const PIGGYBACK_NO_SECTIONS: &str = r#"
 piggyback:
   hostname: "piggy_host"
-  _sqls:
+  _sections:
     cache_age: 111
 "#;
     }
@@ -693,12 +893,20 @@ piggyback:
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
-                sqls: Sqls::default(),
+                sections: Sections::default(),
                 discovery: Discovery::default(),
                 mode: Mode::Port,
-                instances: vec![],
+                custom_instances: vec![],
+                configs: vec![],
             }
         );
+    }
+
+    #[test]
+    fn test_config_all() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        assert_eq!(c.configs.len(), 2);
+        assert_eq!(c.custom_instances.len(), 2);
     }
 
     #[test]
@@ -706,13 +914,13 @@ piggyback:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some(&"bar".to_owned()));
-        assert_eq!(a.auth_type(), &AuthType::Windows);
+        assert_eq!(a.auth_type(), &AuthType::SqlServer);
         assert_eq!(a.access_token(), Some(&"baz".to_owned()));
     }
 
     #[test]
     fn test_authentication_from_yaml_empty() {
-        assert!(Authentication::from_yaml(&create_yaml(r"authentication:")).is_err());
+        assert!(Authentication::from_yaml(&create_yaml(r"authentication:")).is_ok());
     }
 
     #[test]
@@ -723,7 +931,7 @@ authentication:
   _username: 'aa'
 "#
         ))
-        .is_err());
+        .is_ok());
     }
 
     #[test]
@@ -731,7 +939,10 @@ authentication:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
+        #[cfg(windows)]
         assert_eq!(a.auth_type(), &AuthType::Integrated);
+        #[cfg(unix)]
+        assert_eq!(a.auth_type(), &AuthType::SqlServer);
         assert_eq!(a.access_token(), None);
     }
 
@@ -744,7 +955,7 @@ authentication:
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), 9999);
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
-        assert_eq!(c.timeout(), 341);
+        assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
@@ -775,8 +986,8 @@ connection:
         create_yaml(SOURCE)
     }
     #[test]
-    fn test_sqls_from_yaml_full() {
-        let s = Sqls::from_yaml(&create_yaml(data::SQLS_FULL))
+    fn test_sections_from_yaml_full() {
+        let s = Sections::from_yaml(&create_yaml(data::SECTIONS_FULL))
             .unwrap()
             .unwrap();
         assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
@@ -786,8 +997,8 @@ connection:
     }
 
     #[test]
-    fn test_sqls_filtered() {
-        let s = Sqls {
+    fn test_sections_filtered() {
+        let s = Sections {
             always: vec!["eee".to_string(), "aaa".to_string()],
             cached: vec!["ccc".to_string(), "eee".to_string()],
             disabled: vec!["eee".to_string()],
@@ -798,20 +1009,22 @@ connection:
     }
 
     #[test]
-    fn test_sqls_from_yaml_default() {
-        let s = Sqls::from_yaml(&create_sqls_yaml_default())
+    fn test_sections_from_yaml_default() {
+        let s = Sections::from_yaml(&create_sections_yaml_default())
             .unwrap()
             .unwrap();
-        assert_eq!(s.always(), defaults::SQLS_ALWAYS.clone());
-        assert_eq!(s.cached(), defaults::SQLS_CACHED.clone());
+        assert_eq!(s.always(), defaults::SECTIONS_ALWAYS);
+        assert_eq!(s.cached(), defaults::SECTIONS_CACHED);
         assert!(s.disabled().is_empty());
-        assert_eq!(s.cache_age(), defaults::SQLS_CACHE_AGE);
-        assert!(Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap().is_none());
+        assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
+        assert!(Sections::from_yaml(&create_yaml("_sections:\n"))
+            .unwrap()
+            .is_none());
     }
 
-    fn create_sqls_yaml_default() -> Yaml {
+    fn create_sections_yaml_default() -> Yaml {
         const SOURCE: &str = r#"
-sqls:
+sections:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)
@@ -821,7 +1034,6 @@ sqls:
     fn test_discovery_from_yaml_full() {
         let discovery = Discovery::from_yaml(&create_yaml(data::DISCOVERY_FULL)).unwrap();
         assert!(!discovery.detect());
-        assert!(discovery.all());
         assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
         assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
     }
@@ -830,7 +1042,6 @@ sqls:
     fn test_discovery_from_yaml_default() {
         let discovery = Discovery::from_yaml(&create_discovery_yaml_default()).unwrap();
         assert!(discovery.detect());
-        assert!(discovery.all());
         assert!(discovery.include().is_empty());
         assert!(discovery.exclude().is_empty());
     }
@@ -862,67 +1073,74 @@ discovery:
 
     #[test]
     fn test_piggyback() {
-        let piggyback = Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_FULL), &Sqls::default())
-            .unwrap()
-            .unwrap();
+        let piggyback =
+            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_FULL), &Sections::default())
+                .unwrap()
+                .unwrap();
         assert_eq!(piggyback.hostname(), "piggy_host");
-        let sqls = piggyback.sqls();
+        let sections = piggyback.sections();
         assert_eq!(
-            sqls.always(),
+            sections.always(),
             &["alw1", "alw2"].map(str::to_string).to_vec()
         );
         assert_eq!(
-            sqls.cached(),
+            sections.cached(),
             &["cache1", "cache2"].map(str::to_string).to_vec()
         );
-        assert_eq!(sqls.disabled(), &["disabled"].map(str::to_string).to_vec());
-        assert_eq!(sqls.cache_age(), 111);
+        assert_eq!(
+            sections.disabled(),
+            &["disabled"].map(str::to_string).to_vec()
+        );
+        assert_eq!(sections.cache_age(), 111);
     }
 
     #[test]
     fn test_piggyback_error() {
-        assert!(
-            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_HOSTNAME), &Sqls::default())
-                .is_err()
-        );
+        assert!(Piggyback::from_yaml(
+            &create_yaml(data::PIGGYBACK_NO_HOSTNAME),
+            &Sections::default()
+        )
+        .is_err());
         assert_eq!(
-            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_SQLS), &Sqls::default())
-                .unwrap()
-                .unwrap()
-                .sqls(),
-            &Sqls::default()
+            Piggyback::from_yaml(
+                &create_yaml(data::PIGGYBACK_NO_SECTIONS),
+                &Sections::default()
+            )
+            .unwrap()
+            .unwrap()
+            .sections(),
+            &Sections::default()
         );
     }
 
     #[test]
     fn test_piggyback_none() {
         assert_eq!(
-            Piggyback::from_yaml(&create_yaml("source:\n  xxx"), &Sqls::default()).unwrap(),
+            Piggyback::from_yaml(&create_yaml("source:\n  xxx"), &Sections::default()).unwrap(),
             None
         );
     }
     #[test]
-    fn test_instance() {
-        let instance = Instance::from_yaml(
+    fn test_custom_instance() {
+        let instance = CustomInstance::from_yaml(
             &create_yaml(data::INSTANCE),
             &Authentication::default(),
             &Connection::default(),
-            &Sqls::default(),
+            &Sections::default(),
         )
         .unwrap();
         assert_eq!(instance.sid(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
-        assert_eq!(instance.conn().hostname(), "h1");
+        assert_eq!(instance.conn().hostname(), "localhost");
+        assert_eq!(instance.calc_real_host(), "localhost");
         assert_eq!(instance.alias().unwrap(), "a1");
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
-        assert_eq!(instance.piggyback().unwrap().sqls().cache_age(), 123);
+        assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
     }
 
     #[test]
     fn test_config() {
-        let c = Config::from_yaml(&create_yaml(data::TEST_CONFIG))
-            .unwrap()
-            .unwrap();
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.instances().len(), 2);
         assert!(c.instances()[0].piggyback().is_some());
         assert_eq!(
@@ -937,7 +1155,6 @@ discovery:
             &vec!["foo".to_string(), "bar".to_string()]
         );
         assert_eq!(c.discovery().exclude(), &vec!["baz".to_string()]);
-        assert!(!c.discovery().all());
         assert!(c.discovery().detect());
         assert_eq!(c.auth().username(), "foo");
         assert_eq!(c.auth().password().unwrap(), "bar");
@@ -955,10 +1172,63 @@ discovery:
             c.conn().tls().unwrap().client_certificate(),
             Path::new(r"C:\path\to\file")
         );
-        assert_eq!(c.conn().timeout(), defaults::CONNECTION_TIMEOUT);
-        assert_eq!(c.sqls().always(), defaults::SQLS_ALWAYS);
-        assert_eq!(c.sqls().cached(), defaults::SQLS_CACHED);
-        assert_eq!(c.sqls().disabled(), &vec!["someOtherSQL".to_string()]);
-        assert_eq!(c.sqls().cache_age(), defaults::SQLS_CACHE_AGE);
+        assert_eq!(
+            c.conn().timeout(),
+            std::time::Duration::from_secs(defaults::CONNECTION_TIMEOUT)
+        );
+        assert_eq!(c.sections().always(), defaults::SECTIONS_ALWAYS);
+        assert_eq!(c.sections().cached(), defaults::SECTIONS_CACHED);
+        assert_eq!(c.sections().disabled(), &vec!["someOtherSQL".to_string()]);
+        assert_eq!(c.sections().cache_age(), defaults::SECTIONS_CACHE_AGE);
+    }
+
+    #[test]
+    fn test_config_discovery() {
+        let c = make_detect_config(&[], &[]);
+        assert!(c.is_instance_allowed(&"weird"));
+        let c = make_detect_config(&["a", "b"], &["a", "b"]);
+        assert!(!c.is_instance_allowed(&"weird"));
+        assert!(c.is_instance_allowed(&"a"));
+        assert!(c.is_instance_allowed(&"b"));
+    }
+
+    fn make_detect_config(include: &[&str], exclude: &[&str]) -> Config {
+        let source = format!(
+            r"---
+mssql:
+  main:
+    authentication:
+      username: foo
+    discovery:
+      detect: true # doesnt matter for us
+      include: {include:?}
+      exclude: {exclude:?}
+    custom:
+      - sid: sid1
+      - sid: sid2
+        connection:
+          hostname: ab
+"
+        );
+        Config::from_string(&source).unwrap().unwrap()
+    }
+
+    #[test]
+    fn test_calc_effective_host() {
+        let conn_to_bar = Connection {
+            hostname: "bAr".to_string(),
+            ..Default::default()
+        };
+        let auth_integrated = Authentication {
+            auth_type: AuthType::Integrated,
+            ..Default::default()
+        };
+        let auth_sql_server = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+
+        assert_eq!(calc_real_host(&auth_integrated, &conn_to_bar), "localhost");
+        assert_eq!(calc_real_host(&auth_sql_server, &conn_to_bar), "bar");
     }
 }

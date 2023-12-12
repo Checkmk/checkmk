@@ -179,17 +179,15 @@ def test_horizontal_rules_from_thresholds(
         gt._horizontal_rules_from_thresholds(
             [
                 ScalarDefinition(
-                    expression=MetricExpression(WarningOf(Metric("one"))),
+                    expression=WarningOf(Metric("one")),
                     title="Warning",
                 ),
                 ScalarDefinition(
-                    expression=MetricExpression(CriticalOf(Metric("power"))),
+                    expression=CriticalOf(Metric("power")),
                     title="Critical power",
                 ),
                 ScalarDefinition(
-                    expression=MetricExpression(
-                        Product([WarningOf(Metric("output")), Constant(-1)])
-                    ),
+                    expression=Product([WarningOf(Metric("output")), Constant(-1)]),
                     title="Warning output",
                 ),
             ],
@@ -209,7 +207,7 @@ def test_duplicate_graph_templates() -> None:
             expressions.extend(template.range)
 
         idents_by_metrics.setdefault(
-            tuple(sorted(m.name for e in expressions for m in e.declaration.metrics())), []
+            tuple(sorted(m.name for e in expressions for m in e.metrics())), []
         ).append(ident)
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
@@ -245,87 +243,7 @@ def test_graph_template_with_layered_areas() -> None:
         for ident, areas in areas_by_ident.items()
         if areas.pos.count("area") > 1 or areas.neg.count("-area") > 1
     ]
-    assert sorted(templates_with_more_than_one_layer) == sorted(
-        [
-            "livestatus_connects_and_requests",
-            "message_processing",
-            "rule_efficiency",
-            "docker_df",
-            "docker_df_count",
-            "active_shards",
-            "number_of_executors",
-            "number_of_tasks",
-            "kube_cronjob_status",
-            "total_and_open_slots",
-            "connections",
-            "db_connections",
-            "access_point_statistics",
-            "round_trip_average",
-            "hop_1_round_trip_average",
-            "hop_2_round_trip_average",
-            "hop_3_round_trip_average",
-            "hop_4_round_trip_average",
-            "hop_5_round_trip_average",
-            "hop_6_round_trip_average",
-            "hop_7_round_trip_average",
-            "hop_8_round_trip_average",
-            "hop_9_round_trip_average",
-            "hop_10_round_trip_average",
-            "hop_11_round_trip_average",
-            "hop_12_round_trip_average",
-            "hop_13_round_trip_average",
-            "hop_14_round_trip_average",
-            "hop_15_round_trip_average",
-            "hop_16_round_trip_average",
-            "hop_17_round_trip_average",
-            "hop_18_round_trip_average",
-            "hop_19_round_trip_average",
-            "hop_20_round_trip_average",
-            "hop_21_round_trip_average",
-            "hop_22_round_trip_average",
-            "hop_23_round_trip_average",
-            "hop_24_round_trip_average",
-            "hop_25_round_trip_average",
-            "hop_26_round_trip_average",
-            "hop_27_round_trip_average",
-            "hop_28_round_trip_average",
-            "hop_29_round_trip_average",
-            "hop_30_round_trip_average",
-            "hop_31_round_trip_average",
-            "hop_32_round_trip_average",
-            "hop_33_round_trip_average",
-            "hop_34_round_trip_average",
-            "hop_35_round_trip_average",
-            "hop_36_round_trip_average",
-            "hop_37_round_trip_average",
-            "hop_38_round_trip_average",
-            "hop_39_round_trip_average",
-            "hop_40_round_trip_average",
-            "hop_41_round_trip_average",
-            "hop_42_round_trip_average",
-            "hop_43_round_trip_average",
-            "hop_44_round_trip_average",
-            "DB_connections",
-            "http_errors",
-            "nodes_by_type",
-            "oracle_pga_memory_info",
-            "size_of_processes",
-            "size_per_process",
-            "zfs_meta_data",
-            "cache_hit_ratio",
-            "tablespace_sizes",
-            "ram_swap_overview",
-            "swap",
-            "active_and_inactive_memory",
-            "memory_committing",
-            "huge_pages",
-            "vmalloc_address_space_1",
-            "heap_memory_usage",
-            "non-heap_memory_usage",
-            "private_and_shared_memory",
-            "files_notification_spool",
-        ]
-    )
+    assert not templates_with_more_than_one_layer
 
 
 def _conditional_perfometer(
@@ -425,7 +343,7 @@ def test_conditional_perfometer() -> None:
 def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
     return any(
         not isinstance(
-            e.declaration,
+            e,
             (Constant, Metric, WarningOf, CriticalOf, MinimumOf, MaximumOf),
         )
         for e in expressions
@@ -516,16 +434,8 @@ def test_non_trivial_perfometer_declarations() -> None:
             # m(%) -> 100 * m / m:max
             # => segments: ["fs_used"], "total": "fs_used:max"
             "type": "linear",
-            "segments": ["fs_used(%)", "100.0,fs_used(%),-#e3fff9"],
+            "segments": ["fs_used(%)"],
             "total": 100,
-            "label": ("fs_used(%)", "%"),
-        },
-        {
-            "type": "linear",
-            "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
-            # Remove label?
-            "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
-            "total": "mem_total",
         },
         {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
         {
@@ -610,47 +520,45 @@ def test_non_trivial_graph_declarations() -> None:
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 
-    assert sorted(non_trivial_graphs) == sorted(
-        [
-            "bandwidth",
-            "bandwidth_translated",
-            "cmk_cpu_time_by_phase",
-            "cmk_hosts_total",
-            "cmk_services_total",
-            "cpu_time",
-            "cpu_utilization_3",
-            "cpu_utilization_4",
-            "cpu_utilization_5",
-            "cpu_utilization_5_util",
-            "cpu_utilization_6_guest",
-            "cpu_utilization_6_guest_util",
-            "cpu_utilization_6_steal",
-            "cpu_utilization_6_steal_util",
-            "cpu_utilization_7",
-            "cpu_utilization_7_util",
-            "cpu_utilization_8",
-            "cpu_utilization_numcpus",
-            "cpu_utilization_simple",
-            "disk_throughput",
-            "fs_used",
-            "fs_used_2",
-            "growing",
-            "livestatus_requests_per_connection",
-            "mem_growing",
-            "mem_shrinking",
-            "oracle_sga_pga_total",
-            "qos_class_traffic",
-            "ram_swap_used",
-            "savings",
-            "shrinking",
-            "size_per_process",
-            "time_offset",
-            "used_cpu_time",
-            "util_average_1",
-            "util_average_2",
-            "util_fallback",
-        ]
-    )
+    assert set(non_trivial_graphs) == {
+        "bandwidth",
+        "bandwidth_translated",
+        "cmk_cpu_time_by_phase",
+        "cmk_hosts_total",
+        "cmk_services_total",
+        "cpu_time",
+        "cpu_utilization_3",
+        "cpu_utilization_4",
+        "cpu_utilization_5",
+        "cpu_utilization_5_util",
+        "cpu_utilization_6_guest",
+        "cpu_utilization_6_guest_util",
+        "cpu_utilization_6_steal",
+        "cpu_utilization_6_steal_util",
+        "cpu_utilization_7",
+        "cpu_utilization_7_util",
+        "cpu_utilization_8",
+        "cpu_utilization_numcpus",
+        "cpu_utilization_simple",
+        "disk_throughput",
+        "fs_used",
+        "fs_used_2",
+        "growing",
+        "livestatus_requests_per_connection",
+        "mem_growing",
+        "mem_shrinking",
+        "oracle_sga_pga_total",
+        "qos_class_traffic",
+        "ram_swap_used",
+        "savings",
+        "shrinking",
+        "size_per_process",
+        "time_offset",
+        "used_cpu_time",
+        "util_average_1",
+        "util_average_2",
+        "util_fallback",
+    }
 
 
 def test_graph_templates_with_consolidation_function() -> None:

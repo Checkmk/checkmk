@@ -22,6 +22,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Integer,
+    LabelGroups,
     ListOf,
     ListOfStrings,
     MonitoringState,
@@ -31,7 +32,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import DictHostTagCondition, LabelCondition
+from cmk.gui.wato import DictHostTagCondition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.bi import actions
@@ -97,7 +98,7 @@ def convert_from_cascading_vs_choice(value):
 #   ('host_search',
 #   ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                    'host_folder': '',
-#                    'host_labels': {},
+#                    'host_label_groups': [],
 #                    'host_tags': {}},
 #     'refer_to': 'host'},
 #    {'params': {'arguments': []},
@@ -163,7 +164,7 @@ def _get_aggregation_choices() -> CascadingDropdownChoices:
 # ('host_search',
 #  ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                   'host_folder': '',
-#                   'host_labels': {},
+#                   'host_label_groups': [],
 #                   'host_tags': {}},
 #    'refer_to': 'host'},
 #   ('call_a_rule',
@@ -405,7 +406,10 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 ),
             ),
             ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
-            ("host_labels", LabelCondition(title=_("Host Labels"), help_txt="")),
+            (
+                "host_label_groups",
+                LabelGroups(add_label=_("Add to condition"), title=_("Host Labels"), help=""),
+            ),
             ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
         ]
 
@@ -446,7 +450,10 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
                     size=80,
                 ),
             ),
-            ("service_labels", LabelCondition(title=_("Service Labels"), help_txt="")),
+            (
+                "service_label_groups",
+                LabelGroups(add_label=_("Add to condition"), title=_("Service Labels"), help=""),
+            ),
         ]
 
 

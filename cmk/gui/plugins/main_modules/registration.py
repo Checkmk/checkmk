@@ -8,6 +8,8 @@
 
 from functools import partial
 
+from livestatus import MultiSiteConnection
+
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 from cmk.utils.version import edition, Edition
@@ -19,6 +21,7 @@ from cmk.gui import (
     crash_handler,
     crash_reporting,
     cron,
+    customer,
     default_permissions,
     graphing,
     gui_background_job,
@@ -34,6 +37,7 @@ from cmk.gui import (
     prediction,
     robotmk,
     sidebar,
+    sites,
     user_message,
     valuespec,
     visuals,
@@ -51,6 +55,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
@@ -183,6 +188,7 @@ def register() -> None:
             snapin_registry,
             contact_group_usage_finder_registry,
             timeperiod_usage_finder_registry,
+            endpoint_registry,
         )
         custom_icons_register(
             mode_registry,
@@ -220,6 +226,7 @@ def register() -> None:
         mega_menu_registry,
         ac_test_registry,
         contact_group_usage_finder_registry,
+        notification_parameter_registry,
     )
     bi_registration.register(
         data_source_registry,
@@ -235,6 +242,7 @@ def register() -> None:
         mode_registry,
         icon_and_action_registry,
         snapin_registry,
+        endpoint_registry,
     )
     robotmk.register(page_registry)
     cron.register(page_registry)
@@ -259,7 +267,9 @@ def register() -> None:
     graphing.register(page_registry, config_variable_registry)
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
-    openapi_registration.register()
+    openapi_registration.register(endpoint_registry)
+    sites.ConnectionClass = MultiSiteConnection
+    customer.CustomerAPIClass = customer.CustomerAPIStub
 
 
 register()

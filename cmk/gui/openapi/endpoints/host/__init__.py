@@ -50,6 +50,7 @@ from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 
@@ -203,3 +204,8 @@ def fixup_inventory_column(
             yield ResultRow(copy)
         else:
             yield row
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(list_hosts)
+    endpoint_registry.register(show_host)

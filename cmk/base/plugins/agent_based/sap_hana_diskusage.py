@@ -6,6 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import df, sap_hana
+
 from .agent_based_api.v1 import (
     get_value_store,
     IgnoreResultsError,
@@ -15,7 +17,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import df, sap_hana
 
 
 def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSection:

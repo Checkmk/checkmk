@@ -24,9 +24,10 @@
 # .1.3.6.1.4.1.1966.21.1.1.1.1.3.1.19.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.3.1.19.1.2
 
+from cmk.plugins.lib.perle import DETECT_PERLE
+
 from .agent_based_api.v1 import register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.perle import DETECT_PERLE
 
 Section = StringTable
 

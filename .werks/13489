@@ -1,4 +1,4 @@
-Title: <tt>mem_win</tt>: Fix missing levels in service graphs
+Title: mem_win: Fix missing levels in service graphs
 Class: fix
 Compatible: compat
 Component: checks

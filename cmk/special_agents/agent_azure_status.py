@@ -13,8 +13,8 @@ from pydantic import BaseModel
 
 from cmk.utils.azure_constants import AZURE_REGIONS
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 class AzureIssue(BaseModel, frozen=True):
@@ -101,7 +101,7 @@ def write_section(args: Args) -> int:
     azure_status = AzureStatus(link=feed.feed.link, regions=selected_regions, issues=azure_issues)
 
     with SectionWriter("azure_status") as writer:
-        writer.append_json(azure_status.dict())
+        writer.append_json(azure_status.model_dump())
     return 0
 
 

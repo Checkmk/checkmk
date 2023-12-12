@@ -11,6 +11,7 @@ from typing import Any, Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.log import VERBOSE
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 
 from ._abstract import Fetcher, Mode
@@ -24,10 +25,11 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         address: HostAddress | None,
         time_settings: Sequence[tuple[str | None, str, int]],
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.piggyback"))
+        super().__init__()
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
+        self._logger: Final = logging.getLogger("cmk.helper.piggyback")
         self._sources: list[PiggybackRawDataInfo] = []
 
     def __repr__(self) -> str:
@@ -62,6 +64,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         self._sources.clear()
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        self._logger.log(VERBOSE, "Get piggybacked data")
         return AgentRawData(bytes(self._get_main_section() + self._get_source_labels_section()))
 
     def _get_main_section(self) -> bytearray | bytes:

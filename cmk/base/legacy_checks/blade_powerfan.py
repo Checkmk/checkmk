@@ -10,11 +10,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SN
 
 
 def inventory_blade_powerfan(info):
-    return [(line[0], (50, 40)) for line in info if line[0] != "" and line[1] == "1"]
+    return [(line[0], {}) for line in info if line[0] != "" and line[1] == "1"]
 
 
-def check_blade_powerfan(item, params, info):
-    warn_perc, crit_perc = params
+def check_blade_powerfan(item, _no_params, info):
+    warn_perc, crit_perc = 50, 40
     for index, present, status, _fancount, speedperc, rpm, ctrlstate in info:
         if index != item:
             continue

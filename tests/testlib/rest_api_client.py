@@ -51,6 +51,10 @@ API_DOMAIN = Literal[
     "comment",
     "event_console",
     "audit_log",
+    "bi_pack",
+    "bi_aggregation",
+    "bi_rule",
+    "user_role",
 ]
 
 
@@ -220,7 +224,7 @@ def default_rule_properties() -> RuleProperties:
     return {"disabled": False}
 
 
-class StringMatcher(TypedDict):
+class StringMatcher(TypedDict, total=False):
     match_on: list[str]
     operator: Literal["one_of", "none_of"]
 
@@ -237,9 +241,21 @@ class LabelMatcher(TypedDict):
     value: str
 
 
+class LabelCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label: str
+
+
+class LabelGroupCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label_group: list[LabelCondition]
+
+
 class RuleConditions(TypedDict, total=False):
     host_name: StringMatcher
     host_tags: list[HostTagMatcher]
+    host_label_groups: list[LabelGroupCondition]
+    service_label_groups: list[LabelGroupCondition]
     host_labels: list[LabelMatcher]
     service_labels: list[LabelMatcher]
     service_description: StringMatcher
@@ -326,7 +342,7 @@ class RestApiClient:
                 query_params=query_params,
                 body=body,
                 headers=default_headers,
-                url_is_complete=url_is_complete,
+                url_is_complete=True,
             )
         return resp
 
@@ -1131,9 +1147,9 @@ class RuleClient(RestApiClient):
     def create(
         self,
         ruleset: str,
-        value_raw: str,
         conditions: RuleConditions,
         folder: str = "~",
+        value_raw: str | None = None,
         properties: RuleProperties | None = None,
         expect_ok: bool = True,
     ) -> Response:
@@ -1524,6 +1540,13 @@ class DowntimeClient(RestApiClient):
 
 class GroupConfig(RestApiClient):
     domain: API_DOMAIN
+
+    def get(self, group_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{group_id}",
+            expect_ok=expect_ok,
+        )
 
     def bulk_create(self, groups: tuple[dict[str, str], ...], expect_ok: bool = True) -> Response:
         return self.request(
@@ -2198,6 +2221,163 @@ class AuditLogClient(RestApiClient):
         return result
 
 
+class BiPackClient(RestApiClient):
+    domain: API_DOMAIN = "bi_pack"
+
+    def get(self, pack_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{pack_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, pack_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{pack_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, pack_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{pack_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, pack_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{pack_id}",
+            expect_ok=expect_ok,
+        )
+
+
+class BiAggregationClient(RestApiClient):
+    domain: API_DOMAIN = "bi_aggregation"
+
+    def get(self, aggregation_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, aggregation_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, aggregation_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, aggregation_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_aggregation_state(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/aggregation_state/invoke",
+            expect_ok=expect_ok,
+        )
+
+
+class BiRuleClient(RestApiClient):
+    domain: API_DOMAIN = "bi_rule"
+
+    def get(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, rule_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, rule_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+
+class UserRoleClient(RestApiClient):
+    domain: API_DOMAIN = "user_role"
+
+    def get(self, role_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{role_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def clone(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, role_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{role_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, role_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{role_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2223,6 +2403,10 @@ class ClientRegistry:
     EventConsole: EventConsoleClient
     Dcd: DcdClient
     AuditLog: AuditLogClient
+    BiPack: BiPackClient
+    BiAggregation: BiAggregationClient
+    BiRule: BiRuleClient
+    UserRole: UserRoleClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2250,4 +2434,8 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         EventConsole=EventConsoleClient(request_handler, url_prefix),
         Dcd=DcdClient(request_handler, url_prefix),
         AuditLog=AuditLogClient(request_handler, url_prefix),
+        BiPack=BiPackClient(request_handler, url_prefix),
+        BiAggregation=BiAggregationClient(request_handler, url_prefix),
+        BiRule=BiRuleClient(request_handler, url_prefix),
+        UserRole=UserRoleClient(request_handler, url_prefix),
     )

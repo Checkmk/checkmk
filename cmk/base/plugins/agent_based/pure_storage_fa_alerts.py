@@ -32,7 +32,7 @@ class InternalAlerts(BaseModel, frozen=True):
 
 def parse_alerts(string_table: StringTable) -> InternalAlerts:
     json_data = json.loads(string_table[0][0])
-    alerts = [Alert.parse_obj(item) for item in json_data.get("items", [])]
+    alerts = [Alert.model_validate(item) for item in json_data.get("items", [])]
 
     return InternalAlerts(
         critical_alerts=[a.description for a in alerts if a.severity == AlertSeverity.CRITICAL],

@@ -19,9 +19,22 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site
-from tests.testlib.utils import execute, qa_test_data_path
+from tests.testlib.utils import qa_test_data_path, run
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SkippedDumps:
+    SKIPPED_DUMPS = []  # type: ignore
+
+
+@dataclass
+class SkippedChecks:
+    SKIPPED_CHECKS = [
+        "snmp-fw-fortigate:Signatures",  # TODO: dynamic data need to be regexed
+        "agent-2_2_0_p12-redis:Redis 127.0.0.1:6379 Server Info",  # TODO: dynamic data need to be regexed
+    ]
 
 
 class CheckModes(IntEnum):
@@ -259,7 +272,7 @@ def _verify_check_result(
         logger.error("[%s] No data returned!", check_id)
         return False, ""
 
-    diff = execute(
+    diff = run(
         shlex.split(os.getenv("DIFF_CMD", "diff"))
         + [
             json_canon_file_path,
@@ -290,6 +303,9 @@ def process_check_output(
     output_dir: Path,
 ) -> bool:
     """Process the check output and either dump or compare it."""
+    if host_name in SkippedDumps.SKIPPED_DUMPS:
+        pytest.skip(reason=f"{host_name} dumps currently skipped.")
+
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
 
@@ -307,6 +323,11 @@ def process_check_output(
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
     for check_id in check_results:
+        if check_id in SkippedChecks.SKIPPED_CHECKS:
+            logger.info("Check %s currently skipped", check_id)
+            passed = True
+            continue
+
         logger.debug('> Processing check id "%s"...', check_id)
         if config.mode == CheckModes.ADD and not check_canons.get(check_id):
             check_canons[check_id] = check_results[check_id]
@@ -353,8 +374,50 @@ def process_check_output(
     return passed is True
 
 
+def setup_site(site: Site, dump_path: str) -> None:
+    # NOTE: the snmpwalks folder cannot be changed!
+    walk_path = site.path("var/check_mk/snmpwalks")
+    # create dump folder in the test site
+    logger.info('Creating folder "%s"...', dump_path)
+    rc = site.execute(["mkdir", "-p", dump_path]).wait()
+    assert rc == 0
+
+    logger.info("Injecting agent-output...")
+    for dump_name in get_host_names():
+        assert (
+            run(
+                [
+                    "sudo",
+                    "cp",
+                    "-f",
+                    f"{config.dump_dir}/{dump_name}",
+                    f"{walk_path}/{dump_name}"
+                    if re.search(r"\bsnmp\b", dump_name)
+                    else f"{dump_path}/{dump_name}",
+                ]
+            ).returncode
+            == 0
+        )
+
+    for dump_type in config.dump_types:  # type: ignore
+        host_folder = f"/{dump_type}"
+        if site.openapi.get_folder(host_folder):
+            logger.info('Host folder "%s" already exists!', host_folder)
+        else:
+            logger.info('Creating host folder "%s"...', host_folder)
+            site.openapi.create_folder(host_folder)
+        ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
+        logger.info('Creating rule "%s"...', ruleset_name)
+        site.openapi.create_rule(
+            ruleset_name=ruleset_name,
+            value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
+            folder=host_folder,
+        )
+        logger.info('Rule "%s" created!', ruleset_name)
+
+
 @contextmanager
-def setup_host(site: Site, host_name: str) -> Iterator:
+def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterator:
     logger.info('Creating host "%s"...', host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
@@ -404,7 +467,7 @@ def setup_host(site: Site, host_name: str) -> Iterator:
     try:
         yield
     finally:
-        if not config.skip_cleanup:
+        if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
             site.openapi.delete_host(host_name)
 

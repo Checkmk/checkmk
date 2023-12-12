@@ -19,8 +19,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
-from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
+
+from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Section5142 = int
 

@@ -11,12 +11,11 @@ async fn main() -> Result<()> {
         Ok(output) => {
             print!("{output}");
             log::info!("Success");
+            Ok(())
         }
         Err(e) => {
-            print!("{e}");
-            log::error!("{e}")
+            log::error!("{e}");
+            Err(anyhow::anyhow!("{e}"))
         }
-    };
-
-    Ok(())
+    }
 }

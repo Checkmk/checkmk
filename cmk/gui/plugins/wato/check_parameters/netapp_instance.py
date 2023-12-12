@@ -9,20 +9,30 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput
 
 
-def _parameter_valuespec_netapp_instance():
-    return ListOf(
+def _parameter_valuespec_netapp_instance() -> Migrate:
+    return Migrate(
         valuespec=Dictionary(
-            help=_("This rule allows you to override netapp warnings"),
             elements=[
-                ("name", TextInput(title=_("Warning starts with"))),
-                ("state", MonitoringState(title="Set state to", default_value=1)),
-            ],
-            optional_keys=False,
+                (
+                    "warning_overrides",
+                    ListOf(
+                        valuespec=Dictionary(
+                            help=_("This rule allows you to override netapp warnings"),
+                            elements=[
+                                ("name", TextInput(title=_("Warning starts with"))),
+                                ("state", MonitoringState(title="Set state to", default_value=1)),
+                            ],
+                            optional_keys=False,
+                        ),
+                        add_label=_("Add warning"),
+                    ),
+                )
+            ]
         ),
-        add_label=_("Add warning"),
+        migrate=lambda p: p if isinstance(p, dict) else {"warning_overrides": p},
     )
 
 

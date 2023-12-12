@@ -1,4 +1,4 @@
-Title: Bug fixes for <tt>cmk.gui.plugins.metrics.utils.indexed_color</tt>
+Title: Bug fixes for cmk.gui.plugins.metrics.utils.indexed_color
 Class: fix
 Compatible: incomp
 Component: metrics

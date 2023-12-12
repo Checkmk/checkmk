@@ -5,86 +5,13 @@
 
 from datetime import datetime
 
+import cryptography.hazmat.primitives.asymmetric as asym
 import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
-from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.x509 import (
-    Certificate,
-    CertificateSigningRequest,
-    CertificateSigningRequestBuilder,
-    Name,
-    NameAttribute,
-)
-from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.certs import _rsa_public_key_from_cert_or_csr
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
-
-
-def check_certificate_against_private_key(
-    cert: Certificate,
-    private_key: rsa.RSAPrivateKey,
-) -> None:
-    # Check if the public key of certificate matches the public key corresponding to the given
-    # private one
-    assert (
-        _rsa_public_key_from_cert_or_csr(cert).public_numbers()
-        == private_key.public_key().public_numbers()
-    )
-
-
-def check_certificate_against_public_key(
-    cert: Certificate,
-    public_key: rsa.RSAPublicKey,
-) -> None:
-    # Check if the signature of the certificate matches the public key
-    public_key.verify(
-        cert.signature,
-        cert.tbs_certificate_bytes,
-        PKCS1v15(),
-        SHA256(),
-    )
-
-
-def check_cn(
-    cert_or_csr: Certificate | CertificateSigningRequest,
-    expected_cn: str,
-) -> bool:
-    return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn
-
-
-def generate_csr_pair(
-    cn: str, private_key_size: int = 2048
-) -> tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
-    private_key = generate_private_key(private_key_size)
-    return (
-        private_key,
-        CertificateSigningRequestBuilder()
-        .subject_name(
-            Name(
-                [
-                    NameAttribute(NameOID.COMMON_NAME, cn),
-                ]
-            )
-        )
-        .sign(
-            private_key,
-            SHA256(),
-        ),
-    )
-
-
-def generate_private_key(size: int) -> rsa.RSAPrivateKey:
-    return rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=size,
-    )
-
-
-FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
+from cmk.utils.crypto.keys import PrivateKey
 
 
 @pytest.fixture(name="self_signed_cert", scope="module")
@@ -94,9 +21,25 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
     Valid from 2023-01-01 08:00:00 til 2023-01-01 10:00:00.
     """
-    with freeze_time(FROZEN_NOW):
+    with freeze_time(datetime(2023, 1, 1, 8, 0, 0)):
         return CertificateWithPrivateKey.generate_self_signed(
             common_name="TestGenerateSelfSigned",
             expiry=relativedelta(hours=2),
             key_size=1024,
+            is_ca=True,
         )
+
+
+@pytest.fixture(name="rsa_key", scope="module")
+def fixture_rsa_key() -> PrivateKey:
+    return PrivateKey.generate_rsa(1024)
+
+
+def rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
+    """Check if two keys are the same RSA key"""
+    # Asserting key types here just to cut corners on type checking
+    # (ed25519 keys don't have private_numbers())
+    assert isinstance(key_a._key, asym.rsa.RSAPrivateKey) and isinstance(
+        key_b._key, asym.rsa.RSAPrivateKey
+    )
+    return key_a._key.private_numbers() == key_b._key.private_numbers()

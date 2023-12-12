@@ -33,7 +33,7 @@ def test_list_currently_running_activations(clients: ClientRegistry) -> None:
     clients.ActivateChanges.get_running_activations()
 
 
-def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
+def test_activate_changes_unknown_site(clients: ClientRegistry, is_licensed: bool) -> None:
     resp = clients.ActivateChanges.activate_changes(sites=["asdf"], expect_ok=False)
     resp.assert_status_code(400)
     assert "Unknown site" in repr(resp.json), resp.json
@@ -41,6 +41,7 @@ def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
 
 def test_activate_changes(
     clients: ClientRegistry,
+    is_licensed: bool,
     monkeypatch: pytest.MonkeyPatch,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
@@ -107,6 +108,7 @@ def test_list_activate_changes_no_if_match_header(clients: ClientRegistry) -> No
 
 def test_list_activate_changes_star_etag(
     clients: ClientRegistry,
+    is_licensed: bool,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")
@@ -117,6 +119,7 @@ def test_list_activate_changes_star_etag(
 
 def test_list_activate_changes_valid_etag(
     clients: ClientRegistry,
+    is_licensed: bool,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     clients.HostConfig.create(host_name="foobar", folder="/")

@@ -10,7 +10,7 @@ the global settings.
 """
 
 import re
-from collections.abc import Collection, Mapping
+from collections.abc import Collection, Mapping, Sequence
 from typing import Any, overload
 
 import cmk.utils.man_pages as man_pages
@@ -45,6 +45,8 @@ from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
+from cmk.discover_plugins import discover_families, PluginGroup
+
 from ._tile_menu import TileMenuRenderer
 
 
@@ -65,7 +67,7 @@ class ModeCheckPlugins(WatoMode):
         return ["check_plugins"]
 
     def _from_vars(self):
-        self._manpages = _get_check_catalog(only_path=())
+        self._manpages = _get_check_catalog(discover_families(raise_errors=False), only_path=())
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
@@ -119,7 +121,7 @@ class ModeCheckPluginSearch(WatoMode):
 
     def _from_vars(self):
         self._search = get_search_expression()
-        self._manpages = _get_check_catalog(only_path=())
+        self._manpages = _get_check_catalog(discover_families(raise_errors=False), only_path=())
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
@@ -234,7 +236,7 @@ class ModeCheckPluginTopic(WatoMode):
         for comp in self._path:
             ID().validate_value(comp, None)  # Beware against code injection!
 
-        self._manpages = _get_check_catalog(self._path)
+        self._manpages = _get_check_catalog(discover_families(raise_errors=False), self._path)
         self._titles = man_pages.CATALOG_TITLES
 
         self._has_second_level = None
@@ -401,7 +403,10 @@ def _man_page_catalog_topics():
     ]
 
 
-def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
+def _get_check_catalog(
+    plugin_families: Mapping[str, Sequence[str]],
+    only_path: tuple[str, ...],
+) -> Mapping[str, Any]:
     # Note: this is impossible to type, since the type is recursive.
     # The return type `Monster` would be something like
     # Monster = Mapping[str, Union[Sequence[_ManPageSummary], Monster]]
@@ -411,7 +416,9 @@ def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
 
     tree: dict[str, Any] = {}
 
-    for path, entries in man_pages.load_man_page_catalog().items():
+    for path, entries in man_pages.load_man_page_catalog(
+        plugin_families, PluginGroup.CHECKMAN.value
+    ).items():
         if not path_prefix_matches(path):
             continue
         subtree = tree
@@ -465,11 +472,16 @@ class ModeCheckManPage(WatoMode):
         ):
             raise MKUserError("check_type", _("Invalid check type"))
 
-        manpage = man_pages.load_man_page(self._check_plugin_name)
-        if manpage is None:
-            raise MKUserError(None, _("There is no manpage for this check."))
-        self._manpage = manpage
+        man_page_paths = man_pages.make_man_page_path_map(
+            discover_families(raise_errors=False), PluginGroup.CHECKMAN.value
+        )
 
+        try:
+            man_page_path = man_page_paths[self._check_plugin_name]
+        except KeyError:
+            raise MKUserError(None, _("There is no manpage for this check."))
+
+        self._manpage = man_pages.parse_man_page(self._check_plugin_name, man_page_path)
         self._check_default_parameters: object = None
 
         checks = get_check_information().plugin_infos

@@ -1,4 +1,4 @@
-Title: Diskspace cleanup: Fix <tt>RuntimeError: dictionary changed size during iteration</tt>
+Title: Diskspace cleanup: Fix RuntimeError: dictionary changed size during iteration
 Class: fix
 Compatible: compat
 Component: omd

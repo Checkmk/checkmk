@@ -1,0 +1,14 @@
+Title: Fix "Metric history" context filter on view edit
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1700552738
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+If you edited a view with the context filter "Metric history", the value was
+always "Only first 10 sorted results", even if another value was set before.
+
+This was just a problem with the default choice of the dropdown. If you used
+the view, the filter should have been worked as expected.

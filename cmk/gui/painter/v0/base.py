@@ -20,7 +20,6 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -245,13 +244,6 @@ class Painter(abc.ABC):
         raises a 'JSONExportError'.
         """
         return self._compute_data(row, cell)
-
-
-class Painter2(Painter):
-    # Poor man's composition:  Renderer differs between CRE and non-CRE.
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ] | None = None
 
 
 class PainterRegistry(Registry[type[Painter]]):

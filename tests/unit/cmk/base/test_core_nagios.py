@@ -18,7 +18,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.exceptions as exceptions
+import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostName
@@ -260,11 +260,11 @@ def test_create_nagios_host_spec(
         "extra_host_conf",
         {
             "alias": [
-                {"condition": {"host_name": ["host2"]}, "value": "lOCALhost"},
-                {"condition": {"host_name": ["cluster2"]}, "value": "CLUSTer"},
+                {"id": "01", "condition": {"host_name": ["host2"]}, "value": "lOCALhost"},
+                {"id": "02", "condition": {"host_name": ["cluster2"]}, "value": "CLUSTer"},
             ],
             "parents": [
-                {"condition": {"host_name": ["node1", "node2"]}, "value": "switch"},
+                {"id": "03", "condition": {"host_name": ["node1", "node2"]}, "value": "switch"},
             ],
         },
     )
@@ -819,7 +819,9 @@ def test_create_nagios_servicedefs_omit_service(
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Host: my_host, Service: Active check of my_host\).",
+            "\nWARNING: Config creation for active check my_active_check failed on my_host: "
+            "The check argument function needs to return either a list of arguments or a string"
+            " of the concatenated arguments (Service: Active check of my_host).\n",
             id="invalid_args",
         ),
     ],
@@ -830,21 +832,30 @@ def test_create_nagios_servicedefs_invalid_args(
     host_attrs: dict[str, Any],
     error_message: str,
     monkeypatch: MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: False,
+    )
+
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
 
-    with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(
-            cfg, config_cache, hostname, host_attrs, {}, license_counter
-        )
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    )
+
+    out, _ = capsys.readouterr()
+    assert out == error_message
 
 
 @pytest.mark.parametrize(

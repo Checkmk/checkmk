@@ -9,7 +9,8 @@ import typing as t
 import pytest
 
 from cmk.base.plugins.agent_based import multipath
-from cmk.base.plugins.agent_based.utils import multipath as multipath_utils
+
+from cmk.plugins.lib import multipath as multipath_utils
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

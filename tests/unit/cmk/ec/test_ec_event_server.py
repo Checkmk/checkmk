@@ -5,8 +5,6 @@
 
 import logging
 
-import pytest
-
 from tests.testlib import CMKEventConsole
 
 from cmk.utils.hostaddress import HostName
@@ -14,8 +12,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.ec.config import Config, Rule, ServiceLevel
 from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
-from cmk.ec.history import create_history
-from cmk.ec.main import EventServer, StatusTableEvents, StatusTableHistory
+from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
 from cmk.ec.settings import Settings
 
 RULE = Rule(
@@ -35,31 +32,24 @@ RULE = Rule(
 )
 
 
-@pytest.fixture(name="config_with_host_patterns")
-def fixture_config_with_host_patterns(config: Config) -> Config:
-    """Return a config with a rule with specific host patterns inside the default rule_pack."""
-    with_host_patterns: Config = config.copy()
-    with_host_patterns["rule_packs"] = [default_rule_pack([RULE])]
-    return with_host_patterns
-
-
 def test_event_rewrite(
     event_server: EventServer,
     settings: Settings,
-    config_with_host_patterns: Config,
+    config: Config,
 ) -> None:
     """
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
+    config_rule_packs: Config = {**config, "rule_packs": [default_rule_pack([RULE])]}
     history = create_history(
         settings,
-        config_with_host_patterns,
+        config_rule_packs,
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,
     )
-    event_server.reload_configuration(config=config_with_host_patterns, history=history)
+    event_server.reload_configuration(config_rule_packs, history=history)
     event = CMKEventConsole.new_event(
         Event(
             host=HostName("heute"),

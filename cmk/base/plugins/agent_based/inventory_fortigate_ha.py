@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
+
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.fortinet import DETECT_FORTIGATE
 
 Section = Mapping[str, str]
 

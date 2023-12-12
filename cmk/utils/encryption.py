@@ -19,9 +19,10 @@ from typing import NamedTuple
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import ExtensionOID, NameOID
+from cryptography.x509.oid import NameOID
 from OpenSSL import crypto, SSL
 
+from cmk.utils.crypto.certificate import Certificate
 from cmk.utils.crypto.secrets import EncrypterSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
@@ -84,6 +85,10 @@ def fetch_certificate_details(
 
     for result in verify_chain_results:
         crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+        if crypto_cert.signature_hash_algorithm is None:
+            # TODO: This could actually happen and should be allowed, e.g. for ed25519 certs
+            raise ValueError("Signature algorithm missing in certificate")
+
         yield CertificateDetails(
             issued_to=get_name(crypto_cert.subject),
             issued_by=get_name(crypto_cert.issuer),
@@ -92,27 +97,9 @@ def fetch_certificate_details(
             signature_algorithm=crypto_cert.signature_hash_algorithm.name,
             digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
             serial_number=crypto_cert.serial_number,
-            is_ca=_is_ca_certificate(crypto_cert),
+            is_ca=Certificate(crypto_cert).may_sign_certificates(),
             verify_result=result,
         )
-
-
-def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
-    try:
-        key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
-        use_key_for_signing = key_usage.value.key_cert_sign is True
-    except x509.ExtensionNotFound:
-        use_key_for_signing = False
-
-    try:
-        basic_constraints = crypto_cert.extensions.get_extension_for_oid(
-            ExtensionOID.BASIC_CONSTRAINTS
-        )
-        is_ca = basic_constraints.value.ca is True
-    except x509.ExtensionNotFound:
-        is_ca = False
-
-    return is_ca and use_key_for_signing
 
 
 def _fetch_certificate_chain_verify_results(

@@ -7,19 +7,15 @@
 # log
 
 import itertools
-import os
-import re
 import time
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
 from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
-from werks.models import Compatibility, Werk
-
-import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
+from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
@@ -73,6 +69,9 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.werks.models import Compatibility, Werk
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -230,7 +229,7 @@ class ChangeLogPage(Page):
         return menu
 
 
-def handle_acknowledgement():
+def handle_acknowledgement() -> None:
     if not transactions.check_transaction():
         return
 
@@ -297,26 +296,24 @@ def _extend_display_dropdown(  # type: ignore[no-untyped-def]
 
 def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
     with output_funnel.plugged():
-        html.begin_form("werks")
-        html.hidden_field("wo_set", "set")
+        with html.form_context("werks"):
+            html.hidden_field("wo_set", "set")
 
-        _show_werk_options_controls()
+            _show_werk_options_controls()
 
-        html.open_div(class_="side_popup_content")
-        for name, height, vs, _default_value in _werk_table_option_entries():
+            html.open_div(class_="side_popup_content")
+            for name, height, vs, _default_value in _werk_table_option_entries():
 
-            def renderer(
-                name: _WerkTableOptionColumns = name,
-                vs: ValueSpec = vs,
-                werk_table_options: WerkTableOptions = werk_table_options,
-            ) -> None:
-                vs.render_input("wo_" + name, werk_table_options[name])
+                def renderer(
+                    name: _WerkTableOptionColumns = name,
+                    vs: ValueSpec = vs,
+                    werk_table_options: WerkTableOptions = werk_table_options,
+                ) -> None:
+                    vs.render_input("wo_" + name, werk_table_options[name])
 
-            html.render_floating_option(name, height, vs.title(), renderer)
-        html.close_div()
-
-        html.hidden_fields()
-        html.end_form()
+                html.render_floating_option(name, height, vs.title(), renderer)
+            html.close_div()
+            html.hidden_fields()
 
         return HTML(output_funnel.drain())
 
@@ -851,12 +848,10 @@ def render_nowiki_werk_description(  # pylint: disable=too-many-branches
 
 def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
+    known_checks = _get_known_checks()
     new_parts: list[HTML] = []
-    check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(
-            cmk.utils.paths.check_manpages_dir + "/" + part
-        ):
+        if part in known_checks:
             url = makeuri_contextless(
                 request,
                 [
@@ -869,3 +864,8 @@ def insert_manpage_links(text: str) -> HTML:
         else:
             new_parts.append(escape_to_html(part))
     return HTML(" ").join(new_parts)
+
+
+@request_memoize()
+def _get_known_checks() -> Container[str]:
+    return make_man_page_path_map(discover_families(raise_errors=False), PluginGroup.CHECKMAN.value)

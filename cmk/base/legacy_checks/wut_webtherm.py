@@ -133,15 +133,9 @@ check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-wut_webtherm_humidity_defaultlevels = (35, 40, 60, 65)
-
 
 def inventory_wut_webtherm_humidity(parsed):
-    return [
-        (sensor_id, wut_webtherm_humidity_defaultlevels)
-        for sensor_id, values in parsed.items()
-        if values["type"] == "humid"
-    ]
+    return [(sensor_id, {}) for sensor_id, values in parsed.items() if values["type"] == "humid"]
 
 
 def check_wut_webtherm_humidity(item, params, parsed):
@@ -156,6 +150,10 @@ check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_wut_webtherm_humidity,
     check_function=check_wut_webtherm_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (60.0, 65.0),
+        "levels_lower": (40.0, 35.0),
+    },
 )
 
 # .

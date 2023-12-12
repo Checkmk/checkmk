@@ -11,10 +11,10 @@
 #include <string>
 #include <utility>
 
+#include "livestatus/DynamicColumn.h"
 #include "livestatus/Row.h"
 
 class Column;
-class DynamicColumn;
 class Logger;
 class ICore;
 class Query;

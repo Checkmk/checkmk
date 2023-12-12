@@ -12,6 +12,9 @@ from xml.etree import ElementTree
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.memory import check_element
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -23,8 +26,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.memory import check_element
-from .utils.temperature import check_temperature, TempParamType
 
 PowerState = Literal[
     "P0",

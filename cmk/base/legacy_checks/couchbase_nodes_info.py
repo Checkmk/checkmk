@@ -6,7 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+
+from cmk.plugins.lib.couchbase import parse_couchbase_lines
 
 
 def check_couchbase_nodes_status(item, params, parsed):

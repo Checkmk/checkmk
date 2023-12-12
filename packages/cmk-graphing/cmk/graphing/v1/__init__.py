@@ -5,11 +5,6 @@
 
 from ._color import Color, RGB
 from ._localize import Localizable
-from ._unit import Unit
+from ._unit import PhysicalUnit, ScientificUnit, Unit
 
-__all__ = [
-    "Color",
-    "RGB",
-    "Localizable",
-    "Unit",
-]
+__all__ = ["Color", "RGB", "Localizable", "PhysicalUnit", "ScientificUnit", "Unit"]

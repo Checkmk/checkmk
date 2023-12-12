@@ -7,8 +7,9 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based import kube_cronjob_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import kube
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib import kube
+from cmk.plugins.lib.kube import (
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,

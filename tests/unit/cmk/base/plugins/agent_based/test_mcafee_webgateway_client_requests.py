@@ -16,7 +16,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based import mcafee_webgateway_client_requests as plugin
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils.mcafee_gateway import MISC_DEFAULT_PARAMS, MiscParams
+
+from cmk.plugins.lib.mcafee_gateway import MISC_DEFAULT_PARAMS, MiscParams
 
 SECTION_NAME = SectionName("mcafee_webgateway_client_requests")
 

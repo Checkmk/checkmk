@@ -224,7 +224,7 @@ metric_info["latencies_99"] = {
 metric_info["availability"] = {
     "title": _("Availability"),
     "unit": "%",
-    "color": "31",
+    "color": "31/a",
 }
 
 # TODO: Metric names with preceeding numbers seems not to be capable
@@ -305,18 +305,6 @@ metric_info["connections"] = {
     "title": _("Connections"),
     "unit": "count",
     "color": "#a080b0",
-}
-
-metric_info["idle_connections"] = {
-    "title": _("Idle connections"),
-    "unit": "count",
-    "color": "#a080f0",
-}
-
-metric_info["active_connections"] = {
-    "title": _("Active connections"),
-    "unit": "count",
-    "color": "#a020c0",
 }
 
 metric_info["failed_connections"] = {
@@ -751,37 +739,37 @@ metric_info["net_data_sent"] = {
 metric_info["total_modems"] = {
     "title": _("Total number of modems"),
     "unit": "count",
-    "color": "12/c",
+    "color": "12/a",
 }
 
 metric_info["active_modems"] = {
     "title": _("Active modems"),
     "unit": "count",
-    "color": "14/c",
+    "color": "14/a",
 }
 
 metric_info["registered_modems"] = {
     "title": _("Registered modems"),
     "unit": "count",
-    "color": "16/c",
+    "color": "16/a",
 }
 
 metric_info["channel_utilization"] = {
     "title": _("Channel utilization"),
     "unit": "%",
-    "color": "24/c",
+    "color": "24/a",
 }
 
 metric_info["channel_utilization_24ghz"] = {
     "title": _("Channel utilization for 2,4GHz Band"),
     "unit": "%",
-    "color": "25/c",
+    "color": "25/a",
 }
 
 metric_info["channel_utilization_5ghz"] = {
     "title": _("Channel utilization for 5GHz Band"),
     "unit": "%",
-    "color": "26/c",
+    "color": "26/a",
 }
 
 metric_info["connector_outlets"] = {
@@ -1419,13 +1407,13 @@ metric_info["connections_max"] = {
 metric_info["connections_conn_threads"] = {
     "title": _("Currently open connections"),
     "unit": "count",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_conn_threads"] = {
     "title": _("Open connections load"),
     "unit": "%",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_used"] = {
@@ -1485,13 +1473,13 @@ metric_info["read_retrans"] = {
 
 metric_info["read_avg_rtt_ms"] = {
     "title": _("Read average rtt"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
 metric_info["read_avg_exe_ms"] = {
     "title": _("Read average exe"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
@@ -1516,13 +1504,13 @@ metric_info["write_b_op"] = {
 
 metric_info["write_avg_rtt_ms"] = {
     "title": _("Write average rtt"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
 metric_info["write_avg_exe_ms"] = {
     "title": _("Write average exe"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
@@ -1800,7 +1788,7 @@ graph_info["total_and_open_slots"] = {
     "title": _("Total and open slots"),
     "metrics": [
         ("total_slots", "area"),
-        ("open_slots", "area"),
+        ("open_slots", "line"),
     ],
 }
 
@@ -1808,9 +1796,9 @@ graph_info["connections"] = {
     "title": _("Connections"),
     "metrics": [
         ("connections", "area"),
-        ("connections_async_writing", "area"),
-        ("connections_async_keepalive", "stack"),
-        ("connections_async_closing", "stack"),
+        ("connections_async_writing", "line"),
+        ("connections_async_keepalive", "line"),
+        ("connections_async_closing", "line"),
     ],
     "optional_metrics": [
         "connections_async_writing",
@@ -1888,14 +1876,6 @@ graph_info["tcp_connection_states"] = {
     "optional_metrics": ["tcp_bound", "tcp_idle"],
 }
 
-graph_info["db_connections"] = {
-    "title": _("DB Connections"),
-    "metrics": [("active_connections", "area"), ("idle_connections", "area")],
-    "scalars": [
-        ("active_connections:warn", _("Warning (active connections)")),
-        ("active_connections:crit", _("Critical (active connections)")),
-    ],
-}
 
 graph_info["cluster_hosts"] = {
     "title": _("Hosts"),
@@ -1930,8 +1910,8 @@ graph_info["access_point_statistics"] = {
     "title": _("Access point statistics"),
     "metrics": [
         ("ap_devices_total", "area"),
-        ("ap_devices_drifted", "area"),
-        ("ap_devices_not_responding", "stack"),
+        ("ap_devices_drifted", "line"),
+        ("ap_devices_not_responding", "line"),
     ],
 }
 
@@ -1951,8 +1931,8 @@ graph_info["wifi_connections"] = {
 graph_info["round_trip_average"] = {
     "title": _("Round trip average"),
     "metrics": [
-        ("rtmax", "area"),
-        ("rtmin", "area"),
+        ("rtmax", "line"),
+        ("rtmin", "line"),
         ("rta", "line"),
     ],
     "scalars": [
@@ -1978,8 +1958,8 @@ def register_hop_graphs():
         graph_info["hop_%d_round_trip_average" % idx] = {
             "title": _("Hop %d Round trip average") % idx,
             "metrics": [
-                ("hop_%d_rtmax" % idx, "area"),
-                ("hop_%d_rtmin" % idx, "area"),
+                ("hop_%d_rtmax" % idx, "line"),
+                ("hop_%d_rtmin" % idx, "line"),
                 ("hop_%d_rta" % idx, "line"),
                 ("hop_%d_rtstddev" % idx, "line"),
             ],
@@ -2132,8 +2112,8 @@ graph_info["web_gateway_miscellaneous_statistics"] = {
 graph_info["DB_connections"] = {
     "title": _("Parallel connections"),
     "metrics": [
-        ("connections_max_used", "area"),
-        ("connections_conn_threads", "area"),
+        ("connections_max_used", "line"),
+        ("connections_conn_threads", "line"),
         ("connections_max", "line"),
     ],
 }
@@ -2141,8 +2121,8 @@ graph_info["DB_connections"] = {
 graph_info["http_errors"] = {
     "title": _("HTTP Errors"),
     "metrics": [
-        ("http_5xx_rate", "area"),
-        ("http_4xx_rate", "area"),
+        ("http_5xx_rate", "line"),
+        ("http_4xx_rate", "line"),
     ],
 }
 
@@ -2163,7 +2143,7 @@ graph_info["nodes_by_type"] = {
     "title": _("Running nodes by nodes type"),
     "metrics": [
         ("number_of_nodes", "area"),
-        ("number_of_data_nodes", "area"),
+        ("number_of_data_nodes", "line"),
     ],
 }
 graph_info["channel_utilization_24ghz"] = {

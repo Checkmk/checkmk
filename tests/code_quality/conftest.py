@@ -15,7 +15,7 @@ class ChangedFiles(NamedTuple):
     file_paths: Collection[Path]
 
     def is_changed(self, path: Path) -> bool:
-        return self.test_all_files or str(path) in self.file_paths
+        return self.test_all_files or path in self.file_paths
 
 
 def pytest_addoption(parser):

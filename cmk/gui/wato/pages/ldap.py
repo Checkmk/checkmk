@@ -7,10 +7,9 @@
 import re
 from collections.abc import Collection
 
-import cmk.utils.version as cmk_version
-
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -61,9 +60,6 @@ from cmk.gui.wato.pages.userdb_common import (
     render_connections_page,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 from ._password_store_valuespecs import MigrateNotUpdatedToIndividualOrStoredPassword
 
@@ -163,8 +159,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         general_elements += [id_element]
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
-            general_elements += managed.customer_choice_element()
+        general_elements += customer_api().customer_choice_element()
 
         general_elements += rule_option_elements()
 
@@ -822,13 +817,12 @@ class ModeEditLDAPConnection(WatoMode):
         html.open_tr()
 
         html.open_td()
-        html.begin_form("connection", method="POST")
-        html.prevent_password_auto_completion()
-        vs = self._valuespec()
-        vs.render_input("connection", self._connection_cfg)
-        vs.set_focus("connection")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("connection", method="POST"):
+            html.prevent_password_auto_completion()
+            vs = self._valuespec()
+            vs.render_input("connection", self._connection_cfg)
+            vs.set_focus("connection")
+            html.hidden_fields()
         html.close_td()
 
         html.open_td(style="padding-left:10px;vertical-align:top")

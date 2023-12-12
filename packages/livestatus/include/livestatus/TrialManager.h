@@ -11,8 +11,6 @@
 #include <filesystem>
 #include <string>
 
-#include "livestatus/ChronoUtils.h"
-
 class TrialManager {
     const std::chrono::system_clock::time_point state_file_created_;
     const bool is_licensed_;
@@ -22,7 +20,7 @@ public:
                  bool is_licensed)
         : state_file_created_{state_file_created}, is_licensed_{is_licensed} {}
 
-    constexpr static auto trialPeriod() { return mk::days{30}; }
+    constexpr static auto trialPeriod() { return std::chrono::days{30}; }
 
     constexpr static size_t maxServicesInTrialPeriod() { return 750; }
 

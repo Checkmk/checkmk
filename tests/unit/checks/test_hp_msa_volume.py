@@ -10,7 +10,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 

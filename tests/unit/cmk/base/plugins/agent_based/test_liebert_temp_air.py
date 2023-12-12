@@ -26,8 +26,9 @@ from cmk.base.plugins.agent_based.liebert_temp_air import (
     parse_liebert_temp_air,
     ParsedSection,
 )
-from cmk.base.plugins.agent_based.utils.liebert import SystemSection
-from cmk.base.plugins.agent_based.utils.temperature import TempParamDict, TrendComputeDict
+
+from cmk.plugins.lib.liebert import SystemSection
+from cmk.plugins.lib.temperature import TempParamDict, TrendComputeDict
 
 STRING_TABLE = [
     [

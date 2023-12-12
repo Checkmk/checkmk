@@ -68,10 +68,10 @@ def main() {
 
     def branch_name = versioning.safe_branch_name(scm);
 
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_FOLDER);
-    def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// Get the ID of the docker group from the node(!). This must not be
     /// executed inside the container (as long as the IDs are different)
@@ -131,7 +131,7 @@ def main() {
         }
     }
 
-    /// NOTE: the images referenced in the next step can only be concidered
+    /// NOTE: the images referenced in the next step can only be considered
     ///       up to date if the same node is being used as for the
     ///       `build-build-images` job. For some reasons we can't just pull the
     ///       latest image though, see
@@ -317,19 +317,26 @@ def main() {
     }
     parallel package_builds;
 
-    stage("Upload") {
+    conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
+        def exclude_pattern = versioning.get_internal_distros_pattern()
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
-                    INTERNAL_DEPLOY_PORT, cmk_version_rc_aware, "${WORKSPACE}/versions/${cmk_version_rc_aware}")
+                    INTERNAL_DEPLOY_PORT,
+                    cmk_version_rc_aware,
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}",
+                    "*",
+                    "all packages",
+                    exclude_pattern,
+                )
                 artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
                 if (deploy_to_website) {
                     artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }
@@ -448,7 +455,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def ext_files = "robotmk_ext.exe"
         def check_sql = "check-sql.exe"
         def hashes_file = "windows_files_hashes.txt"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {

@@ -483,8 +483,7 @@ bool InstallService(const wchar_t *service_name, const wchar_t *display_name,
         auto error = GetLastError();
         if (error == ERROR_SERVICE_EXISTS) {
             XLOG::l(XLOG::kStdio)
-                .crit("The Service '{}' already exists",
-                      wtools::ToUtf8(service_name));
+                .crit("The Service '{}' already exists", ToUtf8(service_name));
             return false;
         }
         XLOG::l(XLOG::kStdio).crit("CreateService failed w/err {}", error);
@@ -555,7 +554,7 @@ bool UninstallService(const wchar_t *service_name,
         XLOG::l(XLOG::kStdio).crit("Parameter is null");
         return false;
     }
-    auto name = wtools::ToUtf8(service_name);
+    auto name = ToUtf8(service_name);
     // Open the local default service control manager database
     const SC_HANDLE service_manager =
         ::OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
@@ -751,14 +750,12 @@ void ServiceController::Pause() {
         // Tell SCM that the service is paused.
         setServiceStatus(SERVICE_PAUSED);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Pause");
 
         // Tell SCM that the service is still running.
         setServiceStatus(SERVICE_RUNNING);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to pause.");
 
@@ -786,14 +783,12 @@ void ServiceController::Continue() {
         // Tell SCM that the service is running.
         setServiceStatus(SERVICE_RUNNING);
     } catch (const DWORD &error_exception) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           error_exception, L"Service Continue");
 
         // Tell SCM that the service is still paused.
         setServiceStatus(SERVICE_PAUSED);
     } catch (...) {
-        // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
                           0, L"Service failed to continue.");
 
@@ -934,7 +929,7 @@ std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view key) {
         return {};
     }
 
-    for (const auto reg_type :
+    for (auto &&reg_type :
          {PerfCounterReg::national, PerfCounterReg::english}) {
         auto counter_str = ReadPerfCounterKeyFromRegistry(reg_type);
         auto *data = counter_str.data();
@@ -1051,13 +1046,7 @@ DataSequence ReadPerformanceDataFromRegistry(
     BYTE *buffer = nullptr;
 
     while (true) {
-        try {
-            buffer = new BYTE[buf_size];
-        } catch (...) {
-            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
-                    buf_size);
-            return {};
-        }
+        buffer = new BYTE[buf_size];
 
         DWORD type = 0;
         auto ret =
@@ -3102,7 +3091,7 @@ bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
 std::vector<char> ReadFromHandle(HANDLE handle) {
     std::vector<char> buf;
     while (true) {
-        const auto read_count = wtools::DataCountOnHandle(handle);
+        const auto read_count = DataCountOnHandle(handle);
         if (read_count == 0) {  // no data or error
             break;
         }
@@ -3114,7 +3103,7 @@ std::vector<char> ReadFromHandle(HANDLE handle) {
 }
 
 std::string RunCommand(std::wstring_view cmd) {
-    wtools::AppRunner ar;
+    AppRunner ar;
     const auto ret = ar.goExecAsJob(cmd);
     if (ret == 0) {
         XLOG::d("Failed to run '{}'", ToUtf8(cmd));
@@ -3460,7 +3449,7 @@ InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
         return it->second;
     }
 
-    auto iu = wtools::CreateCmaUserInGroup(group_name);
+    auto iu = CreateCmaUserInGroup(group_name);
     if (iu.first.empty()) {
         return {};
     }

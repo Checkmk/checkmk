@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.version import edition_supports_nagvis
+
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MegaMenuRegistry
 from cmk.gui.pages import PageRegistry
@@ -43,6 +45,8 @@ from . import (
     filters,
     pages,
 )
+from ._notification_parameter import NotificationParameterRegistry
+from ._notification_parameter import registration as _notification_parameter_registration
 from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .pages._rule_conditions import PageAjaxDictHostTagConditionGetChoice
@@ -79,6 +83,7 @@ def register(
     mega_menu_registry: MegaMenuRegistry,
     ac_test_registry: ACTestRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    notification_parameter_registry: NotificationParameterRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -112,7 +117,9 @@ def register(
     )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
-    _nagvis_auth.register(permission_section_registry, permission_registry)
+    if edition_supports_nagvis():
+        _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     _notification_settings.register(config_variable_registry)
+    _notification_parameter_registration.register(notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)

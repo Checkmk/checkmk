@@ -6,12 +6,13 @@
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.aruba_wlc_clients import parse_aruba_wlc_clients
-from cmk.base.plugins.agent_based.utils.wlc_clients import ClientsTotal, VsResult, WlcClientsSection
 from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.wlc_clients import ClientsTotal, VsResult, WlcClientsSection
 
 # raw data looks like this:
 # TODO: we should use this as test input

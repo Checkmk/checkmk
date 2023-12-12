@@ -18,6 +18,7 @@ XINETD_INSTALL := $(BUILD_HELPER_DIR)/$(XINETD_DIR)-install
 
 XINETD_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XINETD_DIR)
 
+.PHONY: $(XINETD_BUILD)
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_BUILD):
 	$(BAZEL_BUILD) @xinetd//:xinetd
@@ -27,7 +28,7 @@ endif
 #ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 #	$(MKDIR) $(XINETD_INSTALL_DIR)/bin
 #	install -m 755 $(XINETD_BUILD_DIR)/xinetd $(XINETD_INSTALL_DIR)/bin
-#	
+#
 #	$(MKDIR) $(XINETD_INSTALL_DIR)/share/man/man5
 #	install -m 644 $(XINETD_BUILD_DIR)/man/xinetd.log.5 $(XINETD_INSTALL_DIR)/share/man/man5
 #	install -m 644 $(XINETD_BUILD_DIR)/man/xinetd.conf.5 $(XINETD_INSTALL_DIR)/share/man/man5
@@ -44,14 +45,13 @@ endif
 #	$(TOUCH) $@
 #endif
 
+.PHONY: $(XINETD_INSTALL)
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_INSTALL): $(XINETD_BUILD)
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(XINETD)/$(XINETD)/ $(DESTDIR)$(OMD_ROOT)/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/doc/xinetd/*
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/man/man5/xinetd.*
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/man/man8/xinetd.8
-	$(TOUCH) $@
 else
 $(XINETD_INSTALL):
-	$(TOUCH) $@
 endif

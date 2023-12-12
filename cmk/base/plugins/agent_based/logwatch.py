@@ -26,13 +26,13 @@ from typing import Any, IO, Literal
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
+from cmk.plugins.lib import eval_regex
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import eval_regex, logwatch
+from .utils import logwatch
 
 AllParams = Sequence[Mapping[str, Any]]
 
@@ -84,11 +84,10 @@ def discover_logwatch_single(
     params: AllParams,
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
 
     for logfile in not_forwarded_logs:
@@ -102,11 +101,10 @@ def discover_logwatch_groups(
     params: AllParams,
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
     inventory: dict[str, set[GroupingPattern]] = {}
 
@@ -140,12 +138,12 @@ def check_logwatch(
         logwatch.get_unreadable_logfiles(item, section), State.CRIT
     )
 
-    value_store = get_value_store()
+    seen_batches = logwatch.update_seen_batches(get_value_store(), section, [item])
 
     loglines: list[str] = sum(
         (
-            logwatch.extract_unseen_lines(value_store, node_data.logfiles[item]["lines"])
-            for node, node_data in section.items()
+            logwatch.extract_unseen_lines(node_data.logfiles[item]["lines"], seen_batches)
+            for node_data in section.values()
             if item in node_data.logfiles
         ),
         [],
@@ -280,17 +278,18 @@ def check_logwatch_groups(
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
 
-    group_patterns = set(params["group_patterns"])
-
     value_store = get_value_store()
-    loglines = []
-    # node name ignored (only used in regular logwatch check)
-    for node_data in section.values():
-        for logfile_name, item_data in node_data.logfiles.items():
-            for inclusion, exclusion in group_patterns:
-                if _match_group_patterns(logfile_name, inclusion, exclusion):
-                    loglines.extend(logwatch.extract_unseen_lines(value_store, item_data["lines"]))
-                break
+    matching_files = _get_matching_logfiles(set(params["group_patterns"]), section)
+    seen_batches = logwatch.update_seen_batches(value_store, section, matching_files)
+
+    loglines = [
+        line
+        # node name ignored (only used in regular logwatch check)
+        for node_data in section.values()
+        for logfile_name, item_data in node_data.logfiles.items()
+        if logfile_name in matching_files
+        for line in logwatch.extract_unseen_lines(item_data["lines"], seen_batches)
+    ]
 
     yield from check_logwatch_generic(
         item=item,
@@ -299,6 +298,20 @@ def check_logwatch_groups(
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
     )
+
+
+def _get_matching_logfiles(
+    group_patterns: set[GroupingPattern], section: ClusterSection
+) -> list[str]:
+    return [
+        logfile_name
+        for node_data in section.values()
+        for logfile_name in node_data.logfiles
+        if any(
+            _match_group_patterns(logfile_name, inclusion, exclusion)
+            for inclusion, exclusion in group_patterns
+        )
+    ]
 
 
 def cluster_check_logwatch_groups(

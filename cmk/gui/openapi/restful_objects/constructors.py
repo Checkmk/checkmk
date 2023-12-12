@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import contextlib
+
 import hashlib
 import re
 from http import HTTPStatus
@@ -15,8 +15,7 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
-from cmk.gui.livestatus_utils.testing import mock_site
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
     CollectionItem,
     CollectionObject,
@@ -33,46 +32,7 @@ from cmk.gui.openapi.utils import EXT, ProblemException
 ETagHash = NewType("ETagHash", str)
 
 
-@contextlib.contextmanager
-def _request_context(secure=True):
-    from werkzeug.test import create_environ
-
-    from cmk.gui.utils.script_helpers import application_and_request_context
-
-    if secure:
-        protocol = "https"
-    else:
-        protocol = "http"
-    # Previous tests already set the site to "heute", which makes this test fail.
-    omd_site.cache_clear()
-    with mock_site(), application_and_request_context(
-        create_environ(base_url=f"{protocol}://localhost:5000/")
-    ):
-        yield
-
-
 def absolute_url(href):
-    """Give an absolute URL.
-
-    Examples:
-
-        This function has to be used within a request context.
-
-        >>> with _request_context(secure=False):
-        ...     absolute_url("objects/host_config/example.com")
-        'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
-
-        >>> with _request_context(secure=True):
-        ...     absolute_url("objects/host_config/example.com")
-        'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
-
-    Args:
-        href:
-
-    Returns:
-        An absolute URL.
-
-    """
     if href.startswith("/"):
         href = href.lstrip("/")
 
@@ -116,21 +76,6 @@ def link_rel(
         parameters:
             (Optional) Parameters for the rel-value. e.g. rel='foo', parameters={'baz': 'bar'}
             will result in a rel-value of 'foo;baz="bar"'
-
-    Examples:
-
-        >>> expected = {
-        ...     'domainType': 'link',
-        ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-        ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/update',
-        ...     'title': 'Update the object',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/foo/update'
-        ... }
-        >>> with _request_context():
-        ...     link = link_rel('.../update', '/objects/foo/update',
-        ...                     method='get', profile='.../object', title='Update the object')
-        >>> assert link == expected, link
 
     Returns:
         A dict representing the link
@@ -232,22 +177,7 @@ def require_etag(
 
 
 def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
-    """A action description to be used as an object member.
-
-    Examples:
-
-        >>> with _request_context():
-        ...     action = object_action('move', {'from': 'to'}, '')
-        >>> assert len(action['links']) > 0
-
-    Args:
-        name:
-        parameters:
-        base:
-
-    Returns:
-
-    """
+    """An action description to be used as an object member"""
 
     return {
         "id": name,
@@ -285,25 +215,6 @@ def object_collection(
 
         base:
             The base-level URI. May be an object's URI for example
-
-    Examples:
-        >>> expected = {
-        ...     'id': 'all',
-        ...     'memberType': 'collection',
-        ...     'value': [],
-        ...     'links': [
-        ...         {
-        ...             'rel': 'self',
-        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all',
-        ...             'method': 'GET',
-        ...             'type': 'application/json',
-        ...             'domainType': 'link',
-        ...         }
-        ...     ]
-        ... }
-        >>> with _request_context():
-        ...     result = object_collection('all', 'host', [], '')
-        >>> assert result == expected, result
 
     Returns:
         The object_collection structure.
@@ -421,18 +332,6 @@ def collection_property(  # type: ignore[no-untyped-def]
 
         base:
             The base url, i.e. the URL under which the collection is located.
-
-        >>> with _request_context(secure=False):
-        ...     _base = '/objects/host_config/example.com'
-        ...     _hosts = [{'name': 'host1'}, {'name': 'host2'}]
-        ...     collection_property('hosts', _hosts, _base)
-        {'id': 'hosts', 'memberType': 'collection', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
-'links': [{'rel': 'self', \
-'href': 'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/collections/hosts', \
-'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
-
-    Returns:
-
     """
     return {
         "id": name,
@@ -822,7 +721,7 @@ def link_endpoint(
             "/foo/{baz}" rendered to "/foo/bar", this mapping should be {'baz': 'bar'}.
 
     """
-    endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
+    endpoint = endpoint_registry.lookup(module_name, rel, parameters)
     return link_rel(
         href=endpoint["endpoint"].make_url(parameters),
         rel=endpoint["rel"],
@@ -851,20 +750,6 @@ def collection_item(
         collection_name:
             The name of the collection. Domain types can have multiple collections, this enables
             us to link to the correct one properly.
-
-    Examples:
-
-        >>> expected = {
-        ...     'domainType': 'link',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/folder_config/3',
-        ...     'method': 'GET',
-        ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
-        ...     'title': 'Foo',
-        ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
-        ... }
-        >>> with _request_context():
-        ...     res = collection_item('folder_config', identifier="3", title='Foo')
-        >>> assert res == expected, res
 
     Returns:
         A dict representation of the collection link-entry.

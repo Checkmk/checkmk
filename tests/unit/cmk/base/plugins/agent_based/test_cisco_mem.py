@@ -7,7 +7,6 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_mem import (
@@ -16,6 +15,8 @@ from cmk.base.plugins.agent_based.cisco_mem import (
     parse_cisco_mem,
     Section,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(
@@ -161,12 +162,12 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     import os
 
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
         [
             "--doctest-modules",
-            os.path.join(cmk_path(), "cmk/base/plugins/agent_based/cisco_mem_asa.py"),
+            os.path.join(repo_path(), "cmk/base/plugins/agent_based/cisco_mem_asa.py"),
         ]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

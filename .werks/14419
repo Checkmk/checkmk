@@ -1,4 +1,4 @@
-Title: <tt>cisco_cpu_multiitem</tt>, <tt>cisco_fru_module_status</tt>: Fix crash in raw data parsing
+Title: cisco_cpu_multiitem, cisco_fru_module_status: Fix crash in raw data parsing
 Class: fix
 Compatible: compat
 Component: checks

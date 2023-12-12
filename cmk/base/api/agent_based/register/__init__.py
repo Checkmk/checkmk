@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-
-from cmk.base.api.agent_based.register._config import (
+from ._config import (
     add_check_plugin,
     add_discovery_ruleset,
     add_host_label_ruleset,
@@ -38,16 +34,7 @@ from cmk.base.api.agent_based.register._config import (
     set_discovery_ruleset,
     set_host_label_ruleset,
 )
-
-
-def load_all_plugins() -> list[str]:
-    errors = []
-    for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
-        errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
-        if cmk.utils.debug.enabled():
-            raise exception
-    return errors
-
+from ._discover import load_all_plugins, register_plugin_by_type
 
 __all__ = [
     "add_check_plugin",
@@ -78,6 +65,7 @@ __all__ = [
     "len_snmp_sections",
     "load_all_plugins",
     "needs_redetection",
+    "register_plugin_by_type",
     "set_discovery_ruleset",
     "set_host_label_ruleset",
 ]

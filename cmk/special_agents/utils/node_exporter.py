@@ -388,7 +388,7 @@ class NodeExporter:
         return {
             sample["labels"]["instance"]: _create_section(
                 "prometheus_uptime_v1:sep(0)",
-                [Uptime.parse_obj({"seconds": sample["value"]}).json()],
+                [Uptime.model_validate({"seconds": sample["value"]}).model_dump_json()],
             )
             for sample in uptime_samples
         }
@@ -405,7 +405,9 @@ class NodeExporter:
                 raw = node_to_raw.setdefault(instance, {})
                 raw[key] = sample["value"]
         return {
-            node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
+            node: _create_section(
+                "prometheus_cpu_v1:sep(0)", [CPULoad.model_validate(raw).model_dump_json()]
+            )
             for node, raw in node_to_raw.items()
         }
 

@@ -7,7 +7,15 @@ import sys
 from typing import Final
 
 import cmk.utils.paths
-from cmk.utils.packaging import (
+import cmk.utils.store
+from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.version import __version__, parse_check_mk_version
+from cmk.utils.visuals import invalidate_visuals_cache
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
+from cmk.mkp_tool import (
     cli,
     make_post_package_change_actions,
     PackageOperationCallbacks,
@@ -15,18 +23,15 @@ from cmk.utils.packaging import (
     PathConfig,
     reload_apache,
 )
-from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import __version__
-from cmk.utils.visuals import invalidate_visuals_cache
-
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 _PATH_CONFIG = PathConfig(
+    cmk_plugins_dir=plugins_local_path(),
+    cmk_addons_plugins_dir=addons_plugins_local_path(),
     agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
     agents_dir=cmk.utils.paths.local_agents_dir,
     alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
     bin_dir=cmk.utils.paths.local_bin_dir,
-    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+    check_manpages_dir=cmk.utils.paths.local_legacy_check_manpages_dir,
     checks_dir=cmk.utils.paths.local_checks_dir,
     doc_dir=cmk.utils.paths.local_doc_dir,
     gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
@@ -46,13 +51,26 @@ _PATH_CONFIG = PathConfig(
     web_dir=cmk.utils.paths.local_web_dir,
 )
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
+
+_SITE_CONTEXT: Final = cli.SiteContext(
+    callbacks={
+        PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
+            install=ec.install_packaged_rule_packs,
+            uninstall=ec.uninstall_packaged_rule_packs,
+            release=ec.release_packaged_rule_packs,
+        ),
+    },
+    post_package_change_actions=make_post_package_change_actions(
+        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
+        ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
+        (
+            (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
+            request_index_rebuild,
+        ),
     ),
-}
+    version=__version__,
+    parse_version=parse_check_mk_version,
+)
 
 
 if __name__ == "__main__":
@@ -60,15 +78,7 @@ if __name__ == "__main__":
         cli.main(
             sys.argv[1:] or ["--help"],
             _PATH_CONFIG,
-            _CALLBACKS,
-            __version__,
-            make_post_package_change_actions(
-                ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-                ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
-                (
-                    (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
-                    request_index_rebuild,
-                ),
-            ),
+            _SITE_CONTEXT,
+            cmk.utils.store.save_bytes_to_file,
         )
     )

@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     TableRow,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import bonding, interfaces
+
+from cmk.plugins.lib import bonding, interfaces
 
 
 @pytest.mark.parametrize(

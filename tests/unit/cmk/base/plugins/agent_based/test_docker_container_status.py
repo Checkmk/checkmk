@@ -18,8 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils import uptime
-from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
+from cmk.plugins.lib import uptime
+from cmk.plugins.lib.docker import AgentOutputMalformatted
 
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
@@ -206,7 +207,7 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
             {},
             PARSED,
             [
-                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Up since 2019-06-05 08:58:07"),
                 Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
@@ -215,7 +216,7 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
             {"min": (1000, 2000)},
             PARSED,
             [
-                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Up since 2019-06-05 08:58:07"),
                 Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
                 Metric("uptime", 3713.0),
             ],
@@ -224,7 +225,7 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
             {"max": (1000, 2000)},
             PARSED,
             [
-                Result(state=State.OK, summary="Up since Jun 05 2019 08:58:07"),
+                Result(state=State.OK, summary="Up since 2019-06-05 08:58:07"),
                 Result(
                     state=State.CRIT,
                     summary="Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)",

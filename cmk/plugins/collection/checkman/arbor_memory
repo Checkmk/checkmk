@@ -1,0 +1,19 @@
+title: Arbor Peakflow: Memory and Swap
+agents: snmp
+catalog: hw/network/arbor
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors memory and swap space on Arbor Peakflow, Peakflow SP and Peakflow TMS devices.
+
+ {WARN}/{CRIT} levels can be configured through the rule
+ "Memory and Swap usage on Arbor devices".
+
+ The service goes {WARN}/{CRIT} if the space exceeds these levels.
+
+ The device reports more detailed memory statistics in a generic
+ MIB handled by hr_mem but that info is not officially supported
+ and seems to report wrong data.
+
+discovery:
+ One service is created.

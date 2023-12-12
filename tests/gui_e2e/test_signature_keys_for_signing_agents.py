@@ -9,15 +9,15 @@ import time
 from collections.abc import Callable, Iterator
 
 import pytest
-from playwright._impl import _api_types
 from playwright.sync_api import expect, FilePayload
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import Site
 
-from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.types import HashAlgorithm
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def delete_key(page: PPage, identifier: str | None = None) -> None:
         for row in page.main_area.locator(f"{locator}").all():
             row.locator("td.buttons >> a[title='Delete this key']").click()
             page.main_area.locator("#page_menu_popups").locator("button.swal2-confirm").click()
-    except _api_types.TimeoutError:
+    except PWTimeoutError:
         pass
 
 

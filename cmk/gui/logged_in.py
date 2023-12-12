@@ -16,6 +16,7 @@ from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Version
@@ -115,6 +116,9 @@ class LoggedInUser:
 
     def reset_language(self) -> None:
         self._unset_attribute("language")
+
+    def is_automation_user(self) -> bool:
+        return AutomationUserSecret(self.ident).exists()
 
     @property
     def show_mode(self) -> str:

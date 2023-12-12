@@ -8,7 +8,6 @@
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
-#include <string_view>
 #include <utility>
 
 #include "livestatus/Logger.h"
@@ -46,21 +45,8 @@ void OutputBuffer::flush() {
     writeData(_os);
 }
 
-namespace {
-// TODO(sp) This cruel and slightly non-portable hack avoids copying, which
-// is important. Note that UBSan rightly complains about it. We could do
-// better with C++20 via os.view().
-std::string_view toStringView(std::ostringstream &os) {
-    struct Hack : public std::stringbuf {
-        [[nodiscard]] const char *base() const { return pbase(); }
-    };
-    return {static_cast<Hack *>(os.rdbuf())->base(),
-            static_cast<size_t>(os.tellp())};
-}
-}  // namespace
-
 void OutputBuffer::writeData(std::ostringstream &os) {
-    if (writeWithTimeoutWhile(_fd, toStringView(os), 100ms,
+    if (writeWithTimeoutWhile(_fd, os.view(), 100ms,
                               [this]() { return !shouldTerminate(); }) == -1) {
         const generic_error ge{"cannot write to client socket"};
         Informational(_logger) << ge;

@@ -24,12 +24,12 @@ info = [
 
 discovery = {
     "": [
-        ("CEHV_ENT_CCS", None),
-        ("MPS_ENT_CCU", None),
-        ("PVSD_STD_CCS", None),
-        ("PVS_STD_CCS", None),
-        ("XDS_ENT_CCS", None),
-        ("XDT_ENT_UD", None),
+        ("CEHV_ENT_CCS", {}),
+        ("MPS_ENT_CCU", {}),
+        ("PVSD_STD_CCS", {}),
+        ("PVS_STD_CCS", {}),
+        ("XDS_ENT_CCS", {}),
+        ("XDT_ENT_UD", {}),
     ]
 }
 
@@ -38,17 +38,17 @@ checks = {
     "": [
         (
             "CEHV_ENT_CCS",
-            None,
+            {"levels": ("crit_on_all", None)},
             [(0, "used 0 out of 22 licenses", [("licenses", 0, 22, 22, 0, 22)])],
         ),
         (
             "MPS_ENT_CCU",
-            {},
+            {"levels": ("crit_on_all", None)},
             [(0, "used 1658 out of 2182 licenses", [("licenses", 1658, 2182, 2182, 0, 2182)])],
         ),
         (
             "PVSD_STD_CCS",
-            (10.0, 0.0),
+            {"levels": ("percentage", (10.0, 0.0))},
             [
                 (
                     1,
@@ -59,7 +59,7 @@ checks = {
         ),
         (
             "PVS_STD_CCS",
-            (5, 0),
+            {"levels":("absolute", (5, 0))},
             [
                 (
                     1,
@@ -68,10 +68,10 @@ checks = {
                 )
             ],
         ),
-        ("XDS_ENT_CCS", {}, [(0, "used 0 out of 22 licenses", [("licenses", 0, 22, 22, 0, 22)])]),
+        ("XDS_ENT_CCS", {"levels": ("crit_on_all", None)}, [(0, "used 0 out of 22 licenses", [("licenses", 0, 22, 22, 0, 22)])]),
         (
             "XDT_ENT_UD",
-            {},
+            {"levels": ("crit_on_all", None)},
             [
                 (
                     2,

@@ -8,7 +8,6 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -23,6 +22,8 @@ from cmk.base.plugins.agent_based.oracle_crs_res import (
     Resource,
     Section,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 _STRING_TABLE_BOTH_OFFLINE = [
     ["nodename", "ezszds8q"],
@@ -93,6 +94,25 @@ def test_parse(section: Section) -> None:
         },
     )
     assert section == expected_section
+
+
+def test_parse_ignores_additional_enable_attribute() -> None:
+    string_table = [
+        ["nodename", "lllllllll"],
+        ["csslocal", "NAME=ooo.ooooooooooooo.oo"],
+        ["csslocal", "TYPE=rrr.rrrrrrrrr.rrrr"],
+        ["csslocal", "ENABLED=1"],
+        ["csslocal", "STATE=ONLINE"],
+        ["csslocal", "TARGET=ONLINE"],
+    ]
+    assert parse_oracle_crs_res(string_table) == Section(
+        crs_nodename="lllllllll",
+        resources={
+            "ooo.ooooooooooooo.oo": {
+                "csslocal": Resource(type="rrr.rrrrrrrrr.rrrr", state="ONLINE", target="ONLINE")
+            }
+        },
+    )
 
 
 def test_discover(section: Section) -> None:

@@ -11,9 +11,11 @@ XMLSEC1_INSTALL := $(BUILD_HELPER_DIR)/$(XMLSEC1_DIR)-install
 
 XMLSEC1_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XMLSEC1_DIR)
 
+.PHONY: $(XMLSEC1_BUILD)
 $(XMLSEC1_BUILD): $(XMLSEC1_UNPACK) $(OPENSSL_CACHE_PKG_PROCESS)
 	$(BAZEL_BUILD) @xmlsec1//:xmlsec1
 
+.PHONY: $(XMLSEC1_INSTALL)
 $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
 	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
 	patchelf --set-rpath "\$$ORIGIN/../lib" \
@@ -22,5 +24,3 @@ $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1.so.1" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1-openssl.so" \
 	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1-openssl.so.1"
-	$(TOUCH) $@
-

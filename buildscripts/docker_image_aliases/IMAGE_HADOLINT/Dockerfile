@@ -1,1 +1,1 @@
-FROM artifacts.lan.tribe29.com:4000/hadolint@sha256:c5ef4209a717b9824108c248a4a1ff09ff2d6b6d69aa96abb6285693867793d2
+FROM artifacts.lan.tribe29.com:4000/hadolint@sha256:886233f23f39c6066d3e23815e5dd47110585c3bc3eb601dbf5c7dcf88f79282

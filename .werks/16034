@@ -1,0 +1,19 @@
+Title: Visualization of rule search
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1701420250
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The visualization for the rule search has been updated to provide
+clearer indications of the displayed information.
+
+The previous green overlay highlighting has been replaced by an
+icon-based visualization.
+Ineffective rules are denoted with a negative icon whereas
+all other rule searches are marked with a green checkmark icon.
+
+It is now clearly separated whether you are matching for a host
+or searching for rules via the rule search.

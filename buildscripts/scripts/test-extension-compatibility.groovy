@@ -6,6 +6,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
 
     check_environment_variables([
         "DOCKER_TAG",
@@ -17,16 +18,14 @@ def main() {
                 docker_image_from_alias("IMAGE_TESTING").inside() {
                     sh("""
                         scripts/run-pipenv run \
-                          tests/extension_compatibility/output_extensions_sorted_by_downloads.py \
-                            | sed -n "1,\$(wc -l < tests/extension_compatibility/current_extensions_under_test.txt)p" \
-                            > /tmp/extension_compatibility.txt
+                          tests/extension_compatibility/output_popular_extensions.py > /tmp/extension_compatibility.txt
                         diff -u --color \
                             tests/extension_compatibility/current_extensions_under_test.txt \
                             /tmp/extension_compatibility.txt \
                         || { cat <<HERE && false
 
                         You can fix the above by running:
-                        pipenv run ./tests/extension_compatibility/output_extensions_sorted_by_downloads.py | head -n 10 > tests/extension_compatibility/current_extensions_under_test.txt
+                        pipenv run ./tests/extension_compatibility/output_popular_extensions.py > tests/extension_compatibility/current_extensions_under_test.txt
 
 
 HERE
@@ -48,7 +47,7 @@ HERE
             ""),   // FIXME was DOCKER_TAG_DEFAULT before
         MAKE_TARGET: "test-extension-compatibility-docker",
         BRANCH: branch_name,
-        cmk_version: versioning.get_cmk_version(branch_name, "daily"),
+        cmk_version: versioning.get_cmk_version(branch_name, branch_version, "daily"),
     );
 }
 return this;

@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec, renderer_registry
+from collections.abc import Mapping
+
+from cmk.gui.graphing import get_first_matching_perfometer, renderer_registry
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Perfdata, Row, TranslatedMetrics
+from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
 
 from .legacy_perfometers import perfometers, render_metricometer
@@ -18,7 +21,7 @@ class Perfometer:
 
         self._perf_data: Perfdata = []
         self._check_command: str = self._row["service_check_command"]
-        self._translated_metrics: TranslatedMetrics = {}
+        self._translated_metrics: Mapping[str, TranslatedMetric] = {}
 
         self._parse_perf_data()
 
@@ -61,7 +64,7 @@ class Perfometer:
         return self._render_legacy_perfometer()
 
     def _render_metrics_perfometer(self) -> tuple[str | None, HTML | None]:
-        perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
+        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
         if not perfometer_definition:
             return None, None
 
@@ -108,7 +111,7 @@ class Perfometer:
         return id(perf_painter_func)
 
     def _get_metrics_sort_group(self) -> int | None:
-        perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
+        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
         if not perfometer_definition:
             return None
 
@@ -140,29 +143,12 @@ class Perfometer:
         return None
 
     def _get_metrics_sort_value(self) -> float | None:
-        perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
+        perfometer_definition = get_first_matching_perfometer(self._translated_metrics)
         if not perfometer_definition:
             return None
 
         renderer = renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_sort_value()
-
-    def _get_perfometer_definition(
-        self, translated_metrics: TranslatedMetrics
-    ) -> PerfometerSpec | None:
-        """Returns the matching perfometer definition
-
-        Uses the metrics of the current row to gather perfometers that can be
-        rendered using these metrics. The first found perfometer definition
-        is used.
-
-        Returns None in case there is no matching definition found.
-        """
-        perfometer_definition = get_first_matching_perfometer(translated_metrics)
-        if not perfometer_definition:
-            return None
-
-        return perfometer_definition
 
     def _has_legacy_perfometer(self) -> bool:
         return self._check_command in perfometers

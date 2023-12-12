@@ -5,82 +5,78 @@
 
 #include <pthread.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/un.h>
 #include <unistd.h>
 
-#include <cerrno>
 #include <chrono>
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <ratio>
 #include <string>
+#include <vector>
 
 #include "livestatus/Poller.h"
 
 using namespace std::chrono_literals;
 
+constexpr size_t buffer_size = 65536;
+
 struct thread_info {
     int from;
     int to;
-    int should_shutdown;
-    int terminate_on_read_eof;
+    bool should_shutdown;
+    bool terminate_on_read_eof;
 };
 
-void printErrno(const std::string &msg) {
-    std::cerr << msg << ": " << strerror(errno) << "\n";
-}
+void printErrno(const std::string &msg) { ::perror(msg.c_str()); }
 
-ssize_t read_with_timeout(int from, char *buffer, int size,
+ssize_t read_with_timeout(int from, std::vector<char> &buffer,
                           std::chrono::microseconds timeout) {
     Poller poller;
     poller.addFileDescriptor(from, PollEvents::in);
     // Do not handle FD errors.
-    return poller.poll(timeout) > 0 ? ::read(from, buffer, size) : -2;
+    return poller.poll(timeout) > 0
+               ? ::read(from, buffer.data(), buffer.capacity())
+               : -2;
 }
 
 void *copy_thread(void *info) {
-    // https://llvm.org/bugs/show_bug.cgi?id=29089
-    signal(SIGWINCH, SIG_IGN);  // NOLINT
-
-    auto *ti = static_cast<thread_info *>(info);
-    const int from = ti->from;
-    const int to = ti->to;
-
-    char read_buffer[65536];
+    (void)signal(SIGWINCH, SIG_IGN);
+    const auto *tinfo = static_cast<thread_info *>(info);
+    std::vector<char> read_buffer(buffer_size);
     while (true) {
-        ssize_t r =
-            read_with_timeout(from, read_buffer, sizeof(read_buffer), 1s);
-        if (r == -1) {
-            printErrno("Error reading from " + std::to_string(from));
+        auto bytes_read = read_with_timeout(tinfo->from, read_buffer, 1s);
+        if (bytes_read == -1) {
+            printErrno("could not read from " + std::to_string(tinfo->from));
             break;
         }
-        if (r == 0) {
-            if (ti->should_shutdown != 0) {
-                shutdown(to, SHUT_WR);
+        if (bytes_read == 0) {
+            if (tinfo->should_shutdown) {
+                ::shutdown(tinfo->to, SHUT_WR);
             }
-            if (ti->terminate_on_read_eof != 0) {
-                exit(0);
-                return nullptr;
+            if (tinfo->terminate_on_read_eof) {
+                // NOLINTNEXTLINE(concurrency-mt-unsafe)
+                ::exit(0);
             }
             break;
         }
-        if (r == -2) {
-            r = 0;
+        if (bytes_read == -2) {
+            bytes_read = 0;
         }
 
-        const char *buffer = read_buffer;
-        size_t bytes_to_write = r;
+        const char *buffer = read_buffer.data();
+        size_t bytes_to_write = bytes_read;
         while (bytes_to_write > 0) {
-            const ssize_t bytes_written = ::write(to, buffer, bytes_to_write);
+            const ssize_t bytes_written =
+                ::write(tinfo->to, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                printErrno("Error: Cannot write " +
-                           std::to_string(bytes_to_write) + " bytes to " +
-                           std::to_string(to));
+                printErrno("cannot write " + std::to_string(bytes_to_write) +
+                           " bytes to " + std::to_string(tinfo->to));
                 break;
             }
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             buffer += bytes_written;
             bytes_to_write -= bytes_written;
         }
@@ -88,60 +84,55 @@ void *copy_thread(void *info) {
     return nullptr;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
+    std::vector<std::string> arguments{argv, argv + argc};
     if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " UNIX-socket\n";
-        exit(1);
+        std::cerr << "Usage: " << arguments[0] << " UNIX-socket\n";
+        return 1;
     }
 
-    // https://llvm.org/bugs/show_bug.cgi?id=29089
-    signal(SIGWINCH, SIG_IGN);  // NOLINT
-
-    const std::string unixpath = argv[1];
-    struct stat st;
-
-    if (0 != stat(unixpath.c_str(), &st)) {
-        std::cerr << "No UNIX socket " << unixpath << " existing\n";
-        exit(2);
-    }
-
+    (void)signal(SIGWINCH, SIG_IGN);
     const int sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
-        printErrno("Cannot create client socket");
-        exit(3);
+        printErrno("cannot create client socket");
+        return 1;
     }
 
-    /* Connect */
-    struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, unixpath.c_str(), sizeof(sockaddr.sun_path) - 1);
+    struct sockaddr_un sockaddr {
+        .sun_family = AF_UNIX, .sun_path = ""
+    };
+    auto unixpath = arguments[1];
+    unixpath.copy(&sockaddr.sun_path[0], sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
-    if (connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
-                sizeof(sockaddr)) != 0) {
-        printErrno("Couldn't connect to UNIX-socket at " + unixpath);
-        ::close(sock);
-        exit(4);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (::connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
+                  sizeof(sockaddr)) != 0) {
+        printErrno("cannot connect to UNIX-socket at '" + unixpath + "'");
+        return 1;
     }
 
-    thread_info toleft_info = {sock, 1, 0, 1};
-    thread_info toright_info = {0, sock, 1, 0};
-    pthread_t toright_thread{};
-    pthread_t toleft_thread{};
-    if (pthread_create(&toright_thread, nullptr, copy_thread, &toright_info) !=
-            0 ||
-        pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=
+    thread_info toleft_info = {.from = sock,
+                               .to = 1,
+                               .should_shutdown = false,
+                               .terminate_on_read_eof = true};
+    thread_info toright_info = {.from = 0,
+                                .to = sock,
+                                .should_shutdown = true,
+                                .terminate_on_read_eof = false};
+    ::pthread_t toright_thread{};
+    ::pthread_t toleft_thread{};
+    if (::pthread_create(&toright_thread, nullptr, copy_thread,
+                         &toright_info) != 0 ||
+        ::pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=
             0) {
-        printErrno("Couldn't create threads");
-        ::close(sock);
-        exit(5);
+        printErrno("cannot create threads");
+        return 1;
     }
-    if (pthread_join(toleft_thread, nullptr) != 0 ||
-        pthread_join(toright_thread, nullptr) != 0) {
-        printErrno("Couldn't join threads");
-        ::close(sock);
-        exit(6);
+    if (::pthread_join(toleft_thread, nullptr) != 0 ||
+        ::pthread_join(toright_thread, nullptr) != 0) {
+        printErrno("cannot join threads");
+        return 1;
     }
 
-    ::close(sock);
     return 0;
 }

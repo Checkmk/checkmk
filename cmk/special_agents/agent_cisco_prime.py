@@ -17,7 +17,7 @@ import urllib3
 
 from cmk.utils import password_store
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {

@@ -46,34 +46,40 @@ TEST(Extensions, FindBinary) {
 /// Test may require a lot of time to complete
 TEST(Extensions, ExtensionsManagerComponent) {
     const tst::TempDirPair temp{tst::GetUnitTestName()};
-    const auto &[ps1, log] = MakePowershellFileAndLog(temp.in());
-    std::vector<Extension> extensions;
-    extensions.emplace_back(Extension{
-        .name = "test",
-        .binary = "powershell.exe",
-        .command_line = fmt::format("-ExecutionPolicy ByPass -File {}", ps1),
-        .mode = Mode::yes,
-    });
+    {
+        const auto &[ps1, log] = MakePowershellFileAndLog(temp.in());
+        std::vector<Extension> extensions;
+        extensions.emplace_back(Extension{
+            .name = "test",
+            .binary = "powershell.exe",
+            .command_line =
+                fmt::format("-ExecutionPolicy ByPass -File {}", ps1),
+            .mode = Mode::yes,
+        });
 
-    ExtensionsManager em(extensions, 5);
-    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
-        return !em.processes().empty() &&
-               wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
-                                                  em.processes()[0].pid);
-    }));
+        ExtensionsManager em(extensions, 1, std::nullopt);
 
-    wtools::KillProcessesByPathEndAndPid(em.processes()[0].path,
-                                         em.processes()[0].pid);
+        EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+            return !em.processes().empty() &&
+                   wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
+                                                      em.processes()[0].pid);
+        }));
+        EXPECT_TRUE(fs::exists(fs::path{GetTempDir()} / "test.run"));
 
-    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
-        return !wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
-                                                   em.processes()[0].pid);
-    }));
+        wtools::KillProcessesByPathEndAndPid(em.processes()[0].path,
+                                             em.processes()[0].pid);
 
-    EXPECT_TRUE(tst::WaitForSuccessSilent(10000ms, [&]() {
-        return wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
-                                                  em.processes()[0].pid);
-    }));
+        EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+            return !wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
+                                                       em.processes()[0].pid);
+        }));
+
+        EXPECT_TRUE(tst::WaitForSuccessSilent(10000ms, [&]() {
+            return wtools::FindProcessByPathEndAndPid(em.processes()[0].path,
+                                                      em.processes()[0].pid);
+        }));
+    }
+    EXPECT_FALSE(fs::exists(fs::path{GetTempDir()} / "test.run"));
 }
 
 }  // namespace cma::cfg::extensions

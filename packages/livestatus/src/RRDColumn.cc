@@ -9,12 +9,12 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <filesystem>
 #include <memory>
 #include <set>
 #include <stdexcept>
+#include <string_view>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
@@ -90,9 +90,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
 
 namespace {
 bool isVariableName(const std::string &token) {
-    auto is_operator = [](char c) { return strchr("+-/*", c) != nullptr; };
+    using namespace std::string_view_literals;
+    auto is_operator = [](char c) {
+        return "+-/*"sv.find_first_of(c) != std::string_view::npos;
+    };
     auto is_number_part = [](char c) {
-        return strchr("0123456789.", c) != nullptr;
+        return "0123456789."sv.find_first_of(c) != std::string_view::npos;
     };
 
     return !(is_operator(token[0]) ||
@@ -274,8 +277,11 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
             }
         }
 
-        if (rrd_flushcached(static_cast<int>(daemon_argv_s.size()),
-                            const_cast<char **>(daemon_argv.data())) != 0) {
+        if (rrd_flushcached(
+                static_cast<int>(daemon_argv_s.size()),
+                // The RRD library is not const-correct.
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+                const_cast<char **>(daemon_argv.data())) != 0) {
             Warning(logger) << "Error flushing RRD: " << rrd_get_error();
         }
     }
@@ -313,6 +319,8 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
 
     Data data;
     if (rrd_xport(static_cast<int>(argv_s.size()),
+                  // The RRD library is not const-correct.
+                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         const std::string rrd_error{rrd_get_error()};

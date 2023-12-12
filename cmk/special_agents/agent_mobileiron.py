@@ -26,12 +26,12 @@ import requests
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
-from cmk.special_agents.utils.agent_common import (
+from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger("agent_mobileiron")
 

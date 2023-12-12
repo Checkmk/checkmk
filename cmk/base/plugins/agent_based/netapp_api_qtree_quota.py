@@ -13,9 +13,10 @@
 from collections.abc import Generator, Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import df, netapp_api
+
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import df, netapp_api
 
 
 class Qtree(NamedTuple):

@@ -1,0 +1,17 @@
+Title: discovery: better message in case of failing data sources
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701963693
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+With the werk 15242, bulk discovery and periodic service discovery report errors
+if fetching from one of the data sources failed. Additionally, autodiscovery won't make
+changes to the configuration in that case.
+
+The discovery service still showed a message 'rediscovery scheduled' which was confusing
+to the users. Now, the message 'Automatic rediscovery currently not possible due to failing
+data source(s). Please run service discovery manually' will be shown in case of failing data
+sources.

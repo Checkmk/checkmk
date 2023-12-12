@@ -226,7 +226,7 @@ metric_info["jvm_garbage_collection_time"] = {
 metric_info["registered_desktops"] = {
     "title": _l("Registered desktops"),
     "unit": "count",
-    "color": "16/d",
+    "color": "16/a",
 }
 
 metric_info["time_in_GC"] = {

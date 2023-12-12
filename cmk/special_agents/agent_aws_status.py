@@ -15,8 +15,8 @@ from collections.abc import Sequence
 import pydantic
 import requests
 
-from cmk.special_agents.utils import agent_common
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable import agent_common
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 Seconds = typing.NewType("Seconds", float)
 
@@ -60,11 +60,11 @@ def _get_rss() -> requests.Response:
 def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
     response = get_rss()
     section = AgentOutput(
-        discovery_param=DiscoveryParam.parse_obj(vars(args)),
+        discovery_param=DiscoveryParam.model_validate(vars(args)),
         rss_str=response.text,
     )
     with agent_common.SectionWriter("aws_status") as writer:
-        writer.append(section.json())
+        writer.append(section.model_dump_json())
     return 0
 
 

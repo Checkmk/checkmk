@@ -132,7 +132,7 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
-        [{"condition": {"host_name": ["localhost"]}, "value": True}],
+        [{"condition": {"host_name": ["localhost"]}, "id": "01", "value": True}],
     )
     ts.add_host(HostName("abc"))
     ts.add_host(HostName("localhost"))
@@ -155,11 +155,11 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
-        [{"condition": {"host_name": ["bulkwalk_h"]}, "value": True}],
+        [{"condition": {"host_name": ["bulkwalk_h"]}, "id": "01", "value": True}],
     )
     ts.set_ruleset(
         "snmpv2c_hosts",
-        [{"condition": {"host_name": ["v2c_h"]}, "value": True}],
+        [{"condition": {"host_name": ["v2c_h"]}, "id": "02", "value": True}],
     )
     ts.add_host(HostName("bulkwalk_h"))
     ts.add_host(HostName("v2c_h"))

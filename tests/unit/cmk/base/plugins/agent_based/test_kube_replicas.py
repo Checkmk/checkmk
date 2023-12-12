@@ -22,7 +22,8 @@ from cmk.base.plugins.agent_based.kube_replicas import (
     parse_kube_strategy,
     Replicas,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     ControllerSpec,
     DaemonSetReplicas,
     DeploymentReplicas,

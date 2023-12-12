@@ -31,7 +31,6 @@ from tests.testlib.utils import (
     add_python_paths,
     cmc_path,
     cme_path,
-    cmk_path,
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
@@ -51,8 +50,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-
-from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, HTTPProxy
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -123,13 +120,13 @@ def fake_version_and_paths() -> None:
         except ValueError:
             pass  # path is outside of omd_root
 
-    # these use cmk_path
-    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
-    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
+    # these use repo_path
+    monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
+    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % repo_path())
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -144,7 +141,7 @@ def import_module_hack(pathname: str) -> ModuleType:
     See: https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     """
     name = os.path.splitext(os.path.basename(pathname))[0]
-    location = os.path.join(cmk_path(), pathname)
+    location = os.path.join(repo_path(), pathname)
     loader = importlib.machinery.SourceFileLoader(name, location)
     spec = importlib.machinery.ModuleSpec(name, loader, origin=location)
     spec.has_location = True
@@ -226,20 +223,23 @@ class WatchLog:
     def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if not self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if not found:
             raise Exception(
-                "Did not find %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Did not find %r in %s after %d seconds\n%s"
+                % (match_for, self._log_path, timeout, lines)
             )
 
     def check_not_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if found:
             raise Exception(
-                "Found %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Found %r in %s after %d seconds\n%s" % (match_for, self._log_path, timeout, lines)
             )
 
-    def _check_for_line(self, match_for: str, timeout: float) -> bool:
+    def _check_for_line(self, match_for: str, timeout: float) -> tuple[bool, str]:
         if self._tail_process is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
@@ -247,18 +247,20 @@ class WatchLog:
             "Start checking for matching line %r at %d until %d\n"
             % (match_for, time.time(), timeout_at)
         )
+        lines: list[str] = []
         while time.time() < timeout_at:
             # print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
             assert self._tail_process.stdout is not None
             line = self._tail_process.stdout.readline()
+            lines += line
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
-                return True
+                return True, "".join(lines)
             time.sleep(0.1)
 
         sys.stdout.write("Timed out at %d\n" % (time.time()))
-        return False
+        return False, "".join(lines)
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
@@ -331,9 +333,12 @@ class BaseCheck(abc.ABC):
         self.name = name
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
-        import cmk.base.api.agent_based.plugin_contexts  # pylint: disable=import-outside-toplevel
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
 
-        cmk.base.api.agent_based.plugin_contexts._hostname = HostName("non-existent-testhost")
+        cmk.base.plugin_contexts._hostname = HostName("non-existent-testhost")
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r})"
 
 
 class Check(BaseCheck):
@@ -439,7 +444,7 @@ def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> It
 __all__ = [
     "cmc_path",
     "cme_path",
-    "cmk_path",
+    "repo_path",
     "add_python_paths",
     "create_linux_test_host",
     "fake_version_and_paths",
@@ -460,7 +465,6 @@ __all__ = [
     "compare_html",
     "current_branch_name",
     "get_cmk_download_credentials",
-    "repo_path",
     "site_id",
     "virtualenv_path",
 ]

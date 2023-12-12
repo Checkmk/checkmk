@@ -7,7 +7,8 @@
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
+
+from cmk.plugins.lib.dell import DETECT_OPENMANAGE
 
 
 def inventory_dell_om_mem(info):

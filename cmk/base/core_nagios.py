@@ -39,10 +39,10 @@ from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.config_generation as config_generation
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
+import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
@@ -54,7 +54,9 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
+
+from cmk.discover_plugins import PluginLocation
 
 ObjectSpec = dict[str, Any]
 
@@ -360,7 +362,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
 
 def transform_active_service_command(
-    cfg: NagiosConfig, service_data: config_generation.ActiveServiceData
+    cfg: NagiosConfig, service_data: server_side_calls.ActiveServiceData
 ) -> str:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
@@ -450,7 +452,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         service_labels[service.description] = {
             label.name: label.value for label in service.service_labels.values()
-        } | get_labels_from_attributes(list(passive_service_attributes.items()))
+        } | dict(get_labels_from_attributes(list(passive_service_attributes.items())))
 
         service_spec.update(passive_service_attributes)
 
@@ -479,7 +481,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     # legacy checks via active_checks
     active_services = []
 
-    active_check_config = config_generation.ActiveCheck(
+    active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         hostname,
@@ -1243,18 +1245,23 @@ if os.path.islink(%(dst)r):
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
+    output.write("from cmk.discover_plugins import PluginLocation\n")
     output.write("from cmk.utils.log import console\n")
+    output.write("from cmk.base.api.agent_based.register import register_plugin_by_type\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("from cmk.checkengine.submitters import get_submitter\n")
     output.write("\n")
-    for module in _get_needed_agent_based_modules(
+
+    locations = _get_needed_agent_based_locations(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ):
-        full_mod_name = "cmk.base.plugins.agent_based.%s" % module
-        output.write("import %s\n" % full_mod_name)
-        console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
+    )
+    for module in {l.module for l in locations}:
+        output.write("import %s\n" % module)
+        console.verbose(" %s%s%s", tty.green, module, tty.normal, stream=sys.stderr)
+    for location in (l for l in locations if l.name is not None):
+        output.write(f"register_plugin_by_type({location!r}, {location.module}.{location.name})\n")
 
     # Register default Checkmk signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")
@@ -1432,7 +1439,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
     # A management plugin *could have been* created on the fly, from a 'regular' legacy
     # check plugin. In this case, we must load that.
     plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if not plugin or plugin.module is not None:
+    if not plugin or plugin.location is not None:
         # it does *not* result from a legacy plugin, if module is not None
         return None
 
@@ -1460,30 +1467,30 @@ def _get_legacy_check_file_names_to_load(
     return filenames
 
 
-def _get_needed_agent_based_modules(
+def _get_needed_agent_based_locations(
     check_plugin_names: set[CheckPluginName],
     inventory_plugin_names: set[InventoryPluginName],
-) -> list[str]:
+) -> list[PluginLocation]:
     modules = {
-        plugin.module
+        plugin.location
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and plugin.module is not None
+        if plugin is not None and plugin.location is not None
     }
     modules.update(
-        plugin.module
+        plugin.location
         for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and plugin.module is not None
+        if plugin is not None and plugin.location is not None
     )
     modules.update(
-        section.module
+        section.location
         for section in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=check_plugin_names,
             inventory_plugin_names=inventory_plugin_names,
         ).values()
-        if section.module is not None
+        if section.location is not None
     )
 
-    return sorted(modules)
+    return sorted(modules, key=lambda l: (l.module, l.name or ""))
 
 
 def _get_required_legacy_check_sections(
@@ -1498,6 +1505,6 @@ def _get_required_legacy_check_sections(
         check_plugin_names=check_plugin_names,
         inventory_plugin_names=inventory_plugin_names,
     ).values():
-        if section.module is None:
+        if section.location is None:
             required_legacy_check_sections.add(str(section.name))
     return required_legacy_check_sections

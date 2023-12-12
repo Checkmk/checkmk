@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
+from cmk.plugins.lib.hp_proliant import DETECT
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils.hp_proliant import DETECT
 
 _MAP_CONDITION = {
     "0": "n/a",

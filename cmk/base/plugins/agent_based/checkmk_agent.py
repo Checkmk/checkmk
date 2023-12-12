@@ -21,16 +21,15 @@ from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
     parse_check_mk_version,
 )
 
-# We need config and host_name() because the "only_from" configuration is not a check parameter.
-# It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
-# We wan't to use that very setting to check whether it is deployed correctly.
-# I currently see no better soluton than this API violation.
-from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.checkmk import (
+# We need config and host_name() because the "only_from" configuration is not a check parameter.
+# It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
+# We want to use that very setting to check whether it is deployed correctly.
+# I currently see no better soluton than this API violation.
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,
@@ -40,6 +39,9 @@ from .utils.checkmk import (
     Plugin,
     PluginSection,
 )
+
+from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:

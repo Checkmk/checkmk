@@ -7,7 +7,7 @@ import importlib
 import sys
 import traceback
 from collections.abc import Iterator
-from contextlib import suppress
+from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
 
@@ -17,28 +17,46 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
+
+@contextmanager
+def suppress_module_not_found(name: str) -> Iterator[None]:
+    """Specialized to contextlib.supress with additional module name matching"""
+    try:
+        yield
+    except ModuleNotFoundError as e:
+        if e.name != name:
+            raise
+
+
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plugin discovery mechanism.
-with suppress(ModuleNotFoundError):
-    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
-    import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
+with suppress_module_not_found("cmk.gui.raw"):
+    import cmk.gui.raw.registration
 
-with suppress(ModuleNotFoundError):
-    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+    cmk.gui.raw.registration.register()
 
-with suppress(ModuleNotFoundError):
-    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module
+with suppress_module_not_found("cmk.gui.cee"):
+    import cmk.gui.cee.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+
+    cmk.gui.cee.registration.register()
+
+with suppress_module_not_found("cmk.gui.cme"):
+    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cme.registration.register()
 
-with suppress(ModuleNotFoundError):
-    import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+with suppress_module_not_found("cmk.gui.cce"):
+    import cmk.gui.cce.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
-    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+    cmk.gui.cce.registration.register()
+
+with suppress_module_not_found("cmk.gui.cse"):
+    import cmk.gui.cse.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+
+    cmk.gui.cse.registration.register()
 
 
 def _imports() -> Iterator[str]:
@@ -64,7 +82,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.{cee.,cce.}plugins.main_modules` above.
+    `cmk.gui.plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
@@ -114,11 +132,9 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     if (
         cmk_version.edition() is cmk_version.Edition.CCE
         or cmk_version.edition() is cmk_version.Edition.CSE
+        or cmk_version.edition() is cmk_version.Edition.CME
     ):
         yield f"cmk.gui.cce.plugins.{main_module_name}"
-
-    if cmk_version.edition() is cmk_version.Edition.CSE:
-        yield f"cmk.gui.cse.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
@@ -176,10 +192,6 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
             or name.startswith("cmk.gui.cee.")
-            and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cce.")
-            and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4
         )
     ]

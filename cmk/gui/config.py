@@ -24,11 +24,13 @@ import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig
+from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CEEConfig,
+    )
 else:
     # Stub needed for non enterprise edition
     class CEEConfig:  # type: ignore[no-redef]
@@ -36,7 +38,9 @@ else:
 
 
 if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.config import CMEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.config import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CMEConfig,
+    )
 else:
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]
@@ -185,7 +189,7 @@ def load_config() -> None:
     # to be done in make_config_object() in the next step.
     if "agent_signature_keys" in raw_config:
         raw_config["agent_signature_keys"] = {
-            key_id: Key.parse_obj(raw_key)
+            key_id: Key.model_validate(raw_key)
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 

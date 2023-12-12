@@ -16,15 +16,10 @@ from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto import HashAlgorithm
-from cmk.utils.crypto.certificate import (
-    Certificate,
-    CertificatePEM,
-    CertificateWithPrivateKey,
-    EncryptedPrivateKeyPEM,
-    RsaPrivateKey,
-)
+from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
+from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.types import HashAlgorithm
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
@@ -152,6 +147,12 @@ class SessionInfo:
         self.last_activity = int(now.timestamp())
 
 
+class LastLoginInfo(TypedDict, total=False):
+    auth_type: AuthType
+    timestamp: int
+    remote_address: str
+
+
 class UserSpec(TypedDict, total=False):
     """This is not complete, but they don't yet...  Also we have a
     user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
@@ -174,6 +175,7 @@ class UserSpec(TypedDict, total=False):
     idle_timeout: Any  # TODO: Improve this
     language: str
     last_pw_change: int
+    last_login: LastLoginInfo | None
     locked: bool | None
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
@@ -293,7 +295,7 @@ class PainterParameters(TypedDict, total=False):
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str, int]
     # From graph painters
-    graph_render_options: GraphRenderOptions
+    graph_render_options: GraphRenderOptionsVS
     set_default_time_range: int
 
 
@@ -587,47 +589,6 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
-UnitRenderFunc = Callable[[Any], str]
-
-GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
-GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
-
-
-class UnitInfo(TypedDict):
-    title: str
-    symbol: str
-    render: UnitRenderFunc
-    js_render: str
-    id: NotRequired[str]
-    stepping: NotRequired[str]
-    color: NotRequired[str]
-    graph_unit: NotRequired[GraphUnitRenderFunc]
-    description: NotRequired[str]
-    valuespec: NotRequired[Any]  # TODO: better typing
-    conversion: NotRequired[Callable[[float], float]]
-    perfometer_render: NotRequired[UnitRenderFunc]
-
-
-class ScalarBounds(TypedDict, total=False):
-    warn: float
-    crit: float
-    min: float
-    max: float
-
-
-class TranslatedMetric(TypedDict):
-    orig_name: list[str]
-    value: float
-    scalar: ScalarBounds
-    scale: list[float]
-    auto_graph: bool
-    title: str
-    unit: UnitInfo
-    color: str
-
-
-TranslatedMetrics = dict[str, TranslatedMetric]
-
 
 class PerfDataTuple(NamedTuple):
     metric_name: MetricName
@@ -650,7 +611,10 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-class GraphRenderOptions(TypedDict, total=False):
+GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
+
+
+class GraphRenderOptionsBase(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
     editing: bool
@@ -669,8 +633,11 @@ class GraphRenderOptions(TypedDict, total=False):
     show_title: bool | Literal["inline"]
     show_vertical_axis: bool
     size: tuple[int, int]
-    title_format: Sequence[GraphTitleFormat]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+
+
+class GraphRenderOptionsVS(GraphRenderOptionsBase, total=False):
+    title_format: Sequence[GraphTitleFormatVS]
 
 
 ActionResult = FinalizeRequest | None
@@ -711,9 +678,7 @@ class Key(BaseModel):
     def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
         return CertificateWithPrivateKey(
             certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
-            private_key=RsaPrivateKey.load_pem(
-                EncryptedPrivateKeyPEM(self.private_key), passphrase
-            ),
+            private_key=PrivateKey.load_pem(EncryptedPrivateKeyPEM(self.private_key), passphrase),
         )
 
     def fingerprint(self, algorithm: HashAlgorithm) -> str:

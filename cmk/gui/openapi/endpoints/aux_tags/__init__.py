@@ -32,6 +32,7 @@ from cmk.gui.openapi.endpoints.aux_tags.schemas import (
     AuxTagResponseCollection,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config, update_tag_config
@@ -181,3 +182,11 @@ def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:
         editable=True,
         deletable=True,
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_aux_tag)
+    endpoint_registry.register(show_aux_tags)
+    endpoint_registry.register(create_aux_tag)
+    endpoint_registry.register(put_aux_tag)
+    endpoint_registry.register(delete_aux_tag)

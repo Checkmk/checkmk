@@ -7,6 +7,7 @@ set -e -o pipefail
 
 case "$DISTRO" in
     ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
         # Install docker software
@@ -16,10 +17,11 @@ case "$DISTRO" in
         apt-get install -y docker-ce
         rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        docker --version || exit $?
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - docker-ce should only be available in Ubuntu!"
         exit 1
         ;;
 esac

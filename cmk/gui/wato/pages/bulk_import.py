@@ -349,18 +349,17 @@ class ModeBulkImport(WatoMode):
             self._preview()
 
     def _upload_form(self) -> None:
-        html.begin_form("upload", method="POST")
-        html.p(
-            _(
-                "Using this page you can import several hosts at once into the choosen folder. You can "
-                "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-                "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+        with html.form_context("upload", method="POST"):
+            html.p(
+                _(
+                    "Using this page you can import several hosts at once into the choosen folder. You can "
+                    "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+                    "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+                )
             )
-        )
 
-        self._vs_upload().render_input("_upload", None)
-        html.hidden_fields()
-        html.end_form()
+            self._vs_upload().render_input("_upload", None)
+            html.hidden_fields()
 
     def _vs_upload(self):
         return Dictionary(
@@ -388,85 +387,86 @@ class ModeBulkImport(WatoMode):
         )
 
     def _preview(self) -> None:
-        html.begin_form("preview", method="POST")
-        self._preview_form()
+        with html.form_context("preview", method="POST"):
+            self._preview_form()
 
-        attributes = self._attribute_choices()
+            attributes = self._attribute_choices()
 
-        # first line could be missing in situation of import error
-        csv_reader = self._open_csv_file()
-        if not csv_reader:
-            return  # don't try to show preview when CSV could not be read
+            # first line could be missing in situation of import error
+            csv_reader = self._open_csv_file()
+            if not csv_reader:
+                return  # don't try to show preview when CSV could not be read
 
-        html.h2(_("Preview"))
-        attribute_list = "<ul>%s</ul>" % "".join(
-            ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None]
-        )
-        html.help(
-            _(
-                "This list shows you the first 10 rows from your CSV file in the way the import is "
-                "currently parsing it. If the lines are not splitted correctly or the title line is "
-                "not shown as title of the table, you may change the import settings above and try "
-                "again."
+            html.h2(_("Preview"))
+            attribute_list = "<ul>%s</ul>" % "".join(
+                ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None]
             )
-            + "<br><br>"
-            + _(
-                "The first row below the titles contains fields to specify which column of the "
-                "CSV file should be imported to which attribute of the created hosts. The import "
-                "progress is trying to match the columns to attributes automatically by using the "
-                "titles found in the title row (if you have some). "
-                "If you use the correct titles, the attributes can be mapped automatically. The "
-                "currently available attributes are:"
-            )
-            + attribute_list
-            + _(
-                "You can change these assignments according to your needs and then start the "
-                "import by clicking on the <i>Import</i> button above."
-            )
-        )
-
-        # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
-        # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
-        # erneut importieren kann.
-        if self._has_title_line:
-            try:
-                headers = list(next(csv_reader))
-            except StopIteration:
-                headers = []  # nope, there is no header
-        else:
-            headers = []
-
-        rows = list(csv_reader)
-
-        # Determine how many columns should be rendered by using the longest column
-        num_columns = max(len(r) for r in [headers] + rows)
-
-        with table_element(
-            sortable=False, searchable=False, omit_headers=not self._has_title_line
-        ) as table:
-            # Render attribute selection fields
-            table.row()
-            for col_num in range(num_columns):
-                header = headers[col_num] if len(headers) > col_num else None
-                table.cell(escape_to_html_permissive(header))
-                attribute_varname = "attribute_%d" % col_num
-                if request.var(attribute_varname):
-                    attribute_method = request.get_ascii_input_mandatory(attribute_varname)
-                else:
-                    attribute_method = self._try_detect_default_attribute(attributes, header)
-                    request.del_var(attribute_varname)
-
-                html.dropdown(
-                    "attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off"
+            html.help(
+                _(
+                    "This list shows you the first 10 rows from your CSV file in the way the import is "
+                    "currently parsing it. If the lines are not splitted correctly or the title line is "
+                    "not shown as title of the table, you may change the import settings above and try "
+                    "again."
                 )
+                + "<br><br>"
+                + _(
+                    "The first row below the titles contains fields to specify which column of the "
+                    "CSV file should be imported to which attribute of the created hosts. The import "
+                    "progress is trying to match the columns to attributes automatically by using the "
+                    "titles found in the title row (if you have some). "
+                    "If you use the correct titles, the attributes can be mapped automatically. The "
+                    "currently available attributes are:"
+                )
+                + attribute_list
+                + _(
+                    "You can change these assignments according to your needs and then start the "
+                    "import by clicking on the <i>Import</i> button above."
+                )
+            )
 
-            # Render sample rows
-            for row in rows:
+            # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
+            # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
+            # erneut importieren kann.
+            if self._has_title_line:
+                try:
+                    headers = list(next(csv_reader))
+                except StopIteration:
+                    headers = []  # nope, there is no header
+            else:
+                headers = []
+
+            rows = list(csv_reader)
+
+            # Determine how many columns should be rendered by using the longest column
+            num_columns = max(len(r) for r in [headers] + rows)
+
+            with table_element(
+                sortable=False, searchable=False, omit_headers=not self._has_title_line
+            ) as table:
+                # Render attribute selection fields
                 table.row()
-                for cell in row:
-                    table.cell(None, cell)
+                for col_num in range(num_columns):
+                    header = headers[col_num] if len(headers) > col_num else None
+                    table.cell(escape_to_html_permissive(header))
+                    attribute_varname = "attribute_%d" % col_num
+                    if request.var(attribute_varname):
+                        attribute_method = request.get_ascii_input_mandatory(attribute_varname)
+                    else:
+                        attribute_method = self._try_detect_default_attribute(attributes, header)
+                        request.del_var(attribute_varname)
 
-        html.end_form()
+                    html.dropdown(
+                        "attribute_%d" % col_num,
+                        attributes,
+                        deflt=attribute_method,
+                        autocomplete="off",
+                    )
+
+                # Render sample rows
+                for row in rows:
+                    table.row()
+                    for cell in row:
+                        table.cell(None, cell)
 
     def _preview_form(self) -> None:
         if self._params is not None:

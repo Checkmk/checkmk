@@ -153,10 +153,9 @@ int main(int argc, char **argv) {
         }
 
         auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
-        char remote_hostipaddress[64];
+        std::string remote_hostipaddress;
         for (int i = 0; addr_list[i] != nullptr; i++) {
-            strncpy(remote_hostipaddress, inet_ntoa(*addr_list[i]),
-                    sizeof(remote_hostipaddress));
+          remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
         }
 
         char *port_str = strtok(nullptr, ":");
@@ -178,14 +177,14 @@ int main(int argc, char **argv) {
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        inet_aton(remote_hostipaddress, &addr.sin_addr);
+        inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
-        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                    sizeof(struct sockaddr_in)) == -1) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                      sizeof(struct sockaddr_in)) == -1) {
             ioError("Cannot connect to event console at " +
-                    std::string(remote_hostipaddress) + ":" +
-                    std::to_string(remote_port));
+                    remote_hostipaddress + ":" + std::to_string(remote_port));
         }
 
     } else {
@@ -213,15 +212,14 @@ int main(int argc, char **argv) {
             ioError("Cannot set socket reveive timeout");
         }
 
-        struct sockaddr_un addr;
-        memset(&addr, 0, sizeof(addr));
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, unixsocket_path.c_str(),
-                sizeof(addr.sun_path) - 1);
+        struct sockaddr_un addr {
+          .sun_family = AF_UNIX, .sun_path = ""
+        };
+        unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
         addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
-
-        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                    sizeof(addr)) == -1) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                      sizeof(addr)) == -1) {
             ioError("Cannot connect to event daemon via UNIX socket " +
                     unixsocket_path);
         }

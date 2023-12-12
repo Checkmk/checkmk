@@ -1,4 +1,4 @@
-Title: aws: support for us-gov-* and cn-* regions
+Title: aws: support for us-gov-\* and cn-\* regions
 Class: fix
 Compatible: compat
 Component: agents

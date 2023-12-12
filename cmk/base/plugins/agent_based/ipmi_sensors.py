@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import ipmi as ipmi_utils
+
 from .agent_based_api.v1 import register, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import ipmi as ipmi_utils
 
 _NA_VALUES = {"NA", "N/A"}
 

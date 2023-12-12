@@ -1,0 +1,6 @@
+===========
+rulesets.v1
+===========
+
+.. automodule:: cmk.rulesets.v1
+   :members:

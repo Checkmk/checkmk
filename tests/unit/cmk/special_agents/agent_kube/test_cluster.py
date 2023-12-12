@@ -33,7 +33,6 @@ from .factory import (
     composed_entities_builder,
     ContainerSpecFactory,
     MetaDataFactory,
-    node_status,
     NodeMetaDataFactory,
     NodeResourcesFactory,
     NodeStatusFactory,
@@ -121,12 +120,18 @@ def test_node_count(cluster_node_count: int) -> None:
 
 
 def test__node_is_ready_with_ready_node() -> None:
-    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
+    status = NodeStatusFactory.build(
+        conditions=[api.NodeCondition(type_="Ready", status=api.NodeConditionStatus.TRUE)]
+    )
+    api_node = APINodeFactory.build(status=status)
     assert _node_is_ready(api_node) is True
 
 
 def test__node_is_ready_with_unready_node() -> None:
-    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.FALSE))
+    status = NodeStatusFactory.build(
+        conditions=[api.NodeCondition(type_="Ready", status=api.NodeConditionStatus.FALSE)]
+    )
+    api_node = APINodeFactory.build(status=status)
     assert _node_is_ready(api_node) is False
 
 

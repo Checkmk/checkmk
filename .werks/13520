@@ -1,4 +1,4 @@
-Title: <tt>cisco_ucs</tt> checks: Add support for UCS C480 M5 Servers
+Title: cisco_ucs checks: Add support for UCS C480 M5 Servers
 Class: feature
 Compatible: compat
 Component: checks

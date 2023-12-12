@@ -5,7 +5,6 @@
 
 import time
 
-import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
 from cmk.base.check_api import check_levels, get_age_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
@@ -13,6 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     render,
 )
+
+import cmk.plugins.lib.cpu_util as cpu_util
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -30,7 +31,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 ##########################################################################################
 #                                                                                        #
 #     THE FUNCTIONS IN THIS FILE HAVE PARTIALLY BEEN MIGRATED TO CPU_UTIL.PY             #
-#     IN cmk/base/plugins/agent_based/utils/                                             #
+#     IN cmk.plugins.lib/                                             #
 #                                                                                        #
 #     PLEASE TAKE A LOOK AT THOSE BEFOR MODIFYING ANY CODE IN THIS FILE                  #
 #     THERE ARE MORE FUNCTIONS IN IT THAT THE ONES USED BELOW!                           #

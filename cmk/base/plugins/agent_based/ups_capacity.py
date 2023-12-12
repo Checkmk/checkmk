@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.ups import (
+from cmk.plugins.lib.ups import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,
     check_ups_capacity,
@@ -14,6 +12,9 @@ from .utils.ups import (
     discover_ups_capacity,
     optional_int,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_ups_capacity(string_table: StringTable) -> Battery | None:

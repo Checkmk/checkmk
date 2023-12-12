@@ -33,9 +33,14 @@ def prevent_livestatus_connect() -> None:
 @pytest.fixture
 def ca(tmp_path: Path) -> CertificateAuthority:
     p = tmp_path / "etc" / "ssl"
-    return CertificateAuthority(
+    ca = CertificateAuthority(
         root_ca=RootCA.load_or_create(root_cert_path(p), "ca-name"), ca_path=p
     )
+    ssl_dir = tmp_path / "var/ssl"
+    ssl_dir.mkdir(parents=True)
+    with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
+        f.write((ca._ca_path / "ca.pem").open(encoding="utf-8").read())
+    return ca
 
 
 @pytest.fixture()
@@ -43,7 +48,6 @@ def sock_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
     omd_root = tmp_path
     sock_path = omd_root / "tmp" / "run" / "live"
     monkeypatch.setenv("OMD_ROOT", "%s" % omd_root)
-    # Will be fixed with pylint >2.0
     sock_path.parent.mkdir(parents=True)
     return sock_path
 
@@ -165,53 +169,59 @@ def test_single_site_connection_socketurl(
 ) -> None:
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
-            livestatus._parse_socket_url(socket_url)
+            livestatus.parse_socket_url(socket_url)
         return
 
-    assert livestatus._parse_socket_url(socket_url) == result
+    assert livestatus.parse_socket_url(socket_url) == result
 
 
-@pytest.mark.parametrize("tls", [True, False])
-@pytest.mark.parametrize("verify", [True, False])
-@pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
-def test_create_socket(
-    tls: bool,
-    verify: bool,
+def test_create_socket_create_plain_text_socket() -> None:
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=False)
+    sock = live._create_socket(socket.AF_INET)
+    assert isinstance(sock, socket.socket)
+    assert not isinstance(sock, ssl.SSLSocket)
+
+
+def test_create_socket_with_verification_using_custom_trust_store(
     ca: CertificateAuthority,
-    ca_file_path: str | None,
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    ssl_dir = tmp_path / "var/ssl"
-    ssl_dir.mkdir(parents=True)
-    with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
-        f.write((ca._ca_path / "ca.pem").open(encoding="utf-8").read())
-
     monkeypatch.setenv("OMD_ROOT", str(tmp_path))
-
-    if ca_file_path is not None:
-        ca_file_path = str(Path(ca._ca_path) / ca_file_path)
+    ca_file_path = str(Path(ca._ca_path) / "ca.pem")
 
     live = livestatus.SingleSiteConnection(
-        "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path
+        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path=ca_file_path
     )
-
-    if ca_file_path is None:
-        ca_file_path = str(tmp_path / "var/ssl/ca-certificates.crt")
 
     sock = live._create_socket(socket.AF_INET)
 
-    if not tls:
-        assert isinstance(sock, socket.socket)
-        assert not isinstance(sock, ssl.SSLSocket)
-        return
-
     assert isinstance(sock, ssl.SSLSocket)
-    assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
-    # TODO: The assertion below is nonsense, it depends e.g. on the certificates in /etc/ssl/certs.
-    # What was the intention for the assertion, i.e. what exactly should be checked? No idea...
-    # assert len(sock.context.get_ca_certs()) == 1
+    assert sock.context.verify_mode == ssl.CERT_REQUIRED
     assert live.tls_ca_file_path == str(ca_file_path)
+
+
+def test_create_socket_with_verification_using_site_trust_store(
+    ca: CertificateAuthority, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=True, verify=True)
+    sock = live._create_socket(socket.AF_INET)
+    assert isinstance(sock, ssl.SSLSocket)
+    assert sock.context.verify_mode == ssl.CERT_REQUIRED
+    assert live.tls_ca_file_path == str(tmp_path / "var/ssl/ca-certificates.crt")
+
+
+def test_create_socket_without_verification(
+    ca: CertificateAuthority, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+
+    live = livestatus.SingleSiteConnection("unix:/tmp/xyz", tls=True, verify=False)
+    sock = live._create_socket(socket.AF_INET)
+    assert isinstance(sock, ssl.SSLSocket)
+    assert sock.context.verify_mode == ssl.CERT_NONE
 
 
 def test_create_socket_not_existing_ca_file() -> None:
@@ -265,16 +275,13 @@ def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(
-    mock_livestatus: MockLiveStatusConnection, user_id: livestatus.UserId, allowed: bool
-) -> None:
-    with mock_livestatus(expect_status_query=False):
-        if not allowed:
-            with pytest.raises(ValueError, match="Invalid user ID"):
-                livestatus.LocalConnection().set_auth_user("mydomain", user_id)
-            return
+def test_set_auth_user(user_id: livestatus.UserId, allowed: bool) -> None:
+    if not allowed:
+        with pytest.raises(ValueError, match="Invalid user ID"):
+            livestatus.LocalConnection().set_auth_user("mydomain", user_id)
+        return
 
-        livestatus.LocalConnection().set_auth_user("mydomain", user_id)
+    livestatus.LocalConnection().set_auth_user("mydomain", user_id)
 
 
 @pytest.mark.parametrize(

@@ -615,6 +615,15 @@ div#page_menu_popups {
     font-size: $font-size-large;
     padding: 0;
     text-align: left;
+
+    table {
+      margin-left: -3px;
+      &:before {
+        content: "";
+        display: block;
+        margin-top: 5px;
+      }
+    }
   }
 
   .confirm_title {
@@ -625,8 +634,9 @@ div#page_menu_popups {
   .confirm_content {
     margin: 5px 25px 0px;
 
-    div.confirm_info {
-      margin-top: 4px;
+    div.confirm_info,
+    div.confirm_block {
+      margin-top: 0.5 * $spacing;
     }
   }
 
@@ -684,17 +694,139 @@ div.page_menu_popup {
     }
 
     .button {
-      margin: 0px 20px 0px 0px;
+      margin-left: 0px;
 
       &.border_hot {
         border: 1px solid $success-dimmed;
       }
+    }
+
+    input[type="date"],
+    input[type="time"],
+    select#_down_recurring + span .select2-selection.select2-selection--single,
+    .server_time {
+      margin-left: 10px;
+    }
+
+    .server_time {
+      color: $font-color-dimmed;
+    }
+
+    td.down_duration {
+      padding: 10px;
+    }
+
+    .down_advanced {
+      margin: 10px 0 10px 0;
+    }
+
+    .down_advanced_option {
+      margin-bottom: 10px;
+    }
+
+    input.button.duration {
+      margin: 0px;
+      border: none;
+      border-radius: 0px;
+      border-top: 1px solid $line-color;
+      border-bottom: 1px solid $line-color;
+
+      &:first-child {
+        border-radius: 4px 0 0 4px;
+        border-left: 1px solid $line-color;
+      }
+
+      &:last-child {
+        border-radius: 0 4px 4px 0;
+        border-right: 1px solid $line-color;
+      }
+
+      &.active,
+      &:focus {
+        background-color: $input-button-hover-bg-color;
+      }
+    }
+
+    span.vs_age_footer {
+      display: block;
+      margin-top: 5px;
+    }
+
+    a.upgrade img.iconbutton {
+      width: auto;
+      height: auto;
+      margin-left: 0.5 * $spacing;
+    }
+
+    hr {
+      margin-top: 15px;
+      border: 1px solid $line-color;
+    }
+
+    table.down_date_and_time {
+      border-spacing: 0px 10px;
+    }
+
+    &.ack_command_options {
+      h2 {
+        display: inline-block;
+
+        + span {
+          margin-left: 0.5 * $spacing;
+
+          &,
+          a {
+            opacity: 0.8;
+          }
+        }
+      }
+
+      div {
+        margin-top: 1.5 * $spacing;
+
+        &.example {
+          margin-top: 0.5 * $spacing;
+          margin-left: 2 * $spacing;
+          color: $font-color-dimmed;
+        }
+
+        span.checkbox {
+          padding-right: 0;
+        }
+
+        &.date_time_picker {
+          display: inline-block;
+          margin-top: 0;
+
+          input[type="date"]:not(.active),
+          input[type="time"]:not(.active) {
+            color: $font-color-dimmed;
+          }
+        }
+
+        &.disabled {
+          color: $font-color-dimmed;
+
+          input,
+          label {
+            pointer-events: none;
+          }
+        }
+      }
+    }
+
+    &.buttons {
+      padding-top: 2 * $spacing;
     }
   }
 
   form span.checkbox {
     padding-right: $spacing;
     white-space: initial;
+  }
+
+  a.down_presets {
+    margin-left: 10px;
   }
 }
 

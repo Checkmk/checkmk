@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.megaraid import expand_abbreviation, LDISKS_DEFAULTS
+
+from cmk.plugins.lib.megaraid import expand_abbreviation, LDISKS_DEFAULTS
 
 from .agent_based_api.v1 import register, Result, Service, State
 

@@ -17,11 +17,8 @@ from cmk.base.check_legacy_includes.temperature import (
     check_temperature_trend,
     Number,
 )
-from cmk.base.plugins.agent_based.utils.temperature import (
-    TempParamDict,
-    TempParamType,
-    TrendComputeDict,
-)
+
+from cmk.plugins.lib.temperature import TempParamDict, TempParamType, TrendComputeDict
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 

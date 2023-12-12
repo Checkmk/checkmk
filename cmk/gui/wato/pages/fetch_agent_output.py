@@ -210,7 +210,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return JobStatusSpec.parse_obj(
+        return JobStatusSpec.model_validate(
             do_remote_automation(
                 get_site_config(self._request.host.site_id()),
                 "fetch-agent-output-get-status",

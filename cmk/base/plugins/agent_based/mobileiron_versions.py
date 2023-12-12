@@ -9,9 +9,10 @@ import datetime
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.mobileiron import Section
+
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mobileiron import Section
 
 
 class Params(TypedDict):

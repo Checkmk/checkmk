@@ -91,8 +91,24 @@ def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
+def get_authserials_lines() -> list[str]:
+    authserials_path = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    if not authserials_path.exists():
+        return []
+    with authserials_path.open(encoding="utf-8") as f:
+        return f.readlines()
+
+
+def load_users_uncached(lock: bool = False) -> Users:
+    return _load_users(lock)
+
+
 @request_memoize()
-def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
+def load_users(lock: bool = False) -> Users:
+    return _load_users(lock)
+
+
+def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
@@ -192,6 +208,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 "ui_theme",
                 "two_factor_credentials",
                 "ui_sidebar_position",
+                "last_login",
             ],
             Callable,
         ]
@@ -205,6 +222,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
         ("ui_theme", lambda x: x),
         ("two_factor_credentials", ast.literal_eval),
         ("ui_sidebar_position", lambda x: None if x == "None" else x),
+        ("last_login", ast.literal_eval),
     ]
 
     # Now read the user specific files
@@ -256,6 +274,34 @@ def get_online_user_ids(now: datetime) -> list[UserId]:
 
 def get_last_activity(user: UserSpec) -> int:
     return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
+
+
+def get_last_seen(user: UserSpec) -> tuple[int, str]:
+    """
+    The function returns information about the last activity of a user.
+    For those users who log in to the website, the information is obtained
+    from their active sessions. In the case of REST API authentication,
+    the last_login custom attribute is taken into account.
+
+    As a user can authenticate using both methods, this function obtains
+    information from both sources and returns the most recent one.
+    """
+
+    timestamp = 0
+    auth_type = ""
+
+    for s in user.get("session_info", {}).values():
+        if s.last_activity > timestamp:
+            timestamp = s.last_activity
+            auth_type = "" if s.auth_type is None else s.auth_type
+
+    if ((last_login_info := user.get("last_login")) is not None) and last_login_info[
+        "timestamp"
+    ] > timestamp:
+        timestamp = last_login_info["timestamp"]
+        auth_type = last_login_info["auth_type"]
+
+    return timestamp, auth_type
 
 
 def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict[str, Any]:

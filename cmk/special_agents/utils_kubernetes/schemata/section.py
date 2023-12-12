@@ -232,7 +232,7 @@ class PodInfo(Section):
     annotations: FilteredAnnotations  # used for host labels
     node: api.NodeName | None = None  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
-    host_network: str | None = None
+    host_network: bool | None = None
     dns_policy: str | None = None
     host_ip: api.IpAddress | None = None
     pod_ip: api.IpAddress | None = None
@@ -343,38 +343,17 @@ class NodeInfo(Section):
     kubernetes_cluster_hostname: str
 
 
-class NodeCondition(BaseModel):
-    status: api.NodeConditionStatus
-    reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = None
-
-
-class NodeCustomCondition(NodeCondition):
-    """NodeCustomCondition mainly come from Node Problem Detector.
-    Its type can be user-defined, hence it being a string."""
-
+class NodeCondition(BaseModel, extra="forbid"):
     type_: str
-
-
-TruthyNodeCondition = NodeCondition
-FalsyNodeCondition = NodeCondition
+    status: api.NodeConditionStatus
+    reason: str | None
+    message: str | None
 
 
 class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
-    ready: TruthyNodeCondition
-    memorypressure: FalsyNodeCondition
-    diskpressure: FalsyNodeCondition
-    pidpressure: FalsyNodeCondition
-    networkunavailable: FalsyNodeCondition | None = None
-
-
-class NodeCustomConditions(Section):
-    """section: kube_node_custom_conditions_v1"""
-
-    custom_conditions: Sequence[NodeCustomCondition]
+    conditions: Sequence[NodeCondition]
 
 
 class DeploymentInfo(Section):

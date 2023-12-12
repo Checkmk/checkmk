@@ -7,11 +7,12 @@ from collections.abc import Collection, Iterator, Mapping, MutableMapping, Seque
 from dataclasses import asdict
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
+
 from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import interfaces
-from .utils.inventory_interfaces import Interface as InterfaceInv
-from .utils.inventory_interfaces import inventorize_interfaces
 
 Line = Sequence[str]
 Lines = Iterator[Line]
@@ -89,9 +90,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status=None,
+                    oper_status="1",
                     out_qlen=counters["34"],
-                    oper_status_name=interfaces.MISSING_OPER_STATUS,
+                    oper_status_name="Connected",
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -644,9 +645,7 @@ def inventory_winperf_if(
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status[0])
-                if isinstance(interface.attributes.oper_status, str)
-                else None,
+                oper_status=int(interface.attributes.oper_status[0]),
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(

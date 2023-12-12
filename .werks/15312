@@ -1,0 +1,11 @@
+Title: mk_oracle: use "${GREP}" instead of "grep"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701070131
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When executed on solaris, `"grep"` does not know `-x` or `-F`. "${GREP}" points
+to a version of grep that understands those options.

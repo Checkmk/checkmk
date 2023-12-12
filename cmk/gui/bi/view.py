@@ -436,7 +436,9 @@ class PainterAggrIcons(Painter):
             ]
         )
 
-        bi_frozen_diff_url = "view.py?" + urlencode_vars([("view_name", "aggr_frozen_diff")])
+        bi_frozen_diff_url = "view.py?" + urlencode_vars(
+            [("aggr_name", row["aggr_name"]), ("view_name", "aggr_frozen_diff")]
+        )
 
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         with output_funnel.plugged():

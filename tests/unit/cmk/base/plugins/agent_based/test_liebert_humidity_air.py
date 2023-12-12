@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.liebert_humidity_air import (
     parse_liebert_humidity_air,
     ParsedSection,
 )
-from cmk.base.plugins.agent_based.utils.liebert import SystemSection
+
+from cmk.plugins.lib.liebert import SystemSection
 
 STRING_TABLE = [
     [

@@ -1,4 +1,4 @@
-Title: <tt>sap_hana_ess</tt>:Check is removed after SAP HANA version 1.0 SPS 09
+Title: sap_hana_ess:Check is removed after SAP HANA version 1.0 SPS 09
 Class: feature
 Compatible: incomp
 Component: checks

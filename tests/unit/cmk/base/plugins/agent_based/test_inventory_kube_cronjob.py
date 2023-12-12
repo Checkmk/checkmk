@@ -8,7 +8,8 @@ import polyfactory.factories.pydantic_factory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_cronjob import inventory_kube_cronjob
-from cmk.base.plugins.agent_based.utils.kube import CronJobInfo
+
+from cmk.plugins.lib.kube import CronJobInfo
 
 
 class CronJobInfoFactory(polyfactory.factories.pydantic_factory.ModelFactory):

@@ -6,6 +6,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def branch_name = versioning.safe_branch_name(scm);
+    def branch_version = versioning.get_branch_version(checkout_dir);
 
     check_environment_variables([
         "DOCKER_TAG",
@@ -22,7 +23,7 @@ def main() {
             ""),   // FIXME was DOCKER_TAG_DEFAULT before
         MAKE_TARGET: "test-gui-e2e-docker",
         BRANCH: branch_name,
-        cmk_version: versioning.get_cmk_version(branch_name, "daily"),
+        cmk_version: versioning.get_cmk_version(branch_name, branch_version, "daily"),
     );
 }
 return this;

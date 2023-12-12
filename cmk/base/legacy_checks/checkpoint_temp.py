@@ -9,7 +9,8 @@ from cmk.base.check_legacy_includes.checkpoint import checkpoint_sensorstatus_to
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
+
+from cmk.plugins.lib.checkpoint import DETECT
 
 
 def format_item_checkpoint_temp(name):

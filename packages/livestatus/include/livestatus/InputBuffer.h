@@ -35,8 +35,8 @@ public:
                 std::chrono::milliseconds query_timeout,
                 std::chrono::milliseconds idle_timeout);
     Result readRequest();
-    [[nodiscard]] bool empty() const;
     std::string nextLine();
+    std::list<std::string> getLines();
 
 private:
     const int _fd;

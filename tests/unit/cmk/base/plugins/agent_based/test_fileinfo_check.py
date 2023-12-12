@@ -18,8 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
-from cmk.base.plugins.agent_based.utils.fileinfo import (
+
+from cmk.plugins.lib import fileinfo as fileinfo_utils
+from cmk.plugins.lib.fileinfo import (
     discovery_fileinfo_groups,
     DiscoveryParams,
     Fileinfo,

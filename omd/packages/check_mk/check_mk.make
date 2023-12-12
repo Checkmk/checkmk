@@ -56,7 +56,7 @@ ifneq ($(EDITION),managed)
 	    --exclude "cme" \
 	    --exclude "cme.py"
 endif
-ifeq ($(filter $(EDITION),cloud free saas),)
+ifeq ($(filter $(EDITION),cloud free saas managed),)
 	EDITION_EXCLUDE += \
 	    --exclude "cloud" \
 	    --exclude "cce" \
@@ -74,7 +74,8 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/[!__init__.py]* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	rm $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/__init__.py
 	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -type f | sed -e 'p;s~.py$$~~' | xargs -n2 mv
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
@@ -101,12 +102,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	tar -c -C $(REPO_PATH)/doc \
 	    --transform "s/^plugin-api\/build/plugin-api/" \
 	    plugin-api/build/html | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
-	tar -c -C $(REPO_PATH)/livestatus/api \
-	    $(CHECK_MK_TAROPTS) \
-	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/livestatus/
-
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
-	install -m 644 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
@@ -146,7 +141,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/check_mk_agent.msi \
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \
-	    windows/python-3.4.cab \
 	    windows/check_mk.user.yml \
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
@@ -174,67 +168,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 
 	# cmk needs to be a namespace package (CMK-3979)
-	rm -f \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/special_agents/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/dashboard/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/cron/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/userdb/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/bi/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/sidebar/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/icons/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/visuals/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/actions/__init__.py \
-	    \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/cce/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
-	    \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py
+	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk
@@ -247,9 +181,11 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 
 
 	# Install the diskspace cleanup plugin

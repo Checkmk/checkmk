@@ -201,7 +201,7 @@ class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
 
 
-class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
+class MkpRulePackProxy(MutableMapping[str, Any]):
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack

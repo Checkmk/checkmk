@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Notification Rules
@@ -30,6 +30,7 @@ from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.constructors import domain_object
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
@@ -214,3 +215,11 @@ def _serialize_notification_rule(rule: NotificationRule) -> DomainObject:
         editable=True,
         deletable=True,
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_rule)
+    endpoint_registry.register(show_rules)
+    endpoint_registry.register(post_rule)
+    endpoint_registry.register(put_rule)
+    endpoint_registry.register(delete_rule)

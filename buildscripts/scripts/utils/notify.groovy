@@ -33,19 +33,22 @@ def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
+    def projectname = currentBuild.fullProjectName
     try {
-        def isChangeValidation = currentBuild.fullProjectName.contains("cv");
-        print("|| error-reporting: isChangeValidation=${isChangeValidation}");
-
-        def isTesting = currentBuild.fullProjectName.contains("Testing");
-        print("|| error-reporting: isTesting=${isTesting}");
-
-        def isTriggerJob = currentBuild.fullProjectName.contains("trigger");
-        print("|| error-reporting: isTriggerJob=${isTriggerJob}");
-
+        def isChangeValidation = projectname.contains("cv");
+        def isTesting = projectname.contains("Testing");
+        def isTriggerJob = projectname.contains("trigger");
         /// for now we assume this build to be in state "FAILURE"
         def isFirstFailure = currentBuild.getPreviousBuild()?.result != "FAILURE";
-        print("|| error-reporting: isFirstFailure=${isFirstFailure}");
+        print(
+            """
+            ||==========================================================================================
+            || error-reporting: isChangeValidation=${isChangeValidation}
+            || error-reporting: isTesting=${isTesting}
+            || error-reporting: isTriggerJob=${isTriggerJob}
+            || error-reporting: isFirstFailure=${isFirstFailure}
+            ||==========================================================================================
+            """.stripMargin());
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
@@ -55,11 +58,15 @@ def notify_error(error) {
                 "jonas.scharpf@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
-                print("|| error-reporting:   changeSet=${changeSet}");
-                print("|| error-reporting:   changeSet.items=${changeSet.items}");
-
                 def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
-                print("|| error-reporting:   culprits_emails ${culprits_emails}");
+                print(
+                    """
+                    ||==========================================================================================
+                    || error-reporting:   changeSet=${changeSet}
+                    || error-reporting:   changeSet.items=${changeSet.items}
+                    || error-reporting:   culprits_emails=${culprits_emails}
+                    ||==========================================================================================
+                    """.stripMargin());
             }
 
             // It seems the option "Allowed domains" is not working properly.
@@ -70,13 +77,18 @@ def notify_error(error) {
             });
 
             /// Inform cloud devs if cloud burns
-            if (currentBuild.fullProjectName.contains("build-cmk-cloud-images")) {
+            if (projectname.contains("build-cmk-cloud-images")) {
                 notify_emails += "max.linke@checkmk.com"
             }
 
             /// Inform nile devs if our extensions fail
-            if (currentBuild.fullProjectName.contains("test-extension-compatibility")) {
+            if (projectname.contains("test-extension-compatibility")) {
                 notify_emails.addAll(TEAM_NILE_MAIL.split(","))
+            }
+
+            /// Inform werk workers if something's wrong with the werk jobs
+            if (projectname.startsWith("werks/")) {
+                notify_emails += "benedikt.seidl@checkmk.com"
             }
 
             /// fallback - for investigation
@@ -130,6 +142,7 @@ def notify_error(error) {
 
     StackTraceUtils.sanitize(error);
     print("ERROR: ${error.stackTrace.head()}: ${error}");
+    currentBuild.description += "<br>The build failed due to an exception (at ${error.stackTrace.head()}):<br><strong style='color:red'>${error}</strong>";
     throw error;
 }
 

@@ -22,6 +22,7 @@ from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollecti
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
     load_password,
@@ -212,3 +213,11 @@ def serialize_password(ident, details):
         editable=True,
         deletable=True,
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_password)
+    endpoint_registry.register(update_password)
+    endpoint_registry.register(delete_password)
+    endpoint_registry.register(show_password)
+    endpoint_registry.register(list_passwords)

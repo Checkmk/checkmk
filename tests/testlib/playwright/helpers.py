@@ -12,8 +12,8 @@ from re import Pattern
 from typing import Literal
 from urllib.parse import urljoin, urlsplit
 
-from playwright._impl import _api_types
-from playwright.sync_api import expect, Locator, Page, Response
+from playwright.sync_api import Error, expect, Locator, Page, Response
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
 
@@ -168,7 +168,7 @@ class MainMenu(LocatorHelper):
 
     @property
     def help_plugin_api_docs(self) -> Locator:
-        return self.help_menu.get_by_text("Check plugin API reference")
+        return self.help_menu.get_by_text("Plugin API references")
 
     @property
     def help_rest_api_intro(self) -> Locator:
@@ -355,7 +355,7 @@ class PPage(LocatorHelper):
                 try:
                     locator.click()
                     clicked = True
-                except _api_types.TimeoutError:
+                except PWTimeoutError:
                     pass
 
             if clicked:
@@ -372,7 +372,7 @@ class PPage(LocatorHelper):
             try:
                 if reload_on_error:
                     self.page.reload(wait_until="networkidle")
-            except _api_types.Error:
+            except Error:
                 continue
 
         raise AssertionError(

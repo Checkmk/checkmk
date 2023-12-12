@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
 
-from .agent_based_api.v1 import HostLabel, register
-from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
-from .utils.esx_vsphere import (
+from cmk.plugins.lib.esx_vsphere import (
     ESXCpu,
     ESXDataStore,
     ESXMemory,
@@ -16,6 +14,9 @@ from .utils.esx_vsphere import (
     HeartBeatStatus,
     SectionVM,
 )
+
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
@@ -108,7 +109,7 @@ def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemo
 
         memory_values[parsed_name] = value_optional
 
-    return ESXMemory.parse_obj(memory_values)
+    return ESXMemory.model_validate(memory_values)
 
 
 def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:

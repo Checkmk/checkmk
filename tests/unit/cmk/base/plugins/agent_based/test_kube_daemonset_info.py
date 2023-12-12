@@ -9,13 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_daemonset_info import check_kube_daemonset_info
-from cmk.base.plugins.agent_based.utils.kube import (
-    DaemonSetInfo,
-    NamespaceName,
-    Selector,
-    ThinContainers,
-    Timestamp,
-)
+
+from cmk.plugins.lib.kube import DaemonSetInfo, NamespaceName, Selector, ThinContainers, Timestamp
 
 
 @pytest.mark.parametrize(

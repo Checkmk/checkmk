@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib import bonding
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import bonding
 
 
 def _get_real_adapter_name(bond: str, name: str) -> str:
@@ -91,6 +92,5 @@ def parse_windows_intel_bonding(  # pylint: disable=too-many-branches
 
 register.agent_section(
     name="windows_intel_bonding",
-    parsed_section_name="bonding",
     parse_function=parse_windows_intel_bonding,
 )

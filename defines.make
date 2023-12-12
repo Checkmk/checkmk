@@ -17,20 +17,20 @@ else
 ENTERPRISE         := no
 endif
 
-ifneq (,$(wildcard $(REPO_PATH)/managed))
-MANAGED            := yes
-EDITION            := managed
-EDITION_SHORT      := cme
-else
-MANAGED            := no
-endif
-
 ifneq (,$(wildcard $(REPO_PATH)/cloud))
 CLOUD              := yes
 EDITION            := cloud
 EDITION_SHORT      := cce
 else
 CLOUD              := no
+endif
+
+ifneq (,$(wildcard $(REPO_PATH)/managed))
+MANAGED            := yes
+EDITION            := managed
+EDITION_SHORT      := cme
+else
+MANAGED            := no
 endif
 
 ifneq (,$(wildcard $(REPO_PATH)/saas))
@@ -72,10 +72,11 @@ GCC_VERSION_PATCHLEVEL := 0
 GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}
 
 # NOTE: When you update the Python version, please take care of the following things:
+# * the python version is now centralized within bazel, see package_versions.bzl
 # * update test_03_pip_interpreter_version
 # * update omd/Licenses.csv, too.
 # * you may need to regenerate the Pipfile.lock with "make --what-if Pipfile Pipfile.lock"
-PYTHON_VERSION  := 3.11.5
+PYTHON_VERSION  := $(shell sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/package_versions.bzl)
 
 # convenience stuff derived from PYTHON_VERSION
 PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))
@@ -91,7 +92,7 @@ AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11
 PIPENV_VERSION := 2023.2.18
 VIRTUALENV_VERSION := 20.20.0
 NODEJS_VERSION := 18
-NPM_VERSION := 9
+NPM_VERSION := 10
 
 # PyPi Mirror Configuration
 # By default our internal Python mirror is used.

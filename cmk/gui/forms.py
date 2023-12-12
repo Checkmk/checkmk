@@ -229,3 +229,11 @@ def remove_unused_vars(
             form_prefix, varname, value
         ):
             request.del_var(varname)
+
+
+def open_submit_button_container_div(tooltip: str) -> None:
+    html.open_div(
+        class_="submit_button_container",
+        data_title=tooltip,
+        title=tooltip,
+    )

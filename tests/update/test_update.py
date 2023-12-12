@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import random
 from pathlib import Path
 
@@ -22,17 +21,12 @@ from .conftest import get_site_status, update_config, update_site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed  starting from  base-version 2.2.0p8",
-)
+@pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
-    test_site: Site,
+    test_setup: tuple[Site, bool],
     agent_ctl: Path,
-    request: pytest.FixtureRequest,
 ) -> None:
-    # get version data
+    test_site, disable_interactive_mode = test_setup
     base_version = test_site.version
 
     hostnames = [HostName(f"test-host-{i}") for i in range(5)]
@@ -83,14 +77,6 @@ def test_update(  # pylint: disable=too-many-branches
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
 
-        # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
-        #  after the update. See CMK-13774.
-        if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
-            postfix_services = ["Postfix Queue", "Postfix status"]
-            for postfix_service in postfix_services:
-                if postfix_service in base_data[hostname]:
-                    base_data[hostname].pop(postfix_service)
-
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
         # used in debugging mode
         _ = get_services_with_status(base_data[hostname], 1)  # Warn
@@ -105,9 +91,7 @@ def test_update(  # pylint: disable=too-many-branches
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(
-        test_site, target_version, request.config.getoption(name="--disable-interactive-mode")
-    )
+    target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)
@@ -172,4 +156,4 @@ def test_update(  # pylint: disable=too-many-branches
             f"target-version: "
             f"{not_ok_services}"
         )
-        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+        assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

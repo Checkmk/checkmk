@@ -4,6 +4,11 @@ log() {
     echo "+++ $1"
 }
 
+failure() {
+    echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
 _artifact_name() {
     local DIR_NAME="$1"
     local DISTRO="$2"
@@ -183,7 +188,6 @@ find_defines_make() {
     while [ ! -e defines.make ]; do
         if [ "$PWD" = / ]; then
             failure "could not find defines.make"
-            break
         fi
         cd ..
     done
@@ -199,7 +203,7 @@ get_version() {
 test_package() {
     log "Testing for ${1% *} in \$PATH"
     $1 | grep "$2" >/dev/null 2>&1 || (
-        echo "Invalid version: $($1)"
+        echo "Invalid version: $($1) expected $2"
         exit 1
     )
 }

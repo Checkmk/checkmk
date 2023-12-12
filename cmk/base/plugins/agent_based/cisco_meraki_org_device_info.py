@@ -5,9 +5,10 @@
 
 from dataclasses import dataclass
 
+from cmk.plugins.lib.cisco_meraki import load_json, MerakiAPIData
+
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.cisco_meraki import load_json, MerakiAPIData
 
 
 @dataclass(frozen=True)

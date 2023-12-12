@@ -113,39 +113,38 @@ class MonitoringSearch(ABCMegaMenuSearch):
     def show_search_field(self) -> None:
         html.open_div(id_="mk_side_search_monitoring")
         # TODO: Implement submit action (e.g. show all results of current query)
-        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
-        tooltip = _(
-            "Search with regular expressions for menu entries, \n"
-            "hosts, services or host and service groups.\n\n"
-            "You can use the following filters:\n"
-            "h: Host\n"
-            "s: Service\n"
-            "hg: Host group\n"
-            "sg: Service group\n"
-            "ad: Address\n"
-            "al: Alias\n"
-            "tg: Host tag\n"
-            "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-            "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
-            "Note that for simplicity '*' will be substituted with '.*'."
-        )
-        html.input(
-            id_=f"mk_side_search_field_{self.name}",
-            type_="text",
-            name="search",
-            title=tooltip,
-            autocomplete="off",
-            placeholder=_("Search in Monitoring"),
-            onkeydown="cmk.search.on_key_down('monitoring')",
-            oninput="cmk.search.on_input_search('monitoring')",
-        )
-        html.input(
-            id_=f"mk_side_search_field_clear_{self.name}",
-            name="reset",
-            type_="button",
-            onclick="cmk.search.on_click_reset('monitoring');",
-        )
-        html.end_form()
+        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
+            tooltip = _(
+                "Search with regular expressions for menu entries, \n"
+                "hosts, services or host and service groups.\n\n"
+                "You can use the following filters:\n"
+                "h: Host\n"
+                "s: Service\n"
+                "hg: Host group\n"
+                "sg: Service group\n"
+                "ad: Address\n"
+                "al: Alias\n"
+                "tg: Host tag\n"
+                "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+                "sl: Service label (e.g. sl: cmk/os_family:linux)\n\n"
+                "Note that for simplicity '*' will be substituted with '.*'."
+            )
+            html.input(
+                id_=f"mk_side_search_field_{self.name}",
+                type_="text",
+                name="search",
+                title=tooltip,
+                autocomplete="off",
+                placeholder=_("Search in Monitoring"),
+                onkeydown="cmk.search.on_key_down('monitoring')",
+                oninput="cmk.search.on_input_search('monitoring')",
+            )
+            html.input(
+                id_=f"mk_side_search_field_clear_{self.name}",
+                name="reset",
+                type_="button",
+                onclick="cmk.search.on_click_reset('monitoring');",
+            )
         html.close_div()
         html.div("", id_="mk_side_clear")
 

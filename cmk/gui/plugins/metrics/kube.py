@@ -375,7 +375,7 @@ graph_info["kube_replica_update_state"] = {
 graph_info["kube_cronjob_status"] = {
     "title": _("Duration"),
     "metrics": [
-        ("kube_cron_job_status_job_duration", "area"),
-        ("kube_cron_job_status_execution_duration", "area"),
+        ("kube_cron_job_status_job_duration", "line"),
+        ("kube_cron_job_status_execution_duration", "line"),
     ],
 }

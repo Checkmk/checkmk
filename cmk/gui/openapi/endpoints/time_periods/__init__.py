@@ -31,6 +31,7 @@ from cmk.gui.openapi.endpoints.time_periods.response_schemas import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
@@ -414,3 +415,11 @@ def _to_checkmk_format(
     time_period.update(periods)
 
     return time_period
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_timeperiod)
+    endpoint_registry.register(update_timeperiod)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(show_time_period)
+    endpoint_registry.register(list_time_periods)

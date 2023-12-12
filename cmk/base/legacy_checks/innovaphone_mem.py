@@ -4,19 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.innovaphone import check_innovaphone
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-
-innovaphone_mem_default_levels = (60.0, 70.0)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def inventory_innovaphone_mem(info):
-    return [(None, innovaphone_mem_default_levels)]
+    yield None, {}
 
 
 def check_innovaphone_mem(_no_item, params, info):
-    return check_innovaphone(params, info)
+    yield check_levels(
+        int(info[0][1]),
+        "usage",
+        params["levels"],
+        human_readable_func=render.percent,
+        infoname="Current",
+    )
 
 
 check_info["innovaphone_mem"] = LegacyCheckDefinition(
@@ -24,4 +28,7 @@ check_info["innovaphone_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_innovaphone_mem,
     check_function=check_innovaphone_mem,
     check_ruleset_name="innovaphone_mem",
+    check_default_parameters={
+        "levels": (60.0, 70.0),
+    },
 )

@@ -209,7 +209,7 @@ graph_info["shards_allocation"] = {
 graph_info["active_shards"] = {
     "title": _("Active shards"),
     "metrics": [
-        ("active_shards", "area"),
-        ("active_primary_shards", "area"),
+        ("active_shards", "line"),
+        ("active_primary_shards", "line"),
     ],
 }

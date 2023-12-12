@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.packaging import PackageID
-
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
+from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
     get_installer_and_package_map,
+    get_package_store,
+    get_path_config,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -23,7 +24,9 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
     def __call__(self, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
-        installer, package_map = get_installer_and_package_map()
+        path_config = get_path_config()
+        package_store = get_package_store(path_config)
+        installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()
         for path, _gui_part, module_name, error in get_failed_plugins():
             package_id = package_map.get(path.resolve())
@@ -46,6 +49,8 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 error,
                 package_id,
                 installer,
+                package_store,
+                path_config,
             ):
                 disabled_packages.add(package_id)
                 remove_failed_plugin(path)

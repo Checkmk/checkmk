@@ -10,14 +10,15 @@ import pytest
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.threepar_capacity import (
     check_threepar_capacity,
     discover_threepar_capacity,
     parse_threepar_capacity,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [
@@ -152,7 +153,7 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 3}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
@@ -171,7 +172,7 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 6}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),

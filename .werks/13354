@@ -1,4 +1,4 @@
-Title: <tt>check_sftp</tt>: Fix password store usage
+Title: check_sftp: Fix password store usage
 Class: fix
 Compatible: compat
 Component: checks

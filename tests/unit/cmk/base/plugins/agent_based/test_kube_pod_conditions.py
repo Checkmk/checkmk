@@ -13,12 +13,14 @@ from pydantic import ValidationError
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin, Result
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
 from cmk.base.plugins.agent_based import kube_pod_conditions
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import PodCondition, PodConditions
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.lib.kube import PodCondition, PodConditions
 
 MINUTE = 60
 TIMESTAMP = 359

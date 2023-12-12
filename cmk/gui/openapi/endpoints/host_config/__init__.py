@@ -40,10 +40,9 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import operator
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
-from urllib.parse import urlencode
+from typing import Any, Callable
+from urllib.parse import urlparse
 
-import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.bakery as bakery
@@ -77,6 +76,8 @@ from cmk.gui.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
@@ -575,9 +576,13 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         )
 
     response = Response(status=302)
-    response.location = constructors.link_endpoint(
-        "cmk.gui.openapi.endpoints.host_config", "cmk/wait-for-completion", parameters={}
-    )["href"]
+    response.location = urlparse(
+        constructors.link_endpoint(
+            "cmk.gui.openapi.endpoints.host_config",
+            "cmk/wait-for-completion",
+            parameters={},
+        )["href"]
+    ).path
     return response
 
 
@@ -611,7 +616,7 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
 
     if job_is_active:
         response = Response(status=302)
-        response.location = request.url
+        response.location = urlparse(request.url).path
         return response
     return Response(status=204)
 
@@ -652,10 +657,7 @@ def move(params: Mapping[str, Any]) -> Response:
             detail="The host is already part of the specified target folder",
         )
     try:
-        if (
-            target_folder.name(),
-            target_folder.title(),
-        ) not in current_folder.choices_for_moving_host():
+        if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host():
             raise MKAuthException
         current_folder.move_hosts([host_name], target_folder)
     except MKAuthException:
@@ -746,6 +748,9 @@ def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
+agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
+
+
 def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
     extensions = {
         "folder": "/" + host.folder().path(),
@@ -756,24 +761,7 @@ def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
         "cluster_nodes": host.cluster_nodes(),
     }
 
-    agent_links = []
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
-        from cmk.cee.bakery.type_defs import (  # pylint: disable=import-error,no-name-in-module
-            AgentPackagePlatform,
-        )
-
-        for platform in sorted(AgentPackagePlatform, key=lambda p: p.value):
-            agent_links.append(
-                constructors.link_rel(
-                    rel="cmk/download",
-                    href="{}?{}".format(
-                        constructors.domain_type_action_href("agent", "download"),
-                        urlencode({"os_type": platform.value, "host_name": host.id()}),
-                    ),
-                    method="get",
-                    title=f"Download the {platform.value} agent of the host.",
-                )
-            )
+    agent_links = agent_links_hook(host.name())
 
     return constructors.domain_object(
         domain_type="host_config",
@@ -809,3 +797,19 @@ def _host_etag_values(host: Host) -> dict[str, Any]:
         "attributes": {k: v for k, v in host.attributes.items() if k != "meta_data"},
         "cluster_nodes": host.cluster_nodes(),
     }
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_host)
+    endpoint_registry.register(create_cluster_host)
+    endpoint_registry.register(bulk_create_hosts)
+    endpoint_registry.register(list_hosts)
+    endpoint_registry.register(update_nodes)
+    endpoint_registry.register(update_host)
+    endpoint_registry.register(bulk_update_hosts)
+    endpoint_registry.register(rename_host)
+    endpoint_registry.register(renaming_job_wait_for_completion)
+    endpoint_registry.register(move)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(bulk_delete)
+    endpoint_registry.register(show_host)

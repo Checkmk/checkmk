@@ -34,9 +34,10 @@
 from collections.abc import Sequence
 from typing import NamedTuple
 
+from cmk.plugins.lib.cisco import DETECT_CISCO
+
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.cisco import DETECT_CISCO
 
 
 class _IfInfo(NamedTuple):

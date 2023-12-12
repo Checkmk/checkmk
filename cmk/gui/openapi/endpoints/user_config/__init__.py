@@ -21,6 +21,7 @@ from cmk.gui.openapi.endpoints.user_config.request_schemas import CreateUser, Up
 from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import ConnectorType, htpasswd, load_connection_config, load_users
@@ -731,3 +732,11 @@ def _internal_temperature_format_to_api_format(internal_temperature: str | None)
     'default'
     """
     return "default" if not internal_temperature else internal_temperature
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_user)
+    endpoint_registry.register(list_users)
+    endpoint_registry.register(create_user)
+    endpoint_registry.register(delete_user)
+    endpoint_registry.register(edit_user)

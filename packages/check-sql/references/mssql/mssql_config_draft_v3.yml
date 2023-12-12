@@ -14,7 +14,7 @@ mssql:
         ca: "C:\path\to\file" # mandatory
         client_certificate: "C:\path\to\file" # mandatory
       timeout: 5 # optional, default: 5
-    sqls: # optional
+    sections: # optional
       always: # optional, default
         - "instance"
         - "databases"
@@ -35,7 +35,6 @@ mssql:
       cache_age: 600 # optional, default: 600
     instances: # optional
       detect: yes # optional, default
-      all: yes # optional, default: yes / prio 1; ignore include/exclude if yes
       include: ["foo", "bar"] # optional, no default /prio 2; use instance even if excluded
       exclude: ["baz"] # optional, no default / prio 3
     mode: "port" # optional, default: "port" / can be "socket", "port" or "special"
@@ -46,4 +45,4 @@ mssql:
       alias: "someApplicationName" # optional , no default
       piggyback: # optional, no default
         hostname: "myPiggybackHost" # mandatory
-        sqls: # optional, no default / same as above
+        sections: # optional, no default / same as above

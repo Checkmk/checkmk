@@ -1,4 +1,4 @@
-Title: <tt>check_http</tt>: Make method <tt>CONNECT:POST</tt> selectable in Checkmk user interface
+Title: check_http: Make method CONNECT:POST selectable in Checkmk user interface
 Class: feature
 Compatible: compat
 Component: checks

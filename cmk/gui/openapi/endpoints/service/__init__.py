@@ -33,6 +33,7 @@ from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 
 from cmk import fields
@@ -223,3 +224,9 @@ def _list_services(params: Mapping[str, Any]) -> Response:
             ],
         )
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_service)
+    endpoint_registry.register(_list_host_services)
+    endpoint_registry.register(_list_all_services)

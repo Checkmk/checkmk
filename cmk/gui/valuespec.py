@@ -55,15 +55,16 @@ from typing import (
     TypeVar,
 )
 
+import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from OpenSSL import crypto
 from PIL import Image
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 from livestatus import SiteId
 
 import cmk.utils.crypto.certificate as certificate
+import cmk.utils.crypto.keys as keys
 import cmk.utils.dateutils as dateutils
 import cmk.utils.log
 import cmk.utils.paths
@@ -71,6 +72,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import AndOrNotLiteral
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
@@ -105,7 +107,6 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutoc
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
-    AndOrNotLiteral,
     encode_labels_for_http,
     get_labels_from_config,
     get_labels_from_core,
@@ -206,6 +207,13 @@ class Bounds(Generic[C]):
                     else message_upper
                 ).format(actual=formatter(value), bound=formatter(self._upper)),
             )
+
+    def transform_value(self, value: C) -> C:
+        if self._lower is not None and value < self._lower:
+            return self._lower
+        if self._upper is not None and self._upper < value:
+            return self._upper
+        return value
 
 
 class ValueSpec(abc.ABC, Generic[T]):
@@ -419,6 +427,7 @@ class Age(ValueSpec[int]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: str | None = None,
+        footer: str | None = None,
         minvalue: int | None = None,
         maxvalue: int | None = None,
         display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
@@ -430,6 +439,7 @@ class Age(ValueSpec[int]):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
+        self._footer = footer
         self._bounds = Bounds[int](minvalue, maxvalue)
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
         self._cssclass = [] if cssclass is None else [cssclass]
@@ -462,6 +472,10 @@ class Age(ValueSpec[int]):
                 html.write_text(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
+
+        if self._footer:
+            html.span(self._footer, class_=["vs_floating_text", "vs_age_footer"])
+
         html.close_div()
 
     def from_html_vars(self, varprefix: str) -> int:
@@ -496,6 +510,9 @@ class Age(ValueSpec[int]):
 
     def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
+
+    def transform_value(self, value: int) -> int:
+        return self._bounds.transform_value(value)
 
 
 class NumericRenderer:
@@ -7036,15 +7053,28 @@ class AndOrNotDropdown(DropdownChoice):
         vs_val = self._valuespec.from_html_vars(varprefix_vs)
         return (bool_val, vs_val)
 
+    def validate_datatype(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
+        if value is None:
+            return
+
+        varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
+        # Validate datatype of AndOrNotLiteral: value[0]
+        super().validate_datatype(value[0], varprefix_bool)
+
+        # Validate datatype of valuespec: value[1]
+        vs_validate_datatype = getattr(self._valuespec, "validate_datatype", None)
+        if callable(vs_validate_datatype):
+            vs_validate_datatype(value[1], varprefix_vs)
+
     def _validate_value(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
         if value is None:
             return
 
         varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
-        # Validate AndOrNotLiteral: value[0]
+        # Validate value of AndOrNotLiteral: value[0]
         super()._validate_value(value[0], varprefix_bool)
 
-        # Validate valuespec value: value[1]
+        # Validate value of valuespec: value[1]
         vs_validate_value = getattr(self._valuespec, "_validate_value", None)
         if callable(vs_validate_value):
             vs_validate_value(value[1], varprefix_vs)
@@ -7110,7 +7140,14 @@ class LabelGroup(ListOf):
     _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
     _magic: str = "@:@"  # Used by ListOf class to count through entries
 
-    def __init__(self) -> None:
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        # ListOf
+        add_label: str | None = None,
+        # ValueSpec
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+    ) -> None:
         super().__init__(
             valuespec=AndOrNotDropdown(
                 valuespec=self._sub_vs,
@@ -7122,12 +7159,14 @@ class LabelGroup(ListOf):
                 vs_label=self._first_element_label,
             ),
             magic=self._magic,
-            add_label=_("Add to query"),
+            add_label=add_label if add_label is not None else _("Add to query"),
             del_label=self.del_label,
             add_icon="plus",
             ignore_complain=True,
             movable=False,
             default_value=[("and", self._sub_vs.default_value())],
+            title=title,
+            help=help,
         )
 
     @property
@@ -7153,6 +7192,11 @@ class LabelGroup(ListOf):
         )
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
+    def title(self) -> str | None:
+        if self._title:
+            return self._title
+        return self._valuespec.title()
+
 
 class LabelGroups(LabelGroup):
     _ident: str = "label_groups"
@@ -7161,33 +7205,35 @@ class LabelGroups(LabelGroup):
     _first_element_label: str | None = "Label"
     _sub_vs: ValueSpec = LabelGroup()
     _magic: str = "@!@"  # Used by ListOf class to count through entries
+    _default_value: ListOfAndOrNotDropdownValue = [("and", [("and", "")])]
 
     @property
     def del_label(self) -> str:
         return _("Remove this label group")
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
-        # Remove all HTTP vars for the current varprefix before rendering. This ensures that
-        # rendering is based solely on the given argument 'value' (no interference from formerly
-        # submitted values under the same varname). Also this avoids the dragging on of unused HTTP
-        # vars in hidden input fields.
-        for varname, _value in request.itervars(prefix=varprefix):
-            request.del_var_from_env(varname)
-
         # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
+        html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
 
     def _add_empty_row_to_groups(
-        self, label_groups: ListOfAndOrNotDropdownValue
+        self, value: ListOfAndOrNotDropdownValue
     ) -> ListOfAndOrNotDropdownValue:
-        if not label_groups:
-            return [("and", [("and", "")])]
+        if not value:
+            return self._default_value
 
-        for _group_operator, label_group in label_groups:
+        for _group_operator, label_group in value:
             if label_group and label_group[-1] != ("and", ""):
                 label_group.append(("and", ""))
-        return label_groups
+        return value
+
+    def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
+        # By default, i.e. without any user input, rendered and submitted LabelGroups return a value
+        # of [("and", [("and", "")])]  (self._default_value)
+        # For this default case we provide an actually empty value [] here
+        value = super().from_html_vars(varprefix)
+        return [] if value == self._default_value else value
 
 
 # https://github.com/python/mypy/issues/12368
@@ -7764,7 +7810,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         # TODO: This method is the only reason we have to offer dump_legacy_pkcs1. Can we use
         # dump_pem instead? The only difference is "-----BEGIN RSA PRIVATE KEY-----" (pkcs1) vs
         # "-----BEGIN PRIVATE KEY-----".
-        key = certificate.RsaPrivateKey.generate(4096)
+        key = keys.PrivateKey.generate_rsa(4096)
         private_key = key.dump_legacy_pkcs1().str
         public_key = key.public_key.dump_openssh()
         return (private_key, public_key)
@@ -7931,39 +7977,6 @@ class AjaxFetchCA(AjaxPage):
         raise MKUserError(None, _("Found no CA"))
 
 
-def analyse_cert(value: Any) -> dict[str, dict[str, str]]:
-    # ? type of the value argument is unclear
-    # TODO(hannes): use utils.crypto.certificate instead
-    cert = crypto.load_certificate(
-        crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
-    )
-    titles = {
-        "C": _("Country"),
-        "ST": _("State or Province Name"),
-        "L": _("Locality Name"),
-        "O": _("Organization Name"),
-        "CN": _("Common Name"),
-    }
-    cert_info: dict[str, dict[str, str]] = {}
-    for what, x509 in [
-        ("issuer", cert.get_issuer()),
-        ("subject", cert.get_subject()),
-    ]:
-        cert_info[what] = {}
-        for raw_key, raw_val in x509.get_components():
-            key = raw_key.decode("utf-8")
-            if key in titles:
-                cert_info[what][titles[key]] = raw_val.decode("utf-8")
-    return cert_info
-
-
-def validate_certificate(value: Any, varprefix: str) -> None:
-    try:
-        analyse_cert(value)
-    except Exception as e:
-        raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
-
-
 def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
     *,
     title: str | None = None,
@@ -7976,7 +7989,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
             raise MKUserError(varprefix, _("Encrypted private keys are not supported"))
 
         try:
-            certificate.RsaPrivateKey.load_pem(certificate.PlaintextPrivateKeyPEM(value))
+            keys.PrivateKey.load_pem(keys.PlaintextPrivateKeyPEM(value))
         except Exception:
             raise MKUserError(varprefix, _("Invalid private key"))
 
@@ -8004,7 +8017,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
     )
 
 
-class CAorCAChain(UploadOrPasteTextFile):
+class _CAorCAChain(UploadOrPasteTextFile):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # UploadOrPasteTextFile
@@ -8044,11 +8057,57 @@ class CAorCAChain(UploadOrPasteTextFile):
             validate=validate,
         )
 
+    @staticmethod
+    def _analyse_cert(cert: certificate.Certificate) -> dict[str, dict[str, str]]:
+        """
+        Inspect the certificate and place selected info in a dict.
+
+        Depending on which info is specified in the certificate, the resulting dict may contain
+        - common name; organization name; locality name; state or province name; country name
+        and will look something like this:
+        {
+            "issuer": {
+                "Common Name": ...,
+                "Organization Name": ...,
+                ...
+            },
+            "subject": {
+                "Common Name": ...,
+                "Organization Name": ...,
+                ...
+            },
+        }
+        """
+        attributes = {
+            certificate.X509NameOid.COUNTRY_NAME: _("Country"),
+            certificate.X509NameOid.STATE_OR_PROVINCE_NAME: _("State or Province Name"),
+            certificate.X509NameOid.LOCALITY_NAME: _("Locality Name"),
+            certificate.X509NameOid.ORGANIZATION_NAME: _("Organization Name"),
+            certificate.X509NameOid.COMMON_NAME: _("Common Name"),
+        }
+
+        return {
+            entity: {
+                attributes[attr_name]: attr_value
+                for attr_name in attributes
+                if (attr_value := info.get_single_name_attribute(attr_name)) is not None
+            }
+            for (entity, info) in [("issuer", cert.issuer), ("subject", cert.subject)]
+        }
+
     def _validate_value(self, value: Any, varprefix: str) -> None:
-        validate_certificate(value, varprefix)
+        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
+        try:
+            # make sure the PEM can be loaded
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        except Exception as e:
+            raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def value_to_html(self, value: Any) -> ValueSpecText:
-        cert_info = analyse_cert(value)
+        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
+        cert_info = self._analyse_cert(
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        )
 
         rows = []
         for what, title in [
@@ -8086,7 +8145,7 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
     validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
 ) -> ListOf:
     return ListOf(
-        valuespec=CAorCAChain(),
+        valuespec=_CAorCAChain(),
         magic=magic,
         add_label=_("Add new CA certificate or chain") if add_label is None else add_label,
         del_label=del_label,
@@ -8335,3 +8394,97 @@ def _type_name(v):
         return type(v).__name__
     except Exception:
         return escaping.escape_attribute(str(type(v)))
+
+
+class DatePicker(ValueSpec[str]):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[str] | None = None,
+        onchange: str | None = None,
+    ):
+        self._onchange = onchange
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+    def render_input(self, varprefix: str, value: str) -> None:
+        html.date(
+            var=varprefix,
+            value=value,
+            id_="date_" + varprefix,
+            onchange=self._onchange,
+        )
+
+    def canonical_value(self) -> str:
+        return ""
+
+    def from_html_vars(self, varprefix: str) -> str:
+        return request.get_str_input_mandatory(varprefix)
+
+    def mask(self, value: str) -> str:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> str:
+        return json_value
+
+    def value_to_json(self, value: T) -> JSONValue:
+        return value
+
+    def validate_value(self, value: str, varprefix: str) -> None:
+        try:
+            dateutil.parser.isoparse(value)
+        except ValueError as e:
+            raise MKUserError(varprefix, _("Invalid date format: %s") % e) from e
+
+
+class TimePicker(ValueSpec[str]):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[str] | None = None,
+        onchange: str | None = None,
+    ):
+        self._onchange = onchange
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+    def render_input(self, varprefix: str, value: str) -> None:
+        html.time(
+            var=varprefix,
+            value=value,
+            id_="time_" + varprefix,
+            onchange=self._onchange,
+        )
+
+    def canonical_value(self) -> str:
+        return ""
+
+    def from_html_vars(self, varprefix: str) -> str:
+        return request.get_str_input_mandatory(varprefix)
+
+    def mask(self, value: str) -> str:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> str:
+        return json_value
+
+    def value_to_json(self, value: T) -> JSONValue:
+        return value
+
+    def validate_value(self, value: str, varprefix: str) -> None:
+        try:
+            time.strptime(value, "%H:%M")
+        except ValueError as e:
+            raise MKUserError(varprefix, _("Invalid time format: %s") % e) from e

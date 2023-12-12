@@ -730,33 +730,34 @@ class DiscoveryPageRenderer:
             if not checks:
                 continue
 
-            html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with table_element(
-                table_id="checks_%s" % entry.table_group,
-                title=f"{entry.title} ({len(checks)})",
-                css="data",
-                searchable=False,
-                limit=False,
-                sortable=False,
-                foldable=Foldable.FOLDABLE_STATELESS,
-                omit_update_header=False,
-                help=entry.help_text,
-                isopen=entry.table_group
-                not in (
-                    DiscoveryState.CLUSTERED_NEW,
-                    DiscoveryState.CLUSTERED_OLD,
-                    DiscoveryState.CLUSTERED_VANISHED,
-                ),
-            ) as table:
-                for check in sorted(checks, key=lambda e: e.description.lower()):
-                    self._show_check_row(
-                        table, discovery_result, api_request, check, entry.show_bulk_actions
-                    )
+            with html.form_context(
+                "checks_%s" % entry.table_group, method="POST", action="wato.py"
+            ):
+                with table_element(
+                    table_id="checks_%s" % entry.table_group,
+                    title=f"{entry.title} ({len(checks)})",
+                    css="data",
+                    searchable=False,
+                    limit=False,
+                    sortable=False,
+                    foldable=Foldable.FOLDABLE_STATELESS,
+                    omit_update_header=False,
+                    help=entry.help_text,
+                    isopen=entry.table_group
+                    not in (
+                        DiscoveryState.CLUSTERED_NEW,
+                        DiscoveryState.CLUSTERED_OLD,
+                        DiscoveryState.CLUSTERED_VANISHED,
+                    ),
+                ) as table:
+                    for check in sorted(checks, key=lambda e: e.description.lower()):
+                        self._show_check_row(
+                            table, discovery_result, api_request, check, entry.show_bulk_actions
+                        )
 
-            if entry.show_bulk_actions:
-                self._toggle_bulk_action_page_menu_entries(entry.table_group)
-            html.hidden_fields()
-            html.end_form()
+                if entry.show_bulk_actions:
+                    self._toggle_bulk_action_page_menu_entries(entry.table_group)
+                html.hidden_fields()
 
     @staticmethod
     def _show_empty_cluster_hint() -> None:
@@ -973,7 +974,7 @@ class DiscoveryPageRenderer:
             css=[stateclass],
         )
         table.cell(_("Service"), entry.description, css=["service"])
-        table.cell(_("Status detail"), css=["expanding"])
+        table.cell(_("Summary"), css=["expanding"])
         self._show_status_detail(entry)
 
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:

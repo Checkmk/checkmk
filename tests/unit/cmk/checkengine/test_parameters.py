@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 
 
 def _default() -> LegacyCheckParameters:
@@ -88,3 +90,35 @@ class TestTimespecificParameters:
                 TimespecificParameterSet(_default(), tuple_2 + _tp_values()),
             )
         ).evaluate(lambda x: True) == (1, 1)
+
+
+def test_parameters_features() -> None:
+    par0 = Parameters({})
+    par1 = Parameters({"olaf": "schneemann"})
+
+    assert repr(par1) == "Parameters({'olaf': 'schneemann'})"
+
+    assert len(par0) == 0
+    assert len(par1) == 1
+
+    assert not par0
+    assert par1
+
+    assert "olaf" not in par0
+    assert "olaf" in par1
+
+    assert par0.get("olaf") is None
+    assert par1.get("olaf") == "schneemann"
+
+    with pytest.raises(KeyError):
+        _ = par0["olaf"]
+    assert par1["olaf"] == "schneemann"
+
+    assert not list(par0)
+    assert not list(par0.keys())
+    assert not list(par0.values())
+    assert not list(par0.items())
+
+    assert list(par1) == list(par1.keys()) == ["olaf"]
+    assert list(par1.values()) == ["schneemann"]
+    assert list(par1.items()) == [("olaf", "schneemann")]

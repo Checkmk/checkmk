@@ -9,18 +9,31 @@ import dataclasses
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
+from urllib.parse import urlparse
 
 import pexpect  # type: ignore[import-untyped]
+import pytest
 
 from cmk.utils.version import Edition
 
 LOGGER = logging.getLogger()
+
+
+class UtilCalledProcessError(subprocess.CalledProcessError):
+    def __str__(self) -> str:
+        return (
+            super().__str__()
+            if self.stderr is None
+            else f"{super().__str__()[:-1]} ({self.stderr!r})."
+        )
 
 
 @dataclasses.dataclass
@@ -48,40 +61,36 @@ def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
-def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
-    return str(repo_path())
+def cmc_path() -> Path:
+    return repo_path() / "enterprise"
 
 
-def cmc_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "enterprise")
+def cme_path() -> Path:
+    return repo_path() / "managed"
 
 
-def cme_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "managed")
+def cce_path() -> Path:
+    return repo_path() / "cloud"
 
 
-def cce_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "cloud")
-
-
-def cse_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "saas")
+def cse_path() -> Path:
+    return repo_path() / "saas"
 
 
 def is_enterprise_repo() -> bool:
-    return os.path.exists(cmc_path())
+    return cmc_path().exists()
 
 
 def is_managed_repo() -> bool:
-    return os.path.exists(cme_path())
+    return cme_path().exists()
 
 
 def is_cloud_repo() -> bool:
-    return os.path.exists(cce_path())
+    return cce_path().exists()
 
 
 def is_saas_repo() -> bool:
-    return os.path.exists(cse_path())
+    return cse_path().exists()
 
 
 def is_containerized() -> bool:
@@ -94,7 +103,7 @@ def is_containerized() -> bool:
 
 def virtualenv_path() -> Path:
     venv = subprocess.check_output(
-        [str(repo_path() / "scripts/run-pipenv"), "--bare", "--venv"], encoding="utf-8"
+        [repo_path() / "scripts/run-pipenv", "--bare", "--venv"], encoding="utf-8"
     )
     return Path(venv.rstrip("\n"))
 
@@ -129,6 +138,19 @@ def current_branch_name() -> str:
         ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
     )
     return branch_name.split("\n", 1)[0]
+
+
+def current_branch_version() -> str:
+    return subprocess.check_output(
+        [
+            "make",
+            "--no-print-directory",
+            "-f",
+            str(repo_path() / "defines.make"),
+            "print-BRANCH_VERSION",
+        ],
+        encoding="utf-8",
+    ).strip()
 
 
 def current_base_branch_name() -> str:
@@ -213,11 +235,11 @@ def site_id() -> str:
 
 
 def add_python_paths() -> None:
-    sys.path.insert(0, cmk_path())
+    sys.path.insert(0, str(repo_path()))
     if is_enterprise_repo():
         sys.path.insert(0, os.path.join(cmc_path()))
-    sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
-    sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
+    sys.path.insert(0, os.path.join(repo_path(), "livestatus/api/python"))
+    sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
 
 
 def package_hash_path(version: str, edition: Edition) -> Path:
@@ -336,7 +358,8 @@ def spawn_expect_process(
     return rc
 
 
-def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+def run(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+    """Run a process and return a CompletedProcess object."""
     LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
@@ -354,6 +377,97 @@ def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProc
     return proc
 
 
+def execute(  # type: ignore[no-untyped-def]
+    cmd: list[str],
+    *args,
+    preserve_env: list[str] | None = None,
+    sudo: bool = True,
+    substitute_user: str | None = None,
+    **kwargs,
+) -> subprocess.Popen:
+    """Run a process as root or a different user and return a Popen object."""
+    sudo_cmd = ["sudo"] if sudo else []
+    su_cmd = ["su", "-l", substitute_user] if substitute_user else []
+    if preserve_env:
+        # Skip the test cases calling this for some distros
+        if os.environ.get("DISTRO") == "centos-8":
+            pytest.skip("preserve env not possible in this environment")
+        if sudo:
+            sudo_cmd += [f"--preserve-env={','.join(preserve_env)}"]
+        if substitute_user:
+            su_cmd += ["--whitelist-environment", ",".join(preserve_env)]
+
+    kwargs.setdefault("encoding", "utf-8")
+    cmd = sudo_cmd + (su_cmd + ["-c", shlex.quote(shlex.join(cmd))] if substitute_user else cmd)
+    cmd_txt = " ".join(cmd)
+    LOGGER.info("Executing: %s", cmd_txt)
+    kwargs["shell"] = kwargs.get("shell", True)
+    return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
+
+
+def check_output(
+    cmd: list[str],
+    input: str | None = None,  # pylint: disable=redefined-builtin
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> str:
+    """Mimics subprocess.check_output while running a process as root or a different user.
+
+    Returns the stdout of the process.
+    """
+    p = execute(
+        cmd,
+        sudo=sudo,
+        substitute_user=substitute_user,
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE if input else None,
+    )
+    stdout, stderr = p.communicate(input)
+    if p.returncode != 0:
+        raise UtilCalledProcessError(p.returncode, p.args, stdout, stderr)
+    assert isinstance(stdout, str)
+    return stdout
+
+
+def write_file(
+    path: str,
+    content: bytes | str,
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> None:
+    """Write a file as root or another user."""
+    with execute(
+        ["tee", path],
+        sudo=sudo,
+        substitute_user=substitute_user,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        encoding=None
+        if isinstance(
+            content,
+            bytes,
+        )
+        else "utf-8",
+    ) as p:
+        p.communicate(content)
+    if p.returncode != 0:
+        raise Exception(
+            "Failed to write file %s. Exit-Code: %d"
+            % (
+                path,
+                p.returncode,
+            )
+        )
+
+
+def makedirs(path: str, sudo: bool = True, substitute_user: str | None = None) -> bool:
+    """Make directory path (including parents) as root or another user."""
+    p = execute(["mkdir", "-p", path], sudo=sudo, substitute_user=substitute_user)
+    return p.wait() == 0
+
+
 def restart_httpd() -> None:
     """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
     creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
@@ -365,17 +479,17 @@ def restart_httpd() -> None:
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
-        execute(["sudo", "httpd", "-k", "restart"])
+        run(["sudo", "httpd", "-k", "restart"])
 
 
 def get_services_with_status(
     host_data: dict, service_status: int, skipped_services: list | tuple = ()
-) -> list:
-    """Return a list of services in the given status which are not in the 'skipped' list."""
-    services_list = []
+) -> set:
+    """Return a set of services in the given status which are not in the 'skipped' list."""
+    services_list = set()
     for service in host_data:
         if host_data[service] == service_status and service not in skipped_services:
-            services_list.append(service)
+            services_list.add(service)
 
     LOGGER.debug(
         "%s service(s) found in state %s:\n%s",
@@ -384,3 +498,67 @@ def get_services_with_status(
         pformat(services_list),
     )
     return services_list
+
+
+@contextmanager
+def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
+    idp_url = "http://localhost:5551"
+    makedirs("/etc/cse", sudo=True)
+    assert os.path.exists("/etc/cse")
+
+    cognito_config = "/etc/cse/cognito-cmk.json"
+    write_cognito_config = not os.path.exists(cognito_config)
+    global_config = "/etc/cse/global-config.json"
+    write_global_config = not os.path.exists(global_config)
+    if write_cognito_config:
+        write_file(
+            cognito_config,
+            check_output(
+                [f"{repo_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]
+            ),
+            sudo=True,
+        )
+    else:
+        LOGGER.warning('Skipped writing "%s": File exists!', cognito_config)
+    assert os.path.exists(cognito_config)
+
+    if write_global_config:
+        with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
+            write_file(
+                global_config,
+                f.read(),
+                sudo=True,
+            )
+    else:
+        LOGGER.warning('Skipped writing "%s": File exists!', global_config)
+    assert os.path.exists(global_config)
+
+    idp = urlparse(idp_url)
+    auth_provider_proc = execute(
+        [
+            f"{repo_path()}/scripts/run-pipenv",
+            "run",
+            "uvicorn",
+            "tests.testlib.cse.openid_oauth_provider:application",
+            "--host",
+            f"{idp.hostname}",
+            "--port",
+            f"{idp.port}",
+        ],
+        sudo=False,
+        cwd=repo_path(),
+        env=dict(os.environ, URL=idp_url),
+        shell=False,
+    )
+    assert (
+        auth_provider_proc.poll() is None
+    ), f"Error while starting auth provider! (RC: {auth_provider_proc.returncode})"
+    try:
+        yield auth_provider_proc
+    finally:
+        if auth_provider_proc:
+            auth_provider_proc.kill()
+        if write_cognito_config:
+            execute(["rm", cognito_config])
+        if write_global_config:
+            execute(["rm", global_config])

@@ -9,10 +9,11 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import uptime
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib import uptime as uptime_utils
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -47,7 +48,7 @@ def test_uptime_discovery(section: uptime_utils.Section, do_discover: bool) -> N
 def test_uptime_check_basic() -> None:
     with on_time("2018-04-15 16:50", "CET"):
         assert list(uptime_utils.check({}, uptime_utils.Section(123, None))) == [
-            Result(state=State.OK, summary="Up since Apr 15 2018 18:47:57"),
+            Result(state=State.OK, summary="Up since 2018-04-15 18:47:57"),
             Result(state=State.OK, summary="Uptime: 2 minutes 3 seconds"),
             Metric("uptime", 123.0),
         ]
@@ -56,7 +57,7 @@ def test_uptime_check_basic() -> None:
 def test_uptime_check_zero() -> None:
     with on_time("2018-04-15 16:50", "CET"):
         assert list(uptime_utils.check({}, uptime_utils.Section(0, None))) == [
-            Result(state=State.OK, summary="Up since Apr 15 2018 18:50:00"),
+            Result(state=State.OK, summary="Up since 2018-04-15 18:50:00"),
             Result(state=State.OK, summary="Uptime: 0 seconds"),
             Metric("uptime", 0.0),
         ]
@@ -87,7 +88,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since Apr 15 2018 12:31:09"),
+                Result(state=State.OK, summary="Up since 2018-04-15 12:31:09"),
                 Result(state=State.OK, summary="Uptime: 6 hours 18 minutes"),
                 Metric("uptime", 22731),
             ],
@@ -115,7 +116,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since Apr 15 2018 18:31:18"),
+                Result(state=State.OK, summary="Up since 2018-04-15 18:31:18"),
                 Result(state=State.OK, summary="Uptime: 18 minutes 42 seconds"),
                 Metric("uptime", 1122),
             ],
@@ -144,7 +145,7 @@ def test_uptime_check_zero() -> None:
                 ["[uptime_solaris_end]"],
             ],
             [
-                Result(state=State.OK, summary="Up since May 14 2017 19:33:11"),
+                Result(state=State.OK, summary="Up since 2017-05-14 19:33:11"),
                 Result(state=State.OK, summary="Uptime: 335 days 23 hours"),
                 Metric("uptime", 29027808.0471184),
             ],

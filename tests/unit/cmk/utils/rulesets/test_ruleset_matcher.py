@@ -84,9 +84,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "host_labels": {
-                "os": "linux",
-            },
+            "host_label_groups": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -95,10 +93,15 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "host_labels": {
-                "os": "linux",
-                "abc": "xä",
-            },
+            "host_label_groups": [
+                (
+                    "and",
+                    [
+                        ("and", "os:linux"),
+                        ("and", "abc:xä"),
+                    ],
+                )
+            ],
         },
         "options": {},
     },
@@ -106,7 +109,9 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "hu",
-        "condition": {"host_labels": {"hu": {"$ne": "ha"}}},
+        "condition": {
+            "host_label_groups": [("and", [("not", "hu:ha")])],
+        },
         "options": {},
     },
     # test unconditional match
@@ -120,19 +125,19 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
 
 
 @pytest.mark.parametrize(
-    "hostname_str,expected_result",
+    "hostname, expected_result",
     [
-        ("host1", ["os_linux", "abc", "BLA"]),
-        ("host2", ["hu", "BLA"]),
+        (HostName("host1"), ["os_linux", "abc", "BLA"]),
+        (HostName("host2"), ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_host_values_labels(
-    hostname_str: str, expected_result: Sequence[str]
+    hostname: HostName, expected_result: Sequence[str]
 ) -> None:
     matcher = RulesetMatcher(
         host_tags={HostName("host1"): {}, HostName("host2"): {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={
                 HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
                 HostName("host2"): {},
@@ -146,10 +151,7 @@ def test_ruleset_matcher_get_host_values_labels(
         nodes_of={},
     )
 
-    assert (
-        list(matcher.get_host_values(HostName(hostname_str), ruleset=host_label_ruleset))
-        == expected_result
-    )
+    assert list(matcher.get_host_values(hostname, ruleset=host_label_ruleset)) == expected_result
 
 
 def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
@@ -158,7 +160,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     ruleset_matcher = RulesetMatcher(
         host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=[
@@ -199,14 +201,13 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     }
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_labels_of_service_discovered_labels() -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
     ruleset_matcher = RulesetMatcher(
         host_tags={test_host: {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -239,7 +240,7 @@ def test_basic_get_host_values() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -278,7 +279,7 @@ def test_basic_get_host_values_subfolders() -> None:
             HostName("lvl2"): "/lvl1/lvl2/hosts.mk",
             HostName("lvl1a"): "/lvl1_a/hosts.mk",
         },
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -354,7 +355,7 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -429,7 +430,7 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -552,7 +553,7 @@ def test_ruleset_matcher_get_host_values_tags(
             },
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -580,6 +581,7 @@ def test_ruleset_matcher_get_host_values_tags(
                         TagGroupID("grp1"): TagID("v1"),
                     },
                 },
+                "id": "01",
                 "options": {},
             },
             ["value"],
@@ -593,6 +595,7 @@ def test_ruleset_matcher_get_host_values_tags(
                         TagGroupID("grp2"): TagID("v1"),
                     },
                 },
+                "id": "02",
                 "options": {},
             },
             [],
@@ -659,9 +662,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "service_labels": {
-                "os": "linux",
-            },
+            "service_label_groups": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -670,10 +671,10 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "service_labels": {
-                "os": "linux",
-                "abc": "xä",
-            },
+            "service_label_groups": [
+                ("and", [("and", "os:linux")]),
+                ("and", [("and", "abc:xä")]),
+            ],
         },
         "options": {},
     },
@@ -681,7 +682,9 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "hu",
-        "condition": {"service_labels": {"hu": {"$ne": "ha"}}},
+        "condition": {
+            "service_label_groups": [("and", [("not", "hu:ha")])],
+        },
         "options": {},
     },
     # test unconditional match
@@ -699,14 +702,18 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
     [
         # Funny service description because the plugin isn't loaded.
         # We could patch config.service_description, but this is easier:
-        (HostName("host1"), "Unimplemented check cpu_load", ["os_linux", "abc", "BLA"]),
-        (HostName("host2"), "Unimplemented check cpu_load", ["hu", "BLA"]),
+        (
+            HostName("host1"),
+            ServiceName("Unimplemented check cpu_load"),
+            ["os_linux", "abc", "BLA"],
+        ),
+        (HostName("host2"), ServiceName("Unimplemented check cpu_load"), ["hu", "BLA"]),
     ],
 )
 def test_ruleset_matcher_get_service_ruleset_values_labels(
     monkeypatch: MonkeyPatch,
     hostname: HostName,
-    service_description: str,
+    service_description: ServiceName,
     expected_result: Sequence[str],
 ) -> None:
     ts = Scenario()
@@ -747,7 +754,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
     assert (
         list(
             matcher.get_service_ruleset_values(
-                matcher._service_match_object(hostname, ServiceName(service_description)),
+                matcher._service_match_object(hostname, service_description),
                 ruleset=service_label_ruleset,
             )
         )

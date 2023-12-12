@@ -11,10 +11,11 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_graylog_messages
 from cmk.base.config import check_info
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}

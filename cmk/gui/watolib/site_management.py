@@ -30,6 +30,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 
 from cmk.gui.config import prepare_raw_site_config
+from cmk.gui.customer import customer_api
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
@@ -39,9 +40,6 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
-
-if version.edition() is version.Edition.CME:
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
 
 class SiteDoesNotExistException(Exception):
@@ -335,7 +333,7 @@ class BasicSettings:
             return cls(
                 alias=internal_config["alias"],
                 site_id=site_id,
-                customer=internal_config.get("customer", default_customer_id()),
+                customer=internal_config.get("customer", customer_api().default_customer_id()),
             )
         return cls(alias=internal_config["alias"], site_id=site_id)
 

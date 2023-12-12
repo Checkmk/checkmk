@@ -158,6 +158,7 @@ def register(
     config_variable_registry.register(ConfigVariableiAdHocDowntime)
     config_variable_registry.register(ConfigVariableAuthByHTTPHeader)
     config_variable_registry.register(EnableLoginViaGet)
+    config_variable_registry.register(EnableDeprecatedAutomationuserAuthentication)
     config_variable_registry.register(ConfigVariableStalenessThreshold)
     config_variable_registry.register(ConfigVariableLoginScreen)
     config_variable_registry.register(ConfigVariableUserLocalizations)
@@ -166,7 +167,7 @@ def register(
     config_variable_registry.register(ConfigVariableUserDowntimeTimeranges)
     config_variable_registry.register(ConfigVariableBuiltinIconVisibility)
     config_variable_registry.register(ConfigVariableServiceViewGrouping)
-    config_variable_registry.register(ConfigVariableViewActionDefaults)
+    config_variable_registry.register(ConfigVariableAcknowledgeProblems)
     config_variable_registry.register(ConfigVariableDefaultTemperatureUnit)
     config_variable_registry.register(ConfigVariableTrustedCertificateAuthorities)
     config_variable_registry.register(ConfigVariableAgentControllerCertificates)
@@ -1252,7 +1253,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                         "duration",
                         Integer(
                             title=_("Duration"),
-                            help=_("The duration in minutes of the adhoc downtime."),
+                            help=_("The duration in minutes of the ad hoc downtime."),
                             minvalue=1,
                             unit=_("minutes"),
                             default_value=60,
@@ -1261,9 +1262,9 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     (
                         "comment",
                         TextInput(
-                            title=_("Adhoc comment"),
+                            title=_("Ad hoc comment"),
                             help=_(
-                                "The comment which is automatically sent with an adhoc downtime"
+                                "The comment which is automatically sent with an ad hoc downtime"
                             ),
                             size=80,
                             allow_empty=False,
@@ -1271,11 +1272,11 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                     ),
                 ],
             ),
-            title=_("Adhoc downtime"),
-            label=_("Enable adhoc downtime"),
+            title=_("Ad hoc downtime"),
+            label=_("Enable ad hoc downtime"),
             help=_(
-                "This setting allows to set an adhoc downtime comment and its duration. "
-                "When enabled a new button <i>Adhoc downtime for __ minutes</i> will "
+                "This setting allows to set an ad hoc downtime comment and its duration. "
+                "When enabled a new button <i>Ad hoc downtime for __ minutes</i> will "
                 "be available in the command form."
             ),
         )
@@ -1348,6 +1349,32 @@ class EnableLoginViaGet(ConfigVariable):
                 "in via this method by default. Use this property to enable logging in via the "
                 "GET method for all users."
             ),
+        )
+
+
+class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
+    """See Werk #16223"""
+
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "enable_deprecated_automation_user_authentication"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Enable automation user authentication via HTTP parameters"),
+            help=_(
+                "In previous Checkmk versions it was possible to use an automation user to display "
+                "specific pages within Checkmk. To authenticate these requests it was possible to "
+                "add the _username and _secret parameters to the parameters (e.g. append them to the "
+                "URL). GET parameters are usually logged by proxies and webservers and are not "
+                "deemed secure for secrets. See Werk  #16223 for more information."
+            ),
+            default_value=True,
         )
 
 
@@ -1778,7 +1805,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
                 ],
                 optional_keys=[],
             ),
-            title=_("Custom Downtime Timeranges"),
+            title=_("Downtime duration presets"),
             movable=True,
             totext=_("%d timeranges"),
         )
@@ -1917,7 +1944,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         )
 
 
-class ConfigVariableViewActionDefaults(ConfigVariable):
+class ConfigVariableAcknowledgeProblems(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
@@ -1925,42 +1952,47 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
         return ConfigDomainGUI
 
     def ident(self) -> str:
-        return "view_action_defaults"
+        return "acknowledge_problems"
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("View action defaults"),
+            title=_("Acknowledge problems"),
             elements=[
                 (
                     "ack_sticky",
                     Checkbox(
-                        title=_("Sticky"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_notify",
-                    Checkbox(
-                        title=_("Send notification"),
-                        label=_("Enable"),
-                        default_value=True,
-                    ),
-                ),
-                (
-                    "ack_persistent",
-                    Checkbox(
-                        title=_("Persistent comment"),
+                        title=_(
+                            "Ignore status changes until services/hosts are OK/UP again (sticky)"
+                        ),
                         label=_("Enable"),
                         default_value=False,
                     ),
                 ),
                 (
+                    "ack_persistent",
+                    Checkbox(
+                        title=_("Keep comment after acknowledgment expires (persistent comment)"),
+                        label=_("Enable"),
+                        default_value=False,
+                    ),
+                ),
+                (
+                    "ack_notify",
+                    Checkbox(
+                        title=_(
+                            "Notify affected users if notification rules are in place (send notifications)"
+                        ),
+                        label=_("Enable"),
+                        default_value=True,
+                    ),
+                ),
+                (
                     "ack_expire",
                     Age(
-                        title=_("Expire acknowledgement after"),
+                        title=_("Default expiration time (relative)"),
                         display=["days", "hours", "minutes"],
-                        default_value=0,
+                        default_value=3600,
+                        minvalue=60,
                     ),
                 ),
             ],
@@ -3111,7 +3143,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return Transform(
             valuespec=DropdownChoice(
                 title=cmk_version.mark_edition_only(
-                    _("Choose SNMP Backend"), cmk_version.Edition.CEE
+                    _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
                 ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3158,7 +3190,9 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % cmk_version.mark_edition_only(_("Choose SNMP Backend"), cmk_version.Edition.CEE),
+            % cmk_version.mark_edition_only(
+                _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+            ),
         )
 
 
@@ -4803,7 +4837,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition() is Edition.CCE
+            if edition() in (Edition.CME, Edition.CCE)
             else ""
         ),
         sorted=False,
@@ -5345,7 +5379,7 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
+        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
     ),
 )
 

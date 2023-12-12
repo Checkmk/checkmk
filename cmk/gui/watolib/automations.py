@@ -23,8 +23,8 @@ import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
@@ -597,7 +597,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
         )
         assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
-            JobStatusSpec.parse_obj(raw_response[0]),
+            JobStatusSpec.model_validate(raw_response[0]),
             raw_response[1],
         )
         auto_logger.debug("Job status: %r", response)

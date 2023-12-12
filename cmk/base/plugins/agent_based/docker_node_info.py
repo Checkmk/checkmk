@@ -5,9 +5,10 @@
 
 from itertools import zip_longest
 
+from cmk.plugins.lib import docker
+
 from .agent_based_api.v1 import Attributes, HostLabel, register, TableRow
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
-from .utils import docker
 
 
 def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:

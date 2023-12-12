@@ -1,0 +1,32 @@
+Title: linux-bonding: introduce check for expected bonding mode
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1698999268
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The service monitoring rule "Linux monitoring service status"
+was previously being used for both Linux and OVS.  This werk
+now splits this rule in two.  We now have the following rules.
+
+Bonding interface status
+OVS bonding interface status
+
+The reason behind this, is that we have now introduced an
+expected mode configuration parameter only for the Linux
+rule. So you are now able to select the expected bonding
+mode and the state you want to display when this condition
+is not met.
+
+Actions:
+
+Case 1: Rule configured for linux
+Action: do nothing.
+
+Case 2: Rule configured for OVS
+Action: All previously configured rules will now appear as
+Linux Bonding interface status rules.  Therefore you will
+have to delete them and create new "OVS Bonding interface
+status" rules.

@@ -78,6 +78,13 @@ class PredictionData(BaseModel, frozen=True):
     def num_points(self) -> int:
         return len(self.points)
 
+    def predict(self, timestamp: int) -> DataStat | None:
+        unbound_index = (timestamp - self.data_twindow[0]) // self.step
+        # NOTE: A one hour prediction is valid for 24 hours, while the time range only covers one hour.
+        # This is why we have to wrap larger indices back into the available list.
+        # For consistenty we allow negative times as well.
+        return self.points[unbound_index % len(self.points)]
+
 
 class PredictionStore:
     def __init__(
@@ -101,8 +108,8 @@ class PredictionStore:
         data: PredictionData,
     ) -> None:
         self._dir.mkdir(exist_ok=True, parents=True)
-        self._info_file(info.name).write_text(info.json())
-        self._data_file(info.name).write_text(data.json())
+        self._info_file(info.name).write_text(info.model_dump_json())
+        self._data_file(info.name).write_text(data.model_dump_json())
 
     def remove_prediction(self, timegroup: Timegroup) -> None:
         self._data_file(timegroup).unlink(missing_ok=True)
@@ -111,7 +118,7 @@ class PredictionStore:
     def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
         file_path = self._info_file(timegroup)
         try:
-            return PredictionInfo.parse_raw(file_path.read_text())
+            return PredictionInfo.model_validate_json(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
         return None
@@ -119,7 +126,7 @@ class PredictionStore:
     def get_data(self, timegroup: Timegroup) -> PredictionData | None:
         file_path = self._data_file(timegroup)
         try:
-            return PredictionData.parse_raw(file_path.read_text())
+            return PredictionData.model_validate_json(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction for group %s available.", timegroup)
         return None

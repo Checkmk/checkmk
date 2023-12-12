@@ -188,12 +188,13 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_store_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.snmp"))
+        super().__init__()
         self.sections: Final = sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
+        self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._section_store = SectionStore[SNMPRawDataElem](
             section_store_path,
             logger=self._logger,

@@ -12,15 +12,15 @@ Previously a table in the HW/SW inventory tree could be opened as an own view
 if
 <ul>
 <li>the view name was added to the related display hint (with suffix
-{{_of_host}}) and</li>
-<li>the view was declared with {{declare_invtable_view}}.</li>
+"_of_host") and</li>
+<li>the view was declared with "declare_invtable_view".</li>
 </ul>
 
-The view declaration function {{declare_invtable_view}} was removed. Thus you
+The view declaration function "declare_invtable_view" was removed. Thus you
 also have to remove this function from your modules in order to avoid import
 errors.
 
-Moreover the view name does not have to end with {{_of_host}}.
+Moreover the view name does not have to end with "_of_host".
 
 Example:
 

@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.oracle_performance_inventory import inventory_oracle_performance
 from cmk.base.plugins.agent_based.oracle_performance_section import parse_oracle_performance
-from cmk.base.plugins.agent_based.utils.oracle import SectionPerformance
+
+from cmk.plugins.lib.oracle import SectionPerformance
 
 _AGENT_OUTPUT_1 = [
     ["TWH", "sys_time_model", "DB CPU", "14826"],

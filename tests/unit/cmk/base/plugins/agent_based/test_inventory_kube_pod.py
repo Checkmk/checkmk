@@ -11,7 +11,8 @@ from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     ContainerName,
     ContainerRunningState,
     ContainerSpec,

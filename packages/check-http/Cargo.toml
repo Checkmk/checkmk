@@ -1,3 +1,7 @@
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 [package]
 name = "check_http"
 version = "0.1.0"
@@ -7,10 +11,23 @@ edition = "2021"
 
 [dependencies]
 aes-gcm = { version = "*", features = ["aes", "std"] }
+bytes = { version = "*" }
 anyhow = { version = "*" }
 clap = { version = "*", features = ["derive"] }
 http = { version = "*" }
-reqwest = { version = "*", features = ["json"] }
+# We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
+# Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
+# supported by rustls.
+# Since we only know that at runtime we need to pull in both TLS backends.
+reqwest = { version = "*", features = [
+    "json",
+    "rustls-tls",
+    "native-tls-alpn",
+] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
 tokio = { version = "*", features = ["full"] }
 openssl = { version = "*", features = ["vendored"] }
+httpdate = { version = "*" }
+mime = { version = "*" }
+encoding_rs = { version = "*" }
+regex = { version = "*" }

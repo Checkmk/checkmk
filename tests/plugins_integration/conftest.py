@@ -3,13 +3,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
-import re
 from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import execute
+from tests.testlib.site import get_site_factory, Site, SiteFactory
+from tests.testlib.utils import run
+from tests.testlib.version import CMKVersion, Edition
+from tests.testlib.utils import current_base_branch_name, current_branch_version
 
 from tests.plugins_integration import checks
 
@@ -34,7 +35,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--skip-cleanup",
         action="store_true",
-        default=False,
+        default=os.getenv("CLEANUP", "1") != "1",
         help="Skip cleanup process after test execution",
     )
     parser.addoption(
@@ -146,52 +147,43 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     skip_cleanup = request.config.getoption("--skip-cleanup")
     for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
-        # NOTE: the snmpwalks folder cannot be changed!
-        walk_path = site.path("var/check_mk/snmpwalks")
-        # create dump folder in the test site
-        logger.info('Creating folder "%s"...', dump_path)
-        rc = site.execute(["mkdir", "-p", dump_path]).wait()
-        assert rc == 0
-
-        logger.info("Injecting agent-output...")
-        for dump_name in checks.get_host_names():
-            assert (
-                execute(
-                    [
-                        "sudo",
-                        "cp",
-                        "-f",
-                        f"{checks.config.dump_dir}/{dump_name}",
-                        f"{walk_path}/{dump_name}"
-                        if re.search(r"\bsnmp\b", dump_name)
-                        else f"{dump_path}/{dump_name}",
-                    ]
-                ).returncode
-                == 0
-            )
-
-        for dump_type in checks.config.dump_types:  # type: ignore
-            host_folder = f"/{dump_type}"
-            if site.openapi.get_folder(host_folder):
-                logger.info('Host folder "%s" already exists!', host_folder)
-            else:
-                logger.info('Creating host folder "%s"...', host_folder)
-                site.openapi.create_folder(host_folder)
-            ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
-            logger.info('Creating rule "%s"...', ruleset_name)
-            site.openapi.create_rule(
-                ruleset_name=ruleset_name,
-                value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
-                folder=host_folder,
-            )
-            logger.info('Rule "%s" created!', ruleset_name)
+        checks.setup_site(site, dump_path)
 
         yield site
 
-        if os.getenv("CLEANUP", "1") == "1" and not skip_cleanup:
+        if not skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+
+
+@pytest.fixture(name="site_factory_update", scope="session")
+def _get_sf_update():
+    base_version = CMKVersion(
+        "2.2.0p8",  # todo: retrieve this version number from a common utils module
+        branch=current_base_branch_name(),
+        branch_version=current_branch_version(),
+        edition=Edition.CEE,
+    )
+    return get_site_factory(prefix="plugins_", version=base_version)
+
+
+@pytest.fixture(name="test_site_update", scope="session")
+def _get_site_update(
+    site_factory_update: SiteFactory, request: pytest.FixtureRequest
+) -> Iterator[Site]:
+    """Setup test-site and perform cleanup after test execution."""
+    skip_cleanup = request.config.getoption("--skip-cleanup")
+    for site in site_factory_update.get_test_site(auto_cleanup=not skip_cleanup):
+        dump_path = site.path("var/check_mk/dumps")
+        checks.setup_site(site, dump_path)
+
+        yield site
+
+        if not skip_cleanup:
+            # cleanup existing agent-output folder in the test site
+            logger.info('Removing folder "%s"...', dump_path)
+            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")

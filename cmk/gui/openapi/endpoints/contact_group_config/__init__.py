@@ -52,6 +52,7 @@ from cmk.gui.openapi.endpoints.utils import (
 from cmk.gui.openapi.permission_tracking import disable_permission_tracking
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.groups import (
@@ -270,3 +271,14 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     entries = body["entries"]
     updated_contact_groups = update_groups("contact", entries)
     return serve_json(serialize_group_list("contact_group_config", updated_contact_groups))
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create)
+    endpoint_registry.register(bulk_create)
+    endpoint_registry.register(list_group)
+    endpoint_registry.register(show)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(bulk_delete)
+    endpoint_registry.register(update)
+    endpoint_registry.register(bulk_update)

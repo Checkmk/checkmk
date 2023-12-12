@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.apc_netbotz_smoke import (
@@ -14,6 +13,8 @@ from cmk.base.plugins.agent_based.apc_netbotz_smoke import (
     SmokeSensorSection,
     SmokeSensorState,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 TEST_SECTION = [
     ["0", "3", "Banana1", "1"],

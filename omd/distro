@@ -62,7 +62,7 @@ then
         exit 0
     elif [ "${VERSION:0:9}" = "AlmaLinux" ]
     then
-        if [ "${VERSION:0:21}" = "AlmaLinux release 9.0" ]; then
+        if [[ "${VERSION:0:21}" =~ "AlmaLinux release 9."(0|2) ]]; then
             echo "ALMALINUX${SEP}9"
             exit 0
         fi
@@ -83,7 +83,7 @@ then
     then
         echo "SLES$SEP${VERSION}SP2"
         exit 0
-    elif [ "$VERSION" = 11 -a "$SP" = 3 ] 
+    elif [ "$VERSION" = 11 -a "$SP" = 3 ]
     then
         echo "SLES$SEP${VERSION}SP3"
         exit 0
@@ -91,7 +91,7 @@ then
     then
         echo "SLES$SEP${VERSION}SP4"
         exit 0
-    elif [ "$VERSION" = 10 -a "$SP" = 1 ] 
+    elif [ "$VERSION" = 10 -a "$SP" = 1 ]
     then
         echo "SLES$SEP${VERSION}SP1"
         exit 0

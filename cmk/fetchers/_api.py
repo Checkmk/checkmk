@@ -29,9 +29,7 @@ def get_raw_data(
         if file_cache.simulation:
             raise MKFetcherError(f"{fetcher}: data unavailable in simulation mode")
 
-        fetched: result.Result[_TRawData, Exception] = result.Error(
-            MKFetcherError(f"{fetcher}: unknown error")
-        )
+        fetched: result.Result[_TRawData, Exception] = result.Error(MKFetcherError("unknown error"))
         with fetcher:
             fetched = fetcher.fetch(mode)
         fetched.map(partial(file_cache.write, mode=mode))

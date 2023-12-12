@@ -32,45 +32,44 @@
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
-emerson_stat_default = (0, 0)  # warning / critical, unused
+from cmk.agent_based.v2.type_defs import StringTable
 
 
-def inventory_emerson_stat(info):
-    if info:
-        return [(None, emerson_stat_default)]
-    return []
+def inventory_emerson_stat(string_table: StringTable) -> DiscoveryResult:
+    if string_table:
+        yield Service()
 
 
-def check_emerson_stat(item, params, info):
-    if info:
-        status_text = {
-            1: "unknown",
-            2: "normal",
-            3: "observation",
-            4: "warning - A3",
-            5: "minor - MA",
-            6: "major - CA",
-            7: "unmanaged",
-            8: "restricted",
-            9: "testing",
-            10: "disabled",
-        }
-        status = int(info[0][0])
-        infotext = "Status: " + status_text[status]
+def check_emerson_stat(_no_item, _no_params, info):
+    if not info:
+        return
 
-        state = 0
-        if status in [5, 6, 10]:
-            state = 2
-        elif status in [1, 3, 4, 7, 8, 9]:
-            state = 1
+    status_text = {
+        1: "unknown",
+        2: "normal",
+        3: "observation",
+        4: "warning - A3",
+        5: "minor - MA",
+        6: "major - CA",
+        7: "unmanaged",
+        8: "restricted",
+        9: "testing",
+        10: "disabled",
+    }
+    status = int(info[0][0])
+    infotext = "Status: " + status_text[status]
 
-        return (state, infotext)
+    state = 0
+    if status in [5, 6, 10]:
+        state = 2
+    elif status in [1, 3, 4, 7, 8, 9]:
+        state = 1
 
-    return (3, "Status not found in SNMP output")
+    yield state, infotext
 
 
 check_info["emerson_stat"] = LegacyCheckDefinition(

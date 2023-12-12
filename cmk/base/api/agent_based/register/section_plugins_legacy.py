@@ -5,19 +5,26 @@
 """Helper to register a new-style section based on config.check_info
 """
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentParseFunction,
+    AgentSectionPlugin,
+    SNMPSectionPlugin,
+)
 from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
-from cmk.base.api.agent_based.type_defs import (
-    AgentParseFunction,
-    AgentSectionPlugin,
-    SNMPParseFunction,
-    SNMPSectionPlugin,
-    StringTable,
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    SimpleSNMPSection,
+    SNMPDetectSpecification,
+    SNMPSection,
+    SNMPTree,
 )
+from cmk.agent_based.v2.type_defs import StringTable
 
 from .utils_legacy import LegacyCheckDefinition
 
@@ -46,7 +53,7 @@ def _create_agent_parse_function(
 def _create_snmp_parse_function(
     original_parse_function: Callable | None,
     handle_empty_info: bool,
-) -> SNMPParseFunction:
+) -> Callable[[Any], object]:  # sorry, but this is what we know.
     """Wrap parse function to comply to new API
 
     The created parse function will comply to the new signature requirement of
@@ -58,7 +65,7 @@ def _create_snmp_parse_function(
     """
 
     # do not use functools.wraps, the point is the new argument name!
-    def parse_function(string_table) -> Any:  # type: ignore[no-untyped-def]
+    def parse_function(string_table: Any) -> object:
         if not handle_empty_info and not any(string_table):
             return None
 
@@ -76,8 +83,6 @@ def _create_snmp_parse_function(
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
-    *,
-    validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
     if check_info_element.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
@@ -90,22 +95,26 @@ def create_agent_section_plugin_from_legacy(
     )
 
     return create_agent_section_plugin(
-        name=get_section_name(check_plugin_name),
-        parse_function=parse_function,
-        validate_creation_kwargs=validate_creation_kwargs,
+        AgentSection(
+            name=get_section_name(check_plugin_name),
+            parse_function=parse_function,
+        ),
+        location=None,
+        validate=False,
     )
 
 
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
-    *,
-    validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:
     if check_info_element.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
         # This would add 19 plugins to list of failures, but some are on the list anyway.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
+
+    fetch = check_info_element["fetch"]
+    detect = cast(SNMPDetectSpecification, check_info_element["detect"])
 
     parse_function = _create_snmp_parse_function(
         check_info_element.get("parse_function"),
@@ -113,9 +122,19 @@ def create_snmp_section_plugin_from_legacy(
     )
 
     return create_snmp_section_plugin(
-        name=get_section_name(check_plugin_name),
-        parse_function=parse_function,
-        fetch=check_info_element["fetch"],
-        detect_spec=check_info_element["detect"],
-        validate_creation_kwargs=validate_creation_kwargs,
+        SimpleSNMPSection(  # ty#pe: ignore[call-overload]
+            name=get_section_name(check_plugin_name),
+            parse_function=parse_function,
+            fetch=fetch,
+            detect=detect,
+        )
+        if isinstance(fetch, SNMPTree)
+        else SNMPSection(  # ty#pe: ignore[call-overload]
+            name=get_section_name(check_plugin_name),
+            parse_function=parse_function,
+            fetch=fetch,
+            detect=detect,
+        ),
+        location=None,
+        validate=False,
     )

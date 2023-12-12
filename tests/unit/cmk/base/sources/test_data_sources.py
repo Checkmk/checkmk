@@ -26,6 +26,7 @@ def make_scenario(hostname, tags):
                 "condition": {
                     "host_name": ["ds-host-14", "all-agents-host", "all-special-host"],
                 },
+                "id": "01",
                 "value": "echo 1",
             },
         ],
@@ -42,6 +43,7 @@ def make_scenario(hostname, tags):
                             "all-special-host",
                         ],
                     },
+                    "id": "02",
                     "value": {},
                 },
             ]

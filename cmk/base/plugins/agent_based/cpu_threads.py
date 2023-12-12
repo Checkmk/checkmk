@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.cpu import Section
+
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.cpu import Section
 
 Params = Mapping[str, str | tuple[str, tuple[float, float]]]
 

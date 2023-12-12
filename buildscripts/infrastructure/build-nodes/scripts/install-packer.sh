@@ -6,7 +6,8 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-    ubuntu-20.04)
+    ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
         wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -14,10 +15,11 @@ case "$DISTRO" in
         apt-get update && apt-get install -y packer
         rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        packer --version || exit $?
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO - packer should only be available in IMAGE_TESTING!"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - packer should only be available in Ubuntu!"
         exit 1
         ;;
 esac

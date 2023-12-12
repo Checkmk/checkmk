@@ -5,16 +5,12 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.arbor import (
-    ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
-    check_arbor_disk_usage,
-    check_arbor_memory,
-    inventory_arbor_disk_usage,
-    inventory_arbor_memory,
-)
+from cmk.base.check_legacy_includes.arbor import check_arbor_disk_usage, inventory_arbor_disk_usage
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.plugins.lib.arbor import DETECT_PEAKFLOW_SP
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.2.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg5min.0
@@ -32,26 +28,21 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 def parse_peakflow_sp(string_table):
     valid = string_table[0]
-    res = {"disk": valid[0], "memory": valid[1:3]}
-    if valid[3]:
+    res = {"disk": valid[0]}
+    if valid[1]:
         # this value appears to be optional
-        res["flows"] = valid[3]
+        res["flows"] = valid[1]
 
     return res
 
 
 check_info["arbor_peakflow_sp"] = LegacyCheckDefinition(
-    detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow SP"),
+    detect=DETECT_PEAKFLOW_SP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.4.2.1",
-        oids=["4.0", "7.0", "10.0", "12.0"],
+        oids=["4.0", "12.0"],
     ),
     parse_function=parse_peakflow_sp,
-    service_name="Memory",
-    discovery_function=inventory_arbor_memory,
-    check_function=check_arbor_memory,
-    check_ruleset_name="memory_arbor",
-    check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_peakflow_sp.disk_usage"] = LegacyCheckDefinition(

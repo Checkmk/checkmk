@@ -6,9 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.oracle_instance import GeneralError, Instance, InvalidData, Section
 
 # <<<oracle_instance:sep(124)>>>
 # XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
@@ -145,7 +146,7 @@ def _parse_agent_line(line: Sequence[str]) -> InvalidData | GeneralError | Insta
         return InvalidData(sid=sid, error="Invalid data from agent")
 
     raw = ((k, v) for k, v in zip(header, line) if not k.startswith("_"))
-    instance = Instance.parse_obj(dict(raw, old_agent=length == 6))
+    instance = Instance.model_validate(dict(raw, old_agent=length == 6))
 
     if instance.pdb:
         assert instance.popenmode is not None

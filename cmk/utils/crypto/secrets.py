@@ -122,3 +122,7 @@ class AutomationUserSecret:
     def delete(self) -> None:
         """Delete the secret file, ignore missing files"""
         self.path.unlink(missing_ok=True)
+
+    def check(self, other: str) -> bool:
+        """Check if a given secret is the same as this one in a timing attack safe manner"""
+        return secrets.compare_digest(self.read().encode("utf-8"), other.encode("utf-8"))

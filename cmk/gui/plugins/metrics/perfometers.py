@@ -30,15 +30,6 @@ from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "active_connections",
-        "half_value": 50.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "dual",
         "perfometers": [
             {
@@ -645,12 +636,8 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": [
-            "fs_used(%)",
-            "100.0,fs_used(%),-#e3fff9",
-        ],
+        "segments": ["fs_used(%)"],
         "total": 100,
-        "label": ("fs_used(%)", "%"),
     }
 )
 
@@ -660,15 +647,6 @@ perfometer_info.append(
         "metric": "dedup_rate",
         "half_value": 30.0,
         "exponent": 1.2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
-        "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
-        "total": "mem_total",
     }
 )
 
@@ -2124,8 +2102,17 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "test_runtime",
-        "half_value": 864000.0,
+        "metric": "robotmk_suite_runtime",
+        "half_value": 3600,
+        "exponent": 2,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "robotmk_test_runtime",
+        "half_value": 1800,
         "exponent": 2,
     }
 )

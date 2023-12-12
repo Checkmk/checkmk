@@ -6,8 +6,9 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import if64, interfaces
+
 from .agent_based_api.v1 import register, SNMPTree, type_defs
-from .utils import if64, interfaces
 
 If64AdmSection = Sequence[str]
 

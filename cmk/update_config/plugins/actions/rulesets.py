@@ -3,46 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from collections.abc import Container, Mapping, Sequence
-from datetime import time as dt_time
-from itertools import chain
 from logging import Logger
 from re import Pattern
+from typing import Any
 
+import cmk.utils.store as store
 from cmk.utils import debug
+from cmk.utils.labels import single_label_group_from_labels
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib import timeperiods
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, RulesetCollection
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import format_warning, UpdateActionState
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
-    "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
-    "checkgroup_parameters:systemd_services": "checkgroup_parameters:systemd_units_services",
-    "checkgroup_parameters:apc_symmetra_power": "checkgroup_parameters:epower",
-    "static_checks:systemd_services": "static_checks:systemd_units_services",
+    "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
+    "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
 }
 
-DEPRECATED_RULESET_PATTERNS = (re.compile("^inv_exports:"),)
+DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
 
 
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets()
+        # To transform the given ruleset config files before initialization, we cannot call
+        # AllRulesets.load_all_rulesets() here.
+        raw_rulesets = AllRulesets(RulesetCollection._initialize_rulesets())
+        root_folder = folder_tree().root_folder()
+        all_rulesets = _transform_label_conditions_in_all_folders(logger, raw_rulesets, root_folder)
 
-        # this *must* be done before the transorms, otherwise information is lost!
-        _extract_connection_encryption_handling_from_210_rules(logger, all_rulesets)
-
-        _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
         _delete_deprecated_wato_rulesets(
             logger,
             all_rulesets,
@@ -74,50 +72,62 @@ update_action_registry.register(
 )
 
 
-def _extract_connection_encryption_handling_from_210_rules(
-    logger: Logger, all_rulesets: RulesetCollection
-) -> None:
-    """Exctract the new 2.2 'encryption_handling' rule from the old 2.1 'agent_encryption'
+def _transform_label_conditions_in_all_folders(
+    logger: Logger, all_rulesets: AllRulesets, folder: Folder
+) -> AllRulesets:
+    for subfolder in folder.subfolders():
+        _transform_label_conditions_in_all_folders(logger, all_rulesets, subfolder)
 
-    We must do this befor we transform the rules, as the used information is then removed by the migration.
-    This can be removed after 2.2 is forked away.
-    """
-    if not (encryption_handling := all_rulesets.get("encryption_handling")).is_empty():
-        logger.log(VERBOSE, "New rule 'encryption_handling' is already present")
-        return
+    loaded_file_config = store.load_mk_file(
+        folder.rules_file_path(),
+        {
+            **RulesetCollection._context_helpers(folder),
+            **RulesetCollection._prepare_empty_rulesets(),
+        },
+    )
 
-    if (encryption_ruleset := all_rulesets.get("agent_encryption")).is_empty():
-        logger.log(VERBOSE, "No 'agent_encryption' rules to transform")
-        return
+    for varname, ruleset_config in all_rulesets.get_ruleset_configs_from_file(
+        folder, loaded_file_config
+    ):
+        if not ruleset_config:
+            continue  # Nothing configured: nothing left to do
 
-    logger.log(VERBOSE, "Create 'encryption_handling' rules from 'agent_encryption'")
-    for folder, _folder_index, rule in encryption_ruleset.get_rules():
-        if not rule.value or "use_regular" not in rule.value:
-            continue
+        # Transform parameters per rule
+        for rule_config in ruleset_config:
+            _transform_label_conditions(rule_config)
 
-        new_rule = Rule.from_ruleset_defaults(folder, encryption_handling)
-        match rule.value["use_regular"]:
-            case "enforce":
-                new_rule.value["accept"] = "any_encrypted"
-            case "allow":
-                new_rule.value["accept"] = "any_and_plain"
-            case "disable":
-                continue
-            case unknown_setting:
-                raise ValueError(f"Unknown setting in {encryption_ruleset.name}: {unknown_setting}")
+        # Overwrite rulesets
+        if varname in all_rulesets._rulesets:
+            all_rulesets._rulesets[varname].replace_folder_config(folder, ruleset_config)
+        else:
+            all_rulesets._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
 
-        new_rule.rule_options.comment = (
-            "This rule has been created automatically during the upgrade to Checkmk version 2.2.\n"
-            f"Please refer to Werk #14982 for details.\n\n{new_rule.comment()}"
+    return all_rulesets
+
+
+def _transform_label_conditions(rule_config: RuleSpec[object]) -> None:
+    if any(key.endswith("_labels") for key in rule_config.get("condition", {})):
+        rule_config["condition"] = transform_condition_labels_to_label_groups(  # type: ignore[typeddict-item]
+            rule_config.get("condition", {})  # type: ignore[arg-type]
         )
-        logger.log(VERBOSE, "Adding 'encryption_handling' rule: %s", new_rule.id)
-        encryption_handling.append_rule(folder, new_rule)
+
+
+def transform_condition_labels_to_label_groups(conditions: dict[str, Any]) -> dict[str, Any]:
+    for what in ["host", "service"]:
+        old_key = f"{what}_labels"
+        new_key = f"{what}_label_groups"
+        if old_key in conditions:
+            conditions[new_key] = (
+                single_label_group_from_labels(conditions[old_key]) if conditions[old_key] else []
+            )
+            del conditions[old_key]
+    return conditions
 
 
 def _delete_deprecated_wato_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
-    deprecated_ruleset_patterns: tuple[Pattern],
+    deprecated_ruleset_patterns: Sequence[Pattern],
 ) -> None:
     for ruleset_name in list(all_rulesets.get_rulesets()):
         if any(p.match(ruleset_name) for p in deprecated_ruleset_patterns):
@@ -237,84 +247,3 @@ def _remove_removed_check_plugins_from_ignored_checks(
                 rule,
                 create_change=False,
             )
-
-
-def _transform_fileinfo_timeofday_to_timeperiods(collection: RulesetCollection) -> None:
-    """Transforms the deprecated timeofday parameter to timeperiods
-
-    In the general case, timeperiods shouldn't be specified if timeofday is used.
-    It wasn't restriced, but it doesn't make sense to have both.
-    In case of timeofday in the default timeperiod, timeofday time range is
-    used and other timeperiods are removed.
-    In case of timeofday in the non-default timeperiod, timeofday param is removed.
-
-    This transformation is introduced in v2.2 and can be removed in v2.3.
-    """
-    all_rulesets = collection.get_rulesets()
-    rulesets = [
-        all_rulesets[RuleGroup.CheckgroupParameters(c)] for c in ("fileinfo", "fileinfo-groups")
-    ]
-    rules = [r.get_rules() for r in rulesets]
-
-    for _folder, _folder_index, rule in chain(*rules):
-        # in case there are timeperiods, look at default timepriod params
-        rule_params = rule.value.get("tp_default_value", rule.value)
-
-        timeofday = rule_params.get("timeofday")
-        if not timeofday:
-            # delete timeofday from non-default timeperiods
-            # this configuration doesn't make sense at all, there is nothing to transform it to
-            for _, tp_params in rule.value.get("tp_values", {}):
-                tp_params.pop("timeofday", None)
-            continue
-
-        timeperiod_name = _get_timeperiod_name(timeofday)
-        if timeperiod_name not in timeperiods.load_timeperiods():
-            _create_timeperiod(timeperiod_name, timeofday)
-
-        thresholds = {
-            k: p
-            for k, p in rule_params.items()
-            if k not in ("timeofday", "tp_default_value", "tp_values")
-        }
-        tp_values = [(timeperiod_name, thresholds)]
-
-        rule.value = {"tp_default_value": {}, "tp_values": tp_values}
-
-
-TimeRange = tuple[tuple[int, int], tuple[int, int]]
-
-
-def _transform_time_range(time_range: TimeRange) -> tuple[str, str]:
-    begin_time = dt_time(hour=time_range[0][0], minute=time_range[0][1])
-    end_time = dt_time(hour=time_range[1][0], minute=time_range[1][1])
-    return (begin_time.strftime("%H:%M"), end_time.strftime("%H:%M"))
-
-
-def _get_timeperiod_name(timeofday: Sequence[TimeRange]) -> str:
-    periods = [_transform_time_range(t) for t in timeofday]
-    period_string = "_".join((f"{b}-{e}" for b, e in periods)).replace(":", "")
-    return f"timeofday_{period_string}"
-
-
-def _create_timeperiod(name: str, timeofday: Sequence[TimeRange]) -> None:
-    periods = [_transform_time_range(t) for t in timeofday]
-    periods_alias = ", ".join((f"{b}-{e}" for b, e in periods))
-    timeperiods.create_timeperiod(
-        name,
-        {
-            "alias": f"Created by migration of timeofday parameter ({periods_alias})",
-            **{
-                d: periods
-                for d in (
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday",
-                )
-            },
-        },
-    )

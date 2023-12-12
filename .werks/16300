@@ -1,0 +1,12 @@
+Title: Revert werk #16150 and fix IndexError: boolean index did not match indexed array along dimension 0 in forecast graphs
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1700760668
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+This change reverts werk #16150, since this werk made forecast graphs basically unusable.
+Furthermore, this change fixes the error mentioned above. This error occurred when computing a
+forecast based on constant and incomplete input data.

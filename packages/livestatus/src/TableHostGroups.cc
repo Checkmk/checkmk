@@ -5,6 +5,7 @@
 #include "livestatus/TableHostGroups.h"
 
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <vector>
 

@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import enum
-import logging
 from collections.abc import Mapping
 from typing import Final, NoReturn
 
@@ -31,7 +30,7 @@ class NoFetcherError(enum.Enum):
 
 class NoFetcher(Fetcher[AgentRawData]):
     def __init__(self, /, canned: NoFetcherError) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.noop"))
+        super().__init__()
         self._canned: Final = canned
 
     @classmethod

@@ -49,10 +49,12 @@ def main() {
     }
 
     stage("Archive") {
-        archiveArtifacts(
-            artifacts: "all_werks.json",
-            fingerprint: true,
-        )
+        show_duration("archiveArtifacts") {
+            archiveArtifacts(
+                artifacts: "all_werks.json",
+                fingerprint: true,
+            );
+        }
     }
 
     targets_credentials.each{target_credential ->

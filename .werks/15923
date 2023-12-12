@@ -1,0 +1,12 @@
+Title: haproxy: Adapted HAproxy Server State and HAproxy Frontend State rules to be item specific
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700826137
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+HAproxy Server State and HAproxy Frontend State were not configurable with regard to the service name.
+This means that the rules were applied to all services.
+This has now been adapted and the rules can be configured to apply to certain services only.

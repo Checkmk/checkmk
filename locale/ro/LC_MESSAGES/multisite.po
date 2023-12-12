@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-10-20 17:46+0000\n"
-"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
+"PO-Revision-Date: 2023-11-18 00:08+0000\n"
+"Last-Translator: Marius Pana <mp@spearhead.systems>\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
 "software/ro/>\n"
 "Language: ro\n"
@@ -456,11 +456,11 @@ msgstr "%d deschide lucrări incompatibile"
 msgid "%d rows"
 msgstr "%d rânduri"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
 msgstr[0] "%d site-ul este %s."
-msgstr[1] ""
+msgstr[1] "%d site-urile sunt %s."
 msgstr[2] "%d site-urile sunt %s."
 
 #, python-format
@@ -595,6 +595,10 @@ msgstr "%s by este element existent în aceasta selecție."
 msgid "%s is parent of %s."
 msgstr "%s este părintele lui %s."
 
+#, fuzzy, python-format
+msgid "%s is too %s. The %s allowed value is %s."
+msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
+
 #, python-format
 msgid "%s latency"
 msgstr "%s latență"
@@ -692,6 +696,10 @@ msgstr "%s a fost oprit după %s la %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s scrie %s"
+
+#, fuzzy, python-format
+msgid "%s, %s. %s %s at %s"
+msgstr "%s a fost oprit după %s la %s."
 
 #, python-format
 msgid ""
@@ -813,6 +821,10 @@ msgstr ""
 
 msgid "(0 is current period)"
 msgstr "(0 reprezintă perioada curentă)"
+
+#, fuzzy
+msgid "(Edit presets)"
+msgstr "Editarea rapoartelor"
 
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(sugestii maxime atinse, fiți mai specific)"
@@ -966,12 +978,20 @@ msgstr "... (%d mai mult)"
 msgid ".Net/CLR Memory"
 msgstr "Memorie .Net/CLR"
 
+#, fuzzy
+msgid "/d"
+msgstr "B/d"
+
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf are permisiuni greșite. Refuză să citească fișierul"
 
 msgid "/m"
 msgstr "/m"
+
+#, fuzzy
+msgid "/op"
+msgstr "Top"
 
 msgid "/s"
 msgstr "/s"
@@ -1146,6 +1166,9 @@ msgstr "Afișaj cu 7 segmente uid"
 msgid "8 days back"
 msgstr "8 zile înapoi"
 
+msgid "802.3ad"
+msgstr ""
+
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 deviații standard"
@@ -1179,10 +1202,6 @@ msgstr ""
 #, python-format
 msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s de %s lungime</b>?"
-
-#, python-format
-msgid "<b>%s for the next %d minutes</b>?"
-msgstr "<b>%s pentru următoarele %d minute</b>?"
 
 #, python-format
 msgid "<b>%s until 24:00:00</b>?"
@@ -1914,6 +1933,10 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> de folosit pentru <tt>sqlnet.ora</tt> și <tt>tnsnames."
 "ora</tt> %s."
 
+#, fuzzy
+msgid "<u>Info</u>: Downtime also applies to services."
+msgstr "Întreruperi de serviciu"
+
 msgid "??"
 msgstr "??"
 
@@ -2518,9 +2541,6 @@ msgstr "APT normal și actualizări de securitate (Linux)"
 msgid "ASCII Email"
 msgstr "ASCII Email"
 
-msgid "ASCII Email (legacy)"
-msgstr "ASCII Email (moștenire)"
-
 msgid "ASM - Disk Groups"
 msgstr "ASM - Grupuri de discuri"
 
@@ -2715,9 +2735,6 @@ msgid "Absolut level for total number of used file descriptors"
 msgstr ""
 "Nivelul absolut pentru numărul total de descriptori de fișiere utilizați"
 
-msgid "Absolut level for total number of used processes"
-msgstr "Nivelul absolut pentru numărul total de procese utilizate"
-
 msgid "Absolut level for total number of used sockets"
 msgstr "Nivelul absolut pentru numărul total de prize utilizate"
 
@@ -2789,6 +2806,10 @@ msgstr "Niveluri absolute pentru memoria recuperată de GC"
 
 msgid "Absolute levels for output traffic"
 msgstr "Niveluri absolute pentru traficul de ieșire"
+
+#, fuzzy
+msgid "Absolute levels for total number of used processes"
+msgstr "Nivelul absolut pentru numărul total de procese utilizate"
 
 msgid "Absolute levels for unused licenses"
 msgstr "Nivel-urile absolute de licențe neutilizate"
@@ -3255,6 +3276,12 @@ msgstr "Activarea"
 msgid "Activation"
 msgstr "Activare"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Curățarea activării"
 
@@ -3690,9 +3717,6 @@ msgstr "Adăugați un loc de muncă"
 msgid "Add key"
 msgstr "Adăugați cheia"
 
-msgid "Add label condition"
-msgstr "Adăugați o condiție de etichetare"
-
 msgid "Add limits"
 msgstr "Adaugă limite"
 
@@ -3789,6 +3813,10 @@ msgstr "Adăugați noi criterii de potrivire"
 msgid "Add new metric"
 msgstr "Adăugați o nouă măsurătoare"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "Adăugați o condiție de etichetare"
+
 msgid "Add new pattern"
 msgstr "Adăugați un nou model"
 
@@ -3824,6 +3852,10 @@ msgstr "Adăugați un nou subiect"
 
 msgid "Add new user configuration"
 msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "Adăugați o condiție de etichetare"
 
 msgid "Add notification rule"
 msgstr "Adăugați o regulă de notificare"
@@ -3994,6 +4026,10 @@ msgstr "Adăugați la %s"
 
 msgid "Add to bookmark list"
 msgstr "Adăugați la lista de favorite"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "Adăugați o condiție de etichetare"
 
 msgid "Add to graph collection"
 msgstr "Adăugați la colecția de grafice"
@@ -4281,6 +4317,10 @@ msgstr ""
 
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
+
+#, fuzzy
+msgid "Advanced options"
+msgstr "Opțiuni disponibile"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
@@ -5000,9 +5040,6 @@ msgstr ""
 msgid "Alerted"
 msgstr "Alertat"
 
-msgid "Alerting depending on the number of used licenses is disabled"
-msgstr "Alertarea în funcție de numărul de licențe utilizate este dezactivată"
-
 msgid "Alertmanager"
 msgstr "Alertmanager"
 
@@ -5115,6 +5152,10 @@ msgstr "Toți clienții cu statistici privind gazda și serviciul"
 
 msgid "All datasources are OK"
 msgstr "Toate sursele de date sunt OK"
+
+#, fuzzy
+msgid "All differences in frozen aggregations"
+msgstr "Toate agregatele înghețate"
 
 msgid "All directions"
 msgstr "Toate direcțiile"
@@ -5717,9 +5758,6 @@ msgstr "De asemenea, contactați agentul Checkmk"
 msgid "Also search in subfolders"
 msgstr "Căutați și în subfoldere"
 
-msgid "Also set downtime on child hosts"
-msgstr "De asemenea, setați timpul de nefuncționare pe gazdele copil"
-
 msgid ""
 "Also use these contact groups in eventually notifications created by this "
 "rule. Historically this option only affected the visibility in the GUI and "
@@ -5777,6 +5815,10 @@ msgstr ""
 msgid "Always assume host to be up"
 msgstr "Întotdeauna să presupunem că gazda este activă"
 
+#, fuzzy
+msgid "Always be OK"
+msgstr "Raportează întotdeauna OK"
+
 msgid "Always bulk"
 msgstr "Întotdeauna în vrac"
 
@@ -5785,9 +5827,6 @@ msgstr "Instalați întotdeauna Python cu agentul"
 
 msgid "Always keep vanished clustered services"
 msgstr "Păstrați întotdeauna serviciile grupate dispărute"
-
-msgid "Always report OK"
-msgstr "Raportează întotdeauna OK"
 
 msgid "Always send <b>all</b> messages, even old ones (just for testing!)"
 msgstr ""
@@ -5832,6 +5871,10 @@ msgstr "Cantitatea de fișiere din spool-ul de notificare"
 
 msgid "Amount of mails in queues"
 msgstr "Cantitatea de mailuri în cozi"
+
+#, fuzzy
+msgid "Amount of substance"
+msgstr "Cantitatea de date prelucrate"
 
 msgid ""
 "Amount of time that the application of redo data on the standby database "
@@ -6370,6 +6413,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Arhivați un eveniment"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "Obțineți jurnalele de audit la distanță"
+
 msgid "Archive event"
 msgstr "Eveniment de arhivă"
 
@@ -6379,17 +6426,29 @@ msgstr "Arhiva evenimentelor"
 msgid "Archive events of hosts"
 msgstr "Arhiva evenimentelor de gazde"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "Arhiva"
+
 msgid "Archive messages that do not match any rule"
 msgstr "Arhivați mesajele care nu corespund niciunei reguli"
 
 msgid "Archive this event"
 msgstr "Arhivați acest eveniment"
 
+#, fuzzy
+msgid "Archived audit log"
+msgstr "A șters jurnalul de audit."
+
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Copii de rezervă Arcserve (germană) (Windows)"
 
 msgid "Area"
 msgstr "Zona"
+
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "Agent pentru %s (%s)"
 
 msgid "Arguments:"
 msgstr "Argumente:"
@@ -6468,6 +6527,10 @@ msgstr "Atribuiți definiția SLA la serviciu"
 
 msgid "Assign SLA to service"
 msgstr "Atribuiți SLA serviciului"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "Traducerea numelui de gazdă pentru gazdele piggybacked"
 
 msgid "Assign service to following host"
 msgstr "Atribuiți serviciul la următoarea gazdă"
@@ -7244,6 +7307,10 @@ msgstr "Utilizarea medie"
 msgid "Average utilization core %d"
 msgstr "Utilizare medie de bază %d"
 
+#, fuzzy
+msgid "Average utilization of memory on the active supervisor"
+msgstr "Utilizarea medie a memoriei pe supervizorul activ"
+
 msgid "Average utilization per core"
 msgstr "Utilizare medie pe nucleu"
 
@@ -7705,6 +7772,10 @@ msgstr "Director de bază pentru <tt>plugins</tt> și <tt>local</tt>."
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Director de bază pentru datele variabile (cache-uri, fișiere de stare)"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "Raport de bază numai pe baza timpilor de serviciu"
+
 msgid "Base layout"
 msgstr "Schema de bază"
 
@@ -7749,6 +7820,10 @@ msgstr "Setări BasicAuth (opțional)"
 
 msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
+
+#, fuzzy
+msgid "Battery Levels"
+msgstr "Niveluri de memorie"
 
 msgid "Battery capacity"
 msgstr "Capacitatea bateriei"
@@ -7928,6 +8003,10 @@ msgstr "Coadă de corp pentru notificări de serviciu"
 msgid "Bold"
 msgstr "Bold"
 
+#, fuzzy
+msgid "Bonding interface status"
+msgstr "Interfețe de lipire"
+
 msgid "Bonding interfaces"
 msgstr "Interfețe de lipire"
 
@@ -7964,6 +8043,10 @@ msgstr "Cutii"
 
 msgid "Boxes (omit root)"
 msgstr "Cutii (omiteți rădăcina)"
+
+#, fuzzy
+msgid "Bq"
+msgstr "B"
 
 msgid "Breakdown"
 msgstr "Descompunere"
@@ -8060,6 +8143,10 @@ msgstr "Corectare de erori"
 
 msgid "Bugle"
 msgstr "Bugle"
+
+#, fuzzy
+msgid "Build"
+msgstr "Construiți memoria cache"
 
 msgid "Build Cache"
 msgstr "Construiți memoria cache"
@@ -8394,6 +8481,9 @@ msgstr ""
 "gol, toate gazdele configurate vor fi monitorizate. De îndată ce adăugați "
 "cel puțin o regulă, vor fi monitorizate numai gazdele cu o regulă "
 "corespunzătoare."
+
+msgid "By age of Robotmk executions"
+msgstr ""
 
 msgid "By aggregation group prefix"
 msgstr "Prin prefixul grupului de agregare"
@@ -8854,6 +8944,10 @@ msgstr ""
 "Prin activarea acestei opțiuni, notificările vor fi grupate și în afara "
 "perioadei de timp definite."
 
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "Numărul de executanți ocupați"
+
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
 "be available. In case you select global, it will be available on all your "
@@ -8908,6 +9002,10 @@ msgstr "Byte pierdute"
 
 msgid "Bytes per day"
 msgstr "Bytes pe zi"
+
+#, fuzzy
+msgid "Bytes per operation"
+msgstr "Citire de octeți pe operațiune"
 
 msgid "Bytes per second"
 msgstr "Byte pe secundă"
@@ -9680,6 +9778,10 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
+#, fuzzy
+msgid "Capacitance"
+msgstr "Utilizarea capacității"
+
 msgid "Capacity filled"
 msgstr "Capacitate umplută"
 
@@ -9736,6 +9838,10 @@ msgstr "Catalog"
 
 msgid "Catalog of check plugins"
 msgstr "Catalog de plugin-uri de verificare"
+
+#, fuzzy
+msgid "Catalytic activity"
+msgstr "Activare automată"
 
 msgid "Categories"
 msgstr "Categorii"
@@ -10078,6 +10184,10 @@ msgstr "Verificați accesul la serviciul LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Verificați starea MK a gazdei piggybacked în această perioadă"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Verificați parametrul"
 
@@ -10245,9 +10355,6 @@ msgstr "Verificați plugin-ul"
 
 msgid "Check plugin API introduction"
 msgstr "Verificați introducerea plugin-ului API"
-
-msgid "Check plugin API reference"
-msgstr "Verificați referința API a plugin-ului"
 
 msgid "Check plugin timeout"
 msgstr "Verificați timeout-ul plugin-ului"
@@ -10765,6 +10872,13 @@ msgstr "Condiții pentru copii"
 msgid "Child Node Generation"
 msgstr "Generarea nodurilor copil"
 
+msgid "Child hosts also go in downtime (recursively)."
+msgstr ""
+
+#, fuzzy
+msgid "Child hosts also go in downtime."
+msgstr "Listează toate timpii de nefuncționare a gazdelor."
+
 msgid "Child report"
 msgstr "Raportul copilului"
 
@@ -11149,19 +11263,17 @@ msgstr "Curățați fișierele gazdă abandonate mai vechi de"
 msgid "Cleanup messages"
 msgstr "Mesaje de curățare"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "Curățarea în gol a lucrătorului"
+
 msgid "Cleanup when disk space is below"
 msgstr "Curățare atunci când spațiul pe disc este sub"
-
-msgid "Clear"
-msgstr "Clar"
 
 msgid "Clear & Delete"
 msgstr "Ștergeți & Ștergeți"
 
 msgid "Clear audit Log"
-msgstr "Ștergeți jurnalul de audit"
-
-msgid "Clear audit log"
 msgstr "Ștergeți jurnalul de audit"
 
 msgid "Clear failed notifications"
@@ -11185,9 +11297,6 @@ msgstr ""
 "jurnalul de audit, un utilizator are nevoie de permisiunea generică Setup "
 "\"Make changes, perform actions\", de permisiunea \"View audit log\" și de "
 "această permisiune."
-
-msgid "Cleared audit log."
-msgstr "A șters jurnalul de audit."
 
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
@@ -11842,6 +11951,10 @@ msgstr "Lucrări compatibile"
 msgid "Compatible and incompatible Werks"
 msgstr "Werks compatibile și incompatibile"
 
+#, fuzzy
+msgid "Complete"
+msgstr "complet"
+
 msgid "Complete the restore"
 msgstr "Finalizați restaurarea"
 
@@ -12109,6 +12222,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Configurați nivelurile de fum"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Containere niveluri inferioare"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12341,6 +12458,10 @@ msgid ""
 msgstr ""
 "Configurați praguri care se aplică grupurilor în funcție de numărul de "
 "noduri pe care le au."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Containere niveluri superioare"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -13594,10 +13715,6 @@ msgid "Created new connection to site %s"
 msgstr "A fost creată o nouă conexiune la site %s"
 
 #, python-format
-msgid "Created new event correlation rule with id %s"
-msgstr "A creat o nouă regulă de corelare a evenimentelor cu id %s"
-
-#, python-format
 msgid "Created new extension package %s"
 msgstr "A fost creat un nou pachet de extensii %s."
 
@@ -13753,9 +13870,6 @@ msgstr "Critic (în)"
 msgid "Critical (Out)"
 msgstr "Critic (Out)"
 
-msgid "Critical (active connections)"
-msgstr "Critic (conexiuni active)"
-
 msgid "Critical above"
 msgstr "Critic de mai sus"
 
@@ -13835,6 +13949,10 @@ msgstr "Critic dacă la"
 msgid "Critical if below"
 msgstr "Critic dacă este sub"
 
+#, fuzzy
+msgid "Critical if below or equal"
+msgstr "critică dacă este mai mică sau egală cu"
+
 msgid "Critical if equal or below"
 msgstr "Critic dacă este egal sau mai mic"
 
@@ -13859,20 +13977,18 @@ msgstr "Critic dacă este sub"
 msgid "Critical level for remaining"
 msgstr "Nivelul critic pentru restul"
 
-msgid "Critical level for time since last update"
-msgstr "Nivelul critic pentru timpul scurs de la ultima actualizare"
-
 msgid "Critical level is at least"
 msgstr "Nivelul critic este de cel puțin"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "Critic dacă %s"
 
 msgid "Critical threshold"
 msgstr "Pragul critic"
 
 msgid "Critical warning"
 msgstr "Avertisment critic"
-
-msgid "Critical when all licenses are used"
-msgstr "Critic atunci când sunt utilizate toate licențele"
 
 msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
@@ -13961,6 +14077,10 @@ msgstr "Modul de replicare curent"
 msgid "Current setting"
 msgstr "Setare curentă"
 
+#, fuzzy
+msgid "Current setting as VUE"
+msgstr "Setare curentă"
+
 msgid "Current size"
 msgstr "Dimensiunea actuală"
 
@@ -14045,9 +14165,6 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Acțiune personalizată"
-
-msgid "Custom Downtime Timeranges"
-msgstr "Timerange de timp de oprire personalizate"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -14200,9 +14317,6 @@ msgstr "Elemente personalizate pentru bara laterală"
 
 msgid "Custom states"
 msgstr "State personalizate"
-
-msgid "Custom time range"
-msgstr "Interval de timp personalizat"
 
 msgid "Custom time span"
 msgstr "Interval de timp personalizat"
@@ -14660,6 +14774,9 @@ msgstr "Raportul de succesiune a datelor"
 msgid "Data ingress"
 msgstr "Intrarea datelor"
 
+msgid "Data is outdated and will be removed with the next check execution"
+msgstr ""
+
 msgid "Data movement completed"
 msgstr "Mișcarea datelor a fost finalizată"
 
@@ -14742,6 +14859,10 @@ msgstr "Unități de date scrise"
 
 msgid "Data usage"
 msgstr "Utilizarea datelor"
+
+#, fuzzy, python-format
+msgid "Data was provided at %s and is considered valid until %s"
+msgstr "Acest mesaj a fost creat la %s și este valabil până la %s."
 
 msgid "Data width"
 msgstr "Lățimea datelor"
@@ -15031,6 +15152,10 @@ msgstr "Decibel"
 msgid "Decibel-millivolt"
 msgstr "Decibel-millivolt"
 
+#, fuzzy
+msgid "Decibel-milliwatt"
+msgstr "Decibel-milliwati"
+
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwati"
 
@@ -15108,6 +15233,9 @@ msgstr "Configurație implicită"
 
 msgid "Default credentials"
 msgstr "Acreditări implicite"
+
+msgid "Default element is not one of the specified elements"
+msgstr ""
 
 msgid "Default is 22."
 msgstr "Valoarea implicită este 22."
@@ -15922,6 +16050,10 @@ msgstr "Implementarea pluginului AD-Replication"
 msgid "Deploy Arcserve plugin"
 msgstr "Implementarea plugin-ului Arcserve"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "Implementarea plugin-ului MSSQL Server"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "Implementarea plugin-ului de memorie DB2"
 
@@ -16026,9 +16158,6 @@ msgstr "Distribuie fișiere personalizate cu agentul"
 msgid "Deploy iptables plugin"
 msgstr "Implementați plugin-ul iptables"
 
-msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
-msgstr "Implementarea mediului moștenit (Python 3.4 + set standard de module)"
-
 msgid "Deploy logged in users plugin"
 msgstr "Implementați plugin-ul pentru utilizatorii conectați"
 
@@ -16090,11 +16219,6 @@ msgstr "Implementați un plugin care actualizează automat agentul"
 msgid "Deploy powershell plugin - recommended for Win2k8 upwards"
 msgstr ""
 "Implementarea plugin-ului powershell - recomandat pentru Win2k8 și mai sus"
-
-msgid ""
-"Deploy standard environment (Current Python 3.8 + standard set of modules)"
-msgstr ""
-"Implementați mediul standard (Python 3.8 curent + set standard de module)"
 
 #, python-format
 msgid "Deploy the %s plugin and its configuration"
@@ -16622,6 +16746,10 @@ msgstr "Dezactivați notificările"
 
 msgid "Disable notifications?"
 msgstr "Dezactivați notificările?"
+
+#, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Secțiuni dezactivate sau activate (SNMP)"
 
 msgid "Disable passive checks"
 msgstr "Dezactivarea verificărilor pasive"
@@ -17191,6 +17319,10 @@ msgstr "Afișează toate agregările BI."
 msgid "Displays all aggregations of a certain group."
 msgstr "Afișează toate agregările unui anumit grup."
 
+#, fuzzy
+msgid "Displays all frozen BI aggregations."
+msgstr "Afișează toate agregările BI."
+
 msgid "Displays amount of hosts in a selected state."
 msgstr "Afișează numărul de gazde aflate într-o stare selectată."
 
@@ -17353,6 +17485,10 @@ msgstr "Nu creați gazde"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Nu implementați pluginul AD-Replication"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "Nu implementați plugin-ul MySQL"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Nu implementați pluginul de memorie DB2"
@@ -17750,9 +17886,6 @@ msgstr "Afișați acum spațiul rezervat"
 msgid "Do status data inventory"
 msgstr "Efectuați inventarierea datelor de stare"
 
-msgid "Do this recursively"
-msgstr "Faceți acest lucru în mod recursiv"
-
 msgid "Do transfer context"
 msgstr "Transferați contextul"
 
@@ -17828,6 +17961,9 @@ msgstr "Nu există"
 
 msgid "Does not match any service"
 msgstr "Nu se potrivește cu niciun serviciu"
+
+msgid "Dollar"
+msgstr ""
 
 msgid "Domain (only used for european accounts)"
 msgstr "Domeniu (utilizat numai pentru conturile europene)"
@@ -17913,6 +18049,9 @@ msgstr "Nu folosiți ghilimele"
 
 msgid "Don't wait for document body"
 msgstr "Nu așteptați corpul documentului"
+
+msgid "Dose equivalent"
+msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
@@ -18011,11 +18150,18 @@ msgstr "ID-ul de întrerupere a activității (potrivire exactă)"
 msgid "Downtime active or pending"
 msgstr "Timp de oprire activ sau în așteptare"
 
+#, fuzzy
+msgid "Downtime attributes:"
+msgstr "Atribute modificate"
+
 msgid "Downtime author"
 msgstr "Autorul Downtime"
 
 msgid "Downtime author (regex)"
 msgstr "Autorul timpului de nefuncționare (regex)"
+
+msgid "Downtime can extend beyond the previously defined end date and time"
+msgstr ""
 
 msgid "Downtime comment"
 msgstr "Comentariu privind timpul de nefuncționare"
@@ -18023,7 +18169,15 @@ msgstr "Comentariu privind timpul de nefuncționare"
 msgid "Downtime comment (regex)"
 msgstr "Comentariu privind timpul de întrerupere (regex)"
 
+#, fuzzy
+msgid "Downtime datepicker"
+msgstr "Ora de sfârșit a timpului de oprire"
+
 msgid "Downtime duration (if flexible)"
+msgstr "Durata timpului de oprire (dacă este flexibil)"
+
+#, fuzzy
+msgid "Downtime duration presets"
 msgstr "Durata timpului de oprire (dacă este flexibil)"
 
 msgid "Downtime end"
@@ -18061,6 +18215,10 @@ msgstr "Ora de începere a timpului de oprire"
 
 msgid "Downtime stopped"
 msgstr "Timpul de oprire a oprit"
+
+#, fuzzy
+msgid "Downtime timepicker"
+msgstr "Ora de sfârșit a timpului de oprire"
 
 msgid "Downtime will not start anymore after"
 msgstr "Timpul de nefuncționare nu va mai începe după"
@@ -18905,8 +19063,20 @@ msgstr "Noduri Elasticsearch"
 msgid "Elbow"
 msgstr "Cotul"
 
+#, fuzzy
+msgid "Electric charge"
+msgstr "Curent electric"
+
+#, fuzzy
+msgid "Electric potential"
+msgstr "Putere electrică"
+
 msgid "Electrical Apparent Power"
 msgstr "Puterea electrică aparentă"
+
+#, fuzzy
+msgid "Electrical Current"
+msgstr "Curent electric"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Curent electric (amperaj)"
@@ -18928,6 +19098,10 @@ msgstr "Tensiune electrică (tensiune)"
 
 msgid "Electrical apparent power"
 msgstr "Puterea aparentă electrică"
+
+#, fuzzy
+msgid "Electrical conductance"
+msgstr "Tensiune electrică"
 
 msgid "Electrical current"
 msgstr "Curent electric"
@@ -19067,6 +19241,10 @@ msgstr ""
 
 msgid "Enable automatic host removal"
 msgstr "Activați eliminarea automată a gazdei"
+
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "Nu se poate crea o cerere de autentificare"
 
 msgid "Enable community translated languages"
 msgstr "Activați limbile traduse de comunitate"
@@ -19385,6 +19563,10 @@ msgstr "Sfârșitul timpului"
 msgid "End-to-end latency"
 msgstr "Latență de la un capăt la altul"
 
+#, fuzzy
+msgid "End:"
+msgstr "Adăugat %s"
+
 msgid "Ended"
 msgstr "S-a încheiat"
 
@@ -19646,6 +19828,10 @@ msgid "Entry"
 msgstr "Intrare"
 
 msgid "Environment Variables"
+msgstr "Variabile de mediu"
+
+#, fuzzy
+msgid "Environment build timeout"
 msgstr "Variabile de mediu"
 
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
@@ -20200,6 +20386,10 @@ msgstr ""
 "Excludeți spațiul rezervat pentru utilizatorul <tt>root</tt> din calculul "
 "spațiului utilizat"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "Excludeți alegerile de etichete goale"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "Excludeți următoarele SID-uri (dacă sunt găsite)"
 
@@ -20290,6 +20480,10 @@ msgstr "Executați acest program acum în jobul de fundal"
 
 msgid "Execution Mode"
 msgstr "Modul de execuție"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "Configurația notificărilor"
 
 msgid "Execution has been triggered"
 msgstr "Execuția a fost declanșată"
@@ -20382,6 +20576,10 @@ msgstr "Trasee active preconizate"
 
 msgid "Expected autoextend setting"
 msgstr "Setarea de extindere automată preconizată"
+
+#, fuzzy
+msgid "Expected bonding mode"
+msgstr "Modul așteptat"
 
 msgid "Expected cluster type."
 msgstr "Tipul de cluster așteptat."
@@ -20640,6 +20838,9 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Doar extreme"
 
+msgid "F"
+msgstr ""
+
 msgid "F5 BigIP configuration sync status"
 msgstr "Starea de sincronizare a configurației F5 BigIP"
 
@@ -20729,6 +20930,10 @@ msgstr "Setare din fabrică"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "RAID: starea sistemului"
 
 msgid "Failed"
 msgstr "A eșuat"
@@ -21326,6 +21531,10 @@ msgstr ""
 "Testul de eliminare a fișierelor pentru stocarea la distanță a eșuat. Mesaj "
 "de eroare original: %s."
 
+#, fuzzy
+msgid "File selection"
+msgstr "Selecție de dosare"
+
 msgid "File size"
 msgstr "Dimensiunea fișierului"
 
@@ -21602,6 +21811,9 @@ msgstr "Dimensiune fixă"
 msgid "Fixed string to expect in the content"
 msgstr "Șir fixat pentru a aștepta în conținut"
 
+msgid "FixedValue value is not serializable."
+msgstr ""
+
 msgid "Flap"
 msgstr "Clapetă"
 
@@ -21630,6 +21842,10 @@ msgid "Flexible downtime"
 msgstr "Timp de oprire flexibil"
 
 msgid "Flexible downtime duration:"
+msgstr "Durata flexibilă a timpului de oprire:"
+
+#, fuzzy
+msgid "Flexible downtime options"
 msgstr "Durata flexibilă a timpului de oprire:"
 
 msgid "Floating point number"
@@ -21989,6 +22205,10 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Interzis să vezi tot copacul"
 
+#, fuzzy
+msgid "Force"
+msgstr "forță"
+
 msgid "Force agent to run in single thread"
 msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
 
@@ -22145,9 +22365,6 @@ msgstr "Transmiteți e-mailurile ca evenimente către Consola de evenimente"
 
 msgid "Forward to remote site by notification spooler"
 msgstr "Redirecționarea către site-ul la distanță prin spooler de notificare"
-
-msgid "Forwarding"
-msgstr "Redirecționare"
 
 msgid "Forwarding Method"
 msgstr "Metoda de expediere"
@@ -22350,9 +22567,6 @@ msgstr "Din tabelul de inventar"
 
 msgid "From left of the page"
 msgstr "Din stânga paginii"
-
-msgid "From now for"
-msgstr "De acum înainte pentru"
 
 msgid "From password store"
 msgstr "Din magazinul de parole"
@@ -22916,6 +23130,10 @@ msgid "Graph rendering options"
 msgstr "Opțiuni de redare grafică"
 
 #, python-format
+msgid "Graph specification '%s' is insufficient for Dashboard."
+msgstr ""
+
+#, python-format
 msgid ""
 "Graph specification '%s' is insufficient for Dashboard. Please save your "
 "graph as a custom graph first, then add that one to the dashboard."
@@ -23201,6 +23419,14 @@ msgstr "Sisteme de operare invitate"
 msgid "Guest user"
 msgstr "Utilizator invitat"
 
+#, fuzzy
+msgid "Gy"
+msgstr "y"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
 msgid "H.Down"
 msgstr "H.Down"
 
@@ -23407,9 +23633,6 @@ msgstr "Gestionarea textelor prea lungi (afectează doar tabelul)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
-msgid "Hard disk device"
-msgstr "Dispozitiv de hard disk"
-
 msgid "Hard query limit"
 msgstr "Limita de interogare dură"
 
@@ -23430,9 +23653,6 @@ msgstr ""
 "OK. <b>Nota:</b> La calcularea disponibilității unui agregat BI această "
 "opțiune nu are niciun impact. În acest scop se vor utiliza întotdeauna "
 "stările soft (adică reale)."
-
-msgid "Harddisk temperature (e.g. via SMART)"
-msgstr "Temperatura harddisk-ului (de exemplu, prin SMART)"
 
 msgid "Harddrive CRC errors"
 msgstr "Erori CRC ale harddrive-ului"
@@ -23488,9 +23708,6 @@ msgstr "Informații hardware ale serverului Checkmk"
 msgid "Hardware status"
 msgstr "Starea hardware"
 
-msgid "Hardware temperature, multiple sensors"
-msgstr "Temperatura hardware, senzori multipli"
-
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
 
@@ -23524,6 +23741,10 @@ msgstr "Trebuie să conțină calea către fișierul cu cheia de certificare."
 
 msgid "Hash"
 msgstr "Hash"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "Programarea execuției"
 
 msgid "Headers at the left (single dataset)"
 msgstr "Antetele din stânga (set de date unic)"
@@ -23581,6 +23802,9 @@ msgstr "Clustere de bătăi ale inimii"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "Instrumentele Heartbeat lipsesc sau nu sunt instalate"
+
+msgid "Heat"
+msgstr ""
 
 msgid "Height"
 msgstr "Înălțime"
@@ -25228,9 +25452,6 @@ msgstr "Comentarii privind gazdele și serviciile"
 
 msgid "Host- or DNS name"
 msgstr "Nume gazdă sau DNS"
-
-msgid "Host/Device temperature"
-msgstr "Temperatura gazdei/dispozitivului"
 
 msgid "Host/Service"
 msgstr "Gazdă/Serviciu"
@@ -27793,6 +28014,10 @@ msgstr "Ignoră tipurile de așteptare"
 msgid "Ignored autostart services"
 msgstr "Servicii de autopornire ignorate"
 
+#, fuzzy
+msgid "Illuminance"
+msgstr "Instanța InfluxDB"
+
 msgid "Image"
 msgstr "Imagine"
 
@@ -27813,6 +28038,10 @@ msgstr "Controale programate imediat"
 
 msgid "Impact"
 msgstr "Impact"
+
+#, fuzzy
+msgid "Impedance"
+msgstr "Aspectul articolului"
 
 msgid "Import"
 msgstr "Import"
@@ -28227,6 +28456,15 @@ msgstr ""
 "chiar dacă setați acest lucru la 0, ar putea exista cazuri în care mesajele "
 "trebuie să fie oricum stocate în memoria cache."
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "În raport cu intervalul normal de verificare"
 
@@ -28401,6 +28639,9 @@ msgstr "Includeți bazinele goale în monitorizare"
 msgid "Include full path"
 msgstr "Includeți calea completă"
 
+msgid "Include indirectly connected hosts (recursively)"
+msgstr ""
+
 msgid "Include per-process arguments (security risk!)"
 msgstr "Includeți argumente per-proces (risc de securitate!)"
 
@@ -28412,6 +28653,10 @@ msgstr "Includeți spațiul rezervat"
 
 msgid "Include service with zero base."
 msgstr "Includeți serviciul cu bază zero."
+
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "Excludeți alegerile de etichete goale"
 
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
@@ -28523,6 +28768,10 @@ msgstr ""
 msgid "Increment size"
 msgstr "Mărimea incrementului"
 
+#, fuzzy
+msgid "Incremental"
+msgstr "#Incremente"
+
 msgid "Index"
 msgstr "Index"
 
@@ -28585,8 +28834,16 @@ msgstr "State individuale pentru fiecare sursă de date"
 msgid "Individual topic"
 msgstr "Subiect individual"
 
+#, fuzzy
+msgid "Inductance"
+msgstr "Instanța"
+
 msgid "Ineffective"
 msgstr "Ineficace"
+
+#, fuzzy
+msgid "Ineffective rule"
+msgstr "Reguli neaplicate"
 
 msgid "Ineffective rules"
 msgstr "Reguli neaplicate"
@@ -28636,6 +28893,10 @@ msgstr "Informații"
 
 msgid "Info:"
 msgstr "Informații:"
+
+#, fuzzy
+msgid "Info: Downtime does not apply to host."
+msgstr "Timpii de întrerupere a gazdei"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29137,6 +29398,10 @@ msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 msgid "Invalid action"
 msgstr "Acțiune invalidă"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "Acțiune invalidă"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -29197,6 +29462,10 @@ msgstr "Sursă de date invalidă '%s' configurată."
 
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipul de date invalid al timestamp-ului: trebuie să fie int sau float."
+
+#, fuzzy, python-format
+msgid "Invalid date format: %s"
+msgstr "Sursă de date invalidă: %s"
 
 msgid "Invalid end time given"
 msgstr "Ora de încheiere invalidă dată"
@@ -29381,6 +29650,10 @@ msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 "Format de oră invalid '<tt>%s</tt>', vă rugăm să utilizați formatul "
 "<tt>24:00</tt>."
+
+#, fuzzy, python-format
+msgid "Invalid time format: %s"
+msgstr "Identificator invalid: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -29744,6 +30017,9 @@ msgstr "Iterator age"
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons pentru MDM (fostul MobileIron Cloud)"
 
+msgid "J"
+msgstr ""
+
 msgid "JIRA URL"
 msgstr "JIRA URL"
 
@@ -29922,6 +30198,10 @@ msgstr "Trebuie doar să eliminați etichetele afectate din reguli."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Afișați doar disponibilitatea (de exemplu, OK/UP)"
+
+#, fuzzy
+msgid "K"
+msgstr "OK"
 
 msgid "KByte"
 msgstr "KByte"
@@ -30102,6 +30382,10 @@ msgstr "Condiții de implementare Kubernetes"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Utilizarea resurselor de memorie Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Condițiile podurilor Kubernetes"
 
 msgid "Kubernetes node containers"
 msgstr "Containere de noduri Kubernetes"
@@ -30579,8 +30863,18 @@ msgstr "Plugin-uri de inventar vechi"
 msgid "Legacy run"
 msgstr "Rularea moștenirii"
 
+msgid "Legacy valuespec (input data is ignored"
+msgstr ""
+
+msgid "Legacy valuespec (input data is ignored)"
+msgstr ""
+
 msgid "Legal"
 msgstr "Legal"
+
+#, fuzzy
+msgid "Length"
+msgstr "Lungime maximă"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Lungimea cozii de așteptare a mesagerului Z1"
@@ -30980,6 +31274,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Niveluri pentru numărul de fișe active dintr-un dispozitiv."
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"Această regulă stabilește nivelurile warn și crit pentru numărul de "
+"conexiuni curente la o aplicație JVM la nivel de servlet."
+
 msgid "Levels for the number of print jobs"
 msgstr "Niveluri pentru numărul de lucrări de imprimare"
 
@@ -30989,6 +31291,12 @@ msgstr "Niveluri pentru numărul de sesiuni care sunt active în prezent"
 msgid "Levels for the number of sessions that are currently inactive"
 msgstr "Niveluri pentru numărul de sesiuni care sunt în prezent inactive"
 
+#, fuzzy
+msgid "Levels for the number of threads running in a JVM"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"fire de execuție care rulează într-un JVM."
+
 msgid "Levels for the percentual growth per time range"
 msgstr "Niveluri pentru creșterea procentuală pe interval de timp"
 
@@ -30997,6 +31305,10 @@ msgstr "Niveluri pentru contracția procentuală pe interval de timp"
 
 msgid "Levels for the queue length"
 msgstr "Niveluri pentru lungimea cozii de așteptare"
+
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Nivelul de avertizare pentru timpul scurs de la ultima actualizare"
 
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
@@ -31039,6 +31351,14 @@ msgstr "Niveluri de așteptare"
 
 msgid "Levels health"
 msgstr "Niveluri de sănătate"
+
+#, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "Specificați nivelurile în procente din totalul RAM"
+
+#, fuzzy
+msgid "Levels in percentage of total memory usage"
+msgstr "Specificați nivelurile în procente din utilizarea totală a memoriei"
 
 msgid "Levels instance"
 msgstr "Instanța de nivel"
@@ -31175,6 +31495,10 @@ msgstr ""
 
 msgid "Levels on time offset"
 msgstr "Niveluri pe decalaj de timp"
+
+#, fuzzy
+msgid "Levels on time since last successful backup"
+msgstr "Specificați timpul scurs de la ultima copie de rezervă reușită"
 
 msgid "Levels on total CPU utilization"
 msgstr "Niveluri privind utilizarea totală a CPU"
@@ -31742,6 +32066,10 @@ msgid ""
 msgstr ""
 "Listează membrii unui grup de gazde cu numărul de servicii în diferite stări."
 
+#, fuzzy
+msgid "Liter per second"
+msgstr "Litri pe secundă"
+
 msgid "Liters per second"
 msgstr "Litri pe secundă"
 
@@ -31862,6 +32190,10 @@ msgstr "Balansatoare de sarcină"
 msgid "Load balancers Target Groups"
 msgstr "Balansatoare de sarcină Grupuri țintă"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "Utilizați variabilele de mediu de la gazdă"
+
 msgid "Load in a new window / tab"
 msgstr "Încărcați într-o fereastră / filă nouă"
 
@@ -31910,6 +32242,10 @@ msgstr "Răspunsuri HTTP 503 locale"
 
 msgid "Local IP address"
 msgstr "Adresa IP locală"
+
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Date de autentificare locală"
 
 msgid "Local Only"
 msgstr "Numai local"
@@ -32601,6 +32937,12 @@ msgstr "Niveluri mai mici pentru durata de viață a sănătății"
 msgid "Lower levels for hit ratio"
 msgstr "Niveluri mai mici pentru raportul de succes"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Niveluri inferioare pentru numărul de cereri"
 
@@ -32647,6 +32989,12 @@ msgstr "Nivel de avertizare mai scăzut"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
+
+msgid "Luminous flux"
+msgstr ""
+
+msgid "Luminous intensity"
+msgstr ""
 
 msgid "MAC Address"
 msgstr "Adresa MAC"
@@ -32906,6 +33254,14 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Factorul magic (adaptare automată a nivelului pentru spațiile de masă mari)"
+
+#, fuzzy
+msgid "Magnetic flux"
+msgstr "Spațiul volumelor magnetice"
+
+#, fuzzy
+msgid "Magnetic flux density"
+msgstr "Spațiul volumelor magnetice"
 
 msgid "Magnetic volumes space"
 msgstr "Spațiul volumelor magnetice"
@@ -33289,6 +33645,16 @@ msgstr "Starea GCP pentru a verifica mk"
 msgid "Map RWVDMS names"
 msgstr "Hartă denumiri RWVDMS"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "Data necunoscută"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "Harta stărilor administratorului (numai SNMP cu contoare pe 64 de biți)"
@@ -33424,6 +33790,9 @@ msgstr "Marcați controlerul care se distinge în prezent ca fiind cel preferat"
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marcați nodurile din resurse ca fiind cele preferate"
 
+msgid "Mass"
+msgstr ""
+
 msgid "Master Event Console"
 msgstr "Consola principală de evenimente"
 
@@ -33542,6 +33911,10 @@ msgstr "Potriviți tipurile de porturi"
 msgid "Match process path"
 msgstr "Potrivește calea procesului"
 
+#, fuzzy
+msgid "Match search"
+msgstr "Servicii de potrivire"
+
 msgid "Match service event type"
 msgstr "Potrivire tip de eveniment de serviciu"
 
@@ -33615,6 +33988,10 @@ msgstr "Tipul de meci"
 msgid "Matched line"
 msgstr "Linie de potrivire"
 
+#, fuzzy
+msgid "Matches"
+msgstr "Meci"
+
 msgid "Matching"
 msgstr "Potrivire"
 
@@ -33662,6 +34039,10 @@ msgstr "Max. Vârsta (sec)"
 
 msgid "Max. Count"
 msgstr "Numarul maxim"
+
+#, fuzzy
+msgid "Max. duration after downtime starts: "
+msgstr "Prima dată când începe timpul de nefuncționare"
 
 msgid "Max. number of SSL connections"
 msgstr "Numărul maxim de conexiuni SSL"
@@ -33960,6 +34341,10 @@ msgstr "Numărul maxim de conexiuni sau de ascultători"
 msgid "Maximum number of delivery attempts"
 msgstr "Numărul maxim de încercări de livrare"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "Numărul maxim de clienți"
+
 msgid "Maximum number of firewall connections"
 msgstr "Numărul maxim de conexiuni firewall"
 
@@ -33972,6 +34357,10 @@ msgstr "Numărul maxim de noduri depășit %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "Numărul maxim de clienți"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Numărul maxim de noduri de plan de control pregătite"
@@ -33990,6 +34379,10 @@ msgid ""
 msgstr ""
 "Numărul maxim de fire de execuție pornite la un moment dat pe durata de "
 "viață a JVM-ului"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "Maxim"
 
 msgid "Maximum parallel connections"
 msgstr "Număr maxim de conexiuni paralele"
@@ -34416,6 +34809,9 @@ msgstr "Număr de mesaje"
 msgid "Message Rate"
 msgstr "Rata mesajelor"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Media mesajelor"
 
@@ -34702,6 +35098,10 @@ msgstr "Numărul minim de noduri de plan de control pregătite"
 msgid "Minimum number of ready worker nodes"
 msgstr "Numărul minim de noduri de lucru pregătite"
 
+#, fuzzy
+msgid "Minimum of "
+msgstr "Minim"
+
 msgid "Minimum password length"
 msgstr "Lungimea minimă a parolei"
 
@@ -34824,9 +35224,6 @@ msgstr "Mod lipsă sau invalid. Permise sunt 'agent' și 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Lipsește parametrul \"%s\"."
 
-msgid "Missing render parameter"
-msgstr "Parametru de redare lipsă"
-
 msgid "Missing required \"Host name\" selection."
 msgstr "Lipsește selecția necesară \"Host name\"."
 
@@ -34841,9 +35238,6 @@ msgstr "Lipsește selecția necesară."
 
 msgid "Missing secret for automation command."
 msgstr "Secretul lipsă pentru comanda de automatizare."
-
-msgid "Missing spec parameter"
-msgstr "Parametru de specificații lipsă"
 
 msgid "Missing test host name"
 msgstr "Numele gazdei de test lipsă"
@@ -34969,10 +35363,6 @@ msgstr "Regula BI modificată %s."
 
 msgid "Modified NFS data"
 msgstr "Date NFS modificate"
-
-#, python-format
-msgid "Modified event correlation rule %s"
-msgstr "Regula de corelare a evenimentelor modificată %s"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
@@ -35361,28 +35751,6 @@ msgstr ""
 "Starea de monitorizare în cazul în care Cluster Collector nu raportează "
 "Metrici mașină"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea DISKPRESSURE este defectă sau necunoscută"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea MEMORYPRESSURE este defectă sau "
-"necunoscută"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare în cazul în care starea NETWORKUNAVAILABLE este "
-"defectă sau necunoscută"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea PIDPRESSURE este defectă sau necunoscută"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr "Starea de monitorizare dacă starea READY este defectă sau necunoscută"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr ""
 "Starea de monitorizare în cazul în care unitatea greșită este activă/în "
@@ -35650,6 +36018,10 @@ msgstr "MySQL Slave"
 msgid "MySQL database sizes"
 msgstr "Dimensiunile bazei de date MySQL"
 
+#, fuzzy
+msgid "N"
+msgstr "N#"
+
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr "N * 100%, deoarece fiecare nucleu contribuie cu 100% la sarcină maximă"
@@ -35793,6 +36165,14 @@ msgstr "Numele canalului"
 
 msgid "Name of Checkmk site of update server"
 msgstr "Numele site-ului Checkmk al serverului de actualizare"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy Frontend State"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "Numele VServerului"
 
 msgid "Name of Queue"
 msgstr "Numele cozii de așteptare"
@@ -35982,6 +36362,9 @@ msgstr "Numele mașinii virtuale și/sau<br>tipul de colectare a gunoiului"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Numele mașinii virtuale și/sau al<br>threadpool-ului"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Rezoluția numelui"
@@ -36275,9 +36658,6 @@ msgstr "Niciodată executat"
 msgid "Never install Python with the agent"
 msgstr "Nu instalați niciodată Python cu agentul"
 
-msgid "Never logged in"
-msgstr "Niciodată conectat"
-
 msgid "Never remove files newer than"
 msgstr "Nu eliminați niciodată fișiere mai noi decât"
 
@@ -36561,9 +36941,6 @@ msgstr "Nu este configurat niciun interval de excludere"
 msgid "No explicit credentials"
 msgstr "Fără acreditări explicite"
 
-msgid "No forwarding"
-msgstr "Fără redirecționare"
-
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
 "Please perform a rescan in case you want to discover the current state."
@@ -36685,6 +37062,10 @@ msgstr "Nu există modificări în așteptare."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "Execuții concurente"
 
 #, python-format
 msgid "No remote %s processed."
@@ -36840,9 +37221,6 @@ msgstr "Statisticile nodurilor"
 
 msgid "Node Status"
 msgstr "Starea nodului"
-
-msgid "Node conditions"
-msgstr "Condițiile nodurilor"
 
 msgid "Node name"
 msgstr "Numele nodului"
@@ -38455,6 +38833,10 @@ msgstr "Versiunea oficială de lansare"
 msgid "Offline"
 msgstr "Offline"
 
+#, fuzzy, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "Online (%s)"
+
 msgid "Offline hosts"
 msgstr "Gazde offline"
 
@@ -38634,6 +39016,10 @@ msgstr "Cereri de informații în curs de desfășurare"
 msgid "Online"
 msgstr "Online"
 
+#, fuzzy, python-format
+msgid "Online (%s %s via %s)"
+msgstr "Online (%s)"
+
 #, python-format
 msgid "Online (%s)"
 msgstr "Online (%s)"
@@ -38734,6 +39120,10 @@ msgstr "Doar primele 10 rezultate sortate"
 msgid "Only first 20 sorted results"
 msgstr "Doar primele 20 de rezultate sortate"
 
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime"
+msgstr "numai atunci când gazda nu este în timp de nefuncționare"
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -38833,6 +39223,11 @@ msgstr "Afișați numai serviciile din aceste state"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Afișează %s numai dacă este activată opțiunea \"Show more\"."
+
+msgid ""
+"Only start downtime if host/service goes DOWN/UNREACH during the defined "
+"start and end time (flexible)"
+msgstr ""
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -39526,13 +39921,6 @@ msgstr ""
 "diferite stări."
 
 msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"Starea generală a tuturor gazdelor cunoscute de Ntop, cu numărul de servicii "
-"în diferitele stări.\n"
-
-msgid ""
 "Overall state of all hosts, with counts of services in the various states."
 msgstr ""
 "Starea generală a tuturor gazdelor, cu numărul de servicii în diferitele "
@@ -40097,6 +40485,10 @@ msgstr "Partiții (XEN)"
 msgid "Parts per Million"
 msgstr "Părți per milion"
 
+#, fuzzy
+msgid "Parts per million"
+msgstr "Părți per milion"
+
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -40179,6 +40571,10 @@ msgstr "Calea către categorii"
 
 msgid "Path to nvidia-smi.exe"
 msgstr "Cărare către nvidia-smi.exe"
+
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Calea de acces la fișierul Cert Key"
 
 msgid "Path to sapgenpse"
 msgstr "Calea către sapgenpse"
@@ -40372,6 +40768,10 @@ msgstr ""
 msgid "Per entry"
 msgstr "Pe intrare"
 
+#, fuzzy
+msgid "Per second"
+msgstr "pe secundă"
+
 msgid "Per topic"
 msgstr "Pe subiect"
 
@@ -40503,6 +40903,10 @@ msgstr "Procentul din totalul RAM"
 msgid "Percentage of total service problems"
 msgstr "Procent din totalul problemelor de serviciu"
 
+#, fuzzy
+msgid "Percentage per meter"
+msgstr "Procent pe metru"
+
 msgid "Percentage used"
 msgstr "Procentul utilizat"
 
@@ -40529,9 +40933,6 @@ msgstr "Niveluri procentuale (în raport cu viteza politicii)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Niveluri procentuale (în raport cu viteza portului)"
-
-msgid "Percentual levels ->"
-msgstr "Niveluri procentuale ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -40978,6 +41379,9 @@ msgstr "Comunicarea în text simplu este activată pentru %s."
 msgid "Plaintext"
 msgstr "Plaintext"
 
+msgid "Plane angle"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "Platforma Nivelul firmware-ului"
 
@@ -41068,6 +41472,10 @@ msgstr "Vă rugăm să alegeți o țintă de la care să efectuați restaurarea.
 msgid "Please choose a valid PNG image."
 msgstr "Vă rugăm să alegeți o imagine PNG validă."
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "Vă rugăm să alegeți un fișier de încărcat."
+
 msgid "Please choose the check plugin"
 msgstr "Vă rugăm să alegeți plugin-ul de verificare"
 
@@ -41146,9 +41554,6 @@ msgstr ""
 
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
-
-msgid "Please enter a positive number of minutes."
-msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
 
 msgid "Please enter a time."
 msgstr "Vă rugăm să introduceți o oră."
@@ -41294,10 +41699,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Vă rugăm să furnizați un fișier '.xml'."
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "Vă rugăm să furnizați un nume valid"
+
 msgid "Please provide a valid host and port"
 msgstr "Vă rugăm să furnizați o gazdă și un port valid"
 
 msgid "Please provide a valid name"
+msgstr "Vă rugăm să furnizați un nume valid"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "Vă rugăm să furnizați un nume valid"
 
 msgid ""
@@ -41580,6 +41993,10 @@ msgstr "Numărul sau denumirea elementului de fișă"
 msgid "Plugin"
 msgstr "Plugin"
 
+#, fuzzy
+msgid "Plugin API references"
+msgstr "Verificați referința API a plugin-ului"
+
 msgid "Plugin Name"
 msgstr "Nume Plugin"
 
@@ -41745,6 +42162,10 @@ msgstr "Numărul portului:"
 
 msgid "Port numbers"
 msgstr "Numerele de port"
+
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Port types to include in usage statistics"
 msgstr "Tipuri de porturi care trebuie incluse în statisticile de utilizare"
@@ -42579,9 +43000,6 @@ msgstr "Versiunea Python"
 msgid "Python agent plugin execution (UNIX)"
 msgstr "Executarea plugin-ului agentului Python (UNIX)"
 
-msgid "Python environment"
-msgstr "Mediul Python"
-
 msgid "Python version for execution of python agent plugins"
 msgstr "Versiunea Python pentru execuția plugin-urilor agentului python"
 
@@ -42958,6 +43376,14 @@ msgstr "RabbitMQ vhosts"
 msgid "Radial layout"
 msgstr "Dispunere radială"
 
+#, fuzzy
+msgid "Radioactive activity"
+msgstr "activ / activ"
+
+#, fuzzy
+msgid "Radioactive dose"
+msgstr "gazde inactive"
+
 msgid "Raid controllers from Areca"
 msgstr "Controlere Raid de la Areca"
 
@@ -43030,6 +43456,14 @@ msgstr "Biti brute (HEXSTR)"
 msgid "Rcvd"
 msgstr "Rcvd"
 
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "timpul de execuție"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "timpul de execuție"
+
 msgid "Read"
 msgstr "Citește"
 
@@ -43086,6 +43520,10 @@ msgstr "Citire de octeți pe operațiune"
 
 msgid "Read capacity"
 msgstr "Capacitatea de citire"
+
+#, fuzzy
+msgid "Read capacity unit"
+msgstr "Unități de capacitate de citire"
 
 msgid "Read hits"
 msgstr "Citiți hiturile"
@@ -43823,9 +44261,6 @@ msgstr "Eliminarea confirmării"
 msgid "Remove acknowledgement?"
 msgstr "Îndepărtați confirmarea?"
 
-msgid "Remove all"
-msgstr "Eliminați toate"
-
 msgid "Remove all and find new"
 msgstr "Îndepărtați totul și găsiți unul nou"
 
@@ -43834,9 +44269,6 @@ msgstr "Eliminați toate timpii de nefuncționare"
 
 msgid "Remove all files and subdirectories"
 msgstr "Îndepărtați toate fișierele și subdirectoarele"
-
-msgid "Remove all scheduled downtimes?"
-msgstr "Eliminați toate opririle programate?"
 
 msgid "Remove downtimes"
 msgstr "Eliminați timpii de nefuncționare"
@@ -43856,14 +44288,15 @@ msgstr "Îndepărtați fișierele și subdirectoarele gestionate de agentul Chec
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
 
-msgid "Remove label condition"
-msgstr "Îndepărtarea condiției de etichetare"
-
 msgid "Remove only matching vanished services"
 msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
 
 msgid "Remove package"
 msgstr "Îndepărtați pachetul"
+
+#, fuzzy
+msgid "Remove scheduled downtimes?"
+msgstr "Eliminați toate opririle programate?"
 
 msgid "Remove service"
 msgstr "Îndepărtarea serviciului"
@@ -44076,6 +44509,10 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
 
+#, fuzzy
+msgid "Repeat"
+msgstr "repetați:"
+
 msgid "Repeat query and allow more results."
 msgstr "Repetați interogarea și permiteți mai multe rezultate."
 
@@ -44085,8 +44522,9 @@ msgstr "Repetați interogarea fără limită."
 msgid "Repeat this downtime"
 msgstr "Repetați acest timp de oprire"
 
-msgid "Repeat this downtime on a regular basis every"
-msgstr "Repetați acest timp de nefuncționare în mod regulat în fiecare"
+#, fuzzy, python-format
+msgid "Repeats every %s"
+msgstr "se repetă la fiecare 20'th rând"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -44959,6 +45397,18 @@ msgstr "Unități Rittal CMC-III: Curent"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unități Rittal CMC-III: Temperaturi"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "Cadrul robotului: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "Cadrul robotului: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "Cadrul robotului: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Cadrul robotului: %s"
@@ -44978,6 +45428,10 @@ msgstr "Robotmk"
 msgid "Robotmk (Windows)"
 msgstr "Robotmk (Windows)"
 
+#, fuzzy
+msgid "Robotmk Suite Status"
+msgstr "Starea sitului"
+
 msgid "Role"
 msgstr "Rol"
 
@@ -44989,9 +45443,6 @@ msgstr "Roluri"
 
 msgid "Roles & permissions"
 msgstr "Roluri și permisiuni"
-
-msgid "Room temperature (external thermal sensors)"
-msgstr "Temperatura camerei (senzori termici externi)"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Se rotește în fiecare zi la ora locală 00:00"
@@ -45391,6 +45842,10 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Nivelul de putere Rx"
 
+#, fuzzy
+msgid "S"
+msgstr "S."
+
 msgid "S."
 msgstr "S."
 
@@ -45742,6 +46197,10 @@ msgstr "SOFT"
 msgid "SQL Compilations/sec"
 msgstr "Compilări SQL/sec"
 
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Credențiale de utilizator al bazei de date"
+
 msgid "SQL Databases"
 msgstr "Baze de date SQL"
 
@@ -45914,9 +46373,9 @@ msgstr "Interval de scanare"
 msgid "Schedule"
 msgstr "Programare"
 
-#, python-format
-msgid "Schedule a downtime from %s to %s?"
-msgstr "Programați o perioadă de întrerupere de la %s la %s?"
+#, fuzzy
+msgid "Schedule a downtime?"
+msgstr "Programarea timpilor morți?"
 
 #, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -45934,6 +46393,10 @@ msgid "Schedule downtime for %d %s"
 msgstr "Programarea timpului de oprire pentru %d %s"
 
 msgid "Schedule downtime on host"
+msgstr "Programarea timpului de oprire pe gazdă"
+
+#, fuzzy
+msgid "Schedule downtime on service"
 msgstr "Programarea timpului de oprire pe gazdă"
 
 msgid "Schedule downtime?"
@@ -46272,6 +46735,10 @@ msgstr "Secunde înainte de expirarea conexiunii"
 msgid "Seconds of operation"
 msgstr "Secunde de funcționare"
 
+#, fuzzy
+msgid "Seconds per second"
+msgstr "secunde pe secundă"
+
 msgid "Seconds since service"
 msgstr "Secunde de la service"
 
@@ -46501,6 +46968,14 @@ msgstr "Selectați sunetul"
 msgid "Select specific object type"
 msgstr "Selectați un anumit tip de obiect"
 
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "Denumire de securitate"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
+
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
@@ -46599,11 +47074,12 @@ msgstr "Selectați tipul de element de pagină fix"
 msgid "Select view"
 msgstr "Selectați vizualizarea"
 
+#, fuzzy
 msgid ""
 "Select which Azure services to monitor.\n"
-"In case you want to monitor 'Users in the Active Directory' or 'AD Connect "
-"Sync', you will need to grant the 'Directory.Read.All' graph permission to "
-"the Azure app and to grant admin consent to it."
+"In case you want to monitor 'Users in the Active Directory', 'AD Connect "
+"Sync', or 'App Registrations' you will need to grant the 'Directory.Read."
+"All' graph permission to the Azure app and to grant admin consent to it."
 msgstr ""
 "Selectați ce servicii Azure doriți să monitorizați.\n"
 "În cazul în care doriți să monitorizați 'Users in the Active Directory' sau "
@@ -46863,6 +47339,14 @@ msgstr "Performanța serverului"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Manipularea pe server a datelor necriptate"
+
+#, fuzzy
+msgid "Server time"
+msgstr "Ora serverului"
+
+#, python-format
+msgid "Server time (currently: %s)"
+msgstr ""
 
 msgid "Service"
 msgstr "Serviciul"
@@ -48320,6 +48804,14 @@ msgstr "Arată mai mult / Arată mai puțin"
 msgid "Show number of groups"
 msgstr "Afișați numărul de grupuri"
 
+#, fuzzy
+msgid "Show object"
+msgstr "Arată mai mult"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "Nici un tip de obiect"
+
 msgid "Show only modified settings"
 msgstr "Afișați numai setările modificate"
 
@@ -49183,6 +49675,10 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
+#, fuzzy
+msgid "Solid angle"
+msgstr "Single"
+
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -50045,6 +50541,9 @@ msgstr ""
 "Specificați numele logic, de exemplu, numele de gazdă, al PLC-ului. Acest "
 "nume este utilizat pentru a denumi serviciile rezultate."
 
+msgid "Specify the monitoring state when the bonding mode is not as expected."
+msgstr ""
+
 msgid "Specify the name of a store (This is either a mailbox or public folder)"
 msgstr ""
 "Specificați numele unui magazin (acesta este fie o căsuță poștală, fie un "
@@ -50203,9 +50702,6 @@ msgstr ""
 "durată mare de execuție a unei funcții, insuficiența fragmentelor într-un "
 "flux, erori de invocare, dimensiune insuficientă a lotului. Această "
 "măsurătoare este raportată numai pentru invocările bazate pe flux."
-
-msgid "Specify time since last successful backup"
-msgstr "Specificați timpul scurs de la ultima copie de rezervă reușită"
 
 msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
 msgstr ""
@@ -50467,6 +50963,10 @@ msgstr "Începeți!"
 msgid "Start-Time"
 msgstr "Ora de începere"
 
+#, fuzzy
+msgid "Start:"
+msgstr "Start"
+
 msgid "Started"
 msgstr "A început cu"
 
@@ -50504,6 +51004,11 @@ msgstr "Pornirea"
 msgid "Starting with entry"
 msgstr "Începând cu intrarea"
 
+#, python-format
+msgid ""
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+msgstr ""
+
 msgid "Startup overhead in shared pool"
 msgstr "Cheltuieli generale de pornire în pool partajat"
 
@@ -50537,6 +51042,10 @@ msgstr "Clasificarea de stat"
 
 msgid "State during active system events"
 msgstr "Starea în timpul evenimentelor sistemului activ"
+
+#, fuzzy
+msgid "State during discovery of the service"
+msgstr "Descoperirea serviciilor: Eliminarea serviciilor"
 
 msgid "State flag (on/off)"
 msgstr "Indicator de stare (pornit/oprit)"
@@ -50714,6 +51223,10 @@ msgstr "Starea dacă nodul are o alarmă mem în vigoare"
 
 msgid "State if node is not in state running"
 msgstr "Stare dacă nodul nu este în stare de funcționare"
+
+#, fuzzy
+msgid "State if not as expected"
+msgstr "Indicați dacă licența este expirată"
 
 msgid "State if probe state not OK"
 msgstr "Stare dacă starea sondei nu este OK"
@@ -51730,6 +52243,21 @@ msgstr "Semnătură verificată cu succes"
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
+msgid "Suite"
+msgstr ""
+
+#, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "ID-urile cererilor nu sunt egale"
+
+#, fuzzy
+msgid "Suite runtime"
+msgstr "Numele sitului"
+
+#, fuzzy
+msgid "Suites"
+msgstr "Site-uri"
+
 msgid "Sum"
 msgstr "Suma"
 
@@ -51813,6 +52341,10 @@ msgstr "Suspendat"
 
 msgid "Suspending"
 msgstr "Suspendarea"
+
+#, fuzzy
+msgid "Sv"
+msgstr "Salveaza"
 
 msgid "Swap"
 msgstr "Schimbați"
@@ -51917,6 +52449,14 @@ msgstr "Cozi Symantec Brightmail"
 msgid "Symmetric encryption (Linux, Windows)"
 msgstr "Criptare simetrică (Linux, Windows)"
 
+#, fuzzy
+msgid "Sync disabled"
+msgstr "dezactivat"
+
+#, fuzzy
+msgid "Sync enabled"
+msgstr "activat"
+
 msgid "Sync group memberships from other connections"
 msgstr "Sincronizarea membrilor de grup din alte conexiuni"
 
@@ -51978,6 +52518,10 @@ msgstr "Sincronizare"
 
 msgid "Synchronous"
 msgstr "Sincronă"
+
+#, fuzzy
+msgid "Syncing"
+msgstr "Sincronizare"
 
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
@@ -52127,6 +52671,10 @@ msgstr "Rezumatul socket-urilor Systemd"
 
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
+
+#, fuzzy
+msgid "T"
+msgstr "TX"
 
 msgid "TCP"
 msgstr "TCP"
@@ -52523,34 +53071,6 @@ msgstr "Analiza tendinței temperaturii"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatura și umiditatea pentru UPS Eaton"
-
-msgid ""
-"Temperature levels for external thermometers that are used for monitoring "
-"the temperature of a datacenter. An example is the webthem from W&T."
-msgstr ""
-"Nivelurile de temperatură pentru termometrele externe utilizate pentru "
-"monitorizarea temperaturii unui centru de date. Un exemplu este webthem de "
-"la W&T."
-
-msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
-msgstr ""
-"Nivelurile de temperatură pentru discurile dure, care sunt determinate, de "
-"exemplu, prin SMART."
-
-msgid ""
-"Temperature levels for hardware devices like Brocade switches with "
-"(potentially) several temperature sensors. Sensor IDs can be selected in the "
-"rule."
-msgstr ""
-"Niveluri de temperatură pentru dispozitive hardware precum switch-urile "
-"Brocade cu (potențial) mai mulți senzori de temperatură. ID-urile senzorilor "
-"pot fi selectate în regulă."
-
-msgid ""
-"Temperature levels for hardware devices with a single temperature sensor."
-msgstr ""
-"Niveluri de temperatură pentru dispozitive hardware cu un singur senzor de "
-"temperatură."
 
 msgid "Temperature sensors with built-in levels"
 msgstr "Senzori de temperatură cu niveluri încorporate"
@@ -53778,9 +54298,6 @@ msgstr ""
 "cantitate mare de date. Setați această valoare la zero pentru a dezactiva "
 "limita."
 
-msgid "The average utilization of memory on the active supervisor"
-msgstr "Utilizarea medie a memoriei pe supervizorul activ"
-
 msgid "The backup has been deleted."
 msgstr "Copia de rezervă a fost ștearsă."
 
@@ -53914,13 +54431,6 @@ msgstr ""
 "din orice motiv. O utilizare obișnuită este setarea la OK pentru stațiile de "
 "lucru care pot fi dezactivate - astfel încât nu veți primi notificări în "
 "acest caz."
-
-msgid ""
-"The checkbox for setting host downtimes does not work when removing "
-"downtimes."
-msgstr ""
-"Caseta de selectare pentru setarea timpilor de oprire a gazdelor nu "
-"funcționează atunci când se elimină timpii de oprire."
 
 msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
@@ -54908,6 +55418,10 @@ msgstr "Numele de gazdă al controlorului distins așteptat al clusterului"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "Numele de gazdă al nodului care urmează să dețină această resursă."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Numele de gazdă sau adresa IPv4 pentru ascultător"
+
 msgid "The hostname template does not contain any label."
 msgstr "Șablonul de nume de gazdă nu conține nicio etichetă."
 
@@ -54937,10 +55451,6 @@ msgstr ""
 
 msgid "The identificator of the fan."
 msgstr "Identificatorul ventilatorului."
-
-msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
-msgstr ""
-"Identificatorul dispozitivului hard disk, de exemplu <tt>/dev/sda</tt>."
 
 msgid "The identificator of the module."
 msgstr "Identificatorul modulului."
@@ -54998,6 +55508,12 @@ msgstr ""
 "a se potrivi nevoilor dumneavoastră. Această valoare înseamnă că toate "
 "snapnis-urile care solicită o reîmprospătare regulată sunt actualizate în "
 "acest interval."
+
+#, fuzzy
+msgid "The installed Python modules and their versions"
+msgstr ""
+"Inventarul tuturor plugin-urilor de agent implementate și a versiunilor "
+"acestora"
 
 msgid "The installed agent needs an update"
 msgstr "Agentul instalat are nevoie de o actualizare"
@@ -56196,6 +56712,10 @@ msgstr "Graficul solicitat nu există"
 msgid "The requested item %s does not exist"
 msgstr "Elementul solicitat %s nu există"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "Pachetul de reguli solicitat nu există"
+
 msgid "The requested report does not exist."
 msgstr "Raportul solicitat nu există."
 
@@ -56389,6 +56909,12 @@ msgstr ""
 "Utilizați acest nume atunci când lucrați cu regulile și cu apelurile API "
 "REST pentru setul de reguli."
 
+msgid ""
+"The runtime of a suite is limited by the maximum number of attempts "
+"multiplied by the timeout per attempt. This settings configures thresholds "
+"on the suite runtime with respect to this overall limit."
+msgstr ""
+
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Programul pe care încercați să îl clonați nu există."
 
@@ -56427,12 +56953,11 @@ msgstr ""
 "automatizare \"automation\"."
 
 msgid ""
-"The selected automation user needs rights for pairing all agents. TODO: "
-"Provide details (ATM: We still need such a role)"
+"The selected automation user needs rights for registering new agents. I.e., "
+"it either needs the <i>register all new hosts</i> permission, or needs to be "
+"a contact of the relevant folder/s that this rule matches on, together with "
+"the <i>register new hosts in managed folders</i> permission."
 msgstr ""
-"Utilizatorul de automatizare selectat are nevoie de drepturi pentru "
-"împerecherea tuturor agenților. TODO: Furnizați detalii (ATM: Încă avem "
-"nevoie de un astfel de rol)"
 
 #, python-format
 msgid ""
@@ -56599,13 +57124,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"În prezent, site-ul este blocat de un alt proces de activare. Vă rugăm să "
-"încercați din nou mai târziu"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
 
@@ -56662,19 +57180,6 @@ msgstr ""
 "adunat la un interval și jumătate de verificare a unui obiect. Aceasta ar "
 "însemna 90 de secunde în cazul unei verificări care este verificată la "
 "fiecare 60 de secunde."
-
-msgid ""
-"The standard environment we deploy can't be used on legacy Windows systems "
-"such as Windows Server 2008, Windows Server 2008R2. If you want to deploy "
-"agent plugins like the agent updater, mk_logwatch or mk_jolokia on such "
-"windows hosts, you have to select the option \"Deploy legacy environment\" "
-"here."
-msgstr ""
-"Mediul standard pe care îl implementăm nu poate fi utilizat pe sistemele "
-"Windows vechi, cum ar fi Windows Server 2008, Windows Server 2008R2. Dacă "
-"doriți să implementați plugin-uri de agent precum agent updater, mk_logwatch "
-"sau mk_jolokia pe astfel de gazde Windows, trebuie să selectați opțiunea "
-"\"Deploy legacy environment\" aici."
 
 msgid ""
 "The start of a recurring downtime can only be set for days 1-28 of a month."
@@ -57700,6 +58205,11 @@ msgstr ""
 "Acest ID este utilizat ca identificator unic al acestuia. Acesta nu poate fi "
 "modificat ulterior."
 
+#, fuzzy
+msgid "This Ruleset sets the threshold limits for battery sensors"
+msgstr ""
+"Acest set de reguli stabilește limitele de prag pentru senzorii de umiditate"
+
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
 "Acest set de reguli stabilește limitele de prag pentru senzorii de umiditate"
@@ -58469,14 +58979,15 @@ msgstr ""
 msgid "This is a top-level rule. Show rule tree"
 msgstr "Aceasta este o regulă de nivel superior. Afișați arborele de reguli"
 
+#, fuzzy
 msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
 "the binary versions. You have to care for the dependencies by yourself. The "
 "script requires a Python 3.4 (or greater) installation and matching python "
-"packages \"requests\", \"PySocks\" and \"pyOpenSSL\" installed on the target "
-"hosts. Requirements may change eventually without announcement. However, "
-"this might be the right choice for experienced users or users that want to "
-"run the agent updater on architectures like ARM, ppc or others."
+"packages \"requests\", \"PySocks\" and \"cryptography\" installed on the "
+"target hosts. Requirements may change eventually without announcement. "
+"However, this might be the right choice for experienced users or users that "
+"want to run the agent updater on architectures like ARM, ppc or others."
 msgstr ""
 "Acesta este, în esență, scriptul de actualizare a agentului brut care este "
 "inclus în versiunile binare. Trebuie să vă ocupați singur de dependențe. "
@@ -59444,6 +59955,15 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Acest plugin poate fi utilizat pentru a colecta informații despre toate "
+"licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
+"PowerShell."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Acest plugin poate fi utilizat pentru a colecta informații despre toate "
 "licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
@@ -60638,27 +61158,6 @@ msgstr ""
 
 msgid "This rule sets the required state of a switch contact"
 msgstr "Această regulă stabilește starea necesară a unui contact de comutație"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"Această regulă stabilește nivelurile warn și crit pentru numărul de "
-"conexiuni curente la o aplicație JVM la nivel de servlet."
-
-msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
-"cereri primite de un server de aplicații JVM."
-
-msgid ""
-"This rule sets the warn and crit levels for the number of threads running in "
-"a JVM."
-msgstr ""
-"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
-"fire de execuție care rulează într-un JVM."
 
 msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
@@ -62270,6 +62769,10 @@ msgstr ""
 msgid "Timeout occured"
 msgstr "A apărut timeout"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "nu s-a încercat"
+
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout în așteptarea unui canal liber"
 
@@ -63708,11 +64211,11 @@ msgstr "Nu se poate analiza datele furnizate: %s."
 msgid "Unable to process request"
 msgstr "Imposibilitatea de a procesa cererea"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -63723,11 +64226,11 @@ msgstr ""
 "exemplu, atunci când regulile se referă la grupuri de etichete sau etichete "
 "care nu mai există."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "Nu se pot citi opțiunile curente ale acestei reguli. Se revine la valorile "
 "implicite. Când salvați această regulă acum, setările anterioare vor fi "
@@ -63938,6 +64441,10 @@ msgstr ""
 "ID unic de client utilizat pentru broker. Va fi generat în mod aleatoriu "
 "atunci când nu este setat."
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "licente nefolosite"
+
 msgid "Unit"
 msgstr "Unitatea"
 
@@ -63984,10 +64491,6 @@ msgstr "Data necunoscută"
 
 msgid "Unknown entities"
 msgstr "Entități necunoscute"
-
-#, python-format
-msgid "Unknown graph type: %s"
-msgstr "Tip de grafic necunoscut: %s"
 
 #, python-format
 msgid "Unknown group: %s"
@@ -64245,6 +64748,9 @@ msgstr ""
 "Actualizarea memoriei cache DNS a site-ului este necesară pentru a reflecta "
 "schimbările de adresă IP ale gazdelor care sunt configurate fără o adresă "
 "explicită."
+
+msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgstr ""
 
 msgid "Upload"
 msgstr "Încărcați"
@@ -64650,6 +65156,12 @@ msgstr "Nivelurile superioare pentru primul element de ieșire"
 msgid "Upper levels for hit ratio"
 msgstr "Niveluri superioare pentru raportul de succes"
 
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
+
 msgid "Upper levels for indexes"
 msgstr "Niveluri superioare pentru indici"
 
@@ -64881,6 +65393,10 @@ msgstr "Niveluri superioare ale numărului de conexiuni punct-la-sediu"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Niveluri superioare la procentul de cereri %s"
 
+#, fuzzy
+msgid "Upper levels on suite runtime relative to overall timeout"
+msgstr "Niveluri superioare pentru durata în procente din timeout"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr ""
 "Nivelurile superioare pe cel mai vechi decalaj al slotului de replicare"
@@ -65086,6 +65602,10 @@ msgstr "Utilizați Livestatus Proxy Daemon"
 
 msgid "Use Piggyback"
 msgstr "Utilizați Piggyback"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Use Reporting"
 msgstr "Utilizare Raportare"
@@ -66484,6 +67004,14 @@ msgstr "Servicii dispărute - monitorizate, dar care nu mai există"
 msgid "Variable"
 msgstr "Variabilă"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "Verificarea a eșuat (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "Variabilă"
+
 msgid "Variables set in the site user's environment"
 msgstr "Variabilele setate în mediul utilizatorului site-ului"
 
@@ -66746,9 +67274,6 @@ msgstr "Vizualizați și editați parametrii pentru acest serviciu"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
-
-msgid "View history"
-msgstr "Vezi istoricul"
 
 msgid "View layout"
 msgstr "Vizualizați aspectul"
@@ -67155,9 +67680,6 @@ msgstr "Avertisment (în)"
 msgid "Warning (Out)"
 msgstr "Avertisment (Out)"
 
-msgid "Warning (active connections)"
-msgstr "Avertisment (conexiuni active)"
-
 msgid "Warning above"
 msgstr "Avertismentul de mai sus"
 
@@ -67228,6 +67750,10 @@ msgstr "Avertisment dacă la"
 msgid "Warning if below"
 msgstr "Avertisment dacă este sub"
 
+#, fuzzy
+msgid "Warning if below or equal"
+msgstr "avertisment dacă este mai mică sau egală cu"
+
 msgid "Warning if equal or below"
 msgstr "Avertisment dacă este egal sau mai mic"
 
@@ -67252,9 +67778,6 @@ msgstr "Avertisment dacă sub"
 msgid "Warning level for remaining"
 msgstr "Nivelul de avertizare pentru restul"
 
-msgid "Warning level for time since last update"
-msgstr "Nivelul de avertizare pentru timpul scurs de la ultima actualizare"
-
 msgid "Warning level is at least"
 msgstr "Nivelul de avertizare este de cel puțin"
 
@@ -67264,11 +67787,19 @@ msgstr "Niveluri de avertizare pentru Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Niveluri de avertizare pentru decalajul de timp"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "Avertisment dacă %s"
+
 msgid "Warning starts with"
 msgstr "Avertismentul începe cu"
 
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
+
+#, fuzzy
+msgid "Warning: "
+msgstr "Avertismente:"
 
 msgid "Warning: This host has an invalid configuration!"
 msgstr "Avertisment: Această gazdă are o configurație invalidă!"
@@ -67287,6 +67818,10 @@ msgstr "Urmăriți dimensiunea totală a fișierului jurnal"
 
 msgid "Wato"
 msgstr "Wato"
+
+#, fuzzy
+msgid "Wb"
+msgstr "Web"
 
 #, python-format
 msgid ""
@@ -67435,6 +67970,9 @@ msgstr "Lucrări doar în ceea ce privește %s."
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What is the occasion?"
+msgstr ""
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -67699,10 +68237,11 @@ msgstr ""
 "dosarului atunci când se creează un nou dosar. Dezactivați această opțiune "
 "dacă doriți să vedeți și să setați manual numele fișierelor."
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "Atunci când este activată, acest site este marcat pentru sincronizare de "
 "fiecare dată când se modifică o opțiune legată de interfața grafică web și "
@@ -69170,6 +69709,10 @@ msgstr "Utilizarea cache-ului de scriere"
 msgid "Write capacity"
 msgstr "Capacitate de scriere"
 
+#, fuzzy
+msgid "Write capacity unit"
+msgstr "Unități de capacitate de scriere"
+
 msgid "Write latency"
 msgstr "Latență de scriere"
 
@@ -69865,6 +70408,9 @@ msgstr ""
 "nu utilizează Checkmk Microcore. Designerul grafic poate fi utilizat numai "
 "cu site-uri care utilizează Checkmk Microcore."
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -70109,11 +70655,12 @@ msgstr ""
 msgid "You can specify at most %d entries"
 msgstr "Puteți specifica cel mult %d intrări"
 
+#, fuzzy
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
-"specfied VMs are distributed across at least so many hosts. E.g. provide two "
-"VM names and set 'Number of hosts' to two, to make sure those VMs are not "
-"running on the same host."
+"specified VMs are distributed across at least so many hosts. E.g. provide "
+"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
+"not running on the same host."
 msgstr ""
 "Puteți specifica liste de nume de mașini virtuale și un număr de gazde, "
 "pentru a vă asigura că mașinile virtuale specificate sunt distribuite pe cel "
@@ -71062,6 +71609,10 @@ msgstr ""
 "Pictograma dvs. intră în conflict cu o pictogramă integrată Checkmk. Vă "
 "rugăm să alegeți un alt nume pentru pictograma dumneavoastră."
 
+#, fuzzy, python-format
+msgid "Your input '%s' does not match the required format '%s'."
+msgstr "Datele introduse nu corespund formatului cerut."
+
 msgid "Your input does not match the required format."
 msgstr "Datele introduse nu corespund formatului cerut."
 
@@ -71333,6 +71884,10 @@ msgstr "gazde active"
 msgid "active instances"
 msgstr "instanțe active"
 
+#, fuzzy
+msgid "active-backup"
+msgstr "Ultima copie de rezervă"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 "adăugați \"ISL\" la descrierea serviciului pentru legăturile între "
@@ -71396,9 +71951,6 @@ msgstr "permit executarea de comenzi și acțiuni prin TCP"
 msgid "allow users to deactivate this notification"
 msgstr "permite utilizatorilor să dezactiveze această notificare"
 
-msgid "and"
-msgstr "și"
-
 msgid "any"
 msgstr "orice"
 
@@ -71450,6 +72002,20 @@ msgstr "backup"
 msgid "baking"
 msgstr "coacere"
 
+msgid "balance-alb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-rr"
+msgstr "Balansatoare de sarcină"
+
+msgid "balance-tlb"
+msgstr ""
+
+#, fuzzy
+msgid "balance-xor"
+msgstr "Balansatoare de sarcină"
+
 msgid "bar"
 msgstr "bar"
 
@@ -71486,6 +72052,9 @@ msgstr "biți/s"
 msgid "blocks/s"
 msgstr "blocuri/s"
 
+msgid "broadcast"
+msgstr "difuzare"
+
 msgid "built-in"
 msgstr "built-in"
 
@@ -71512,6 +72081,10 @@ msgstr "cazul"
 
 msgid "cases"
 msgstr "cazuri"
+
+#, fuzzy
+msgid "cd"
+msgstr "d"
 
 msgid "check plugins"
 msgstr "verificați plugin-urile"
@@ -71611,6 +72184,10 @@ msgstr "critică dacă este mai mică decât"
 
 msgid "critical if older than"
 msgstr "critică dacă este mai veche de"
+
+#, fuzzy
+msgid "current"
+msgstr "Curent"
 
 msgid "current events"
 msgstr "evenimente curente"
@@ -71859,9 +72436,6 @@ msgstr "defect"
 msgid "faulty"
 msgstr "defectă"
 
-msgid "fibers"
-msgstr "fibre"
-
 msgid "file IO"
 msgstr "fișier IO"
 
@@ -71888,9 +72462,6 @@ msgstr "element de pagină fix"
 
 msgid "flexible"
 msgstr "flexibil"
-
-msgid "flexible with max. duration"
-msgstr "flexibil cu durata maximă."
 
 msgid "folder"
 msgstr "dosar"
@@ -71952,12 +72523,6 @@ msgstr "h"
 
 msgid "handles"
 msgstr "mânere"
-
-msgid "has"
-msgstr "are"
-
-msgid "has not"
-msgstr "nu a"
 
 msgid "height"
 msgstr "înălțime"
@@ -72108,6 +72673,10 @@ msgstr "ignorați statul"
 msgid "ignore which one is active"
 msgstr "ignoră care dintre ele este activă"
 
+#, fuzzy
+msgid "ignored"
+msgstr "ignorați"
+
 msgid "immediate stop"
 msgstr "oprirea imediată"
 
@@ -72230,8 +72799,15 @@ msgstr "locuri de muncă"
 msgid "kW"
 msgstr "kW"
 
+#, fuzzy
+msgid "kat"
+msgstr "la"
+
 msgid "kernel counter"
 msgstr "contor kernel"
+
+msgid "kg"
+msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -72256,6 +72832,10 @@ msgstr "execuție moștenită"
 
 msgid "license details"
 msgstr "detalii despre licență"
+
+#, fuzzy
+msgid "lm"
+msgstr "m"
 
 msgid "local connect"
 msgstr "conexiune locală"
@@ -72392,6 +72972,9 @@ msgstr ""
 msgid "mm"
 msgstr "mm"
 
+msgid "mol"
+msgstr ""
+
 msgid "monitor"
 msgstr "monitor"
 
@@ -72432,6 +73015,10 @@ msgstr "n/a"
 
 msgid "negate"
 msgstr "nega"
+
+#, fuzzy
+msgid "never"
+msgstr "(niciodată)"
 
 msgid "new element"
 msgstr "element nou"
@@ -72484,9 +73071,6 @@ msgstr "niciunul dintre"
 msgid "normal connection"
 msgstr "conexiune normală"
 
-msgid "not"
-msgstr "nu"
-
 #, python-format
 msgid "not %s states"
 msgstr "nu %s state"
@@ -72520,9 +73104,6 @@ msgstr "ntopng Admin Utilizator"
 
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Parametrii de conectare ntopng (add-on taxabil)"
-
-msgid "ntopng Hosts"
-msgstr "Gazde ntopng"
 
 msgid "ntopng Username"
 msgstr "ntopng Nume utilizator"
@@ -72605,9 +73186,6 @@ msgstr "numai atunci când gazda nu este în timp de nefuncționare"
 
 msgid "open"
 msgstr "deschis"
-
-msgid "operational state not available"
-msgstr "starea de funcționare nu este disponibilă"
 
 msgid "optional"
 msgstr "opțional"
@@ -72710,6 +73288,9 @@ msgstr "comentariu persistent"
 msgid "pfSense Firewall Packet Rates"
 msgstr "Ratele de pachete pfSense Firewall"
 
+msgid "pip freeze output"
+msgstr ""
+
 msgid "pkts / sec"
 msgstr "pkts / sec"
 
@@ -72751,6 +73332,10 @@ msgstr "pt"
 
 msgid "purchase a license"
 msgstr "achiziționați o licență"
+
+#, fuzzy
+msgid "rad"
+msgstr "și"
 
 msgid "radial"
 msgstr "radial"
@@ -72968,6 +73553,10 @@ msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
 msgid "specify manually ->"
 msgstr "specificați manual ->"
+
+#, fuzzy
+msgid "sr"
+msgstr "s"
 
 msgid "status entries"
 msgstr "intrări de stare"
@@ -73241,9 +73830,6 @@ msgstr "latime"
 msgid "with a timeout of"
 msgstr "cu un timeout de"
 
-msgid "with comment"
-msgstr "cu comentariu"
-
 msgid "with context"
 msgstr "cu context"
 
@@ -73298,6 +73884,266 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+msgid "Ω"
+msgstr ""
+
+#~ msgid "Critical (active connections)"
+#~ msgstr "Critic (conexiuni active)"
+
+#~ msgid "Warning (active connections)"
+#~ msgstr "Avertisment (conexiuni active)"
+
+#~ msgid "Forwarding"
+#~ msgstr "Redirecționare"
+
+#~ msgid "No forwarding"
+#~ msgstr "Fără redirecționare"
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea DISKPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea MEMORYPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare în cazul în care starea NETWORKUNAVAILABLE este "
+#~ "defectă sau necunoscută"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea PIDPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea READY este defectă sau necunoscută"
+
+#~ msgid "Node conditions"
+#~ msgstr "Condițiile nodurilor"
+
+#~ msgid "Add label condition"
+#~ msgstr "Adăugați o condiție de etichetare"
+
+#~ msgid "Never logged in"
+#~ msgstr "Niciodată conectat"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "Starea generală a tuturor gazdelor cunoscute de Ntop, cu numărul de "
+#~ "servicii în diferitele stări.\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "Îndepărtarea condiției de etichetare"
+
+#~ msgid "and"
+#~ msgstr "și"
+
+#~ msgid "has"
+#~ msgstr "are"
+
+#~ msgid "has not"
+#~ msgstr "nu a"
+
+#~ msgid "not"
+#~ msgstr "nu"
+
+#~ msgid "ntopng Hosts"
+#~ msgstr "Gazde ntopng"
+
+#, python-format
+#~ msgid "Created new event correlation rule with id %s"
+#~ msgstr "A creat o nouă regulă de corelare a evenimentelor cu id %s"
+
+#, python-format
+#~ msgid "Modified event correlation rule %s"
+#~ msgstr "Regula de corelare a evenimentelor modificată %s"
+
+#~ msgid "Hard disk device"
+#~ msgstr "Dispozitiv de hard disk"
+
+#~ msgid "Harddisk temperature (e.g. via SMART)"
+#~ msgstr "Temperatura harddisk-ului (de exemplu, prin SMART)"
+
+#~ msgid "Hardware temperature, multiple sensors"
+#~ msgstr "Temperatura hardware, senzori multipli"
+
+#~ msgid "Host/Device temperature"
+#~ msgstr "Temperatura gazdei/dispozitivului"
+
+#~ msgid "Room temperature (external thermal sensors)"
+#~ msgstr "Temperatura camerei (senzori termici externi)"
+
+#~ msgid ""
+#~ "Temperature levels for external thermometers that are used for monitoring "
+#~ "the temperature of a datacenter. An example is the webthem from W&T."
+#~ msgstr ""
+#~ "Nivelurile de temperatură pentru termometrele externe utilizate pentru "
+#~ "monitorizarea temperaturii unui centru de date. Un exemplu este webthem "
+#~ "de la W&T."
+
+#~ msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
+#~ msgstr ""
+#~ "Nivelurile de temperatură pentru discurile dure, care sunt determinate, "
+#~ "de exemplu, prin SMART."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like Brocade switches with "
+#~ "(potentially) several temperature sensors. Sensor IDs can be selected in "
+#~ "the rule."
+#~ msgstr ""
+#~ "Niveluri de temperatură pentru dispozitive hardware precum switch-urile "
+#~ "Brocade cu (potențial) mai mulți senzori de temperatură. ID-urile "
+#~ "senzorilor pot fi selectate în regulă."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices with a single temperature sensor."
+#~ msgstr ""
+#~ "Niveluri de temperatură pentru dispozitive hardware cu un singur senzor "
+#~ "de temperatură."
+
+#~ msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
+#~ msgstr ""
+#~ "Identificatorul dispozitivului hard disk, de exemplu <tt>/dev/sda</tt>."
+
+#~ msgid "operational state not available"
+#~ msgstr "starea de funcționare nu este disponibilă"
+
+#, fuzzy, python-format
+#~ msgid "Start: %s"
+#~ msgstr "Setari"
+
+#~ msgid ""
+#~ "The checkbox for setting host downtimes does not work when removing "
+#~ "downtimes."
+#~ msgstr ""
+#~ "Caseta de selectare pentru setarea timpilor de oprire a gazdelor nu "
+#~ "funcționează atunci când se elimină timpii de oprire."
+
+#~ msgid "Missing render parameter"
+#~ msgstr "Parametru de redare lipsă"
+
+#~ msgid "Missing spec parameter"
+#~ msgstr "Parametru de specificații lipsă"
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s pentru următoarele %d minute</b>?"
+
+#~ msgid "Also set downtime on child hosts"
+#~ msgstr "De asemenea, setați timpul de nefuncționare pe gazdele copil"
+
+#~ msgid "Custom Downtime Timeranges"
+#~ msgstr "Timerange de timp de oprire personalizate"
+
+#~ msgid "Custom time range"
+#~ msgstr "Interval de timp personalizat"
+
+#~ msgid "Do this recursively"
+#~ msgstr "Faceți acest lucru în mod recursiv"
+
+#~ msgid "From now for"
+#~ msgstr "De acum înainte pentru"
+
+#~ msgid "Please enter a positive number of minutes."
+#~ msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
+
+#~ msgid "Remove all"
+#~ msgstr "Eliminați toate"
+
+#~ msgid "Repeat this downtime on a regular basis every"
+#~ msgstr "Repetați acest timp de nefuncționare în mod regulat în fiecare"
+
+#, python-format
+#~ msgid "Schedule a downtime from %s to %s?"
+#~ msgstr "Programați o perioadă de întrerupere de la %s la %s?"
+
+#~ msgid "View history"
+#~ msgstr "Vezi istoricul"
+
+#~ msgid "flexible with max. duration"
+#~ msgstr "flexibil cu durata maximă."
+
+#~ msgid "with comment"
+#~ msgstr "cu comentariu"
+
+#~ msgid "Clear"
+#~ msgstr "Clar"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Ștergeți jurnalul de audit"
+
+#~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
+#~ msgstr ""
+#~ "Implementarea mediului moștenit (Python 3.4 + set standard de module)"
+
+#~ msgid ""
+#~ "Deploy standard environment (Current Python 3.8 + standard set of modules)"
+#~ msgstr ""
+#~ "Implementați mediul standard (Python 3.8 curent + set standard de module)"
+
+#~ msgid "Python environment"
+#~ msgstr "Mediul Python"
+
+#~ msgid ""
+#~ "The standard environment we deploy can't be used on legacy Windows "
+#~ "systems such as Windows Server 2008, Windows Server 2008R2. If you want "
+#~ "to deploy agent plugins like the agent updater, mk_logwatch or mk_jolokia "
+#~ "on such windows hosts, you have to select the option \"Deploy legacy "
+#~ "environment\" here."
+#~ msgstr ""
+#~ "Mediul standard pe care îl implementăm nu poate fi utilizat pe sistemele "
+#~ "Windows vechi, cum ar fi Windows Server 2008, Windows Server 2008R2. Dacă "
+#~ "doriți să implementați plugin-uri de agent precum agent updater, "
+#~ "mk_logwatch sau mk_jolokia pe astfel de gazde Windows, trebuie să "
+#~ "selectați opțiunea \"Deploy legacy environment\" aici."
+
+#~ msgid "Alerting depending on the number of used licenses is disabled"
+#~ msgstr ""
+#~ "Alertarea în funcție de numărul de licențe utilizate este dezactivată"
+
+#~ msgid "Critical when all licenses are used"
+#~ msgstr "Critic atunci când sunt utilizate toate licențele"
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "În prezent, site-ul este blocat de un alt proces de activare. Vă rugăm să "
+#~ "încercați din nou mai târziu"
+
+#~ msgid "fibers"
+#~ msgstr "fibre"
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Nivelul critic pentru timpul scurs de la ultima actualizare"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Niveluri procentuale ->"
+
+#~ msgid ""
+#~ "The selected automation user needs rights for pairing all agents. TODO: "
+#~ "Provide details (ATM: We still need such a role)"
+#~ msgstr ""
+#~ "Utilizatorul de automatizare selectat are nevoie de drepturi pentru "
+#~ "împerecherea tuturor agenților. TODO: Furnizați detalii (ATM: Încă avem "
+#~ "nevoie de un astfel de rol)"
+
+#~ msgid "ASCII Email (legacy)"
+#~ msgstr "ASCII Email (moștenire)"
+
+#, python-format
+#~ msgid "Unknown graph type: %s"
+#~ msgstr "Tip de grafic necunoscut: %s"
 
 #~ msgid ""
 #~ "This rule sets the warn and crit levels for the number of unacknowlegded "
@@ -73418,14 +74264,8 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid "Custom notification"
 #~ msgstr "Notificare personalizată"
 
-#~ msgid "Modified attributes"
-#~ msgstr "Atribute modificate"
-
 #~ msgid "Remove comments"
 #~ msgstr "Eliminați comentariile"
-
-#~ msgid "broadcast"
-#~ msgstr "difuzare"
 
 #~ msgid "forced"
 #~ msgstr "forțat"
@@ -73586,9 +74426,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "Nu s-au găsit date de inventar pentru această gazdă."
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "Obțineți jurnalele de audit la distanță"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"
@@ -73920,9 +74757,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid "years"
 #~ msgstr "ani"
 
-#~ msgid "Request IDs are not equal"
-#~ msgstr "ID-urile cererilor nu sunt egale"
-
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Dacă este omisă, se utilizează adresa IP."
 
@@ -74090,17 +74924,8 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Numele Aplicatiei"
 
 #, fuzzy, python-format
-#~| msgid "Added: %s"
-#~ msgid "End: %s"
-#~ msgstr "Adăugat %s"
-
-#, fuzzy, python-format
 #~ msgid "Limit: %s"
 #~ msgstr "Adaugă limite"
-
-#, fuzzy, python-format
-#~ msgid "Start: %s"
-#~ msgstr "Setari"
 
 #, fuzzy
 #~ msgid "New collection"
@@ -75197,10 +76022,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Voluble"
 #~ msgstr "Nume nou"
-
-#, fuzzy
-#~ msgid "Failover state"
-#~ msgstr "RAID: starea sistemului"
 
 #, fuzzy
 #~ msgid "Name - Use the containers' name"
@@ -77159,10 +77980,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Unallocated Space"
 #~ msgstr "spatiu utilizat"
-
-#, fuzzy
-#~ msgid "Unique Rule ID"
-#~ msgstr "licente nefolosite"
 
 #, fuzzy
 #~ msgid "Unused"

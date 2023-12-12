@@ -7,7 +7,8 @@ import pytest
 
 import cmk.base.plugins.agent_based.df_netscaler as dfn
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS, FSBlocks
 
 STRING_TABLE = [
     ["/var", "96133", "87418"],

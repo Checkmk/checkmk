@@ -24,25 +24,18 @@ else:
     suppressed_issues.update(
         {
             "CMK-12182",  # mostly done, but fixing InputPassword was apparently overlooked
-            # "CMK-12421",  # NOTE: problem with redirects in Schemathesis, need to investigate!
             "CMK-13216",
-            "CMK-14100",
-            "CMK-14101",
-            "CMK-14110",
-            "CMK-14259",
-            "CMK-14261",
-            "CMK-14263",
             "CMK-14273",
-            "CMK-14291",
-            "CMK-14314",  # follow-up of CMK-12235
-            "CMK-14366",  # follow-up of CMK-12261
             # "CMK-14375",
             # "CMK-14375.1",
             # "CMK-14375.2",
             "CMK-14381",
-            "CMK-14403",
-            "CMK-14416",
             "CMK-TODO",
+            "CMK-14991",
+            "CMK-14995",
+            "CMK-15035",
+            "CMK-15166",
+            "CMK-15167",
         }
     )
 for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):

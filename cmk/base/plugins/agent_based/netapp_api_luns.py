@@ -7,15 +7,16 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import netapp_api
-from .utils.df import (
+from cmk.plugins.lib import netapp_api
+from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
     TREND_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _MEBI = 1048576
 
@@ -61,6 +62,9 @@ def _check_netapp_api_luns(
 ) -> CheckResult:
     if (lun := section.get(item)) is None:
         return
+
+    yield Result(state=State.OK, summary=f"Volume: {lun['volume']}")
+    yield Result(state=State.OK, summary=f"Vserver: {lun['vserver']}")
 
     if lun.get("online") != "true":
         yield Result(state=State.CRIT, summary="LUN is offline")

@@ -1,4 +1,4 @@
-Title: <tt>cisco_wlc</tt>, <tt>cisco_wlc_clients</tt>: add support for Cisco Aironet 2800
+Title: cisco_wlc, cisco_wlc_clients: add support for Cisco Aironet 2800
 Class: feature
 Compatible: compat
 Component: checks

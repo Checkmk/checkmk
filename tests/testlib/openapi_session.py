@@ -36,7 +36,7 @@ class RequestSessionRequestHandler(RequestHandler):
             params=query_params,
             data=body,
             headers=headers,
-            allow_redirects=False,
+            allow_redirects=True,
         )
         return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
 
@@ -165,22 +165,31 @@ class CMKOpenApiSession(requests.Session):
             return self.activate_changes(sites, force_foreign_changes)
 
     def create_user(
-        self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        customer: None | str = None,
     ) -> None:
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": {
+                "auth_type": "password",
+                "password": password,
+            },
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+        }
+        if customer:
+            body["customer"] = customer
         response = self.post(
             "domain-types/user_config/collections/all",
-            json={
-                "username": username,
-                "fullname": fullname,
-                "auth_option": {
-                    "auth_type": "password",
-                    "password": password,
-                },
-                "contact_options": {
-                    "email": email,
-                },
-                "contactgroups": contactgroups,
-            },
+            json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -431,7 +440,11 @@ class CMKOpenApiSession(requests.Session):
         try:
             yield None
         except Redirect as redirect:
-            redirect_url = redirect.redirect_url
+            if not redirect.redirect_url.startswith("http://"):
+                redirect_url = f"http://{self.host}:{self.port}{redirect.redirect_url}"
+            else:
+                redirect_url = redirect.redirect_url
+
             while redirect_url:
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")

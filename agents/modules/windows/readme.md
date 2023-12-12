@@ -1,11 +1,16 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.11.5 & Python 3.4.4
+## Python 3.11.5
 
 ### Source
 
 PYTHON 3.11.5, provided as source tarball by standard Checkmk development process
-PYTHON 3.4.4, downloaded as MSI installer from the python.org
+=======
+## Python 3.11.2
+
+### Source
+
+PYTHON 3.11.2, provided as source tarball by standard Checkmk development process
 
 ### Changing or Updating the Python
 
@@ -52,7 +57,7 @@ This procedure may quite annoying, you have to check next points:
 
    Usually it is conftest.py and Makefile.
 
-6. Check build_the_module.cmd for 3.11, 3.4 and et cetera
+6. Check build_the_module.cmd for 3.11 and et cetera
 7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
@@ -61,7 +66,6 @@ This procedure may quite annoying, you have to check next points:
 
 ##### Building
 make build PY_VER=3.11 PY_SUBVER=1
-make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
 make integration
@@ -74,7 +78,6 @@ Main entry:
 build_the_module cached
 
 In a turn the script makes two calls:
-build_the_cached artefact_dir credentials url 3.4 4
 build_the_cached artefact_dir credentials url 3.11 1
 
 #### Caching
@@ -106,52 +109,26 @@ In latter case the git_hash is replaced with string "latest".
 14. Compress *tmp/to_save* into *tmp/python-3.cab*.
 15. Copy cab to *artefacts*
 
-#### Steps 3.4.4
-
-1. Uninstall omd/packages/Python/windows/python-3.4.4.msi
-2. install omd/packages/Python/windows/python-3.4.4.msi to the *to_install*
-3. Build virtual environment and copy files into *to_save*
-4. Uninstall omd/packages/Python/windows/python-3.4.4.msi
-5. Upgradepip and install packages
-6. Copy correct *pyvenv.cfg* into *to-save/.venv*
-7. Clean virtual environemtn *to_save*
-8. Compress *tmp/to_save* into *tmp/python-3.4.cab*.
-9. Copy cab to *artefacts*
-
-IMPORTANT: You need Visual Studio 10 to build 3.4.4.
-This can be difficult to obtain, you have to ask a person having Visual Studio Professional license to download.
-
 ### TREE
 
 .
 |
 |-- tmp/
 |    |
-|    |-- 3.11/
-|    |      |   python-3.cab  * resulting module file
-|    |      |
-|    |      |-- to_save/		* to produce module *
-|    |      |
-|    |      |-- Libs/           * libraries from the install
-|    |      |    |-- Libs/      * libraries from the install
-|    |      |    |
-|    |      |    |
-|    |      |    +-- .venv/	    * virtual environment *
-|    |      |
-|    |      |-- out/		    * output from the Python build *
-|    |      |
-|    |      |-- uninstall/	    * backed up installer *
-|    |      |
-|    |      +-- to_install/	    * installation of the Python *
-|    |
-|    +-- 3.4/
-|           |   python-3.4.cab  * resulting module file
+|    +-- 3.11/
+|           |   python-3.cab  * resulting module file
 |           |
 |           |-- to_save/		* to produce module *
-|           |    |
+|           |
+|           |-- Libs/           * libraries from the install
 |           |    |-- Libs/      * libraries from the install
 |           |    |
+|           |    |
 |           |    +-- .venv/	    * virtual environment *
+|           |
+|           |-- out/		    * output from the Python build *
+|           |
+|           |-- uninstall/	    * backed up installer *
 |           |
 |           +-- to_install/	    * installation of the Python *
 |
@@ -163,14 +140,8 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- python/
      |
-     |-- 3.11/
-     |       |
-     |       |-- python-3.11.timestamp
-     |       |
-     |       +-- python-3.11/
-     |
-     |-- 3.4/
+     +-- 3.11/
              |
-             |-- python-3.4.timestamp
+             |-- python-3.11.timestamp
              |
-             +-- python-3.4/
+             +-- python-3.11/

@@ -1,0 +1,10 @@
+Title: rabbitmq_cluster_messages: Most of the configrable parametes have not been considered
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701894663
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Most of the parameters configurable in the ruleset <i>"RabbitMQ cluster messages"</i> have not been considered by the plugin.

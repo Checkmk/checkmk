@@ -5,17 +5,22 @@
 
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
 
-#include "TableQueryHelper.h"
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/OutputBuffer.h"
+#include "livestatus/ParsedQuery.h"
+#include "livestatus/Query.h"
+#include "livestatus/Table.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
 #include "neb/Comment.h"   // IWYU pragma: keep
@@ -141,16 +146,29 @@ TEST_F(CrashReportTableFixture, TestTable) {
     EXPECT_EQ("crashreport_", table.namePrefix());
 }
 
+namespace {
+std::string query(Table &table, const std::list<std::string> &q) {
+    OutputBuffer output{-1, [] { return false; }, table.logger()};
+    Query{ParsedQuery{q, table, output},
+          table,
+          Encoding::utf8,
+          5000,
+          output,
+          table.logger()}
+        .process();
+    return output.str();
+}
+}  // namespace
+
 TEST_F(CrashReportTableFixture, TestListCrashReports) {
     ASSERT_TRUE(fs::exists(basepath));
     EXPECT_EQ("component;id\n" + component + ";" + uuid + "\n",
-              mk::test::query(table, {}));
+              query(table, {}));
 }
 
 TEST_F(CrashReportTableFixture, TestGetOneCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
-    EXPECT_EQ(json + "\n",
-              mk::test::query(table, {"Columns: file:f0:" + component + "/" +
-                                          uuid + "/" + crash_info + "\n",
-                                      "Filter: id = " + uuid + "\n"}));
+    EXPECT_EQ(json + "\n", query(table, {"Columns: file:f0:" + component + "/" +
+                                             uuid + "/" + crash_info + "\n",
+                                         "Filter: id = " + uuid + "\n"}));
 }

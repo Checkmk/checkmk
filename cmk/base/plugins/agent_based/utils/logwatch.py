@@ -15,14 +15,14 @@
 
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple, TypedDict
+from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, Literal, NamedTuple, Pattern, TypedDict
+
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -37,20 +37,53 @@ class Section(NamedTuple):
     logfiles: Mapping[str, ItemData]
 
 
+SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
+
+
+class DictLogwatchEc(TypedDict, total=False):
+    method: Literal["", "spool:"] | str | SyslogConfig
+    facility: int
+    restrict_logfiles: list[str]
+    monitor_logfilelist: bool
+    expected_logfiles: list[str]
+    logwatch_reclassify: bool
+    monitor_logfile_access_state: Literal[0, 1, 2, 3]
+    separate_checks: bool
+
+
+ParameterLogwatchEc = Literal[""] | DictLogwatchEc
+
+
 def service_extra_conf(service: str) -> list:
     return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-        host_name(), service, cmk.base.config.logwatch_rules
+        HostName(host_name()), service, cmk.base.config.logwatch_rules
     )
 
 
-def extract_unseen_lines(
+ClusterSection = dict[str | None, Section]
+
+
+def update_seen_batches(
     value_store: MutableMapping[str, Any],
-    batches_of_lines: Mapping[str, list[str]],
-) -> list[str]:
+    cluster_section: ClusterSection,
+    logfiles: Iterable[str],
+) -> Container[str]:
     # Watch out: we cannot write an empty set to the value_store :-(
     seen_batches = value_store.get("seen_batches", ())
-    value_store["seen_batches"] = tuple(batches_of_lines)
+    value_store["seen_batches"] = tuple(
+        batch_id
+        for node_section in cluster_section.values()
+        for logfile in logfiles
+        if (logfile_data := node_section.logfiles.get(logfile)) is not None
+        for batch_id in logfile_data["lines"]
+    )
+    return seen_batches
 
+
+def extract_unseen_lines(
+    batches_of_lines: Mapping[str, list[str]],
+    seen_batches: Container[str],
+) -> list[str]:
     return [
         line
         for batch, lines in sorted(batches_of_lines.items())
@@ -59,11 +92,12 @@ def extract_unseen_lines(
     ]
 
 
-def get_ec_rule_params() -> Sequence[Any]:
+# This is only wishful typing -- but lets assume this is what we get.
+def get_ec_rule_params() -> Sequence[ParameterLogwatchEc]:
     """Isolate the remaining API violation w.r.t. parameters"""
     return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-        host_name(),
-        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),
+        HostName(host_name()),
+        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
     )
 
 
@@ -80,27 +114,33 @@ def discoverable_items(*sections: Section) -> list[str]:
     )
 
 
-def ec_forwarding_enabled(params: Mapping[str, Any], item: str) -> bool:
-    if "restrict_logfiles" not in params:
-        return True  # matches all logs on this host
+class LogFileFilter:
+    @staticmethod
+    def _match_all(_logfile: str) -> Literal[True]:
+        return True
 
-    # only logs which match the specified patterns
-    return any(re.match(pattern, item) for pattern in params["restrict_logfiles"])
+    @staticmethod
+    def _match_nothing(_logfile: str) -> Literal[False]:
+        return False
 
+    def __init__(self, rules: Sequence[ParameterLogwatchEc]) -> None:
+        self._expressions: tuple[Pattern[str], ...] = ()
+        self.is_forwarded: Callable[[str], bool]
+        if not rules or not (params := rules[0]):
+            # forwarding disabled
+            self.is_forwarded = self._match_nothing
+            return
 
-def select_forwarded(
-    items: Sequence[str],
-    forward_settings: Sequence[Mapping[str, Any]],
-    *,
-    invert: bool = False,
-) -> set[str]:
-    # Is forwarding enabled in general?
-    if not (forward_settings and forward_settings[0]):
-        return set(items) if invert else set()
+        if "restrict_logfiles" not in params:
+            # matches all logs on this host
+            self.is_forwarded = self._match_all
+            return
 
-    return {
-        item for item in items if ec_forwarding_enabled(forward_settings[0], item) is not invert
-    }
+        self._expressions = tuple(re.compile(pattern) for pattern in params["restrict_logfiles"])
+        self.is_forwarded = self._match_patterns
+
+    def _match_patterns(self, logfile: str) -> bool:
+        return any(rgx.match(logfile) for rgx in self._expressions)
 
 
 def reclassify(

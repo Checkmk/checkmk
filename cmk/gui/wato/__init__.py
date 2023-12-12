@@ -101,6 +101,7 @@ from ._notification_parameter import (
     notification_parameter_registry as notification_parameter_registry,
 )
 from ._notification_parameter import NotificationParameter as NotificationParameter
+from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
 from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
 from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
@@ -156,22 +157,17 @@ from ._rulespec_groups import (
     RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
 )
 from ._rulespec_groups import RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer
+from .pages import IndividualOrStoredPassword as IndividualOrStoredPassword
+from .pages import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
+from .pages import MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
 )
-from .pages._password_store_valuespecs import (
-    IndividualOrStoredPassword as IndividualOrStoredPassword,
-)
-from .pages._password_store_valuespecs import (
-    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
-)
-from .pages._password_store_valuespecs import (
-    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
-)
 from .pages._password_store_valuespecs import PasswordFromStore as PasswordFromStore
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
-from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType

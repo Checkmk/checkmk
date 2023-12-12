@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.netapp_api import CPUSection
+
+from cmk.plugins.lib.netapp_api import CPUSection
 
 SECTION_NETAPP_API_VF_STATS = {
     "vfiler0": {

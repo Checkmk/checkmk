@@ -29,6 +29,7 @@ from .dashlet import (
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
 from .title_macros import render_title_with_macros_string
 from .type_defs import DashboardConfig, DashboardName
+from .visual_type import VisualTypeDashboards
 
 __all__ = [
     "load_plugins",
@@ -50,6 +51,7 @@ __all__ = [
     "render_title_with_macros_string",
     "ABCFigureDashlet",
     "IFrameDashlet",
+    "VisualTypeDashboards",
 ]
 
 
@@ -105,8 +107,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.dashboard as api_module
-    import cmk.gui.plugins.dashboard.utils as plugin_utils
+    import cmk.gui.plugins.dashboard as api_module  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.dashboard.utils as plugin_utils  # pylint: disable=cmk-module-layer-violation
 
     for name, val in (
         ("ABCFigureDashlet", ABCFigureDashlet),

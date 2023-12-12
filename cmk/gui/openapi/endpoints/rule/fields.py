@@ -5,10 +5,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import cast, Literal, TYPE_CHECKING
+from typing import Any, cast, Literal, TYPE_CHECKING
 
 import marshmallow_oneofschema
-from marshmallow import post_load, pre_dump, types, ValidationError
+from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
 from typing_extensions import TypedDict
 
 from cmk.utils.rulesets.conditions import (
@@ -49,6 +49,16 @@ if TYPE_CHECKING:
     class ApiMatchExpression(TypedDict, total=True):
         match_on: list[str]
         operator: ApiOperator
+
+
+class APILabelCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label: str
+
+
+class APILabelGroupCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label_group: list[APILabelCondition]
 
 
 RULE_ID: Mapping[str, fields.String] = {
@@ -133,12 +143,7 @@ class LabelConditionSchema(base.BaseSchema):
         >>> rv = l.load([{'key': 'os', 'operator': 'is', 'value': 'windows'},
         ...         {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}], many=True)  # doctest: +ELLIPSIS
         >>> rv
-        {'os': 'windows', 'foo': {'$ne': 'bar'}}
-
-        >>> l.dump(rv, many=True)
-        [{'key': 'os', 'operator': 'is', 'value': 'windows'}, \
-{'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]
-
+        [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}, {'operator': 'not', 'label': 'foo:bar'}]}]
     """
 
     cast_to_dict = True
@@ -149,6 +154,7 @@ class LabelConditionSchema(base.BaseSchema):
     )
     operator = fields.String(
         enum=["is", "is_not"],
+        required=True,
         description="How the label should be matched.",
     )
     value = fields.String(
@@ -156,56 +162,32 @@ class LabelConditionSchema(base.BaseSchema):
         description="The value of the label. e.g. 'windows' in 'os:windows'",
     )
 
-    @pre_dump(pass_many=True)
-    def convert_to_api(  # type: ignore[no-untyped-def]
-        self,
-        data,
-        many: bool = False,
-        partial: bool = False,
-    ) -> list[ApiExpression]:
-        entries: list[LabelConditions]
-        if isinstance(data, dict):
-            entries = [data]
-        elif isinstance(data, list):
-            entries = data
-        else:
-            raise ValidationError(f"Unknown type: {data!r}")
-
-        rv: list[ApiExpression] = []
-        for entry in entries:
-            for key, value in entry.items():
-                try:
-                    unpacked = _unpack_value(value)
-                except ValueError as exc:
-                    raise ValidationError(str(exc), field_name=key) from exc
-                if unpacked is None:
-                    continue
-                rv.append(
-                    {
-                        "key": key,
-                        "operator": _unpack_operator(value),
-                        "value": unpacked,
-                    }
-                )
-
-        return rv
-
     @post_load(pass_many=True)
     def convert_to_checkmk(
         self,
         data: list[ApiExpressionSingle],
         many: bool = False,
         partial: bool = False,
-    ) -> LabelConditions:
-        rv = {}
+    ) -> list[APILabelGroupCondition]:
+        label_group: list[APILabelCondition] = []
+        labels_added: list[str] = []
         for entry in data:
-            key: str = entry["key"]
-            if key in rv:
-                raise ValidationError(f"Keys can only be used once. Duplicate key: {key!r}")
+            label_str = f"{entry['key']}:{entry['value']}"
+            if label_str in labels_added:
+                raise ValidationError(
+                    f"Keys can only be used once. Duplicate key: {entry['key']!r}"
+                )
 
-            rv[key] = _scalar_value(entry["value"], entry["operator"])
+            label_group.append(
+                {"operator": "not" if entry["operator"] == "is_not" else "and", "label": label_str},
+            )
+            labels_added.append(label_str)
 
-        return rv
+        new_entries: list[APILabelGroupCondition] = [
+            {"operator": "and", "label_group": label_group}
+        ]
+
+        return new_entries
 
 
 class TagConditionSchemaBase(base.BaseSchema):
@@ -213,6 +195,7 @@ class TagConditionSchemaBase(base.BaseSchema):
     operator_type: str
 
     key = fields.String(
+        required=True,
         description="The name of the tag.",
     )
 
@@ -313,10 +296,12 @@ class TagConditionScalarSchemaBase(TagConditionSchemaBase):
 
     # field defined in superclass
     operator = fields.String(
+        required=True,
         description="If the tag's value should match what is given under the field `value`.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
     value = fields.String(
+        required=True,
         description="The value of a tag.",
     )
 
@@ -347,11 +332,13 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
 
     # field defined in superclass
     operator = fields.String(
+        required=True,
         description="If the matched tag should be one of the given values, or not.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
     value = fields.List(
         fields.String(description="The value of a tag."),
+        required=True,
         description="A list of values for the tag.",
     )
 
@@ -508,10 +495,12 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
     match_on = fields.List(
         fields.String(),
+        required=True,
         description="A list of string matching regular expressions.",
     )
     operator = fields.String(
         enum=["one_of", "none_of"],
+        required=True,
         description=(
             "How the hosts or services should be matched.\n"
             " * one_of - will match if any of the hosts or services is matched\n"
@@ -623,6 +612,38 @@ class RuleProperties(base.BaseSchema):
     )
 
 
+class LabelCondition(base.BaseSchema):
+    """A schema representing a label condition.
+    The label is connected to other labels (within one label group condition) via one of
+    the boolean operators {"and", "or", "not"}"""
+
+    operator = fields.String(
+        enum=["and", "or", "not"],
+        description="Boolean operator that connects the label to other labels within the same "
+        "label group condition",
+    )
+    label = fields.String(
+        required=True, description='A label of format "{key}:{value}"', example="os:windows"
+    )
+
+
+class LabelGroupCondition(base.BaseSchema):
+    """A schema representing a label group condition.
+    The label group (i.e. a list of label conditions) is connected to other label groups via one
+    of the boolean operators {"and", "or", "not"}"""
+
+    operator = fields.String(
+        enum=["and", "or", "not"],
+        description="Boolean operator that connects the label group to other label groups",
+    )
+    label_group = fields.List(
+        fields.Nested(LabelCondition),
+        required=True,
+        description="A list of label conditions that form a label group",
+        example=[{"operator": "and", "label": "os:linux"}],
+    )
+
+
 class RuleConditions(base.BaseSchema):
     cast_to_dict = True
 
@@ -663,6 +684,38 @@ class RuleConditions(base.BaseSchema):
         ),
         example=[{"key": "os", "operator": "is", "value": "windows"}],
     )
+    host_label_groups = fields.List(
+        fields.Nested(LabelGroupCondition),
+        description="Further restrict this rule by applying host label conditions.",
+        example=[
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "os:windows",
+                    }
+                ],
+            }
+        ],
+    )
+    service_label_groups = fields.List(
+        fields.Nested(LabelGroupCondition),
+        description=(
+            "Restrict the application of the rule, by checking against service label conditions."
+        ),
+        example=[
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "os:windows",
+                    }
+                ],
+            }
+        ],
+    )
     service_description = fields.Nested(
         HostOrServiceConditionSchema(use_regex="always"),
         many=False,
@@ -683,43 +736,72 @@ class RuleConditions(base.BaseSchema):
         example={"match_on": ["foo1", "bar2"], "operator": "none_of"},
     )
 
+    @post_load
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        """To maintain backward compatibility. If we receive 'host_labels',
+        or 'service_labels' we change the key to 'host_label_groups' or
+        'service_label_groups' respectively."""
+
+        if host_labels := data.pop("host_labels", None):
+            data["host_label_groups"] = host_labels
+
+        if service_labels := data.pop("service_labels", None):
+            data["service_label_groups"] = service_labels
+
+        return data
+
+    @validates_schema
+    def _validate_labels(self, data: dict[str, Any], **kwargs: Any) -> None:
+        """We allow host_labels (old) or host_label_groups (new), not both.
+        We allow service_labels (old) or service_label_groups (new), not both."""
+
+        if data.get("host_labels") and data.get("host_label_groups"):
+            raise ValidationError(
+                "Please provide the field 'host_labels' OR 'host_label_groups', not both."
+            )
+
+        if data.get("service_labels") and data.get("service_label_groups"):
+            raise ValidationError(
+                "Please provide the field 'service_labels' OR 'service_label_groups', not both."
+            )
+
 
 class RuleExtensions(base.BaseSchema):
     """Serializes the 'extensions' part of the Rule Domain Object.
 
-    Examples:
+        Examples:
 
-        >>> ext = RuleExtensions()
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
-        ...     ext.load({
-        ...        'folder': '/',
-        ...     })
-        {'folder': Folder('', 'Main')}
+            >>> ext = RuleExtensions()
+            >>> from cmk.gui.utils.script_helpers import application_and_request_context
+            >>> from cmk.gui.livestatus_utils.testing import mock_site
+            >>> with mock_site(), application_and_request_context():
+            ...     ext.load({
+            ...        'folder': '/',
+            ...     })
+            {'folder': Folder('', 'Main')}
 
-        >>> with mock_site(), application_and_request_context():
-        ...     rv = ext.load({
-        ...        'folder': '/',
-        ...        'conditions': {
-        ...            'service_description': {'match_on': ['foo'],
-        ...                                               'operator': 'none_of',},
-        ...            'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}],
-        ...        }
-        ...     })
-        ...     rv
-        {'folder': Folder('', 'Main'), \
+            >>> with mock_site(), application_and_request_context():
+            ...     rv = ext.load({
+            ...        'folder': '/',
+            ...        'conditions': {
+            ...            'service_description': {'match_on': ['foo'],
+            ...                                               'operator': 'none_of',},
+            ...            'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}],
+            ...        }
+            ...     })
+            ...     rv
+            {'folder': Folder('', 'Main'), \
 'conditions': {\
 'host_tags': {'criticality': 'prod'},\
  'service_description': {'$nor': [{'$regex': 'foo'}]}\
 }}
 
-        >>> ext.dump(rv)
-        {'folder': '/', 'conditions': {\
+            >>> ext.dump(rv)
+            {'folder': '/', 'conditions': {\
 'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}], \
 'service_description': {'match_on': ['foo'], 'operator': 'none_of'}}}
 
-    """
+        """
 
     cast_to_dict = True
 
@@ -788,29 +870,31 @@ class UpdateRuleObject(base.BaseSchema):
         ...                  'match_on': ['example.com', 'heute'],
         ...                  'operator': 'one_of',
         ...              },
-        ...              'host_labels': [
-        ...                   {'key': 'os', 'operator': 'is', 'value': 'windows'},
-        ...                   {'key': 'foo', 'operator': 'is_not', 'value': 'bar'},
+        ...              'host_label_groups': [
+        ...                   {"operator": "and", "label_group": [{"operator": "and", "label": "os:windows"}]},
         ...              ],
         ...              'host_tags': [
         ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
         ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
         ...              ],
-        ...         }
+        ...         },
+        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
         ...     })
         >>> rv
         {'properties': {'disabled': False}, \
+'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}}
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
 
         >>> s.dump(rv)
         {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
 'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}}
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
 
     """
 
@@ -828,6 +912,7 @@ class UpdateRuleObject(base.BaseSchema):
             "to be a valid Python type."
         ),
         example="{'cmk/os_family': 'linux'}",
+        required=True,
     )
     conditions = fields.Nested(
         RuleConditions,
@@ -854,31 +939,34 @@ class InputRuleObject(UpdateRuleObject):
         ...                  'match_on': ['example.com', 'heute'],
         ...                  'operator': 'one_of',
         ...              },
-        ...              'host_labels': [
-        ...                   {'key': 'os', 'operator': 'is', 'value': 'windows'},
-        ...                   {'key': 'foo', 'operator': 'is_not', 'value': 'bar'},
+        ...              'host_label_groups': [
+        ...                   {"operator": "and", "label_group": [{"operator": "not", "label": "foo:bar"}]},
         ...              ],
         ...              'host_tags': [
         ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
         ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
         ...              ],
-        ...         }
+        ...         },
+        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
         ...     })
         >>> rv
         {'properties': {'disabled': False}, \
+'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_labels': {'os': 'windows', 'foo': {'$ne': 'bar'}}}, 'ruleset': 'host', 'folder': Folder('', 'Main')}
-
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
+'ruleset': 'host', 'folder': Folder('', 'Main')}
         >>> rv['folder'].path()
         ''
 
         >>> s.dump(rv)
-        {'properties': {'disabled': False}, 'conditions': {\
+        {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
+'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}, \
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
 'ruleset': 'host', 'folder': '/'}
 
     """

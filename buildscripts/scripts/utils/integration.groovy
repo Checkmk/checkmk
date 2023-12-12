@@ -103,9 +103,11 @@ def run_make_targets(Map args) {
                         }
                         parallel DOCKER_BUILDS
                     } finally {
-                        stage('archive artifacts') {
+                        stage("Archive / process test reports") {
                             dir(WORKSPACE) {
-                                archiveArtifacts("test-results/**")
+                                show_duration("archiveArtifacts") {
+                                    archiveArtifacts("test-results/**");
+                                }
                                 xunit([Custom(
                                     customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                                     deleteOutputFiles: true,

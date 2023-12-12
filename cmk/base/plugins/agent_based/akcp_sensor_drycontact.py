@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
-from .utils.akcp import DETEC_AKCP_SP2PLUS
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS
+from cmk.plugins.lib.akcp_sensor import (
     check_akcp_sensor_drycontact,
     inventory_akcp_sensor_no_params,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
 
 register.snmp_section(
     name="akcp_sensor_drycontact",

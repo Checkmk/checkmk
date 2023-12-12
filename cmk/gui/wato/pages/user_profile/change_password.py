@@ -7,12 +7,14 @@ import time
 from datetime import datetime
 
 from cmk.utils.crypto.password import Password
+from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
@@ -83,6 +85,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         userdb.save_users(users, now)
 
+        log_security_event(
+            UserManagementEvent(
+                event="password changed",
+                affected_user=user.id,
+                acting_user=user.id,
+            )
+        )
+
         flash(_("Successfully changed password."))
 
         # Set the new cookie to prevent logout for the current user
@@ -125,25 +135,24 @@ class UserChangePasswordPage(ABCUserProfilePage):
                 _("You can not change your password, because it is managed by another system."),
             )
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
-        forms.header(self._page_title())
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
+            forms.header(self._page_title())
 
-        forms.section(_("Current Password"))
-        html.password_input("cur_password", autocomplete="new-password")
+            forms.section(_("Current Password"))
+            html.password_input("cur_password", autocomplete="new-password")
 
-        forms.section(_("New Password"))
-        html.password_input("password", autocomplete="new-password")
-        html.password_meter()
+            forms.section(_("New Password"))
+            html.password_input("password", autocomplete="new-password")
+            html.password_meter()
 
-        forms.section(_("New Password Confirmation"))
-        html.password_input("password2", autocomplete="new-password")
+            forms.section(_("New Password Confirmation"))
+            html.password_input("password2", autocomplete="new-password")
 
-        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
+            html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 
-        forms.end()
-        html.close_div()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_fields()
         html.footer()

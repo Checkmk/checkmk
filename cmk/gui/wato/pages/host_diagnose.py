@@ -207,48 +207,47 @@ class ModeDiagHost(WatoMode):
         html.open_tr()
         html.open_td()
 
-        html.begin_form("diag_host", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("diag_host", method="POST"):
+            html.prevent_password_auto_completion()
 
-        forms.header(_("Host Properties"))
+            forms.header(_("Host Properties"))
 
-        forms.section(legend=False)
+            forms.section(legend=False)
 
-        # The diagnose page shows both SNMP variants at the same time
-        # We need to analyse the preconfigured community and set either the
-        # snmp_community or the snmp_v3_credentials
-        vs_dict: dict[str, object] = {}
-        for key, value in self._host.attributes.items():
-            if key == "snmp_community" and isinstance(value, tuple):
-                vs_dict["snmp_v3_credentials"] = value
-                continue
-            vs_dict[key] = value
+            # The diagnose page shows both SNMP variants at the same time
+            # We need to analyse the preconfigured community and set either the
+            # snmp_community or the snmp_v3_credentials
+            vs_dict: dict[str, object] = {}
+            for key, value in self._host.attributes.items():
+                if key == "snmp_community" and isinstance(value, tuple):
+                    vs_dict["snmp_v3_credentials"] = value
+                    continue
+                vs_dict[key] = value
 
-        vs_host = self._vs_host()
-        vs_host.render_input("vs_host", vs_dict)
-        html.help(vs_host.help())
+            vs_host = self._vs_host()
+            vs_host.render_input("vs_host", vs_dict)
+            html.help(vs_host.help())
 
-        forms.end()
+            forms.end()
 
-        html.open_div(style="margin-bottom:10px")
-        html.close_div()
+            html.open_div(style="margin-bottom:10px")
+            html.close_div()
 
-        forms.header(_("Options"))
+            forms.header(_("Options"))
 
-        value = {}
-        forms.section(legend=False)
-        vs_rules = self._vs_rules()
-        vs_rules.render_input("vs_rules", value)
-        html.help(vs_rules.help())
-        forms.end()
+            value = {}
+            forms.section(legend=False)
+            vs_rules = self._vs_rules()
+            vs_rules.render_input("vs_rules", value)
+            html.help(vs_rules.help())
+            forms.end()
 
-        # When clicking "Save & Test" on the "Edit host" page, this will be set
-        # to immediately execute the tests using the just saved settings
-        if request.has_var("_start_on_load"):
-            html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
+            # When clicking "Save & Test" on the "Edit host" page, this will be set
+            # to immediately execute the tests using the just saved settings
+            if request.has_var("_start_on_load"):
+                html.final_javascript("cmk.page_menu.form_submit('diag_host', '_save');")
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
         html.close_td()
         html.open_td(style="padding-left:10px;")

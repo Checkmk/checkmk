@@ -43,7 +43,7 @@ def parse_hardware(string_table: StringTable) -> Hardware | None:
     if "items" not in json_data:
         return None
 
-    devices = [Device.parse_obj(item) for item in json_data["items"]]
+    devices = [Device.model_validate(item) for item in json_data["items"]]
 
     return Hardware(
         storage_bays={d.name: d for d in devices if d.type == "drive_bay"},

@@ -14,36 +14,34 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Mapping
 from typing import Any
+
+from livestatus import SiteId
 
 import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing import parse_perfometers, perfometer_info
-from cmk.gui.graphing._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphMetric,
-    parse_raw_graph_specification,
-)
+from cmk.gui.graphing._graph_render_config import GraphRenderConfig
+from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
-from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
+from cmk.gui.graphing._loader import load_graphing_plugins
+from cmk.gui.graphing._type_defs import TranslatedMetric
+from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import TranslatedMetrics
-
-PerfometerExpression = str | int | float
-RequiredMetricNames = set[str]
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -61,6 +59,7 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
+    add_graphing_plugins(load_graphing_plugins())
     parse_perfometers(perfometer_info)
 
 
@@ -78,8 +77,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.metrics as legacy_api_module
-    import cmk.gui.plugins.metrics.utils as legacy_plugin_utils
+    import cmk.gui.plugins.metrics as legacy_api_module  # pylint: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.metrics.utils as legacy_plugin_utils  # pylint: disable=cmk-module-layer-violation
 
     for name in (
         "check_metrics",
@@ -101,7 +100,6 @@ def _register_pre_21_plugin_api() -> None:
         "skype_mobile_devices",
         "T",
         "TB",
-        "time_series_expression_registry",
     ):
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
@@ -132,6 +130,7 @@ def _register_pre_21_plugin_api() -> None:
             "metric_info": graphing_utils.metric_info,
             "check_metrics": graphing_utils.check_metrics,
             "graph_info": graphing_utils.graph_info,
+            "_": _,
         }
     )
 
@@ -175,7 +174,7 @@ age_human_readable = cmk.utils.render.approx_age
 
 def translate_perf_data(
     perf_data_string: str, check_command: str | None = None
-) -> TranslatedMetrics:
+) -> Mapping[str, TranslatedMetric]:
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
 
@@ -192,20 +191,12 @@ def translate_perf_data(
 
 
 # This page is called for the popup of the graph icon of hosts/services.
-def page_host_service_graph_popup(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def page_host_service_graph_popup() -> None:
     """Registered as `host_service_graph_popup`."""
-    site_id = request.var("site")
-    host_name = request.var("host_name")
-    service_description = request.get_str_input("service")
     host_service_graph_popup_cmk(
-        site_id,
-        host_name,
-        service_description,
-        resolve_combined_single_metric_spec,
+        SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
+        HostName(request.get_str_input_mandatory("host_name")),
+        ServiceName(request.get_str_input_mandatory("service")),
     )
 
 
@@ -222,27 +213,10 @@ def page_host_service_graph_popup(
 #   '----------------------------------------------------------------------'
 
 
-def page_graph_dashlet(
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> None:
+def page_graph_dashlet() -> None:
     """Registered as `graph_dashlet`."""
-    spec = request.var("spec")
-    if not spec:
-        raise MKUserError("spec", _("Missing spec parameter"))
-    graph_specification = parse_raw_graph_specification(
-        json.loads(request.get_str_input_mandatory("spec"))
-    )
-
-    render = request.var("render")
-    if not render:
-        raise MKUserError("render", _("Missing render parameter"))
-    custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
-
     host_service_graph_dashlet_cmk(
-        graph_specification,
-        custom_graph_render_options,
-        resolve_combined_single_metric_spec,
+        parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
+        GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
         graph_display_id=request.get_str_input_mandatory("id"),
     )

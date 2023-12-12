@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=no-else-continue
-
-from cmk.utils.exceptions import MKGeneralException
-
 
 # This function must be executed for each agent line which has been
 # found for the current item. It must deal with the ORA-* error
@@ -23,7 +19,7 @@ from cmk.utils.exceptions import MKGeneralException
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/oracle.py
+# cmk.plugins.lib/oracle.py
 # ==================================================================================================
 def oracle_handle_ora_errors(line):
     if len(line) == 1:
@@ -51,7 +47,7 @@ def oracle_handle_ora_errors(line):
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/oracle.py
+# cmk.plugins.lib/oracle.py
 # ==================================================================================================
 def oracle_handle_legacy_ora_errors(line):
     # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
@@ -73,5 +69,5 @@ def oracle_handle_ora_errors_discovery(info):
         err = oracle_handle_ora_errors(line)
         if err is False:
             continue
-        elif isinstance(err, tuple):
-            raise MKGeneralException(err[1])
+        if isinstance(err, tuple):
+            raise RuntimeError(err[1])

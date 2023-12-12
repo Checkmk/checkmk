@@ -16,17 +16,42 @@ of plugins developed against a versionized API.
 
 Please keep this in mind when trying to consolidate.
 """
+import enum
 import importlib
 import os
-from collections.abc import Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
-from typing import Generic, TypeVar
+from typing import Final, Generic, Hashable, Protocol, TypeVar
 
-PLUGIN_BASE = "cmk.plugins"
+_CMK_PLUGINS = "cmk.plugins"
+_CMK_ADDONS_PLUGINS = "cmk_addons.plugins"
 
 
-_PluginType = TypeVar("_PluginType")
+class PluginGroup(enum.Enum):
+    """Definitive list of discoverable plugin groups"""
+
+    AGENT_BASED = "agent_based"
+    CHECKMAN = "checkman"
+    GRAPHING = "graphing"
+    RULESETS = "rulesets"
+    SERVER_SIDE_CALLS = "server_side_calls"
+
+
+class _PluginProtocol(Protocol):
+    @property
+    def name(self) -> Hashable:
+        ...
+
+
+_PluginType = TypeVar("_PluginType", bound=_PluginProtocol)
+
+
+class _ImporterProtocol(Protocol):
+    def __call__(self, module_name: str, raise_errors: bool) -> ModuleType | None:
+        ...
 
 
 @dataclass(frozen=True)
@@ -45,51 +70,19 @@ class DiscoveredPlugins(Generic[_PluginType]):
 
 
 def discover_plugins(
-    plugin_group: str,
-    name_prefix: str,
-    plugin_type: type[_PluginType],
-    *,
+    plugin_group: PluginGroup,
+    plugin_prefixes: Mapping[type[_PluginType], str],
     raise_errors: bool,
 ) -> DiscoveredPlugins[_PluginType]:
-    """Load all specified packages"""
+    """Collect all plugins from well-known locations"""
 
-    try:
-        plugin_base = importlib.import_module(PLUGIN_BASE)
-    except Exception as exc:
-        if raise_errors:
-            raise
-        return DiscoveredPlugins((exc,), {})
+    module_names_by_priority = discover_modules(plugin_group, raise_errors=raise_errors)
 
-    errors = []
-    plugins: dict[PluginLocation, _PluginType] = {}
-    for pkg_name in _find_namespaces(plugin_base, plugin_group):
-        try:
-            module = importlib.import_module(pkg_name)
-        except ModuleNotFoundError:
-            pass  # don't choke upon empty folders.
-        except Exception as exc:
-            if raise_errors:
-                raise
-            errors.append(exc)
-            continue
+    collector = Collector(plugin_prefixes, raise_errors=raise_errors)
+    for mod_name in module_names_by_priority:
+        collector.add_from_module(mod_name, _import_optionally)
 
-        module_errors, module_plugins = _collect_module_plugins(
-            pkg_name, vars(module), name_prefix, plugin_type, raise_errors
-        )
-        errors.extend(module_errors)
-        plugins.update(module_plugins)
-
-    return DiscoveredPlugins(errors, plugins)
-
-
-def _find_namespaces(plugin_base: ModuleType, plugin_group: str) -> set[str]:
-    return {
-        f"{plugin_base.__name__}.{family}.{plugin_group}.{fname.removesuffix('.py')}"
-        for path in plugin_base.__path__
-        for family in _ls_defensive(path)
-        for fname in _ls_defensive(f"{path}/{family}/{plugin_group}")
-        if fname not in {"__pycache__", "__init__.py"}
-    }
+    return DiscoveredPlugins(collector.errors, collector.plugins)
 
 
 def _ls_defensive(path: str) -> Sequence[str]:
@@ -99,36 +92,168 @@ def _ls_defensive(path: str) -> Sequence[str]:
         return []
 
 
-def _collect_module_plugins(
-    module_name: str,
-    objects: Mapping[str, object],
-    name_prefix: str,
-    plugin_type: type[_PluginType],
+def discover_families(
+    *,
     raise_errors: bool,
-) -> tuple[Sequence[Exception], Mapping[PluginLocation, _PluginType]]:
-    """Dispatch valid and invalid well-known objects
+    modules: Iterable[ModuleType] | None = None,
+    ls: Callable[[str], Iterable[str]] = _ls_defensive,
+) -> Mapping[str, Sequence[str]]:
+    """Discover all families below `modules` and their paths"""
+    if modules is None:
+        modules = [
+            m
+            for m in (
+                _import_optionally(_CMK_PLUGINS, raise_errors=raise_errors),
+                _import_optionally(_CMK_ADDONS_PLUGINS, raise_errors=raise_errors),
+            )
+            if m is not None
+        ]
 
-    >>> errors, plugins = _collect_module_plugins("my_module", {"my_plugin": 1, "my_b": "two", "some_c": "ignored"}, "my_", int, False)
-    >>> errors[0]
-    TypeError("my_module:my_b: 'two'")
-    >>> plugins
-    {PluginLocation(module='my_module', name='my_plugin'): 1}
+    family_paths = defaultdict(list)
+    for module in modules:
+        for path in module.__path__:
+            for family in ls(path):
+                family_paths[f"{module.__name__}.{family}"].append(f"{path}/{family}")
+
+    return family_paths
+
+
+def discover_modules(
+    plugin_group: PluginGroup,
+    *,
+    raise_errors: bool,
+    modules: Iterable[ModuleType] | None = None,
+    ls: Callable[[str], Iterable[str]] = _ls_defensive,
+) -> Iterable[str]:
+    """Discover all potetial plugin modules blow `modules`.
+
+    Returned iterable should be deduplicated.
     """
-    errors = []
-    plugins = {}
+    return _deduplicate(
+        (
+            f"{family}.{plugin_group.value}.{fname.removesuffix('.py')}"
+            for family, paths in discover_families(
+                raise_errors=raise_errors, modules=modules, ls=ls
+            ).items()
+            for path in paths
+            for fname in ls(f"{path}/{plugin_group.value}")
+            if fname not in {"__pycache__", "__init__.py"}
+        )
+    )
 
-    for name, value in objects.items():
-        if not name.startswith(name_prefix):
-            continue
 
-        location = PluginLocation(module_name, name)
-        if isinstance(value, plugin_type):
-            plugins[location] = value
-            continue
+def plugins_local_path() -> Path:
+    """Return the first local path for cmk plugins
 
+    Currently there is always exactly one.
+    """
+    return Path(next(_writable_module_paths(_CMK_PLUGINS)))
+
+
+def addons_plugins_local_path() -> Path:
+    """Return the first local path for cmk addon plugins
+
+    Currently there is always exactly one.
+    """
+    return Path(next(_writable_module_paths(_CMK_ADDONS_PLUGINS)))
+
+
+def _writable_module_paths(m_name: str) -> Iterator[str]:
+    """Return the writable module paths"""
+    return (p for p in importlib.import_module(m_name).__path__ if os.access(p, os.W_OK))
+
+
+_T = TypeVar("_T")
+
+
+def _deduplicate(iterable: Iterable[_T]) -> Iterable[_T]:
+    """Deduplicate preserving order
+
+    >>> list(_deduplicate([2, 1, 2, 3, 3, 1]))
+    [2, 1, 3]
+    """
+    return dict.fromkeys(iterable)
+
+
+def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | None:
+    try:
+        return importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        return None  # never choke upon empty/non-existing folders.
+    except Exception:
         if raise_errors:
-            raise TypeError(f"{location}: {value!r}")
+            raise
+        return None
 
-        errors.append(TypeError(f"{location}: {value!r}"))
 
-    return errors, plugins
+class Collector(Generic[_PluginType]):
+    def __init__(
+        self,
+        plugin_prefixes: Mapping[type[_PluginType], str],
+        raise_errors: bool,
+    ) -> None:
+        # Transform plugin types / prefixes to the data structure we
+        # need for this algorithm.
+        # We pass them differently to help the type inference along.
+        # Other approaches require even worse explicit type annotations
+        # on caller side.
+        self._prefix_to_types = tuple(
+            (prefix, tuple(t for t, p in plugin_prefixes.items() if p == prefix))
+            for prefix in set(plugin_prefixes.values())
+        )
+        self.raise_errors: Final = raise_errors
+
+        self.errors: list[Exception] = []
+        self._unique_plugins: dict[
+            tuple[type[_PluginType], Hashable], tuple[PluginLocation, _PluginType]
+        ] = {}
+
+    @property
+    def plugins(self) -> Mapping[PluginLocation, _PluginType]:
+        return dict(self._unique_plugins.values())
+
+    def add_from_module(self, mod_name: str, importer: _ImporterProtocol) -> None:
+        try:
+            module = importer(mod_name, raise_errors=True)
+        except Exception as exc:
+            self._handle_error(exc)
+            return
+
+        if module is None:
+            return
+
+        self._collect_module_plugins(mod_name, vars(module))
+
+    def _collect_module_plugins(
+        self,
+        module_name: str,
+        objects: Mapping[str, object],
+    ) -> None:
+        """Dispatch valid and invalid well-known objects"""
+        for name, value in objects.items():
+            try:
+                plugin_types = next(
+                    types for prefix, types in self._prefix_to_types if name.startswith(prefix)
+                )
+            except StopIteration:
+                continue  # no match
+
+            location = PluginLocation(module_name, name)
+            if not isinstance(value, plugin_types):
+                self._handle_error(TypeError(f"{location}: {value!r}"))
+                continue
+
+            key = (value.__class__, value.name)
+            if (existing := self._unique_plugins.get(key)) is not None:
+                self._handle_error(
+                    ValueError(
+                        f"{location}: plugin '{value.name}' already defined at {existing[0]}"
+                    )
+                )
+
+            self._unique_plugins[key] = (location, value)
+
+    def _handle_error(self, exc: Exception) -> None:
+        if self.raise_errors:
+            raise exc
+        self.errors.append(exc)

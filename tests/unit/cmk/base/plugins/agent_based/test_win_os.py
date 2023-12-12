@@ -37,6 +37,7 @@ def test_inventory_win_os(section: win_os.Section) -> None:
                 "type": "Windows",
                 "vendor": "Microsoft",
                 "name": "Microsoft Windows Server 2008 R2 Standard",
+                "version": "Windows Server 2008 R2 Standard",
                 "kernel_version": "6.1.7601",
                 "arch": "x86_64",
                 "service_pack": "1.0",

@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _item_spec_jvm_sessions():
@@ -20,34 +21,43 @@ def _item_spec_jvm_sessions():
     )
 
 
+def _migrate_quadruple(
+    params: tuple[int, int, int, int] | dict[str, tuple[int, int]]
+) -> dict[str, tuple[int, int]]:
+    if isinstance(params, dict):
+        return params
+    wl, cl, wu, cu = params
+    return {
+        "levels_lower": (wl, cl),
+        "levels_upper": (wu, cu),
+    }
+
+
 def _parameter_valuespec_jvm_sessions():
-    return Tuple(
-        help=_(
-            "This rule sets the warn and crit levels for the number of current "
-            "connections to a JVM application on the servlet level."
+    return Migrate(
+        valuespec=Dictionary(
+            title=_(
+                "Levels for the number of current connections to a JVM application on the servlet level"
+            ),
+            elements=[
+                (
+                    "levels_lower",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Lower levels"),
+                    ),
+                ),
+                (
+                    "levels_upper",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Upper levels"),
+                        default_levels=(800, 1000),
+                    ),
+                ),
+            ],
         ),
-        elements=[
-            Integer(
-                title=_("Warning if below"),
-                unit=_("sessions"),
-                default_value=-1,
-            ),
-            Integer(
-                title=_("Critical if below"),
-                unit=_("sessions"),
-                default_value=-1,
-            ),
-            Integer(
-                title=_("Warning at"),
-                unit=_("sessions"),
-                default_value=800,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("sessions"),
-                default_value=1000,
-            ),
-        ],
+        migrate=_migrate_quadruple,
     )
 
 

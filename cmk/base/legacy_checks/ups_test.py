@@ -8,7 +8,8 @@ from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheck
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
+
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 # Description of OIDs used from RFC 1628
 # OID: 1.3.6.1.2.1.33.1.7.3

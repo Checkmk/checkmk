@@ -14,11 +14,14 @@
 # '.1.3.6.1.4.1.232.22.2.3.1.6.1.10' => 'cpqRackCommonEnclosureManagerPresent',
 # '.1.3.6.1.4.1.232.22.2.3.1.6.1.12' => 'cpqRackCommonEnclosureManagerCondition',
 
+from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import CheckResult, DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hp import DETECT_HP_BLADE
+
+from cmk.agent_based.v2.type_defs import StringTable
+from cmk.plugins.lib.hp import DETECT_HP_BLADE
 
 # GENERAL MAPS:
 
@@ -34,21 +37,24 @@ hp_blade_status2nagios_map = {
 }
 
 
-def inventory_hp_blade_manager(info):
+def inventory_hp_blade_manager(string_table: StringTable) -> DiscoveryResult:
     # FIXME: Check if the implementation of the condition is correct or again a wrong implemented value
     # => if hp_blade_present_map[int(line[1])] == 'present'
-    return [(line[0], (line[3],)) for line in info]
+    yield from (Service(item=line[0], parameters={"role": line[3]}) for line in string_table)
 
 
-def check_hp_blade_manager(item, params, info):
-    for line in info:
+def check_hp_blade_manager(
+    item: str, params: Mapping[str, str], string_table: StringTable
+) -> CheckResult:
+    for line in string_table:
         if line[0] == item:
-            expected_role = params[0]
+            expected_role = params["role"]
             if line[3] != expected_role:
-                return (
+                yield (
                     2,
                     f"Unexpected role: {hp_blade_role_map[int(line[3])]} (Expected: {hp_blade_role_map[int(expected_role)]})",
                 )
+                return
 
             # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
             # be set to "fake OK" to display the other gathered information.
@@ -56,11 +62,11 @@ def check_hp_blade_manager(item, params, info):
 
             snmp_state = hp_blade_status_map[state]
             status = hp_blade_status2nagios_map[snmp_state]
-            return (
+            yield (
                 status,
                 f"Enclosure Manager condition is {snmp_state} (Role: {hp_blade_role_map[int(line[3])]}, S/N: {line[4]})",
             )
-    return (3, "item not found in snmp data")
+            return
 
 
 check_info["hp_blade_manager"] = LegacyCheckDefinition(
@@ -72,4 +78,5 @@ check_info["hp_blade_manager"] = LegacyCheckDefinition(
     service_name="Manager %s",
     discovery_function=inventory_hp_blade_manager,
     check_function=check_hp_blade_manager,
+    check_default_parameters={},
 )

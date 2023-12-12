@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 from collections.abc import Iterator
-from itertools import permutations
 from typing import Any, Generator, get_args, Literal
 
 import pytest
@@ -30,6 +29,8 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIRuleProperties,
     CASE_STATE_TYPE,
     INCIDENT_STATE_TYPE,
+    MatchHostEventsAPIType,
+    MatchServiceEventsAPIType,
     MgmtTypeAPI,
     MgmtTypeParamsAPI,
     NotificationBulkingAPIAttrs,
@@ -44,231 +45,6 @@ from cmk.gui.wato._notification_parameter._registry import (
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 
 managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
-
-
-def cb_str_options() -> Iterator[str]:
-    yield "str1"
-
-
-def time_period_option() -> Iterator[str]:
-    yield "time_period_1"
-
-
-def cb_folder_options() -> Iterator[str]:
-    yield "~"
-    yield "~test_folder1"
-    yield "~test_folder1~test_folder2"
-
-
-def cb_list_str_options() -> Iterator[list[str]]:
-    yield ["str1", "str2", "str3"]
-
-
-def contact_group_list_option() -> Iterator[list[str]]:
-    yield ["cg1", "cg2"]
-
-
-def host_group_list_option() -> Iterator[list[str]]:
-    yield ["hg1", "hg2"]
-
-
-def service_group_list_option() -> Iterator[list[str]]:
-    yield ["sg1", "sg2"]
-
-
-def cb_host_list_of_hosts() -> Iterator[list[str]]:
-    yield ["example.com"]
-
-
-def cb_list_sites_options() -> Iterator[list[str]]:
-    yield ["site_id_1"]
-
-
-def cb_from_to_notifications() -> Iterator[dict[str, int]]:
-    yield {"beginning_from": 2, "up_to": 493}
-
-
-def cb_throttle_periodic_notifications() -> Iterator[dict[str, int]]:
-    yield {"beginning_from": 2, "send_every_nth_notification": 493}
-
-
-def cb_labels() -> Iterator[list[dict[str, str]]]:
-    yield [{"key": "label1", "value": "value1"}, {"key": "label2", "value": "value2"}]
-
-
-def cb_regex() -> Iterator:
-    yield {"match_type": "match_id", "regex_list": ["^abc", "^def"]}
-    yield {"match_type": "match_alias", "regex_list": ["alias1", "alias2"]}
-
-
-def cb_service_levels() -> Iterator[dict[str, str]]:
-    for from_level, to_level in permutations(["no_service_level", "silver", "gold", "platinum"], 2):
-        yield {
-            "from_level": from_level,
-            "to_level": to_level,
-        }
-
-
-def cb_host_tags() -> Iterator[dict[str, str]]:
-    yield {
-        "ip_address_family": "ip-v4-only",
-        "ip_v4": "ip-v4",
-        "ip_v6": "!ip-v6",
-        "checkmk_agent_api_integration": "special-agents",
-        "piggyback": "piggyback",
-        "snmp": "snmp-v1",
-        "monitor_via_snmp": "snmp",
-        "monitor_via_checkmkagent_or_specialagent": "tcp",
-        "monitor_via_checkmkagent": "checkmk-agent",
-        "only_ping_this_device": "ping",
-        "criticality": "test",
-        "networking_segment": "wan",
-    }
-
-    yield {
-        "ip_address_family": "ignore",
-        "ip_v4": "ignore",
-        "ip_v6": "ignore",
-        "checkmk_agent_api_integration": "ignore",
-        "piggyback": "ignore",
-        "snmp": "ignore",
-        "monitor_via_snmp": "ignore",
-        "monitor_via_checkmkagent_or_specialagent": "ignore",
-        "monitor_via_checkmkagent": "ignore",
-        "only_ping_this_device": "ignore",
-        "criticality": "ignore",
-        "networking_segment": "ignore",
-    }
-
-
-def cb_host_event_type() -> Iterator[dict[str, bool]]:
-    def host_event_types(value: bool) -> dict[str, bool]:
-        return {
-            "up_down": value,
-            "up_unreachable": value,
-            "down_up": value,
-            "down_unreachable": value,
-            "unreachable_down": value,
-            "unreachable_up": value,
-            "any_up": value,
-            "any_down": value,
-            "any_unreachable": value,
-            "start_or_end_of_flapping_state": value,
-            "start_or_end_of_scheduled_downtime": value,
-            "acknowledgement_of_problem": value,
-            "alert_handler_execution_successful": value,
-            "alert_handler_execution_failed": value,
-        }
-
-    yield host_event_types(True)
-    yield host_event_types(False)
-
-
-def cb_service_event_type() -> Iterator[dict[str, bool]]:
-    def service_event_types(value: bool) -> dict[str, bool]:
-        return {
-            "ok_warn": value,
-            "ok_ok": value,
-            "ok_crit": value,
-            "ok_unknown": value,
-            "warn_ok": value,
-            "warn_crit": value,
-            "warn_unknown": value,
-            "crit_ok": value,
-            "crit_warn": value,
-            "crit_unknown": value,
-            "unknown_ok": value,
-            "unknown_warn": value,
-            "unknown_crit": value,
-            "any_ok": value,
-            "any_warn": value,
-            "any_crit": value,
-            "any_unknown": value,
-            "start_or_end_of_flapping_state": value,
-            "start_or_end_of_scheduled_downtime": value,
-            "acknowledgement_of_problem": value,
-            "alert_handler_execution_successful": value,
-            "alert_handler_execution_failed": value,
-        }
-
-    yield service_event_types(True)
-    yield service_event_types(False)
-
-
-def cb_event_console() -> Iterator[dict[str, Any]]:
-    yield {
-        "match_type": "do_not_match_event_console_alerts",
-    }
-
-    yield {
-        "match_type": "match_only_event_console_alerts",
-        "values": {
-            "match_rule_ids": {
-                "state": "enabled",
-                "value": ["rule_id1", "rule_id2"],
-            },
-            "match_syslog_priority": {
-                "state": "enabled",
-                "value": {"from_priority": "emerg", "to_priority": "emerg"},
-            },
-            "match_syslog_facility": {
-                "state": "enabled",
-                "value": "kern",
-            },
-            "match_event_comment": {
-                "state": "enabled",
-                "value": "comment_1",
-            },
-        },
-    }
-
-    yield {
-        "match_type": "match_only_event_console_alerts",
-        "values": {
-            "match_rule_ids": {"state": "disabled"},
-            "match_syslog_priority": {"state": "disabled"},
-            "match_syslog_facility": {"state": "disabled"},
-            "match_event_comment": {"state": "disabled"},
-        },
-    }
-
-
-def conditions_options(status_code: int) -> Iterator:
-    conditions = {
-        "match_sites": cb_list_sites_options,
-        "match_folder": cb_folder_options,
-        "match_host_tags": cb_host_tags,
-        "match_host_labels": cb_labels,
-        "match_host_groups": host_group_list_option,
-        "match_hosts": cb_host_list_of_hosts,
-        "match_exclude_hosts": cb_host_list_of_hosts,
-        "match_service_labels": cb_labels,
-        "match_service_groups": service_group_list_option,
-        "match_exclude_service_groups": service_group_list_option,
-        "match_service_groups_regex": cb_regex,
-        "match_exclude_service_groups_regex": cb_regex,
-        "match_services": cb_list_str_options,
-        "match_exclude_services": cb_list_str_options,
-        "match_check_types": cb_list_str_options,
-        "match_plugin_output": cb_str_options,
-        "match_contact_groups": contact_group_list_option,
-        "match_service_levels": cb_service_levels,
-        "match_only_during_time_period": time_period_option,
-        "match_host_event_type": cb_host_event_type,
-        "match_service_event_type": cb_service_event_type,
-        "restrict_to_notification_numbers": cb_from_to_notifications,
-        "throttle_periodic_notifications": cb_throttle_periodic_notifications,
-        "match_notification_comment": cb_str_options,
-        "event_console_alerts": cb_event_console,
-    }
-
-    for k, gen in conditions.items():
-        if status_code == 200:
-            for value in gen():
-                yield {k: {"state": "enabled", "value": value}}
-            yield {k: {"state": "disabled"}}
-        else:
-            yield {k: {"state": "enabled"}}
 
 
 def test_get_notification_rule(clients: ClientRegistry) -> None:
@@ -380,9 +156,234 @@ def setup_site_data(clients: ClientRegistry) -> None:
     clients.Folder.create(title="test_folder2", parent="~test_folder1")
 
 
+def host_event_types(value: bool) -> MatchHostEventsAPIType:
+    event_types_for_host: MatchHostEventsAPIType = {
+        "up_down": value,
+        "up_unreachable": value,
+        "down_up": value,
+        "down_unreachable": value,
+        "unreachable_down": value,
+        "unreachable_up": value,
+        "any_up": value,
+        "any_down": value,
+        "any_unreachable": value,
+        "start_or_end_of_flapping_state": value,
+        "start_or_end_of_scheduled_downtime": value,
+        "acknowledgement_of_problem": value,
+        "alert_handler_execution_successful": value,
+        "alert_handler_execution_failed": value,
+    }
+    return event_types_for_host
+
+
+def service_event_types(value: bool) -> MatchServiceEventsAPIType:
+    event_types_for_service: MatchServiceEventsAPIType = {
+        "ok_warn": value,
+        "ok_ok": value,
+        "ok_crit": value,
+        "ok_unknown": value,
+        "warn_ok": value,
+        "warn_crit": value,
+        "warn_unknown": value,
+        "crit_ok": value,
+        "crit_warn": value,
+        "crit_unknown": value,
+        "unknown_ok": value,
+        "unknown_warn": value,
+        "unknown_crit": value,
+        "any_ok": value,
+        "any_warn": value,
+        "any_crit": value,
+        "any_unknown": value,
+        "start_or_end_of_flapping_state": value,
+        "start_or_end_of_scheduled_downtime": value,
+        "acknowledgement_of_problem": value,
+        "alert_handler_execution_successful": value,
+        "alert_handler_execution_failed": value,
+    }
+    return event_types_for_service
+
+
+def conditions_set_1() -> APIConditions:
+    """Here we are testing sets of 'conditions' for rule notifications.
+    The conditions are being tested with sets to cover all valid field values.
+    We are testing in sets to reduce the number of api requests and therefore
+    reduce the test time. These sets are not testing anything specific to any
+    of the fields that are being passed, only that the schemas accept the
+    correct fields and field values.
+    """
+
+    conditions: APIConditions = {
+        "match_sites": {"state": "enabled", "value": ["site_id_1"]},
+        "match_folder": {
+            "state": "enabled",
+            "value": "~",
+        },
+        "match_host_tags": {
+            "state": "enabled",
+            "value": {
+                "ip_address_family": "ip-v4-only",
+                "ip_v4": "ip-v4",
+                "ip_v6": "!ip-v6",
+                "checkmk_agent_api_integration": "special-agents",
+                "piggyback": "piggyback",
+                "snmp": "snmp-v1",
+                "monitor_via_snmp": "snmp",
+                "monitor_via_checkmkagent_or_specialagent": "tcp",
+                "monitor_via_checkmkagent": "checkmk-agent",
+                "only_ping_this_device": "ping",
+                "criticality": "test",
+                "networking_segment": "wan",
+            },
+        },
+        "match_host_labels": {
+            "state": "enabled",
+            "value": [{"key": "label1", "value": "value1"}, {"key": "label2", "value": "value2"}],
+        },
+        "match_host_groups": {"state": "enabled", "value": ["hg1", "hg2"]},
+        "match_hosts": {"state": "enabled", "value": ["example.com"]},
+        "match_exclude_hosts": {"state": "enabled", "value": ["example.com"]},
+        "match_service_labels": {
+            "state": "enabled",
+            "value": [{"key": "label1", "value": "value1"}, {"key": "label2", "value": "value2"}],
+        },
+        "match_service_groups": {"state": "enabled", "value": ["sg1", "sg2"]},
+        "match_exclude_service_groups": {"state": "enabled", "value": ["sg1", "sg2"]},
+        "match_service_groups_regex": {
+            "state": "enabled",
+            "value": {"match_type": "match_id", "regex_list": ["^abc", "^def"]},
+        },
+        "match_exclude_service_groups_regex": {
+            "state": "enabled",
+            "value": {"match_type": "match_alias", "regex_list": ["alias1", "alias2"]},
+        },
+        "match_services": {"state": "enabled", "value": ["str1", "str2", "str3"]},
+        "match_exclude_services": {"state": "enabled", "value": ["str4", "str5", "str6"]},
+        "match_check_types": {"state": "enabled", "value": ["ch1", "ch2", "ch3"]},
+        "match_plugin_output": {"state": "enabled", "value": "str1"},
+        "match_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
+        "match_service_levels": {
+            "state": "enabled",
+            "value": {"from_level": "no_service_level", "to_level": "platinum"},
+        },
+        "match_only_during_time_period": {"state": "enabled", "value": "time_period_1"},
+        "match_host_event_type": {
+            "state": "enabled",
+            "value": host_event_types(True),
+        },
+        "match_service_event_type": {
+            "state": "enabled",
+            "value": service_event_types(True),
+        },
+        "restrict_to_notification_numbers": {
+            "state": "enabled",
+            "value": {"beginning_from": 2, "up_to": 493},
+        },
+        "throttle_periodic_notifications": {
+            "state": "enabled",
+            "value": {"beginning_from": 2, "send_every_nth_notification": 493},
+        },
+        "match_notification_comment": {"state": "enabled", "value": "str1"},
+        "event_console_alerts": {
+            "state": "enabled",
+            "value": {"match_type": "do_not_match_event_console_alerts"},
+        },
+    }
+    return conditions
+
+
+def conditions_set_2() -> APIConditions:
+    conditions: APIConditions = {
+        "match_folder": {
+            "state": "enabled",
+            "value": "~test_folder1~test_folder2",
+        },
+        "match_host_tags": {
+            "state": "enabled",
+            "value": {
+                "ip_address_family": "ignore",
+                "ip_v4": "ignore",
+                "ip_v6": "ignore",
+                "checkmk_agent_api_integration": "ignore",
+                "piggyback": "ignore",
+                "snmp": "ignore",
+                "monitor_via_snmp": "ignore",
+                "monitor_via_checkmkagent_or_specialagent": "ignore",
+                "monitor_via_checkmkagent": "ignore",
+                "only_ping_this_device": "ignore",
+                "criticality": "ignore",
+                "networking_segment": "ignore",
+            },
+        },
+        "match_service_groups_regex": {
+            "state": "enabled",
+            "value": {"match_type": "match_alias", "regex_list": ["alias1", "alias2"]},
+        },
+        "match_exclude_service_groups_regex": {
+            "state": "enabled",
+            "value": {"match_type": "match_id", "regex_list": ["^abc", "^def"]},
+        },
+        "match_host_event_type": {
+            "state": "enabled",
+            "value": host_event_types(False),
+        },
+        "match_service_event_type": {
+            "state": "enabled",
+            "value": service_event_types(False),
+        },
+        "event_console_alerts": {
+            "state": "enabled",
+            "value": {
+                "match_type": "match_only_event_console_alerts",
+                "values": {
+                    "match_rule_ids": {
+                        "state": "enabled",
+                        "value": ["rule_id1", "rule_id2"],
+                    },
+                    "match_syslog_priority": {
+                        "state": "enabled",
+                        "value": {"from_priority": "emerg", "to_priority": "emerg"},
+                    },
+                    "match_syslog_facility": {
+                        "state": "enabled",
+                        "value": "kern",
+                    },
+                    "match_event_comment": {
+                        "state": "enabled",
+                        "value": "comment_1",
+                    },
+                },
+            },
+        },
+    }
+    return conditions
+
+
+def conditions_set_3() -> APIConditions:
+    conditions: APIConditions = {
+        "match_folder": {
+            "state": "enabled",
+            "value": "~test_folder1",
+        },
+        "event_console_alerts": {
+            "state": "enabled",
+            "value": {
+                "match_type": "match_only_event_console_alerts",
+                "values": {
+                    "match_rule_ids": {"state": "disabled"},
+                    "match_syslog_priority": {"state": "disabled"},
+                    "match_syslog_facility": {"state": "disabled"},
+                    "match_event_comment": {"state": "disabled"},
+                },
+            },
+        },
+    }
+    return conditions
+
+
 @managedtest
 @pytest.mark.usefixtures("with_host")
-@pytest.mark.parametrize("testdata", conditions_options(200))
+@pytest.mark.parametrize("testdata", [conditions_set_1(), conditions_set_2(), conditions_set_3()])
 def test_create_and_update_rule_with_conditions_data_200(
     clients: ClientRegistry,
     testdata: APIConditions,
@@ -391,8 +392,8 @@ def test_create_and_update_rule_with_conditions_data_200(
 
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
-    config["conditions"].update(testdata)
 
+    config["conditions"].update(testdata)
     r2 = clients.RuleNotification.edit(
         rule_id=r1.json["id"],
         rule_config=config,
@@ -400,8 +401,15 @@ def test_create_and_update_rule_with_conditions_data_200(
     assert r2.json["extensions"] == {"rule_config": config}
 
 
+def invalid_conditions() -> Iterator:
+    for k in notification_rule_request_example()["conditions"]:
+        config = notification_rule_request_example()
+        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore
+        yield config
+
+
 @managedtest
-@pytest.mark.parametrize("testdata", conditions_options(400))
+@pytest.mark.parametrize("testdata", invalid_conditions())
 def test_create_and_update_rule_with_conditions_data_400(
     clients: ClientRegistry,
     testdata: APIConditions,
@@ -1282,41 +1290,21 @@ plugin_test_data: list[PluginType] = [
 ]
 
 
-@pytest.mark.parametrize("plugin_data", plugin_test_data)
 def test_update_notification_method_cancel_previous(
     clients: ClientRegistry,
-    plugin_data: PluginType,
 ) -> None:
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
 
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.CANCEL,
-        "plugin_params": {"plugin_name": plugin_data["plugin_name"]},
+        "plugin_params": {"plugin_name": "mail"},
     }
     r2 = clients.RuleNotification.edit(
         rule_id=r1.json["id"],
         rule_config=config,
     )
     assert r2.json["extensions"] == {"rule_config": config}
-
-
-@managedtest
-@pytest.mark.parametrize("plugin_data", plugin_test_data)
-def test_create_notification_method(
-    clients: ClientRegistry,
-    plugin_data: PluginType,
-) -> None:
-    setup_site_data(clients)
-
-    config = notification_rule_request_example()
-    config["notification_method"]["notify_plugin"] = {
-        "option": PluginOptions.WITH_PARAMS,
-        "plugin_params": plugin_data,
-    }
-
-    r1 = clients.RuleNotification.create(rule_config=config)
-    assert r1.json["extensions"] == {"rule_config": config}
 
 
 @managedtest

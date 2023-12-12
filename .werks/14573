@@ -1,4 +1,4 @@
-Title: Prometheus & Alertmanager: Deprecation of `IP Address` and `Host name` options
+Title: Prometheus & Alertmanager: Deprecation of 'IP Address` and 'Host name' options
 Class: fix
 Compatible: incomp
 Component: checks

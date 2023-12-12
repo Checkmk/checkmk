@@ -5,7 +5,8 @@
 
 
 from cmk.base.plugins.agent_based.if_statgrab_net import parse_statgrab_net
-from cmk.base.plugins.agent_based.utils import interfaces
+
+from cmk.plugins.lib import interfaces
 
 _SECTION = [
     interfaces.InterfaceWithCounters(

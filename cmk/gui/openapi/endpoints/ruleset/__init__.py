@@ -13,8 +13,9 @@ from cmk.gui.openapi.endpoints.ruleset.fields import (
     RulesetSearchOptions,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
@@ -130,3 +131,8 @@ def _serialize_ruleset(ruleset: Ruleset) -> DomainObject:
             "number_of_rules": ruleset.num_rules(),
         },
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(list_rulesets)
+    endpoint_registry.register(show_ruleset)

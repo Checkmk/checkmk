@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.steelhead import DETECT_STEELHEAD
+
+from cmk.plugins.lib.steelhead import DETECT_STEELHEAD
 
 
 def inventory_steelhead_connections(info):

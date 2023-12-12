@@ -9,7 +9,7 @@ Level: 1
 Version: 2.2.0b1
 
 In order to make this check work you have to configure the ruleset
-{{Cisco Meraki}} for the related special agent.
+"Cisco Meraki" for the related special agent.
 
 This check monitors the status, expiration date and the number of licensed
 devices of each type.

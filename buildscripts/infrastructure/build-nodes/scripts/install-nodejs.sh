@@ -6,7 +6,7 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-# shellcheck source=build_lib.sh
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 # We only ensure we use the right major version at the moment
@@ -14,6 +14,7 @@ NODEJS_VERSION=$(get_version "$SCRIPT_DIR" NODEJS_VERSION)
 NPM_VERSION=$(get_version "$SCRIPT_DIR" NPM_VERSION)
 
 install_package() {
+    # installable on all Ubuntu versions to be potentially usable by developers
     if [ "$(lsb_release -s -i)" != "Ubuntu" ]; then
         echo "ERROR: Unhandled DISTRO: $DISTRO"
         exit 1

@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import synology, temperature
+
+from cmk.plugins.lib import synology, temperature
 
 
 @dataclass(frozen=True)

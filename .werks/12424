@@ -1,4 +1,4 @@
-Title: <tt>check_mail</tt>: Fix <tt>error: argument --connect-timeout: invalid int value</tt>
+Title: check_mail: Fix error: argument --connect-timeout: invalid int value
 Class: fix
 Compatible: compat
 Component: checks

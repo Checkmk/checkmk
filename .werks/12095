@@ -1,4 +1,4 @@
-Title: storcli_pdisks: KeyError(<ITEM>) raised in check-function if item vanished
+Title: storcli_pdisks: KeyError(&lt;ITEM>) raised in check-function if item vanished
 Class: fix
 Compatible: compat
 Component: checks

@@ -5,9 +5,10 @@
 
 from collections import defaultdict
 
+from cmk.plugins.lib import bonding
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import bonding
 
 
 def parse_windows_os_bonding(string_table: StringTable) -> bonding.Section:

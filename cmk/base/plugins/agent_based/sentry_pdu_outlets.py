@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.sentry import DEVICE_STATES_V4
+
 from .agent_based_api.v1 import equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.sentry import DEVICE_STATES_V4
 
 Section = Mapping[str, int]
 

@@ -14,7 +14,8 @@ import pytest
 from cmk.base.plugins.agent_based import kube_deployment_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import DeploymentConditions, VSResultAge
+
+from cmk.plugins.lib.kube import DeploymentConditions, VSResultAge
 
 MINUTE = 60
 TIMESTAMP = 120
@@ -138,14 +139,14 @@ def check_result(params: Mapping[str, VSResultAge], section: DeploymentCondition
 def test_ok_state_mappings_match_conditions() -> None:
     assert all(
         condition in kube_deployment_conditions.CONDITIONS_OK_MAPPINGS
-        for condition in DeploymentConditions.schema()["properties"]
+        for condition in DeploymentConditions.model_json_schema()["properties"]
     )
 
 
 def test_parse(string_table: StringTable) -> None:
     section = kube_deployment_conditions.parse(string_table)
     assert section is not None
-    assert len(section.dict()) == 3
+    assert len(section.model_dump()) == 3
 
 
 def test_discovery(section: DeploymentConditions) -> None:

@@ -9,7 +9,7 @@ from tests.testlib import Check
 
 from tests.unit.checks.test_nimble_latency import Result
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(

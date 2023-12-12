@@ -8,7 +8,8 @@ from cmk.base.check_legacy_includes.alcatel import ALCATEL_TEMP_CHECK_DEFAULT_PA
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
+
+from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
 
 
 def parse_alcatel_aos7_temp(string_table):

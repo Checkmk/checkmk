@@ -16,7 +16,6 @@ from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
@@ -513,7 +512,7 @@ def _synchronize_site(
 ) -> None:
     assert activation_manager._activation_id is not None
     site_activation_state = activate_changes._initialize_site_activation_state(
-        site_id, activation_manager._activation_id, activation_manager, time.time()
+        site_id, activation_manager._activation_id, activation_manager, time.time(), "GUI"
     )
 
     fetch_state_result = activate_changes.fetch_sync_state(

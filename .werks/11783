@@ -11,4 +11,4 @@ Version: 2.1.0b1
 
 HP returns broken and Arris returns invalid values for .1.3.6.1.2.1.25.2.3.1.2.1 (hrStorageType)
 resulting in unhandled KeyErrors.
-This fix maps guesses {{"RAM"}} for HP and {{None}} for Arris and thus prevents the exception.
+This fix maps guesses "RAM" for HP and "None" for Arris and thus prevents the exception.

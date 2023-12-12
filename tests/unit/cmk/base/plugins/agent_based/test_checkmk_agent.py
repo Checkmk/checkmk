@@ -28,7 +28,8 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
 )
 from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
-from cmk.base.plugins.agent_based.utils.checkmk import (
+
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,
@@ -419,6 +420,43 @@ def test_check_no_check_yet_pydantic() -> None:
                 ),
             ],
         ),
+        (
+            {
+                0: {
+                    "corrupt": True,
+                    "not_after": None,
+                    "signature_algorithm": None,
+                    "common_name": None,
+                },
+                1: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:22:17+00:00",
+                    "signature_algorithm": "sha512",
+                    "common_name": "signed",
+                },
+                2: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:28:55+00:00",
+                    "signature_algorithm": "sha1",
+                    "common_name": "Lorem ipsum",
+                },
+            },
+            [
+                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #1 (CN='signed') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #2 (CN='Lorem ipsum') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 22 years 213 days",
+                ),
+            ],
+        ),
     ),
 )
 def test_certificate_results(
@@ -434,7 +472,7 @@ def test_certificate_results(
                         "last_update": None,
                         "pending_hash": None,
                         "update_url": "foo",
-                        "last_check": 990789180,  # Fri May 25 2001 11:13:00 GMT+0000
+                        "last_check": 990789180,  # Fri 2001-05-25 11:13:00 GMT+0000
                         "trusted_certs": trusted_certs,
                         "error": None,
                     }
@@ -448,7 +486,7 @@ def test_certificate_results(
             Result(
                 state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
             ),  # timezones?
-            Result(state=State.OK, notice="Last update check: May 25 2001 11:13:00"),
+            Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
             *results,
         ]
@@ -487,8 +525,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
         ),
-        Result(state=State.OK, notice="Last update check: Feb 16 2022 08:28:01"),
-        Result(state=State.OK, summary="Last update: Feb 16 2022 08:29:41"),
+        Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
+        Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
         Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
         Result(state=State.OK, notice="Pending installation: 1234abcd"),

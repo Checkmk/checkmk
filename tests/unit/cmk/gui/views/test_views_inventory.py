@@ -9,13 +9,13 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.utils.structured_data import (
-    _RetentionInterval,
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    RetentionInterval,
     SDPath,
 )
 
@@ -491,7 +491,7 @@ def test_make_node_displayhint_from_hint(
                     (None,): {"sid": None, "flashback": None, "other": None},
                 },
                 retentions={
-                    ("SID 2",): {"sid": _RetentionInterval(1, 2, 3, "previous")},
+                    ("SID 2",): {"sid": RetentionInterval(1, 2, 3, "previous")},
                 },
             ),
             [
@@ -503,7 +503,7 @@ def test_make_node_displayhint_from_hint(
                     _InventoryTreeValueInfo("other", "Other 1", None),
                 ],
                 [
-                    _InventoryTreeValueInfo("sid", "SID 2", 6),
+                    _InventoryTreeValueInfo("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
                     _InventoryTreeValueInfo("changed", None, None),
                     _InventoryTreeValueInfo("foo", None, None),
                     _InventoryTreeValueInfo("flashback", "Flashback 2", None),
@@ -725,13 +725,13 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                     "c": "C",
                     "a": "A",
                 },
-                retentions={"c": _RetentionInterval(1, 2, 3, "previous")},
+                retentions={"c": RetentionInterval(1, 2, 3, "previous")},
             ),
             [
                 _InventoryTreeValueInfo("a", "A", None),
                 _InventoryTreeValueInfo("b", "B", None),
                 _InventoryTreeValueInfo("d", "D", None),
-                _InventoryTreeValueInfo("c", "C", 6),
+                _InventoryTreeValueInfo("c", "C", RetentionInterval(1, 2, 3, "previous")),
             ],
         ),
     ],

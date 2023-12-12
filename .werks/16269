@@ -1,0 +1,32 @@
+Title: Adapt date formatting in most of the service outputs
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1701538021
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+According to
+<a href="https://forum.checkmk.com/t/survey-results-are-in-micro-survey-7-vote-for-a-date-and-time-format/40173">one of our surveys</a>,
+most of our users prefer dates to be displayed in the format <i>YYYY-MM-DD</i>.
+This Werk changes the library function that many check plugins use when rendering their service summary.
+
+As a result, the service output of many plugins will now format the date in the new format.
+For instance the next Interantional Talk Like a Pirate Day will no longer be rendered as "Sep 19 2024", but as "2024-09-19".
+
+The following plugins are affected:
+
+LI: Checkmk Agent: Deployment properties
+LI: Checkmk: Performance and Settings
+LI: Job Monitoring
+LI: Kaspersky Anti-Virus: Updates (KESL)
+LI: Kubernetes: Pod Containers
+LI: Microsoft Azure Resource Health
+LI: Microsoft Azure Virtual Network Gateways: Connections
+LI: MS SQL Tablespaces: Successful Backups
+LI: Nutanix Prism: Alerts
+LI: Nutanix Prism: Hosts
+LI: Oracle Database: Number of Active Sessions
+LI: SAP HANA: Backup
+LI: Virtual Machine under ESX: Snapshot Settings

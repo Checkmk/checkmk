@@ -7,6 +7,8 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib.dhcp_pools import check_dhcp_pools_levels
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.dhcp_pools import check_dhcp_pools_levels
 
 # Example outputs from agent:
 #

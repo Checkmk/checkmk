@@ -7,6 +7,7 @@ import abc
 import collections
 import json
 from collections.abc import Iterator
+from typing import Callable
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -40,15 +41,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
-from cmk.gui.page_menu_utils import (
-    collect_context_links,
-    get_context_page_menu_dropdowns,
-    get_ntop_page_menu_dropdown,
-)
+from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
@@ -57,9 +53,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
@@ -101,6 +94,10 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
+    page_menu_dropdowns_hook: Callable[
+        [View, Rows, list[PageMenuDropdown]], None
+    ] = lambda v, r, p: None
+
     def __init__(self, view: View, show_buttons: bool) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
@@ -354,18 +351,7 @@ class GUIViewRenderer(ABCViewRenderer):
             + export_dropdown
         )
 
-        if rows:
-            host_address = rows[0].get("host_address")
-            if is_ntop_configured():
-                ntop_connection = get_ntop_connection()
-                assert ntop_connection
-                ntop_instance = ntop_connection["hostaddress"]
-                if (
-                    host_address is not None
-                    and get_cache().is_instance_up(ntop_instance)
-                    and get_cache().is_ntop_host(host_address)
-                ):
-                    page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+        GUIViewRenderer.page_menu_dropdowns_hook(self.view, rows, page_menu_dropdowns)
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
@@ -415,7 +401,18 @@ class GUIViewRenderer(ABCViewRenderer):
                 yield PageMenuEntry(
                     title=command.title,
                     icon_name=command.icon_name,
-                    item=PageMenuPopup(self._render_command_form(info_name, command)),
+                    item=PageMenuPopup(self._render_command_form(info_name, command))
+                    if command.show_command_form
+                    else make_simple_link(
+                        makeuri(
+                            request,
+                            [
+                                ("_transid", str(transactions.get())),
+                                ("_do_actions", "yes"),
+                                (f"_{command.ident}", True),
+                            ],
+                        )
+                    ),
                     name="command_%s" % command.ident,
                     is_enabled=should_show_command_form(self.view.datasource),
                     is_show_more=command.is_show_more,
@@ -426,9 +423,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
-
-    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:  # type: ignore[no-untyped-def]
-        return get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
         if not user.may("general.csv_export"):
@@ -611,15 +605,14 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
-            html.begin_form("actions")
-            # TODO: Are these variables still needed
-            html.hidden_field("_do_actions", "yes")
-            html.hidden_field("actions", "yes")
+            with html.form_context("actions"):
+                # TODO: Are these variables still needed
+                html.hidden_field("_do_actions", "yes")
+                html.hidden_field("actions", "yes")
 
-            command.render(info_name)
+                command.render(info_name)
 
-            html.hidden_fields()
-            html.end_form()
+                html.hidden_fields()
 
             return HTML(output_funnel.drain())
 

@@ -49,6 +49,7 @@ Components
    arch-comp-agent-linux.rst
    arch-comp-agent-controller.rst
    arch-comp-agent-updater.rst
+   arch-comp-agent-bakery.rst
 
    arch-comp-grafana-connector.rst
 

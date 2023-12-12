@@ -14,6 +14,8 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from functools import partial
 from typing import Final
 
+import livestatus
+
 import cmk.utils.debug
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
@@ -24,6 +26,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
+from cmk.utils.prediction import PredictionParameters, PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -65,15 +68,17 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
-from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
-from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
-from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
-from cmk.base.api.agent_based.checking_classes import State
+from cmk.base import plugin_contexts
+from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
+
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
+from cmk.agent_based.v1 import Result as CheckFunctionResult
+from cmk.agent_based.v1 import State
 
 __all__ = [
     "CheckPluginMapper",
@@ -187,7 +192,7 @@ class CMKSummarizer:
                 time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=source.hostname
                 ),
-                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+                is_piggyback=self.config_cache.is_piggyback_host(source.hostname),
             )
             for source, host_sections in host_sections
         ]
@@ -440,7 +445,7 @@ def _get_check_function(
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
         with plugin_contexts.current_service(
-            service.check_plugin_name, service.description
+            str(service.check_plugin_name), service.description
         ), value_store_manager.namespace(service.id()):
             return _aggregate_results(consume_check_results(check_function(*args, **kw)))
 
@@ -488,6 +493,34 @@ def _aggregate_results(
         )
     all_text = [", ".join(summaries)] + details
     return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
+
+
+def consume_check_results(
+    # we need to accept `object`, in order to explicitly protect against plugins
+    # creating invalid output.
+    # Typing this as `CheckResult` will make linters complain about unreachable code.
+    subresults: Iterable[object],
+) -> tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
+    """Impedance matching between the Check API and the Check Engine."""
+    ignore_results: list[IgnoreResults] = []
+    results: list[CheckFunctionResult] = []
+    perfdata: list[MetricTuple] = []
+    for subr in subresults:
+        if isinstance(subr, IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        elif isinstance(subr, CheckFunctionResult):
+            results.append(subr)
+        else:
+            raise TypeError(subr)
+
+    # Consume *all* check results, and *then* raise, if we encountered
+    # an IgnoreResults instance.
+    if ignore_results:
+        raise IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
 
 
 def _get_monitoring_data_kwargs(
@@ -629,7 +662,11 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(service.parameters)}
+        else {
+            "params": _final_read_only_check_parameters(
+                host_name, service.description, service.parameters
+            )
+        }
     )
 
     try:
@@ -688,19 +725,42 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(
+    host_name: HostName,
+    service_name: ServiceName,
     entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
-    raw_parameters = (
-        entries.evaluate(timeperiod_active)
-        if isinstance(entries, TimespecificParameters)
-        else entries
+    return Parameters(
+        # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
+        # wrap_parameters is a no-op for dictionaries.
+        # For auto-migrated plugins expecting tuples, they will be
+        # unwrapped by a decorator of the original check_function.
+        wrap_parameters(
+            _inject_prediction_callback(
+                host_name,
+                service_name,
+                entries.evaluate(timeperiod_active)
+                if isinstance(entries, TimespecificParameters)
+                else entries,
+            ),
+        )
     )
 
-    # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
-    # wrap_parameters is a no-op for dictionaries.
-    # For auto-migrated plugins expecting tuples, they will be
-    # unwrapped by a decorator of the original check_function.
-    return Parameters(wrap_parameters(raw_parameters))
+
+def _inject_prediction_callback(
+    host_name: HostName, service_name: ServiceName, params: LegacyCheckParameters
+) -> LegacyCheckParameters:
+    if not isinstance(params, dict):
+        return params
+
+    if "__get_predictive_levels__" in params:
+        params["__get_predictive_levels__"] = PredictionUpdater(
+            host_name,
+            service_name,
+            PredictionParameters.model_validate(params),
+            partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
+        )
+
+    return {k: _inject_prediction_callback(host_name, service_name, v) for k, v in params.items()}
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

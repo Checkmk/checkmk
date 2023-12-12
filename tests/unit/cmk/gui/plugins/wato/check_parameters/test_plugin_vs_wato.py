@@ -11,8 +11,7 @@ from tests.unit.cmk.conftest import import_plugins
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -254,16 +253,12 @@ class ErrorReporter:
         # type # name
         ("check", RuleGroup.CheckgroupParameters("checkmk_agent_plugins")),
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
-        ("check", RuleGroup.CheckgroupParameters("disk_temperature")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
-        ("check", RuleGroup.CheckgroupParameters("hw_single_temperature")),
-        ("check", RuleGroup.CheckgroupParameters("hw_temperature")),
+        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
         ("check", RuleGroup.CheckgroupParameters("mssql_blocked_sessions")),
         ("check", RuleGroup.CheckgroupParameters("postgres_sessions")),
-        ("check", RuleGroup.CheckgroupParameters("room_temperature")),
         ("check", RuleGroup.CheckgroupParameters("ruckus_mac")),
-        ("check", RuleGroup.CheckgroupParameters("statgrab_mem")),
         ("check", RuleGroup.CheckgroupParameters("systemd_services")),
         ("check", RuleGroup.CheckgroupParameters("temperature_trends")),
         ("check", RuleGroup.CheckgroupParameters("prism_container")),
@@ -312,16 +307,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "haproxy_frontend",
-            RuleGroup.CheckgroupParameters("haproxy_frontend"),
-        ),
-        (
-            "check",
-            "haproxy_server",
-            RuleGroup.CheckgroupParameters("haproxy_server"),
-        ),
-        (
-            "check",
             "hp_procurve_mem",
             RuleGroup.CheckgroupParameters("memory_simple"),
         ),
@@ -353,18 +338,7 @@ class ErrorReporter:
         ("check", "brocade_tm", "brocade_tm"),
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "domino_tasks", "domino_tasks"),
-        ("check", "drbd_disk", "drbd.disk"),
-        ("check", "drbd_net", "drbd.net"),
-        ("check", "drbd_stats", "drbd.stats"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "innovaphone_channels", "hw_single_channelserature"),
-        ("check", "ironport_misc", "obsolete"),
-        ("check", "j4p_performance_app_sess", "j4p_performance.app_sess"),
-        ("check", "j4p_performance_app_state", "j4p_performance.app_state"),
-        ("check", "j4p_performance_mem", "j4p_performance.mem"),
-        ("check", "j4p_performance_serv_req", "j4p_performance.serv_req"),
-        ("check", "j4p_performance_threads", "j4p_performance.threads"),
-        ("check", "j4p_performance_uptime", "j4p_performance.uptime"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "mongodb_replication_info", "mongodb_replication_info"),
@@ -412,16 +386,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_sessions",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "appdynamics_web_container",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),
@@ -432,29 +396,13 @@ class ErrorReporter:
         ),
         (
             "check",
-            "barracuda_mail_latency",
-            RuleGroup.CheckgroupParameters("mail_latency"),
-        ),
-        (
-            "check",
             "blade_bx_powerfan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        ("check", "brocade_fan", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "brocade_mlx_module_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),
         (
             "check",
             "brocade_optical",
             RuleGroup.CheckgroupParameters("brocade_optical"),
-        ),
-        (
-            "check",
-            "brocade_sys_mem",
-            RuleGroup.CheckgroupParameters("memory_relative"),
         ),
         ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
         ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
@@ -485,35 +433,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "cisco_sys_mem",
-            RuleGroup.CheckgroupParameters("cisco_supervisor_mem"),
-        ),
-        (
-            "check",
-            "citrix_licenses",
-            RuleGroup.CheckgroupParameters("citrix_licenses"),
-        ),
-        (
-            "check",
-            "citrix_serverload",
-            RuleGroup.CheckgroupParameters("citrix_load"),
-        ),
-        (
-            "check",
             "couchbase_buckets_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        ("check", "db2_backup", RuleGroup.CheckgroupParameters("db2_backup")),
-        ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
-        (
-            "check",
-            "ddn_s2a_faultsbasic_disks",
-            RuleGroup.CheckgroupParameters("disk_failures"),
-        ),
-        (
-            "check",
-            "ddn_s2a_faultsbasic_fans",
-            RuleGroup.CheckgroupParameters("fan_failures"),
         ),
         (
             "check",
@@ -533,39 +454,14 @@ class ErrorReporter:
         ),
         (
             "check",
-            "domino_transactions",
-            RuleGroup.CheckgroupParameters("domino_transactions"),
-        ),
-        (
-            "check",
-            "domino_users",
-            RuleGroup.CheckgroupParameters("domino_users"),
-        ),
-        (
-            "check",
             "eltek_fans",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
         (
             "check",
-            "epson_beamer_lamp",
-            RuleGroup.CheckgroupParameters("lamp_operation_time"),
-        ),
-        (
-            "check",
-            "esx_vsphere_licenses",
-            RuleGroup.CheckgroupParameters("esx_licenses"),
-        ),
-        (
-            "check",
             "esx_vsphere_objects_count",
             RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
-        ),
-        (
-            "check",
-            "esx_vsphere_sensors",
-            RuleGroup.CheckgroupParameters("hostsystem_sensors"),
         ),
         (
             "check",
@@ -577,8 +473,6 @@ class ErrorReporter:
             "esx_vsphere_vm_heartbeat",
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
         ),
-        ("check", "f5_bigip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "f5_bigip_pool", RuleGroup.CheckgroupParameters("f5_pools")),
         (
             "check",
             "fortigate_antivirus",
@@ -596,26 +490,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortigate_memory",
-            RuleGroup.CheckgroupParameters("memory"),
-        ),
-        (
-            "check",
-            "fortigate_node_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_node_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions_base",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
             "fortimail_cpu_load",
             RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
         ),
@@ -626,23 +500,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "genua_pfstate",
-            RuleGroup.CheckgroupParameters("pf_used_states"),
-        ),
-        (
-            "check",
-            "hitachi_hnas_bossock",
-            RuleGroup.CheckgroupParameters("bossock_fibers"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
-        ),
-        (
-            "check",
-            "hpux_multipath",
-            RuleGroup.CheckgroupParameters("hpux_multipath"),
         ),
         (
             "check",
@@ -654,72 +513,7 @@ class ErrorReporter:
             "ibm_imm_fan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
-        (
-            "check",
-            "ibm_svc_license",
-            RuleGroup.CheckgroupParameters("ibmsvc_licenses"),
-        ),
-        (
-            "check",
-            "innovaphone_mem",
-            RuleGroup.CheckgroupParameters("innovaphone_mem"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "jolokia_metrics_app_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_queue",
-            RuleGroup.CheckgroupParameters("jvm_queue"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_threads",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_serv_req",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
-            "juniper_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem_modules"),
-        ),
-        (
-            "check",
-            "juniper_screenos_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
-        (
-            "check",
-            "juniper_trpz_flash",
-            RuleGroup.CheckgroupParameters("general_flash_usage"),
-        ),
-        (
-            "check",
-            "juniper_trpz_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
         (
             "check",
@@ -746,7 +540,6 @@ class ErrorReporter:
             "liebert_humidity_air",
             RuleGroup.CheckgroupParameters("humidity"),
         ),
-        ("check", "logins", RuleGroup.CheckgroupParameters("logins")),
         ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
         (
             "check",
@@ -758,17 +551,7 @@ class ErrorReporter:
             "mongodb_collections",
             RuleGroup.CheckgroupParameters("mongodb_collections"),
         ),
-        (
-            "check",
-            "mounts",
-            RuleGroup.CheckgroupParameters("fs_mount_options"),
-        ),
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
-        (
-            "check",
-            "msexch_dag_copyqueue",
-            RuleGroup.CheckgroupParameters("msexch_copyqueue"),
-        ),
         (
             "check",
             "msexch_isclienttype",
@@ -791,11 +574,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netapp_api_connection",
-            RuleGroup.CheckgroupParameters("netapp_instance"),
-        ),
-        (
-            "check",
             "netapp_api_environment_fan_faults",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),
@@ -811,11 +589,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netscaler_mem",
-            RuleGroup.CheckgroupParameters("netscaler_mem"),
-        ),
-        (
-            "check",
             "openhardwaremonitor_fan",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),
@@ -828,11 +601,6 @@ class ErrorReporter:
             "check",
             "openhardwaremonitor_temperature",
             RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "oracle_diva_csm_tapes",
-            RuleGroup.CheckgroupParameters("blank_tapes"),
         ),
         (
             "check",
@@ -869,21 +637,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "raritan_pdu_ocprot",
-            RuleGroup.CheckgroupParameters("ocprot_current"),
-        ),
-        (
-            "check",
-            "raritan_pdu_outletcount",
-            RuleGroup.CheckgroupParameters("plug_count"),
-        ),
-        (
-            "check",
-            "rds_licenses",
-            RuleGroup.CheckgroupParameters("rds_licenses"),
-        ),
-        (
-            "check",
             "redis_info_persistence",
             RuleGroup.CheckgroupParameters("redis_info_persistence"),
         ),
@@ -896,16 +649,6 @@ class ErrorReporter:
             "check",
             "skype_sip_stack",
             RuleGroup.CheckgroupParameters("skype_sip"),
-        ),
-        (
-            "check",
-            "symantec_av_updates",
-            RuleGroup.CheckgroupParameters("antivir_update_age"),
-        ),
-        (
-            "check",
-            "tinkerforge_ambient",
-            RuleGroup.CheckgroupParameters("brightness"),
         ),
         (
             "check",

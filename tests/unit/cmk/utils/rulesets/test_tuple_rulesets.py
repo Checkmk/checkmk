@@ -370,7 +370,7 @@ def test_get_host_merged_dict(ts: Scenario) -> None:
                     "options": {},
                     "value": False,
                 },
-                {"condition": {}, "options": {}, "value": True},
+                {"condition": {}, "id": "13", "options": {}, "value": True},
             ],
             False,
             True,

@@ -10,7 +10,6 @@ import pytest
 
 from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.threepar_cpgs import (
     check_threepar_cpgs,
@@ -19,7 +18,9 @@ from cmk.base.plugins.agent_based.threepar_cpgs import (
     discover_threepar_cpgs_usage,
     parse_threepar_cpgs,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [

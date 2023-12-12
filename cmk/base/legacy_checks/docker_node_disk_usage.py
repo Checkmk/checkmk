@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-import cmk.base.plugins.agent_based.utils.docker as docker
 from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+import cmk.plugins.lib.docker as docker
 
 
 def parse_docker_node_disk_usage(string_table):

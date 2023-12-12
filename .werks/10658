@@ -10,9 +10,9 @@ Version: 2.0.0i1
 
 Previously if ethtool is missing then we do not get any information about
 interface speed. Now we collect speed information from
-{{/sys/class/net/INTERFACE/speed}} in this case.
+"/sys/class/net/INTERFACE/speed" in this case.
 
-You have to install the newest {{check_mk_agent}}.
+You have to install the newest "check_mk_agent".
 
 The speed is remembered during discovery and if the speed changes the interface
 service report WARN. Thus you have to rediscover the related services in order

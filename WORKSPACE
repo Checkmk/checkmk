@@ -100,6 +100,8 @@ load(
     "MOD_WSGI_VERSION",
     "NET_SNMP_SHA256",
     "NET_SNMP_VERSION",
+    "ROBOTMK_SHA256",
+    "ROBOTMK_VERSION",
 )
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
@@ -249,6 +251,13 @@ nagios(
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
 create_python_requirements(
     name = "python_modules",
+    # TODO: differentiate between own code and things we get from other omd packages
+    ignored_modules = [
+        "protobuf",  # don't build with pip -> see protobuf omd packages
+        "rrdtool",  # don't build with pip -> see rrdtool omd packages
+        "agent-receiver",  # don't build with pip (yet)
+        "werks",  # don't build with pip (yet)
+    ],
     requirements = "//:Pipfile",
 )
 
@@ -264,4 +273,11 @@ load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
 netsnmp(
     sha256 = NET_SNMP_SHA256,
     version_str = NET_SNMP_VERSION,
+)
+
+load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
+
+robotmk(
+    sha256 = ROBOTMK_SHA256,
+    version_str= ROBOTMK_VERSION
 )

@@ -25,6 +25,8 @@ class User;
 
 template <typename T>
 const T *offset_cast(const void *ptr, size_t offset) {
+    // This is our ugly "pointer shifting technology", so we need those casts.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     return reinterpret_cast<const T *>(reinterpret_cast<const char *>(ptr) +
                                        offset);
 }

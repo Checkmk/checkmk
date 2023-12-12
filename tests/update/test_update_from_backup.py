@@ -1,9 +1,9 @@
+import json
 import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
 
-import json
 import pytest
 
 from tests.testlib.agent import (
@@ -13,13 +13,15 @@ from tests.testlib.agent import (
     register_controller,
     wait_until_host_receives_data,
 )
+from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     current_base_branch_name,
+    current_branch_version,
     get_services_with_status,
     qa_test_data_path,
 )
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, version_from_env
 from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
@@ -30,7 +32,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
-    base_version = CMKVersion("2.2.0", Edition.CEE, current_base_branch_name())
+    base_version = CMKVersion(
+        "2.2.0p8", Edition.CEE, current_base_branch_name(), current_branch_version()
+    )
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -56,7 +60,9 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
-    base_version = CMKVersion("2.2.0p4", Edition.CCE, current_base_branch_name())
+    base_version = CMKVersion(
+        "2.2.0p8", Edition.CCE, current_base_branch_name(), current_branch_version()
+    )
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -72,6 +78,7 @@ def _base_site_demo(site_factory_demo):
     reason="Test currently failing for missing `php7`. "
     "This will be fixed starting from base-version 2.2.0p8",
 )
+@pytest.mark.cee
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()
@@ -99,8 +106,17 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
         assert len(base_ok_services[hostname]) > 0
 
-    target_version = CMKVersion(CMKVersion.DAILY, Edition.CEE, current_base_branch_name())
-    min_version = CMKVersion(BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name())
+    target_version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        fallback_branch=current_base_branch_name(),
+    )
+    assert target_version.edition == Edition.CEE, "This test works with CEE only"
+
+    min_version = CMKVersion(
+        BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name(), current_branch_version()
+    )
+
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}
@@ -133,9 +149,15 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
             f"target-version: "
             f"{not_ok_services}"
         )
-        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
+        assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
+@pytest.mark.cce
+@skip_if_not_cloud_edition
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
+    reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",
+)
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:
@@ -160,7 +182,12 @@ def test_update_from_backup_demo(
 
         assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
 
-    target_version = CMKVersion(CMKVersion.DAILY, Edition.CCE, current_base_branch_name())
+    target_version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CCE,
+        fallback_branch=current_base_branch_name(),
+    )
+    assert target_version.edition == Edition.CCE, "This test works with CCE only"
 
     site_factory_demo = SiteFactory(
         version=target_version,

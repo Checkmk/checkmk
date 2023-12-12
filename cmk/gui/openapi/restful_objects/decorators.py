@@ -45,7 +45,6 @@ from cmk.gui.openapi.permission_tracking import (
 from cmk.gui.openapi.restful_objects import permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.openapi.restful_objects.parameters import (
     CONTENT_TYPE,
     ETAG_HEADER_PARAM,
@@ -602,8 +601,6 @@ class Endpoint:
 
         # Call to see if a Rule can be constructed. Will throw an AttributeError if not possible.
         _ = self.default_path
-
-        ENDPOINT_REGISTRY.add_endpoint(self)
 
         if (
             self.content_type == "application/json"

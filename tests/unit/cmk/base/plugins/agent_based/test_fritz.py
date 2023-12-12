@@ -28,10 +28,8 @@ from cmk.base.plugins.agent_based.fritz import (
     parse_fritz,
     Section,
 )
-from cmk.base.plugins.agent_based.utils.interfaces import (
-    CHECK_DEFAULT_PARAMETERS,
-    DISCOVERY_DEFAULT_PARAMETERS,
-)
+
+from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS, DISCOVERY_DEFAULT_PARAMETERS
 
 _STRING_TABLE = [
     ["VersionOS", "137.06.83"],
@@ -286,7 +284,7 @@ def test_discover_fritz_uptime(
             [
                 Result(
                     state=State.OK,
-                    summary="Up since Mar 17 2022 11:07:38",
+                    summary="Up since 2022-03-17 11:07:38",
                 ),
                 Result(
                     state=State.OK,

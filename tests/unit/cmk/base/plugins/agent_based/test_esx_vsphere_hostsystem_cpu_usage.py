@@ -17,7 +17,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     EsxVsphereHostsystemCpuSection,
     extract_esx_vsphere_hostsystem_cpu_usage,
 )
-from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
+
+from cmk.plugins.lib.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(

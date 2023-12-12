@@ -6,7 +6,7 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-# shellcheck source=build_lib.sh
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
 # We only ensure we use the right major version at the moment
@@ -21,12 +21,10 @@ install_package() {
         go get github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
 }
 
-test_package "go version" "go$GO_VERSION\."
-
 case "$DISTRO" in
     ubuntu-20.04)
         install_package
-        test_package
+        test_package "go version" "go$GO_VERSION\."
         ;;
     *)
         echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in IMAGE_TESTING!"

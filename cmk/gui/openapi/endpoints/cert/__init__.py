@@ -12,11 +12,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.x509 import CertificateSigningRequest
+import cryptography.x509 as x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.crypto.certificate import CertificateSigningRequest
 from cmk.utils.paths import omd_root
 
 import cmk.gui.config as config
@@ -30,6 +30,7 @@ from cmk.gui.openapi.endpoints.cert.response_schemas import (
     X509PEM,
 )
 from cmk.gui.openapi.restful_objects import Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 
@@ -63,20 +64,20 @@ def _get_agent_ca() -> RootCA:
 
 
 def _serialized_root_cert() -> str:
-    return _get_root_ca().cert.public_bytes(Encoding.PEM).decode()
+    return _get_root_ca().certificate.dump_pem().str
 
 
-def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
+def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
     return (
         _get_agent_ca()
         .sign_csr(
-            csr,
-            validity=relativedelta(
+            CertificateSigningRequest(csr),
+            expiry=relativedelta(
                 months=config.active_config.agent_controller_certificates["lifetime_in_months"]
             ),
         )
-        .public_bytes(Encoding.PEM)
-        .decode()
+        .dump_pem()
+        .str
     )
 
 
@@ -161,3 +162,9 @@ def agent_controller_certificates_settings(param: object) -> Response:
             detail="Unauthorized to read the global settings",
         )
     return serve_json(config.active_config.agent_controller_certificates)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(root_cert)
+    endpoint_registry.register(make_certificate)
+    endpoint_registry.register(agent_controller_certificates_settings)

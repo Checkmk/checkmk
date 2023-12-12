@@ -7,6 +7,13 @@ import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib.brocade import (
+    brocade_fcport_getitem,
+    brocade_fcport_inventory_this_port,
+    DETECT,
+    DISCOVERY_DEFAULT_PARAMETERS,
+)
+
 from .agent_based_api.v1 import (
     get_average,
     get_rate,
@@ -22,12 +29,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.brocade import (
-    brocade_fcport_getitem,
-    brocade_fcport_inventory_this_port,
-    DETECT,
-    DISCOVERY_DEFAULT_PARAMETERS,
-)
 
 Section = Sequence[Mapping[str, Any]]
 

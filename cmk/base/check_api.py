@@ -17,11 +17,8 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 import socket
 import time
-from collections.abc import Callable
-from functools import partial as _partial
-from typing import Any, Literal
-
-import livestatus as _livestatus
+from collections.abc import Callable, Mapping
+from typing import Any, Generator, Literal
 
 import cmk.utils.debug as _debug
 
@@ -32,21 +29,21 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.plugin_contexts import host_name as _internal_host_name
-from cmk.base.api.agent_based.plugin_contexts import service_description
 
 # pylint: disable=unused-import
 from cmk.base.api.agent_based.register.utils_legacy import (
     LegacyCheckDefinition as LegacyCheckDefinition,
 )
+from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
+from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
+
+from cmk.agent_based.v1 import render as _render
 
 # pylint: enable=unused-import
 
@@ -55,22 +52,25 @@ Crit = None | int | float
 _Bound = None | int | float
 Levels = tuple  # Has length 2 or 4
 
-_MetricTuple = tuple[
-    MetricName,
-    float,
-    Warn,
-    Crit,
-    _Bound,
-    _Bound,
-]
+_MetricTuple = (
+    tuple[str, float]
+    | tuple[str, float, Warn, Crit]
+    | tuple[str, float, Warn, Crit, _Bound, _Bound]
+)
 
 ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 
 
-def host_name() -> str:
-    """compatibility for making HostName a own class
-    if somebody make type comparision to str or some other weird stuff we want to be compatible"""
-    return str(_internal_host_name())
+# to ease migration:
+DiscoveryResult = Generator[tuple[str | None, Mapping[str, object]], None, None]
+CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
+
+
+# to ease migration:
+def Service(
+    *, item: str | None = None, parameters: Mapping[str, object] | None = None
+) -> tuple[str | None, Mapping[str, object]]:
+    return item, parameters or {}
 
 
 def get_check_api_context() -> _config.CheckContext:
@@ -306,17 +306,8 @@ def check_levels(  # pylint: disable=too-many-branches
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _get_predictive_levels(
-                _internal_host_name(),
-                service_description(),
+            ref_value, levels = params["__get_predictive_levels__"](
                 dsname,
-                params,
-                _partial(
-                    _livestatus.get_rrd_data,
-                    _livestatus.LocalConnection(),
-                    host_name,
-                    service_description,
-                ),
                 levels_factor=factor * scale,
             )
             if ref_value:

@@ -12,11 +12,17 @@ from ._autochecks import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from ._autodiscovery import autodiscovery, automation_discovery, DiscoveryResult, get_host_services
+from ._autodiscovery import (
+    autodiscovery,
+    automation_discovery,
+    DiscoveryResult,
+    DiscoverySettings,
+    get_host_services,
+)
 from ._commandline import commandline_discovery
 from ._discovery import DiscoveryPlugin
 from ._filters import RediscoveryParameters
-from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
+from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._impl import execute_check_discovery
 from ._params import DiscoveryCheckParameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
@@ -38,14 +44,14 @@ __all__ = [
     "discover_host_labels",
     "discover_services",
     "DiscoveryCheckParameters",
-    "DiscoveryMode",
+    "DiscoveryMode",  # in the process of being replaced by DiscoverySettings
+    "DiscoverySettings",
     "DiscoveryResult",
     "DiscoveryPlugin",
     "execute_check_discovery",
     "find_plugins",
     "get_check_preview",
     "get_host_services",
-    "HostLabel",
     "HostLabelPlugin",
     "QualifiedDiscovery",
     "RediscoveryParameters",

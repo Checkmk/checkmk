@@ -7,11 +7,8 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.hostaddress import HostName
+from tests.testlib.prediction import FixedPredictionUpdater
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -20,7 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
-from cmk.base.plugins.agent_based.utils.multipath import Group
+
+from cmk.plugins.lib.multipath import Group
 
 
 def test_parse_diskstat_minimum() -> None:
@@ -139,6 +137,9 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
             "levels_upper": ("relative", (10.0, 20.0)),
             "levels_upper_min": (10.0, 15.0),
             "period": "wday",
+            "__get_predictive_levels__": FixedPredictionUpdater(
+                None, (2.1, 4.1, None, None)
+            ).get_predictive_levels,
         },
         "read_ios": (400.0, 600.0),
         "read_latency": (80.0, 160.0),
@@ -150,50 +151,42 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         "write_wait": (30.0, 50.0),
     }
 
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.get_predictive_levels",
-        return_value=(None, (2.1, 4.1, None, None)),
-    )
-    with plugin_contexts.current_host(HostName("unittest-hn")), plugin_contexts.current_service(
-        CheckPluginName("unittest_sd"),
-        "unittest_sd_description",
-    ):
-        with pytest.raises(IgnoreResultsError):
-            list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
-        DATA[0][0] = "1617784512"
-        assert list(
-            diskstat.check_diskstat(
-                "nvme0n1",
-                PARAMS,
-                diskstat.parse_diskstat(DATA),
-                None,
-            )
-        ) == [
-            Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
-            Result(state=State.OK, notice="Utilization: 0%"),
-            Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
-            Result(state=State.OK, summary="Read: 0.00 B/s (no reference for prediction yet)"),
-            Metric("disk_read_throughput", 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
-            Result(state=State.OK, summary="Write: 0.00 B/s"),
-            Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
-            Result(state=State.OK, notice="Average wait: 0 seconds"),
-            Metric("disk_average_wait", 0.0),
-            Result(state=State.OK, notice="Average read wait: 0 seconds"),
-            Metric("disk_average_read_wait", 0.0, levels=(0.03, 0.05)),
-            Result(state=State.OK, notice="Average write wait: 0 seconds"),
-            Metric("disk_average_write_wait", 0.0, levels=(0.03, 0.05)),
-            Result(state=State.OK, notice="Average queue length: 0.00"),
-            Metric("disk_queue_length", 0.0),
-            Result(state=State.OK, notice="Read operations: 0.00/s"),
-            Metric("disk_read_ios", 0.0, levels=(400.0, 600.0)),
-            Result(state=State.OK, notice="Write operations: 0.00/s"),
-            Metric("disk_write_ios", 0.0, levels=(300.0, 400.0)),
-            Result(state=State.OK, summary="Latency: 0 seconds"),
-            Metric("disk_latency", 0.0, levels=(0.08, 0.16)),
-            Metric("disk_average_read_request_size", 0.0),
-            Metric("disk_average_request_size", 0.0),
-            Metric("disk_average_write_request_size", 0.0),
-        ]
+    with pytest.raises(IgnoreResultsError):
+        list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
+    DATA[0][0] = "1617784512"
+    assert list(
+        diskstat.check_diskstat(
+            "nvme0n1",
+            PARAMS,
+            diskstat.parse_diskstat(DATA),
+            None,
+        )
+    ) == [
+        Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
+        Result(state=State.OK, notice="Utilization: 0%"),
+        Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
+        Result(state=State.OK, summary="Read: 0.00 B/s (no reference for prediction yet)"),
+        Metric("disk_read_throughput", 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
+        Result(state=State.OK, summary="Write: 0.00 B/s"),
+        Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
+        Result(state=State.OK, notice="Average wait: 0 seconds"),
+        Metric("disk_average_wait", 0.0),
+        Result(state=State.OK, notice="Average read wait: 0 seconds"),
+        Metric("disk_average_read_wait", 0.0, levels=(0.03, 0.05)),
+        Result(state=State.OK, notice="Average write wait: 0 seconds"),
+        Metric("disk_average_write_wait", 0.0, levels=(0.03, 0.05)),
+        Result(state=State.OK, notice="Average queue length: 0.00"),
+        Metric("disk_queue_length", 0.0),
+        Result(state=State.OK, notice="Read operations: 0.00/s"),
+        Metric("disk_read_ios", 0.0, levels=(400.0, 600.0)),
+        Result(state=State.OK, notice="Write operations: 0.00/s"),
+        Metric("disk_write_ios", 0.0, levels=(300.0, 400.0)),
+        Result(state=State.OK, summary="Latency: 0 seconds"),
+        Metric("disk_latency", 0.0, levels=(0.08, 0.16)),
+        Metric("disk_average_read_request_size", 0.0),
+        Metric("disk_average_request_size", 0.0),
+        Metric("disk_average_write_request_size", 0.0),
+    ]
 
 
 def test_parse_diskstat_simple() -> None:

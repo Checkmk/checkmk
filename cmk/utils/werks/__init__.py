@@ -24,11 +24,11 @@ from typing import IO, Protocol, TypeVar
 
 from pydantic import RootModel, TypeAdapter
 
-from werks import load_werk
-from werks.models import Class, Compatibility, Werk, WerkV1
-from werks.parse import parse_werk_v1
-
 import cmk.utils.paths
+
+from cmk.werks import load_werk
+from cmk.werks.models import Class, Compatibility, Werk, WerkV1
+from cmk.werks.parse import parse_werk_v1
 
 from .werk import sort_by_version_and_component, WerkTranslator
 

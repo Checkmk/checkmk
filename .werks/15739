@@ -1,4 +1,4 @@
-Title: <tt>fortisandbox_disk_usage</tt>: Fix <tt>KeyError: 'disk_used'</tt>
+Title: fortisandbox_disk_usage: Fix KeyError: 'disk_used'
 Class: fix
 Compatible: compat
 Component: checks

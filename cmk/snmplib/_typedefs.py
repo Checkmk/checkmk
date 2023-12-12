@@ -8,7 +8,7 @@ import copy
 import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, Protocol, Self
 
 from cmk.utils.exceptions import MKSNMPError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -57,7 +57,7 @@ class SNMPBackendEnum(enum.Enum):
         return self.name
 
     @classmethod
-    def deserialize(cls, name: str) -> "SNMPBackendEnum":
+    def deserialize(cls, name: str) -> Self:
         return cls[name]
 
 
@@ -104,7 +104,7 @@ class SNMPHostConfig(NamedTuple):
                 return contexts
         return [""]
 
-    def serialize(self):
+    def serialize(self) -> Mapping[str, object]:
         serialized = self._asdict()
         serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
         serialized["oid_range_limits"] = {
@@ -116,7 +116,7 @@ class SNMPHostConfig(NamedTuple):
         return serialized
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPHostConfig":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> Self:
         serialized_ = copy.deepcopy(dict(serialized))
         serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
         serialized_["oid_range_limits"] = {
@@ -181,6 +181,20 @@ class SpecialColumn(enum.IntEnum):
     END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
+class OIDSpecLike(Protocol):
+    @property
+    def column(self) -> int | str:
+        ...
+
+    @property
+    def encoding(self) -> Literal["string", "binary"]:
+        ...
+
+    @property
+    def save_to_cache(self) -> bool:
+        ...
+
+
 class BackendOIDSpec(NamedTuple):
     column: str | SpecialColumn
     encoding: SNMPValueEncoding
@@ -197,7 +211,7 @@ class BackendOIDSpec(NamedTuple):
         column: str | int,
         encoding: SNMPValueEncoding,
         save_to_cache: bool,
-    ) -> "BackendOIDSpec":
+    ) -> Self:
         return cls(
             SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache
         )
@@ -218,11 +232,14 @@ class BackendSNMPTree(NamedTuple):
         cls,
         *,
         base: str,
-        oids: Iterable[tuple[str | int, SNMPValueEncoding, bool]],
-    ) -> "BackendSNMPTree":
+        oids: Iterable[OIDSpecLike],
+    ) -> Self:
         return cls(
             base=base,
-            oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],
+            oids=[
+                BackendOIDSpec.deserialize(oid.column, oid.encoding, oid.save_to_cache)
+                for oid in oids
+            ],
         )
 
     def to_json(self) -> Mapping[str, Any]:
@@ -232,7 +249,7 @@ class BackendSNMPTree(NamedTuple):
         }
 
     @classmethod
-    def from_json(cls, serialized: Mapping[str, Any]) -> "BackendSNMPTree":
+    def from_json(cls, serialized: Mapping[str, Any]) -> Self:
         return cls(
             base=serialized["base"],
             oids=[BackendOIDSpec.deserialize(*oid) for oid in serialized["oids"]],

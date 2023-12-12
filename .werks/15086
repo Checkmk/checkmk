@@ -20,19 +20,19 @@ A macro is allowed to contain only ASCII upper letters, digits and underscores.
 Macros for which a value is not found, won't be replaced by anything and stay
 as they are.
 
-Then these macros can be used for {{Joined inventory columns}} below
-{{Columns}} in order to connect these tables. Note that these macros only make
+Then these macros can be used for "Joined inventory columns" below
+"Columns" in order to connect these tables. Note that these macros only make
 sense for tables to be connected which also provide these columns.
 
 Example:
 
 <ul>
-<li>Choose {{Oracle instances}} as the data source</li>
-<li>Choose {{SID}} with {{$SID$}} below macros</li>
-<li>Now you can connect {{Oracle dataguard statistics > Name}} where {{SID}}
-equals {{$SID$}} below {{match criteria}}</li>
+<li>Choose "Oracle instances" as the data source</li>
+<li>Choose "SID" with "$SID$" below macros</li>
+<li>Now you can connect "Oracle dataguard statistics > Name" where "SID"
+equals "$SID$" below "match criteria"</li>
 </ul>
 
 Note:
-Columns of the data source itself are available below {{Column}} - not
-{{Joined inventory columns}}.
+Columns of the data source itself are available below "Column" - not
+"Joined inventory columns".

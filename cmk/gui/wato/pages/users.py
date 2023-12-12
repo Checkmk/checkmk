@@ -22,6 +22,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -81,12 +82,6 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
 
 
 def register(_mode_registry: ModeRegistry) -> None:
@@ -330,8 +325,7 @@ class ModeUsers(WatoMode):
             html.immediate_browser_redirect(2, url)
 
         elif (
-            self._job_snapshot.status.state
-            == gui_background_job.background_job.JobStatusStates.FINISHED
+            self._job_snapshot.status.state == background_job.JobStatusStates.FINISHED
             and not self._job_snapshot.acknowledged_by
         ):
             # Just finished, auto-acknowledge
@@ -345,7 +339,12 @@ class ModeUsers(WatoMode):
                 + self._job_details_link()
             )
 
-        self._show_user_list()
+        users = userdb.load_users()
+
+        with html.form_context("bulk_delete_form", method="POST"):
+            self._show_user_list(users)
+
+        self._show_user_list_footer(users)
 
     def _job_details_link(self):
         return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
@@ -372,22 +371,19 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self) -> None:  # pylint: disable=too-many-branches``
+    def _show_user_list(  # pylint: disable=too-many-branches
+        self, users: dict[UserId, UserSpec]
+    ) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
         ]
-
-        users = userdb.load_users()
-
         entries = list(users.items())
-
-        html.begin_form("bulk_delete_form", method="POST")
-
         roles = load_roles()
         contact_groups = load_contact_group_information()
 
         html.div("", id_="row_info")
 
+        customer = customer_api()
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - active_config.user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
@@ -446,18 +442,25 @@ class ModeUsers(WatoMode):
 
                 # Online/Offline
                 if user.may("wato.show_last_user_activity"):
-                    last_seen = userdb.get_last_activity(user_spec)
+                    last_seen, auth_type = userdb.get_last_seen(user_spec)
                     if last_seen >= online_threshold:
-                        title = _("Online")
+                        title = _("Online (%s %s via %s)") % (
+                            render.date(last_seen),
+                            render.time_of_day(last_seen),
+                            auth_type,
+                        )
                         img_txt = "checkmark"
                     elif last_seen != 0:
-                        title = _("Offline")
+                        title = _("Offline (%s %s via %s)") % (
+                            render.date(last_seen),
+                            render.time_of_day(last_seen),
+                            auth_type,
+                        )
                         img_txt = "cross_grey"
                     elif last_seen == 0:
-                        title = _("Never logged in")
+                        title = _("Never")
                         img_txt = "hyphen"
 
-                    title += f" ({render.date(last_seen)} {render.time_of_day(last_seen)})"
                     table.cell(_("Act."))
                     html.icon(img_txt, title)
 
@@ -465,10 +468,10 @@ class ModeUsers(WatoMode):
                     if last_seen != 0:
                         html.write_text(f"{render.date(last_seen)} {render.time_of_day(last_seen)}")
                     else:
-                        html.write_text(_("Never logged in"))
+                        html.write_text(_("Never"))
 
                 if edition() is Edition.CME:
-                    table.cell(_("Customer"), managed.get_customer_name(user_spec))
+                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
 
                 # Connection
                 if connection:
@@ -562,8 +565,8 @@ class ModeUsers(WatoMode):
 
         html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
-        html.end_form()
 
+    def _show_user_list_footer(self, users: dict[UserId, UserSpec]) -> None:
         show_row_count(
             row_count=(row_count := len(users)),
             row_info=_("user") if row_count == 1 else _("users"),
@@ -635,8 +638,7 @@ class ModeEditUser(WatoMode):
         self._roles = load_roles()
         self._user_id: UserId | None
 
-        if edition() is Edition.CME:
-            self._vs_customer = managed.vs_customer()
+        self._vs_customer = customer_api().vs_customer()
 
         self._can_edit_users = edition() != Edition.CSE
 
@@ -754,6 +756,11 @@ class ModeEditUser(WatoMode):
 
         if self._can_edit_users:
             self._get_identity_userattrs(user_attrs)
+
+        # We always store secrets for automation users. Also in editions that are not allowed
+        # to edit users *hust* CSE *hust*
+        is_automation_user = self._user.get("automation_secret", None) is not None
+        if is_automation_user or self._can_edit_users:
             self._get_security_userattrs(user_attrs)
 
         # Language configuration
@@ -789,15 +796,55 @@ class ModeEditUser(WatoMode):
         edit_users(user_object)
         return redirect(mode_url("users"))
 
-    def _get_identity_userattrs(  # pylint: disable=too-many-branches
-        self, user_attrs: UserSpec
-    ) -> None:
+    def _get_identity_userattrs(self, user_attrs: UserSpec) -> None:
         # Full name
         user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()
 
         # Connector
         user_attrs["connector"] = self._user.get("connector")
 
+        # Email address
+        user_attrs["email"] = EmailAddress().from_html_vars("email")
+
+        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
+        user_attrs["idle_timeout"] = idle_timeout
+        if idle_timeout is None:
+            del user_attrs["idle_timeout"]
+
+        # Pager
+        user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
+
+        if edition() is Edition.CME:
+            customer = self._vs_customer.from_html_vars("customer")
+            self._vs_customer.validate_value(customer, "customer")
+
+            if customer != customer_api().default_customer_id():
+                user_attrs["customer"] = customer
+            elif "customer" in user_attrs:
+                del user_attrs["customer"]
+
+        vs_sites = self._vs_sites()
+        authorized_sites = vs_sites.from_html_vars("authorized_sites")
+        vs_sites.validate_value(authorized_sites, "authorized_sites")
+
+        if authorized_sites is not None:
+            user_attrs["authorized_sites"] = authorized_sites
+        elif "authorized_sites" in user_attrs:
+            del user_attrs["authorized_sites"]
+
+        # ntopng
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding Setup rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
+                    ntop_username_attribute
+                )
+
+    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
@@ -859,58 +906,20 @@ class ModeEditUser(WatoMode):
         if increase_serial:
             user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
-        # Email address
-        user_attrs["email"] = EmailAddress().from_html_vars("email")
-
-        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
-        user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout is None:
-            del user_attrs["idle_timeout"]
-
-        # Pager
-        user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
-
-        if edition() is Edition.CME:
-            customer = self._vs_customer.from_html_vars("customer")
-            self._vs_customer.validate_value(customer, "customer")
-
-            if customer != default_customer_id():
-                user_attrs["customer"] = customer
-            elif "customer" in user_attrs:
-                del user_attrs["customer"]
-
-        vs_sites = self._vs_sites()
-        authorized_sites = vs_sites.from_html_vars("authorized_sites")
-        vs_sites.validate_value(authorized_sites, "authorized_sites")
-
-        if authorized_sites is not None:
-            user_attrs["authorized_sites"] = authorized_sites
-        elif "authorized_sites" in user_attrs:
-            del user_attrs["authorized_sites"]
-
-        # ntopng
-        if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
-                    ntop_username_attribute
-                )
-
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Roles
-        user_attrs["roles"] = [
-            role for role in self._roles.keys() if html.get_checkbox("role_" + role)
-        ]
+        if edition() != Edition.CSE:
+            user_attrs["roles"] = [
+                role for role in self._roles.keys() if html.get_checkbox("role_" + role)
+            ]
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         # Let exceptions from loading notification scripts happen now
         load_notification_scripts()
 
-        html.begin_form("user", method="POST")
+        with html.form_context("user", method="POST"):
+            self._show_form()
+
+    def _show_form(self) -> None:  # pylint: disable=too-many-branches
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
         is_automation_user = self._user.get("automation_secret", None) is not None
@@ -933,6 +942,7 @@ class ModeEditUser(WatoMode):
             self._render_security(
                 {
                     "automation",
+                    "disable_password",
                 },
                 None,
                 is_automation_user,
@@ -1036,7 +1046,6 @@ class ModeEditUser(WatoMode):
         else:
             html.set_focus("alias")
         html.hidden_fields()
-        html.end_form()
 
     def _render_identity(
         self, custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]]
@@ -1079,7 +1088,7 @@ class ModeEditUser(WatoMode):
 
         if edition() is Edition.CME:
             forms.section(self._vs_customer.title())
-            self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
+            self._vs_customer.render_input("customer", customer_api().get_customer_id(self._user))
 
             html.help(self._vs_customer.help())
 

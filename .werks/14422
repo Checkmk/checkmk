@@ -1,4 +1,4 @@
-Title: <tt>ipmi</tt>, <tt>ipmi_sensors</tt>: Fix user-configured status overrides
+Title: ipmi, ipmi_sensors: Fix user-configured status overrides
 Class: fix
 Compatible: compat
 Component: checks

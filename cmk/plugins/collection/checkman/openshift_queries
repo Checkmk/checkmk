@@ -1,0 +1,62 @@
+title: Kubernetes: Cluster Collector for OpenShift
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ The Kubernetes monitoring gathers information about an OpenShift cluster by
+ connecting to a Prometheus endpoint. This service monitors the connection to
+ Prometheus. Moreover, for each Prometheus query one of the following errors
+ can occur:
+
+ - Request exception
+
+ - Invalid response
+
+ - Prometheus error
+
+ - Querying endpoint succeeded, but no samples received
+
+ - Incompatible data received: data did not match format expected from
+   OpenShift
+
+ If only incompatible data is received, the service goes {UNKNOWN}. If any
+ other error occurs, the state of the service goes {CRIT}. If all queries
+ succeed, the service is {OK}. If multiple differing errors occur, each error
+ is displayed together with the correspond queries.
+
+ `Request exception` indicates that agent_kube was unable to obtain a response
+ from the endpoint. Examples of such errors are ssl, proxy and timeout errors.
+ In case the monitoring of the endpoint is setup for the first time, it is
+ advisable to double-check the configuration. Specifying an incorrect scheme or
+ token is a common source of this error. Moreover, details of the service
+ contain the precise endpoint, which is contacted by Checkmk. Using the
+ `--debug` flag of `agent_kube` may provide additional information.
+
+ `Invalid response` indicates that the contacted server did not respond in a
+ way that is expected from a Prometheus endpoint. Checkmk will only process
+ data, which matches the HTTP API specified by Prometheus. A common source of
+ this error is that a proxy server or an OAuth server interjected itself in the
+ communication. Debugging can be done in similiar manner as for `Request
+ exception`.
+
+ `Prometheus error` indicates that Prometheus reported an error while
+ responding to the query. In such a case, Checkmk does not process any data,
+ even though some data may be transmitted. Checkmk will provide the error code
+ and message as reported by Prometheus.
+
+ `Querying endpoint succeeded, but no samples received` indicates that the
+ query succeeded. However, the metric requested by Checkmk could not be
+ obtained. Which metrics are available depends on the collectors inside of
+ cluster and how they are scraped by Prometheus. Checkmk only maintains
+ metrics which match the internals of an OpenShift cluster.
+
+ `Incompatible data received` indicates that the labels of the received metrics
+ did not match those expected by Checkmk. The labels depend on the collectors
+ of the cluster.
+
+ Note, that the information displayed by this service changes, if the
+ corresponding collector is changed.
+
+discovery:
+ One service is created if the option `Use data from Openshift` is set.

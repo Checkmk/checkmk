@@ -14,6 +14,7 @@ from typing import Any, Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.log import VERBOSE
 
 from ._abstract import Fetcher, Mode
 
@@ -26,10 +27,11 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         stdin: str | None,
         is_cmc: bool,
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.program"))
+        super().__init__()
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
+        self._logger: Final = logging.getLogger("cmk.helper.program")
         self._process: subprocess.Popen | None = None
 
     def __repr__(self) -> str:
@@ -128,6 +130,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         self._process = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        self._logger.log(VERBOSE, "Get data from program")
         if self._process is None:
             raise MKFetcherError("No process")
         # ? do they have the default byte type, because in open() none of the "text", "encoding",

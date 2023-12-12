@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
-from typing import Callable, Final
+from collections.abc import Callable, Iterator
+from typing import Final
 
-from cmk.gui.type_defs import UnitInfo
+from ._type_defs import UnitInfo
 
 
 class UnitRegistry:

@@ -16,24 +16,20 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
-cpsecure_sessions_default_levels = (2500, 5000)
-
 
 def inventory_cpsecure_sessions(info):
-    inventory = []
     for service, enabled, _sessions in info:
         if enabled == "1":
-            inventory.append((service, cpsecure_sessions_default_levels))
-    return inventory
+            yield service, {}
 
 
-def check_cpsecure_sessions(item, params, info):
+def check_cpsecure_sessions(item, _no_params, info):
     for service, enabled, sessions in info:
         if item == service:
             if enabled != "1":
                 return 1, "service not enabled"
             num_sessions = int(sessions)
-            warn, crit = params
+            warn, crit = (2500, 5000)
             perfdata = [("sessions", num_sessions, warn, crit, 0)]
 
             if num_sessions >= crit:

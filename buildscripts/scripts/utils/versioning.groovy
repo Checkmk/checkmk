@@ -40,15 +40,10 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
 "managed": [\
     "paths_to_be_removed": [\
-        "cloud", \
-        "cce", \
-        "cce.py", \
         "saas", \
         "cse", \
-        "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"], \
-    "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"]], \
+        "cse.py"], \
+    "folders_to_be_created": []], \
 "cloud": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -78,14 +73,12 @@ def safe_branch_name(scm) {
     return branch_name(scm).replaceAll("/", "-");
 }
 
-def get_cmk_version(branch, version) {
+def get_cmk_version(branch_name, branch_version, version) {
     return (
-      // Regular daily build of master branch
-      (branch == 'master' && version in ['daily', 'git']) ? "${build_date}" :
       // Experimental builds
-      (branch.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch}" :
-      // version branch dailies (e.g. 1.6.0)
-      (version == version in ['daily', 'git']) ? "${branch}-${build_date}" :
+      (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
+      // Daily builds
+      (version in ['daily', 'git']) ? "${branch_version}-${build_date}" :
       // else
       "${version}");
 }
@@ -98,17 +91,33 @@ def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
-                  --edition "${edition}" \
                   --editions_file "${checkout_dir}/editions.yml" \
-                  --use_case "${use_case}" 
+                  use_cases \
+                  --edition "${edition}" \
+                  --use_case "${use_case}"
             """, returnStdout: true).trim().split();
         }
     }
 }
 
+def get_internal_distros_pattern() {
+    docker_image_from_alias("IMAGE_TESTING").inside() {
+        dir("${checkout_dir}") {
+            return sh(script: """scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --editions_file "editions.yml" \
+                  internal_distros \
+                  --as-codename \
+                  --as-rsync-exclude-pattern;
+            """, returnStdout: true).trim();
+        }
+    }
+
+}
+
 def get_branch_version(String git_dir=".") {
     dir(git_dir) {
-        return (cmd_output("grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'")
+        return (cmd_output("make --no-print-directory -f defines.make print-BRANCH_VERSION").trim()
                 ?: raise("Could not read BRANCH_VERSION from defines.make - wrong directory?"));
     }
 }

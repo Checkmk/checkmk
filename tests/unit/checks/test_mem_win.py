@@ -7,15 +7,13 @@ from collections.abc import Mapping
 from typing import Any
 
 import pytest
-from pytest_mock import MockerFixture
+
+from tests.testlib.prediction import FixedPredictionUpdater
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -137,11 +135,17 @@ _SECTION = {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "pagefile": {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
             },
             [
@@ -203,11 +207,17 @@ _SECTION = {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "pagefile": {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "average": 60,
             },
@@ -267,25 +277,17 @@ _SECTION = {
     ],
 )
 def test_mem_win(
-    mocker: MockerFixture,
     fix_register: FixRegister,
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    mocker.patch(
-        "cmk.base.check_api._get_predictive_levels",
-        return_value=(100000, (90000, 110000, None, None)),
-    )
-    with current_host(HostName("unittest-hn")), current_service(
-        CheckPluginName("unittest_sd"), "unittest_sd_description"
-    ):
-        assert (
-            list(
-                fix_register.check_plugins[CheckPluginName("mem_win")].check_function(
-                    item=None,
-                    params=params,
-                    section=_SECTION,
-                )
+    assert (
+        list(
+            fix_register.check_plugins[CheckPluginName("mem_win")].check_function(
+                item=None,
+                params=params,
+                section=_SECTION,
             )
-            == expected_result
         )
+        == expected_result
+    )

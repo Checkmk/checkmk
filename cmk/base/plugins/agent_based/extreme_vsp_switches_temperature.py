@@ -5,10 +5,11 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.netextreme import DETECT_NETEXTREME
-from .utils.temperature import check_temperature, TempParamType
 
 
 @dataclass

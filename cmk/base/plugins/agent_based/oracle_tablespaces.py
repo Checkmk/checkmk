@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import db, oracle
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -18,7 +20,6 @@ from .agent_based_api.v1 import (
     TableRow,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import db, oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces

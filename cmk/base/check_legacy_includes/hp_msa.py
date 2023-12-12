@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
+import cmk.plugins.lib.hp_msa as hp_msa
 
 # TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.

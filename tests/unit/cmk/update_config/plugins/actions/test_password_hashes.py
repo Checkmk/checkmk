@@ -7,6 +7,8 @@ import datetime
 
 import pytest
 
+from tests.testlib import mocklogger
+
 from tests.unit.cmk.gui.userdb.test_userdb import _load_users_uncached
 
 from cmk.utils.crypto.password import PasswordHash
@@ -43,14 +45,6 @@ def fixture_userdb(with_user: tuple[UserId, str]) -> Users:
     ), "Legacy password hash found in test user data"
 
     return existing
-
-
-class _MockLogger:
-    def __init__(self) -> None:
-        self.warnings: list[str] = []
-
-    def warning(self, msg: str) -> None:
-        self.warnings.append(msg)
 
 
 @pytest.mark.parametrize(
@@ -113,12 +107,12 @@ def test_check_password_hashes(
         test_user | automation_md5 | existing_users,
         datetime.datetime.now(),
     )
-    mock_logger = _MockLogger()
+    mock_logger = mocklogger.MockLogger()
 
     run_check(mock_logger, {})  # type: ignore[arg-type]
 
     if should_warn:
-        assert len(mock_logger.warnings) == 1
-        assert username in mock_logger.warnings[0]
+        assert len(mock_logger.messages) == 1
+        assert username in mock_logger.messages[0]
     else:
-        assert len(mock_logger.warnings) == 0
+        assert len(mock_logger.messages) == 0

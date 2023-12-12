@@ -23,6 +23,7 @@ from cmk.gui.openapi.endpoints.audit_log.request_schemas import (
 )
 from cmk.gui.openapi.endpoints.audit_log.response_schemas import AuditLogEntryCollection
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
 
@@ -118,3 +119,8 @@ def _get_start_end_day_timestamp(value: datetime.date) -> tuple[int, int]:
     start_of_next_day = start_of_day + datetime.timedelta(days=1)
 
     return math.floor(start_of_day.timestamp()), math.floor(start_of_next_day.timestamp())
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(clear_logs)
+    endpoint_registry.register(get_all)

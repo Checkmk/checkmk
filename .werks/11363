@@ -1,4 +1,4 @@
-Title: if64, if64adm: Monitoring of the admin status <tt>ifAdminStatus</tt> for switch ports
+Title: if64, if64adm: Monitoring of the admin status ifAdminStatus for switch ports
 Class: feature
 Compatible: incomp
 Component: checks

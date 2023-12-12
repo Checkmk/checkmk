@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -64,18 +65,30 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def mark_edition_only(feature_to_mark: str, exclusive_to: Edition) -> str:
+def edition_has_enforced_licensing() -> bool:
+    return edition() in (Edition.CME, Edition.CCE)
+
+
+def edition_supports_nagvis() -> bool:
+    return edition() is not Edition.CSE
+
+
+def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
-    >>> mark_edition_only("Feature", Edition.CRE)
+    >>> mark_edition_only("Feature", [Edition.CRE])
     'Feature (Raw Edition)'
-    >>> mark_edition_only("Feature", Edition.CEE)
+    >>> mark_edition_only("Feature", [Edition.CEE])
     'Feature (Enterprise Edition)'
-    >>> mark_edition_only("Feature", Edition.CCE)
+    >>> mark_edition_only("Feature", [Edition.CCE])
     'Feature (Cloud Edition)'
-    >>> mark_edition_only("Feature", Edition.CME)
+    >>> mark_edition_only("Feature", [Edition.CME])
     'Feature (Managed Services Edition)'
+    >>> mark_edition_only("Feature", [Edition.CCE, Edition.CME])
+    'Feature (Cloud Edition, Managed Services Edition)'
     """
-    return f"{feature_to_mark} ({exclusive_to.title.removeprefix('Checkmk ')})"
+    return (
+        f"{feature_to_mark} ({', '.join([e.title.removeprefix('Checkmk ') for e in exclusive_to])})"
+    )
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>
@@ -152,6 +165,8 @@ class Version:
     _RGX_STABLE = re.compile(rf"{_PAT_BASE}(?:{_PAT_BUILD})?")  # e.g. "2.1.0p17"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
+    # -> The master branch also uses the [branch_version]-[date] schema since 2023-11-16.
+    #    Keep old variant in the parser for now for compatibility.
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
     _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?")
@@ -337,27 +352,6 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def is_daily_build_of_master(version: str) -> bool:
-    """
-    >>> f = is_daily_build_of_master
-    >>> f("2021.04.12")
-    True
-    >>> f("2023.04.12")
-    True
-    >>> f("2.1.0")
-    False
-    >>> f("2.1.0-2022.06.23")
-    False
-
-    Is not directly built from master, but a sandbox branch which is based on the master branch.
-    Treat it same as a master branch.
-
-    >>> f("2022.06.23-sandbox-lm-2.2-omd-apache")
-    True
-    """
-    return re.match(r"\d{4}.\d{2}.\d{2}(?:-sandbox.+)?$", version) is not None
-
-
 class VersionsCompatible:
     ...
 
@@ -377,8 +371,8 @@ def versions_compatible(
 
     >>> c = versions_compatible
 
-    Nightly build of master branch is always compatible as we don't know which major version it
-    belongs to. It's also not that important to validate this case.
+    Nightly build of master branch (with old version scheme) is always compatible as we don't know
+    which major version it belongs to. It's also not that important to validate this case.
 
     >>> isinstance(c(Version.from_str("2.0.0i1"), Version.from_str("2021.12.13")), VersionsCompatible)
     True
@@ -440,7 +434,8 @@ def versions_compatible(
     'This target version requires at least 2.2.0p...'
     """
 
-    # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
+    # Daily builds of the master branch (in old format (used until 2023-11-16): YYYY.MM.DD) are
+    # always treated to be compatible
     if from_v.base is None or to_v.base is None:
         return VersionsCompatible()
 

@@ -26,7 +26,7 @@ def python_container(request, docker_client):
         command=["python2.5", "-c", "import time; time.sleep(9999)"],
         detach=True,
         volumes={
-            testlib.cmk_path(): {"bind": "/cmk", "mode": "ro"},
+            testlib.repo_path(): {"bind": "/cmk", "mode": "ro"},
         },
     )
     yield c
@@ -36,7 +36,7 @@ def python_container(request, docker_client):
 def _get_python_plugins():
     return [
         f"agents/plugins/{p.name}"
-        for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
+        for p in (testlib.repo_path() / "agents" / "plugins").iterdir()
         if is_python_file(p, "python") or is_python_file(p, "python3")
     ]
 

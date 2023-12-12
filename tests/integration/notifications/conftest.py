@@ -11,7 +11,7 @@ from tests.testlib import wait_until
 from tests.testlib.site import Site
 
 
-@pytest.fixture(name="disable_checks", scope="module")
+@pytest.fixture(name="disable_checks")
 def fixture_disable_checks(site: Site) -> Iterator[None]:
     site.live.command("STOP_EXECUTING_HOST_CHECKS")
     wait_until(lambda: site.is_global_flag_disabled("execute_host_checks"), timeout=60, interval=1)
@@ -34,7 +34,7 @@ def fixture_disable_checks(site: Site) -> Iterator[None]:
         )
 
 
-@pytest.fixture(name="disable_flap_detection", scope="module")
+@pytest.fixture(name="disable_flap_detection")
 def fixture_disable_flap_detection(site: Site) -> Iterator[None]:
     site.live.command("DISABLE_FLAP_DETECTION")
     wait_until(

@@ -1,4 +1,4 @@
-Title: KUBE: Allow invalid value for `names` field of Node
+Title: KUBE: Allow invalid value for 'names' field of Node
 Class: fix
 Compatible: compat
 Component: checks

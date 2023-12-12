@@ -4,81 +4,115 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, MutableMapping
-from contextlib import suppress
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from time import time
+from typing import Any
+
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 from .agent_based_api.v1 import equals, get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-
-FJDARYE_SUPPORTED_DEVICE = ".1.3.6.1.4.1.211.1.21.1.150"  # fjdarye500
 
 
-class PoolEntry(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class Pool:
     capacity: float
     usage: float
     available: float
 
 
-FjdaryePoolsSection = Mapping[str, PoolEntry]
+def parse_fjdarye_pools(string_table: StringTable) -> dict[str, Pool]:
+    pools = {}
 
-
-def _to_float(value: str) -> float | None:
-    with suppress(ValueError):
-        return float(value)
-    return None
-
-
-def parse_fjdarye_pools(string_table: list[StringTable]) -> FjdaryePoolsSection:
-    pools: MutableMapping[str, PoolEntry] = {}
-
-    if not string_table:
-        return pools
-
-    for pool_id, capacity, usage in string_table[0]:
-        pool_capacity = _to_float(capacity)
-        pool_usage = _to_float(usage)
-
-        if pool_capacity is None or pool_usage is None:
+    for pool_id, raw_capacity, raw_usage in string_table:
+        try:
+            capacity = float(raw_capacity)
+            usage = float(raw_usage)
+        except ValueError:
             continue
 
-        pools[pool_id] = PoolEntry(
-            capacity=pool_capacity, usage=pool_usage, available=pool_capacity - pool_usage
+        pools[pool_id] = Pool(
+            capacity=capacity,
+            usage=usage,
+            available=capacity - usage,
         )
 
     return pools
 
 
 register.snmp_section(
-    name="fjdarye_pools",
+    # 150 does not refer to a specific device model, but to the OID
+    # this section applies to a range of models (see AF250S2.pdf in SUP-16226):
+    # ETERNUS AF250 S2/AF650S2
+    # ETERNUS AF250/AF650
+    # ETERNUS DX200F All-Flash Arrays
+    # etc.
+    name="fjdarye_pools_150",
+    parsed_section_name="fjdarye_pools",
     parse_function=parse_fjdarye_pools,
-    fetch=[
-        SNMPTree(
-            base=f"{FJDARYE_SUPPORTED_DEVICE}.14.5.2.1",
-            oids=[
-                "1",  # fjdaryMgtTpPoolNumber
-                "3",  # fjdaryMgtTpPoolTotalCapacity
-                "4",  # fjdaryMgtTpPoolUsedCapacity
-            ],
-        )
-    ],
-    detect=equals(".1.3.6.1.2.1.1.2.0", FJDARYE_SUPPORTED_DEVICE),
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.211.1.21.1.150.14.5.2.1",
+        oids=[
+            "1",  # fjdaryMgtTpPoolNumber
+            "3",  # fjdaryMgtTpPoolTotalCapacity
+            "4",  # fjdaryMgtTpPoolUsedCapacity
+        ],
+    ),
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.211.1.21.1.150"),
 )
 
 
-def discover_fjdarye_pools(section: FjdaryePoolsSection) -> DiscoveryResult:
+register.snmp_section(
+    # 153 does not refer to a specific device model, but to the OID
+    # this section applies to a range of models (see AF250S3.pdf in SUP-16226):
+    # ETERNUS AF150 S3/AF250 S3
+    # ETERNUS AF650 S3 All-Flash Arrays
+    # ETERNUS DX60 S5/DX100 S5/DX200 S5
+    # etc.
+    name="fjdarye_pools_153",
+    parsed_section_name="fjdarye_pools",
+    parse_function=parse_fjdarye_pools,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.211.1.21.1.153.14.5.2.1",
+        oids=[
+            "1",  # fjdaryMgtTpPoolNumber
+            "3",  # fjdaryMgtTpPoolTotalCapacity
+            "4",  # fjdaryMgtTpPoolUsedCapacity
+        ],
+    ),
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.211.1.21.1.153"),
+)
+
+
+def discover_fjdarye_pools(section: Mapping[str, Pool]) -> DiscoveryResult:
     for pool in section:
         yield Service(item=pool)
 
 
 def check_fjdarye_pools(
-    item: str, params: Mapping[str, Any], section: FjdaryePoolsSection
+    item: str, params: Mapping[str, Any], section: Mapping[str, Pool]
 ) -> CheckResult:
     if (pool := section.get(item)) is None:
         return
-
-    yield from df_check_filesystem_single(
+    yield from _check_fjdarye_pools(
+        item=item,
+        params=params,
+        pool=pool,
         value_store=get_value_store(),
+        timestamp=time(),
+    )
+
+
+def _check_fjdarye_pools(
+    *,
+    item: str,
+    params: Mapping[str, Any],
+    pool: Pool,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
+) -> CheckResult:
+    yield from df_check_filesystem_single(
+        value_store=value_store,
         mountpoint=item,
         filesystem_size=pool.capacity,
         free_space=pool.available,
@@ -86,6 +120,7 @@ def check_fjdarye_pools(
         inodes_total=None,
         inodes_avail=None,
         params=params,
+        this_time=timestamp,
     )
 
 

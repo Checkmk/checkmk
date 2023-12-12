@@ -3,6 +3,7 @@ SNAP7 := snap7
 
 SNAP7_INSTALL := $(BUILD_HELPER_DIR)/$(SNAP7)-install
 
+.PHONY: $(SNAP7_INSTALL)
 $(SNAP7_INSTALL):
 	# run the Bazel build process which does all the dependency stuff
 	$(BAZEL_BUILD) @$(SNAP7)//:$(SNAP7)

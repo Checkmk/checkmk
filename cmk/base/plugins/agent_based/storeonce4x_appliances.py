@@ -7,10 +7,11 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import storeonce
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import storeonce
-from .utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 # If have no idea what exactly this is...
 Appliance = Mapping[str, Any]

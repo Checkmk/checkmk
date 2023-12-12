@@ -56,6 +56,7 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
 )
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
 
@@ -484,3 +485,14 @@ def hash_of_folder(folder: Folder) -> constructors.ETagHash:
             "hosts": folder.host_names(),
         }
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create)
+    endpoint_registry.register(hosts_of_folder)
+    endpoint_registry.register(update)
+    endpoint_registry.register(bulk_update)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(move)
+    endpoint_registry.register(list_folders)
+    endpoint_registry.register(show_folder)

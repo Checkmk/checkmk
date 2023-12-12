@@ -1,4 +1,4 @@
-Title: Filesystem (<tt>df</tt>) check plugins: Handle zero free inodes correctly
+Title: Filesystem (df) check plugins: Handle zero free inodes correctly
 Class: fix
 Compatible: compat
 Component: checks

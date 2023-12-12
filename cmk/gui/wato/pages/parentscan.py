@@ -480,7 +480,10 @@ class ModeParentScan(WatoMode):
 
     # TODO: Refactor to be valuespec based
     def _show_start_form(self) -> None:
-        html.begin_form("parentscan", method="POST")
+        with html.form_context("parentscan", method="POST"):
+            self._show_start_form_inner()
+
+    def _show_start_form_inner(self) -> None:
         html.hidden_fields()
 
         # Mode of action
@@ -635,4 +638,3 @@ class ModeParentScan(WatoMode):
         forms.end()
 
         html.hidden_fields()
-        html.end_form()

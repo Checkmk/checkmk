@@ -354,7 +354,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 ),
             )
 
-        if not content.startswith(b"BEGIN:VCALENDAR") or not content.endswith(b"END:VCALENDAR"):
+        if not content.startswith(b"BEGIN:VCALENDAR") or not content.endswith(
+            (b"END:VCALENDAR", b"END:VCALENDAR\n", b"END:VCALENDAR\r\n")
+        ):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
 
     def page(self) -> None:
@@ -374,11 +376,10 @@ class ModeTimeperiodImportICal(WatoMode):
             )
         )
 
-        html.begin_form("import_ical", method="POST")
-        self._vs_ical().render_input("ical", {})
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("import_ical", method="POST"):
+            self._vs_ical().render_input("ical", {})
+            forms.end()
+            html.hidden_fields()
 
     def _show_add_timeperiod_page(self) -> None:
         # If an ICalendar file is uploaded, we process the htmlvars here, to avoid
@@ -690,11 +691,10 @@ class ModeEditTimeperiod(WatoMode):
         return redirect(mode_url("timeperiods"))
 
     def page(self) -> None:
-        html.begin_form("timeperiod", method="POST")
-        self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("timeperiod", method="POST"):
+            self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
+            forms.end()
+            html.hidden_fields()
 
     # The timeperiod data structure for the Checkmk config looks like follows.
     # { 'alias': u'eeee',

@@ -10,13 +10,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_info import check_kube_pod_info
-from cmk.base.plugins.agent_based.utils.kube import (
-    IpAddress,
-    NamespaceName,
-    PodInfo,
-    PodUID,
-    Timestamp,
-)
+
+from cmk.plugins.lib.kube import IpAddress, NamespaceName, PodInfo, PodUID, Timestamp
 
 
 @pytest.mark.parametrize(

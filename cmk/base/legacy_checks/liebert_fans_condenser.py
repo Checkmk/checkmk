@@ -7,7 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_liebert_float
+
+from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert_float
 
 
 def check_liebert_fans_condenser(item, params, parsed):

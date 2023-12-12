@@ -29,7 +29,7 @@ from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
 
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
@@ -419,8 +419,20 @@ class BaseApiClient(abc.ABC):
             return
         self._ratelimit = min(self._ratelimit, new_value)
 
-    def _get(self, uri_end, key=None, params=None):
-        return self._request(method="GET", uri_end=uri_end, key=key, params=params)
+    def _get(
+        self,
+        uri_end,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
+        return self._request(
+            method="GET",
+            uri_end=uri_end,
+            key=key,
+            params=params,
+            next_page_key=next_page_key,
+        )
 
     def _query(self, uri_end, body, params=None):
         json_data = self._request_json_from_url(
@@ -455,7 +467,31 @@ class BaseApiClient(abc.ABC):
             processed_query.append(processed_row)
         return processed_query
 
-    def _request(self, method, uri_end, body=None, key=None, params=None):
+    def _get_paginated_data(
+        self,
+        next_link,
+        next_page_key,
+        method,
+        body,
+        key,
+    ):
+        data = []
+        while next_link:
+            new_json_data = self._request_json_from_url(method, next_link, body=body)
+            data += self._lookup(new_json_data, key)
+            next_link = new_json_data.get(next_page_key)
+
+        return data
+
+    def _request(
+        self,
+        method,
+        uri_end,
+        body=None,
+        key=None,
+        params=None,
+        next_page_key="nextLink",
+    ):
         json_data = self._request_json_from_url(
             method, self._base_url + uri_end, body=body, params=params
         )
@@ -467,12 +503,14 @@ class BaseApiClient(abc.ABC):
 
         # The API will not send more than 1000 recources at once.
         # See if we must fetch another page:
-        next_link = json_data.get("nextLink")
-        while next_link is not None:
-            json_data = self._request_json_from_url(method, next_link, body=body)
-            # we only know of lists. Let exception happen otherwise
-            data += self._lookup(json_data, key)
-            next_link = json_data.get("nextLink")
+        if next_link := json_data.get(next_page_key):
+            return data + self._get_paginated_data(
+                next_link=next_link,
+                next_page_key=next_page_key,
+                method=method,
+                body=body,
+                key=key,
+            )
 
         return data
 
@@ -524,14 +562,15 @@ class GraphApiClient(BaseApiClient):
         return self._get("organization", key="value")
 
     def applications(self):
-        apps = self._get("applications", key="value")
+        applications = self._get("applications", key="value", next_page_key="@odata.nextLink")
+        return self._filter_out_applications(applications)
 
+    @staticmethod
+    def _filter_out_applications(applications: list[dict[str, Any]]) -> list[dict[str, Any]]:
         key_subset = {"id", "appId", "displayName", "passwordCredentials"}
-        apps_selected = [
-            {k: app[k] for k in key_subset} for app in apps if app["passwordCredentials"]
+        return [
+            {k: app[k] for k in key_subset} for app in applications if app["passwordCredentials"]
         ]
-
-        return apps_selected
 
 
 class MgmtApiClient(BaseApiClient):

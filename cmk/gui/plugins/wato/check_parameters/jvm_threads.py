@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _item_spec_jvm_threads():
@@ -21,22 +22,22 @@ def _item_spec_jvm_threads():
 
 
 def _parameter_valuespec_jvm_threads():
-    return Tuple(
-        help=_(
-            "This rule sets the warn and crit levels for the number of threads running in a JVM."
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Levels for the number of threads running in a JVM"),
+                        default_levels=(80, 100),
+                        unit=_("threads"),
+                    ),
+                ),
+            ],
+            optional_keys=[],
         ),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("threads"),
-                default_value=80,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("threads"),
-                default_value=100,
-            ),
-        ],
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

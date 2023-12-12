@@ -601,24 +601,24 @@ graph_info["number_of_monitored_hosts_and_services"] = {
 graph_info["livestatus_connects_and_requests"] = {
     "title": _l("Livestatus Connects and Requests"),
     "metrics": [
-        ("livestatus_request_rate", "area"),
-        ("livestatus_connect_rate", "area"),
+        ("livestatus_request_rate", "line"),
+        ("livestatus_connect_rate", "line"),
     ],
 }
 
 graph_info["message_processing"] = {
     "title": _l("Message processing"),
     "metrics": [
-        ("average_message_rate", "area"),
-        ("average_drop_rate", "area"),
+        ("average_message_rate", "line"),
+        ("average_drop_rate", "line"),
     ],
 }
 
 graph_info["rule_efficiency"] = {
     "title": _l("Rule efficiency"),
     "metrics": [
-        ("average_rule_trie_rate", "area"),
-        ("average_rule_hit_rate", "area"),
+        ("average_rule_trie_rate", "line"),
+        ("average_rule_hit_rate", "line"),
     ],
 }
 

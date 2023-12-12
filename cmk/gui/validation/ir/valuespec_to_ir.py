@@ -32,6 +32,8 @@ import typing
 
 from cmk.gui import valuespec
 from cmk.gui.validation.ir import elements
+from cmk.gui.validation.ir.elements import DictionaryKeySpec, LegacyValueSpecDetails
+from cmk.gui.validation.visitors.vue_lib import GenericComponent
 
 Stack = list[str]
 T = typing.TypeVar("T")
@@ -128,15 +130,19 @@ def get_validator(vs_instance: valuespec.ValueSpec | None) -> list[elements.Vali
     if vs_instance is None:
         return None
 
-    # TODO: Make sure this is actually working in subsequent compilation phases, and covered by tests.
-    def validator(value: typing.Any, all_values: dict[str, typing.Any] | None) -> None:
-        vs_instance.validate_datatype(value, varprefix="")
-        vs_instance.validate_value(value, varprefix="")
+    def validator(value: typing.Any, component: GenericComponent) -> None:
+        # This code does not belong here. GenericComponent is part of vue
+        # valuespec_to_ir.py is part of FormElement
+        # Since elements.py/valuespec_to_ir.py are currently part of a major restructuring
+        # -> I do not care
+        varprefix = component.config.get("varprefix", "")
+        vs_instance.validate_datatype(value, varprefix=varprefix)
+        vs_instance.validate_value(value, varprefix=varprefix)
 
     return [validator]
 
 
-@match_on(valuespec.ListOf)
+# @match_on(valuespec.ListOf)
 def valuespec_listof(
     vs_instance: valuespec.ListOf,
     stack: Stack,
@@ -157,7 +163,7 @@ def valuespec_listof(
     )
 
 
-@match_on(valuespec.ListOfStrings)
+# @match_on(valuespec.ListOfStrings)
 def valuespec_listofstrings(
     vs_instance: valuespec.ListOfStrings,
     stack: Stack,
@@ -190,7 +196,7 @@ def valuespec_listofstrings(
     )
 
 
-@match_on(valuespec.Timeofday)
+# @match_on(valuespec.Timeofday)
 def valuespec_timeofday(
     vs_instance: valuespec.Timeofday,
     stack: Stack,
@@ -208,7 +214,7 @@ def valuespec_timeofday(
     )
 
 
-@match_on(valuespec.Age)
+# @match_on(valuespec.Age)
 def valuespec_age(
     vs_instance: valuespec.Age,
     stack: Stack,
@@ -239,6 +245,7 @@ def valuespec_integer(
             help=get_help(vs_instance),
             label_text=vs_instance.title(),
             default_value=default_of(vs_instance),
+            unit=vs_instance._renderer._unit,
             le=vs_instance._bounds._upper,
             ge=vs_instance._bounds._lower,
             lt=None,
@@ -250,8 +257,8 @@ def valuespec_integer(
     )
 
 
-@match_on(valuespec.HostAddress)
-@match_on(valuespec.TextInput)
+# @match_on(valuespec.HostAddress)
+# @match_on(valuespec.TextInput)
 def valuespec_textinput(
     vs_instance: valuespec.TextInput,
     stack: Stack,
@@ -289,7 +296,7 @@ def valuespec_textinput(
     )
 
 
-@match_on(valuespec.Timerange)
+# @match_on(valuespec.Timerange)
 def valuespec_timerange(
     vs_instance: valuespec.Timerange,
     stack: Stack,
@@ -306,7 +313,7 @@ def valuespec_timerange(
     )
 
 
-@match_on(valuespec.Password)
+# @match_on(valuespec.Password)
 def valuespec_password(
     vs_instance: valuespec.Password,
     stack: Stack,
@@ -334,13 +341,25 @@ def valuespec_dictionary(
     stack: Stack,
     name: str | None,
 ) -> elements.TypedDictionaryElement:
+    optional_keys = vs_instance._optional_keys
+    required_keys = vs_instance._required_keys
+
+    dictionary_elements = []
+    for ident, element in maybe_lazy(vs_instance._elements):
+        dictionary_elements.append(
+            (
+                DictionaryKeySpec(
+                    name=ident,
+                    optional=False if optional_keys in (False, []) else ident not in required_keys,
+                ),
+                valuespec_to_ir(element, stack=stack, name=name),
+            )
+        )
+
     return elements.TypedDictionaryElement(
         ident=stack_to_name(stack),
         details=elements.TypedDictionaryDetails(
-            fields={
-                ident: valuespec_to_ir(element, stack=stack, name=ident)
-                for ident, element in maybe_lazy(vs_instance._elements)
-            },
+            elements=dictionary_elements,
             label_text=vs_instance.title(),
             help=get_help(vs_instance),
             default_value=default_of(vs_instance),
@@ -349,7 +368,7 @@ def valuespec_dictionary(
     )
 
 
-@match_on(valuespec.Alternative, has_name=False)
+# @match_on(valuespec.Alternative, has_name=False)
 def valuespec_alternative(
     vs_instance: valuespec.Alternative,
     stack: Stack,
@@ -370,7 +389,7 @@ def valuespec_alternative(
     )
 
 
-@match_on(valuespec.FixedValue)
+# @match_on(valuespec.FixedValue)
 def valuespec_fixedvalue(
     vs_instance: valuespec.FixedValue,
     stack: Stack,
@@ -410,7 +429,7 @@ def valuespec_checkbox(
     )
 
 
-@match_on(valuespec.CascadingDropdown)
+# @match_on(valuespec.CascadingDropdown)
 def valuespec_cascading_dropdown(
     vs_instance: valuespec.CascadingDropdown,
     stack: Stack,
@@ -444,7 +463,7 @@ def valuespec_cascading_dropdown(
     )
 
 
-@match_on(valuespec.DropdownChoice)
+# @match_on(valuespec.DropdownChoice)
 def valuespec_dropdown_choice(
     vs_instance: valuespec.DropdownChoice,
     stack: Stack,
@@ -468,7 +487,7 @@ def valuespec_dropdown_choice(
     )
 
 
-@match_on(valuespec.Foldable, has_name=False)
+# @match_on(valuespec.Foldable, has_name=False)
 def valuespec_foldable(
     vs_instance: valuespec.Foldable,
     stack: Stack,
@@ -487,7 +506,7 @@ def valuespec_foldable(
     )
 
 
-@match_on(type(None))
+# @match_on(type(None))
 def valuespec_none(
     vs_instance: None,
     stack: Stack,
@@ -504,7 +523,7 @@ def valuespec_none(
     )
 
 
-@match_on(valuespec.Optional)
+# @match_on(valuespec.Optional)
 def valuespec_transparent(
     vs_instance: valuespec.Optional,
     stack: Stack,
@@ -523,7 +542,7 @@ def valuespec_transparent(
     )
 
 
-@match_on(valuespec.Transform)
+# @match_on(valuespec.Transform)
 def valuespec_transform(
     vs_instance: valuespec.Transform,
     stack: Stack,
@@ -549,7 +568,7 @@ def valuespec_transform(
     )
 
 
-@match_on(valuespec.Url)
+# @match_on(valuespec.Url)
 def valuespec_url(
     vs_instance: valuespec.Url,
     stack: Stack,
@@ -574,7 +593,7 @@ def valuespec_url(
     )
 
 
-@match_on(valuespec.Float)
+# @match_on(valuespec.Float)
 def valuespec_float(
     vs_instance: valuespec.Float,
     stack: Stack,
@@ -585,6 +604,7 @@ def valuespec_float(
         details=elements.NumberDetails(
             label_text=vs_instance.title(),
             help=get_help(vs_instance),
+            unit=vs_instance._renderer._unit,
             ge=vs_instance._bounds._lower,
             gt=None,
             lt=vs_instance._bounds._upper,
@@ -597,7 +617,7 @@ def valuespec_float(
     )
 
 
-@match_on(valuespec.EmailAddress)
+# @match_on(valuespec.EmailAddress)
 def valuespec_email(
     vs_instance: valuespec.EmailAddress,
     stack: Stack,
@@ -663,34 +683,46 @@ def list_choices(choices: valuespec.ListChoiceChoices) -> list[tuple[str, str]]:
 def default_of(vs_instance: valuespec.ValueSpec) -> typing.Callable[[], typing.Any] | None:
     # We can't call default_value() as this will give us the "canonical value" as a default,
     # even if no default is set.
-    if vs_instance._default_value is valuespec.DEF_VALUE:
-        return None
 
-    return vs_instance.default_value
+    # if vs_instance._default_value is valuespec.DEF_VALUE:
+    #     return None
+    #
+    # return vs_instance.default_value
+
+    # ab: i see no problem in using this default value. 'None', as it is used above, is obviously wrong.
+    return vs_instance.default_value()
 
 
-@match_on(valuespec.ListChoice)
+# @match_on(valuespec.ListChoice)
 def valuespec_listchoice(
     vs_instance: valuespec.ListChoice,
     stack: Stack,
-    name: str | None,
+    _name: str | None,
 ) -> elements.TypedDictionaryElement:
-    return elements.TypedDictionaryElement(
-        ident=stack_to_name(stack),
-        details=elements.TypedDictionaryDetails(
-            label_text=vs_instance.title(),
-            fields={
-                str(ident): elements.CheckboxElement(
+    list_elements: list[tuple[DictionaryKeySpec, elements.FormElement]] = []
+    for ident, label in list_choices(vs_instance._choices):
+        list_elements.append(
+            (
+                DictionaryKeySpec(
+                    name=ident,
+                ),
+                elements.CheckboxElement(
                     ident=stack_to_name(stack, append=str(ident)),
                     details=elements.Details[bool](
-                        label_text=None,
+                        label_text=label,
                         help=None,
                         default_value=None,
                     ),
                     validators=None,
-                )
-                for ident, label in list_choices(vs_instance._choices)
-            },
+                ),
+            ),
+        )
+
+    return elements.TypedDictionaryElement(
+        ident=stack_to_name(stack),
+        details=elements.TypedDictionaryDetails(
+            label_text=vs_instance.title(),
+            elements=list_elements,
             help=get_help(vs_instance),
             default_value=default_of(vs_instance),
         ),
@@ -726,13 +758,32 @@ def valuespec_tuple(
     )
 
 
+def legacy_valuespec(vs_instance: valuespec.ValueSpec) -> elements.LegacyValueSpecElement:
+    return elements.LegacyValueSpecElement(
+        ident="legacy_valuespec",
+        details=LegacyValueSpecDetails(
+            label_text=vs_instance.title(),
+            help=get_help(vs_instance),
+            valuespec=vs_instance,
+            default_value=vs_instance.default_value(),
+        ),
+        validators=get_validator(vs_instance),
+    )
+
+
 def valuespec_to_ir(
     vs_instance: valuespec.ValueSpec,
     *,
     stack: Stack,
     name: str | bool | int | None,
 ) -> elements.FormElement:
-    match_entry = matchers[type(vs_instance)]
+    res: elements.FormElement
+
+    try:
+        match_entry = matchers[type(vs_instance)]
+    except KeyError:
+        return legacy_valuespec(vs_instance)
+
     if name is not None:
         name = str(name)
 

@@ -5,10 +5,11 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Mapping, Sequence
 from logging import Logger
 
 from .helpers import ECLock
-from .history import Columns
+from .query import Columns
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -19,7 +20,7 @@ def lerp(a: float, b: float, t: float) -> float:
 class Perfcounters:
     """Helper class for performance counting."""
 
-    _counter_names = [
+    _counter_names: Sequence[str] = [
         "messages",
         "rule_tries",
         "rule_hits",
@@ -30,7 +31,7 @@ class Perfcounters:
     ]
 
     # Average processing times
-    _weights = {
+    _weights: Mapping[str, float] = {
         "processing": 0.99,  # event processing
         "sync": 0.95,  # Replication sync
         "request": 0.95,  # Client requests
@@ -100,7 +101,7 @@ class Perfcounters:
 
         return columns
 
-    def get_status(self) -> list[float]:
+    def get_status(self) -> Sequence[float]:
         with self._lock:
             row: list[float] = []
             # Please note: status_columns() and get_status() need to produce lists with exact same column order

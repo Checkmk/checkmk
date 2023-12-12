@@ -26,10 +26,6 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
-from cmk.special_agents.utils_kubernetes.agent_handlers import node_handler
-from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
-    NATIVE_NODE_CONDITION_TYPES,
-)
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -281,51 +277,15 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
-NPD_NODE_CONDITION_TYPES = [
-    "KernelDeadlock",
-    "ReadonlyFilesystem",
-    "FrequentKubeletRestart",
-    "FrequentDockerRestart",
-    "FrequentContainerdRestart",
-]
-
-
-def _node_conditions() -> Iterator[str]:
-    yield from (node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
-
-
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
-
-    type_ = Use(
-        next,  # type: ignore [arg-type]
-        itertools.cycle(node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES),
-    )
 
 
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
 
-    conditions = Use(
-        NodeConditionFactory.batch,
-        size=len(node_handler.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-        factory_use_construct=True,
-    )
     allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
     capacity = Use(NodeResourcesFactory.build, factory_use_construct=True)
-
-
-def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
-    return NodeStatusFactory.build(
-        conditions=[
-            NodeConditionFactory.build(
-                type_=type_,
-                status=node_condition_status,
-                factory_use_construct=True,
-            )
-            for type_ in NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
-        ],
-    )
 
 
 class APINodeFactory(ModelFactory):

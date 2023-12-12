@@ -50,6 +50,7 @@ from cmk.gui.openapi.endpoints.utils import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 
@@ -249,3 +250,14 @@ def get(params: Mapping[str, Any]) -> Response:
     name = params["name"]
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create)
+    endpoint_registry.register(bulk_create)
+    endpoint_registry.register(list_groups)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(bulk_delete)
+    endpoint_registry.register(update)
+    endpoint_registry.register(bulk_update)
+    endpoint_registry.register(get)

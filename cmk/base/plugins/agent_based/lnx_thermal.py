@@ -6,9 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType
+
 from .agent_based_api.v1 import get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 # <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 57000 127000 critical

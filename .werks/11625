@@ -1,4 +1,4 @@
-Title: Splunk special agent: fix section <tt>splunk_jobs</tt>
+Title: Splunk special agent: fix section splunk_jobs
 Class: fix
 Compatible: compat
 Component: checks

@@ -1,4 +1,4 @@
-Title: <tt>mk_cups_queues</tt>: Accept printer names with hyphens ("-")
+Title: mk_cups_queues: Accept printer names with hyphens ("-")
 Class: feature
 Compatible: compat
 Component: checks

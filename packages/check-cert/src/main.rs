@@ -2,13 +2,66 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{Context, Result};
-use clap::Parser;
-use openssl::asn1::{Asn1Time, Asn1TimeRef};
-use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
-use openssl::x509::X509;
-use std::net::TcpStream;
-use std::time::Duration;
+use anyhow::Result;
+use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
+use check_cert::checker::certificate::{self, Config as CertChecks};
+use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
+use check_cert::checker::verification::{self, Config as VerifChecks};
+use check_cert::fetcher::{self, Config as FetcherConfig};
+use check_cert::truststore;
+use clap::{Parser, ValueEnum};
+use std::time::Duration as StdDuration;
+use time::{Duration, Instant};
+
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, ValueEnum)]
+enum SignatureAlgorithm {
+    RSA,
+    RSASSA_PSS,
+    RSAAES_OAEP,
+    DSA,
+    ECDSA,
+    ED25519,
+}
+
+impl SignatureAlgorithm {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::RSA => "RSA",
+            Self::RSASSA_PSS => "RSASSA_PSS",
+            Self::RSAAES_OAEP => "RSAAES_OAEP",
+            Self::DSA => "DSA",
+            Self::ECDSA => "ECDSA",
+            Self::ED25519 => "ED25519",
+        }
+    }
+}
+
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, ValueEnum)]
+enum PubKeyAlgorithm {
+    RSA,
+    EC,
+    DSA,
+    Gost_R3410,
+    Gost_R3410_2012,
+    Unknown,
+}
+
+impl PubKeyAlgorithm {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::RSA => "RSA",
+            Self::EC => "EC",
+            Self::DSA => "DSA",
+            Self::Gost_R3410 => "GostR3410",
+            Self::Gost_R3410_2012 => "GostR3410_2012",
+            Self::Unknown => "Unknown",
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -25,195 +78,139 @@ struct Args {
     #[arg(long, default_value_t = 10)]
     timeout: u64,
 
-    /// Warn if certificate expires in n days
-    #[arg(long, default_value_t = 30)]
-    warn: u32,
+    /// Expected serial
+    #[arg(long)]
+    serial: Option<String>,
 
-    /// Crit if certificate expires in n days
-    #[arg(long, default_value_t = 0)]
-    crit: u32,
+    /// Expected subject
+    #[arg(long)]
+    subject: Option<String>,
+
+    /// Expected issuer
+    #[arg(long)]
+    issuer: Option<String>,
+
+    /// Expected signature algorithm
+    #[arg(long)]
+    signature_algorithm: Option<SignatureAlgorithm>,
+
+    /// Expected public key algorithm
+    #[arg(long)]
+    pubkey_algorithm: Option<PubKeyAlgorithm>,
+
+    /// Expected public key size
+    #[arg(long)]
+    pubkey_size: Option<usize>,
+
+    /// Certificate expiration levels in days [WARN:CRIT]
+    #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
+    not_after: Vec<u32>,
+
+    /// Response time levels in milliseconds [WARN:CRIT]
+    #[arg(
+        long,
+        num_args = 2,
+        value_delimiter = ':',
+        default_value = "60000:90000"
+    )]
+    response_time: Vec<u32>,
+
+    /// Load CA store at this location in place of the default one
+    #[arg(long)]
+    ca_store: Option<std::path::PathBuf>,
+
+    /// Allow self-signed certificates
+    #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
+    allow_self_signed: bool,
 
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
     disable_sni: bool,
 }
 
-fn fetch_server_cert(
-    server: &str,
-    port: &u16,
-    timeout: Option<Duration>,
-    use_sni: bool,
-) -> Result<X509> {
-    let stream = TcpStream::connect(format!("{server}:{port}"))?;
-    stream.set_read_timeout(timeout)?;
-    let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
-    connector_builder.set_verify(SslVerifyMode::NONE);
-    let connector = connector_builder.build();
-    connector
-        .configure()
-        .context("Cannot configure connection")?
-        .use_server_name_indication(use_sni);
-    let mut stream = connector.connect(server, stream)?;
-    let cert = stream
-        .ssl()
-        .peer_cert_chain()
-        .context("Failed fetching peer cert chain")?
-        .iter()
-        .next()
-        .context("Failed unpacking peer cert chain")?
-        .to_owned();
-    stream.shutdown()?;
-    Ok(cert)
-}
-
-#[derive(PartialEq, Eq)]
-enum Validity {
-    OK,
-    Warn,
-    Crit,
-}
-
-fn check_validity(x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> Validity {
-    std::assert!(warn >= crit);
-
-    if crit >= x {
-        Validity::Crit
-    } else if warn >= x {
-        Validity::Warn
-    } else {
-        Validity::OK
-    }
-}
-
-fn diff_to_now(x: &Asn1TimeRef) -> i32 {
-    let exp = Asn1Time::days_from_now(0).unwrap().diff(x).unwrap();
-    exp.days
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // We ran into https://github.com/sfackler/rust-openssl/issues/575
+    // without openssl_probe.
+    openssl_probe::init_ssl_cert_env_vars();
+
     let args = Args::parse();
 
-    let warn_time = Asn1Time::days_from_now(args.warn).context("Invalid warn value")?;
-    let crit_time = Asn1Time::days_from_now(args.crit).context("Invalid crit value")?;
-    if warn_time < crit_time {
-        eprintln!("crit limit larger than warn limit");
-        std::process::exit(1);
-    }
+    let not_after: [_; 2] = args
+        .not_after
+        .try_into()
+        .expect("invalid arg count for not_after");
+    let Ok(not_after_levels_checker) = LevelsChecker::try_new(
+        LevelsStrategy::Lower,
+        Levels::from(&mut not_after.map(|v| v * Duration::DAY)),
+    ) else {
+        check::bail_out("invalid args: not after crit level larger than warn")
+    };
 
-    let cert = fetch_server_cert(
+    let response_time: [_; 2] = args
+        .response_time
+        .try_into()
+        .expect("invalid arg count for response_time");
+    let Ok(response_time_levels_checker) = LevelsChecker::try_new(
+        LevelsStrategy::Upper,
+        Levels::from(&mut response_time.map(|v| v * Duration::MILLISECOND)),
+    ) else {
+        check::bail_out("invalid args: response time crit higher than warn")
+    };
+
+    let Ok(trust_store) = (match args.ca_store {
+        Some(ca_store) => truststore::load_store(&ca_store),
+        None => truststore::system(),
+    }) else {
+        check::abort("Failed to load trust store")
+    };
+
+    let start = Instant::now();
+    let chain = match fetcher::fetch_server_cert(
         &args.url,
         &args.port,
-        if args.timeout == 0 {
-            None
-        } else {
-            Some(Duration::new(args.timeout, 0))
-        },
-        !args.disable_sni,
-    )?;
+        FetcherConfig::builder()
+            .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
+            .use_sni(!args.disable_sni)
+            .build(),
+    ) {
+        Ok(chain) => chain,
+        Err(err) => check::abort(format!("{:?}", err)),
+    };
+    let response_time = start.elapsed();
 
-    match check_validity(cert.not_after(), &warn_time, &crit_time) {
-        Validity::OK => {
-            println!(
-                "OK - Certificate '{}' will expire on {}",
-                args.url,
-                cert.not_after()
-            );
-            std::process::exit(0)
-        }
-        Validity::Warn => {
-            println!(
-                "WARNING - Certificate '{}' expires in {} day(s) ({})",
-                args.url,
-                diff_to_now(cert.not_after()),
-                cert.not_after()
-            );
-            std::process::exit(1)
-        }
-        Validity::Crit => {
-            println!(
-                "CRITICAL - Certificate '{}' expires in {} day(s) ({})",
-                args.url,
-                diff_to_now(cert.not_after()),
-                cert.not_after()
-            );
-            std::process::exit(2)
-        }
-    }
-}
-
-#[cfg(test)]
-mod test_check_validity {
-    use crate::{check_validity, Validity};
-    use openssl::asn1::Asn1Time;
-
-    fn days_from_now(days: u32) -> Asn1Time {
-        Asn1Time::days_from_now(days).unwrap()
+    if chain.is_empty() {
+        check::abort("Empty or invalid certificate chain on host")
     }
 
-    #[test]
-    fn test_check_validity_ok() {
-        assert!(
-            check_validity(
-                days_from_now(30).as_ref(),
-                &days_from_now(0),
-                &days_from_now(0),
-            ) == Validity::OK
-        );
-        assert!(
-            check_validity(
-                days_from_now(30).as_ref(),
-                &days_from_now(15),
-                &days_from_now(7),
-            ) == Validity::OK
-        );
-    }
+    let mut collection = fetcher_check::check(
+        response_time,
+        FetcherChecks::builder()
+            .response_time(Some(response_time_levels_checker))
+            .build(),
+    );
+    collection.join(&mut certificate::check(
+        &chain[0],
+        CertChecks::builder()
+            .serial(args.serial)
+            .subject(args.subject)
+            .issuer(args.issuer)
+            .signature_algorithm(
+                args.signature_algorithm
+                    .map(|sig| String::from(sig.as_str())),
+            )
+            .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
+            .pubkey_size(args.pubkey_size)
+            .not_after(Some(not_after_levels_checker))
+            .build(),
+    ));
+    collection.join(&mut verification::check(
+        &chain,
+        VerifChecks::builder()
+            .trust_store(&trust_store)
+            .allow_self_signed(args.allow_self_signed)
+            .build(),
+    ));
 
-    #[test]
-    fn test_check_validity_warn() {
-        assert!(
-            check_validity(
-                days_from_now(10).as_ref(),
-                &days_from_now(15),
-                &days_from_now(7),
-            ) == Validity::Warn
-        );
-    }
-
-    #[test]
-    fn test_check_validity_crit() {
-        assert!(
-            check_validity(
-                days_from_now(3).as_ref(),
-                &days_from_now(15),
-                &days_from_now(7),
-            ) == Validity::Crit
-        );
-        assert!(
-            check_validity(
-                days_from_now(3).as_ref(),
-                &days_from_now(15),
-                &days_from_now(15),
-            ) == Validity::Crit
-        );
-    }
-}
-
-#[cfg(test)]
-mod test_diff_to_now {
-    use crate::diff_to_now;
-    use openssl::asn1::Asn1Time;
-
-    fn days_from_now(days: u32) -> Asn1Time {
-        Asn1Time::days_from_now(days).unwrap()
-    }
-
-    #[test]
-    fn test_diff_to_today() {
-        assert!(diff_to_now(days_from_now(0).as_ref()) == 0);
-    }
-
-    #[test]
-    fn test_diff_to_tomorrow() {
-        assert!(diff_to_now(days_from_now(1).as_ref()) == 1);
-    }
+    println!("HTTP {}", collection);
+    std::process::exit(check::exit_code(&collection))
 }

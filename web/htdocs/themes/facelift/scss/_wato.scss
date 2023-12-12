@@ -539,7 +539,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     }
   }
 
-  .label_operator {
+  i.andornot_operator,
+  div.label_group {
     display: inline-block;
     padding: 0 2px;
   }
@@ -1247,5 +1248,21 @@ a.create_rule {
 
   img.icon {
     margin-right: 0.5 * $spacing;
+  }
+}
+
+tr.condition div.label_groups,
+form.birule div.label_groups {
+  @include label-groups-mixin; // from _main.scss
+
+  tr[id*="label_groups_entry"] > td.vlof_buttons a.delete_button img {
+    width: 12px;
+    height: 12px;
+    opacity: 1;
+    margin-right: $spacing;
+  }
+
+  div.label_group {
+    flex-grow: unset;
   }
 }

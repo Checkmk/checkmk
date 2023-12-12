@@ -39,28 +39,29 @@ def create_stage(Map args, time_stage_started) {
         sh(script: "figlet -w 150 '${args.NAME}'", returnStatus: true);
         println("CMD: ${args.COMMAND}")
         def cmd_status;
-        withEnv(args.ENV_VAR_LIST) {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                dir(args.DIR) {
-                    cmd_status = sh(script: args.COMMAND, returnStatus: true);
-                }
-                duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
-                desc_add_status_row(
-                    args.NAME,
-                    duration, cmd_status==0 ? "success" : "failure",
-                    "${args.RESULT_CHECK_FILE_PATTERN}");
+        withCredentials(args.SEC_VAR_LIST.collect{string(credentialsId: it, variable: it)}) {
+            withEnv(args.ENV_VAR_LIST) {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir(args.DIR) {
+                        cmd_status = sh(script: args.COMMAND, returnStatus: true);
+                    }
+                    duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
+                    desc_add_status_row(
+                        args.NAME,
+                        duration, cmd_status==0 ? "success" : "failure",
+                        "${args.RESULT_CHECK_FILE_PATTERN}");
 
-                println("Check results: ${args.RESULT_CHECK_TYPE}");
-                if (args.RESULT_CHECK_TYPE) {
-                    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-                    issues = test_jenkins_helper.analyse_issues(
-                        args.RESULT_CHECK_TYPE,
-                        args.RESULT_CHECK_FILE_PATTERN,
-                        false
-                    );
+                    println("Check results: ${args.RESULT_CHECK_TYPE}");
+                    if (args.RESULT_CHECK_TYPE) {
+                        issues = test_jenkins_helper.analyse_issues(
+                            args.RESULT_CHECK_TYPE,
+                            args.RESULT_CHECK_FILE_PATTERN,
+                            false
+                        );
+                    }
+                    /// make the stage fail if the command returned nonzero
+                    sh("exit ${cmd_status}");
                 }
-                /// make the stage fail if the command returned nonzero
-                sh("exit ${cmd_status}");
             }
         }
         return [cmd_status == 0, issues];

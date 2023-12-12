@@ -11,7 +11,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import ps
+
+from cmk.plugins.lib import ps
 
 
 def splitter(

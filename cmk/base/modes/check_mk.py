@@ -104,9 +104,9 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.api.agent_based.value_store import load_host_value_store
+from cmk.base import plugin_contexts
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,
@@ -121,8 +121,11 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
+
+from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize
 
@@ -442,11 +445,16 @@ modes.register(
 def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
+    all_check_manuals = {
+        n: man_pages.parse_man_page(n, p)
+        for n, p in man_pages.make_man_page_path_map(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        ).items()
+    }
 
     all_checks: list[CheckPluginName | str] = [
         p.name for p in agent_based_register.iter_all_check_plugins()
-    ]  #
+    ]
 
     # active checks using both new and old API have to be collected
     all_checks += [
@@ -456,7 +464,10 @@ def mode_list_checks() -> None:
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)
-        title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
+        try:
+            title = all_check_manuals[str(plugin_name)].title
+        except KeyError:
+            title = "(no man page present)"
 
         out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
 
@@ -480,20 +491,6 @@ def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
         return f"{tty.magenta}{'snmp':10}"
 
     return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
-
-
-def _get_check_plugin_title(
-    check_plugin_name: str,
-    all_man_pages: dict[str, str],
-) -> str:
-    man_filename = all_man_pages.get(check_plugin_name)
-    if man_filename is None:
-        return "(no man page present)"
-
-    try:
-        return cmk.utils.man_pages.get_title_from_man_page(Path(man_filename))
-    except MKGeneralException:
-        return "(failed to read man page)"
 
 
 modes.register(
@@ -674,167 +671,6 @@ modes.register(
     )
 )
 
-# .
-#   .--paths---------------------------------------------------------------.
-#   |                                  _   _                               |
-#   |                      _ __   __ _| |_| |__  ___                       |
-#   |                     | '_ \ / _` | __| '_ \/ __|                      |
-#   |                     | |_) | (_| | |_| | | \__ \                      |
-#   |                     | .__/ \__,_|\__|_| |_|___/                      |
-#   |                     |_|                                              |
-#   '----------------------------------------------------------------------'
-
-
-def mode_paths() -> None:
-    inst = 1
-    conf = 2
-    data = 3
-    pipe = 4
-    local = 5
-    directory = 1
-    fil = 2
-
-    paths = [
-        (cmk.utils.paths.modules_dir, directory, inst, "Main components of check_mk"),
-        (cmk.utils.paths.checks_dir, directory, inst, "Checks"),
-        (str(cmk.utils.paths.notifications_dir), directory, inst, "Notification scripts"),
-        (cmk.utils.paths.inventory_dir, directory, inst, "Inventory plugins"),
-        (cmk.utils.paths.agents_dir, directory, inst, "Agents for operating systems"),
-        (str(cmk.utils.paths.doc_dir), directory, inst, "Documentation files"),
-        (cmk.utils.paths.web_dir, directory, inst, "Check_MK's web pages"),
-        (cmk.utils.paths.check_manpages_dir, directory, inst, "Check manpages (for check_mk -M)"),
-        (cmk.utils.paths.lib_dir, directory, inst, "Binary plugins (architecture specific)"),
-        (str(cmk.utils.paths.pnp_templates_dir), directory, inst, "Templates for PNP4Nagios"),
-    ]
-    if config.monitoring_core == "nagios":
-        paths += [
-            (cmk.utils.paths.nagios_startscript, fil, inst, "Startscript for Nagios daemon"),
-            (cmk.utils.paths.nagios_binary, fil, inst, "Path to Nagios executable"),
-            (cmk.utils.paths.nagios_config_file, fil, conf, "Main configuration file of Nagios"),
-            (
-                cmk.utils.paths.nagios_conf_dir,
-                directory,
-                conf,
-                "Directory where Nagios reads all *.cfg files",
-            ),
-            (
-                cmk.utils.paths.nagios_objects_file,
-                fil,
-                data,
-                "File into which Nagios configuration is written",
-            ),
-            (cmk.utils.paths.nagios_status_file, fil, data, "Path to Nagios status.dat"),
-            (cmk.utils.paths.nagios_command_pipe_path, fil, pipe, "Nagios' command pipe"),
-            (cmk.utils.paths.check_result_path, fil, pipe, "Nagios' check results directory"),
-        ]
-
-    paths += [
-        (cmk.utils.paths.default_config_dir, directory, conf, "Directory that contains main.mk"),
-        (
-            cmk.utils.paths.check_mk_config_dir,
-            directory,
-            conf,
-            "Directory containing further *.mk files",
-        ),
-        (
-            cmk.utils.paths.apache_config_dir,
-            directory,
-            conf,
-            "Directory where Apache reads all config files",
-        ),
-        (cmk.utils.paths.htpasswd_file, fil, conf, "Users/Passwords for HTTP basic authentication"),
-        (cmk.utils.paths.var_dir, directory, data, "Base working directory for variable data"),
-        (cmk.utils.paths.autochecks_dir, directory, data, "Checks found by inventory"),
-        (cmk.utils.paths.precompiled_hostchecks_dir, directory, data, "Precompiled host checks"),
-        (cmk.utils.paths.snmpwalks_dir, directory, data, "Stored snmpwalks (output of --snmpwalk)"),
-        (cmk.utils.paths.counters_dir, directory, data, "Current state of performance counters"),
-        (cmk.utils.paths.tcp_cache_dir, directory, data, "Cached output from agents"),
-        (
-            cmk.utils.paths.logwatch_dir,
-            directory,
-            data,
-            "Unacknowledged logfiles of logwatch extension",
-        ),
-        (
-            cmk.utils.paths.livestatus_unix_socket,
-            fil,
-            pipe,
-            "Socket of Check_MK's livestatus module",
-        ),
-        (str(cmk.utils.paths.local_checks_dir), directory, local, "Locally installed checks"),
-        (
-            str(cmk.utils.paths.local_notifications_dir),
-            directory,
-            local,
-            "Locally installed notification scripts",
-        ),
-        (
-            str(cmk.utils.paths.local_inventory_dir),
-            directory,
-            local,
-            "Locally installed inventory plugins",
-        ),
-        (
-            str(cmk.utils.paths.local_check_manpages_dir),
-            directory,
-            local,
-            "Locally installed check man pages",
-        ),
-        (
-            str(cmk.utils.paths.local_agents_dir),
-            directory,
-            local,
-            "Locally installed agents and plugins",
-        ),
-        (
-            str(cmk.utils.paths.local_web_dir),
-            directory,
-            local,
-            "Locally installed Multisite addons",
-        ),
-        (
-            str(cmk.utils.paths.local_pnp_templates_dir),
-            directory,
-            local,
-            "Locally installed PNP templates",
-        ),
-        (str(cmk.utils.paths.local_doc_dir), directory, local, "Locally installed documentation"),
-        (
-            str(cmk.utils.paths.local_locale_dir),
-            directory,
-            local,
-            "Locally installed localizations",
-        ),
-    ]
-
-    def show_paths(title: str, t: int) -> None:
-        if t != inst:
-            out.output("\n")
-        out.output(tty.bold + title + tty.normal + "\n")
-        for path, filedir, typp, descr in paths:
-            if typp == t:
-                if filedir == directory:
-                    path += "/"
-                out.output("  %-47s: %s%s%s\n" % (descr, tty.bold + tty.blue, path, tty.normal))
-
-    for title, t in [
-        ("Files copied or created during installation", inst),
-        ("Configuration files edited by you", conf),
-        ("Data created by Nagios/Check_MK at runtime", data),
-        ("Sockets and pipes", pipe),
-        ("Locally installed addons", local),
-    ]:
-        show_paths(title, t)
-
-
-modes.register(
-    Mode(
-        long_option="paths",
-        handler_function=mode_paths,
-        needs_config=False,
-        short_help="List all pathnames and directories",
-    )
-)
 
 # .
 #   .--package-------------------------------------------------------------.
@@ -1597,13 +1433,35 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(args: list[str]) -> None:
+def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    if args:
-        man_pages.ConsoleManPageRenderer(args[0]).paint()
-    else:
-        man_pages.print_man_page_table()
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+    )
+    if not args:
+        man_pages.print_man_page_table(man_page_path_map)
+        return
+
+    if (man_page_path := man_page_path_map.get(args[0])) is None:
+        raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
+
+    man_page = man_pages.parse_man_page(args[0], man_page_path)
+    renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
+    match options.get("renderer", "console"):
+        case "console":
+            renderer = man_pages.ConsoleManPageRenderer
+        case "nowiki":
+            renderer = man_pages.NowikiManPageRenderer
+        case other:
+            raise ValueError(other)
+
+    try:
+        rendered = renderer(man_page).render_page()
+    except Exception as exc:
+        sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
+
+    man_pages.write_output(rendered)
 
 
 modes.register(
@@ -1622,6 +1480,15 @@ modes.register(
             "available it is used as pager. Exit by pressing Q. "
             "Use -M without an argument to show a list of all manual pages."
         ],
+        sub_options=[
+            Option(
+                long_option="renderer",
+                short_option="r",
+                argument=True,
+                argument_descr="RENDERER",
+                short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+            ),
+        ],
     )
 )
 
@@ -1639,7 +1506,11 @@ modes.register(
 def mode_browse_man() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_pages.print_man_page_browser()
+    man_pages.print_man_page_browser(
+        man_pages.load_man_page_catalog(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        )
+    )
 
 
 modes.register(
@@ -2295,8 +2166,8 @@ def mode_check(
             Snapshot,
         ]
     ] = ()
-    with error_handler, plugin_contexts.current_host(hostname), load_host_value_store(
-        hostname, store_changes=not dry_run
+    with error_handler, plugin_contexts.current_host(hostname), set_value_store_manager(
+        ValueStoreManager(hostname), store_changes=not dry_run
     ) as value_store_manager:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)

@@ -2,5 +2,5 @@
 cmk_graphing.v1
 ===============
 
-.. automodule:: cmk_graphing.v1
+.. automodule:: cmk.graphing.v1
    :members:

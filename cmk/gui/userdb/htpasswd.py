@@ -31,7 +31,6 @@ from cmk.gui.userdb import CheckCredentialsResult, ConnectorType, UserConnector
 #
 # See:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
-# - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
 def hash_password(password: Password) -> PasswordHash:
     """Hash a password

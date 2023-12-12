@@ -15,7 +15,7 @@ from cmk.utils.i18n import _
 g_compiled_regexes: dict[tuple[str, int], re.Pattern[str]] = {}
 
 REGEX_HOST_NAME_CHARS: Final = r"-0-9a-zA-Z_."
-REGEX_HOST_NAME: Final = f"^[{REGEX_HOST_NAME_CHARS}]+$"
+REGEX_HOST_NAME: Final = f"^[{REGEX_HOST_NAME_CHARS}]{{,253}}$"
 
 REGEX_GENERIC_IDENTIFIER_CHARS: Final = r"-0-9a-zA-Z_."
 REGEX_GENERIC_IDENTIFIER: Final = f"^[{REGEX_GENERIC_IDENTIFIER_CHARS}]+$"

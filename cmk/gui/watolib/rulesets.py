@@ -18,7 +18,7 @@ from typing import Any, assert_never, cast, Final
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import Labels
+from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
@@ -135,27 +135,27 @@ class RuleConditions:
         self,
         host_folder: str,
         host_tags: Mapping[TagGroupID, TagCondition] | None = None,
-        host_labels: Labels | None = None,
+        host_label_groups: LabelGroups | None = None,
         host_name: HostOrServiceConditions | None = None,
         service_description: HostOrServiceConditions | None = None,
-        service_labels: Labels | None = None,
+        service_label_groups: LabelGroups | None = None,
     ) -> None:
         self.host_folder: Final = host_folder
         self.host_tags: Final[Mapping[TagGroupID, TagCondition]] = host_tags or {}
-        self.host_labels: Final = host_labels or {}
+        self.host_label_groups: Final = host_label_groups or []
         self.host_name: Final = host_name
         self.service_description: Final = service_description
-        self.service_labels: Final = service_labels or {}
+        self.service_label_groups: Final = service_label_groups or []
 
     @classmethod
     def from_config(cls, host_folder: str, conditions: Mapping[str, Any]) -> RuleConditions:
         return cls(
             host_folder=conditions.get("host_folder", host_folder),
             host_tags=conditions.get("host_tags", {}),
-            host_labels=conditions.get("host_labels", {}),
+            host_label_groups=conditions.get("host_label_groups", []),
             host_name=conditions.get("host_name"),
             service_description=conditions.get("service_description"),
-            service_labels=conditions.get("service_labels", {}),
+            service_label_groups=conditions.get("service_label_groups", []),
         )
 
     def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
@@ -181,8 +181,8 @@ class RuleConditions:
         if self.host_tags:
             cfg["host_tags"] = self.host_tags
 
-        if self.host_labels:
-            cfg["host_labels"] = self.host_labels
+        if self.host_label_groups:
+            cfg["host_label_groups"] = self.host_label_groups
 
         if self.host_name is not None:
             cfg["host_name"] = self.host_name
@@ -190,8 +190,8 @@ class RuleConditions:
         if self.service_description is not None:
             cfg["service_description"] = self.service_description
 
-        if self.service_labels:
-            cfg["service_labels"] = self.service_labels
+        if self.service_label_groups:
+            cfg["service_label_groups"] = self.service_label_groups
 
         match use_host_folder:
             case UseHostFolder.NONE:
@@ -272,7 +272,7 @@ class RuleConditions:
         return RuleConditions(
             host_folder=self.host_folder,
             host_tags={**self.host_tags},
-            host_labels={**self.host_labels},
+            host_label_groups=self.host_label_groups,
             host_name=self.host_name.copy()
             if isinstance(
                 self.host_name,
@@ -289,7 +289,7 @@ class RuleConditions:
             else [*self.service_description]
             if self.service_description is not None
             else None,
-            service_labels={**self.service_labels},
+            service_label_groups=self.service_label_groups,
         )
 
 
@@ -352,15 +352,14 @@ class RulesetCollection:
             for name in rulespec_registry.keys()
         )
 
-    def replace_folder_config(
-        # The Any below should most likely be RuleSpec[object] but I am not sure.
+    def get_ruleset_configs_from_file(
         self,
         folder: Folder,
         loaded_file_config: Mapping[str, Any],
         only_varname: RulesetName | None = None,
-    ) -> None:
+    ) -> Iterable[tuple[RulesetName, list[RuleSpec[object]]]]:
         if only_varname:
-            variable_names_to_load = [only_varname]
+            variable_names_to_load: list[RulesetName] = [only_varname]
         else:
 
             def varnames_from_item(name: str, value: object) -> Sequence[str]:
@@ -385,11 +384,20 @@ class RulesetCollection:
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do
 
-                ruleset_config = rulegroup_config[subkey]
+                yield varname, rulegroup_config[subkey]
             else:
-                config_varname, subkey = varname, None
-                ruleset_config = loaded_file_config.get(config_varname, [])
+                yield varname, loaded_file_config.get(varname, [])
 
+    def replace_folder_config(
+        # The Any below should most likely be RuleSpec[object] but I am not sure.
+        self,
+        folder: Folder,
+        loaded_file_config: Mapping[str, Any],
+        only_varname: RulesetName | None = None,
+    ) -> None:
+        for varname, ruleset_config in self.get_ruleset_configs_from_file(
+            folder, loaded_file_config, only_varname
+        ):
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
@@ -1237,7 +1245,7 @@ class Rule:
         only_host_conditions,
         service_labels: Labels,
     ):
-        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
+        """A generator that provides the reasons why a given folder/host/item does not match this rule"""
         host = host_folder.host(hostname)
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())

@@ -7,29 +7,39 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from . import _perfometer
-from ._explicit_graphs import ExplicitGraphRecipeBuilder
-from ._graph_recipe_builder import graph_recipe_builder_registry
-from ._graph_templates import TemplateGraphRecipeBuilder
+from ._explicit_graphs import ExplicitGraphSpecification
+from ._graph_specification import (
+    graph_specification_registry,
+    metric_operation_registry,
+    MetricOpConstant,
+    MetricOpOperator,
+    MetricOpRRDChoice,
+    MetricOpRRDSource,
+    MetricOpScalar,
+)
+from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
     get_first_matching_perfometer,
     LogarithmicPerfometerSpec,
-    MetricometerRendererLogarithmic,
+    MetricometerRendererLegacyLogarithmic,
     parse_perfometers,
     perfometer_info,
     PerfometerSpec,
     renderer_registry,
 )
 from ._settings import ConfigVariableGraphTimeranges
-from ._timeseries import register_time_series_expressions
-from ._utils import time_series_expression_registry
 from ._valuespecs import PageVsAutocomplete
 
 
 def register(page_registry: PageRegistry, config_variable_registry: ConfigVariableRegistry) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
-    graph_recipe_builder_registry.register(ExplicitGraphRecipeBuilder())
-    graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
-    register_time_series_expressions(time_series_expression_registry)
+    metric_operation_registry.register(MetricOpConstant)
+    metric_operation_registry.register(MetricOpScalar)
+    metric_operation_registry.register(MetricOpOperator)
+    metric_operation_registry.register(MetricOpRRDSource)
+    metric_operation_registry.register(MetricOpRRDChoice)
+    graph_specification_registry.register(ExplicitGraphSpecification)
+    graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
     _perfometer.register()
 
@@ -38,7 +48,7 @@ __all__ = [
     "register",
     "get_first_matching_perfometer",
     "LogarithmicPerfometerSpec",
-    "MetricometerRendererLogarithmic",
+    "MetricometerRendererLegacyLogarithmic",
     "parse_perfometers",
     "perfometer_info",
     "PerfometerSpec",

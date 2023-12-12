@@ -54,11 +54,16 @@ shout = {msg ->
 check_job_parameters = {param_list ->
     print("""
         ||== REQUIRED JOB PARAMETERS ===============================================================
-        ${param_list.collect({param ->
-          if (!params.containsKey(param)) {
-            raise ("Expected job parameter ${param} not defined!");
+        ${param_list.collect({param_or_tuple ->
+          def (param_name, must_be_nonempty) = (param_or_tuple instanceof java.util.ArrayList) ? param_or_tuple : [param_or_tuple, false];
+          if (!params.containsKey(param_name)) {
+            raise ("Expected job parameter ${param_name} not defined!");
           }
-          "||  ${param.padRight(32)} ${"(${params[param].getClass().name.tokenize('.').last()})".padRight(12)} = |${params[param]}|"
+          def param_value = params[param_name];
+          if (must_be_nonempty && (param_value instanceof java.lang.String) && !param_value) {
+            raise ("Job parameter ${param_name} is expected to be nonempty!");
+          }
+          "||  ${param_name.padRight(32)} ${"(${param_value.getClass().name.tokenize('.').last()})".padRight(12)} = |${param_value}|"
             }).join("\n")}
         ||==========================================================================================
         """.stripMargin());

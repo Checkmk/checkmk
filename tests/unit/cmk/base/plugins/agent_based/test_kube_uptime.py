@@ -5,7 +5,8 @@
 
 
 from cmk.base.plugins.agent_based.kube_uptime import _parse_kube_start_time
-from cmk.base.plugins.agent_based.utils.uptime import Section
+
+from cmk.plugins.lib.uptime import Section
 
 
 def test_parse_kube_start_time() -> None:

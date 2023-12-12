@@ -5,7 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 checkname = "esx_vsphere_datastores"
 

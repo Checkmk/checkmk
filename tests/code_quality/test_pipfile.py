@@ -36,12 +36,20 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
-    repo_path() / "packages/werks/build",
+    # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
     repo_path() / "bazel-check_mk",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
     repo_path() / "packages/cmc/test",
+    repo_path() / "packages/cmk-agent-based/build",
+    repo_path() / "packages/cmk-agent-receiver/build",
+    repo_path() / "packages/cmk-graphing/build",
+    repo_path() / "packages/cmk-server-side-calls/build",
+    repo_path() / "packages/cmk-rulesets/build",
+    repo_path() / "packages/cmk-mkp-tool/build",
+    repo_path() / "packages/cmk-werks/build",
+    repo_path() / "packages/cmk-livestatus-client/build",
     repo_path() / "packages/livestatus/build",
     repo_path() / "packages/neb/build",
 }
@@ -138,7 +146,6 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
     exclusions = (
         basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
-        basepath / "agent-receiver",  # uses setup.py
         basepath / "packages",  # ignore all packages
         basepath / "enterprise/core/src/test",  # test files
         basepath / "omd/license_sources",  # update_licenses.py contains imports
@@ -313,9 +320,7 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "bcrypt",  # optional for passlib, we need it
     "cython",
-    "defusedxml",
     "docutils",
     "grpcio",
     "idna",
@@ -329,14 +334,11 @@ CEE_UNUSED_PACKAGES = [
     "ply",
     "psycopg2-binary",
     "pyasn1-modules",
-    "pycparser",
     "pykerberos",
     "pymssql",
     "pymysql",
-    "pyprof2calltree",
     "pyrsistent",
     "requests-kerberos",
-    "requests-toolbelt",
     "s3transfer",
     "setuptools-scm",
     "snmpsim-lextudio",
@@ -345,7 +347,6 @@ CEE_UNUSED_PACKAGES = [
     "wrapt",
     "yarl",
     "zipp",
-    "xmltodict",
 ]
 
 
@@ -381,7 +382,6 @@ def test_dependencies_are_declared() -> None:
         "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
         "_typeshed",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
-        "werks",  # can not be found because it is installed editable  # TODO: FIXME!
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

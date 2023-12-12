@@ -1,0 +1,21 @@
+title: Output Power
+agents: snmp
+catalog: hw/power/generic
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the output power (in Watt) of the (usually three) phases
+ of an UPS.
+
+ You can configure lower and upper levels for {WARN}/{CRIT}, both optional.
+ Lower levels default to (20, 1), upper levels do not have default values for
+ compatibility reasons.
+
+ The service goes {WARN}/{CRIT} if the value for power is not in the range as
+ specified above.
+
+item:
+ The index of the phase, e.g. {"1"}.
+
+discovery:
+ One service is created for each phase if the output power is not 0 or -1

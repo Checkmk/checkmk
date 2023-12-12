@@ -47,6 +47,10 @@ class RuleNotFoundException(MKGeneralException):
     pass
 
 
+class PackNotFoundException(MKGeneralException):
+    pass
+
+
 class AggregationNotFoundException(MKGeneralException):
     pass
 
@@ -171,7 +175,9 @@ class BIAggregationPacks:
         return self.packs.get(pack_id)
 
     def get_pack_mandatory(self, pack_id: str) -> BIAggregationPack:
-        return self.packs[pack_id]
+        if pack := self.packs.get(pack_id):
+            return pack
+        raise PackNotFoundException(_("The requested pack_id does not exist"))
 
     def delete_pack(self, pack_id: str) -> None:
         del self.packs[pack_id]

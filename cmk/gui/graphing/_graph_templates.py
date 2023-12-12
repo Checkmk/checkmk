@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
-from typing import Final
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from re import Match
+from typing import ClassVar, Literal
 
 from livestatus import SiteId
 
@@ -15,7 +18,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import Row, TranslatedMetrics
+from cmk.gui.type_defs import Row
 
 from ._expression import (
     Average,
@@ -25,7 +28,6 @@ from ._expression import (
     Maximum,
     Merge,
     Metric,
-    MetricDeclaration,
     MetricExpression,
     Minimum,
     parse_expression,
@@ -34,19 +36,18 @@ from ._expression import (
 )
 from ._graph_specification import (
     GraphMetric,
+    GraphRecipe,
+    GraphRecipeBase,
+    GraphSpecification,
     HorizontalRule,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
-    TemplateGraphSpecification,
 )
-from ._type_defs import GraphConsoldiationFunction
+from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 from ._utils import (
     get_graph_data_from_livestatus,
-    get_graph_range,
     get_graph_templates,
-    GraphRecipe,
-    GraphRecipeBase,
     GraphTemplate,
     MetricDefinition,
     MetricUnitColor,
@@ -55,23 +56,36 @@ from ._utils import (
 )
 
 
-class TemplateGraphRecipeBuilder:
-    def __init__(self) -> None:
-        self.graph_type: Final = "template"
+class TemplateGraphSpecification(GraphSpecification, frozen=True):
+    # Overwritten in cmk/gui/graphing/cee/__init__.py
+    TUNE_GRAPH_TEMPLATE: ClassVar[
+        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
+    ] = lambda graph_template, _spec: graph_template
 
-    def __call__(self, spec: TemplateGraphSpecification) -> list[GraphRecipe]:
-        row = get_graph_data_from_livestatus(spec.site, spec.host_name, spec.service_description)
+    graph_type: Literal["template"] = "template"
+    site: SiteId | None
+    host_name: HostName
+    service_description: ServiceName
+    graph_index: int | None = None
+    graph_id: str | None = None
+    destination: str | None = None
+
+    @staticmethod
+    def name() -> str:
+        return "template_graph_specification"
+
+    def recipes(self) -> list[GraphRecipe]:
+        row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
         translated_metrics = translated_metrics_from_row(row)
         return [
             recipe
             for index, graph_template in matching_graph_templates(
-                graph_id=spec.graph_id,
-                graph_index=spec.graph_index,
+                graph_id=self.graph_id,
+                graph_index=self.graph_index,
                 translated_metrics=translated_metrics,
             )
             if (
                 recipe := self._build_recipe_from_template(
-                    spec=spec,
                     graph_template=graph_template,
                     row=row,
                     translated_metrics=translated_metrics,
@@ -83,19 +97,15 @@ class TemplateGraphRecipeBuilder:
     def _build_recipe_from_template(
         self,
         *,
-        spec: TemplateGraphSpecification,
         graph_template: GraphTemplate,
         row: Row,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
     ) -> GraphRecipe | None:
         if not (
-            graph_template_tuned := self._template_tuning(
+            graph_template_tuned := TemplateGraphSpecification.TUNE_GRAPH_TEMPLATE(
                 graph_template,
-                site=spec.site,
-                host_name=spec.host_name,
-                service_description=spec.service_description,
-                destination=spec.destination,
+                self,
             )
         ):
             return None
@@ -115,10 +125,10 @@ class TemplateGraphRecipeBuilder:
             omit_zero_metrics=graph_recipe.omit_zero_metrics,
             consolidation_function=graph_recipe.consolidation_function,
             specification=TemplateGraphSpecification(
-                site=spec.site,
-                host_name=spec.host_name,
-                service_description=spec.service_description,
-                destination=spec.destination,
+                site=self.site,
+                host_name=self.host_name,
+                service_description=self.service_description,
+                destination=self.destination,
                 # Performance graph dashlets already use graph_id, but for example in reports, we still
                 # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
                 # done, we can remove the line below.
@@ -126,16 +136,6 @@ class TemplateGraphRecipeBuilder:
                 graph_id=graph_template_tuned.id,
             ),
         )
-
-    @staticmethod
-    def _template_tuning(
-        graph_template: GraphTemplate,
-        site: SiteId | None,
-        host_name: HostName | None,
-        service_description: ServiceName | None,
-        destination: str | None,
-    ) -> GraphTemplate | None:
-        return graph_template
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use
@@ -147,7 +147,7 @@ def matching_graph_templates(
     *,
     graph_id: str | None,
     graph_index: int | None,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[tuple[int, GraphTemplate]]:
     # Single metrics
     if (
@@ -166,10 +166,10 @@ def matching_graph_templates(
     )
 
 
-def _replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
+def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
+    def eval_to_string(match: Match[str]) -> str:
         try:
             result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
@@ -183,7 +183,7 @@ def _replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> st
 
 def _horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> list[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
@@ -206,7 +206,7 @@ def _horizontal_rules_from_thresholds(
 
 
 def create_graph_recipe_from_template(
-    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
+    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric], row: Row
 ) -> GraphRecipeBase:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
         unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
@@ -247,7 +247,7 @@ def create_graph_recipe_from_template(
         title=title,
         metrics=metrics,
         unit=units.pop(),
-        explicit_vertical_range=get_graph_range(graph_template, translated_metrics),
+        explicit_vertical_range=graph_template.compute_range(translated_metrics),
         horizontal_rules=_horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
@@ -257,14 +257,14 @@ def create_graph_recipe_from_template(
 
 
 def _to_metric_operation(
-    declaration: MetricDeclaration,
-    translated_metrics: TranslatedMetrics,
+    expression: MetricExpression,
+    translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    if isinstance(declaration, Constant):
-        return MetricOpConstant(value=float(declaration.value))
-    if isinstance(declaration, Metric):
+    if isinstance(expression, Constant):
+        return MetricOpConstant(value=float(expression.value))
+    if isinstance(expression, Metric):
         sources = [
             MetricOpRRDSource(
                 site_id=lq_row["site"],
@@ -272,13 +272,13 @@ def _to_metric_operation(
                 service_name=lq_row.get("service_description", "_HOST_"),
                 metric_name=pnp_cleanup(orig_name),
                 consolidation_func_name=(
-                    declaration.consolidation_func_name or enforced_consolidation_function
+                    expression.consolidation_func_name or enforced_consolidation_function
                 ),
                 scale=scale,
             )
             for orig_name, scale in zip(
-                translated_metrics[declaration.name]["orig_name"],
-                translated_metrics[declaration.name]["scale"],
+                translated_metrics[expression.name]["orig_name"],
+                translated_metrics[expression.name]["scale"],
             )
         ]
         if len(sources) > 1:
@@ -287,7 +287,7 @@ def _to_metric_operation(
                 operands=sources,
             )
         return sources[0]
-    if isinstance(declaration, Sum):
+    if isinstance(expression, Sum):
         return MetricOpOperator(
             operator_name="+",
             operands=[
@@ -297,10 +297,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for s in declaration.summands
+                for s in expression.summands
             ],
         )
-    if isinstance(declaration, Product):
+    if isinstance(expression, Product):
         return MetricOpOperator(
             operator_name="*",
             operands=[
@@ -310,46 +310,46 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for f in declaration.factors
+                for f in expression.factors
             ],
         )
-    if isinstance(declaration, Difference):
+    if isinstance(expression, Difference):
         return MetricOpOperator(
             operator_name="-",
             operands=[
                 _to_metric_operation(
-                    declaration.minuend,
+                    expression.minuend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
-                    declaration.subtrahend,
+                    expression.subtrahend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
             ],
         )
-    if isinstance(declaration, Fraction):
+    if isinstance(expression, Fraction):
         return MetricOpOperator(
             operator_name="/",
             operands=[
                 _to_metric_operation(
-                    declaration.dividend,
+                    expression.dividend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
-                    declaration.divisor,
+                    expression.divisor,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
             ],
         )
-    if isinstance(declaration, Maximum):
+    if isinstance(expression, Maximum):
         return MetricOpOperator(
             operator_name="MAX",
             operands=[
@@ -359,10 +359,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Minimum):
+    if isinstance(expression, Minimum):
         return MetricOpOperator(
             operator_name="MIN",
             operands=[
@@ -372,10 +372,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Average):
+    if isinstance(expression, Average):
         return MetricOpOperator(
             operator_name="AVERAGE",
             operands=[
@@ -385,10 +385,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Merge):
+    if isinstance(expression, Merge):
         return MetricOpOperator(
             operator_name="MERGE",
             operands=[
@@ -398,20 +398,20 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    raise TypeError(declaration)
+    raise TypeError(expression)
 
 
 def metric_expression_to_graph_recipe_expression(
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
-        metric_expression.declaration,
+        metric_expression,
         translated_metrics,
         lq_row,
         enforced_consolidation_function,
@@ -421,7 +421,7 @@ def metric_expression_to_graph_recipe_expression(
 def metric_line_title(
     metric_definition: MetricDefinition,
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> str:
     if metric_definition.title:
         return metric_definition.title
@@ -430,7 +430,7 @@ def metric_line_title(
 
 def metric_unit_color(
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:

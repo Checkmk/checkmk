@@ -39,12 +39,12 @@ def register_oracle_metrics():
     metric_info["oracle_wait_class_total"] = {
         "title": _("ORACLE Total waited"),
         "unit": "1/s",
-        "color": "#100",
+        "color": "#110000",
     }
     metric_info["oracle_wait_class_total_fg"] = {
         "title": _("ORACLE Total waited (FG)"),
         "unit": "1/s",
-        "color": "#100",
+        "color": "#110000",
     }
 
     # waitclasses
@@ -143,7 +143,7 @@ def register_oracle_metrics():
     for what, descr, unit, color in [
         ("db_cpu", "DB CPU time", "1/s", "#60f020"),
         ("db_time", "DB time", "1/s", "#004080"),
-        ("db_wait_time", "DB Non-Idle Wait", "1/s", "00b0c0"),
+        ("db_wait_time", "DB Non-Idle Wait", "1/s", "#00b0c0"),
         ("buffer_hit_ratio", "buffer hit ratio", "%", "21/a"),
         ("physical_reads", "physical reads", "1/s", "43/b"),
         ("physical_writes", "physical writes", "1/s", "26/a"),
@@ -311,9 +311,9 @@ def register_oracle_graphs():
     graph_info["oracle_pga_memory_info"] = {
         "title": _("ORACLE PGA memory statistics"),
         "metrics": [
-            ("oracle_pga_total_pga_allocated", "area"),
-            ("oracle_pga_total_pga_inuse", "area"),
-            ("oracle_pga_total_freeable_pga_memory", "area"),
+            ("oracle_pga_total_pga_allocated", "line"),
+            ("oracle_pga_total_pga_inuse", "line"),
+            ("oracle_pga_total_freeable_pga_memory", "line"),
         ],
         "optional_metrics": ["oracle_pga_total_freeable_pga_memory"],
     }

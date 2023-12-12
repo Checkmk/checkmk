@@ -1,34 +1,38 @@
+[project]
+name = "cmk-graphing"
+version = "1.0.0"
+dependencies = []
+
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "cmk_graphing"
-version = "1.0.0"
-
 [tool.setuptools.package-data]
-cmk_graphing = ["py.typed"]
+"cmk.graphing" = ["py.typed"]
 
 [tool.bandit]
 
 [tool.black]
-line-length = 100
+line_length = 100
+quiet = true
 
 [tool.isort]
 profile = "black"
 order_by_type = false
 line_length = 100
 py_version = 311
-known_first_party = "werks"
 
 [tool.mypy]
 explicit_package_bases = true
+packages = ["cmk", "tests"]
 strict = true
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = true
 disallow_any_explicit = true
 disallow_any_expr = true
+disallow_any_generics = true
 disallow_any_unimported = true
+disallow_subclassing_any = true
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true
@@ -38,13 +42,13 @@ disable_memoryview_promotion = true
 
 [tool.pylint.format]
 max-line-length = 100
+persistent = "no"
+score = "no"
 
 [tool.pylint.messages_control]
 disable = "missing-docstring,fixme"
 
-# We need this section, even if it is empty, without it pytest won't consider
-# our package directory as the root directory and climbs up further, see:
-# https://docs.pytest.org/en/stable/reference/customize.html#finding-the-rootdir
 [tool.pytest.ini_options]
 pythonpath = [ "." ]
-testpaths = [ "tests" ]
+testpaths = [ "cmk", "tests" ]
+addopts = "--doctest-modules --import-mode=importlib"

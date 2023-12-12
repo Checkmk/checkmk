@@ -19,7 +19,7 @@ oneTimeSetUp() {
     LOCA_CACHE="$MK_VARDIR/cache/local_my_local_check.cache"
     MRPE_CACHE="$MK_VARDIR/cache/mrpe_mrpetest.cache"
 
-    # create some caches.
+    # create some caches
     # similar/duplicate lines are on purpose, because sed is for pros.
 
     # local plugin
@@ -54,7 +54,7 @@ oneTimeSetUp() {
 test_run_cached_plugin() {
 
     MTIME="$(stat -c %X "$PLUG_CACHE")"
-    OUTPUT="$(run_cached "plugins_my_plugin" "180" "180" "run_agent_plugin" "180/my_plugin")"
+    OUTPUT="$(_run_cached_internal "plugins_my_plugin" 170 180 540 360 "run_agent_plugin" "170/my_plugin")"
 
     expected() {
         echo "<<<my_plugin_section:cached($MTIME,180)>>>"
@@ -71,7 +71,7 @@ test_run_cached_plugin() {
 test_run_cached_local() {
 
     MTIME="$(stat -c %X "$LOCA_CACHE")"
-    OUTPUT=$(run_cached "local_my_local_check" "180" "180" "run_agent_locals" "_log_section_time 'local_180/my_local_check' './180/my_local_check'")
+    OUTPUT=$(_run_cached_internal "local_my_local_check" 170 180 540 360 "run_agent_locals" "_log_section_time 'local_170/my_local_check' './170/my_local_check'")
 
     expected() {
         echo "cached($MTIME,180) P \"This is local output without custom cache info\""
@@ -91,7 +91,7 @@ test_run_cached_mrpe() {
     descr="mrpetest"
     cmdline="this is the cmdline for the mrpe call"
     MTIME="$(stat -c %X "$MRPE_CACHE")"
-    OUTPUT=$(run_cached "mrpe_$descr" "180" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
+    OUTPUT=$(_run_cached_internal "mrpe_$descr" 170 180 540 360 "_log_section_time 'mrpe_$descr' '$cmdline'")
 
     assertEquals "<<<mrpe>>>
 cached($MTIME,180) (my_check) Description 0 This is mrpe output" "$OUTPUT"

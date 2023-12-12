@@ -1,0 +1,12 @@
+Title: Date macro replacement in fileinfo patterns
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701427733
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The grouping patterns in the ruleset <i>Group patterns</i> allow to specify certain date macros (for details refer to the rulesets inline help).
+Previously only one instance of the macros could be used. Now all occurrences of either macro type are replaced.
+In addition, the pattern no longer has to begin with a "/" or a letter (which was not documented).

@@ -4,22 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-
-db2_mem_default_levels = (10.0, 5.0)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 
 def inventory_db2_mem(info):
-    return [(x[1], db2_mem_default_levels) for x in info if x[0] == "Instance"]
+    return [(x[1], {}) for x in info if x[0] == "Instance"]
 
 
 def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     if not info:
         raise IgnoreResultsError("Login into database failed")
-
-    warn, crit = params
 
     in_block = False
     limit, usage = None, None
@@ -41,29 +37,20 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
                 break
 
     if limit is None or usage is None:
-        return None
+        return
 
-    left = limit - usage
-    perc_level = (100.0 / limit) * left
-    label = " (Warn/Crit %d%%/%d%%)" % (warn, crit)
-
-    if perc_level <= crit:
-        state = 2
-    elif perc_level <= warn:
-        state = 1
-    else:
-        label = ""
-        state = 0
-
-    message = "Max: %s, Used: %s (%.2d%% Free%s) " % (
-        get_bytes_human_readable(limit),
-        get_bytes_human_readable(usage),
-        perc_level,
-        label,
+    perc_free = (limit - usage) / limit * 100.0
+    yield 0, f"Max {render.bytes(limit)}"
+    yield check_levels(
+        usage, "mem", None, human_readable_func=render.bytes, infoname="Used", boundaries=(0, limit)
     )
-    perf = [("mem", usage, 0, 0, 0, limit)]
-
-    return state, message, perf
+    yield check_levels(
+        perc_free,
+        None,
+        (None, None) + (params["levels_lower"] or (None, None)),
+        human_readable_func=render.percent,
+        infoname="Free",
+    )
 
 
 check_info["db2_mem"] = LegacyCheckDefinition(
@@ -71,4 +58,5 @@ check_info["db2_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_mem,
     check_function=check_db2_mem,
     check_ruleset_name="db2_mem",
+    check_default_parameters={"levels_lower": (10.0, 5.0)},
 )

@@ -17,7 +17,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based import mcafee_webgateway_time_to_resolve_dns
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils import mcafee_gateway
+
+from cmk.plugins.lib import mcafee_gateway
 
 WALK = """
 .1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7

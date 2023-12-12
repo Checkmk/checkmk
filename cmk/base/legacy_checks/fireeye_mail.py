@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     SNMPTree,
 )
-from cmk.base.plugins.agent_based.utils.fireeye import DETECT
+
+from cmk.plugins.lib.fireeye import DETECT
 
 
 def fireeye_counter_generic(value, what, average):

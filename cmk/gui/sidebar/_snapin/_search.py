@@ -8,7 +8,7 @@ import itertools
 import json
 import re
 import traceback
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Final, Literal, TypeVar
@@ -33,7 +33,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.plugins.wato.utils import main_module_registry
 from cmk.gui.type_defs import (
     HTTPVariables,
     Icon,
@@ -55,6 +54,7 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
 from ._base import PageHandlers, SidebarSnapin
@@ -563,29 +563,26 @@ class QuicksearchManager:
 
         found_filters = self._find_search_object_expressions(query)
 
-        search_objects: list[ABCQuicksearchConductor] = []
         if found_filters:
             # The query contains at least one search expression to search a specific search plugin.
             used_filters = self._get_used_filters_from_query(query, found_filters)
-            search_objects.append(
+            return [
                 LivestatusQuicksearchConductor(
                     used_filters,
                     FilterBehaviour.CONTINUE,
                 )
-            )
-        else:
-            # No explicit filters specified by search expression. Execute the quicksearch plugins in
-            # the order they are configured to let them answer the query.
-            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order:
-                search_objects.append(
-                    self._make_conductor(
-                        filter_name,
-                        {filter_name: [_to_regex(query)]},
-                        FilterBehaviour[filter_behaviour_str.upper()],
-                    )
-                )
+            ]
 
-        return search_objects
+        # No explicit filters specified by search expression. Execute the quicksearch plugins in
+        # the order they are configured to let them answer the query.
+        return [
+            self._make_conductor(
+                filter_name,
+                {filter_name: [_to_regex(query)]},
+                FilterBehaviour[filter_behaviour_str.upper()],
+            )
+            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order
+        ]
 
     @staticmethod
     def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:
@@ -744,7 +741,9 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
-            search_objects = self._quicksearch_manager._determine_search_objects(query)
+            search_objects = self._quicksearch_manager._determine_search_objects(
+                livestatus.lqencode(query)
+            )
             self._quicksearch_manager._conduct_search(search_objects)
 
         except TooManyRowsError as e:
@@ -1372,14 +1371,22 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 #   '----------------------------------------------------------------------'
 
 
-class MenuSearchResultsRenderer:
+class MenuSearchResultsRenderer(abc.ABC):
     MAX_RESULTS_BEFORE_SHOW_ALL: Final = 10
 
-    def __init__(self, search_type: Literal["monitoring", "setup"]) -> None:
-        generate_results, max_results_after_show_all = self._search_type_specific_setup(search_type)
-        self.generate_results: Final = generate_results
-        self.max_results_after_show_all: Final = max_results_after_show_all
-        self.search_type: Final = search_type
+    @abc.abstractmethod
+    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def search_type(self) -> Literal["monitoring", "setup"]:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def max_results_after_show_all(self) -> None | int:
+        raise NotImplementedError()
 
     def render(self, query: str) -> str:
         try:
@@ -1391,25 +1398,6 @@ class MenuSearchResultsRenderer:
         except MKException as error:
             return self._render_error(error)
         return self._render_results(results)
-
-    @staticmethod
-    def _search_type_specific_setup(
-        search_type: Literal["monitoring", "setup"]
-    ) -> tuple[Callable[[str], SearchResultsByTopic], int | None]:
-        if search_type == "monitoring":
-            return (
-                QuicksearchManager(raise_too_many_rows_error=False).generate_results,
-                None,
-            )
-        if search_type == "setup":
-            return (
-                IndexSearcher(
-                    get_redis_client(),
-                    PermissionsHandler(),
-                ).search,
-                80,
-            )
-        raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
 
     def _render_error(self, error: MKException) -> str:
         with output_funnel.plugged():
@@ -1553,6 +1541,31 @@ class MenuSearchResultsRenderer:
         html.close_li()
 
 
+class MonitorMenuSearchResultsRenderer(MenuSearchResultsRenderer):
+    max_results_after_show_all: Final = None
+    search_type: Final = "monitoring"
+
+    def __init__(self) -> None:
+        self._search_manager: Final = QuicksearchManager(raise_too_many_rows_error=False)
+
+    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
+        return self._search_manager.generate_results(query)
+
+
+class SetupMenuSearchResultsRenderer(MenuSearchResultsRenderer):
+    max_results_after_show_all: Final = 80
+    search_type: Final = "setup"
+
+    def __init__(self) -> None:
+        self._search_manager: Final = IndexSearcher(
+            get_redis_client(),
+            PermissionsHandler(),
+        )
+
+    def generate_results(self, query: SearchQuery) -> SearchResultsByTopic:
+        return self._search_manager.search(query)
+
+
 _TIterItem = TypeVar("_TIterItem")
 
 
@@ -1574,14 +1587,14 @@ def _evaluate_iterable_up_to(
 class PageSearchMonitoring(AjaxPage):
     def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
-        return MenuSearchResultsRenderer("monitoring").render(query)
+        return MonitorMenuSearchResultsRenderer().render(livestatus.lqencode(query))
 
 
 class PageSearchSetup(AjaxPage):
     def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
-            return MenuSearchResultsRenderer("setup").render(query)
+            return SetupMenuSearchResultsRenderer().render(livestatus.lqencode(query))
         except IndexNotFoundException:
             with output_funnel.plugged():
                 html.open_div(class_="topic")

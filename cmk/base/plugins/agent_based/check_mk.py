@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.checkmk import CheckmkSection
+
 from .agent_based_api.v1 import Attributes, HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
-from .utils.checkmk import CheckmkSection
 
 
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
@@ -46,9 +47,31 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
             This label is set to the operating system as reported by the agent
             as "AgentOS" (such as "windows" or "linux").
 
+        cmk/os_type:
+            This label is set to the operating system as reported by the agent
+            as "AgentOS" (such as "windows" or "linux").
+
+        cmk/os_platform:
+            This label is set to the platform as reported by the agent as "OSPlatform"
+
+        cmk/os_name:
+            This label is set to the name of the operating system as reported by the agent as "OSName"
+
+        cmk/os_version:
+            This label is set to the version of the operating system as reported by the agent as "OSVersion"
     """
     if (agentos := section.get("agentos")) is not None:
         yield HostLabel("cmk/os_family", agentos)
+        yield HostLabel("cmk/os_type", agentos)
+
+    if (platform := section.get("osplatform", agentos)) is not None:
+        yield HostLabel("cmk/os_platform", platform)
+
+    if (os_name := section.get("osname")) is not None:
+        yield HostLabel("cmk/os_name", os_name)
+
+    if (os_version := section.get("osversion")) is not None:
+        yield HostLabel("cmk/os_version", os_version)
 
 
 register.agent_section(

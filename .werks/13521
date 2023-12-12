@@ -1,4 +1,4 @@
-Title: <tt>mcafee_av_client</tt>: Fix <tt>ValueError (time data u'search:' ...)</tt>
+Title: mcafee_av_client: Fix ValueError (time data u'search:' ...)
 Class: fix
 Compatible: compat
 Component: checks

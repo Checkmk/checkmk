@@ -1,4 +1,4 @@
-Title: <tt>ceph_df</tt>: Support Ceph 15.2.8-1focal
+Title: ceph_df: Support Ceph 15.2.8-1focal
 Class: feature
 Compatible: compat
 Component: checks

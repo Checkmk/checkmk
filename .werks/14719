@@ -1,4 +1,4 @@
-Title: Local customizations might need adjustment due refactorings in GUI code (<tt>PasswordFromStore</tt>)
+Title: Local customizations might need adjustment due refactorings in GUI code (PasswordFromStore)
 Class: feature
 Compatible: incomp
 Component: wato

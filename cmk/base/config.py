@@ -137,16 +137,16 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 
 # TODO: Prefix helper functions with "_".
 
@@ -750,7 +750,6 @@ class PackedConfigGenerator:
         "host_groups",
         "contacts",
         "timeperiods",
-        "extra_service_conf",
         "extra_nagios_conf",
     ]
 
@@ -799,6 +798,11 @@ class PackedConfigGenerator:
                     values_red[hostname] = attributes
             return values_red
 
+        def filter_extra_service_conf(
+            values: dict[str, list[dict[str, str]]]
+        ) -> dict[str, list[dict[str, str]]]:
+            return {"check_interval": values.get("check_interval", [])}
+
         filter_var_functions: dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
             "clusters": filter_clusters,
@@ -809,6 +813,7 @@ class PackedConfigGenerator:
             "hosttags": filter_hostname_in_dict,  # unknown key, might be typo or legacy option
             "host_tags": filter_hostname_in_dict,
             "host_paths": filter_hostname_in_dict,
+            "extra_service_conf": filter_extra_service_conf,
         }
 
         #
@@ -1429,7 +1434,6 @@ def load_checks(  # pylint: disable=too-many-branches
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
-    contexts: dict[str, CheckContext] = {}
 
     did_compile = False
     for f in filelist:
@@ -1442,9 +1446,6 @@ def load_checks(  # pylint: disable=too-many-branches
 
         try:
             check_context = new_check_context(get_check_api_context)
-
-            # Make a copy of known check plugin names
-            known_checks = set(check_info)
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1459,16 +1460,11 @@ def load_checks(  # pylint: disable=too-many-branches
                 raise
             continue
 
-        new_checks = set(check_info).difference(known_checks)
-        # Now store the check context for all checks found in this file
-        for check_plugin_name in new_checks:
-            contexts[check_plugin_name] = check_context
-
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
-    return _extract_agent_and_snmp_sections(
+    return _extract_agent_and_snmp_sections() + _extract_check_plugins(
         validate_creation_kwargs=did_compile
-    ) + _extract_check_plugins(validate_creation_kwargs=did_compile, contexts=contexts)
+    )
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1579,10 +1575,7 @@ AUTO_MIGRATION_ERR_MSG = (
 )
 
 
-def _extract_agent_and_snmp_sections(
-    *,
-    validate_creation_kwargs: bool,
-) -> list[str]:
+def _extract_agent_and_snmp_sections() -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -1603,7 +1596,6 @@ def _extract_agent_and_snmp_sections(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )
             else:
@@ -1611,7 +1603,6 @@ def _extract_agent_and_snmp_sections(
                     create_agent_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
@@ -1625,9 +1616,7 @@ def _extract_agent_and_snmp_sections(
     return errors
 
 
-def _extract_check_plugins(
-    *, validate_creation_kwargs: bool, contexts: dict[str, dict[str, object]]
-) -> list[str]:
+def _extract_check_plugins(*, validate_creation_kwargs: bool) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -1642,7 +1631,7 @@ def _extract_check_plugins(
             present_plugin = agent_based_register.get_check_plugin(
                 CheckPluginName(maincheckify(check_plugin_name))
             )
-            if present_plugin is not None and present_plugin.module is not None:
+            if present_plugin is not None and present_plugin.location is not None:
                 # module is not None => it's a new plugin
                 # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not
@@ -1655,7 +1644,6 @@ def _extract_check_plugins(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
                     check_info_dict,
-                    contexts[check_plugin_name],
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
@@ -1944,7 +1932,7 @@ class ConfigCache:
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=host_tags,
             host_paths=self._host_paths,
-            labels=LabelManager(
+            label_manager=LabelManager(
                 host_labels,
                 host_label_rules,
                 service_label_rules,
@@ -3008,8 +2996,11 @@ class ConfigCache:
         return merged_spec
 
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
-        entries = self.ruleset_matcher.get_host_values(hostname, inv_retention_intervals)
-        return entries[0] if entries else []
+        return [
+            raw
+            for entry in self.ruleset_matcher.get_host_values(hostname, inv_retention_intervals)
+            for raw in entry
+        ]
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values(hostname, host_service_levels)
@@ -4275,9 +4266,9 @@ class CEEConfigCache(ConfigCache):
             ):
                 continue
 
-            if (labels := cond.get("host_labels", {})) and not ruleset_matcher.matches_labels(
-                {}, labels
-            ):
+            if (
+                label_groups := cond.get("host_label_groups", [])
+            ) and not ruleset_matcher.matches_labels({}, label_groups):
                 continue
 
             if not ruleset_matcher.matches_host_name(cond.get("host_name"), HostName("")):

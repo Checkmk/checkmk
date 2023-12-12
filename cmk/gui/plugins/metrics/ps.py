@@ -93,9 +93,9 @@ graph_info["size_of_processes"] = {
     "metrics": [
         ("process_virtual_size_avg", "line"),
         ("process_virtual_size", "area"),
-        ("process_mapped_size", "area"),
+        ("process_mapped_size", "line"),
         ("process_resident_size_avg", "line"),
-        ("process_resident_size", "area"),
+        ("process_resident_size", "line"),
     ],
     "optional_metrics": [
         "process_mapped_size",
@@ -107,7 +107,8 @@ graph_info["size_of_processes"] = {
 graph_info["size_per_process"] = {
     "title": _("Size per process"),
     "metrics": [
-        ("process_virtual_size,processes,/", "area", _("Average virtual size per process")),
+        ("process_virtual_size,processes,/", "line", _("Average virtual size per process")),
         ("process_resident_size,processes,/", "area", _("Average resident size per process")),
     ],
+    # TODO(mo): swith to line/line and fix range in new api
 }

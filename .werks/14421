@@ -1,4 +1,4 @@
-Title: <tt>mssql_datafiles/transactionlogs</tt>: Correct maximum size in unlimited cases
+Title: mssql_datafiles/transactionlogs: Correct maximum size in unlimited cases
 Class: fix
 Compatible: compat
 Component: checks

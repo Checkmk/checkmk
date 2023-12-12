@@ -1,0 +1,18 @@
+Title: Add more host labels for agent based discovery on Linux
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1698148635
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Werk #11742 introduced the agent based discovery of host labels.
+We now added the following labels for the Linux agent (example for Ubuntu):
+
+<ul>
+<li>"cmk/os_type:linux"</li>
+<li>"cmk/os_platform:ubuntu"</li>
+<li>"cmk/os_name:Ubuntu"</li>
+<li>"cmk/os_version:22.04"</li>
+</ul>

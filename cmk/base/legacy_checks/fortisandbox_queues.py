@@ -22,7 +22,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTISANDBOX
+
+from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
 
 
 def parse_fortisandbox_queues(string_table):

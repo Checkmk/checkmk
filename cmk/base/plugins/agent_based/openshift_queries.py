@@ -10,7 +10,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     COLLECTOR_SERVICE_NAME,
     OpenShiftEndpoint,
     PrometheusResult,
@@ -19,7 +20,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
 
 
 def parse(string_table: StringTable) -> OpenShiftEndpoint:
-    return OpenShiftEndpoint.parse_raw(string_table[0][0])
+    return OpenShiftEndpoint.model_validate_json(string_table[0][0])
 
 
 register.agent_section(

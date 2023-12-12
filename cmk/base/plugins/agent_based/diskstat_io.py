@@ -7,8 +7,9 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.plugins.lib import diskstat, hp_msa
+
 from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
-from .utils import diskstat, hp_msa
 
 
 def _check_disk(

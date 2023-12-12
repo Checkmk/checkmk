@@ -8,8 +8,9 @@ from collections.abc import Iterable
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import ContainerSpecs, PodContainers, PodInfo
-from cmk.base.plugins.agent_based.utils.kube_inventory import labels_to_table
+
+from cmk.plugins.lib.kube import ContainerSpecs, PodContainers, PodInfo
+from cmk.plugins.lib.kube_inventory import labels_to_table
 
 
 def parse_kube_pod_container_specs(string_table: StringTable) -> ContainerSpecs:

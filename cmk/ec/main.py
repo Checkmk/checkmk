@@ -56,18 +56,21 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
-from .history import (
-    ActiveHistoryPeriod,
-    Columns,
-    create_history,
-    get_logfile,
-    History,
-    HistoryWhat,
-    quote_tab,
-)
+from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .history_file import FileHistory
+from .history_mongo import MongoDBHistory
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
-from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
+from .query import (
+    Columns,
+    filter_operator_in,
+    MKClientError,
+    Query,
+    QueryCOMMAND,
+    QueryGET,
+    QueryREPLICATE,
+    StatusTable,
+)
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings
@@ -91,7 +94,7 @@ class SlaveStatus(TypedDict):
 
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
 
-Response = Iterable[list[object]] | dict[str, object] | None
+Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
 LimitKind = Literal["overall", "by_rule", "by_host"]
 
@@ -223,6 +226,22 @@ class ECServerThread(threading.Thread):
 
     def terminate(self) -> None:
         self._terminate_event.set()
+
+
+def create_history(
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    event_columns: Columns,
+    history_columns: Columns,
+) -> History:
+    match config["archive_mode"]:
+        case "file":
+            return FileHistory(settings, config, logger, event_columns, history_columns)
+        case "mongodb":
+            return MongoDBHistory(settings, config, logger, event_columns, history_columns)
+        case _ as default:
+            assert_never(default)
 
 
 def allowed_ip(
@@ -513,15 +532,17 @@ class EventServer(ECServerThread):
             ("status_event_limit_active_overall", False),
         ]
 
-    def get_status(self) -> list[list[object]]:
-        row: list[object] = []
-        row += self._add_general_status()
-        row += self._perfcounters.get_status()
-        row += self._add_replication_status()
-        row += self._add_event_limit_status()
-        return [row]
+    def get_status(self) -> Iterable[Sequence[object]]:
+        return [
+            [
+                *self._add_general_status(),
+                *self._perfcounters.get_status(),
+                *self._add_replication_status(),
+                *self._add_event_limit_status(),
+            ]
+        ]
 
-    def _add_general_status(self) -> list[object]:
+    def _add_general_status(self) -> Sequence[object]:
         return [
             self._config["last_reload"],
             self._event_status.num_existing_events,
@@ -1185,9 +1206,7 @@ class EventServer(ECServerThread):
             is_active_time_period=self._time_period.active,
         )
 
-    def compile_rules(  # pylint: disable=too-many-branches
-        self, rule_packs: Sequence[ECRulePack]
-    ) -> None:
+    def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
         self._rules = []
         self._rule_by_id = {}
@@ -1853,14 +1872,19 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
 class Queries:
     """Parsing and processing of status queries."""
 
-    def __init__(self, status_server: StatusServer, sock: socket.socket, logger: Logger) -> None:
-        self._status_server = status_server
+    def __init__(
+        self,
+        get_table: Callable[[str], StatusTable],
+        sock: socket.socket,
+        logger: Logger,
+    ) -> None:
+        self._get_table = get_table
         self._socket = sock
         self._logger = logger
         self._buffer = b""
 
     def _query(self, request: bytes) -> Query:
-        return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
+        return Query.make(self._get_table, request.decode("utf-8").splitlines(), self._logger)
 
     def __iter__(self) -> Iterator[Query]:
         while True:
@@ -1888,79 +1912,11 @@ class Queries:
 #   |    |____/ \__\__,_|\__|\__,_|___/   |_|\__,_|_.__/|_|\___||___/      |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Common functionality for the event/history/rule/status tables        |
-#   '----------------------------------------------------------------------'
-# If you need a new column here, then these are the places to change:
-# bin/mkeventd:
-# - add column to the end of StatusTableEvents.columns
-# - add column to grepping_filters if it is a str column
-# - deal with convert_history_line() (if not a str column)
-# - make sure that the new column is filled at *every* place where
-#   an event is being created:
-#   * _create_event_from_trap()
-#   * create_event_from_syslog_message()
-#   * _handle_absent_event()
-#   * _create_overflow_event()
-# - When loading the status file add the possibly missing column to all
-#   loaded events (load_status())
-# - Maybe add matching/rewriting for the new column
-# - write the actual code using the new column
-# web:
-# - Add column painter for the new column
-# - Create a sorter
-# - Create a filter
-# - Add painter and filter to all views where appropriate
-# - maybe add WATO code for matching rewriting
-# - do not forget event_rule_matches() in web!
-# - maybe add a field into the event simulator
-
-
-class StatusTable:
-    """Common functionality for the event/history/rule/status tables."""
-
-    prefix: str | None = None
-    columns: Columns = []
-
-    @abc.abstractmethod
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
-        """
-        Must return a enumerable type containing fully populated lists (rows) matching the
-        columns of the table.
-        """
-        raise NotImplementedError()
-
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger.getChild(f"status_table.{self.prefix}")
-        self.column_defaults = dict(self.columns)
-        self.column_names = [name for name, _def_val in self.columns]
-        self.column_types = {name: type(def_val) for name, def_val in self.columns}
-        self.column_indices = {name: index for index, name in enumerate(self.column_names)}
-
-    def query(self, query: QueryGET) -> Iterable[list[object]]:
-        requested_column_indexes = query.requested_column_indexes()
-
-        # Output the column headers
-        # TODO: Add support for ColumnHeaders like in livestatus?
-        yield query.requested_columns
-
-        num_rows = 0
-        for row in self._enumerate(query):
-            if query.limit is not None and num_rows >= query.limit:
-                break  # The maximum number of rows has been reached
-            # Apply filters
-            # TODO: History filtering is done in history load code. Check for improvements
-            if query.table_name == "history" or query.filter_row(row):
-                yield self._build_result_row(row, requested_column_indexes)
-                num_rows += 1
-
-    def _build_result_row(
-        self, row: list[object], requested_column_indexes: list[int | None]
-    ) -> list[object]:
-        return [(None if index is None else row[index]) for index in requested_column_indexes]
 
 
 class StatusTableEvents(StatusTable):
-    prefix: str = "event"
+    name = "events"
+    prefix = "event"
     columns: Columns = [
         ("event_id", 1),
         ("event_count", 1),
@@ -1992,27 +1948,23 @@ class StatusTableEvents(StatusTable):
     def __init__(self, logger: Logger, event_status: EventStatus) -> None:
         super().__init__(logger)
         self._event_status = event_status
+        # NOTE: We depend on the dict insertion order below, but this is guaranteed for Python >= 3.7.
+        self._columns_dict = dict(self.columns)
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and not filter_operator_in(event["host"], query.only_host):
-                continue
-
-            row = []
-            for column_name in self.column_names:
-                try:
-                    row.append(event[column_name[6:]])
-                except KeyError:
-                    # The row does not have this value. Use the columns default value
-                    row.append(self.column_defaults[column_name])
-
-            yield row
+            if not query.only_host or filter_operator_in(event["host"], query.only_host):
+                yield [
+                    event.get(column_name[6:], default)
+                    for column_name, default in self._columns_dict.items()
+                ]
 
 
 class StatusTableHistory(StatusTable):
-    prefix: str = "history"
+    name = "history"
+    prefix = "history"
     columns: Columns = list(
         itertools.chain(
             [
@@ -2030,12 +1982,13 @@ class StatusTableHistory(StatusTable):
         super().__init__(logger)
         self._history = history
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._history.get(query)
 
 
 class StatusTableRules(StatusTable):
-    prefix: str = "rule"
+    name = "rules"
+    prefix = "rule"
     columns: Columns = [
         ("rule_id", ""),
         ("rule_hits", 0),
@@ -2045,19 +1998,20 @@ class StatusTableRules(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_status.get_rule_stats()
 
 
 class StatusTableStatus(StatusTable):
-    prefix: str = "status"
+    name = "status"
+    prefix = "status"
     columns: Columns = EventServer.status_columns()
 
     def __init__(self, logger: Logger, event_server: EventServer) -> None:
         super().__init__(logger)
         self._event_server = event_server
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_server.get_status()
 
 
@@ -2275,13 +2229,13 @@ class StatusServer(ECServerThread):
     def handle_client(
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
-        for query in Queries(self, client_socket, self._logger):
+        for query in Queries(self.table, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:
                 # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.
                 if isinstance(query, QueryGET):
-                    response: Response = self.table(query.table_name).query(query)
+                    response: Response = query.table.query(query)
                 elif isinstance(query, QueryREPLICATE):
                     response = self.handle_replicate(query.method_arg, client_ip)
                 elif isinstance(query, QueryCOMMAND):
@@ -2298,7 +2252,7 @@ class StatusServer(ECServerThread):
 
         client_socket.close()  # TODO: This should be in a finally somehow.
 
-    def _answer_query(self, client_socket: socket.socket, query: Query, response: Any) -> None:
+    def _answer_query(self, client_socket: socket.socket, query: Query, response: Response) -> None:
         """
         Only GET queries have customizable output formats. COMMAND is always
         a dictionary and COMMAND is always None and always output as "python"
@@ -2324,9 +2278,7 @@ class StatusServer(ECServerThread):
         else:
             raise NotImplementedError()
 
-    def _answer_query_python(
-        self, client_socket: socket.socket, response: Iterable[list[object]] | None
-    ) -> None:
+    def _answer_query_python(self, client_socket: socket.socket, response: Response) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
@@ -3162,10 +3114,10 @@ class EventStatus:
                     event["owner"] = user
                 self.remove_event(event, "DELETE", user)
 
-    def get_events(self) -> list[Any]:
+    def get_events(self) -> Iterable[Event]:
         return self._events
 
-    def get_rule_stats(self) -> Iterable[Any]:
+    def get_rule_stats(self) -> Iterable[tuple[str, int]]:
         return sorted(self._rule_stats.items(), key=lambda x: x[0])
 
 
@@ -3200,7 +3152,7 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
 
 def replication_send(
     config: Config, lock_configuration: ECLock, event_status: EventStatus, last_update: int
-) -> dict[str, object]:
+) -> Mapping[str, object]:
     response: dict[str, object] = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -3325,7 +3277,7 @@ def replication_update_state(
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: dict[str, object]) -> None:
+def save_master_config(settings: Settings, new_state: Mapping[str, object]) -> None:
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + ".new")
     path_new.write_text(
@@ -3507,7 +3459,7 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main() -> None:  # pylint: disable=too-many-branches
+def main() -> None:
     """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")

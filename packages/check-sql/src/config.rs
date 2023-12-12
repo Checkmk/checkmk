@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub mod ms_sql;
+pub mod system;
 pub mod yaml;
 use anyhow::{bail, Result};
 use std::path::Path;

@@ -7,13 +7,14 @@
 import logging
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import assert_never, Literal
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import get_timegroup_relative_time, PREDICTION_PERIODS, Timegroup
+from ._grouping import PREDICTION_PERIODS, Slice, Timegroup
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
@@ -59,71 +60,82 @@ def _get_prediction(
     return store.get_data(timegroup)
 
 
-# levels_factor: this multiplies all absolute levels. Usage for example
-# in the cpu.loads check the multiplies the levels by the number of CPU
-# cores.
-def get_predictive_levels(
-    host_name: HostName,
-    service_description: ServiceName,
-    dsname: str,
-    params: PredictionParameters,
-    get_recorded_data: Callable[[str, int, int], MetricRecord],
-    levels_factor: float = 1.0,
-) -> tuple[float | None, EstimatedLevels]:
-    now = int(time.time())
-    period_info = PREDICTION_PERIODS[params.period]
+@dataclass(frozen=True)
+class PredictionUpdater:
+    host_name: HostName
+    service_description: ServiceName
+    params: PredictionParameters
+    partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord]
 
-    timegroup, current_slice_start, current_slice_end, rel_time = get_timegroup_relative_time(
-        now, period_info
-    )
-
-    prediction_store = PredictionStore(
-        PREDICTION_DIR,
-        host_name,
-        service_description,
-        dsname,
-    )
-
-    if (
-        data_for_pred := _get_prediction(
-            store=prediction_store,
-            timegroup=timegroup,
-            params=params,
+    def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord:
+        return self.partial_get_recorded_data(
+            self.host_name, self.service_description, metric_name, start, end
         )
-    ) is None:
-        info = PredictionInfo(
-            name=timegroup,
-            time=now,
-            range=(current_slice_start, current_slice_end),
-            dsname=dsname,
-            params=params,
+
+    def _get_updated_prediction(
+        self,
+        dsname: str,
+        now: int,
+    ) -> PredictionData:
+        period_info = PREDICTION_PERIODS[self.params.period]
+
+        current_slice = Slice.from_timestamp(now, period_info)
+
+        prediction_store = PredictionStore(
+            PREDICTION_DIR,
+            self.host_name,
+            self.service_description,
+            dsname,
         )
-        logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
-        prediction_store.remove_prediction(info.name)
 
-        data_for_pred = compute_prediction(
-            info,
-            now,
-            period_info,
-            get_recorded_data,
+        if (
+            data_for_pred := _get_prediction(
+                store=prediction_store,
+                timegroup=current_slice.group,
+                params=self.params,
+            )
+        ) is None:
+            info = PredictionInfo(
+                name=current_slice.group,
+                time=now,
+                range=current_slice.interval,
+                dsname=dsname,
+                params=self.params,
+            )
+            logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
+            prediction_store.remove_prediction(info.name)
+
+            data_for_pred = compute_prediction(
+                info,
+                now,
+                period_info,
+                self._get_recorded_data,
+            )
+            prediction_store.save_prediction(info, data_for_pred)
+
+        return data_for_pred
+
+    # levels_factor: this multiplies all absolute levels. Usage for example
+    # in the cpu.loads check the multiplies the levels by the number of CPU
+    # cores.
+    def get_predictive_levels(
+        self,
+        metric_name: str,
+        levels_factor: float = 1.0,
+    ) -> tuple[float | None, EstimatedLevels]:
+        now = int(time.time())
+        prediction = self._get_updated_prediction(metric_name, now)
+        if (reference := prediction.predict(now)) is None:
+            return None, (None, None, None, None)
+
+        return reference.average, estimate_levels(
+            reference_value=reference.average,
+            stdev=reference.stdev,
+            levels_lower=self.params.levels_lower,
+            levels_upper=self.params.levels_upper,
+            levels_upper_lower_bound=self.params.levels_upper_min,
+            levels_factor=levels_factor,
         )
-        prediction_store.save_prediction(info, data_for_pred)
-
-    # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred.step)
-    reference = data_for_pred.points[index]
-
-    if reference is None:
-        return None, (None, None, None, None)
-
-    return reference.average, estimate_levels(
-        reference_value=reference.average,
-        stdev=reference.stdev,
-        levels_lower=params.levels_lower,
-        levels_upper=params.levels_upper,
-        levels_upper_lower_bound=params.levels_upper_min,
-        levels_factor=levels_factor,
-    )
 
 
 def estimate_levels(

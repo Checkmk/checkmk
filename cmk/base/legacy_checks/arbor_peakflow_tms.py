@@ -6,17 +6,16 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.arbor import (
-    ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
     check_arbor_disk_usage,
     check_arbor_host_fault,
-    check_arbor_memory,
     inventory_arbor_disk_usage,
     inventory_arbor_host_fault,
-    inventory_arbor_memory,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+from cmk.plugins.lib.arbor import DETECT_PEAKFLOW_TMS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 # .1.3.6.1.4.1.9694.1.5.2.1.0 No Fault --> PEAKFLOW-TMS-MIB::tmsHostFault.0
 # .1.3.6.1.4.1.9694.1.5.2.2.0 101420100 --> PEAKFLOW-TMS-MIB::tmsHostUpTime.0
@@ -33,18 +32,17 @@ def parse_peakflow_tms(string_table):
     updates = string_table[1][0]
     return {
         "disk": health[0],
-        "memory": health[1:3],
-        "host_fault": health[3],
+        "host_fault": health[1],
         "update": {"Device": updates[0], "Mitigation": updates[1]},
     }
 
 
 check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
-    detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow"),
+    detect=DETECT_PEAKFLOW_TMS,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9694.1.5.2",
-            oids=["6.0", "7.0", "8.0", "1.0"],
+            oids=["6.0", "1.0"],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.9694.1.5.5",
@@ -52,11 +50,6 @@ check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_peakflow_tms,
-    service_name="Memory",
-    discovery_function=inventory_arbor_memory,
-    check_function=check_arbor_memory,
-    check_ruleset_name="memory_arbor",
-    check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(

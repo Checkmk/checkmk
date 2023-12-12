@@ -6,7 +6,8 @@
 import datetime
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils import mcafee_gateway
+
+from cmk.plugins.lib import mcafee_gateway
 
 
 def parse_mcafee_webgateway_misc(

@@ -11,19 +11,19 @@ from typing import Literal
 
 import pytest
 
-from tests.testlib import cmk_path
+from tests.testlib import repo_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _MutableAttributes,
     _MutableTable,
-    _RetentionInterval,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     MutableTree,
     parse_visible_raw_path,
+    RetentionInterval,
     SDFilterChoice,
     SDNodeName,
     SDPath,
@@ -793,7 +793,9 @@ def test_filter_tree_mixed() -> None:
 
 
 def _get_tree_store() -> TreeStore:
-    return TreeStore(Path("%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()))
+    return TreeStore(
+        repo_path() / "tests" / "unit" / "cmk" / "utils" / "structured_data" / "tree_test_data"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1457,10 +1459,10 @@ def test_update_from_previous_1() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c1": _RetentionInterval(4, 5, 6, "current"),
-            "c2": _RetentionInterval(1, 2, 3, "previous"),
-            "c3": _RetentionInterval(4, 5, 6, "current"),
-            "kc": _RetentionInterval(4, 5, 6, "current"),
+            "c1": RetentionInterval(4, 5, 6, "current"),
+            "c2": RetentionInterval(1, 2, 3, "previous"),
+            "c3": RetentionInterval(4, 5, 6, "current"),
+            "kc": RetentionInterval(4, 5, 6, "current"),
         }
     }
     assert current_tree.get_rows(()) == [
@@ -1504,8 +1506,8 @@ def test_update_from_previous_2() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c2": _RetentionInterval(1, 2, 3, "previous"),
-            "c3": _RetentionInterval(4, 5, 6, "current"),
+            "c2": RetentionInterval(1, 2, 3, "previous"),
+            "c3": RetentionInterval(4, 5, 6, "current"),
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
@@ -1514,28 +1516,28 @@ def test_update_from_previous_2() -> None:
 @pytest.mark.parametrize(
     "raw_retention_interval, expected_retention_interval",
     [
-        ((1, 2, 3), _RetentionInterval(1, 2, 3, "current")),
-        ((4, 5, 6, "previous"), _RetentionInterval(4, 5, 6, "previous")),
-        ((7, 8, 9, "current"), _RetentionInterval(7, 8, 9, "current")),
+        ((1, 2, 3), RetentionInterval(1, 2, 3, "current")),
+        ((4, 5, 6, "previous"), RetentionInterval(4, 5, 6, "previous")),
+        ((7, 8, 9, "current"), RetentionInterval(7, 8, 9, "current")),
     ],
 )
 def test_deserialize_retention_interval(
     raw_retention_interval: tuple[int, int, int]
     | tuple[int, int, int, Literal["previous", "current"]],
-    expected_retention_interval: _RetentionInterval,
+    expected_retention_interval: RetentionInterval,
 ) -> None:
-    assert _RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval
+    assert RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval
 
 
 @pytest.mark.parametrize(
     "retention_interval, expected_raw_retention_interval",
     [
-        (_RetentionInterval(1, 2, 3, "previous"), (1, 2, 3, "previous")),
-        (_RetentionInterval(4, 5, 6, "current"), (4, 5, 6, "current")),
+        (RetentionInterval(1, 2, 3, "previous"), (1, 2, 3, "previous")),
+        (RetentionInterval(4, 5, 6, "current"), (4, 5, 6, "current")),
     ],
 )
 def test_serialize_retention_interval(
-    retention_interval: _RetentionInterval,
+    retention_interval: RetentionInterval,
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
     assert retention_interval.serialize() == expected_raw_retention_interval

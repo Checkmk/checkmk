@@ -17,7 +17,6 @@
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
-#include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/NullColumn.h"
@@ -512,22 +511,18 @@ void ParsedQuery::parseWaitObjectLine(
 }
 
 void ParsedQuery::parseLocaltimeLine(char *line) {
-    auto value = nextNonNegativeIntegerArgument(&line);
-    // Compute offset to be *added* each time we output our time and
-    // *subtracted* from reference value by filter headers
-    auto diff = std::chrono::system_clock::from_time_t(value) -
-                std::chrono::system_clock::now();
-
-    // Round difference to half hour. We assume, that both clocks are more or
-    // less synchronized and that the time offset is only due to being in
-    // different time zones. This would be a one-liner if we already had C++17's
-    // std::chrono::round().
-    using half_an_hour = std::chrono::duration<double, std::ratio<1800>>;
-    auto rounded = half_an_hour(round(mk::ticks<half_an_hour>(diff)));
-    auto offset = std::chrono::duration_cast<std::chrono::seconds>(rounded);
-    if (std::chrono::abs(offset) >= 24h) {
-        throw std::runtime_error(
-            "timezone difference greater than or equal to 24 hours");
+    // Compute the offset to be *added* each time we output our time and
+    // *subtracted* from reference value by filter headers. We round the
+    // difference to half an hour because we assume that both clocks are more or
+    // less synchronized and that the time offset is only caused by being in
+    // different time zones.
+    using namespace std::chrono;
+    auto offset{round<duration<seconds::rep, std::ratio<1800>>>(
+        system_clock::from_time_t(nextNonNegativeIntegerArgument(&line)) -
+        system_clock::now())};
+    if (abs(offset) >= 24h) {
+        throw std::runtime_error{
+            "timezone difference greater than or equal to 24 hours"};
     }
     timezone_offset = offset;
 }

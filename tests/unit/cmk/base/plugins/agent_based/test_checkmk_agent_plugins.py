@@ -11,10 +11,11 @@ import pytest
 
 from cmk.utils.version import parse_check_mk_version
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import checkmk_agent_plugins as cap
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.utils import checkmk
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib import checkmk
 
 
 class _OsType(Enum):

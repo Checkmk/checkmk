@@ -11,13 +11,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, SNMP
 
 def inventory_raritan_pdu_outletcount(info):
     if info and info[0]:
-        yield None, None
+        yield None, {}
 
 
 def check_raritan_pdu_outletcount(item, params, info):
+    levels = params.get("levels_upper", (None, None)) + params.get("levels_lower", (None, None))
     try:
         yield check_levels(
-            int(info[0][0]), "outletcount", params, human_readable_func=lambda f: "%.f" % f
+            int(info[0][0]), "outletcount", levels, human_readable_func=lambda f: "%.f" % f
         )
     except IndexError:
         pass
@@ -39,4 +40,5 @@ check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
     discovery_function=inventory_raritan_pdu_outletcount,
     check_function=check_raritan_pdu_outletcount,
     check_ruleset_name="plug_count",
+    check_default_parameters={},
 )

@@ -5,19 +5,15 @@
 
 import copy
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Literal
 from uuid import uuid4
 
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphMetric,
-    TemplateGraphSpecification,
-)
+from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
@@ -26,7 +22,7 @@ from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, Painter2
+from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
     PainterOption,
@@ -162,9 +158,6 @@ _GRAPH_VIEWS = {
 def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
     *,
     show_time_range_previews: bool | None = None,
 ) -> tuple[Literal[""], HTML | str]:
@@ -184,10 +177,10 @@ def paint_time_graph_cmk(
     if options is not None:
         graph_render_options.update(options)
 
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_render_options,
+    graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
+        **graph_grender_options_from_vs(graph_render_options),
     )
 
     now = int(time.time())
@@ -242,7 +235,6 @@ def paint_time_graph_cmk(
         ),
         graph_data_range,
         graph_render_config,
-        resolve_combined_single_metric_spec,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -254,19 +246,8 @@ def paint_time_graph_cmk(
     )
 
 
-def paint_cmk_graphs_with_timeranges(
-    row: Row,
-    cell: Cell,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> tuple[Literal[""], HTML | str]:
-    return paint_time_graph_cmk(
-        row,
-        cell,
-        resolve_combined_single_metric_spec,
-        show_time_range_previews=True,
-    )
+def paint_cmk_graphs_with_timeranges(row: Row, cell: Cell) -> tuple[Literal[""], HTML | str]:
+    return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
 
 
 def cmk_time_graph_params():
@@ -307,7 +288,7 @@ def _migrate_old_graph_render_options(value: PainterParameters | None) -> Painte
     return value
 
 
-class PainterServiceGraphs(Painter2):
+class PainterServiceGraphs(Painter):
     @property
     def ident(self) -> str:
         return "service_graphs"
@@ -338,13 +319,7 @@ class PainterServiceGraphs(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_cmk_graphs_with_timeranges(
-            row,
-            cell,
-            resolve_combined_single_metric_spec,
-        )
+        return paint_cmk_graphs_with_timeranges(row, cell)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -356,7 +331,7 @@ class PainterServiceGraphs(Painter2):
         raise JSONExportError()
 
 
-class PainterHostGraphs(Painter2):
+class PainterHostGraphs(Painter):
     @property
     def ident(self) -> str:
         return "host_graphs"
@@ -381,13 +356,7 @@ class PainterHostGraphs(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_cmk_graphs_with_timeranges(
-            row,
-            cell,
-            resolve_combined_single_metric_spec,
-        )
+        return paint_cmk_graphs_with_timeranges(row, cell)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -423,7 +392,7 @@ class PainterOptionPNPTimerange(PainterOption):
         )
 
 
-class PainterSvcPnpgraph(Painter2):
+class PainterSvcPnpgraph(Painter):
     @property
     def ident(self) -> str:
         return "svc_pnpgraph"
@@ -454,9 +423,7 @@ class PainterSvcPnpgraph(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+        return paint_time_graph_cmk(row, cell)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -468,7 +435,7 @@ class PainterSvcPnpgraph(Painter2):
         raise JSONExportError()
 
 
-class PainterHostPnpgraph(Painter2):
+class PainterHostPnpgraph(Painter):
     @property
     def ident(self) -> str:
         return "host_pnpgraph"
@@ -496,9 +463,7 @@ class PainterHostPnpgraph(Painter2):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+        return paint_time_graph_cmk(row, cell)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()

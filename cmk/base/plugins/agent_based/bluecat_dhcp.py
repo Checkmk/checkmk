@@ -5,8 +5,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import register, Service, SNMPTree, type_defs
-from .utils.bluecat import (
+from cmk.plugins.lib.bluecat import (
     check_bluecat_operational_state,
     CHECK_DEFAULT_PARAMETERS,
     cluster_check_bluecat_operational_state,
@@ -15,6 +14,8 @@ from .utils.bluecat import (
     parse_bluecat,
     Section,
 )
+
+from .agent_based_api.v1 import register, Service, SNMPTree, type_defs
 
 register.snmp_section(
     name="bluecat_dhcp",

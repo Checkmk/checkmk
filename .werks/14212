@@ -1,0 +1,9 @@
+Title: Fixed missing aggregation filter in frozen aggregations view
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1695990771
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+

@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.scaleio_volume import (
     discover_scaleio_volume,
     ScaleioVolume,
 )
-from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
+
+from cmk.plugins.lib.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "c07a5f6c00000001": ScaleioVolume(

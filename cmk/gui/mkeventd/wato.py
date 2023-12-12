@@ -32,7 +32,6 @@ from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
 import cmk.utils.log
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
@@ -46,35 +45,18 @@ from cmk.utils.version import edition, Edition
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config
-from cmk.gui.htmllib.type_defs import RequireConfirmation
-from cmk.gui.type_defs import Icon, PermissionName
-from cmk.gui.utils.urls import DocReference
-from cmk.gui.wato import NotificationParameter, NotificationParameterRegistry
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.main_menu import MainModuleTopic
-from cmk.gui.watolib.mkeventd import (
-    export_mkp_rule_pack,
-    get_rule_stats_from_ec,
-    save_mkeventd_rules,
-)
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
-
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -92,13 +74,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_delete_link,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
@@ -111,6 +94,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    DictionaryModel,
     DropdownChoice,
     DualListChoice,
     FixedValue,
@@ -135,14 +119,21 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
+from cmk.gui.wato import (
+    ContactGroupSelection,
+    MainModuleTopicEvents,
+    NotificationParameter,
+    NotificationParameterRegistry,
+)
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
@@ -152,7 +143,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupNotifications,
     ConfigVariableGroupSiteManagement,
@@ -161,7 +152,12 @@ from cmk.gui.watolib.config_variable_groups import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.gui.watolib.mkeventd import (
+    export_mkp_rule_pack,
+    get_rule_stats_from_ec,
+    save_mkeventd_rules,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
@@ -182,6 +178,8 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
+
+import cmk.mkp_tool
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -290,14 +288,12 @@ def mib_dirs() -> list[tuple[Path, str]]:
 
 
 def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
-    if managed:
+    if edition() is Edition.CME:
         rule_customer_id = (
-            rule_pack["customer"]
-            if "customer" in rule_pack
-            else rule.get("customer", managed.SCOPE_GLOBAL)
+            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
-        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
+        site_customer_id = customer_api().get_customer_id(active_config.sites[event["site"]])
+        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
     time_period = ec.TimePeriods(log.logger)
@@ -540,7 +536,7 @@ def vs_mkeventd_rule_pack(
     )
 
     if edition() is Edition.CME:
-        elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
+        elements += customer_api().customer_choice_element(deflt=SCOPE_GLOBAL)
 
     return Dictionary(
         title=_("Rule pack properties"),
@@ -576,13 +572,13 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         value=customer,
                         title=_("Customer"),
                         totext="{} ({})".format(
-                            managed.get_customer_name_by_id(customer), _("Set by rule pack")
+                            customer_api().get_customer_name_by_id(customer), _("Set by rule pack")
                         ),
                     ),
                 ),
             ]
         else:
-            elements += managed.customer_choice_element()
+            elements += customer_api().customer_choice_element()
 
     elements += [
         (
@@ -1526,13 +1522,12 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 
     def _show_event_simulator(self) -> ec.Event | None:
         event = user.load_file("simulated_event", {})
-        html.begin_form("simulator")
-        self._vs_mkeventd_event().render_input("event", event)
-        forms.end()
-        html.hidden_fields()
-        html.button("_simulate", _("Try out"))
-        html.button("_generate", _("Generate event"))
-        html.end_form()
+        with html.form_context("simulator"):
+            self._vs_mkeventd_event().render_input("event", event)
+            forms.end()
+            html.hidden_fields()
+            html.button("_simulate", _("Try out"))
+            html.button("_generate", _("Generate event"))
         html.br()
 
         return (
@@ -1572,10 +1567,10 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         return (
             {}
             if edition() is Edition.CRE
-            else cmk.utils.packaging.id_to_mkp(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
-                cmk.utils.packaging.PackagePart.EC_RULE_PACKS,
+            else cmk.mkp_tool.id_to_mkp(
+                cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
+                cmk.mkp_tool.all_rule_pack_files(ec.mkp_rule_pack_dir()),
+                cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
             )
         )
 
@@ -2107,7 +2102,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
-                        html.write_text(managed.get_customer_name(rule_pack))
+                        html.write_text(customer_api().get_customer_name(rule_pack))
 
                 table.cell(
                     _("Rules"),
@@ -2325,9 +2320,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         self._verify_ec_enabled()
         search_expression = self._search_expression()
+
+        found_rules: list[ec.Rule]
         if search_expression:
             found_rules = self._filter_mkeventd_rules(search_expression, self._rule_pack)
         else:
@@ -2343,8 +2340,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return
 
         if len(self._rule_packs) > 1:
-            html.begin_form("move_to", method="POST")
+            with html.form_context("move_to", method="POST"):
+                self._show_table(event, found_rules)
+                html.hidden_field("_move_to", "yes")
+                html.hidden_fields()
+        else:
+            self._show_table(event, found_rules)
 
+    def _show_table(  # pylint: disable=too-many-branches
+        self, event: ec.Event | None, found_rules: list[ec.Rule]
+    ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
         facilities = dict(_deref(syslog_facilities))
@@ -2435,11 +2440,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if "customer" in self._rule_pack:
                         html.write_text(
                             "{} ({})".format(
-                                managed.get_customer_name(self._rule_pack), _("Set by rule pack")
+                                customer_api().get_customer_name(self._rule_pack),
+                                _("Set by rule pack"),
                             )
                         )
                     else:
-                        html.write_text(managed.get_customer_name(rule))
+                        html.write_text(customer_api().get_customer_name(rule))
 
                 if rule.get("drop"):
                     table.cell(_("State"), css=["state statep nowrap"])
@@ -2515,11 +2521,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
-            if len(self._rule_packs) > 1:
-                html.hidden_field("_move_to", "yes")
-                html.hidden_fields()
-                html.end_form()
-
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePackSpec
     ) -> list[ec.Rule]:
@@ -2540,6 +2541,24 @@ def _get_match(rule: ec.Rule) -> str:
     if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
         raise ValueError(f"attribute match of rule {rule['id']} already compiled")
     return value
+
+
+def _add_change_for_sites(
+    *, what: str, message: str, rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec
+) -> None:
+    """If CME, add the changes only for the customer's sites if customer is configured"""
+    customer_id: str | None = rule_or_rulepack.get("customer")
+    if edition() is Edition.CME and customer_id is not None:
+        sites = list(customer_api().get_sites_of_customer(customer_id).keys())
+    else:
+        sites = _get_event_console_sync_sites()
+
+    _changes.add_change(
+        what,
+        message,
+        domains=[ConfigDomainEventConsole],
+        sites=sites,
+    )
 
 
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
@@ -2634,21 +2653,26 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule-pack", _("Created new rule pack with id %s") % self._rule_pack["id"]
+            _add_change_for_sites(
+                what="new-rule-pack",
+                message=_("Created new rule pack with id %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
             )
         else:
-            self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
+            _add_change_for_sites(
+                what="edit-rule-pack",
+                message=_("Modified rule pack %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
+            )
         return redirect(mode_url("mkeventd_rule_packs"))
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule_pack")
-        vs = self._valuespec()
-        vs.render_input("rule_pack", dict(self._rule_pack))
-        vs.set_focus("rule_pack")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule_pack"):
+            vs = self._valuespec()
+            vs.render_input("rule_pack", dict(self._rule_pack))
+            vs.set_focus("rule_pack")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         if self._type == ec.RulePackType.internal:
@@ -2827,12 +2851,16 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule", _("Created new event correlation rule with id %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="new-rule",
+                message=("Created new event correlation rule with id %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
         else:
-            self._add_change(
-                "edit-rule", _("Modified event correlation rule %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="edit-rule",
+                message=("Modified event correlation rule %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
             # Reset hit counters of this rule
             execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
@@ -2840,12 +2868,11 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule")
-        vs = self._valuespec()
-        vs.render_input("rule", self._rule)
-        vs.set_focus("rule")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule"):
+            vs = self._valuespec()
+            vs.render_input("rule", self._rule)
+            vs.set_focus("rule")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         return vs_mkeventd_rule(self._rule_pack.get("customer"))
@@ -2946,18 +2973,17 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.close_ul()
 
         if user.may("mkeventd.switchmode"):
-            html.begin_form(
+            with html.form_context(
                 "switch",
                 require_confirmation=RequireConfirmation(
                     html=_("Do you really want to switch the event daemon mode?")
                 ),
-            )
-            if repl_mode == "sync":
-                html.button("_switch_takeover", _("Switch to Takeover mode!"))
-            elif repl_mode == "takeover":
-                html.button("_switch_sync", _("Switch back to sync mode!"))
-            html.hidden_fields()
-            html.end_form()
+            ):
+                if repl_mode == "sync":
+                    html.button("_switch_takeover", _("Switch to Takeover mode!"))
+                elif repl_mode == "takeover":
+                    html.button("_switch_sync", _("Switch back to sync mode!"))
+                html.hidden_fields()
 
 
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
@@ -3240,14 +3266,18 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        for path, title in mib_dirs():
-            self._show_mib_table(path, title)
+        for mib_path, title in mib_dirs():
+            is_custom_dir = mib_path == mib_upload_dir()
+            if is_custom_dir:
+                with html.form_context("bulk_delete_form", method="POST"):
+                    self._show_mib_table(mib_path, title)
+                    html.hidden_fields()
+                    html.end_form()
+            else:
+                self._show_mib_table(mib_path, title)
 
     def _show_mib_table(self, path: Path, title: str) -> None:
         is_custom_dir = path == mib_upload_dir()
-
-        if is_custom_dir:
-            html.begin_form("bulk_delete_form", method="POST")
 
         with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
@@ -3279,10 +3309,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("MIB"), mib.name)
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
-
-        if is_custom_dir:
-            html.hidden_fields()
-            html.end_form()
 
     def _load_snmp_mibs(self, directory: Path) -> Mapping[str, MIBInfo]:
         return {
@@ -3514,15 +3540,14 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             )
         )
 
-        html.begin_form("upload_form", method="POST")
-        forms.header(_("Upload MIB file"))
+        with html.form_context("upload_form", method="POST"):
+            forms.header(_("Upload MIB file"))
 
-        forms.section(_("Select file"), is_required=True)
-        html.upload_file("_upload_mib")
-        forms.end()
+            forms.section(_("Select file"), is_required=True)
+            html.upload_file("_upload_mib")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:

@@ -9,20 +9,15 @@ FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
+PYTEST_DOC_TEST_OPTS := \
+    --import-mode=importlib \
+    -o pythonpath=. \
+    --doctest-modules \
+    ../cmk \
+    ../omd/packages/omd
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
-    --doctest-modules \
-    ../cmk/base \
-    ../cmk/bi \
-    ../cmk/fields \
-    ../cmk/gui \
-    ../cmk/post_rename_site \
-    ../cmk/special_agents \
-    ../cmk/update_config \
-    ../cmk/utils \
-    ../agent-receiver \
-    ../omd/packages/omd \
-	../cmk/active_checks \
+    $(PYTEST_DOC_TEST_OPTS) \
     unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
@@ -43,9 +38,9 @@ RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
     test-integration \
-    test-plugins-integration \
     test-composition \
-    test-update \
+    test-update-cee \
+    test-update-cce \
     test-schemathesis-openapi \
     test-plugins \
     test-gui-crawl \
@@ -263,10 +258,7 @@ test-gui-e2e: prepare-playwright
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-integration:
-	$(PYTEST) -s -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
-
-test-plugins-integration:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
+	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
 test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
@@ -274,14 +266,17 @@ test-composition:
 test-extension-compatibility:
 	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-update:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
+test-update-cee:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
+
+test-update-cce:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
 test-plugins:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
+	TZ=UTC $(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
@@ -353,7 +348,13 @@ test-shellcheck-docker:
 
 test-cycles:
 	$(CYCLES) \
-		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver packages/werks/werks \
+		--packages \
+		    cmk \
+		    omd/packages/omd/omdlib \
+		    packages/cmk-agent-based/cmk/agent_based \
+		    packages/cmk-agent-receiver/cmk/agent_receiver \
+		    packages/cmk-graphing/cmk/graphing \
+		    packages/cmk-werks/cmk/werks \
 		--project-path $$(realpath -L ..) \
 		--strategy johnson \
 		--verbose

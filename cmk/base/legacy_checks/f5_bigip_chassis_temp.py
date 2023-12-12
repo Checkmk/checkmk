@@ -10,12 +10,10 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
-f5_bigip_chassis_temp_default_params = (35, 40)
-
 
 def inventory_f5_bigip_chassis_temp(info):
     for line in info:
-        yield line[0], f5_bigip_chassis_temp_default_params
+        yield line[0], {}
 
 
 def check_f5_bigip_chassis_temp(item, params, info):
@@ -35,4 +33,5 @@ check_info["f5_bigip_chassis_temp"] = LegacyCheckDefinition(
     discovery_function=inventory_f5_bigip_chassis_temp,
     check_function=check_f5_bigip_chassis_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={"levels": (35.0, 40.0)},
 )

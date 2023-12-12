@@ -30,7 +30,7 @@ class ShowParentChildTopology(Icon):
     ) -> tuple[str, str, str]:
         url = makeuri_contextless(
             request,
-            [("host_name", row["host_name"])],
+            [("host_regex", f"{row['host_name']}$")],
             filename="parent_child_topology.py",
         )
         return "aggr", _("Host Parent/Child topology"), url

@@ -1,4 +1,4 @@
-Title: <tt>oracle_rman</tt>: Fix <tt>ValueError("cannot render negative timespan")</tt>
+Title: oracle_rman: Fix ValueError("cannot render negative timespan")
 Class: fix
 Compatible: compat
 Component: checks

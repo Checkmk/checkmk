@@ -12,10 +12,10 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
+
+from cmk.agent_based.v1 import Metric, Result, Service, State
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
@@ -40,14 +40,11 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         assert info == ["info"]
         return [
             ("foo", {}),
-            ("foo", "params_string"),
             "some string",
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        "norris",
         {"discovery_function": insane_discovery},
-        {"params_string": {"levels": "default"}},
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -56,8 +53,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
 
     result = list(new_function(["info"]))
     expected: list = [
-        checking_classes.Service(item="foo"),
-        checking_classes.Service(item="foo", parameters={"levels": "default"}),
+        Service(item="foo"),
         "some string",  # bogus value let through intentionally
     ]
     assert result == expected
@@ -92,22 +88,22 @@ def test_create_check_function() -> None:
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert list(results) == [
-        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Result(state=State.OK, summary="Main info", details="Main info"),  # Result
         Metric("metric1", 23.0, levels=(2.0, 3.0), boundaries=(None, None)),  # Metric
         Result(
-            state=checking_classes.State.WARN,
+            state=State.WARN,
             summary="still main, but very long",
             details="still main, but very long\nadditional1\nadditional7",
         ),
         Metric("metric2", 23.0, levels=(None, None), boundaries=(0.0, None)),
         Result(
-            state=checking_classes.State.CRIT,
+            state=State.CRIT,
             summary="3 additional details available",
             details="additional2\nadditional3\nadditional5",
         ),
         Metric("metric3", 23.0, levels=(None, None), boundaries=(None, None)),
         Result(
-            state=checking_classes.State.OK,
+            state=State.OK,
             summary="2 additional details available",
             details="additional4\nadditional6",
         ),
@@ -139,9 +135,9 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert list(results) == [
-        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Result(state=State.OK, summary="Main info", details="Main info"),  # Result
         Result(
-            state=checking_classes.State.OK,
+            state=State.OK,
             summary="1 additional detail available",
             details="additional3",
         ),
@@ -171,7 +167,7 @@ def test_create_check_function_without_details() -> None:
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert list(results) == [
-        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Result(state=State.OK, summary="Main info", details="Main info"),  # Result
     ]
 
 
@@ -199,7 +195,7 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert list(results) == [
-        Result(state=checking_classes.State.OK, summary="Main info", details="Main info"),  # Result
+        Result(state=State.OK, summary="Main info", details="Main info"),  # Result
     ]
 
 
@@ -207,7 +203,6 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
-        {},  # get_check_context
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -230,7 +225,6 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         check_info_element,
-        {},
     )
 
     assert plugin.name == CheckPluginName("norris")

@@ -13,24 +13,26 @@ import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.metrics import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._graph_recipe_builder import build_graph_recipes
-from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
+from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
+from cmk.gui.graphing._graph_specification import GraphSpecification
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
     graph_templates_internal,
-    metric_info,
+    metric_title,
     MKCombinedGraphLimitExceededError,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Choices, GraphRenderOptions, SingleInfos, SizePT, VisualContext
+from cmk.gui.logged_in import user
+from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -45,11 +47,6 @@ from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from ..base import Dashlet
 from .status_helpers import make_mk_missing_data_error
-
-
-def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
-    metric_id = metric_or_graph_id.replace("METRIC_", "")
-    return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
 
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
@@ -103,7 +100,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                     value,
                     _("Deprecated choice, please re-select")
                     if value == self._MARKER_DEPRECATED_CHOICE
-                    else _metric_title_from_id(value),
+                    else metric_title(value),
                 ),
             )
         ]
@@ -186,15 +183,15 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     def script(cls) -> str:
         return """
 var dashlet_offsets = {};
-function dashboard_render_graph(nr, graph_identification, graph_render_options, timerange)
+function dashboard_render_graph(nr, graph_specification, graph_render_config, timerange)
 {
     // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
 
-    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
-                  + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
+    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_specification))
+                  + "&config=" + encodeURIComponent(JSON.stringify(graph_render_config))
                   + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
                   + "&width=" + c_w
                   + "&height=" + c_h
@@ -256,7 +253,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         graph_specification = self.graph_specification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = build_graph_recipes(graph_specification)
+            graph_recipes = graph_specification.recipes()
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
@@ -287,14 +284,18 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
-            self._graph_specification.json(),
-            json.dumps(
-                default_dashlet_graph_render_options()
-                # Something is wrong with the typing here. self._dashlet_spec is a subclass of
-                # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
-                # a dict ...
-                | self._dashlet_spec.get("graph_render_options", {})  # type: ignore[operator]
-            ),
+            self._graph_specification.model_dump_json(),
+            GraphRenderConfig.from_user_context_and_options(
+                user,
+                theme.get(),
+                **graph_grender_options_from_vs(
+                    default_dashlet_graph_render_options()
+                    # Something is wrong with the typing here. self._dashlet_spec is a subclass of
+                    # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
+                    # a dict ...
+                    | self._dashlet_spec.get("graph_render_options", {})  # type: ignore[operator]
+                ),
+            ).model_dump_json(),
             json.dumps(self._dashlet_spec["timerange"]),
         )
 
@@ -407,8 +408,8 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         yield "$SITE$"
 
 
-def default_dashlet_graph_render_options() -> GraphRenderOptions:
-    return GraphRenderOptions(
+def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
+    return GraphRenderOptionsVS(
         font_size=SizePT(8),
         show_graph_time=False,
         show_margin=False,

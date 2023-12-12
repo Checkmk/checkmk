@@ -1,0 +1,13 @@
+Title: Activate changes page was unusable because of foreign changes
+Class: fix
+Compatible: compat
+Component: config
+Date: 1697466346
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+

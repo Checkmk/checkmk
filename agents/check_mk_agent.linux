@@ -465,6 +465,18 @@ section_checkmk_failed_plugin() {
 
 section_labels() {
     echo '<<<labels:sep(0)>>>'
+
+    echo '{"cmk/os_type":"linux"}'
+
+    while read -r line; do
+        raw_line="${line//\"/}"
+        case $line in
+            ID=*) echo '{"cmk/os_platform":"'"${raw_line##*=}"'"}' ;;
+            NAME=*) echo '{"cmk/os_name":"'"${raw_line##*=}"'"}' ;;
+            VERSION_ID=*) echo '{"cmk/os_version":"'"${raw_line##*=}"'"}' ;;
+        esac
+    done <<<"$(cat /etc/os-release 2>/dev/null)"
+
     if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '{"cmk/device_type":"container"}'
     elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
@@ -766,7 +778,7 @@ section_chrony() {
         # The "| cat" has been added for some kind of regression in RedHat 7.5. The
         # SELinux rules shipped with that release were denying the chronyc call
         # without cat.
-        run_cached "chrony" 120 30 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
+        _run_cached_internal "chrony" 30 120 200 20 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
     fi
 }
 
@@ -780,9 +792,9 @@ section_kernel() {
 
 section_ipmitool() {
     if inpath ipmitool; then
-        run_cached "ipmi" 300 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
+        _run_cached_internal "ipmi" 300 300 900 600 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
-        run_cached "ipmi_discrete" 300 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
+        _run_cached_internal "ipmi_discrete" 300 300 900 600 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
@@ -802,7 +814,7 @@ section_ipmisensors() {
     fi
 
     # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-    run_cached "ipmi_sensors" 300 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
+    _run_cached_internal "ipmi_sensors" 300 300 900 600 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
         ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
         # In case of a timeout immediately leave loop.
         if [ $? = 255 ]; then break; fi
@@ -907,7 +919,7 @@ section_3ware_raid() {
 
 section_areca_raid() {
     if inpath cli64; then
-        run_cached "arc_raid_status" 300 300 "echo '<<<arc_raid_status>>>'; cli64 rsf info | tail -n +3 | head -n -2"
+        _run_cached_internal "arc_raid_status" 300 300 900 600 "echo '<<<arc_raid_status>>>'; cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
 
@@ -992,7 +1004,7 @@ read_postfix_queue_dirs() {
 ## Postfix status monitoring
 read_postfix_master_pid() {
     postfix_queue_dir=${1}
-    postfix_instance_name=${2:-postfix}
+    postfix_instance_name=${2}
     echo "<<<postfix_mailq_status:sep(58)>>>"
     if [ -e "${postfix_queue_dir}/pid/master.pid" ]; then
         if [ -r "${postfix_queue_dir}/pid/master.pid" ]; then
@@ -1029,7 +1041,7 @@ section_mailqueue() {
         fi
         # Always check for the default queue. It can exist even if multiple instances are configured
         read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
-        read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)"
+        read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)" "default"
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
@@ -1060,7 +1072,8 @@ section_mailqueue() {
 
 section_omd() {
     if inpath omd; then
-        run_cached "omd_status" 60 60 "echo '<<<omd_status>>>'; omd status --bare || true"
+        # 60 is _probably_ the agents polling interval. Why would you use that??
+        _run_cached_internal "omd_status" 60 60 180 120 "echo '<<<omd_status>>>'; omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -1432,7 +1445,7 @@ section_fileinfo() {
 
 get_ntpq() {
     inpath ntpq || return 1
-    run_cached "ntp" 120 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    _run_cached_internal "ntp" 30 120 200 20 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 }
 
 section_timesyncd() {
@@ -1592,24 +1605,50 @@ run_real_time_checks_for_remote() {
 # BEGIN COMMON AGENT CODE
 #
 
-# Run a command asynchronous by use of a cache file.
-# Usage: run_cached NAME MAXAGE [COMMAND ...]
-#   NAME     name of the section (also used as cache file name)
-#   MAXAGE   maximum cache livetime in seconds
-#   REFRESH_INTERVAL threshold in seconds when the cache file needs to be regenerated
-#   COMMAND  command to run
-#
-# Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
-# This means that extra escaping is required.
-# For example: to run `cat "My File"` every two minutes, you'll have to call
-#
-#     run_cached "my_file_output" 120 120 "cat \"My File\""
-#
 run_cached() {
+    # Compatibility wrapper for plugins that might use run_cached.
+    # We should have never exposed this as quasi API.
     NAME="${1}"
     MAXAGE="${2}"
     REFRESH_INTERVAL="${3}"
     shift 3
+
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
+    CREATION_TIMEOUT=$((MAXAGE * 2))
+
+    _run_cached_internal "${NAME}" "${REFRESH_INTERVAL}" "${MAXAGE}" "${OUTPUT_TIMEOUT}" "${CREATION_TIMEOUT}" "$@"
+}
+
+_run_cached_internal() {
+    # Run a command asynchronous by use of a cache file.
+    # Usage: _run_cached_internal NAME REFRESH_INTERVAL MAXAGE OUTPUT_TIMEOUT OUTPUT_TIMEOUT CREATION_TIMEOUT [COMMAND ...]
+    # Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
+    # This means that extra escaping is required.
+    # For example:
+    # To run a cat command every two minutes, considering the created data valid for one three minutes,
+    # send the created data for four minutes and allowing the command to run for 12 minutes, you'll have to call
+    #
+    #   _run_cached_interal "my_file_content" 120 180 240 720 "cat \"My File\""
+    #
+    # Mind the escaping...
+
+    NAME="${1}"
+    # name of the section (also used as cache file name)
+
+    REFRESH_INTERVAL="${2}"
+    # threshold in seconds when the cache file needs to be regenerated
+
+    MAXAGE="${3}"
+    # maximum cache livetime in seconds
+
+    OUTPUT_TIMEOUT="${4}"
+    # threshold in seconds for how long the cache file will be output (regardless of whether it is outdated)
+
+    CREATION_TIMEOUT="${5}"
+    # threshold in seconds for how long the process is allowed to be running before it is killed (see below for details)
+
+    shift 5
+    # $* is now the command to run
 
     if ${DISABLE_CACHING:-false}; then
         # We need the re-splitting to be compatible with the caching case, so:
@@ -1617,10 +1656,6 @@ run_cached() {
         $@
         return
     fi
-
-    # ideally, these should be independent parameters:
-    CREATION_TIMEOUT=$((MAXAGE * 2))
-    OUTPUT_TIMEOUT=$((MAXAGE * 3))
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
@@ -1710,7 +1745,7 @@ run_local_checks() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             interval="${script%/*}"
-            run_cached "local_${script##*/}" "${interval}" "${interval}" "_log_section_time '${script}'"
+            _run_cached_internal "local_${script##*/}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "_log_section_time '${script}'"
         fi
     done
 }
@@ -1807,7 +1842,7 @@ run_plugins() {
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
                 interval="${script%/*}"
                 # shellcheck disable=SC2086
-                run_cached "plugins_${script##*/}" "${interval}" "${interval}" _log_section_time ${plugin_interpreter} "${script}"
+                _run_cached_internal "plugins_${script##*/}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done
@@ -1845,7 +1880,7 @@ run_remote_plugins() {
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
             # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
-            run_cached "mrpe_${descr}" "${interval}" "${interval}" "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
+            _run_cached_internal "mrpe_${descr}" "${interval}" "${interval}" $((interval * 3)) $((interval * 2)) "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe \"${descr}\" \"${cmdline}\""
         fi
 
     done
@@ -1890,7 +1925,7 @@ run_runas_executor() {
                     echo "<<<local:sep(0)>>>"
                 fi
 
-                find "${configfile}/" -executable -type f |
+                find "${configfile}" -executable -type f |
                     while read -r filename; do
                         if [ -n "${prefix}" ]; then
                             # SC2086: We don't want to quote since prefix should not be treated as a
@@ -2109,26 +2144,15 @@ main_sync_parts() {
 }
 
 main_mixed_parts() {
+
     run_partially_asynchronous_sections
 
-    # MK's Remote Plugin Executor
-    # run_remote_plugins -> run_mrpe -> _log_section_time CMD
-    #                    -> run_cached _log_section_time CMD
     run_remote_plugins "${MK_CONFDIR}/mrpe.cfg" ""
 
-    # MK's runas Executor
-    # run_runas_executor -> _log_section_time CMD
-    #                    -> run_mrpe -> _log_section_time CMD
-    #                    -> run_cached _log_section_time CMD
     run_runas_executor
 
-    # Local checks
-    # run_local_checks -> _log_section_time CMD
-    #                  -> run_cached _log_section_time CMD
     run_local_checks
 
-    # Plugins
-    # run_plugins -> _log_section_time CMD
     run_plugins
 }
 

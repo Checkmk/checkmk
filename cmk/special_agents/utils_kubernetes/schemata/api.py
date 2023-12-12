@@ -424,25 +424,11 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
-EXPECTED_CONDITION_STATES = {
-    "ready": NodeConditionStatus.TRUE,
-    "memorypressure": NodeConditionStatus.FALSE,
-    "diskpressure": NodeConditionStatus.FALSE,
-    "pidpressure": NodeConditionStatus.FALSE,
-    "networkunavailable": NodeConditionStatus.FALSE,
-}
-
-
 class NodeCondition(ClientModel):
     status: NodeConditionStatus
     type_: str = Field(..., alias="type")
     reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = Field(None, alias="lastTransitionTime")
-
-    _parse_last_transition_time = field_validator(
-        "last_transition_time", mode="before", check_fields=False
-    )(convert_to_timestamp)
+    message: str | None = None
 
 
 class NodeResources(BaseModel):
@@ -630,8 +616,8 @@ class RollingUpdate(BaseModel):
     """
 
     type_: Literal["RollingUpdate"] = Field("RollingUpdate")
-    max_surge: str  # This field was introduced in Kubernetes v1.21.
-    max_unavailable: str
+    max_surge: str | int  # This field was introduced in Kubernetes v1.21.
+    max_unavailable: str | int
 
 
 class StatefulSetRollingUpdate(BaseModel):
@@ -764,7 +750,7 @@ class PodSpec(BaseModel):
     """
 
     node: NodeName | None = None
-    host_network: str | None = None
+    host_network: bool | None = None
     dns_policy: str | None = None
     restart_policy: RestartPolicy
     containers: Sequence[ContainerSpec]

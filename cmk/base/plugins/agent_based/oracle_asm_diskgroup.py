@@ -5,6 +5,13 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.df import (
+    df_check_filesystem_single,
+    FILESYSTEM_DEFAULT_PARAMS,
+    MAGIC_FACTOR_DEFAULT_PARAMS,
+    TREND_DEFAULT_PARAMS,
+)
+
 from .agent_based_api.v1 import (
     get_value_store,
     IgnoreResults,
@@ -15,12 +22,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_PARAMS,
-    MAGIC_FACTOR_DEFAULT_PARAMS,
-    TREND_DEFAULT_PARAMS,
-)
 
 # future todos in checkcode
 # - RAC: 1 of 3 nodes has a DISMOUNTED DG. This is not a CRIT!

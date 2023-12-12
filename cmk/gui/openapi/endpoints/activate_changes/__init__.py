@@ -18,6 +18,7 @@ You can find an introduction to the configuration of Checkmk including activatio
 from collections.abc import Mapping
 from dataclasses import asdict
 from typing import Any
+from urllib.parse import urlparse
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
@@ -30,6 +31,7 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.activate_changes import (
@@ -121,13 +123,13 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
         MKLicensingError, status=403
     ):
         activation_response = activate_changes_start(
-            sites, force_foreign_changes=body["force_foreign_changes"]
+            sites, "REST API", force_foreign_changes=body["force_foreign_changes"]
         )
 
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
         response = Response(status=302)
-        response.location = wait_for["href"]
+        response.location = urlparse(wait_for["href"]).path
         return response
 
     return serve_json(_activation_run_domain_object(activation_response))
@@ -195,7 +197,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
-        response.location = request.url
+        response.location = urlparse(request.url).path
         return response
 
     return Response(status=204)
@@ -279,3 +281,11 @@ def list_pending_changes(params: Mapping[str, Any]) -> Response:
         }
     )
     return constructors.response_with_etag_created_from_dict(response, pending_changes)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(activate_changes)
+    endpoint_registry.register(activate_changes_wait_for_completion)
+    endpoint_registry.register(show_activation)
+    endpoint_registry.register(list_activations)
+    endpoint_registry.register(list_pending_changes)

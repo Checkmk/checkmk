@@ -123,10 +123,11 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         username: str | None,
         password: str | None,
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.ipmi"))
+        super().__init__()
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
+        self._logger: Final = logging.getLogger("cmk.helper.ipmi")
         self._command: ipmi_cmd.Command | None = None
 
     def __repr__(self) -> str:
@@ -154,6 +155,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         }
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        self._logger.log(VERBOSE, "Get IPMI data")
         if self._command is None:
             raise MKFetcherError("Not connected")
 

@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.utils.aws_constants as aws_types
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic
 from cmk.base.config import check_info
+
+import cmk.plugins.aws.constants as aws_types  # pylint: disable=cmk-module-layer-violation
 
 default_running_ondemand_instances = [
     (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes

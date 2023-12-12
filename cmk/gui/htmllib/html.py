@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import pprint
 import re
+import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal, overload
@@ -61,6 +63,13 @@ def use_vue_rendering():
     return active_config.experimental_features.get("use_vue_rendering") or html.request.has_var(
         "use_vue_rendering"
     )
+
+
+EncType = typing.Literal[
+    "application/x-url-encoded",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+]
 
 
 class HTMLGenerator(HTMLWriter):
@@ -333,6 +342,33 @@ class HTMLGenerator(HTMLWriter):
         self.close_body()
         self.close_html()
 
+    @contextlib.contextmanager
+    def form_context(
+        self,
+        name: str,
+        action: str | None = None,
+        method: str = "GET",
+        onsubmit: str | None = None,
+        add_transid: bool = True,
+        require_confirmation: RequireConfirmation | None = None,
+        only_close: bool = False,
+    ) -> typing.Iterator[None]:
+        html.begin_form(
+            name=name,
+            action=action,
+            method=method,
+            onsubmit=onsubmit,
+            add_transid=add_transid,
+            require_confirmation=require_confirmation,
+        )
+
+        yield
+
+        if only_close:
+            html.close_form()
+        else:
+            html.end_form()
+
     def begin_form(
         self,
         name: str,
@@ -352,6 +388,8 @@ class HTMLGenerator(HTMLWriter):
 
         if action is None:
             action = requested_file_name(self.request) + ".py"
+
+        enctype: EncType = "multipart/form-data"
         self.open_form(
             id_="form_%s" % name,
             name=name,
@@ -360,9 +398,8 @@ class HTMLGenerator(HTMLWriter):
             method=method,
             onsubmit=onsubmit,
             data_cmk_form_confirmation=data_cmk_form_confirmation,
-            enctype="multipart/form-data" if method.lower() == "post" else None,
+            enctype=enctype if method.lower() == "post" else None,
         )
-
         if hasattr(session, "session_info"):
             self.hidden_field("csrf_token", session.session_info.csrf_token)
 
@@ -957,6 +994,7 @@ class HTMLGenerator(HTMLWriter):
         self.close_select()
 
     def upload_file(self, varname: str) -> None:
+        # We need this to upload files, other enctypes won't work.
         error = user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")
@@ -1338,6 +1376,40 @@ class HTMLGenerator(HTMLWriter):
             href="javascript:void(0)",
             class_=["element_dragger"],
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
+        )
+
+    def date(
+        self,
+        var: str,
+        value: str,
+        id_: str,
+        onchange: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                value=value,
+                type_="date",
+                id=id_,
+                onchange=onchange,
+            )
+        )
+
+    def time(
+        self,
+        var: str,
+        value: str,
+        id_: str,
+        onchange: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                value=value,
+                type_="time",
+                id=id_,
+                onchange=onchange,
+            )
         )
 
 

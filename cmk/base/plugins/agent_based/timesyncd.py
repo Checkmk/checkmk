@@ -11,6 +11,8 @@ from dateutil import parser as date_parser
 from dateutil import tz
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.timesync import tolerance_check
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -21,7 +23,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.timesync import tolerance_check
 
 
 class CheckParams(TypedDict):

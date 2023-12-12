@@ -7,8 +7,9 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import interfaces
+
 from .agent_based_api.v1 import register, type_defs
-from .utils import interfaces
 
 
 def check_interfaces(

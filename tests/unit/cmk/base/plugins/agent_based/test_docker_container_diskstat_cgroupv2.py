@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.diskstat import check_diskstat
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
     parse_docker_container_diskstat_cgroupv2,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 AGENT_OUTPUT = """[time]
 1614786439

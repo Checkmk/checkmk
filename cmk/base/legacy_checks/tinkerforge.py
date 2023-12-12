@@ -18,9 +18,6 @@ from cmk.base.config import check_info
 # humidity,6QHSgJ.c.ugg,250
 # ambient,6JLy11.c.uKA,124
 
-# based on customers investigation
-tinkerforge_humidity_default_levels = (35, 40, 50, 55)
-
 
 def parse_tinkerforge(string_table):
     # biggest trouble here is generating sensible item names as tho ones
@@ -72,12 +69,7 @@ def parse_tinkerforge(string_table):
 
 def inventory_tinkerforge(brick_type, parsed):
     for path in parsed.get(brick_type, {}):
-        if brick_type == "humidity":
-            yield path, tinkerforge_humidity_default_levels
-        elif brick_type == "ambient":
-            yield path, None
-        else:
-            yield path, {}
+        yield path, {}
 
 
 def check_tinkerforge_master(item, params, parsed):
@@ -101,9 +93,9 @@ def check_tinkerforge_temperature(item, params, parsed):
 def check_tinkerforge_ambient(item, params, parsed):
     if "ambient" in parsed and item in parsed["ambient"]:
         reading = float(parsed["ambient"][item][0]) / 100.0
-        if not params:
-            params = None
-        return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
+        return check_levels(
+            reading, "brightness", params["levels"], unit="lx", infoname="Brightness"
+        )
     return None
 
 
@@ -158,6 +150,7 @@ check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
     check_function=check_tinkerforge_ambient,
     check_ruleset_name="brightness",
+    check_default_parameters={"levels": None},
 )
 
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
@@ -166,6 +159,11 @@ check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_tinkerforge("humidity", parsed),
     check_function=check_tinkerforge_humidity,
     check_ruleset_name="humidity",
+    # based on customers investigation
+    check_default_parameters={
+        "levels": (50.0, 55.0),
+        "levels_lower": (35.0, 40.0),
+    },
 )
 
 check_info["tinkerforge.motion"] = LegacyCheckDefinition(

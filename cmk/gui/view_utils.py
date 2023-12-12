@@ -10,7 +10,7 @@ from typing import Any
 from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
-from cmk.utils.labels import Labels
+from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -194,6 +194,58 @@ def render_labels(
     )
 
 
+def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
+    overall_html = HTML()
+
+    is_first_group: bool = True
+    for group_op, label_group in label_groups:
+        group_html = HTML()
+
+        # Render group operator
+        if not is_first_group:
+            group_op_str = "and not" if group_op == "not" else group_op  # prepend "not" with "and "
+            overall_html += (
+                HTML(" ")
+                + HTMLWriter.render_i(group_op_str, class_="andornot_operator")
+                + HTML(" ")
+            )
+
+        group_html += HTML("[")  # open group
+
+        is_first_label: bool = True
+        for label_op, label in label_group:
+            if not label:
+                continue
+
+            # Render label operator
+            if not is_first_label or label_op == "not":
+                # Prepend "not" with "and " if the current is not the first label
+                label_op_str = "and not" if (not is_first_label and label_op == "not") else label_op
+                group_html += HTMLWriter.render_i(label_op_str, class_="andornot_operator")
+
+            # Render single label
+            key, val = label.split(":")
+            group_html += HTMLWriter.render_tags(
+                _render_tag_group(
+                    key,
+                    val,
+                    object_type,
+                    with_link=False,
+                    label_type="label",
+                    label_source="unspecified",
+                ),
+                class_=["tagify", "label", "display"],
+                readonly="true",
+            )
+            is_first_label = False
+
+        group_html += HTML("]")  # close group
+        overall_html += HTMLWriter.render_div(group_html, class_="label_group")
+        is_first_group = False
+
+    return overall_html
+
+
 def render_tag_groups(
     tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool
 ) -> HTML:
@@ -281,3 +333,13 @@ def get_themed_perfometer_bg_color() -> str:
         return "#bdbdbd"
     # else (classic and modern theme)
     return "#ffffff"
+
+
+def render_cre_upgrade_button() -> None:
+    html.icon_button(
+        url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
+        title=_("Upgrade to Cloud or Enterprise edition to use this feature"),
+        icon="upgrade",
+        target="_blank",
+        cssclass="upgrade",
+    )

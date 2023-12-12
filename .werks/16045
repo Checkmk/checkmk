@@ -1,0 +1,11 @@
+Title: Improved host/service label conditions in rules
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1701338968
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+In parallel to host/service label filters in visuals (see <a href="https://checkmk.com/werk/15074">Werk #15074</a>), the label conditions in rule configurations have been improved.
+Host and service label conditions now allow for more complex configurations using logical operators 'and', 'or', 'not'. Additionally, the labels can be grouped and label groups can be connected through the logical operators 'and', 'or', 'not' as well. Existing label condition configurations of rules are transformed to the new data structure.

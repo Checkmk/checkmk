@@ -6,6 +6,12 @@
 """Build the CMK container
 
 Usage:
+
+Build .tar.gz file
+may require the following env variables
+- DOCKER_USERNAME=carl.lama
+- DOCKER_PASSPHRASE=eatingHands
+
 scripts/run-pipenv run python \
 buildscripts/scripts/build-cmk-container.py \
 --branch=master \
@@ -13,6 +19,22 @@ buildscripts/scripts/build-cmk-container.py \
 --version=2023.10.17 \
 --source_path=$PWD/download/2023.10.17 \
 --action=build \
+-vvvv
+
+(Down)load .tar.gz file
+may require the following env variables
+- RELEASE_KEY=/path/to/id_rsa
+- INTERNAL_DEPLOY_PORT=42
+- INTERNAL_DEPLOY_DEST=user@some-domain.tld:/path/
+
+scripts/run-pipenv run python \
+buildscripts/scripts/build-cmk-container.py \
+--branch=2.2.0 \
+--edition=enterprise \
+--version=2.2.0p16 \
+--version_rc_aware=2.2.0p16-rc3 \
+--source_path=$PWD/download/2.2.0p16-rc3 \
+--action=load \
 -vvvv
 """
 
@@ -64,7 +86,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--branch",
         required=True,
-        help="Branch to build with, e.g. '2.1.0', 'master', 'sandbox-user.name-lower-chars'",
+        help="Branch to build with, e.g. '2.1.0', 'master', 'sandbox-user.name-lower-chars-only'",
     )
     parser.add_argument(
         "--edition",
@@ -75,6 +97,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--version", required=True, help="Version to build e.g. '2023.10.19'")
     parser.add_argument(
         "--source_path", required=True, help="Full path to downloaded tar.gz and deb files"
+    )
+    parser.add_argument(
+        "--action",
+        required=True,
+        choices=["build", "load", "push", "check_local"],
+        help="Action to perform",
+    )
+    parser.add_argument(
+        "--version_rc_aware",
+        required=parser.parse_known_args()[0].action in ["load", "check_local"],
+        help="RC aware version to load or check e.g. '2.2.0p16-rc3'",
     )
 
     parser.add_argument(
@@ -100,9 +133,6 @@ def parse_arguments() -> argparse.Namespace:
         const=True,
         default=False,
         help="Flag to build image without docker cache",
-    )
-    parser.add_argument(
-        "--action", required=True, choices=["build", "push"], help="Action to perform"
     )
     parser.add_argument(
         "--image_cmk_base", help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE"
@@ -293,6 +323,40 @@ def needed_packages(mk_file: str, output_file: str) -> None:
         file.write(" ".join(packages))
 
 
+def docker_load(args: argparse.Namespace, version_tag: str, registry: str, folder: str) -> None:
+    """Load image from tar.gz file"""
+    tar_name = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
+    this_repository = f"{registry}{folder}/check-mk-{args.edition}"
+
+    with cwd(tmp_path):
+        LOG.debug(f"Now at: {os.getcwd()}")
+        LOG.debug(f"Loading image '{tar_name}' ...")
+
+        with gzip.open(tar_name, "rb") as tar_ball:
+            loaded_image = docker_client.images.load(tar_ball)[0]
+
+    LOG.debug(f"Create '{this_repository}:{version_tag}' tag ...")
+    loaded_image.tag(
+        repository=this_repository,
+        tag=version_tag,
+    )
+
+
+def check_for_local_image(
+    args: argparse.Namespace, version_tag: str, registry: str, folder: str
+) -> bool:
+    """Check whether image is locally available"""
+    image_name_with_tag = f"{registry}{folder}/check-mk-{args.edition}:{version_tag}"
+
+    try:
+        image = docker_client.images.get(image_name_with_tag)
+        LOG.info(f"{image_name_with_tag} locally available")
+        return True
+    except docker.errors.ImageNotFound:
+        LOG.info(f"{image_name_with_tag} not found locally, please pull or load it")
+        return False
+
+
 def build_tar_gz(
     args: argparse.Namespace, version_tag: str, docker_path: str, docker_repo_name: str
 ) -> None:
@@ -339,14 +403,16 @@ def build_tar_gz(
             LOG.info(f"{version_tag} contains rc information, do a retagging before docker save.")
             image.tag(
                 repository=f"{docker_repo_name}/check-mk-{args.edition}",
-                tag=f"check-mk-{args.edition}:{args.version}",
+                tag=f"{args.version}",
             )
 
             with gzip.open(tar_name, "wb") as tar_ball:
                 for chunk in image.save():
                     tar_ball.write(chunk)
 
-            docker_client.remove(image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}")
+            docker_client.images.remove(
+                image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
+            )
         else:
             with gzip.open(tar_name, "wb") as tar_ball:
                 for chunk in image.save():
@@ -461,6 +527,40 @@ def main() -> None:
             )
         case "push":
             docker_push(args=args, registry=registry, folder=folder, version_tag=version_tag)
+        case "load":
+            if check_for_local_image(
+                args=args, registry=registry, folder=folder, version_tag=args.version
+            ):
+                return
+            LOG.info("Image not found locally, trying to download it ...")
+            if release_key := os.environ.get("RELEASE_KEY"):
+                internal_deploy_port = os.environ.get("INTERNAL_DEPLOY_PORT")
+                internal_deploy_dest = os.environ.get("INTERNAL_DEPLOY_DEST")
+                file_pattern = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
+                run_cmd(
+                    cmd=[
+                        "rsync",
+                        "--recursive",
+                        "--links",
+                        "--perms",
+                        "--times",
+                        "--verbose",
+                        "-e",
+                        f"ssh -o StrictHostKeyChecking=no -i {release_key} -p {internal_deploy_port}",
+                        f"{internal_deploy_dest}/{args.version_rc_aware}/{file_pattern}",
+                        f"{tmp_path}/",
+                    ]
+                )
+            else:
+                raise SystemExit(
+                    "RELEASE_KEY not found in env, required to download image via rsync"
+                )
+            docker_load(args=args, registry=registry, folder=folder, version_tag=args.version)
+        case "check_local":
+            if not check_for_local_image(
+                args=args, registry=registry, folder=folder, version_tag=args.version
+            ):
+                raise SystemExit("Image not found locally")
         case _:
             raise Exception(
                 f"Unknown action: {args.action}, should be prevented by argparse options"

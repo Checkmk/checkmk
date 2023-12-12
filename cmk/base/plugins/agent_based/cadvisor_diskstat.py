@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+
+from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import get_value_store, register, Service
 

@@ -19,7 +19,7 @@ from cmk.utils.log import init_dedicated_logging
 class SecurityEvent:
     """A security event that can be logged"""
 
-    Domain = Enum("Domain", ["auth"])
+    Domain = Enum("Domain", ["auth", "user_management"])
 
     summary: str
     details: Mapping[str, JsonSerializable]

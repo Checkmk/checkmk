@@ -8,6 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0b1
 
-Default levels for {{helper_usage_generic}}, {{helper_usage_cmk}}, {{helper_usage_fetcher}} and
-{{helper_usage_checker}} have been too low and thus been set to {{(80, 90)}}.
-{{livestatus_usage}} has been set to lower values: {{(60.0, 80.0)}}.
+Default levels for "helper_usage_generic", "helper_usage_cmk", "helper_usage_fetcher" and
+"helper_usage_checker" have been too low and thus been set to `(80, 90)`.
+"livestatus_usage" has been set to lower values: `(60.0, 80.0)`.

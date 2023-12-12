@@ -8,22 +8,22 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0i1
 
-Within the ruleset {{Periodic service discovery}} you can indicate service
-names or regexes in {{Activate only services matching}} resp.
-{{Don't activate services matching}} below
-{{Service Filters}} > {{Dedicated white-/blacklists for new and vanished services}}
+Within the ruleset "Periodic service discovery" you can indicate service
+names or regexes in "Activate only services matching" resp.
+"Don't activate services matching" below
+"Service Filters" > "Dedicated white-/blacklists for new and vanished services"
 in order to control which new detected services are added automatically.
 
-Now there are two new lists {{Remove only matching vanished services}} and
-{{Don't remove matching vanished services}} for vanished services below
-{{Service Filters}} > {{Dedicated white-/blacklists for new and vanished services}}
+Now there are two new lists "Remove only matching vanished services" and
+"Don't remove matching vanished services" for vanished services below
+"Service Filters" > "Dedicated white-/blacklists for new and vanished services"
 in order to control which vanished services are removed automatically.
 
-Below {{Service Filters}} > {{Combined white-/blacklists for new and vanished services}}
+Below "Service Filters" > "Combined white-/blacklists for new and vanished services"
 you can give patterns for both new and vanished services.
 
 Migration notes: Previously there were only the options
-{{Activate only services matching}} and {{Don't activate services matching}}
-for new {{and}} vanished services. These kind of rules are migrated to be
+"Activate only services matching" and "Don't activate services matching"
+for new **and** vanished services. These kind of rules are migrated to be
 compatible: these lists can now be found below
-{{Service filters}} > {{Combined white-/blacklist for new and vanished services}}.
+"Service filters" > "Combined white-/blacklist for new and vanished services".

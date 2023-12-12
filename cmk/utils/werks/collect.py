@@ -8,11 +8,11 @@ import logging
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Literal
+from typing import Iterator, Literal
 
 from git.repo import Repo
 
-from werks import load_werk, parse_werk
+from cmk.werks import load_werk, parse_werk
 
 from .werk import WebsiteWerk
 
@@ -81,7 +81,33 @@ class CmkConfig(Config):
         if werk_filename == "3229":
             # don't want to commit to branch 1.2.8
             return werk_string.replace("name inventorized\\", "name inventorized")
+        if werk_filename in {"1071", "198", "4045", "10589", "7032", "10579"}:
+            return _replace_compatible(werk_string, "compat")
+        if werk_filename in {"4914", "4737", "10303", "11202", "11277", "7048", "11159", "11475"}:
+            return _replace_compatible(werk_string, "incomp")
+        if werk_filename == "13164":
+            return werk_string.replace("<PC_NAME>", "&lt;PC_NAME>")
+        if werk_filename == "13488":
+            return werk_string.replace("<tt>postgres_conn_time</tt>:", "postgres_conn_time:")
+        if werk_filename == "5141":
+            return werk_string.replace(
+                "parameter <tt>request_format</tt>", "parameter request_format"
+            )
         return werk_string
+
+
+COMP_MATCHER = re.compile("^Compatible: (comp|multisite|incompat|imcompat|compa)$")
+
+
+def _replace_compatible(werk_string: str, compatible: str) -> str:
+    def generator() -> Iterator[str]:
+        for line in werk_string.split("\n"):
+            if COMP_MATCHER.match(line):
+                line = f"Compatible: {compatible}"
+            yield line
+            yield "\n"
+
+    return "".join(generator())
 
 
 class KubeConfig(Config):

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any
+
+import pydantic
 
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -30,15 +31,17 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # ...usw...
 
 
-@dataclass(frozen=True)
-class Resource:
+class Resource(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(frozen=True)
+
     type: str
     state: str
     target: str
 
 
-@dataclass(frozen=True)
-class Section:
+class Section(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(frozen=True)
+
     crs_nodename: str | None
     resources: Mapping[str, Mapping[str | None, Resource]]
 
@@ -74,8 +77,10 @@ def parse_oracle_crs_res(string_table: StringTable) -> Section:
 
     resources: dict[str, Mapping[str | None, Resource]] = {}
     for resname, values in raw_ressources.items():
-        resources[resname] = {node: Resource(**entry) for node, entry in values.items()}
-    return Section(crs_nodename, resources)
+        resources[resname] = {
+            node: Resource.model_validate(entry) for node, entry in values.items()
+        }
+    return Section.model_validate({"crs_nodename": crs_nodename, "resources": resources})
 
 
 register.agent_section(

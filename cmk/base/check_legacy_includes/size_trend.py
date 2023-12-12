@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THESE FUNCTIONS ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/size_trend.py
+# cmk.plugins.lib/size_trend.py
 # ==================================================================================================
 
 Levels = tuple[float, float]

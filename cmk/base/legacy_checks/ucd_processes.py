@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
+
+from cmk.plugins.lib import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.2.1.2.1 Web-Processes  --> UCD-SNMP-MIB::prNames.1
 # .1.3.6.1.4.1.2021.2.1.2.2 SMTP-Processes --> UCD-SNMP-MIB::prNames.2

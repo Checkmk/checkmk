@@ -297,14 +297,25 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
 def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:
     """Check credentials either in query string or form encoded POST body
 
+    This is deprecated with Werk #16223 and should be removed with Checkmk 2.5
+    The config option will be introduced with Checkmk 2.3, in 2.4 the default
+    will change and then we're going to finally remove this
+
     Raises:
         MKAuthException: whenever an illegal username is detected.
     """
+    if not active_config.enable_deprecated_automation_user_authentication:
+        return None
+
     if (username := request.values.get("_username")) and (
         password := request.values.get("_secret")
     ):
         user_id = _try_user_id(username)
         if _verify_automation_login(user_id, password):
+            logger.warning(
+                "Deprecated automation user login method was used for %s. See Werk #16223",
+                username,
+            )
             return user_id
 
     return None
@@ -336,7 +347,7 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     return (
         secret != ""
         and (stored_secret := AutomationUserSecret(user_id)).exists()
-        and stored_secret.read() == secret
+        and stored_secret.check(secret)
     )
 
 

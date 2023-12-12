@@ -1371,16 +1371,20 @@ def _instantiate_skel(site: SiteContext, path: str) -> bytes:
         return b""  # e.g. due to permission error
 
 
-def initialize_site_ca(site: SiteContext) -> None:
+def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
     """Initialize the site local CA and create the default site certificate
-    This will be used e.g. for serving SSL secured livestatus"""
+    This will be used e.g. for serving SSL secured livestatus
+
+    site_key_size specifies the length of the site certificate's private key. It should only be
+    changed for testing purposes.
+    """
     ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
         root_ca=RootCA.load_or_create(root_cert_path(ca_path), CN_TEMPLATE.format(site.name)),
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):
-        ca.create_site_certificate(site.name)
+        ca.create_site_certificate(site.name, key_size=site_key_size)
 
 
 def agent_ca_existing(site: SiteContext) -> bool:
@@ -2820,7 +2824,7 @@ def main_update(  # pylint: disable=too-many-branches
             )
             if not success:
                 bail_out("Aborted.")
-        exec_other_omd(site, to_version, "update")
+        exec_other_omd(to_version)
 
     cmk_from_version = _omd_to_check_mk_version(from_version)
     cmk_to_version = _omd_to_check_mk_version(to_version)
@@ -3447,7 +3451,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     if is_root():
         # Ensure the restore is done with the sites version
         if version != omdlib.__version__:
-            exec_other_omd(site, version, "restore")
+            exec_other_omd(version)
 
         # Restore site with its original name, or specify a new one
         new_sitename = new_site_name or sitename
@@ -4522,11 +4526,7 @@ def handle_global_option(
         # Switch to other version of bin/omd
         version, main_args = _opt_arg(main_args, opt)
         if version != omdlib.__version__:
-            omd_path = "/omd/versions/%s/bin/omd" % version
-            if not os.path.exists(omd_path):
-                bail_out("OMD version '%s' is not installed." % version)
-            os.execv(omd_path, sys.argv)
-            bail_out("Cannot execute %s." % omd_path)
+            exec_other_omd(version)
     elif opt in ["f", "force"]:
         force = True
         interactive = False
@@ -4616,32 +4616,28 @@ def _parse_command_options(  # pylint: disable=too-many-branches
     return (args, set_options)
 
 
-def exec_other_omd(site: SiteContext, version: str, command: str) -> NoReturn:
-    # Rerun with omd of other version
+def exec_other_omd(version: str) -> NoReturn:
+    """Rerun current omd command with other version"""
     omd_path = "/omd/versions/%s/bin/omd" % version
-    if os.path.exists(omd_path):
-        if command == "update":
-            # Prevent inheriting environment variables from this versions/site environment
-            # into the execed omd call. The OMD call must import the python version related
-            # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
-            # not already set when calling "omd update"
-            try:
-                del os.environ["PYTHONPATH"]
-            except KeyError:
-                pass
+    if not os.path.exists(omd_path):
+        bail_out("Version '%s' is not installed." % version)
 
-            try:
-                del os.environ["LD_LIBRARY_PATH"]
-            except KeyError:
-                pass
+    # Prevent inheriting environment variables from this versions/site environment
+    # into the executed omd call. The omd call must import the python version related
+    # modules and libraries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+    # not already set when calling omd.
+    try:
+        del os.environ["PYTHONPATH"]
+    except KeyError:
+        pass
 
-        os.execv(omd_path, sys.argv)
-        bail_out("Cannot run bin/omd of version %s." % version)
-    else:
-        bail_out(
-            "Site %s uses version %s which is not installed.\n"
-            "Please reinstall that version and retry this command." % (site.name, version)
-        )
+    try:
+        del os.environ["LD_LIBRARY_PATH"]
+    except KeyError:
+        pass
+
+    os.execv(omd_path, sys.argv)
+    bail_out("Cannot run bin/omd of version %s." % version)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
@@ -4758,7 +4754,7 @@ def main() -> None:  # pylint: disable=too-many-branches
                     "then please first do an 'omd init %s'." % (3 * (site.name,))
                 )
         elif omdlib.__version__ != v:
-            exec_other_omd(site, v, command.command)
+            exec_other_omd(v)
 
     if isinstance(site, SiteContext):
         site.load_config(load_defaults(site))

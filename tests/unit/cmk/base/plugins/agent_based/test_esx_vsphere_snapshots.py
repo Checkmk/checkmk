@@ -21,7 +21,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
     Snapshot,
 )
 from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
-from cmk.base.plugins.agent_based.utils.esx_vsphere import ESXVm
+
+from cmk.plugins.lib.esx_vsphere import ESXVm
 
 
 def test_parse_esx_vsphere_snapshots():
@@ -41,9 +42,9 @@ def test_parse_esx_vsphere_snapshots():
             [
                 Result(state=State.OK, summary="Count: 2"),
                 Result(state=State.OK, summary="Powered on: vm_name/PC1"),
-                Result(state=State.OK, summary="Latest: vm_name/PC1 Mar 02 1970 14:02:40"),
+                Result(state=State.OK, summary="Latest: vm_name/PC1 1970-03-02 14:02:40"),
                 Result(state=State.OK, notice="Age of latest: 50 years 278 days"),
-                Result(state=State.OK, summary="Oldest: vm_name/PC2 Jan 25 1970 03:57:30"),
+                Result(state=State.OK, summary="Oldest: vm_name/PC2 1970-01-25 03:57:30"),
                 Result(state=State.OK, notice="Age of oldest: 50 years 314 days"),
             ],
         ),
@@ -81,7 +82,7 @@ def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(state=State.OK, summary="Powered on: test_vm_name/Snapshotname"),
-        Result(state=State.OK, summary="Latest: test_vm_name/Snapshotname Nov 17 2020 15:15:14"),
+        Result(state=State.OK, summary="Latest: test_vm_name/Snapshotname 2020-11-17 15:15:14"),
         Result(state=State.OK, notice="Age of latest: 5 days 8 hours"),
         Result(state=State.OK, notice="Age of oldest: 5 days 8 hours"),
     ]
@@ -110,12 +111,12 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
         Result(state=State.OK, summary="Count: 2"),
         Result(state=State.OK, summary="Powered on: test_vm_name/LinuxI Testsnapshot"),
         Result(
-            state=State.OK, summary="Latest: test_vm_name/LinuxI Testsnapshot Oct 22 2014 11:37:07"
+            state=State.OK, summary="Latest: test_vm_name/LinuxI Testsnapshot 2014-10-22 11:37:07"
         ),
         Result(state=State.OK, notice="Age of latest: 6 years 34 days"),
         Result(
             state=State.OK,
-            summary="Oldest: test_vm_name/20130318_105600_snapshot_LinuxI Mar 18 2013 08:52:14",
+            summary="Oldest: test_vm_name/20130318_105600_snapshot_LinuxI 2013-03-18 08:52:14",
         ),
         Result(state=State.OK, notice="Age of oldest: 7 years 252 days"),
     ]
@@ -147,7 +148,7 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         Result(
             state=State.OK,
-            summary="Latest: test_vm_name/VM-Snapshot 12.06.2019 10:56 UTC+02:00 Jun 12 2019 06:57:55",
+            summary="Latest: test_vm_name/VM-Snapshot 12.06.2019 10:56 UTC+02:00 2019-06-12 06:57:55",
         ),
         Result(state=State.OK, notice="Age of latest: 10 days 7 hours"),
         Result(
@@ -175,7 +176,7 @@ def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ) == [
         Result(state=State.OK, summary="Count: 1"),
         Result(state=State.OK, summary="Powered on: test_vm_name/FransTeil2"),
-        Result(state=State.OK, summary="Latest: test_vm_name/FransTeil2 Jul 06 2020 13:23:08"),
+        Result(state=State.OK, summary="Latest: test_vm_name/FransTeil2 2020-07-06 13:23:08"),
         Result(
             state=State.CRIT,
             summary="Age of latest: 1 year 350 days (warn/crit at 1 day 0 hours/2 days 0 hours)",

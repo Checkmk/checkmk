@@ -13,6 +13,7 @@ import pytest
 
 import livestatus
 
+from cmk.utils import man_pages
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageReportVersion,
@@ -32,7 +33,8 @@ from cmk.utils.licensing.usage import (
     save_extensions,
     try_update_license_usage,
 )
-from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
+
+from cmk.discover_plugins import discover_families, PluginGroup
 
 
 def test_try_update_license_usage() -> None:
@@ -790,12 +792,15 @@ def test_cloud_service_prefixes_up_to_date():
      prefixes, update the prefix list or update the manpage catalog"""
     not_cloud_for_licensing_purposes = ["datadog"]
 
-    def is_cloud_manpage(catalog_path: ManPageCatalogPath) -> bool:
+    def is_cloud_manpage(catalog_path: man_pages.ManPageCatalogPath) -> bool:
         return (
             catalog_path[0] == "cloud" and catalog_path[1] not in not_cloud_for_licensing_purposes
         )
 
-    catalog = load_man_page_catalog()
+    catalog = man_pages.load_man_page_catalog(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
+
     cloud_man_pages = [
         manpage
         for catalog_path, man_pages in catalog.items()

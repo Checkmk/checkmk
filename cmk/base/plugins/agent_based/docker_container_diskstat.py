@@ -7,10 +7,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import chain
 
+from cmk.plugins.lib import diskstat, docker
+from cmk.plugins.lib.docker import is_string_table_heading
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import diskstat, docker
-from .utils.docker import is_string_table_heading
 
 MAPPING = {
     ("io_service_bytes_recursive", "read"): "read_throughput",

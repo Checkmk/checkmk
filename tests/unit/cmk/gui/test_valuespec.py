@@ -383,3 +383,18 @@ class TestAlternative:
                     vs.Integer(),
                 ]
             ).transform_value("strange")
+
+
+@pytest.mark.parametrize(
+    "hostname",
+    (
+        "",  # empty
+        "../../foo",  # invalid char, path traversal
+        "a" * 255,  # too long
+    ),
+)
+def test_nvalid_hostnames_rejected(hostname: str) -> None:
+    """test that certain hostnames fail validation"""
+
+    with pytest.raises(MKUserError):
+        vs.Hostname().validate_value(hostname, "varprefix")

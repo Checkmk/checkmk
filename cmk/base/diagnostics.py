@@ -158,6 +158,7 @@ class DiagnosticsDump:
             HWDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
             FilesSizeCSVDiagnosticsElement(),
+            PipFreezeDiagnosticsElement(),
             SELinuxJSONDiagnosticsElement(),
         ]
 
@@ -599,6 +600,28 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         # Get the environment variables
 
         return dict(os.environ)
+
+
+class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "pip_freeze"
+
+    @property
+    def title(self) -> str:
+        return _("pip freeze output")
+
+    @property
+    def description(self) -> str:
+        return _("The installed Python modules and their versions")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        # Execute pip freeze and convert to JSON
+
+        lines = subprocess.check_output(
+            ["pip3", "freeze", "--all", "--no-python-version-warning"], text=True
+        ).split("\n")
+        return {l.split("==")[0]: l.split("==")[1] for l in lines if "==" in l}
 
 
 class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):

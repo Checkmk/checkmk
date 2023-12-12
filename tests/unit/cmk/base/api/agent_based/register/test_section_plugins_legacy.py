@@ -11,9 +11,9 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
-from cmk.base.api.agent_based.section_classes import SNMPTree
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.api.agent_based.utils import startswith
+
+from cmk.agent_based.v1 import SNMPTree, startswith
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 def old_school_parse_function(_info):
@@ -44,12 +44,12 @@ def test_create_agent_parse_function() -> None:
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             old_school_parse_function,
             expected_annotations={(str, "str")},  # irrelevant in test
         )
 
-    section_plugins._validate_parse_function(
+    section_plugins.validate_parse_function(
         compliant_parse_function,
         expected_annotations={(StringTable, "StringTable")},
     )
@@ -65,21 +65,16 @@ def test_create_snmp_parse_function() -> None:
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             old_school_parse_function,
             expected_annotations={(str, "str")},  # irrelevant in test
         )
 
-    section_plugins._validate_parse_function(
-        compliant_parse_function,
-        expected_annotations={(str, "str")},  # irrel. in test, SNMP parse function is not annotated
-    )
-
     arbitrary_non_empty_input = [[["moo"]]]
     assert compliant_parse_function([[]]) is None
-    assert compliant_parse_function(
-        arbitrary_non_empty_input  # type: ignore[arg-type]
-    ) == old_school_parse_function(arbitrary_non_empty_input)
+    assert compliant_parse_function(arbitrary_non_empty_input) == old_school_parse_function(
+        arbitrary_non_empty_input
+    )
 
 
 def test_create_snmp_parse_function_handle_empty() -> None:
@@ -100,7 +95,6 @@ def test_create_snmp_section_plugin_from_legacy() -> None:
             "detect": startswith(".1.2.3.4.5", "norris"),
             "fetch": SNMPTree(base=".1.2.3.4.5", oids=["2", "3"]),
         },
-        validate_creation_kwargs=True,
     )
 
     assert plugin.name == SectionName("norris")

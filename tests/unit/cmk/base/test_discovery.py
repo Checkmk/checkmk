@@ -41,6 +41,7 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     DiscoveryMode,
     DiscoveryResult,
+    DiscoverySettings,
     find_plugins,
     QualifiedDiscovery,
 )
@@ -68,8 +69,7 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.api.agent_based.plugin_contexts import current_host
-from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
+from cmk.base.api.agent_based.plugin_classes import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -78,6 +78,7 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
+from cmk.base.plugin_contexts import current_host
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
@@ -401,7 +402,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             get_service_description=lambda *args: f"Test Description {args[-1]}",
-            mode=mode,
+            settings=DiscoverySettings.from_discovery_mode(mode),
             keep_clustered_vanished_services=True,
         ).values()
     ]
@@ -959,12 +960,16 @@ _expected_services: dict = {
     (CheckPluginName("omd_status"), "test3"): {},
     (CheckPluginName("omd_status"), "test_crawl"): {},
     (CheckPluginName("postfix_mailq"), ""): {},
-    (CheckPluginName("postfix_mailq_status"), ""): {},
+    (CheckPluginName("postfix_mailq_status"), "postfix"): {},
     (CheckPluginName("tcp_conn_stats"), None): {},
     (CheckPluginName("uptime"), None): {},
 }
 
-_expected_host_labels = [HostLabel("cmk/os_family", "linux", SectionName("check_mk"))]
+_expected_host_labels = [
+    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+    HostLabel("cmk/os_type", "linux", SectionName("check_mk")),
+    HostLabel("cmk/os_platform", "linux", SectionName("check_mk")),
+]
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -1046,7 +1051,9 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                         "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
                     },
-                    "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
+                    "condition": {
+                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                    },
                 }
             ]
         ),
@@ -1127,6 +1134,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         "clustered_services",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "fs_"}],
                     "host_name": [node1_hostname],
@@ -1147,7 +1155,9 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                         "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
                     },
-                    "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
+                    "condition": {
+                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                    },
                 }
             ]
         ),

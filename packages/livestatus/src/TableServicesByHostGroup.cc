@@ -5,6 +5,8 @@
 
 #include "livestatus/TableServicesByHostGroup.h"
 
+#include <functional>
+
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"

@@ -117,7 +117,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         return 10
 
     def generate(self) -> None:
-        save_global_settings(self._initial_global_settings())
+        save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
 
         # A contact group for all hosts and services
         groups: AllGroupSpecs = {
@@ -196,7 +196,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "host_check_commands": [
                 {
                     "id": "24da4ccd-0d1b-40e3-af87-0097df8668f2",
-                    "condition": {"host_labels": {"cmk/docker_object": "container"}},
+                    "condition": {
+                        "host_label_groups": [("and", [("and", "cmk/docker_object:container")])]
+                    },
                     "value": ("service", "Docker container status"),
                     "options": {
                         "description": 'Make all docker container host states base on the "Docker container status" service',
@@ -211,27 +213,21 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     {
                         "id": "7ba2ac2a-5a49-47ce-bc3c-1630fb191c7f",
                         "condition": {
-                            "host_labels": {
-                                "cmk/docker_object": "node",
-                            }
+                            "host_label_groups": [("and", [("and", "cmk/docker_object:node")])]
                         },
                         "value": {"status_data_inventory": True},
                     },
                     {
                         "id": "b4b151f9-c7cc-4127-87a6-9539931fcd73",
                         "condition": {
-                            "host_labels": {
-                                "cmk/check_mk_server": "yes",
-                            }
+                            "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                         },
                         "value": {"status_data_inventory": True},
                     },
                     {
                         "id": "2527cb37-e9da-4a15-a7d9-80825a7f6661",
                         "condition": {
-                            "host_labels": {
-                                "cmk/kubernetes": "yes",
-                            }
+                            "host_label_groups": [("and", [("and", "cmk/kubernetes:yes")])]
                         },
                         "value": {"status_data_inventory": True},
                     },
@@ -279,9 +275,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 {
                     "id": "b0ee8a51-703c-47e4-aec4-76430281604d",
                     "condition": {
-                        "host_labels": {
-                            "cmk/check_mk_server": "yes",
-                        },
+                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                     },
                     "value": {
                         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],

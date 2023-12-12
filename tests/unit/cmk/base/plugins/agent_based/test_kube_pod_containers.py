@@ -11,15 +11,12 @@ from collections.abc import Mapping
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_pod_containers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.utils.kube import (
-    ContainerStateType,
-    ContainerTerminatedState,
-    PodContainers,
-)
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.kube import ContainerStateType, ContainerTerminatedState, PodContainers
 
 TIMESTAMP = 359
 MINUTE = 60

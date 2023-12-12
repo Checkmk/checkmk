@@ -11,7 +11,6 @@
 #include <cctype>
 #include <cerrno>
 #include <compare>
-#include <cstring>
 #include <ostream>
 #include <string_view>
 #include <utility>
@@ -165,8 +164,9 @@ InputBuffer::Result InputBuffer::readRequest() {
                     _read_index;  // distance to beginning of buffer
                 const size_t size =
                     _write_index - _read_index;  // amount of data to shift
-                memmove(_readahead_buffer.data(),
-                        &_readahead_buffer[_read_index], size);
+                std::move(&_readahead_buffer[_read_index],
+                          &_readahead_buffer[_read_index + size],
+                          _readahead_buffer.data());
                 _read_index = 0;  // unread data is now at the beginning
                 _write_index -= shift_by;  // write pointer shifted to the left
                 r -= shift_by;  // current scan position also shift left
@@ -247,10 +247,19 @@ InputBuffer::Result InputBuffer::readData() {
     return Result::should_terminate;
 }
 
-bool InputBuffer::empty() const { return _request_lines.empty(); }
-
 std::string InputBuffer::nextLine() {
     std::string s = _request_lines.front();
     _request_lines.pop_front();
     return s;
+}
+
+std::list<std::string> InputBuffer::getLines() {
+    std::list<std::string> lines;
+    while (!_request_lines.empty()) {
+        lines.push_back(nextLine());
+        if (lines.back().empty()) {
+            break;
+        }
+    }
+    return lines;
 }

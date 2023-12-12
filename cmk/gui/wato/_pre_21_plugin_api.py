@@ -5,10 +5,10 @@
 
 import cmk.utils.paths
 
-import cmk.gui.plugins.wato as api_module
-import cmk.gui.plugins.wato.datasource_programs as datasource_programs
-import cmk.gui.plugins.wato.special_agents.common
-import cmk.gui.plugins.wato.utils as wato_utils
+import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.datasource_programs as datasource_programs  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.special_agents.common  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.plugins.wato.utils as wato_utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
@@ -24,7 +24,7 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 from cmk.gui.hooks import register_hook
-from cmk.gui.plugins.wato.utils import (
+from cmk.gui.plugins.wato.utils import (  # pylint: disable=cmk-module-layer-violation
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,

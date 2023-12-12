@@ -269,13 +269,11 @@ class ModeEditSite(WatoMode):
         return redirect(mode_url("sites"))
 
     def page(self) -> None:
-        html.begin_form("site")
+        with html.form_context("site"):
+            self._valuespec().render_input("site", dict(self._site))
 
-        self._valuespec().render_input("site", dict(self._site))
-
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         basic_elements = self._basic_elements()
@@ -513,6 +511,7 @@ class ModeEditSite(WatoMode):
                         "When enabled, this site is marked for synchronisation every time a Web GUI "
                         "related option is changed and users are allowed to login "
                         "to the Web GUI of this site."
+                        "The access to the Rest API is unaffected by this option though."
                     ),
                 ),
             ),
@@ -742,23 +741,22 @@ class ModeDistributedMonitoring(WatoMode):
             % HTMLWriter.render_tt(site["alias"])
         )
 
-        html.begin_form("login", method="POST")
-        forms.header(_("Login credentials"))
-        forms.section(_("Administrator name"))
-        html.text_input("_name")
-        html.set_focus("_name")
-        forms.section(_("Administrator password"))
-        html.password_input("_passwd")
-        forms.section(_("Confirm overwrite"))
-        html.checkbox(
-            "_confirm", False, label=_("Confirm overwrite of the remote site configuration")
-        )
-        forms.end()
-        html.button("_do_login", _("Login"))
-        html.button("_cancel", _("Cancel"))
-        html.hidden_field("_login", login_id)
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("login", method="POST"):
+            forms.header(_("Login credentials"))
+            forms.section(_("Administrator name"))
+            html.text_input("_name")
+            html.set_focus("_name")
+            forms.section(_("Administrator password"))
+            html.password_input("_passwd")
+            forms.section(_("Confirm overwrite"))
+            html.checkbox(
+                "_confirm", False, label=_("Confirm overwrite of the remote site configuration")
+            )
+            forms.end()
+            html.button("_do_login", _("Login"))
+            html.button("_cancel", _("Cancel"))
+            html.hidden_field("_login", login_id)
+            html.hidden_fields()
         html.footer()
         return FinalizeRequest(code=200)
 

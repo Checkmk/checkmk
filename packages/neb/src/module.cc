@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <functional>
@@ -31,6 +30,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -56,6 +56,7 @@
 #include "neb/nagios.h"
 
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
@@ -306,7 +307,8 @@ private:
     void publish(const LogRecord &record) override {
         std::ostringstream os;
         getFormatter()->format(os, record);
-        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         write_to_all_logs(const_cast<char *>(os.str().c_str()),
                           NSLOG_INFO_MESSAGE);
     }
@@ -463,11 +465,13 @@ void open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name
     // fl_paths.livestatus_socket
-    struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_paths.livestatus_socket.c_str(),
-            sizeof(sockaddr.sun_path) - 1);
+    struct sockaddr_un sockaddr {
+        .sun_family = AF_UNIX, .sun_path = ""
+    };
+    fl_paths.livestatus_socket.string().copy(&sockaddr.sun_path[0],
+                                             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::bind(fl_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
         generic_error ge{"cannot bind UNIX socket to address \"" +
@@ -646,7 +650,7 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
-            strcmp(sc->command_string, "_LOG") == 0) {
+            sc->command_string == "_LOG"s) {
             write_to_all_logs(sc->command_args, -1);
             counterIncrement(Counter::log_messages);
             fl_core->triggers().notify_all(Triggers::Kind::log);
@@ -888,7 +892,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     }
 
     // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
-    std::vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
+    const std::string_view sv{args_orig};
+    std::vector<char> args_buf{sv.begin(), sv.end()};
+    args_buf.push_back('\0');
     char *args = args_buf.data();
     while (char *token = next_field(&args)) {
         /* find = */

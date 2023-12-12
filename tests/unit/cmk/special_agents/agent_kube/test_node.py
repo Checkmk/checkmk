@@ -11,7 +11,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
     ContainerStatusFactory,
     create_container_state,
-    node_status,
+    NodeConditionFactory,
     NodeResourcesFactory,
     NodeStatusFactory,
 )
@@ -26,10 +26,8 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
     _allocatable_pods,
     _conditions,
     _container_count,
-    _custom_conditions,
     _info,
     create_api_sections,
-    NATIVE_NODE_CONDITION_TYPES,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -46,7 +44,6 @@ def api_nodes_api_sections() -> set[str]:
         "kube_allocatable_cpu_resource_v1",
         "kube_allocatable_memory_resource_v1",
         "kube_node_conditions_v1",
-        "kube_node_custom_conditions_v1",
     }
 
 
@@ -99,98 +96,6 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written() -> None
     assert {s.section_name for s in sections} == api_nodes_api_sections()
 
 
-def test_conditions_returns_all_native_conditions() -> None:
-    api_node = api_to_agent_node(
-        APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
-    )
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-    conditions_dict = node_conditions.dict()
-    assert len(conditions_dict) == len(NATIVE_NODE_CONDITION_TYPES)
-    assert all(
-        condition_type.lower() in conditions_dict for condition_type in NATIVE_NODE_CONDITION_TYPES
-    )
-
-
-def test_conditions_respects_status_conditions() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    assert status.conditions is not None
-
-    native_conditions = [
-        cond for cond in status.conditions if cond.type_ in NATIVE_NODE_CONDITION_TYPES
-    ]
-
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-    conditions_dict = node_conditions.dict()
-    assert len(conditions_dict) == len(native_conditions)
-    assert all(
-        conditions_dict[condition.type_.lower()]["status"] == condition.status
-        for condition in native_conditions
-    )
-
-
-def test_custom_conditions_respects_status_conditions() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    assert status.conditions is not None
-
-    npd_conditions_status = [
-        cond.status
-        for cond in sorted(status.conditions, key=lambda cond: cond.type_)
-        if cond.type_ not in NATIVE_NODE_CONDITION_TYPES
-    ]
-
-    api_node_custom_conditions = _custom_conditions(api_node)
-    assert api_node_custom_conditions is not None
-    custom_conditions_status = [
-        cond.status
-        for cond in sorted(
-            api_node_custom_conditions.custom_conditions, key=lambda cond: cond.type_
-        )
-    ]
-    assert npd_conditions_status == custom_conditions_status
-
-
-def test_conditions_truthy_vs_status() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-
-    truthy_conditions = [
-        c for _, c in node_conditions if isinstance(c, section.TruthyNodeCondition)
-    ]
-    assert len(truthy_conditions) > 0
-    # Check that all expected to be true states are actually true.
-    for name, value in api.EXPECTED_CONDITION_STATES.items():
-        if value == api.NodeConditionStatus.TRUE:
-            assert getattr(node_conditions, name).status == api.NodeConditionStatus.TRUE
-
-
-def test_conditions_falsy_vs_status() -> None:
-    status = node_status(api.NodeConditionStatus.FALSE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-
-    falsy_conditions = [c for _, c in node_conditions if isinstance(c, section.FalsyNodeCondition)]
-    assert len(falsy_conditions) > 0
-    # Check that all expected to be false states are actually false.
-    for name, value in api.EXPECTED_CONDITION_STATES.items():
-        if value == api.NodeConditionStatus.FALSE:
-            assert getattr(node_conditions, name).status == api.NodeConditionStatus.FALSE
-
-
-def test_conditions_with_status_conditions_none() -> None:
-    api_node = api_to_agent_node(
-        APINodeFactory.build(status=NodeStatusFactory.build(conditions=None))
-    )
-    node_conditions = _conditions(api_node)
-    assert node_conditions is None
-
-
 def test_api_node_info_section() -> None:
     api_node = api_to_agent_node(APINodeFactory.build())
     node_info = _info(
@@ -202,6 +107,21 @@ def test_api_node_info_section() -> None:
     assert node_info.name == api_node.metadata.name
     assert node_info.labels == api_node.metadata.labels
     assert isinstance(node_info.creation_timestamp, float)
+
+
+def test_api_node_conditions() -> None:
+    # Assemble
+    expected_condition = NodeConditionFactory.build()
+    status = NodeStatusFactory.build(conditions=[expected_condition])
+    api_node = APINodeFactory.build(status=status)
+    # Act
+    conditions = _conditions(api_node).conditions
+    assert len(conditions) == 1
+    condition = conditions[0]
+    assert condition.status == expected_condition.status
+    assert condition.message == expected_condition.message
+    assert condition.reason == expected_condition.reason
+    assert condition.type_ == expected_condition.type_
 
 
 @pytest.mark.parametrize("pod_containers_count", [0, 5, 10])
@@ -218,9 +138,9 @@ def test_api_node_container_count(
     )
     node_container_count = _container_count(api_node)
     assert isinstance(node_container_count, section.ContainerCount)
-    assert node_container_count.dict()[container_status_state.value] == pod_containers_count
+    assert node_container_count.model_dump()[container_status_state.value] == pod_containers_count
     assert all(
         count == 0
-        for state, count in node_container_count.dict().items()
+        for state, count in node_container_count.model_dump().items()
         if state != container_status_state.value
     )

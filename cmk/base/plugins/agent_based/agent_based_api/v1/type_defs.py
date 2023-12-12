@@ -26,9 +26,14 @@ Example:
 
 """
 
-from cmk.base.api.agent_based.checking_classes import CheckResult, DiscoveryResult
-from cmk.base.api.agent_based.inventory_classes import InventoryResult
-from cmk.base.api.agent_based.type_defs import HostLabelGenerator, StringByteTable, StringTable
+from cmk.agent_based.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    InventoryResult,
+    StringByteTable,
+    StringTable,
+)
 
 __all__ = [
     "CheckResult",

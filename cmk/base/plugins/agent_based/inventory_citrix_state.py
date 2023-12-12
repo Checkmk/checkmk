@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.plugins.agent_based.utils.citrix_state import parse_citrix_state, Section
+from cmk.plugins.lib.citrix_state import parse_citrix_state, Section
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult

@@ -13,8 +13,8 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.plugin_contexts import current_host
-from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import SectionPlugin, SNMPSectionPlugin
+from cmk.base.plugin_contexts import current_host
 
 
 def _section_permutations(

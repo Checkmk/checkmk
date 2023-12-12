@@ -85,6 +85,7 @@ def test_dashlet_registry_plugins() -> None:
             "ntop_top_talkers",
             "single_timeseries",
             "state_service",
+            "top_list",
             "state_host",
             "host_state_summary",
             "service_state_summary",
@@ -164,10 +165,6 @@ def test_dashlet_refresh_intervals(
         dashlet_spec["context"] = {}
     if type_name in ["pnpgraph", "custom_graph"]:
         monkeypatch.setattr(dashlet_type, "graph_specification", lambda s, c: None)
-        monkeypatch.setattr(
-            "cmk.gui.graphing._graph_recipe_builder.build_graph_recipes",
-            lambda g: [{"title": "1"}],
-        )
 
     monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})
 

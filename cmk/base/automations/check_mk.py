@@ -66,6 +66,7 @@ from cmk.utils.paths import (
 from cmk.utils.sectionname import SectionName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.version import edition_supports_nagvis
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -123,6 +124,7 @@ from cmk.checkengine.discovery import (
     CheckPreviewEntry,
     DiscoveryMode,
     DiscoveryResult,
+    DiscoverySettings,
     get_check_preview,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
@@ -135,16 +137,16 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-import cmk.base.config_generation as config_generation
 import cmk.base.core
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
+import cmk.base.server_side_calls as server_side_calls
 import cmk.base.sources as sources
-from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.api.agent_based.value_store import load_host_value_store
+from cmk.base import plugin_contexts
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -160,8 +162,11 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
+
+from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -239,7 +244,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
             )
 
-        mode = DiscoveryMode.from_str(args[0])
+        settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(args[0]))
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
@@ -307,7 +312,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     get_service_description=functools.partial(
                         config.service_description, ruleset_matcher
                     ),
-                    mode=mode,
+                    settings=settings,
                     keep_clustered_vanished_services=True,
                     service_filters=None,
                     enforced_services=config_cache.enforced_services_table(hostname),
@@ -434,7 +439,7 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    active_check_config = config_generation.ActiveCheck(
+    active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
@@ -501,8 +506,8 @@ def _execute_discovery(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    with plugin_contexts.current_host(host_name), load_host_value_store(
-        host_name, store_changes=False
+    with plugin_contexts.current_host(host_name), set_value_store_manager(
+        ValueStoreManager(host_name), store_changes=False
     ) as value_store_manager:
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckPluginMapper(
@@ -1122,7 +1127,7 @@ class AutomationRenameHosts(Automation):
             actions.append("retention")
 
         # NagVis maps
-        if self.rename_host_in_files(
+        if edition_supports_nagvis() and self.rename_host_in_files(
             "%s/etc/nagvis/maps/*.cfg" % omd_root,
             "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
             "host_name=%s" % newname,
@@ -1315,7 +1320,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         host_attrs = config_cache.get_host_attributes(host_name)
-        active_check_config = config_generation.ActiveCheck(
+        active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
@@ -1677,14 +1682,16 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
-        manuals = man_pages.all_man_pages()
+        man_page_path_map = man_pages.make_man_page_path_map(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        )
 
         plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
                 {
-                    "title": self._get_title(manuals, plugin.name),
+                    "title": self._get_title(man_page_path_map, plugin.name),
                     "name": str(plugin.name),
                     "service_description": str(plugin.service_name),
                 },
@@ -1700,16 +1707,18 @@ class AutomationGetCheckInformation(Automation):
         return GetCheckInformationResult(plugin_infos)
 
     @staticmethod
-    def _get_title(manuals: Mapping[str, str], plugin_name: CheckPluginName) -> str:
-        manfile = manuals.get(str(plugin_name))
-        if manfile:
-            try:
-                return cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
-        return str(plugin_name)
+    def _get_title(man_page_path_map: Mapping[str, Path], plugin_name: CheckPluginName) -> str:
+        try:
+            manfile = man_page_path_map[str(plugin_name)]
+        except KeyError:
+            return str(plugin_name)
+
+        try:
+            return cmk.utils.man_pages.get_title_from_man_page(manfile)
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
 
 automations.register(AutomationGetCheckInformation())
@@ -2164,7 +2173,7 @@ class AutomationActiveCheck(Automation):
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
-        active_check_config = config_generation.ActiveCheck(
+        active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,

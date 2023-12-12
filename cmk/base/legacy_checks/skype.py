@@ -18,7 +18,8 @@ from cmk.base.check_legacy_includes.wmi import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.wmi import WMISection
+
+from cmk.plugins.lib.wmi import WMISection
 
 
 def parse_skype(string_table: StringTable) -> WMISection:

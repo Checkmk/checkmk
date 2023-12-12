@@ -12,28 +12,20 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import suppress
 from typing import Any
 
-from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
+from cmk.utils.check_utils import maincheckify, unwrap_parameters
 
 from cmk.checkengine.parameters import Parameters
 
-from cmk.base.api.agent_based.checking_classes import (
-    CheckPlugin,
-    CheckResult,
-    Metric,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 from .utils_legacy import LegacyCheckDefinition
 
 
-def _create_discovery_function(
-    check_name: str,
-    check_info_element: LegacyCheckDefinition,
-    check_context: dict[str, object],
-) -> Callable:
+def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:
     """Create an API compliant discovery function"""
 
     # 1) ensure we have the correct signature
@@ -53,14 +45,16 @@ def _create_discovery_function(
                 continue
 
             if isinstance(element, tuple) and len(element) in (2, 3):
-                item, raw_params = element[0], element[-1]
+                item, params = element[0], element[-1]
                 if item is not None and not isinstance(item, str):
                     raise ValueError("item must be None or of type `str`")
 
-                parameters = _resolve_string_parameters(raw_params, check_name, check_context)
+                if params is not None and not isinstance(params, dict):
+                    raise ValueError("discovered parameters must be None or of type `dict`")
+
                 service = Service(
                     item=None,  # will be replaced
-                    parameters=wrap_parameters(parameters or {}),
+                    parameters=params,
                 )
                 # nasty hack for nasty plugins: item = ''
                 # Bypass validation. Item should be None or non-empty string!
@@ -72,30 +66,6 @@ def _create_discovery_function(
             yield element
 
     return discovery_migration_wrapper
-
-
-def _resolve_string_parameters(
-    params_unresolved: Any,
-    check_name: str,
-    context: dict[str, object],
-) -> Any:
-    if not isinstance(params_unresolved, str):
-        return params_unresolved
-
-    try:
-        # string may look like '{"foo": bar}', in the worst case.
-        # This evaluation was needed in the past to resolve references to variables in context and
-        # to evaluate data structure declarations containing references to variables.
-        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
-        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
-        # files are resolved during cmk-update-config.
-        return eval(  # nosec B307 # BNS:1c6cc2 # pylint: disable=eval-used
-            params_unresolved, context, context
-        )
-    except Exception:
-        raise ValueError(
-            f"Invalid check parameter string '{params_unresolved}' found in discovered service {check_name!r}"
-        )
 
 
 def _normalize_check_function_return_value(subresults: object) -> list:
@@ -155,7 +125,7 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
         for idx, subresult in enumerate(subresults):
-            if isinstance(subresult, (Result, Metric)):
+            if isinstance(subresult, (Result, Metric, IgnoreResults)):
                 yield subresult
                 continue
 
@@ -273,7 +243,6 @@ def _create_signature_check_function(
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: LegacyCheckDefinition,
-    check_context: dict[str, object],
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -293,11 +262,7 @@ def create_check_plugin_from_legacy(
     if "." in check_plugin_name:
         assert sections == check_info_element["sections"]
 
-    discovery_function = _create_discovery_function(
-        check_plugin_name,
-        check_info_element,
-        check_context,
-    )
+    discovery_function = _create_discovery_function(check_info_element)
 
     check_function = _create_check_function(
         check_plugin_name,

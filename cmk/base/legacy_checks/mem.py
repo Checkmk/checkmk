@@ -8,11 +8,12 @@
 
 import time
 
-import cmk.base.plugins.agent_based.utils.memory as memory
 from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
+
+import cmk.plugins.lib.memory as memory
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -371,9 +372,6 @@ check_info["mem.win"] = LegacyCheckDefinition(
 #   | soon.                                                                |
 #   '----------------------------------------------------------------------'
 
-# warn, crit, warn_chunk, crit_chunk. Integers are in MB, floats are in percent
-mem_vmalloc_default_levels = (80.0, 90.0, 64, 32)
-
 
 def inventory_mem_vmalloc(section):
     if memory.is_linux_section(section):
@@ -387,45 +385,34 @@ def inventory_mem_vmalloc(section):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
         if section["VmallocTotal"] < 4 * 1024**2:
-            yield None, mem_vmalloc_default_levels
+            yield None, {}
 
 
 def check_mem_vmalloc(_item, params, section):
     total_mb = section["VmallocTotal"] / 1024.0**2
     used_mb = section["VmallocUsed"] / 1024.0**2
     chunk_mb = section["VmallocChunk"] / 1024.0**2
-    warn, crit, warn_chunk, crit_chunk = params
+    used_warn_perc, used_crit_perc = params["levels_used_perc"]
 
-    state = 0
-    infotxts = []
-    perfdata = []
-    for var, loop_warn, loop_crit, loop_val, neg, what in [
-        ("used", warn, crit, used_mb, False, "used"),
-        ("chunk", warn_chunk, crit_chunk, chunk_mb, True, "largest chunk"),
-    ]:
-        # convert levels from percentage to MB values
-        if isinstance(loop_warn, float):
-            w_mb = total_mb * loop_warn / 100
-        else:
-            w_mb = float(loop_warn)
-
-        if isinstance(loop_crit, float):
-            c_mb = total_mb * loop_crit / 100
-        else:
-            c_mb = float(loop_crit)
-
-        loop_state = 0
-        infotxt = f"{what} {loop_val:.1f} MB"
-        if (loop_val >= c_mb) != neg:
-            loop_state = 2
-            infotxt += " (critical at %.1f MB!!)" % c_mb
-        elif (loop_val >= w_mb) != neg:
-            loop_state = 1
-            infotxt += " (warning at %.1f MB!)" % w_mb
-        state = max(state, loop_state)
-        infotxts.append(infotxt)
-        perfdata.append((var, loop_val, w_mb, c_mb, 0, total_mb))
-    return (state, ("total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
+    yield 0, f"Total: {total_mb:.1f} MB"
+    yield check_levels(
+        used_mb,
+        dsname="used",
+        params=(total_mb * used_warn_perc / 100, total_mb * used_crit_perc / 100),
+        human_readable_func=lambda v: f"{v:.1f}",
+        unit="MB",
+        infoname="Used",
+        boundaries=(0, total_mb),
+    )
+    yield check_levels(
+        chunk_mb,
+        dsname="chunk",
+        params=(None, None) + params["levels_lower_chunk_mb"],
+        human_readable_func=lambda v: f"{v:.1f}",
+        unit="MB",
+        infoname="Largest chunk",
+        boundaries=(0, total_mb),
+    )
 
 
 check_info["mem.vmalloc"] = LegacyCheckDefinition(
@@ -433,4 +420,8 @@ check_info["mem.vmalloc"] = LegacyCheckDefinition(
     sections=["mem"],
     discovery_function=inventory_mem_vmalloc,
     check_function=check_mem_vmalloc,
+    check_default_parameters={
+        "levels_used_perc": (80.0, 90.0),
+        "levels_lower_chunk_mb": (64, 32),
+    },
 )

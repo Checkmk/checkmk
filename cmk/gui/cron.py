@@ -55,7 +55,7 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.plugins.cron as api_module
+    import cmk.gui.plugins.cron as api_module  # pylint: disable=cmk-module-layer-violation
 
     api_module.__dict__.update(
         {

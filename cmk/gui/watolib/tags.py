@@ -490,10 +490,10 @@ def _change_host_tags_in_rule(  # pylint: disable=too-many-branches
                         **rule.conditions.host_tags,
                         operation.tag_group_id: new_value,
                     },
-                    host_labels=rule.conditions.host_labels,
+                    host_label_groups=rule.conditions.host_label_groups,
                     host_name=rule.conditions.host_name,
                     service_description=rule.conditions.service_description,
-                    service_labels=rule.conditions.service_labels,
+                    service_label_groups=rule.conditions.service_label_groups,
                 )
             )
         # Example for current_value: {'$ne': 'my_tag'} / my_tag
@@ -510,10 +510,10 @@ def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:
         RuleConditions(
             host_folder=rule.conditions.host_folder,
             host_tags={k: v for k, v in rule.conditions.host_tags.items() if k != tag_group_id},
-            host_labels=rule.conditions.host_labels,
+            host_label_groups=rule.conditions.host_label_groups,
             host_name=rule.conditions.host_name,
             service_description=rule.conditions.service_description,
-            service_labels=rule.conditions.service_labels,
+            service_label_groups=rule.conditions.service_label_groups,
         )
     )
 

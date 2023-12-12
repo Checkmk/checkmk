@@ -23,7 +23,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import edition, Edition, edition_has_enforced_licensing
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -505,7 +505,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if edition() is Edition.CCE:
+        if edition() in (Edition.CME, Edition.CCE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -569,42 +569,41 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         valuespec = _vs_activation(self.title(), self.has_foreign_changes())
 
-        html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
+        with html.form_context("activate", method="POST", action=""):
+            html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
 
-        if valuespec:
-            title = valuespec.title()
-            assert title is not None
-            forms.header(title)
-            valuespec.render_input("activate", self._value)
-            valuespec.set_focus("activate")
-            html.help(valuespec.help())
+            if valuespec:
+                title = valuespec.title()
+                assert title is not None
+                forms.header(title)
+                valuespec.render_input("activate", self._value)
+                valuespec.set_focus("activate")
+                html.help(valuespec.help())
 
-        if self.has_foreign_changes():
-            if user.may("wato.activateforeign"):
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you will "
-                        "activate if you proceed. You need to enable the checkbox above "
-                        "to confirm the activation of these changes."
+            if self.has_foreign_changes():
+                if user.may("wato.activateforeign"):
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you will "
+                            "activate if you proceed. You need to enable the checkbox above "
+                            "to confirm the activation of these changes."
+                        )
                     )
-                )
-            else:
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you can not "
-                        "activate because you are not permitted to. You can only activate "
-                        "the changes on the sites that are not affected by these changes. "
-                        "<br>"
-                        "If you need to activate your changes on all sites, please contact "
-                        "a permitted user to do it for you."
+                else:
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you can not "
+                            "activate because you are not permitted to. You can only activate "
+                            "the changes on the sites that are not affected by these changes. "
+                            "<br>"
+                            "If you need to activate your changes on all sites, please contact "
+                            "a permitted user to do it for you."
+                        )
                     )
-                )
 
-        forms.end()
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:
@@ -618,7 +617,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         ).block:
             errors.append(block_effect.message_html)
 
-        if edition() is Edition.CCE:
+        if edition_has_enforced_licensing():
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity
@@ -982,6 +981,7 @@ class PageAjaxStartActivation(AjaxPage):
             activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
             comment=comment,
             activate_foreign=activate_foreign,
+            source="GUI",
         )
 
         return {

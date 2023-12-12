@@ -17,7 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
     SNMPTree,
 )
-from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
+
+from cmk.plugins.lib.detection import DETECT_NEVER
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
 # .1.3.6.1.4.1.2620.1.16.22.1.1.2.1.0 0

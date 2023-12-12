@@ -12,15 +12,17 @@
 | light heartedly!                                        |
 +---------------------------------------------------------+
 """
+from types import ModuleType
+
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
 
-def _names(space):
-    return sorted(n for n in dir(space) if not n.startswith("_"))
+def _names(space: ModuleType) -> set[str]:
+    return {n for n in dir(space) if not n.startswith("_")}
 
 
 def test_v1() -> None:
-    if _names(v1) != [
+    expected = {
         "Attributes",
         "GetRateError",
         "HostLabel",
@@ -60,13 +62,12 @@ def test_v1() -> None:
         "render",
         "startswith",
         "type_defs",
-    ]:
-        # do not output actual names. Changing this is meant to hurt!
-        raise AssertionError(__doc__)
+    }
+    assert _names(v1) == expected
 
 
 def test_v1_render() -> None:
-    if _names(v1.render) != [
+    expected = {
         "bytes",
         "date",
         "datetime",
@@ -78,33 +79,33 @@ def test_v1_render() -> None:
         "nicspeed",
         "percent",
         "timespan",
-    ]:
-        raise AssertionError(__doc__)
+    }
+    assert _names(v1.render) == expected
 
 
 def test_v1_type_defs() -> None:
-    if _names(v1.type_defs) != [
+    expected = {
         "CheckResult",
         "DiscoveryResult",
         "HostLabelGenerator",
         "InventoryResult",
         "StringByteTable",
         "StringTable",
-    ]:
-        raise AssertionError(__doc__)
+    }
+    assert _names(v1.type_defs) == expected
 
 
 def test_v1_register() -> None:
-    if _names(v1.register) != [
+    expected = {
         "RuleSetType",
         "agent_section",
         "check_plugin",
         "inventory_plugin",
         "snmp_section",
-    ]:
-        raise AssertionError(__doc__)
+    }
+    assert _names(v1.register) == expected
 
 
 def test_v1_clusterize() -> None:
-    if _names(v1.clusterize) != ["make_node_notice_results"]:
-        raise AssertionError(__doc__)
+    expected = {"make_node_notice_results"}
+    assert _names(v1.clusterize) == expected

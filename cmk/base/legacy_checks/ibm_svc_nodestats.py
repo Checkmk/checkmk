@@ -6,11 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 # Note: This file is almost identical with ibm_svc_nodestats. We should
 # create an include file for sharing common code!
@@ -288,15 +290,13 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-ibm_svc_cpu_default_levels = (90.0, 95.0)
 
-
-def inventory_ibm_svc_nodestats_cpu(info):
-    return [
-        (node_name, ibm_svc_cpu_default_levels)
-        for node_name, data in parse_ibm_svc_nodestats(info).items()
+def inventory_ibm_svc_nodestats_cpu(string_table: StringTable) -> DiscoveryResult:
+    yield from (
+        Service(item=node_name)
+        for node_name, data in parse_ibm_svc_nodestats(string_table).items()
         if "cpu_pc" in data
-    ]
+    )
 
 
 def check_ibm_svc_nodestats_cpu(item, params, info):
@@ -312,6 +312,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_nodestats_cpu,
     check_function=check_ibm_svc_nodestats_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (90.0, 95.0)},
 )
 
 # .

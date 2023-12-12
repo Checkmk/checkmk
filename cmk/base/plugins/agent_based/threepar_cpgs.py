@@ -13,9 +13,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.threepar import parse_3par
+
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from .utils.threepar import parse_3par
 
 
 class SpaceUsage(pydantic.BaseModel):
@@ -53,7 +54,7 @@ def parse_threepar_cpgs(string_table: StringTable) -> ThreeparCPGSection:
     if (raw_members := parse_3par(string_table).get("members")) is None:
         return {}
 
-    return {cpgs.get("name"): ThreeparCPG.parse_obj(cpgs) for cpgs in raw_members}
+    return {cpgs.get("name"): ThreeparCPG.model_validate(cpgs) for cpgs in raw_members}
 
 
 def count_threepar_vvs(cpg: ThreeparCPG) -> int:

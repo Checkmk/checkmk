@@ -12,17 +12,15 @@ from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.inventory import InventoryPluginName
 
-from cmk.base.api.agent_based.inventory_classes import (
-    Attributes,
-    InventoryFunction,
-    InventoryPlugin,
-    TableRow,
-)
+from cmk.base.api.agent_based.plugin_classes import InventoryFunction, InventoryPlugin
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_default_parameters,
     validate_function_arguments,
 )
+
+from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.discover_plugins import PluginLocation
 
 
 def _filter_inventory(
@@ -50,7 +48,7 @@ def create_inventory_plugin(
     inventory_function: Callable,
     inventory_default_parameters: Mapping[str, Any] | None = None,
     inventory_ruleset_name: str | None = None,
-    module: str,
+    location: PluginLocation,
 ) -> InventoryPlugin:
     """Return an InventoryPlugin object after validating and converting the arguments one by one
 
@@ -84,5 +82,5 @@ def create_inventory_plugin(
         inventory_ruleset_name=(
             RuleSetName(inventory_ruleset_name) if inventory_ruleset_name else None
         ),
-        module=module,
+        location=location,
     )

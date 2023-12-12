@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -16,12 +16,12 @@ pub trait Get {
     fn get_string(&self, key: &str) -> Option<String>
     where
         Self: Sized;
-    fn get_int<T>(&self, key: &str, default: T) -> T
+    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
     where
         Self: Sized,
         T: std::convert::TryFrom<i64>;
     fn get_pathbuf(&self, key: &str) -> Option<PathBuf>;
-    fn get_string_vector(&self, key: &str, default: &[&str]) -> Result<Vec<String>>;
+    fn get_string_vector(&self, key: &str, default: &[&str]) -> Vec<String>;
 
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml>;
 
@@ -44,28 +44,48 @@ impl Get for Yaml {
     }
 
     /// always with default
-    fn get_int<T>(&self, key: &str, default: T) -> T
+    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
     where
         T: std::convert::TryFrom<i64>,
     {
         if let Some(value) = self[key].as_i64() {
             TryInto::try_into(value).unwrap_or(default)
         } else {
+            log::debug!("{key} not found, using default {default:?}");
             default
         }
     }
 
-    fn get_string_vector(&self, key: &str, default: &[&str]) -> Result<Vec<String>> {
-        if self[key].is_badvalue() {
-            Ok(default.iter().map(|&a| str::to_string(a)).collect())
-        } else {
-            self[key]
-                .as_vec()
-                .unwrap_or(&vec![])
-                .iter()
-                .map(|v| v.as_str().map(str::to_string).context("Not string"))
-                .collect()
+    fn get_string_vector(&self, key: &str, default: &[&str]) -> Vec<String> {
+        let map_str = |a: &&str| {
+            if a.is_empty() {
+                log::error!("Empty default value in key {key}");
+                None
+            } else {
+                Some(str::to_string(a))
+            }
+        };
+
+        let value = &self[key];
+        if value.is_badvalue() {
+            log::debug!("{key} no vector, using default {default:?}");
+            return default.iter().filter_map(map_str).collect();
         }
+        value
+            .as_vec()
+            .unwrap_or({
+                log::error!("Bad value in {key} {:?} (expected vector)", value);
+                &vec![]
+            })
+            .iter()
+            .filter_map(|v| match v.as_str() {
+                Some(v) => map_str(&v),
+                None => {
+                    log::error!("Bad value in {key} (expected string)");
+                    None
+                }
+            })
+            .collect()
     }
 
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml> {
@@ -82,8 +102,16 @@ impl Get for Yaml {
 }
 
 pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
-    let content = read_file(file_name)?;
-    load_from_str(&content)
+    match read_file(file_name) {
+        Ok(content) => load_from_str(&content),
+        Err(e) => anyhow::bail!(
+            "Can't read file: {}, {e} ",
+            // Use relatively complicated  method to print name of the file
+            // as it is not possible to use "{file_name:?}": produces to many backslashes
+            // in Windows. Probability to NOT decode filename as UTF-8 is nil.
+            file_name.as_os_str().to_str().unwrap_or("")
+        ),
+    }
 }
 
 fn read_file(file_name: &Path) -> Result<String> {
@@ -149,5 +177,18 @@ vector:
                 .len(),
             2
         );
+    }
+
+    #[test]
+    fn test_get_string_vector() {
+        let yaml = load_from_str("some: 1").unwrap();
+        let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
+        assert_eq!(z, ["1", "2"]);
+        let yaml = load_from_str("bad: 1").unwrap();
+        let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
+        assert!(z.is_empty());
+        let yaml = load_from_str("bad: [a, '3']").unwrap();
+        let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
+        assert_eq!(z, ["a", "3"]);
     }
 }

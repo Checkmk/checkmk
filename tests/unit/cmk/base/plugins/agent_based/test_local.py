@@ -7,7 +7,8 @@ import pytest
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
+
+from cmk.plugins.lib.cache_helper import CacheInfo
 
 
 def test_invalid_metric_name_does_not_crash() -> None:
@@ -362,9 +363,9 @@ if __name__ == "__main__":
     # Just run this file from your IDE and dive into the code.
     import os
 
-    from tests.testlib.utils import cmk_path
+    from tests.testlib.utils import repo_path
 
     assert not pytest.main(
-        ["--doctest-modules", os.path.join(cmk_path(), "cmk/base/plugins/agent_based/local.py")]
+        ["--doctest-modules", os.path.join(repo_path(), "cmk/base/plugins/agent_based/local.py")]
     )
     pytest.main(["-T=unit", "-vvsx", __file__])

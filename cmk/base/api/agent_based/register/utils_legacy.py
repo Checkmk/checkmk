@@ -8,16 +8,15 @@ from typing import Any, NotRequired
 
 from typing_extensions import TypedDict
 
-from cmk.base.api.agent_based.checking_classes import Service
-from cmk.base.api.agent_based.section_classes import SNMPTree
+from cmk.snmplib import SNMPDetectBaseType
 
-from ..section_classes import SNMPDetectSpecification
+from cmk.agent_based.v1 import Service, SNMPTree
 
 _DiscoveredParameters = Mapping | tuple | str | None
 
 
 class LegacyCheckDefinition(TypedDict):
-    detect: NotRequired[SNMPDetectSpecification]
+    detect: NotRequired[SNMPDetectBaseType]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
     sections: NotRequired[list[str]]
     check_function: NotRequired[Callable]

@@ -21,7 +21,7 @@ dockerpty = "*"  # used by dockerized tests for opening debug shells
 fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 fastapi = "*"  # needed to run fake idp for cse tests
 flake8 = "*"
-freezegun = "*"  # used by various unit tests
+freezegun = "==1.2.2"  # used by various unit tests, pinned because of 36 unit test failures (to be analyzed, probably https://github.com/spulec/freezegun/issues/521, hopefully fixed when https://github.com/spulec/freezegun/pull/525 is landed)
 hypothesis = "*"    # used by unit tests
 hypothesis-jsonschema = "==0.22.1"  # pinned for: AttributeError: module 'jsonschema.exceptions' has no attribute '_RefResolutionError'. Did you mean: 'RefResolutionError'?
 isort = "*"  # used as a plugin for editors

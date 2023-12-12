@@ -43,8 +43,8 @@ def check_cisco_asa_connections(_no_item, params, info):
     return state, f"{infotext}, Max. since system startup: {overall_used_conns}", perfdata
 
 
-def parse_cisco_asa_connections(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_asa_connections"] = LegacyCheckDefinition(

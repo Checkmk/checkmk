@@ -12,8 +12,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
 
 
-def parse_alcatel_cpu_aos7(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_alcatel_cpu_aos7(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["alcatel_cpu_aos7"] = LegacyCheckDefinition(

@@ -140,8 +140,7 @@ from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_agent_section_plugin_from_legacy,
-    create_snmp_section_plugin_from_legacy,
+    create_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -1583,29 +1582,21 @@ def _extract_agent_and_snmp_sections() -> list[str]:
     """
     errors = []
     # start with the "main"-checks, the ones without '.' in their names:
-    main_checks = [name for name in check_info if "." not in name]
-    subchecks = [name for name in check_info if "." in name]
+    main_checks = [(name, cinfo) for name, cinfo in check_info.items() if "." not in name]
 
-    for section_name in main_checks:
+    for section_name, check_info_element in main_checks:
         if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
             continue
 
-        check_info_dict = check_info[section_name]
         try:
-            if "fetch" in check_info_dict:
-                agent_based_register.add_section_plugin(
-                    create_snmp_section_plugin_from_legacy(
-                        section_name,
-                        check_info_dict,
-                    )
+            agent_based_register.add_section_plugin(
+                create_section_plugin_from_legacy(
+                    name=section_name,
+                    parse_function=check_info_element["parse_function"],
+                    fetch=check_info_element.get("fetch"),
+                    detect=check_info_element.get("detect"),
                 )
-            else:
-                agent_based_register.add_section_plugin(
-                    create_agent_section_plugin_from_legacy(
-                        section_name,
-                        check_info_dict,
-                    )
-                )
+            )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
             # NOTE: missing section pugins may lead to missing data for a check plugin
             #       *or* to more obscure errors, when a check/inventory plugin will be
@@ -1615,6 +1606,7 @@ def _extract_agent_and_snmp_sections() -> list[str]:
             errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
 
     if cmk.utils.debug.enabled():
+        subchecks = (name for name in check_info if "." in name)
         for subcheck in subchecks:
             assert agent_based_register.is_registered_section_plugin(
                 SectionName(section_name_of(subcheck))

@@ -12,8 +12,6 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
-# TODO params?
-
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
@@ -25,8 +23,8 @@ def check_mcafee_emailgateway_smtp(item, params, info):
     )
 
 
-def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mcafee_emailgateway_smtp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["mcafee_emailgateway_smtp"] = LegacyCheckDefinition(

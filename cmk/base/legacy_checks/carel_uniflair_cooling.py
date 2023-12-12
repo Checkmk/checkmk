@@ -51,8 +51,8 @@ def check_carel_uniflair_cooling(item, _no_params, info):
     return (0, output, perfdata)
 
 
-def parse_carel_uniflair_cooling(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_carel_uniflair_cooling(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["carel_uniflair_cooling"] = LegacyCheckDefinition(

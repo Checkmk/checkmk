@@ -27,6 +27,8 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_peakflow_sp(string_table):
+    if not string_table:
+        return None
     valid = string_table[0]
     res = {"disk": valid[0]}
     if valid[1]:

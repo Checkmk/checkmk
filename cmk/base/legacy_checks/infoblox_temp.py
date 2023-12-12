@@ -31,6 +31,8 @@ from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 
 
 def parse_infoblox_temp(string_table):
+    if not all(string_table):
+        return None
     map_states = {
         "1": (0, "working"),
         "2": (1, "warning"),

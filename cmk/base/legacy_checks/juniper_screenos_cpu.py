@@ -43,8 +43,8 @@ def check_juniper_screenos_cpu(_no_item, params, info):
     return state, message, perf
 
 
-def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_screenos_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(

@@ -17,8 +17,8 @@ def check_netapp_cpu(item, params, info):
     return check_cpu_util(util, params)
 
 
-def parse_netapp_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_netapp_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["netapp_cpu"] = LegacyCheckDefinition(

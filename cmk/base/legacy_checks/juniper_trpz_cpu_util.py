@@ -49,8 +49,8 @@ def check_juniper_trpz_cpu_util(_no_item, params, info):
     return state, message, perf
 
 
-def parse_juniper_trpz_cpu_util(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_trpz_cpu_util(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["juniper_trpz_cpu_util"] = LegacyCheckDefinition(

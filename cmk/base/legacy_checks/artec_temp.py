@@ -24,8 +24,8 @@ def check_artec_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "artec_%s" % item)
 
 
-def parse_artec_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_artec_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["artec_temp"] = LegacyCheckDefinition(

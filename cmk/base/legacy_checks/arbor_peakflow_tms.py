@@ -28,6 +28,8 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_peakflow_tms(string_table):
+    if not all(string_table):
+        return None
     health = string_table[0][0]
     updates = string_table[1][0]
     return {

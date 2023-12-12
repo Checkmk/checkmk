@@ -14,8 +14,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.emc import DETECT_ISILON
 
 
-def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_emc_isilon(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+    return string_table if any(string_table) else None
 
 
 check_info["emc_isilon"] = LegacyCheckDefinition(

@@ -28,8 +28,8 @@ def check_orion_backup(item, params, info):
     return state, f"Status: {state_readable}, Expected time: {backup_time} minutes"
 
 
-def parse_orion_backup(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_orion_backup(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["orion_backup"] = LegacyCheckDefinition(

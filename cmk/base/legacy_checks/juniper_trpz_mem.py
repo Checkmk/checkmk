@@ -17,8 +17,12 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
 
 
-def parse_juniper_trpz_mem(string_table: StringTable) -> Section:
-    return Section(int(string_table[0][0]) * 1024, int(string_table[0][1]) * 1024)
+def parse_juniper_trpz_mem(string_table: StringTable) -> Section | None:
+    return (
+        Section(int(string_table[0][0]) * 1024, int(string_table[0][1]) * 1024)
+        if string_table
+        else None
+    )
 
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(

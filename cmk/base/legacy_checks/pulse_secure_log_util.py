@@ -17,7 +17,7 @@ Section = Mapping[str, int]
 METRIC_PULSE_SECURE_LOG = "log_file_utilization"
 
 
-def parse_pulse_secure_log_utils(string_table: StringTable) -> Section:
+def parse_pulse_secure_log_utils(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, METRIC_PULSE_SECURE_LOG)
 
 

@@ -22,8 +22,8 @@ def check_liebert_chiller_status(_no_item, _no_params, info):
     return 0, "Device is in a OK state"
 
 
-def parse_liebert_chiller_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_liebert_chiller_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["liebert_chiller_status"] = LegacyCheckDefinition(

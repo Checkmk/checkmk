@@ -11,7 +11,9 @@ from cmk.agent_based.v2.type_defs import StringTable
 DETECT_PULSE_SECURE = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12532")
 
 
-def parse_pulse_secure(string_table: StringTable, *keys: str) -> Mapping[str, int]:
+def parse_pulse_secure(string_table: StringTable, *keys: str) -> Mapping[str, int] | None:
+    if not string_table:
+        return None
     parsed = {}
     for key, value in zip(keys, string_table[0]):
         try:

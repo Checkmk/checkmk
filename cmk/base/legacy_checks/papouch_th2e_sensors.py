@@ -61,7 +61,7 @@ def parse_papouch_th2e_sensors(string_table):
                 ),
             )
 
-    return parsed
+    return parsed or None
 
 
 #   .--temperature---------------------------------------------------------.

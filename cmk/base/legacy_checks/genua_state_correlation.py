@@ -30,7 +30,7 @@ from cmk.plugins.lib.genua import DETECT_GENUA
 def inventory_genua_state(info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
-    if info[0]:
+    if info and info[0]:
         numifs = 0
         for _ifIndex, _ifName, _ifType, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in ["0", "1", "2"]:

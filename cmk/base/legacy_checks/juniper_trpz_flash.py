@@ -45,8 +45,8 @@ def check_juniper_trpz_flash(_no_item, params, info):
     return 0, message, perf
 
 
-def parse_juniper_trpz_flash(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_trpz_flash(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["juniper_trpz_flash"] = LegacyCheckDefinition(

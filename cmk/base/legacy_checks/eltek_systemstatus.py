@@ -29,8 +29,8 @@ def check_eltek_systemstatus(_no_item, _no_params, info):
     return state, "Operational status: %s" % state_readable
 
 
-def parse_eltek_systemstatus(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_eltek_systemstatus(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["eltek_systemstatus"] = LegacyCheckDefinition(

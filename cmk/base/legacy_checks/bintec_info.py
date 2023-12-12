@@ -12,9 +12,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 
 
 def inventory_bintec_info(info):
-    if len(info[0]) >= 1:
-        return [(None, None)]
-    return []
+    if info and info[0]:
+        yield None, {}
 
 
 def check_bintec_info(checktype, params, info):

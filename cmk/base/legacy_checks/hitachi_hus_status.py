@@ -46,8 +46,8 @@ def check_hitachi_hus_status(_no_item, _no_params, info):
                 yield state, message
 
 
-def parse_hitachi_hus_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_hitachi_hus_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["hitachi_hus_status"] = LegacyCheckDefinition(

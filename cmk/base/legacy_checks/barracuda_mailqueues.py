@@ -46,8 +46,8 @@ def check_barracuda_mailqueues(_no_item, params, info):
         yield 0, "Daily sent: %s" % daily_sent
 
 
-def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["barracuda_mailqueues"] = LegacyCheckDefinition(

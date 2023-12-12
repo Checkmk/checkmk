@@ -20,8 +20,8 @@ def check_mcafee_emailgateway_agent(item, params, info):
     return 0, "Version: %s, Hostname: %s, Last file update: %s" % tuple(info[0])
 
 
-def parse_mcafee_emailgateway_agent(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mcafee_emailgateway_agent(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["mcafee_emailgateway_agent"] = LegacyCheckDefinition(

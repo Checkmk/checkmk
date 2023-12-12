@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -16,9 +16,10 @@ from cmk.plugins.lib.fireeye import DETECT
 # .1.3.6.1.4.1.25597.13.1.43.0 0
 
 
-def inventory_bypass(info):
-    value = int(info[0][0])
-    yield None, {"value": value}
+def inventory_bypass(section: StringTable) -> DiscoveryResult:
+    if section:
+        value = int(section[0][0])
+        yield Service(parameters={"value": value})
 
 
 def check_fireeye_bypass(_no_item, params, info):

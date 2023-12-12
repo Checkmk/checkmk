@@ -58,8 +58,8 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 0, score_msg
 
 
-def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_acme_sbc_snmp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(

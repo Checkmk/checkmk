@@ -39,8 +39,8 @@ def check_bdt_tape_status(_no_item, _no_params, info):
     return state, status
 
 
-def parse_bdt_tape_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_bdt_tape_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["bdt_tape_status"] = LegacyCheckDefinition(

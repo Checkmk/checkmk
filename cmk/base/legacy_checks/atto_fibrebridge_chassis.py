@@ -12,6 +12,9 @@ from cmk.agent_based.v2 import SNMPTree, startswith
 
 
 def parse_atto_fibrebridge_chassis(string_table):
+    if not string_table:
+        return None
+
     parsed = {}
 
     min_operating_temp = int(string_table[0][0])

@@ -37,8 +37,8 @@ def check_orion_batterytest(item, params, info):
     return 0, "No test result available"
 
 
-def parse_orion_batterytest(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_orion_batterytest(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["orion_batterytest"] = LegacyCheckDefinition(

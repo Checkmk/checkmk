@@ -22,8 +22,8 @@ def check_knuerr_rms_humidity(_no_item, params, info):
     return check_humidity(float(reading) / 10, params)
 
 
-def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_knuerr_rms_humidity(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(

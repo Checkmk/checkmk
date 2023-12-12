@@ -12,6 +12,9 @@ from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 
 def parse_ups_cps_battery(string_table):
+    if not string_table:
+        return None
+
     parsed: dict[str, float] = {}
 
     if string_table[0][0]:

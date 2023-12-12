@@ -25,8 +25,8 @@ def check_mcafee_emailgateway_av_mcafee(item, params, info):
     )
 
 
-def parse_mcafee_emailgateway_av_mcafee(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mcafee_emailgateway_av_mcafee(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["mcafee_emailgateway_av_mcafee"] = LegacyCheckDefinition(

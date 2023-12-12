@@ -14,8 +14,10 @@ from cmk.agent_based.v2 import any_of, equals, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def parse_wagner_titanus_topsense(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_wagner_titanus_topsense(
+    string_table: Sequence[StringTable],
+) -> Sequence[StringTable] | None:
+    return string_table if string_table[0] else None
 
 
 check_info["wagner_titanus_topsense"] = LegacyCheckDefinition(

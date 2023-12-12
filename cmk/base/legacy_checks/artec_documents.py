@@ -34,8 +34,8 @@ def check_artec_documents(_no_item, _no_params, info):
             yield 0, "%s: %d (%.2f/s)" % (name, documents, rate)
 
 
-def parse_artec_documents(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_artec_documents(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["artec_documents"] = LegacyCheckDefinition(

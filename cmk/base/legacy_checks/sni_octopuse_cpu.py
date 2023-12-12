@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
-
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -14,31 +12,28 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
-def inventory_octopus_cpu(info):
-    if len(info[0][0]) == 1:
-        return [(None, None)]
-    return []
+def inventory_octopus_cpu(section: StringTable) -> DiscoveryResult:
+    if len(section[0]) == 1:
+        yield Service()
 
 
 def check_octopus_cpu(_no_item, _no_params_info, info):
-    cpu_perc = int(info[0][0][0])
+    cpu_perc = int(info[0][0])
     perfdata = [("util", "%.3f" % cpu_perc)]
     return 0, "CPU utilization is %d%%" % cpu_perc, perfdata
 
 
-def parse_sni_octopuse_cpu(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_sni_octopuse_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["sni_octopuse_cpu"] = LegacyCheckDefinition(
     parse_function=parse_sni_octopuse_cpu,
     detect=DETECT_SNI_OCTOPUSE,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.231.7.2.9.1",
-            oids=["7"],
-        )
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.231.7.2.9.1",
+        oids=["7"],
+    ),
     service_name="CPU utilization",
     discovery_function=inventory_octopus_cpu,
     check_function=check_octopus_cpu,

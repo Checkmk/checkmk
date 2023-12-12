@@ -28,8 +28,8 @@ def check_barracuda_mail_latency(_no_item, params, info):
     )
 
 
-def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_barracuda_mail_latency(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["barracuda_mail_latency"] = LegacyCheckDefinition(

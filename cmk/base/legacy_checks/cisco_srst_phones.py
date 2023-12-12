@@ -20,8 +20,8 @@ def check_cisco_srst_phones(_no_item, _no_params, info):
     yield 0, "%d phones registered" % phones, [("registered_phones", phones)]
 
 
-def parse_cisco_srst_phones(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_srst_phones(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_srst_phones"] = LegacyCheckDefinition(

@@ -25,8 +25,8 @@ def check_avaya_88xx_cpu(_no_item, params, info):
     return check_cpu_util(int(info[0][0]), params, time.time())
 
 
-def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_avaya_88xx_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(

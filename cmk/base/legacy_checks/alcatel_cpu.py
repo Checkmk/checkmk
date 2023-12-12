@@ -13,8 +13,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.alcatel import DETECT_ALCATEL
 
 
-def parse_alcatel_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_alcatel_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["alcatel_cpu"] = LegacyCheckDefinition(

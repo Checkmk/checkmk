@@ -20,13 +20,16 @@ from cmk.agent_based.v2 import SNMPTree
 
 
 def parse_cisco_ucs_temp_env(string_table):
-    new_info = {
-        "Ambient": string_table[0][0],
-        "Front": string_table[0][1],
-        "IO-Hub": string_table[0][2],
-        "Rear": string_table[0][3],
-    }
-    return new_info
+    return (
+        {
+            "Ambient": string_table[0][0],
+            "Front": string_table[0][1],
+            "IO-Hub": string_table[0][2],
+            "Rear": string_table[0][3],
+        }
+        if string_table
+        else None
+    )
 
 
 def inventory_cisco_ucs_temp_env(info):

@@ -83,8 +83,8 @@ def check_climaveneta_alarm(item, params, info):
         yield 0, "No alarm state"
 
 
-def parse_climaveneta_alarm(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_climaveneta_alarm(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["climaveneta_alarm"] = LegacyCheckDefinition(

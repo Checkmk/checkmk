@@ -23,8 +23,8 @@ def check_quantum_libsmall_door(_no_item, _no_params, info):
     return 3, "Library door status unknown"
 
 
-def parse_quantum_libsmall_door(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_quantum_libsmall_door(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["quantum_libsmall_door"] = LegacyCheckDefinition(

@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree, startswith
 from cmk.agent_based.v2.type_defs import StringTable
 
 
-def inventory_packeteer_fan_status(info):
-    for nr, fan_status in enumerate(info[0]):
+def inventory_packeteer_fan_status(section: StringTable) -> DiscoveryResult:
+    for nr, fan_status in enumerate(section[0]):
         if fan_status in ["1", "2"]:
-            yield ("%d" % nr, None)
+            yield Service(item=f"{nr}")
 
 
 def check_packeteer_fan_status(item, _no_params, info):
@@ -28,8 +28,8 @@ def check_packeteer_fan_status(item, _no_params, info):
     return None
 
 
-def parse_packeteer_fan_status(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_packeteer_fan_status(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["packeteer_fan_status"] = LegacyCheckDefinition(

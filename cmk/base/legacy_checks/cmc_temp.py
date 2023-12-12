@@ -34,8 +34,8 @@ def check_cmc_temp(item, params, info):
     )
 
 
-def parse_cmc_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
-    return string_table
+def parse_cmc_temp(string_table: Sequence[StringTable]) -> Sequence[StringTable] | None:
+    return string_table if any(string_table) else None
 
 
 check_info["cmc_temp"] = LegacyCheckDefinition(

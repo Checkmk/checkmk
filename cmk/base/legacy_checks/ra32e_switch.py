@@ -31,8 +31,8 @@ def check_ra32e_switch(item, params, info):
     return state, infotext
 
 
-def parse_ra32e_switch(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_ra32e_switch(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["ra32e_switch"] = LegacyCheckDefinition(

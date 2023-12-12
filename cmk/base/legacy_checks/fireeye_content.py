@@ -24,6 +24,9 @@ SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtu
 
 
 def parse_fireeye_content(string_table):
+    if not string_table:
+        return None
+
     security_content_status_map = {
         "1": "OK",
         "0": "failed",

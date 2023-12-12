@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import all_of, contains, exists, render, SNMPTree
 def parse_fortigate_memory(string_table):
     try:
         return int(string_table[0][0])
-    except ValueError:
+    except (ValueError, IndexError):
         return None
 
 

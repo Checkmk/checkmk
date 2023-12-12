@@ -25,8 +25,8 @@ def check_netextreme_temp(item, params, info):
     return check_temperature(float(info[0][0]), params, "netextreme_temp_System")
 
 
-def parse_netextreme_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_netextreme_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["netextreme_temp"] = LegacyCheckDefinition(

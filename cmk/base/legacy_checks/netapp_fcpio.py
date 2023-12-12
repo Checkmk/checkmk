@@ -40,8 +40,8 @@ def check_netapp_fcpio(item, params, info):
     )
 
 
-def parse_netapp_fcpio(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_netapp_fcpio(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["netapp_fcpio"] = LegacyCheckDefinition(

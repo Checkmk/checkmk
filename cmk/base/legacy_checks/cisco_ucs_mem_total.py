@@ -25,8 +25,8 @@ def check_cisco_ucs_mem_total(_no_item, _no_params, info):
     return 0, "Total Memory: %s MB" % total_memory
 
 
-def parse_cisco_ucs_mem_total(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_cisco_ucs_mem_total(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["cisco_ucs_mem_total"] = LegacyCheckDefinition(

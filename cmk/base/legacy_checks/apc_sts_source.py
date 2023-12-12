@@ -15,7 +15,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 
 
 def inventory_apc_sts_source(info):
-    return [(None, {"source1": info[0][0], "source2": info[0][1]})]
+    if info:
+        yield None, {"source1": info[0][0], "source2": info[0][1]}
 
 
 def check_apc_sts_source(_not_item, params, info):

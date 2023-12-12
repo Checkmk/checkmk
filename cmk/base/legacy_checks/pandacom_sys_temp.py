@@ -23,8 +23,8 @@ def check_pandacom_sys_temp(item, params, info):
     return check_temperature(int(info[0][0]), params, "pandacom_sys_%s" % item)
 
 
-def parse_pandacom_sys_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_pandacom_sys_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["pandacom_sys_temp"] = LegacyCheckDefinition(

@@ -29,6 +29,8 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 def parse_pravail(string_table):
+    if not string_table:
+        return None
     # peakflow SP and TMS have the same string_table in different oid ranges
     valid = string_table[0]
     return {

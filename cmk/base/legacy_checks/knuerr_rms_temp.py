@@ -21,8 +21,8 @@ def check_knuerr_rms_temp(_no_item, params, info):
     return check_temperature(float(info[0][0]) / 10, params, "knuerr_rms_temp")
 
 
-def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_knuerr_rms_temp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(

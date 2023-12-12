@@ -29,7 +29,7 @@ def inventory_genua_carp(info):
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
 
-    if info[0]:
+    if info and info[0]:
         for ifName, _ifLinkState, ifCarpState in info[0]:
             if ifCarpState in ["0", "1", "2"]:
                 inventory.append((ifName, None))

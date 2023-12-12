@@ -178,7 +178,7 @@ def check_cmctc_lcp(
     yield extra_state, extra_info, perfdata
 
 
-def inventory_cmctc_lcp_temp(section: Section, sensortype: str) -> Iterable[tuple[str, dict]]:
+def inventory_cmctc_lcp_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from inventory_cmctc_lcp(section, "temp")
 
 

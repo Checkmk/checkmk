@@ -26,7 +26,7 @@ def parse_raritan_pdu_inlet_summary(string_table):
                 else:
                     summary[key] = (value, None)
 
-    return {"Summary": summary}
+    return {"Summary": summary} if summary else None
 
 
 def discover_raritan_pdu_inlet_summary(section):

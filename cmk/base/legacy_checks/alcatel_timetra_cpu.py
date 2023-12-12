@@ -21,8 +21,8 @@ def check_alcatel_timetra_cpu(_no_item, params, info):
     return check_cpu_util(cpu_perc, params)
 
 
-def parse_alcatel_timetra_cpu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_alcatel_timetra_cpu(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["alcatel_timetra_cpu"] = LegacyCheckDefinition(

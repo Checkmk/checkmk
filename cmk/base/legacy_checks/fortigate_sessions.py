@@ -26,8 +26,8 @@ def check_fortigate_sessions(item, params, info):
     )
 
 
-def parse_fortigate_sessions(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_fortigate_sessions(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["fortigate_sessions"] = LegacyCheckDefinition(

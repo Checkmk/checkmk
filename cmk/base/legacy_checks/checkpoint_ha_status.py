@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -21,11 +21,12 @@ from cmk.plugins.lib.checkpoint import DETECT
 # .1.3.6.1.4.1.2620.1.5.103.0
 
 
-def inventory_checkpoint_ha_status(info):
-    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = info[0]
+def inventory_checkpoint_ha_status(section: StringTable) -> DiscoveryResult:
+    if not section:
+        return
+    installed, _major, _minor, _started, _state, _block_state, _stat_code, _stat_long = section[0]
     if installed != "0":
-        return [(None, None)]
-    return []
+        yield Service()
 
 
 def check_checkpoint_ha_status(_no_item, _no_params, info):

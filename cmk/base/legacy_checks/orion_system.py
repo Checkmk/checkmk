@@ -15,6 +15,10 @@ from cmk.agent_based.v2 import SNMPTree, startswith
 
 
 def parse_orion_system(string_table):
+    if not string_table:
+        return None
+
+    # states do not belong to the parsing :-(
     map_charge_states = {
         "1": (0, "float charging"),
         "2": (0, "discharge"),

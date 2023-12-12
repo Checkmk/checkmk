@@ -20,7 +20,7 @@ METRICS_INFO_NAMES_PULSE_SECURE_MEM = (
 )
 
 
-def parse_pulse_secure_mem(string_table: StringTable) -> Section:
+def parse_pulse_secure_mem(string_table: StringTable) -> Section | None:
     return pulse_secure.parse_pulse_secure(string_table, *METRICS_INFO_NAMES_PULSE_SECURE_MEM[0])
 
 

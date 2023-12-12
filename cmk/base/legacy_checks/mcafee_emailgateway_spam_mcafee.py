@@ -20,8 +20,8 @@ def check_mcafee_emailgateway_spam_mcafee(item, params, info):
     return 0, f"Engine version: {eng_version}, Rules version: {rules_version}"
 
 
-def parse_mcafee_emailgateway_spam_mcafee(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_mcafee_emailgateway_spam_mcafee(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
 check_info["mcafee_emailgateway_spam_mcafee"] = LegacyCheckDefinition(

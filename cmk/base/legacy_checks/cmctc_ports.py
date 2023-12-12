@@ -65,6 +65,8 @@ def parse_cmctc_ports(string_table):
 
         return description, parsed
 
+    if not all(string_table):
+        return None
     parsed = {}
     # cmctc_lcp uses port numbers the range 3-6.
     # Therefore, we start counting at 3 here as well

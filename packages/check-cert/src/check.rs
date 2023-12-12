@@ -262,19 +262,21 @@ where
             "{}={}{};{};{};{};{}",
             self.label,
             self.value,
-            self.uom.as_ref().map_or(String::new(), ToString::to_string),
+            self.uom
+                .as_ref()
+                .map_or(Default::default(), ToString::to_string),
             self.levels
                 .as_ref()
-                .map_or(String::new(), |v| v.warn.to_string()),
+                .map_or(Default::default(), |v| v.warn.to_string()),
             self.levels
                 .as_ref()
-                .map_or(String::new(), |v| v.crit.to_string()),
+                .map_or(Default::default(), |v| v.crit.to_string()),
             self.bounds
                 .as_ref()
-                .map_or(String::new(), |v| v.min.to_string()),
+                .map_or(Default::default(), |v| v.min.to_string()),
             self.bounds
                 .as_ref()
-                .map_or(String::new(), |v| v.max.to_string()),
+                .map_or(Default::default(), |v| v.max.to_string()),
         )
     }
 }

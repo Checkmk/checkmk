@@ -758,7 +758,7 @@ def _inject_prediction_callback(
             service_name,
             PredictionParameters.model_validate(params),
             partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
-        )
+        ).get_predictive_levels
 
     return {k: _inject_prediction_callback(host_name, service_name, v) for k, v in params.items()}
 

@@ -21,6 +21,7 @@ class HostTag(BaseSchema):
 class HostTagExtensions(BaseSchema):
     topic = fields.String(description="The topic this host tag group is organized in.")
     tags = fields.List(fields.Nested(HostTag()), description="The list of tags in this group.")
+    help = fields.String(description="A help description for the tag group")
 
 
 class ConcreteHostTagGroup(DomainObject):

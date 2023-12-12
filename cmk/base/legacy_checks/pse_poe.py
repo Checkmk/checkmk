@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeValues
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import exists, OIDEnd, SNMPTree
+
+from cmk.agent_based.v2 import exists, OIDEnd, SNMPTree
 
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)

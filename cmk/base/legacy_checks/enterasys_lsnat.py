@@ -6,8 +6,8 @@
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, exists, SNMPTree, startswith
 
+from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith
 from cmk.agent_based.v2.type_defs import StringTable
 
 

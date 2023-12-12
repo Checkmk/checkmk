@@ -15,7 +15,8 @@ from cmk.base.check_legacy_includes.hwg import (
     parse_hwg,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+from cmk.agent_based.v2 import contains, SNMPTree
 
 check_info["hwg_ste2"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),

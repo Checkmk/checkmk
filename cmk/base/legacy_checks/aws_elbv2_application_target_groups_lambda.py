@@ -11,8 +11,8 @@ from cmk.base.check_legacy_includes.aws import (
     check_aws_request_rate,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
+from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
 
 

@@ -12,7 +12,8 @@ import time
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
+
+from cmk.agent_based.v2 import get_value_store
 
 
 def _update_remaining_reads(parsed, value):

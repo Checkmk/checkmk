@@ -7,13 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    contains,
-    not_equals,
-    OIDEnd,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree

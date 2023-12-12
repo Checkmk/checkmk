@@ -7,8 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeStatus, PoeValues
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.plugins.lib.tplink import DETECT_TPLINK
 
 # Maps poe power status to faulty status detail string.

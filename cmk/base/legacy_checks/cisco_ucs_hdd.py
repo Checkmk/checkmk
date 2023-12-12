@@ -14,7 +14,8 @@ from typing import Final, NamedTuple
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_ucs import DETECT, map_operability
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+
+from cmk.agent_based.v2 import render, SNMPTree
 
 _HOT_SPARE_VALUES: Final = {3, 4}
 

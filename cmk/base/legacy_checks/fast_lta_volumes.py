@@ -9,13 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    all_of,
-    any_of,
-    exists,
-    SNMPTree,
-    startswith,
-)
+
+from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith
 
 
 def parse_fast_lta_volumes(string_table):

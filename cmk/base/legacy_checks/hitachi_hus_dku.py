@@ -7,8 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.hitachi_hus import check_hitachi_hus, inventory_hitachi_hus
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
+from cmk.agent_based.v2 import any_of, contains, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 

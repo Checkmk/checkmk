@@ -5,7 +5,7 @@
 """Helper to register a new-style section based on config.check_info
 """
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
@@ -17,13 +17,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
     create_snmp_section_plugin,
 )
 
-from cmk.agent_based.v2 import (
-    AgentSection,
-    SimpleSNMPSection,
-    SNMPDetectSpecification,
-    SNMPSection,
-    SNMPTree,
-)
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 from .utils_legacy import LegacyCheckDefinition
@@ -103,24 +97,21 @@ def create_snmp_section_plugin_from_legacy(
         # This would add 19 plugins to list of failures, but some are on the list anyway.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
-    fetch = check_info_element["fetch"]
-    detect = cast(SNMPDetectSpecification, check_info_element["detect"])
-
     parse_function = _create_snmp_parse_function(check_info_element["parse_function"])
 
     return create_snmp_section_plugin(
-        SimpleSNMPSection(  # ty#pe: ignore[call-overload]
+        SimpleSNMPSection(
             name=get_section_name(check_plugin_name),
             parse_function=parse_function,
             fetch=fetch,
-            detect=detect,
+            detect=check_info_element["detect"],
         )
-        if isinstance(fetch, SNMPTree)
-        else SNMPSection(  # ty#pe: ignore[call-overload]
+        if isinstance((fetch := check_info_element["fetch"]), SNMPTree)
+        else SNMPSection(
             name=get_section_name(check_plugin_name),
             parse_function=parse_function,
             fetch=fetch,
-            detect=detect,
+            detect=check_info_element["detect"],
         ),
         location=None,
         validate=False,

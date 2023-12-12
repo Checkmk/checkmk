@@ -10,8 +10,8 @@ from cmk.base.check_legacy_includes.pandacom_temp import (
     PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 

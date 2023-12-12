@@ -8,15 +8,8 @@ import time
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    any_of,
-    equals,
-    get_rate,
-    get_value_store,
-    OIDEnd,
-    render,
-    SNMPTree,
-)
+
+from cmk.agent_based.v2 import any_of, equals, get_rate, get_value_store, OIDEnd, render, SNMPTree
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second

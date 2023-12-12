@@ -1,0 +1,46 @@
+Title: jar_signature: Prevent privilege escalation to root
+Class: security
+Compatible: incomp
+Component: checks
+Date: 1702395666
+Edition: cre
+Level: 3
+Version: 2.3.0b1
+
+jar_signature agent plugin (configured by the 'Signatures of certificates in JAR files' bakery rule)
+was vulnerable to privilege escalation to root by the oracle user.
+
+A malicious oracle user could replace the jarsigner binary with another script and put
+it in the JAVA_HOME directory. The script would be executed by the root user.
+
+The jarsigner is now executed by the oracle user, preventing the privilege escalation.
+
+This werk is incompatible for users that use the jar_signature plugin. Too avoid risk, users
+should deploy the new version of the plugin or disable it.
+
+This issue was found during internal review.
+
+
+### Affected Versions
+
+ * 2.2.0
+ * 2.1.0
+ * 2.0.0 (EOL) and older
+
+
+### Mitigations
+
+If updating is not possible, disable the jar_signature plugin.
+
+
+### Vulnerability Management
+
+We have rated the issue with a CVSS score of 8.8 (High) with the following CVSS vector:
+`CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H`
+
+We have assigned `CVE-2023-6740`.
+
+
+### Changes
+
+The jarsigner binary is now executed by the oracle user.

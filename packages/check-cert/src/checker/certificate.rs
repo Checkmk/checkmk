@@ -85,16 +85,19 @@ fn check_signature_algorithm(
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let signature_algorithm = match SignatureAlgorithm::try_from(signature_algorithm) {
-            Ok(SignatureAlgorithm::RSA) => "RSA",
-            Ok(SignatureAlgorithm::RSASSA_PSS(_)) => "RSASSA_PSS",
-            Ok(SignatureAlgorithm::RSAAES_OAEP(_)) => "RSAAES_OAEP",
-            Ok(SignatureAlgorithm::DSA) => "DSA",
-            Ok(SignatureAlgorithm::ECDSA) => "ECDSA",
-            Ok(SignatureAlgorithm::ED25519) => "ED25519",
-            Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
-        };
-        check_eq!("Signature algorithm", signature_algorithm, expected)
+        check_eq!(
+            "Signature algorithm",
+            match SignatureAlgorithm::try_from(signature_algorithm) {
+                Ok(SignatureAlgorithm::RSA) => "RSA",
+                Ok(SignatureAlgorithm::RSASSA_PSS(_)) => "RSASSA_PSS",
+                Ok(SignatureAlgorithm::RSAAES_OAEP(_)) => "RSAAES_OAEP",
+                Ok(SignatureAlgorithm::DSA) => "DSA",
+                Ok(SignatureAlgorithm::ECDSA) => "ECDSA",
+                Ok(SignatureAlgorithm::ED25519) => "ED25519",
+                Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
+            },
+            expected
+        )
     })
 }
 
@@ -103,16 +106,19 @@ fn check_pubkey_algorithm(
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let pubkey_alg = match pubkey.parsed() {
-            Ok(PublicKey::RSA(_)) => "RSA",
-            Ok(PublicKey::EC(_)) => "EC",
-            Ok(PublicKey::DSA(_)) => "DSA",
-            Ok(PublicKey::GostR3410(_)) => "GostR3410",
-            Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
-            Ok(PublicKey::Unknown(_)) => "Unknown",
-            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
-        };
-        check_eq!("Public key algorithm", pubkey_alg, expected)
+        check_eq!(
+            "Public key algorithm",
+            match pubkey.parsed() {
+                Ok(PublicKey::RSA(_)) => "RSA",
+                Ok(PublicKey::EC(_)) => "EC",
+                Ok(PublicKey::DSA(_)) => "DSA",
+                Ok(PublicKey::GostR3410(_)) => "GostR3410",
+                Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
+                Ok(PublicKey::Unknown(_)) => "Unknown",
+                Err(_) => return SimpleCheckResult::warn("Invalid public key"),
+            },
+            expected
+        )
     })
 }
 
@@ -121,17 +127,20 @@ fn check_pubkey_size(
     expected: Option<usize>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
-        let pubkey_size = match pubkey.parsed() {
-            // more or less stolen from upstream `examples/print-cert.rs`.
-            Ok(PublicKey::RSA(rsa)) => rsa.key_size(),
-            Ok(PublicKey::EC(ec)) => ec.key_size(),
-            Ok(PublicKey::DSA(k))
-            | Ok(PublicKey::GostR3410(k))
-            | Ok(PublicKey::GostR3410_2012(k))
-            | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
-            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
-        };
-        check_eq!("Public key size", pubkey_size, expected)
+        check_eq!(
+            "Public key size",
+            match pubkey.parsed() {
+                // more or less stolen from upstream `examples/print-cert.rs`.
+                Ok(PublicKey::RSA(rsa)) => rsa.key_size(),
+                Ok(PublicKey::EC(ec)) => ec.key_size(),
+                Ok(PublicKey::DSA(k))
+                | Ok(PublicKey::GostR3410(k))
+                | Ok(PublicKey::GostR3410_2012(k))
+                | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
+                Err(_) => return SimpleCheckResult::warn("Invalid public key"),
+            },
+            expected
+        )
     })
 }
 

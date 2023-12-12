@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-import tests.testlib as testlib
+from tests.testlib.utils import wait_until
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -133,7 +133,7 @@ def test_start_job() -> None:
     assert status.state == JobStatusStates.INITIALIZED
 
     job.start(job.execute_hello)
-    testlib.wait_until(job.is_active, timeout=5, interval=0.1)
+    wait_until(job.is_active, timeout=5, interval=0.1)
 
     with pytest.raises(BackgroundJobAlreadyRunning):
         job.start(job.execute_hello)
@@ -141,7 +141,7 @@ def test_start_job() -> None:
 
     job.finish_hello_event.set()
 
-    testlib.wait_until(
+    wait_until(
         lambda: job.get_status().state
         not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
         timeout=5,
@@ -161,7 +161,7 @@ def test_stop_job() -> None:
     job = DummyBackgroundJob()
     job.start(job.execute_endless)
 
-    testlib.wait_until(
+    wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,
@@ -202,7 +202,7 @@ def test_job_status_not_started() -> None:
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
     job.start(job.execute_endless)
-    testlib.wait_until(
+    wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,
@@ -227,7 +227,7 @@ def test_job_status_while_running() -> None:
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
     job.start(job.execute_endless)
-    testlib.wait_until(
+    wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,

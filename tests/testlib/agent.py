@@ -14,9 +14,8 @@ from multiprocessing import Process
 from pathlib import Path
 from typing import Any
 
-from tests.testlib import wait_until
 from tests.testlib.site import Site
-from tests.testlib.utils import run
+from tests.testlib.utils import run, wait_until
 
 from cmk.utils.hostaddress import HostName
 

@@ -7,9 +7,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib import wait_until
 from tests.testlib.site import get_site_factory, Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, run
+from tests.testlib.utils import current_base_branch_name, current_branch_version, run, wait_until
 from tests.testlib.version import CMKVersion, Edition, get_min_version
 
 from tests.plugins_integration import checks

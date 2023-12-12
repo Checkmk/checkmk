@@ -59,7 +59,7 @@ are ready to process the data:
 <tr><td>netapp_api_vf_stats.cpu_util</td><td>vFiler CPU utilization</td></tr>
 <tr><td>netapp_api_vf_status</td><td>vFiler status</td></tr>
 <tr><td>netapp_api_psu</td><td>Power supplies summary which are relevant to that filer. Reports broken units</td></tr>
-<tr><td>netapp_api_fan</td><td>Fans summary which are relevant to that filer. Reports broken units</td><tr>
+<tr><td>netapp_api_fan</td><td>Fans summary which are relevant to that filer. Reports broken units</td></tr>
 <tr><td>netapp_api_temp</td><td>Temperature sensor summary for internal and ambient sensors relevant to that filer. Reports broken units</td></tr>
 </table>
 

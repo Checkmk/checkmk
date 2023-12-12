@@ -12,14 +12,13 @@ agent plugin {{mk_informix}} and state a configuration file
 informix.cfg.
 <ul>
 <li>ONINIT_PATH; Default is empty, which means auto detection:</li>
-<ul>
 <li>ONINIT_PATH=/PATH/TO/ONINIT-BINARY</li>
 </ul>
-<li>Excluding sections: status, sessions, locks, tabextents, dbspaces, logusage:</li>
+
+Excluding sections: status, sessions, locks, tabextents, dbspaces, logusage:
 <ul>
 <li>EXCLUDES_INFORMIX-INSTANCE="SECTION SECTION ..."</li>
 <li>EXCLUDES_INFORMIX-INSTANCE=ALL</li>
 <li>EXCLUDES="SECTION SECTION ..."</li>
 <li>EXCLUDES=ALL</li>
-</ul>
 </ul>

@@ -9,7 +9,7 @@ from typing import ContextManager
 
 import pytest
 
-from cmk.rulesets.v1 import disallow_empty, in_range, Localizable, match_regex, ValidationError
+from cmk.rulesets.v1 import DisallowEmpty, InRange, Localizable, MatchRegex, ValidationError
 
 
 @pytest.mark.parametrize(
@@ -33,7 +33,7 @@ from cmk.rulesets.v1 import disallow_empty, in_range, Localizable, match_regex, 
             None,
             2.5,
             pytest.raises(ValidationError),
-            "2.5 is too low. The minimum allowed value is 5.0.",
+            "The minimum allowed value is 5.0.",
             id="outside lower limit",
         ),
         pytest.param(
@@ -41,7 +41,7 @@ from cmk.rulesets.v1 import disallow_empty, in_range, Localizable, match_regex, 
             None,
             15.0,
             pytest.raises(ValidationError),
-            "15.0 is too high. The maximum allowed value is 10.0.",
+            "The maximum allowed value is 10.0.",
             id="outside upper limit",
         ),
         pytest.param(
@@ -72,7 +72,7 @@ def test_in_range(
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
-        in_range(**input_args, error_msg=input_message)(test_value)
+        InRange(**input_args, error_msg=input_message)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
@@ -92,7 +92,7 @@ def test_in_range(
             {},
             "invalid.string",
             pytest.raises(ValidationError),
-            r"Your input 'invalid.string' does not match the required format '^[^.\r\n]+$'.",
+            r"Your input does not match the required format '^[^.\r\n]+$'.",
             id="invalid string with default message",
         ),
         pytest.param(
@@ -112,7 +112,7 @@ def test_match_regex(
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
-        match_regex(input_regex, **input_msg)(test_value)
+        MatchRegex(input_regex, **input_msg)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 
@@ -159,6 +159,6 @@ def test_disallow_empty(
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
-        disallow_empty(**input_msg)(test_value)
+        DisallowEmpty(**input_msg)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message

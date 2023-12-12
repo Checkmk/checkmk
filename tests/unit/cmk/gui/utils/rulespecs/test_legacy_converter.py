@@ -30,8 +30,8 @@ import cmk.rulesets.v1 as api_v1
 
 
 def _v1_custom_text_validate(value: str) -> None:
-    api_v1.disallow_empty(error_msg=api_v1.Localizable("Fill this"))(value)
-    api_v1.match_regex(regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed"))(value)
+    api_v1.DisallowEmpty(error_msg=api_v1.Localizable("Fill this"))(value)
+    api_v1.MatchRegex(regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed"))(value)
 
     if value == "admin":
         raise api_v1.ValidationError(api_v1.Localizable("Forbidden"))
@@ -728,7 +728,7 @@ def test_convert_validation(input_value: str) -> None:
 )
 def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -> None:
     def _v1_custom_list_validate(value: Sequence[object]) -> None:
-        api_v1.disallow_empty(error_msg=api_v1.Localizable("Empty list"))(value)
+        api_v1.DisallowEmpty(error_msg=api_v1.Localizable("Empty list"))(value)
 
         if len(value) > 2:
             raise api_v1.ValidationError(api_v1.Localizable("Max number of elements exceeded"))

@@ -13,9 +13,9 @@ from cmk.rulesets.v1 import (
     CheckParameterRuleSpecWithoutItem,
     DictElement,
     Dictionary,
-    disallow_empty,
+    DisallowEmpty,
     FixedValue,
-    in_range,
+    InRange,
     Integer,
     List,
     Localizable,
@@ -70,7 +70,7 @@ def _discovery_parameters_form_alertmanager():
                                             title=Localizable(
                                                 "Minimum amount of alert rules in a group to create a group service"
                                             ),
-                                            custom_validate=in_range(min_value=1),
+                                            custom_validate=InRange(min_value=1),
                                             prefill_value=3,
                                             help_text=Localizable(
                                                 "Below the specified value alert rules will be monitored as a"
@@ -177,7 +177,7 @@ def form_alert_remapping():
         ),
         title=Localizable("Remap alert rule states"),
         help_text=Localizable("Configure the monitoring state for Alertmanager rules."),
-        custom_validate=disallow_empty(),
+        custom_validate=DisallowEmpty(),
         prefill_value=[
             {
                 "map": {
@@ -206,7 +206,7 @@ rule_spec_alertmanager_rule_state = CheckParameterRuleSpecWithItem(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
     item_form=TextInput(
-        title=Localizable("Name of Alert rules/Alert rule groups"), custom_validate=disallow_empty()
+        title=Localizable("Name of Alert rules/Alert rule groups"), custom_validate=DisallowEmpty()
     ),
     parameter_form=_check_parameters_form_alertmanager,
     title=Localizable("Alertmanager rule states"),

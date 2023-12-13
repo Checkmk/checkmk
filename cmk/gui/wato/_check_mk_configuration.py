@@ -6,7 +6,7 @@
 import logging
 import re
 from collections.abc import Mapping
-from typing import Any, Literal
+from typing import Any, Literal, Sequence
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -5971,34 +5971,53 @@ SnmpExcludeSections = HostRulespec(
 )
 
 
+prev_snmpv3_values = tuple[
+    str | None,
+    Sequence[str],
+]
+new_snmpv3_values = tuple[
+    str | None,
+    Sequence[str],
+    Literal["continue_on_timeout", "stop_on_timeout"],
+]
+
+
+def add_error_handling_option(values: prev_snmpv3_values | new_snmpv3_values) -> new_snmpv3_values:
+    """Update from 2.2 -> 2.3"""
+    return values + ("stop_on_timeout",) if len(values) == 2 else values
+
+
 def _valuespec_snmpv3_contexts():
-    return Tuple(
-        title=_("SNMPv3 contexts to use in requests"),
-        help=_(
-            "By default Checkmk does not use a specific context during SNMPv3 queries, "
-            "but some devices are offering their information in different SNMPv3 contexts. "
-            "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
-            "contexts Checkmk should ask for when getting information via SNMPv3."
+    return Migrate(
+        migrate=add_error_handling_option,
+        valuespec=Tuple(
+            title=_("SNMPv3 contexts to use in requests"),
+            help=_(
+                "By default Checkmk does not use a specific context during SNMPv3 queries, "
+                "but some devices are offering their information in different SNMPv3 contexts. "
+                "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
+                "contexts Checkmk should ask for when getting information via SNMPv3."
+            ),
+            elements=[
+                DropdownChoice(
+                    title=_("Section name"),
+                    choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
+                ),
+                ListOfStrings(
+                    title=_("SNMP Context IDs"),
+                    allow_empty=False,
+                ),
+                DropdownChoice(
+                    title=_("Error Handling"),
+                    choices=lambda: [
+                        ("stop_on_timeout", _("Stop SNMP processing on timeout")),
+                        ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),
+                    ],
+                    help="You should not configure an unnecessarily large number of SNMP contexts, "
+                    "as this can lead to unnecessarily long runtimes due to accumulated timeouts.",
+                ),
+            ],
         ),
-        elements=[
-            DropdownChoice(
-                title=_("Section name"),
-                choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
-            ),
-            ListOfStrings(
-                title=_("SNMP Context IDs"),
-                allow_empty=False,
-            ),
-            DropdownChoice(
-                title=_("Error Handling"),
-                choices=lambda: [
-                    ("stop_on_timeout", _("Stop SNMP processing on timeout")),
-                    ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),
-                ],
-                help="You should not configure an unnecessarily large number of SNMP contexts, "
-                "as this can lead to unnecessarily long runtimes due to accumulated timeouts.",
-            ),
-        ],
     )
 
 

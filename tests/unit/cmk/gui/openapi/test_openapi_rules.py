@@ -432,3 +432,22 @@ def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
+
+
+def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {
+        "host_name": {
+            "operator": "one_of",
+            "match_on": [""],
+        }
+    }
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)

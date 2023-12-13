@@ -494,7 +494,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
     cast_to_dict = True
 
     match_on = fields.List(
-        fields.String(),
+        fields.String(minLength=1),
         required=True,
         description="A list of string matching regular expressions.",
     )

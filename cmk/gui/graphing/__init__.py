@@ -13,9 +13,7 @@ from ._graph_specification import (
     metric_operation_registry,
     MetricOpConstant,
     MetricOpOperator,
-    MetricOpRRDChoice,
     MetricOpRRDSource,
-    MetricOpScalar,
 )
 from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
@@ -34,10 +32,8 @@ from ._valuespecs import PageVsAutocomplete
 def register(page_registry: PageRegistry, config_variable_registry: ConfigVariableRegistry) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
     metric_operation_registry.register(MetricOpConstant)
-    metric_operation_registry.register(MetricOpScalar)
     metric_operation_registry.register(MetricOpOperator)
     metric_operation_registry.register(MetricOpRRDSource)
-    metric_operation_registry.register(MetricOpRRDChoice)
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)

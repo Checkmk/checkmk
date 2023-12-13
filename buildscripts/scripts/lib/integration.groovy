@@ -2,7 +2,7 @@
 
 def build(Map args) {
     def DOCKER_BUILDS = [:]
-
+    def download_dir = "${WORKSPACE}/downloaded_packages_for_integration_tests"
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
         // The commands are executed with the 1001:1000 UID:GID (non-root).
@@ -13,15 +13,15 @@ def build(Map args) {
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
             def IMAGE_VERSION = args.VERSION == "git" ? versioning.get_cmk_version(scm, "daily") : CMK_VERSION
 
-            sh("rm -rf \"${WORKSPACE}/packages\"")
+            sh("""rm -rf "${download_dir}" """)
             if(args.DISTRO_LIST == ["ubuntu-20.04"]) {
-                upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}", args.EDITION, "focal")
+                upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${download_dir}/${IMAGE_VERSION}", args.EDITION, "focal")
             }
             else if(args.DISTRO_LIST.size() == 1) {
                 throw new Exception("Please add a case to download only the needed package for ${args.DISTRO_LIST}")
             }
             else {
-                upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${WORKSPACE}/packages/${IMAGE_VERSION}")
+                upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${download_dir}/${IMAGE_VERSION}")
             }
 
             // Cleanup test results directory before starting the test to prevent previous
@@ -55,6 +55,8 @@ def build(Map args) {
                         stopProcessingIfError: true
                     )])
                 }
+                /// remove downloaded packages since they consume dozens of GiB
+                sh("""rm -rf "${download_dir}" """);
             }
         }
     }

@@ -63,7 +63,7 @@ def main() {
                 try {
                     dir("${checkout_dir}") {
                         sh("""
-                        npm ci
+                        ./scripts/npm-ci
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' >${WORKSPACE}/index.html
                         # still no need for jq!
                         python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/index.html

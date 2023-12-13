@@ -23,6 +23,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 
 import cmk.rulesets.v1 as api_v1
 
@@ -530,7 +531,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
@@ -553,7 +554,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
                 parameter_valuespec=None,
@@ -578,7 +579,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
                     elements=[
@@ -599,7 +600,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 parameter_valuespec=None,
                 match_type="dict",
@@ -632,6 +633,9 @@ def _compare_specs(actual: object, expected: object) -> None:
     actual_keys = actual.__dict__.keys() - ignored_attrs
     assert expected_keys == actual_keys
 
+    if isinstance(expected, legacy_rulespecs.RulespecBaseGroup):
+        _compare_rulespec_groups(actual, expected)
+
     for attr, expected_value in expected.__dict__.items():
         if attr in ignored_attrs:
             continue
@@ -649,6 +653,19 @@ def _compare_specs(actual: object, expected: object) -> None:
             _compare_specs(actual_value(), expected_value())
         except TypeError:  # deal with valuespec constructors
             assert actual_value == expected_value
+
+
+def _compare_rulespec_groups(actual: object, expected: legacy_rulespecs.RulespecBaseGroup) -> None:
+    if isinstance(expected, legacy_rulespecs.RulespecSubGroup):
+        assert isinstance(actual, legacy_rulespecs.RulespecSubGroup)
+        assert expected.choice_title == actual.choice_title
+        assert expected.help == actual.help
+        assert expected.main_group == actual.main_group
+        assert expected.name == actual.name
+        assert expected.sub_group_name == actual.sub_group_name
+        assert expected.title == actual.title
+    else:
+        raise NotImplementedError()
 
 
 @pytest.mark.parametrize(

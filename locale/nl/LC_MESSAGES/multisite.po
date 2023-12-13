@@ -302,10 +302,6 @@ msgid "% of port speed"
 msgstr "% van poort snelheid"
 
 #, no-python-format
-msgid "% of the specified time via GET request"
-msgstr ""
-
-#, no-python-format
 msgid "% time"
 msgstr "% tijd"
 
@@ -4341,6 +4337,10 @@ msgstr "Beschikbare opties"
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
 "Geavanceerd: Ondersteuning voor hostnaamextensie SSL/TLS uitschakelen (SNI)"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "Lokale authentificatiegegevens"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive Hive Beheerder"
@@ -13001,6 +13001,10 @@ msgstr "Doorgaan met tellen wanneer gebeurtenis <b>erkend</b> is"
 msgid "Continue search"
 msgstr "Zoek verder"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "Time-out verbinding identiteitsprovider"
+
 msgid "Control group:"
 msgstr "Controlegroep:"
 
@@ -16281,10 +16285,11 @@ msgstr "Inzet"
 msgid "Deployment problems"
 msgstr "Problemen bij de uitrol"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "De implementatiestatus van host %s is corrupt. Overweeg het overeenkomstige "
 "bestand op Check_MK-Server op %s te verwijderen en host %s opnieuw te "
@@ -19822,6 +19827,10 @@ msgstr "Gelijk aan"
 
 msgid "Error"
 msgstr "Fout"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "Foutafhandeling"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -42380,10 +42389,6 @@ msgstr "Pretty-Print regels in config bestand van Event Console"
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Voorkom DNS lookups door gebruik van een cache bestand"
 
-#, fuzzy
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr "Lokale authentificatiegegevens"
-
 msgid "Prevent host deletion after initialization"
 msgstr "Voorkom verwijderen van host na initialisatie"
 
@@ -51807,6 +51812,10 @@ msgstr "Er gebeurde nog steeds niets."
 
 msgid "Stop"
 msgstr "Stop"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "Verwerkingstijd van gebeurtenissen"
 
 msgid "Stop and do not create hosts."
 msgstr "Stop en maak geen hosts."
@@ -69165,6 +69174,11 @@ msgstr "Waarschuwen als de waarde van de abonnementsstatus niet"
 msgid "Warn on unexpected active interface"
 msgstr "Waarschuwing voor onverwachte actieve interface"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "Waarschuw, als de leeftijd van de pagina ouder is dan dit"
 
@@ -69301,6 +69315,9 @@ msgstr "Waarschuwing begint met"
 
 msgid "Warning threshold"
 msgstr "Waarschuwingsdrempel"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 #, fuzzy
 msgid "Warning: "
@@ -75396,6 +75413,11 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Local Authentication Data"
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr "Lokale authentificatiegegevens"
 
 #~ msgid "Expire acknowledgement after"
 #~ msgstr "Bevestiging vervallen na"

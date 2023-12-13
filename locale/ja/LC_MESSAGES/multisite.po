@@ -297,10 +297,6 @@ msgid "% of port speed"
 msgstr "ポート速度の%"
 
 #, no-python-format
-msgid "% of the specified time via GET request"
-msgstr "%GETリクエストによる指定時間"
-
-#, no-python-format
 msgid "% time"
 msgstr "時間"
 
@@ -4243,6 +4239,10 @@ msgstr "利用可能なオプション"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr "詳細:SSL / TLSホスト名拡張サポート(SNI)を無効にする"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "再認証を強制する:"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -12649,6 +12649,10 @@ msgstr "イベントが<b>確認済み</b>になったときにカウントを�
 msgid "Continue search"
 msgstr "検索を続ける"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "IDプロバイダ接続タイムアウト"
+
 msgid "Control group:"
 msgstr "コントロールグループ:"
 
@@ -15887,10 +15891,11 @@ msgstr "デプロイ"
 msgid "Deployment problems"
 msgstr "デプロイする問題"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "ホスト %s のデプロイメントステータスが破損しています。Check_MK-Serverの %s に"
 "ある対応するファイルを削除し、ホスト %s を再登録することを検討してください"
@@ -19366,6 +19371,10 @@ msgstr "イコール"
 
 msgid "Error"
 msgstr "エラー"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "エラー処理"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -41406,9 +41415,6 @@ msgstr "イベントコンソールの設定ファイルにプリティプリン
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "キャッシュファイルを使用してDNSルックアップを防止する"
 
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr "認証後に再認証を強制することで、フォームのデータ損失を防止する"
-
 msgid "Prevent host deletion after initialization"
 msgstr "初期化後のホストの削除を防ぐ"
 
@@ -50658,6 +50664,10 @@ msgstr "それでも何も起こりませんでした。"
 
 msgid "Stop"
 msgstr "やめる"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "イベント処理時間"
 
 msgid "Stop and do not create hosts."
 msgstr "停止し、ホストを作成しないでください。"
@@ -67363,6 +67373,11 @@ msgstr "サブスクリプションステータス値がそうでない場合に
 msgid "Warn on unexpected active interface"
 msgstr "予期しないアクティブなインターフェイスについて警告する"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "警告、ページの経過時間がこれより古い場合"
 
@@ -67498,6 +67513,9 @@ msgstr "警告の開始"
 
 msgid "Warning threshold"
 msgstr "警告しきい値"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 #, fuzzy
 msgid "Warning: "
@@ -73350,6 +73368,13 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr ""
+
+#, no-python-format
+#~ msgid "% of the specified time via GET request"
+#~ msgstr "%GETリクエストによる指定時間"
+
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr "認証後に再認証を強制することで、フォームのデータ損失を防止する"
 
 #~ msgid "Expire acknowledgement after"
 #~ msgstr "承認の有効期限が切れます"

@@ -303,10 +303,6 @@ msgid "% of port speed"
 msgstr "% din viteza portului"
 
 #, no-python-format
-msgid "% of the specified time via GET request"
-msgstr "% din timpul specificat prin intermediul unei cereri GET"
-
-#, no-python-format
 msgid "% time"
 msgstr "% timp"
 
@@ -4363,6 +4359,10 @@ msgstr "Opțiuni disponibile"
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
 "Avansat: Dezactivați suportul pentru extensia de nume de gazdă SSL/TLS (SNI)"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "Impuneți re-autentificarea după:"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -13081,6 +13081,10 @@ msgstr "Continuă numărarea atunci când evenimentul este <b>acceptat</b>."
 msgid "Continue search"
 msgstr "Continuați căutarea"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "Timeout de conectare a furnizorului de identitate"
+
 msgid "Control group:"
 msgstr "Grup de control:"
 
@@ -16386,10 +16390,11 @@ msgstr "Desfășurare"
 msgid "Deployment problems"
 msgstr "Probleme de implementare"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "Starea de implementare a gazdei %s este coruptă. Luați în considerare "
 "ștergerea fișierului corespunzător pe Check_MK-Server la %s și "
@@ -19945,6 +19950,10 @@ msgstr "Este egal cu"
 
 msgid "Error"
 msgstr "Eroare"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "Gestionarea erorilor"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -42613,11 +42622,6 @@ msgstr ""
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Prevenirea căutărilor DNS prin utilizarea unui fișier cache"
 
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr ""
-"Preveniți pierderea datelor din formulare prin forțarea reautentificării "
-"după ce"
-
 msgid "Prevent host deletion after initialization"
 msgstr "Împiedicați ștergerea gazdei după inițializare"
 
@@ -52140,6 +52144,10 @@ msgstr "Tot nu s-a întâmplat nimic."
 
 msgid "Stop"
 msgstr "Stop"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "Timpul de procesare a evenimentelor"
 
 msgid "Stop and do not create hosts."
 msgstr "Opriți-vă și nu creați gazde."
@@ -69620,6 +69628,11 @@ msgstr "Avertizează în cazul în care valoarea statutului de abonament nu este
 msgid "Warn on unexpected active interface"
 msgstr "Avertizare privind o interfață activă neașteptată"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "Avertizează, dacă vechimea paginii este mai mare decât aceasta"
 
@@ -69755,6 +69768,9 @@ msgstr "Avertismentul începe cu"
 
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 #, fuzzy
 msgid "Warning: "
@@ -75864,6 +75880,15 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#, no-python-format
+#~ msgid "% of the specified time via GET request"
+#~ msgstr "% din timpul specificat prin intermediul unei cereri GET"
+
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr ""
+#~ "Preveniți pierderea datelor din formulare prin forțarea reautentificării "
+#~ "după ce"
 
 #~ msgid "Expire acknowledgement after"
 #~ msgstr "Expiră confirmarea după"

@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-12-12 00:09+0000\n"
+"PO-Revision-Date: 2023-12-13 07:00+0000\n"
 "Last-Translator: Thomas Koslowski <thomas.koslowski@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -302,10 +302,6 @@ msgstr "% der maximal inaktiven Verbindungen"
 #, no-python-format
 msgid "% of port speed"
 msgstr "% der Portgeschwindigkeit"
-
-#, no-python-format
-msgid "% of the specified time via GET request"
-msgstr "% der festgesetzten Zeit mittels GET-Anfrage"
 
 #, no-python-format
 msgid "% time"
@@ -4346,6 +4342,10 @@ msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
 "Fortgeschritten: Unterstützung für SSL/TLS Hostnamen Erweiterung (SNI) "
 "ausschalten"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "Erneute Authentifizierung erzwingen nach:"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -12965,6 +12965,10 @@ msgstr "Setze Zählen fort sobald Ereignis <b>quittiert</b> ist"
 msgid "Continue search"
 msgstr "Suche verfeinern"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "Zeitüberschreitung bei der Verbindung zum Identitätsanbieter"
+
 msgid "Control group:"
 msgstr "Kontrollgruppe:"
 
@@ -16245,10 +16249,11 @@ msgstr "Verteilung"
 msgid "Deployment problems"
 msgstr "Probleme beim Deployment"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "Status der Agentenupdates für Host %s ist fehlerhaft. Sie können versuchen, "
 "die betroffene Datei auf dem Checkmk-Server unter %s zu löschen und den Host "
@@ -19784,6 +19789,10 @@ msgstr "Entspricht"
 
 msgid "Error"
 msgstr "Fehler"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "Fehlerbehandlung"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -42264,11 +42273,6 @@ msgstr "Regeln in Konfigdatei für Event Console einrücken"
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "DNS-Abfragen vermeiden, in dem eine Cache-Datei verwendet wird"
 
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr ""
-"Datenverlust in Formularen durch Erzwingen einer nachfolgenden erneuten "
-"Authentifizierung verhindern"
-
 msgid "Prevent host deletion after initialization"
 msgstr "Verhindert das Löschens des Hosts nach der Initialisierung"
 
@@ -51664,6 +51668,10 @@ msgstr "Kein Ereignis bisher."
 
 msgid "Stop"
 msgstr "Anhalten"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "Ereignissverarbeitungszeit"
 
 msgid "Stop and do not create hosts."
 msgstr "Stoppen und keine Hosts erstellen."
@@ -69001,6 +69009,11 @@ msgstr "Warnung wenn kein Subskriptionsstatus vorhanden"
 msgid "Warn on unexpected active interface"
 msgstr "Warnung bei unerwarteter aktiver Schnittstelle"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "Warnung wenn Seite älter als"
 
@@ -69134,6 +69147,9 @@ msgstr "Warnung beginnt mit"
 
 msgid "Warning threshold"
 msgstr "Warnungs-Schwellwert"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 msgid "Warning: "
 msgstr "Warnung: "
@@ -73734,7 +73750,7 @@ msgid "events per second"
 msgstr "Ereignissen pro Sekunde"
 
 msgid "exact match"
-msgstr "Genaue Übereinstimmung"
+msgstr "exakter Match"
 
 msgid "excluded"
 msgstr "ausgeschlossen"
@@ -75203,6 +75219,15 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#, no-python-format
+#~ msgid "% of the specified time via GET request"
+#~ msgstr "% der festgesetzten Zeit mittels GET-Anfrage"
+
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr ""
+#~ "Datenverlust in Formularen durch Erzwingen einer nachfolgenden erneuten "
+#~ "Authentifizierung verhindern"
 
 #~ msgid "Default element is not one of the specified elements"
 #~ msgstr "Das Standard-Element ist keins der vorgegebenen Elemente"

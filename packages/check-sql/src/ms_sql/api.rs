@@ -1100,11 +1100,19 @@ impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
             let dumb_header = Self::generate_dumb_header(ms_sql);
-            let instances_data = generate_data(ms_sql).await.unwrap_or_else(|e| {
+            let data = generate_data(ms_sql).await.unwrap_or_else(|e| {
                 log::error!("Error generating data: {e}");
                 format!("{e}\n")
             });
-            Ok(dumb_header + &instances_data)
+            let mut output: Vec<String> = Vec::new();
+            for config in ms_sql.configs() {
+                let configs_data = generate_data(config).await.unwrap_or_else(|e| {
+                    log::error!("Error generating data: {e}");
+                    format!("{e}\n")
+                });
+                output.push(configs_data);
+            }
+            Ok(dumb_header + &data + &output.join(""))
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")
@@ -1127,6 +1135,8 @@ async fn generate_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
     let instances = find_instances_to_use(ms_sql).await?;
     if instances.is_empty() {
         return Ok("ERROR: Failed to gather SQL server instances".to_string());
+    } else {
+        log::info!("Found {} SQL server instances", instances.len())
     }
     let sections = section::get_work_sections(ms_sql);
     Ok(generate_instance_entries(&instances)

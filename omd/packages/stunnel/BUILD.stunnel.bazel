@@ -48,5 +48,6 @@ genrule(
     ],
     cmd = """
         cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))
+        find $$(realpath $(RULEDIR)) -name ".gitignore" -delete
     """,
 )

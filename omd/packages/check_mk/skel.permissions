@@ -8,7 +8,9 @@ etc/cron.d/cmk_update_license_usage 0640
 etc/cron.d/cmk_cleanup_pdf_tmp_files 0640
 etc/init.d/agent-receiver 0770
 etc/init.d/mkeventd 0770
+etc/logrotate.d/audit 0640
 etc/logrotate.d/license-usage 0640
+etc/logrotate.d/security 0640
 tmp/run 0751
 var/check_mk/backup 0770
 var/check_mk/crashes 0770
@@ -19,7 +21,10 @@ var/check_mk/wato/auth/auth.php 0660
 var/check_mk/wato/log 0770
 var/check_mk/wato/snapshots 0770
 var/check_mk/web 0770
+local/lib/python3/cmk_addons 0750
+local/lib/python3/cmk_addons/plugins 0750
 local/lib/python3/cmk/gui 0750
 local/lib/python3/cmk/gui/plugins 0750
 local/lib/python3/cmk/gui/plugins/dashboard 0750
 local/lib/python3/cmk/gui/plugins/views 0750
+local/lib/python3/cmk/plugins 0750

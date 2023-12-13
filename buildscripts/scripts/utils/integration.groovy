@@ -106,6 +106,8 @@ def run_make_targets(Map args) {
                                 )])
                             }
                         }
+                        /// remove downloaded packages since they consume dozens of GiB
+                        sh("""rm -rf "${WORKSPACE}/${download_dir}" """);
                     }
                 }
             }

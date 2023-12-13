@@ -185,10 +185,16 @@ def get_host_names(site: Site | None = None) -> list[str]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"
                 with open(dump_file_path, encoding="utf-8") as dump_file:
-                    if dump_file.read(1) == ".":
+                    if re.match(r"^snmp-", dump_file_name) and dump_file.read(1) == ".":
                         snmp_host_names.append(dump_file_name)
-                    else:
+                    elif re.match(r"^agent-\d+\.\d+\.\d+\w*\d*-", dump_file_name):
                         agent_host_names.append(dump_file_name)
+                    else:
+                        raise Exception(
+                            f"A dump file name should start either with 'agent-X.X.XpX-' or with "
+                            f"'snmp-', where X.X.XpX defines the agent version used."
+                            f"This is not the case for {dump_file_name}"
+                        )
             except OSError:
                 logger.error('Could not access dump file "%s"!', dump_file_name)
             except UnicodeDecodeError:

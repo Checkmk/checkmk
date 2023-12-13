@@ -66,9 +66,9 @@ def main() {
                         npm ci
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' >${WORKSPACE}/index.html
                         # still no need for jq!
-                        python3 -c 'import json; print("\n".join(("\n\n<p>{}</p>\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/index.html
+                        python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/index.html
                         echo '</body></html>' >>${WORKSPACE}/index.html
-                        java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\. Use CSS instead\.' --stdout --format gnu - <${WORKSPACE}/index.html >${WORKSPACE}/errors.txt
+                        java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' --stdout --format gnu - <${WORKSPACE}/index.html >${WORKSPACE}/errors.txt
                         """)
                     }
                 } catch {

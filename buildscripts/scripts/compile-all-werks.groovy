@@ -71,11 +71,11 @@ def main() {
                         java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' --stdout --format gnu - <${WORKSPACE}/index.html >${WORKSPACE}/errors.txt
                         """)
                     }
-                } catch {
+                } catch(Exception) {
                     archiveArtifacts(
                         artifacts: [
-                            ${WORKSPACE}"/index.html"
-                            ${WORKSPACE}"/errors.txt"
+                            "${WORKSPACE}/index.html",
+                            "${WORKSPACE}/errors.txt"
                         ],
                         fingerprint: true,
                     );

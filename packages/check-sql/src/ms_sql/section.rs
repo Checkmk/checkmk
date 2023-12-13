@@ -144,10 +144,36 @@ mod tests {
     use super::*;
     use crate::config::ms_sql::Config;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_work_sections() {
+    #[test]
+    fn test_work_sections() {
         let config = Config::default();
         assert_eq!(get_work_sections(&config).len(), 13);
+    }
+
+    #[test]
+    fn test_sections_enabled() {
+        const CONFIG: &str = r#"
+---
+mssql:
+  main: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: "f" # mandatory
+    sections:
+      always: 
+      - "instance"
+      - "backup"
+      cached:
+      - "jobs"
+      disabled: 
+      - "backup"
+"#;
+        assert_eq!(
+            get_work_sections(&Config::from_string(CONFIG).unwrap().unwrap())
+                .iter()
+                .map(|s| s.name())
+                .collect::<Vec<&str>>(),
+            ["instance", "jobs"]
+        );
     }
 
     #[test]

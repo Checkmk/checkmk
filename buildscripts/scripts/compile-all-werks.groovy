@@ -73,7 +73,7 @@ def main() {
                     }
                 } catch(Exception) {
                     archiveArtifacts(
-                        artifacts: "${WORKSPACE}/validate-werks.*",
+                        artifacts: "validate-werks.*",
                         fingerprint: true,
                     );
                     sh("""

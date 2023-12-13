@@ -115,31 +115,6 @@ class MetricOpConstant(MetricOperation, frozen=True):
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
-class MetricOpScalar(MetricOperation, frozen=True):
-    ident: Literal["scalar"] = "scalar"
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    scalar_name: Literal["warn", "crit", "min", "max"] | None
-
-    @staticmethod
-    def name() -> str:
-        return "metric_op_scalar"
-
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForTranslation(self.host_name, self.service_name)
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        _site, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        if not isinstance(value := trans["scalar"].get(str(self.scalar_name)), float):
-            # TODO if scalar_name not in trans["scalar"] -> crash; No warning to the user :(
-            raise TypeError(value)
-        return MetricOpConstant(value=value)
-
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        return []
-
-
 class MetricOpOperator(MetricOperation, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators
@@ -229,43 +204,6 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
 
         num_points, twindow = derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
-
-
-class MetricOpRRDChoice(MetricOperation, frozen=True):
-    ident: Literal["rrd_choice"] = "rrd_choice"
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: MetricName
-    consolidation_func_name: GraphConsoldiationFunction | None
-
-    @staticmethod
-    def name() -> str:
-        return "metric_op_rrd_choice"
-
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForTranslation(self.host_name, self.service_name)
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        metrics: list[MetricOperation] = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                metric_name=name,
-                consolidation_func_name=self.consolidation_func_name,
-                scale=scale,
-            )
-            for name, scale in zip(trans["orig_name"], trans["scale"])
-        ]
-
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-
-        return metrics[0]
-
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        return []
 
 
 MetricOpOperator.model_rebuild()

@@ -35,6 +35,7 @@ from cmk.special_agents import (
     agent_mobileiron,
     agent_mqtt,
     agent_netapp,
+    agent_netapp_ontap,
     agent_prometheus,
     agent_proxmox_ve,
     agent_pure_storage_fa,
@@ -81,6 +82,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp": agent_netapp,
+    "netapp_ontap": agent_netapp_ontap,
     "prism": None,
     "prometheus": agent_prometheus,
     "proxmox_ve": agent_proxmox_ve,
@@ -179,6 +181,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "Hostname",
     ],
     "netapp": ["address", "user", "password"],
+    "netapp_ontap": ["--hostname", "HOSTNAME", "--username", "USERNAME", "--password", "PASSWORD"],
     "activemq": ["server", "1234"],
     "datadog": [
         "HOSTNAME",

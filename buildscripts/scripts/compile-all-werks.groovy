@@ -57,6 +57,37 @@ def main() {
         }
     }
 
+    stage("Validate HTML") {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+                try {
+                    dir("${checkout_dir}") {
+                        sh("""
+                        npm ci
+                        echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' >${WORKSPACE}/index.html
+                        # still no need for jq!
+                        python3 -c 'import json; print("\n".join(("\n\n<p>{}</p>\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/index.html
+                        echo '</body></html>' >>${WORKSPACE}/index.html
+                        java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\. Use CSS instead\.' --stdout --format gnu - <${WORKSPACE}/index.html >${WORKSPACE}/errors.txt
+                        """)
+                    }
+                } catch {
+                    archiveArtifacts(
+                        artifacts: [
+                            ${WORKSPACE}"/index.html"
+                            ${WORKSPACE}"/errors.txt"
+                        ],
+                        fingerprint: true,
+                    );
+                    sh("""
+                    cat "${WORKSPACE}/errors.txt"
+                    echo "Found invalid html. See errors above, compare the line numbers with index.html artifact."
+                    """)
+                }
+            }
+        }
+    }
+
     targets_credentials.each{target_credential ->
         def target = target_credential[0];
         def credentials_id = target_credential[1];

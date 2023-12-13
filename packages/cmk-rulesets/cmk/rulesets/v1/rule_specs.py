@@ -12,10 +12,25 @@ from .form_specs import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, Text
 
 
 class Topic(Enum):
-    APPLICATIONS = auto()
-    OPERATING_SYSTEM = auto()
-    VIRTUALIZATION = auto()
-    GENERAL = auto()
+    AGENT_PLUGINS = "agent_plugins"
+    APPLICATIONS = "applications"
+    CACHING_MESSAGE_QUEUES = "cache_message_queues"
+    CLOUD = "cloud"
+    CONFIGURATION_DEPLOYMENT = "configuration_deployment"
+    DATABASES = "databases"
+    GENERAL = "general"
+    ENVIRONMENTAL = "environmental"
+    LINUX = "linux"
+    NETWORKING = "networking"
+    MIDDLEWARE = "middleware"
+    NOTIFICATIONS = "notifications"
+    OPERATING_SYSTEM = "operating_system"
+    PERIPHERALS = "peripherals"
+    POWER = "power"
+    SERVER_HARDWARE = "server_hardware"
+    STORAGE = "storage"
+    VIRTUALIZATION = "virtualization"
+    WINDOWS = "windows"
 
 
 @dataclass(frozen=True)

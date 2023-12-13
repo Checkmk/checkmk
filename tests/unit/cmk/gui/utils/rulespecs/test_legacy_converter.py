@@ -9,22 +9,28 @@ from typing import TypeVar
 
 import pytest
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
 
 import cmk.gui.valuespec as legacy_valuespecs
-import cmk.gui.watolib.rulespecs as legacy_rulespecs
+from cmk.gui import inventory as legacy_inventory_groups
+from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
     _convert_to_legacy_rulespec_group,
     _convert_to_legacy_valuespec,
+    _to_generated_builtin_sub_group,
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
+from cmk.gui.watolib import rulespecs as legacy_rulespecs
 
 import cmk.rulesets.v1 as api_v1
 
@@ -656,6 +662,292 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="dict",
             ),
             id="EnforcedServiceRuleSpecWithoutItem no parameters",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ActiveChecks(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.ActiveChecks("test_rulespec"),
+                group=_to_generated_builtin_sub_group(
+                    legacy_wato_groups.RulespecGroupIntegrateOtherServices,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ActiveChecksRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.AgentAccess(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name="test_rulespec",
+                group=_to_generated_builtin_sub_group(
+                    legacy_cmk_config_groups.RulespecGroupAgent,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="AgentAccessRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.AgentConfig(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.AgentConfig("test_rulespec"),
+                group=_to_generated_builtin_sub_group(
+                    legacy_rulespec_groups.RulespecGroupMonitoringAgents,
+                    "Agent plug-ins",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="AgentConfigRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ExtraHostConfHostMonitoring(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.ExtraHostConf("test_rulespec"),
+                group=_to_generated_builtin_sub_group(
+                    legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ExtraHostConfHostMonitoringRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ExtraHostConfEventConsole(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.ExtraHostConf("test_rulespec"),
+                group=_to_generated_builtin_sub_group(
+                    legacy_mkeventd_groups.RulespecGroupEventConsole,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ExtraHostConfEventConsoleRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ExtraServiceConf(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ServiceRulespec(
+                name=RuleGroup.ExtraServiceConf("test_rulespec"),
+                item_type="service",
+                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ExtraServiceConfRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.HostMonitoring(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name="test_rulespec",
+                group=legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesNotifications,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="HostMonitoringRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.InventoryParameters(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.InvParameters("test_rulespec"),
+                group=_to_generated_builtin_sub_group(
+                    legacy_inventory_groups.RulespecGroupInventory,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="InventoryParameterRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.NotificationParameters(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.NotificationParameters("test_rulespec"),
+                group=legacy_rulespec_groups.RulespecGroupMonitoringConfigurationNotifications,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="NotificationParametersRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.DiscoveryParameters(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name="test_rulespec",
+                group=_to_generated_builtin_sub_group(
+                    legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                    "Applications",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ServiceDiscoveryRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ServiceMonitoringWithoutService(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name="test_rulespec",
+                group=legacy_rulespec_groups.RulespecGroupMonitoringConfigurationNotifications,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ServiceMonitoringRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.ServiceMonitoring(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.VIRTUALIZATION,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ServiceRulespec(
+                name="test_rulespec",
+                item_type="service",
+                group=legacy_wato_groups.RulespecGroupCheckParametersVirtualization,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="ServiceRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.SNMP(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.SERVER_HARDWARE,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name="test_rulespec",
+                group=_to_generated_builtin_sub_group(
+                    legacy_rulespec_groups.RulespecGroupAgentSNMP,
+                    "Server hardware",
+                    lambda x: x,
+                ),
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="SNMPRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.SpecialAgent(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.rule_specs.Topic.CLOUD,
+                eval_type=api_v1.rule_specs.EvalType.MERGE,
+                parameter_form=partial(api_v1.form_specs.TextInput),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.SpecialAgents("test_rulespec"),
+                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="dict",
+            ),
+            id="SpecialAgentRuleSpec",
         ),
     ],
 )

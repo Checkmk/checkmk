@@ -1377,12 +1377,18 @@ def _output_availability_timelines_csv(
     what: AVObjectType, av_data: AVData, avoptions: AVOptions
 ) -> None:
     _av_output_set_content_disposition("Checkmk-Availability-Timeline")
-    for timeline_nr, av_entry in enumerate(av_data):
-        _output_availability_timeline_csv(what, av_entry, avoptions, timeline_nr)
+
+    with table_element(
+        "av_timeline",
+        "",
+        output_format="csv",
+    ) as table:
+        for av_entry in av_data:
+            _output_availability_timeline_csv(table, what, av_entry, avoptions)
 
 
 def _output_availability_timeline_csv(
-    what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions, timeline_nr: int
+    table: Table, what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions
 ) -> None:
     timeline_layout = availability.layout_timeline(
         what,
@@ -1393,31 +1399,27 @@ def _output_availability_timeline_csv(
     )
 
     object_cells = availability.get_object_cells(what, av_entry, avoptions["labelling"])
+    for row in timeline_layout["table"]:
+        table.row()
 
-    with table_element(
-        "av_timeline", "", output_format="csv", omit_headers=timeline_nr != 0
-    ) as table:
-        for row in timeline_layout["table"]:
-            table.row()
+        table.cell("object_type", what)
+        for cell_index, objectcell in enumerate(object_cells):
+            table.cell("object_name_%d" % cell_index, objectcell[0])
 
-            table.cell("object_type", what)
-            for cell_index, objectcell in enumerate(object_cells):
-                table.cell("object_name_%d" % cell_index, objectcell[0])
+        table.cell("object_title", availability.object_title(what, av_entry))
+        table.cell("from", row["from"])
+        table.cell("from_text", row["from_text"])
+        table.cell("until", row["until"])
+        table.cell("until_text", row["until_text"])
+        table.cell("state", row["state"])
+        table.cell("state_name", row["state_name"])
+        table.cell("duration_text", row["duration_text"])
 
-            table.cell("object_title", availability.object_title(what, av_entry))
-            table.cell("from", row["from"])
-            table.cell("from_text", row["from_text"])
-            table.cell("until", row["until"])
-            table.cell("until_text", row["until_text"])
-            table.cell("state", row["state"])
-            table.cell("state_name", row["state_name"])
-            table.cell("duration_text", row["duration_text"])
+        if "omit_timeline_plugin_output" not in avoptions["labelling"]:
+            table.cell("log_output", row.get("log_output", ""))
 
-            if "omit_timeline_plugin_output" not in avoptions["labelling"]:
-                table.cell("log_output", row.get("log_output", ""))
-
-            if "timeline_long_output" in avoptions["labelling"]:
-                table.cell("long_log_output", row.get("long_log_output", ""))
+        if "timeline_long_output" in avoptions["labelling"]:
+            table.cell("long_log_output", row.get("long_log_output", ""))
 
 
 def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:

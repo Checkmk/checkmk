@@ -394,6 +394,12 @@ class OverridableInstances(Generic[_T]):
             return foreign
         return None
 
+    def find_foreign_page(self, owner: UserId, name: str) -> _T | None:
+        try:
+            return self.instance((UserId(owner), name))
+        except KeyError:
+            return None
+
     def pages(self) -> list[_T]:
         """Return all pages visible to the user, implements shadowing etc."""
         pages = {}
@@ -786,11 +792,11 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return user.may(f"general.{how}_{cls.type_name()}")
 
     @classmethod
-    def need_overriding_permission(cls) -> None:
-        if not cls.has_overriding_permission("edit"):
+    def need_overriding_permission(cls, permission_name: Literal["edit", "see_user"]) -> None:
+        if not cls.has_overriding_permission(permission_name):
             raise MKAuthException(
                 _("Sorry, you lack the permission. Operation: %s, table: %s")
-                % ("edit", cls.phrase("title_plural"))
+                % (permission_name, cls.phrase("title_plural"))
             )
 
     @classmethod
@@ -915,7 +921,7 @@ class ListPage(Page, Generic[_Self]):
 
     def page(self) -> None:
         instances = self._type.load()
-        self._type.need_overriding_permission()
+        self._type.need_overriding_permission("edit")
 
         title_plural = self._type.phrase("title_plural")
         breadcrumb = make_breadcrumb(title_plural, "list", self._type.list_url())
@@ -1076,7 +1082,7 @@ class ListPage(Page, Generic[_Self]):
 
                 # View
                 if isinstance(instance, PageRenderer):
-                    html.icon_button(instance.page_url(), _("View"), self._type.type_name())
+                    html.icon_button(instance.view_url(), _("View"), self._type.type_name())
 
                 # Clone / Customize
                 html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
@@ -1128,7 +1134,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
         back_url = request.get_url_input("back", self._type.list_url())
 
         instances = self._type.load()
-        self._type.need_overriding_permission()
+        self._type.need_overriding_permission("edit")
 
         raw_mode = request.get_ascii_input_mandatory("mode", "edit")
         mode: PageMode
@@ -1654,7 +1660,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
     def add_element_via_popup(
         cls: type[_Self], page_name: str, element_type: str, create_info: ElementSpec
     ) -> tuple[str | None, bool]:
-        cls.need_overriding_permission()
+        cls.need_overriding_permission("edit")
 
         need_sidebar_reload = False
         instances = cls.load()
@@ -1824,7 +1830,20 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
     def requested_page(
         cls, instances: OverridableInstances[_SelfPageRenderer]
     ) -> _SelfPageRenderer:
-        name = request.get_ascii_input_mandatory(cls.ident_attr(), "")
+        return cls.requested_page_by_name(
+            instances,
+            request.get_ascii_input_mandatory(cls.ident_attr(), ""),
+        )
+
+    @classmethod
+    def requested_page_by_name(
+        cls, instances: OverridableInstances[_SelfPageRenderer], name: str
+    ) -> _SelfPageRenderer:
+        if owner := request.var("owner"):
+            cls.need_overriding_permission("see_user")
+            if foreign := instances.find_foreign_page(UserId(owner), name):
+                return foreign
+
         page = instances.find_page(name)
         if not page:
             raise MKGeneralException(
@@ -1860,6 +1879,12 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
             [(self.ident_attr(), self.name())],
             filename="%s.py" % self.type_name(),
         )
+
+    def view_url(self) -> str:
+        http_vars: HTTPVariables = [(self.ident_attr(), self.name())]
+        if not self.is_mine():
+            http_vars.append(("owner", self.owner()))
+        return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())
 
     def render_title(self, instances: OverridableInstances[_SelfPageRenderer]) -> str | HTML:
         if self._can_be_linked(instances):

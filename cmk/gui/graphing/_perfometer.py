@@ -19,8 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from cmk.graphing.v1 import metric as metric_api
-from cmk.graphing.v1 import perfometer as perfometer_api
+from cmk.graphing.v1 import metric, perfometer
 
 from ._evaluate import evaluate_quantity, perfometer_matches
 from ._expression import (
@@ -68,15 +67,15 @@ MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
 def _parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:
-    for index, perfometer in reversed(list(enumerate(perfometers))):
-        if isinstance(perfometer, dict):
+    for index, perfometer_ in reversed(list(enumerate(perfometers))):
+        if isinstance(perfometer_, dict):
             continue
 
-        if not isinstance(perfometer, tuple) or len(perfometer) != 2:
-            raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
+        if not isinstance(perfometer_, tuple) or len(perfometer_) != 2:
+            raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer_)
 
         # Convert legacy tuple based perfometer
-        perfometer_type, perfometer_args = perfometer[0], perfometer[1]
+        perfometer_type, perfometer_args = perfometer_[0], perfometer_[1]
         if perfometer_type == "dual":
             sub_performeters = perfometer_args[:]
             _parse_perfometers(sub_performeters)
@@ -104,7 +103,8 @@ def _parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> 
 
         else:
             logger.warning(
-                _("Could not convert perfometer to dict format: %r. Ignoring this one."), perfometer
+                _("Could not convert perfometer to dict format: %r. Ignoring this one."),
+                perfometer_,
             )
             perfometers.pop(index)
 
@@ -119,44 +119,44 @@ def parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> N
 
 
 def _perfometer_has_required_metrics_or_scalars(
-    perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
+    perfometer_: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
-    if perfometer["type"] == "linear":
-        expressions = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
-        if (total := perfometer.get("total")) is not None:
+    if perfometer_["type"] == "linear":
+        expressions = [parse_expression(s, translated_metrics) for s in perfometer_["segments"]]
+        if (total := perfometer_.get("total")) is not None:
             expressions.append(parse_expression(total, translated_metrics))
-        if (label := perfometer.get("label")) is not None:
+        if (label := perfometer_.get("label")) is not None:
             expressions.append(parse_expression(label[0], translated_metrics))
         return has_required_metrics_or_scalars(expressions, translated_metrics)
 
-    if perfometer["type"] == "logarithmic":
+    if perfometer_["type"] == "logarithmic":
         return has_required_metrics_or_scalars(
-            [parse_expression(perfometer["metric"], translated_metrics)], translated_metrics
+            [parse_expression(perfometer_["metric"], translated_metrics)], translated_metrics
         )
 
-    if perfometer["type"] in ("dual", "stacked"):
+    if perfometer_["type"] in ("dual", "stacked"):
         return all(
             _perfometer_has_required_metrics_or_scalars(p, translated_metrics)
-            for p in perfometer["perfometers"]
+            for p in perfometer_["perfometers"]
         )
 
-    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
+    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer_["type"])
 
 
 def _perfometer_possible(
-    perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
+    perfometer_: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if not translated_metrics:
         return False
 
-    if not _perfometer_has_required_metrics_or_scalars(perfometer, translated_metrics):
+    if not _perfometer_has_required_metrics_or_scalars(perfometer_, translated_metrics):
         return False
 
-    if perfometer["type"] == "linear":
-        if "condition" in perfometer:
+    if perfometer_["type"] == "linear":
+        if "condition" in perfometer_:
             try:
                 return parse_conditional_expression(
-                    perfometer["condition"], translated_metrics
+                    perfometer_["condition"], translated_metrics
                 ).evaluate(translated_metrics)
             except Exception:
                 return False
@@ -166,23 +166,17 @@ def _perfometer_possible(
 
 def get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric]
-) -> (
-    perfometer_api.Perfometer
-    | perfometer_api.Bidirectional
-    | perfometer_api.Stacked
-    | PerfometerSpec
-    | None
-):
-    for perfometer in [
+) -> perfometer.Perfometer | perfometer.Bidirectional | perfometer.Stacked | PerfometerSpec | None:
+    for perfometer_ in [
         plugin
         for plugin in load_graphing_plugins().plugins.values()
         if isinstance(
             plugin,
-            (perfometer_api.Perfometer, perfometer_api.Bidirectional, perfometer_api.Stacked),
+            (perfometer.Perfometer, perfometer.Bidirectional, perfometer.Stacked),
         )
     ]:
-        if perfometer_matches(perfometer, translated_metrics):
-            return perfometer
+        if perfometer_matches(perfometer_, translated_metrics):
+            return perfometer_
 
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for legacy_perfometer in perfometer_info:
@@ -234,27 +228,27 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
 
     def get_renderer(
         self,
-        perfometer: perfometer_api.Perfometer
-        | perfometer_api.Bidirectional
-        | perfometer_api.Stacked
+        perfometer_: perfometer.Perfometer
+        | perfometer.Bidirectional
+        | perfometer.Stacked
         | PerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricometerRenderer:
-        if isinstance(perfometer, perfometer_api.Perfometer):
-            return MetricometerRendererPerfometer(perfometer, translated_metrics)
-        if isinstance(perfometer, perfometer_api.Bidirectional):
-            return MetricometerRendererBidirectional(perfometer, translated_metrics)
-        if isinstance(perfometer, perfometer_api.Stacked):
-            return MetricometerRendererStacked(perfometer, translated_metrics)
-        if perfometer["type"] == "logarithmic":
-            return MetricometerRendererLegacyLogarithmic(perfometer, translated_metrics)
-        if perfometer["type"] == "linear":
-            return MetricometerRendererLegacyLinear(perfometer, translated_metrics)
-        if perfometer["type"] == "dual":
-            return MetricometerRendererLegacyDual(perfometer, translated_metrics)
-        if perfometer["type"] == "stacked":
-            return MetricometerRendererLegacyStacked(perfometer, translated_metrics)
-        raise ValueError(perfometer["type"])
+        if isinstance(perfometer_, perfometer.Perfometer):
+            return MetricometerRendererPerfometer(perfometer_, translated_metrics)
+        if isinstance(perfometer_, perfometer.Bidirectional):
+            return MetricometerRendererBidirectional(perfometer_, translated_metrics)
+        if isinstance(perfometer_, perfometer.Stacked):
+            return MetricometerRendererStacked(perfometer_, translated_metrics)
+        if perfometer_["type"] == "logarithmic":
+            return MetricometerRendererLegacyLogarithmic(perfometer_, translated_metrics)
+        if perfometer_["type"] == "linear":
+            return MetricometerRendererLegacyLinear(perfometer_, translated_metrics)
+        if perfometer_["type"] == "dual":
+            return MetricometerRendererLegacyDual(perfometer_, translated_metrics)
+        if perfometer_["type"] == "stacked":
+            return MetricometerRendererLegacyStacked(perfometer_, translated_metrics)
+        raise ValueError(perfometer_["type"])
 
 
 renderer_registry = MetricometerRendererRegistry()
@@ -340,7 +334,7 @@ _BIDIRECTIONAL_PROJECTION_PARAMETERS = _ProjectionParameters(0.0, 5.0, 45.0, 50.
 
 
 def _make_projection(
-    focus_range: perfometer_api.FocusRange,
+    focus_range: perfometer.FocusRange,
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> _Projection:
@@ -358,7 +352,7 @@ def _make_projection(
         raise ValueError((lower_x, upper_x))
 
     match focus_range.lower, focus_range.upper:
-        case perfometer_api.Closed(), perfometer_api.Closed():
+        case perfometer.Closed(), perfometer.Closed():
             return _Projection(
                 lower_x=lower_x,
                 upper_x=upper_x,
@@ -373,7 +367,7 @@ def _make_projection(
                 limit=projection_parameters.upper_closed,
             )
 
-        case perfometer_api.Open(), perfometer_api.Closed():
+        case perfometer.Open(), perfometer.Closed():
             linear = _Linear.from_points(
                 lower_x,
                 projection_parameters.lower_open,
@@ -395,7 +389,7 @@ def _make_projection(
                 limit=projection_parameters.upper_closed,
             )
 
-        case perfometer_api.Closed(), perfometer_api.Open():
+        case perfometer.Closed(), perfometer.Open():
             linear = _Linear.from_points(
                 lower_x,
                 projection_parameters.lower_closed,
@@ -417,7 +411,7 @@ def _make_projection(
                 limit=projection_parameters.upper_closed,
             )
 
-        case perfometer_api.Open(), perfometer_api.Open():
+        case perfometer.Open(), perfometer.Open():
             linear = _Linear.from_points(
                 lower_x,
                 projection_parameters.lower_open,
@@ -457,15 +451,15 @@ class _StackEntry:
 def _compute_segments(
     segments: Sequence[
         str
-        | metric_api.Constant
-        | metric_api.WarningOf
-        | metric_api.CriticalOf
-        | metric_api.MinimumOf
-        | metric_api.MaximumOf
-        | metric_api.Sum
-        | metric_api.Product
-        | metric_api.Difference
-        | metric_api.Fraction
+        | metric.Constant
+        | metric.WarningOf
+        | metric.CriticalOf
+        | metric.MinimumOf
+        | metric.MaximumOf
+        | metric.Sum
+        | metric.Product
+        | metric.Difference
+        | metric.Fraction
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[_StackEntry]:
@@ -501,10 +495,10 @@ def _project_segments(
 class MetricometerRendererPerfometer(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: perfometer_api.Perfometer,
+        perfometer_: perfometer.Perfometer,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        self.perfometer = perfometer
+        self.perfometer = perfometer_
         self.translated_metrics = translated_metrics
 
     @classmethod
@@ -547,10 +541,10 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 class MetricometerRendererBidirectional(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: perfometer_api.Bidirectional,
+        perfometer_: perfometer.Bidirectional,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        self.perfometer = perfometer
+        self.perfometer = perfometer_
         self.translated_metrics = translated_metrics
 
     @classmethod
@@ -562,8 +556,8 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         if left_projections := _project_segments(
             _make_projection(
-                perfometer_api.FocusRange(
-                    perfometer_api.Closed(0),
+                perfometer.FocusRange(
+                    perfometer.Closed(0),
                     self.perfometer.left.focus_range.upper,
                 ),
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
@@ -578,8 +572,8 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         if right_projections := _project_segments(
             _make_projection(
-                perfometer_api.FocusRange(
-                    perfometer_api.Closed(0),
+                perfometer.FocusRange(
+                    perfometer.Closed(0),
                     self.perfometer.right.focus_range.upper,
                 ),
                 _BIDIRECTIONAL_PROJECTION_PARAMETERS,
@@ -629,10 +623,10 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 class MetricometerRendererStacked(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: perfometer_api.Stacked,
+        perfometer_: perfometer.Stacked,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        self.perfometer = perfometer
+        self.perfometer = perfometer_
         self.translated_metrics = translated_metrics
 
     @classmethod
@@ -683,17 +677,17 @@ class MetricometerRendererStacked(MetricometerRenderer):
 class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: LogarithmicPerfometerSpec,
+        perfometer_: LogarithmicPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        if "metric" not in perfometer:
+        if "metric" not in perfometer_:
             raise MKGeneralException(
-                _('Missing key "metric" in logarithmic perfometer: %r') % perfometer
+                _('Missing key "metric" in logarithmic perfometer: %r') % perfometer_
             )
 
-        self._metric = parse_expression(perfometer["metric"], translated_metrics)
-        self._half_value = perfometer["half_value"]
-        self._exponent = perfometer["exponent"]
+        self._metric = parse_expression(perfometer_["metric"], translated_metrics)
+        self._half_value = perfometer_["half_value"]
+        self._exponent = perfometer_["exponent"]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -784,12 +778,12 @@ class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
 class MetricometerRendererLegacyLinear(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _LinearPerfometerSpec,
+        perfometer_: _LinearPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
-        self._total = parse_expression(perfometer["total"], translated_metrics)
-        if (label := perfometer.get("label")) is None:
+        self._segments = [parse_expression(s, translated_metrics) for s in perfometer_["segments"]]
+        self._total = parse_expression(perfometer_["total"], translated_metrics)
+        if (label := perfometer_.get("label")) is None:
             self._label_expression = None
             self._label_unit_name = None
         else:
@@ -854,15 +848,15 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
 class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _StackedPerfometerSpec,
+        perfometer_: _StackedPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        if len(perfometer["perfometers"]) != 2:
+        if len(perfometer_["perfometers"]) != 2:
             raise MKInternalError(
                 _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
-                % len(perfometer["perfometers"])
+                % len(perfometer_["perfometers"])
             )
-        self._perfometers = perfometer["perfometers"]
+        self._perfometers = perfometer_["perfometers"]
         self._translated_metrics = translated_metrics
 
     @classmethod
@@ -903,15 +897,15 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
 class MetricometerRendererLegacyDual(MetricometerRenderer):
     def __init__(
         self,
-        perfometer: _DualPerfometerSpec,
+        perfometer_: _DualPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        if len(perfometer["perfometers"]) != 2:
+        if len(perfometer_["perfometers"]) != 2:
             raise MKInternalError(
                 _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
-                % len(perfometer["perfometers"])
+                % len(perfometer_["perfometers"])
             )
-        self._perfometers = perfometer["perfometers"]
+        self._perfometers = perfometer_["perfometers"]
         self._translated_metrics = translated_metrics
 
     @classmethod

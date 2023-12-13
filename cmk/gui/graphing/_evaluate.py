@@ -10,9 +10,7 @@ from typing import Literal, Self
 from cmk.gui.i18n import _
 from cmk.gui.utils.speaklater import LazyString
 
-from cmk.graphing.v1 import Color
-from cmk.graphing.v1 import metric as metric_api
-from cmk.graphing.v1 import perfometer as perfometer_api
+from cmk.graphing.v1 import Color, metric, perfometer
 
 from ._parser import parse_color, parse_unit
 from ._type_defs import TranslatedMetric, UnitInfo
@@ -21,62 +19,60 @@ from ._type_defs import TranslatedMetric, UnitInfo
 @dataclass(frozen=True)
 class _MetricNamesOrScalars:
     _metric_names: list[str]
-    _scalars: list[
-        metric_api.WarningOf | metric_api.CriticalOf | metric_api.MinimumOf | metric_api.MaximumOf
-    ]
+    _scalars: list[metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf]
 
     def collect_quantity_names(
         self,
         quantity: (
             str
-            | metric_api.Constant
-            | metric_api.WarningOf
-            | metric_api.CriticalOf
-            | metric_api.MinimumOf
-            | metric_api.MaximumOf
-            | metric_api.Sum
-            | metric_api.Product
-            | metric_api.Difference
-            | metric_api.Fraction
+            | metric.Constant
+            | metric.WarningOf
+            | metric.CriticalOf
+            | metric.MinimumOf
+            | metric.MaximumOf
+            | metric.Sum
+            | metric.Product
+            | metric.Difference
+            | metric.Fraction
         ),
     ) -> None:
         match quantity:
             case str():
                 self._metric_names.append(quantity)
-            case metric_api.WarningOf():
+            case metric.WarningOf():
                 self._metric_names.append(quantity.name)
                 self._scalars.append(quantity)
-            case metric_api.CriticalOf():
+            case metric.CriticalOf():
                 self._metric_names.append(quantity.name)
                 self._scalars.append(quantity)
-            case metric_api.MinimumOf():
+            case metric.MinimumOf():
                 self._metric_names.append(quantity.name)
                 self._scalars.append(quantity)
-            case metric_api.MaximumOf():
+            case metric.MaximumOf():
                 self._metric_names.append(quantity.name)
                 self._scalars.append(quantity)
-            case metric_api.Sum():
+            case metric.Sum():
                 for s in quantity.summands:
                     self.collect_quantity_names(s)
-            case metric_api.Product():
+            case metric.Product():
                 for f in quantity.factors:
                     self.collect_quantity_names(f)
-            case metric_api.Difference():
+            case metric.Difference():
                 self.collect_quantity_names(quantity.minuend)
                 self.collect_quantity_names(quantity.subtrahend)
-            case metric_api.Fraction():
+            case metric.Fraction():
                 self.collect_quantity_names(quantity.dividend)
                 self.collect_quantity_names(quantity.divisor)
 
     @classmethod
-    def from_perfometers(cls, *perfometers: perfometer_api.Perfometer) -> Self:
+    def from_perfometers(cls, *perfometers: perfometer.Perfometer) -> Self:
         instance = cls([], [])
-        for perfometer in perfometers:
-            if not isinstance(perfometer.focus_range.lower.value, (int, float)):
-                instance.collect_quantity_names(perfometer.focus_range.lower.value)
-            if not isinstance(perfometer.focus_range.upper.value, (int, float)):
-                instance.collect_quantity_names(perfometer.focus_range.upper.value)
-            for s in perfometer.segments:
+        for perfometer_ in perfometers:
+            if not isinstance(perfometer_.focus_range.lower.value, (int, float)):
+                instance.collect_quantity_names(perfometer_.focus_range.lower.value)
+            if not isinstance(perfometer_.focus_range.upper.value, (int, float)):
+                instance.collect_quantity_names(perfometer_.focus_range.upper.value)
+            for s in perfometer_.segments:
                 instance.collect_quantity_names(s)
         return instance
 
@@ -87,26 +83,21 @@ class _MetricNamesOrScalars:
     @property
     def scalars(
         self,
-    ) -> Sequence[
-        metric_api.WarningOf | metric_api.CriticalOf | metric_api.MinimumOf | metric_api.MaximumOf
-    ]:
+    ) -> Sequence[metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf]:
         return self._scalars
 
 
 def _scalar_name(
-    scalar: metric_api.WarningOf
-    | metric_api.CriticalOf
-    | metric_api.MinimumOf
-    | metric_api.MaximumOf,
+    scalar: metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf,
 ) -> Literal["warn", "crit", "min", "max"]:
     match scalar:
-        case metric_api.WarningOf():
+        case metric.WarningOf():
             return "warn"
-        case metric_api.CriticalOf():
+        case metric.CriticalOf():
             return "crit"
-        case metric_api.MinimumOf():
+        case metric.MinimumOf():
             return "min"
-        case metric_api.MaximumOf():
+        case metric.MaximumOf():
             return "max"
 
 
@@ -128,21 +119,21 @@ def _is_perfometer_applicable(
 
 
 def perfometer_matches(
-    perfometer: perfometer_api.Perfometer | perfometer_api.Bidirectional | perfometer_api.Stacked,
+    perfometer_: perfometer.Perfometer | perfometer.Bidirectional | perfometer.Stacked,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
-    match perfometer:
-        case perfometer_api.Perfometer():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(perfometer)
-        case perfometer_api.Bidirectional():
+    match perfometer_:
+        case perfometer.Perfometer():
+            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(perfometer_)
+        case perfometer.Bidirectional():
             metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.left,
-                perfometer.right,
+                perfometer_.left,
+                perfometer_.right,
             )
-        case perfometer_api.Stacked():
+        case perfometer.Stacked():
             metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.lower,
-                perfometer.upper,
+                perfometer_.lower,
+                perfometer_.upper,
             )
     return _is_perfometer_applicable(translated_metrics, metric_names_or_scalars)
 
@@ -158,67 +149,67 @@ class EvaluatedQuantity:
 def evaluate_quantity(
     quantity: (
         str
-        | metric_api.Constant
-        | metric_api.WarningOf
-        | metric_api.CriticalOf
-        | metric_api.MinimumOf
-        | metric_api.MaximumOf
-        | metric_api.Sum
-        | metric_api.Product
-        | metric_api.Difference
-        | metric_api.Fraction
+        | metric.Constant
+        | metric.WarningOf
+        | metric.CriticalOf
+        | metric.MinimumOf
+        | metric.MaximumOf
+        | metric.Sum
+        | metric.Product
+        | metric.Difference
+        | metric.Fraction
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> EvaluatedQuantity:
     match quantity:
         case str():
-            metric = translated_metrics[quantity]
+            metric_ = translated_metrics[quantity]
             return EvaluatedQuantity(
-                metric["title"],
-                metric["unit"],
-                metric["color"],
+                metric_["title"],
+                metric_["unit"],
+                metric_["color"],
                 translated_metrics[quantity]["value"],
             )
-        case metric_api.Constant():
+        case metric.Constant():
             return EvaluatedQuantity(
                 str(quantity.title),
                 parse_unit(quantity.unit),
                 parse_color(quantity.color),
                 quantity.value,
             )
-        case metric_api.WarningOf():
-            metric = translated_metrics[quantity.name]
+        case metric.WarningOf():
+            metric_ = translated_metrics[quantity.name]
             return EvaluatedQuantity(
-                _("Warning of ") + metric["title"],
-                metric["unit"],
+                _("Warning of ") + metric_["title"],
+                metric_["unit"],
                 parse_color(Color.YELLOW),
                 translated_metrics[quantity.name]["scalar"]["warn"],
             )
-        case metric_api.CriticalOf():
-            metric = translated_metrics[quantity.name]
+        case metric.CriticalOf():
+            metric_ = translated_metrics[quantity.name]
             return EvaluatedQuantity(
-                _("Critical of ") + metric["title"],
-                metric["unit"],
+                _("Critical of ") + metric_["title"],
+                metric_["unit"],
                 parse_color(Color.RED),
                 translated_metrics[quantity.name]["scalar"]["crit"],
             )
-        case metric_api.MinimumOf():
-            metric = translated_metrics[quantity.name]
+        case metric.MinimumOf():
+            metric_ = translated_metrics[quantity.name]
             return EvaluatedQuantity(
-                _("Minimum of ") + metric["title"],
-                metric["unit"],
+                _("Minimum of ") + metric_["title"],
+                metric_["unit"],
                 parse_color(quantity.color),
                 translated_metrics[quantity.name]["scalar"]["min"],
             )
-        case metric_api.MaximumOf():
-            metric = translated_metrics[quantity.name]
+        case metric.MaximumOf():
+            metric_ = translated_metrics[quantity.name]
             return EvaluatedQuantity(
-                _("Maximum of ") + metric["title"],
-                metric["unit"],
+                _("Maximum of ") + metric_["title"],
+                metric_["unit"],
                 parse_color(quantity.color),
                 translated_metrics[quantity.name]["scalar"]["max"],
             )
-        case metric_api.Sum():
+        case metric.Sum():
             evaluated_first_summand = evaluate_quantity(quantity.summands[0], translated_metrics)
             return EvaluatedQuantity(
                 str(quantity.title),
@@ -232,7 +223,7 @@ def evaluate_quantity(
                     )
                 ),
             )
-        case metric_api.Product():
+        case metric.Product():
             product = 1.0
             for f in quantity.factors:
                 product *= evaluate_quantity(f, translated_metrics).value
@@ -242,7 +233,7 @@ def evaluate_quantity(
                 parse_color(quantity.color),
                 product,
             )
-        case metric_api.Difference():
+        case metric.Difference():
             evaluated_minuend = evaluate_quantity(quantity.minuend, translated_metrics)
             evaluated_subtrahend = evaluate_quantity(quantity.subtrahend, translated_metrics)
             return EvaluatedQuantity(
@@ -251,7 +242,7 @@ def evaluate_quantity(
                 parse_color(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
-        case metric_api.Fraction():
+        case metric.Fraction():
             return EvaluatedQuantity(
                 str(quantity.title),
                 parse_unit(quantity.unit),

@@ -11,32 +11,44 @@ from cmk.utils.version import Edition
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import (
     ActiveChecksRuleSpec,
+    AgentAccessRuleSpec,
     AgentConfigRuleSpec,
     CheckParameterRuleSpecWithItem,
     CheckParameterRuleSpecWithoutItem,
     EnforcedServiceRuleSpecWithItem,
     EnforcedServiceRuleSpecWithoutItem,
-    ExtraHostConfRuleSpec,
+    ExtraHostConfEventConsoleRuleSpec,
+    ExtraHostConfHostMonitoringRuleSpec,
     ExtraServiceConfRuleSpec,
-    HostRuleSpec,
+    HostMonitoringRuleSpec,
     InventoryParameterRuleSpec,
+    NotificationParametersRuleSpec,
+    ServiceDiscoveryRuleSpec,
+    ServiceMonitoringRuleSpec,
     ServiceRuleSpec,
+    SNMPRuleSpec,
     SpecialAgentRuleSpec,
 )
 
 RuleSpec = (
-    HostRuleSpec
-    | ServiceRuleSpec
-    | CheckParameterRuleSpecWithItem
-    | CheckParameterRuleSpecWithoutItem
+    ActiveChecksRuleSpec
+    | AgentConfigRuleSpec
+    | AgentAccessRuleSpec
     | EnforcedServiceRuleSpecWithItem
     | EnforcedServiceRuleSpecWithoutItem
-    | InventoryParameterRuleSpec
-    | ActiveChecksRuleSpec
-    | AgentConfigRuleSpec
-    | SpecialAgentRuleSpec
-    | ExtraHostConfRuleSpec
     | ExtraServiceConfRuleSpec
+    | ExtraHostConfHostMonitoringRuleSpec
+    | ExtraHostConfEventConsoleRuleSpec
+    | CheckParameterRuleSpecWithItem
+    | CheckParameterRuleSpecWithoutItem
+    | HostMonitoringRuleSpec
+    | InventoryParameterRuleSpec
+    | NotificationParametersRuleSpec
+    | ServiceDiscoveryRuleSpec
+    | ServiceMonitoringRuleSpec
+    | ServiceRuleSpec
+    | SNMPRuleSpec
+    | SpecialAgentRuleSpec
 )
 
 
@@ -52,18 +64,24 @@ def load_api_v1_rule_specs(
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {
-            HostRuleSpec: "rule_spec_",
-            ServiceRuleSpec: "rule_spec_",
-            CheckParameterRuleSpecWithItem: "rule_spec_",
-            CheckParameterRuleSpecWithoutItem: "rule_spec_",
-            EnforcedServiceRuleSpecWithItem: "rule_spec_",
-            EnforcedServiceRuleSpecWithoutItem: "rule_spec_",
-            InventoryParameterRuleSpec: "rule_spec_",
             ActiveChecksRuleSpec: "rule_spec_",
             AgentConfigRuleSpec: "rule_spec_",
-            SpecialAgentRuleSpec: "rule_spec_",
-            ExtraHostConfRuleSpec: "rule_spec_",
+            AgentAccessRuleSpec: "rule_spec_",
+            EnforcedServiceRuleSpecWithItem: "rule_spec_",
+            EnforcedServiceRuleSpecWithoutItem: "rule_spec_",
             ExtraServiceConfRuleSpec: "rule_spec_",
+            ExtraHostConfHostMonitoringRuleSpec: "rule_spec_",
+            ExtraHostConfEventConsoleRuleSpec: "rule_spec_",
+            CheckParameterRuleSpecWithItem: "rule_spec_",
+            CheckParameterRuleSpecWithoutItem: "rule_spec_",
+            HostMonitoringRuleSpec: "rule_spec_",
+            InventoryParameterRuleSpec: "rule_spec_",
+            NotificationParametersRuleSpec: "rule_spec_",
+            ServiceDiscoveryRuleSpec: "rule_spec_",
+            ServiceMonitoringRuleSpec: "rule_spec_",
+            ServiceRuleSpec: "rule_spec_",
+            SNMPRuleSpec: "rule_spec_",
+            SpecialAgentRuleSpec: "rule_spec_",
         },
         raise_errors=raise_errors,
     )

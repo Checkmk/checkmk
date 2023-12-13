@@ -15,7 +15,6 @@ from cmk.rulesets.v1 import (
     Dictionary,
     disallow_empty,
     FixedValue,
-    HostRuleSpec,
     in_range,
     Integer,
     List,
@@ -23,6 +22,7 @@ from cmk.rulesets.v1 import (
     Migrate,
     MonitoringState,
     RuleEvalType,
+    ServiceDiscoveryRuleSpec,
     TextInput,
     Topic,
 )
@@ -112,7 +112,7 @@ def _discovery_parameters_form_alertmanager():
     )
 
 
-rule_spec_discovery_alertmanager = HostRuleSpec(
+rule_spec_discovery_alertmanager = ServiceDiscoveryRuleSpec(
     topic=Topic.GENERAL,
     eval_type=RuleEvalType.MERGE,
     name="discovery_alertmanager",

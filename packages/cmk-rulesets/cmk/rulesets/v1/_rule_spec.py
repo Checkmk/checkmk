@@ -18,7 +18,7 @@ class RuleEvalType(Enum):
 
 
 @dataclass(frozen=True)
-class HostRuleSpec:
+class HostMonitoringRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -98,7 +98,18 @@ class EnforcedServiceRuleSpecWithoutItem:
 
 
 @dataclass(frozen=True)
-class InventoryParameterRuleSpec:
+class ServiceMonitoringRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class ServiceDiscoveryRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -142,7 +153,62 @@ class SpecialAgentRuleSpec:
 
 
 @dataclass(frozen=True)
-class ExtraHostConfRuleSpec:
+class AgentAccessRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class NotificationParametersRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class SNMPRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class InventoryParameterRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class ExtraHostConfEventConsoleRuleSpec:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: RuleEvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class ExtraHostConfHostMonitoringRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]

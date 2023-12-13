@@ -1,0 +1,13 @@
+Title: CSV export for availability timelines of hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1702457176
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When exporting all availability timelines of a host as a CSV file
+only the last timeline was written to the CSV file.
+
+Now all timelines are written again like in Checkmk 2.0 and before.

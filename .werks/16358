@@ -1,0 +1,15 @@
+Title: Session termination after maximum session age
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1702467423
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+To mitigate the risk of a session takeover you can now define a maximum session duration.
+This is set by default to 24 hours.
+For the case that somebody is actively using the session over this duration you can also configure a threshold to warn users about the upcoming session termination.
+This value is set by default to 15 minutes.
+
+You can disable this feature completely via the global setting *Session management*.

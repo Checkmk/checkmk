@@ -179,6 +179,18 @@ class EnforcedService:
 
 @dataclass(frozen=True)
 class DiscoveryParameters:
+    """Specifies configurations for the discovery of services
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -213,6 +225,18 @@ class ActiveCheck:
 
 @dataclass(frozen=True)
 class AgentConfig:
+    """Specifies rule configurations for agents
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -224,6 +248,18 @@ class AgentConfig:
 
 @dataclass(frozen=True)
 class SpecialAgent:
+    """Specifies rule configurations for special agents
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -235,6 +271,18 @@ class SpecialAgent:
 
 @dataclass(frozen=True)
 class AgentAccess:
+    """Specifies configurations for the connection to the Checkmk and SNMP agents
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -246,6 +294,18 @@ class AgentAccess:
 
 @dataclass(frozen=True)
 class NotificationParameters:
+    """Specifies rule configurations for notifications
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -257,6 +317,18 @@ class NotificationParameters:
 
 @dataclass(frozen=True)
 class SNMP:
+    """Specifies configurations for SNMP services
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -268,6 +340,18 @@ class SNMP:
 
 @dataclass(frozen=True)
 class InventoryParameters:
+    """Specifies rule configurations for inventory services
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -279,6 +363,18 @@ class InventoryParameters:
 
 @dataclass(frozen=True)
 class ExtraHostConfEventConsole:
+    """Specifies extra host configurations for event console services
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -290,6 +386,18 @@ class ExtraHostConfEventConsole:
 
 @dataclass(frozen=True)
 class ExtraHostConfHostMonitoring:
+    """Specifies extra host configurations
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
@@ -301,6 +409,18 @@ class ExtraHostConfHostMonitoring:
 
 @dataclass(frozen=True)
 class ExtraServiceConf:
+    """Specifies extra service configurations
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]

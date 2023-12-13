@@ -9,12 +9,16 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, TypeVar
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
 
-import cmk.gui.wato as legacy_wato
+from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
+from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
@@ -40,6 +44,26 @@ def convert_to_legacy_rulespec(
     to_convert: APIV1RuleSpec, edition_only: Edition, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
     match to_convert:
+        case ruleset_api_v1.ActiveChecksRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_wato_groups.RulespecGroupIntegrateOtherServices,
+                localizer,
+                config_scope_prefix=RuleGroup.ActiveChecks,
+            )
+        case ruleset_api_v1.AgentAccessRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_cmk_config_groups.RulespecGroupAgent,
+                localizer,
+            )
+        case ruleset_api_v1.AgentConfigRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupMonitoringAgents,
+                localizer,
+                config_scope_prefix=RuleGroup.AgentConfig,
+            )
         case ruleset_api_v1.CheckParameterRuleSpecWithItem():
             return _convert_to_legacy_check_parameter_with_item_rulespec(
                 to_convert, edition_only, localizer
@@ -57,10 +81,76 @@ def convert_to_legacy_rulespec(
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, edition_only, localizer
             )
-        case ruleset_api_v1.HostRuleSpec():
-            return _convert_to_legacy_host_rule_spec_rulespec(to_convert, localizer)
-        case ruleset_api_v1.ServiceRuleSpec() | ruleset_api_v1.InventoryParameterRuleSpec() | ruleset_api_v1.ActiveChecksRuleSpec() | ruleset_api_v1.AgentConfigRuleSpec() | ruleset_api_v1.SpecialAgentRuleSpec() | ruleset_api_v1.ExtraHostConfRuleSpec() | ruleset_api_v1.ExtraServiceConfRuleSpec():
-            raise NotImplementedError(to_convert)
+        case ruleset_api_v1.ExtraHostConfEventConsoleRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_mkeventd_groups.RulespecGroupEventConsole,
+                localizer,
+                config_scope_prefix=RuleGroup.ExtraHostConf,
+            )
+        case ruleset_api_v1.ExtraHostConfHostMonitoringRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
+                localizer,
+                config_scope_prefix=RuleGroup.ExtraHostConf,
+            )
+        case ruleset_api_v1.ExtraServiceConfRuleSpec():
+            return _convert_to_legacy_service_rule_spec_rulespec(
+                to_convert,
+                localizer,
+                config_scope_prefix=RuleGroup.ExtraServiceConf,
+            )
+        case ruleset_api_v1.HostMonitoringRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
+                localizer,
+            )
+        case ruleset_api_v1.InventoryParameterRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_inventory_groups.RulespecGroupInventory,
+                localizer,
+                config_scope_prefix=RuleGroup.InvParameters,
+            )
+        case ruleset_api_v1.NotificationParametersRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+                localizer,
+                config_scope_prefix=RuleGroup.NotificationParameters,
+            )
+        case ruleset_api_v1.ServiceDiscoveryRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_wato.RulespecGroupDiscoveryCheckParameters,
+                localizer,
+            )
+        case ruleset_api_v1.ServiceMonitoringRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+                localizer,
+            )
+        case ruleset_api_v1.ServiceRuleSpec():
+            return _convert_to_legacy_service_rule_spec_rulespec(
+                to_convert,
+                localizer,
+            )
+        case ruleset_api_v1.SNMPRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_rulespec_groups.RulespecGroupAgentSNMP,
+                localizer,
+            )
+        case ruleset_api_v1.SpecialAgentRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(
+                to_convert,
+                legacy_wato.RulespecGroupDatasourcePrograms,
+                localizer,
+                config_scope_prefix=RuleGroup.SpecialAgents,
+            )
         case other:
             assert_never(other)
 
@@ -149,13 +239,42 @@ def _convert_to_legacy_rulespec_group(
 
 
 def _convert_to_legacy_host_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.HostRuleSpec,
+    to_convert: ruleset_api_v1.ActiveChecksRuleSpec
+    | ruleset_api_v1.AgentConfigRuleSpec
+    | ruleset_api_v1.AgentAccessRuleSpec
+    | ruleset_api_v1.ExtraHostConfEventConsoleRuleSpec
+    | ruleset_api_v1.ExtraHostConfHostMonitoringRuleSpec
+    | ruleset_api_v1.HostMonitoringRuleSpec
+    | ruleset_api_v1.NotificationParametersRuleSpec
+    | ruleset_api_v1.InventoryParameterRuleSpec
+    | ruleset_api_v1.ServiceDiscoveryRuleSpec
+    | ruleset_api_v1.ServiceMonitoringRuleSpec
+    | ruleset_api_v1.SNMPRuleSpec
+    | ruleset_api_v1.SpecialAgentRuleSpec,
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
 ) -> legacy_rulespecs.HostRulespec:
     return legacy_rulespecs.HostRulespec(
-        # group will be adjusted when introducing more rulespec types
-        group=legacy_wato.RulespecGroupCheckParametersDiscovery,
+        group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
+        name=config_scope_prefix(to_convert.name),
+        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        is_deprecated=to_convert.is_deprecated,
+        match_type="dict" if to_convert.eval_type == ruleset_api_v1.RuleEvalType.MERGE else "all",
+    )
+
+
+def _convert_to_legacy_service_rule_spec_rulespec(
+    to_convert: ruleset_api_v1.ServiceRuleSpec | ruleset_api_v1.ExtraServiceConfRuleSpec,
+    localizer: Callable[[str], str],
+    config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
+) -> legacy_rulespecs.ServiceRulespec:
+    return legacy_rulespecs.ServiceRulespec(
+        group=_convert_to_legacy_rulespec_group(
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
+        ),
+        item_type="service",
         name=config_scope_prefix(to_convert.name),
         valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
@@ -175,18 +294,36 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
                 return legacy_wato_groups.RulespecGroupCheckParametersApplications
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
+                return legacy_wato_groups.RulespecGroupDatasourceProgramsApps
             return _to_generated_builtin_sub_group(legacy_main_group, "Applications", localizer)
         case ruleset_api_v1.Topic.GENERAL:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_rulespec_groups.RulespecGroupMonitoringConfigurationVarious
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
+                return legacy_wato_groups.RulespecGroupDatasourceProgramsCustom
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupHostsMonitoringRules:
+                return legacy_rulespec_groups.RulespecGroupHostsMonitoringRulesVarious
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringAgents:
+                return legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions
+            if legacy_main_group == legacy_wato.RulespecGroupDiscoveryCheckParameters:
+                return legacy_wato_groups.RulespecGroupCheckParametersDiscovery
             return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
         case ruleset_api_v1.Topic.OPERATING_SYSTEM:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersOperatingSystem
+            if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
+                return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
+                return legacy_wato_groups.RulespecGroupDatasourceProgramsOS
             return _to_generated_builtin_sub_group(legacy_main_group, "Operating System", localizer)
         case ruleset_api_v1.Topic.VIRTUALIZATION:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersVirtualization
+            if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
+                return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
+            if legacy_main_group == legacy_wato_groups.RulespecGroupDatasourcePrograms:
+                return legacy_wato_groups.RulespecGroupDatasourceProgramsContainer
             return _to_generated_builtin_sub_group(legacy_main_group, "Virtualization", localizer)
         case other:
             assert_never(other)

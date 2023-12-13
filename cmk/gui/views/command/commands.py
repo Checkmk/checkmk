@@ -601,18 +601,17 @@ class CommandFakeCheckResult(Command):
 
     @property
     def confirm_title(self) -> str:
-        return _("Manually set check results to %s?") % self._get_target_state()
+        return _("Set fake check result to ‘%s’?") % self._get_target_state()
 
     def _get_target_state(self) -> str:
-        for var, value in list(request.itervars(prefix="_fake_")):
-            if not var[-1].isdigit():
-                continue
-            return value
-        return ""
+        state = request.var("_state")
+        statename = request.var(f"_state_{state}")
+
+        return "" if statename is None else statename
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Set")
+        return _l("Set to '%s'") % self._get_target_state()
 
     @property
     def icon_name(self):
@@ -634,71 +633,111 @@ class CommandFakeCheckResult(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.open_table()
+    def _link_to_test_notifications(self):
+        return html.render_a(
+            _("Test notification"),
+            makeuri_contextless(request, [("mode", "notifications")], filename="wato.py"),
+        )
 
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Plugin output"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_output", "", size=60)
-        html.close_td()
-        html.close_tr()
+    def _render_test_notification_tip(self):
+        html.open_div(class_="info")
+        html.icon("toggle_details")
+        html.write_text(
+            " &nbsp; "
+            + _(
+                "If you are looking for a way to test your notification settings, try '%s' in Setup > Notifications"
+            )
+            % self._link_to_test_notifications()
+        )
+        html.close_div()
 
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Performance data"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_perfdata", "", size=60)
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Result"))
-        html.close_td()
-        html.open_td()
+    def _get_states(self, what):
         if what == "host":
-            html.button("_fake_0", _("Up"))
-            html.button("_fake_1", _("Down"))
-        else:
-            html.button("_fake_0", _("OK"))
-            html.button("_fake_1", _("Warning"))
-            html.button("_fake_2", _("Critical"))
-            html.button("_fake_3", _("Unknown"))
+            return [(0, _("Up")), (1, _("Down"))]
+
+        return [(0, _("OK")), (1, _("Warning")), (2, _("Critical")), (3, _("Unknown"))]
+
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        self._render_test_notification_tip()
+
+        html.open_div(class_="group")
+        html.open_table(class_=["fake_check_result"])
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Result") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.open_span(class_="inline_radio_group")
+        for value, description in self._get_states(what):
+            html.radiobutton("_state", value, value == 0, description)
+            html.hidden_field(f"_state_{value}", description)
+        html.close_span()
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Plugin output") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Performance data") + " &nbsp; ")
+        html.close_td()
+        html.open_td()
+        html.text_input(
+            "_fake_perfdata",
+            "",
+            size=60,
+            placeholder=_("Enter performance data to show in notifications etc. ..."),
+        )
         html.close_td()
         html.close_tr()
 
         html.close_table()
+        html.close_div()
+
+        html.open_div(class_="group")
+        html.button("_fake_check_result", _("Fake check result"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        for s in [0, 1, 2, 3]:
-            statename = request.var("_fake_%d" % s)
-            if statename:
-                pluginoutput = request.get_str_input_mandatory("_fake_output").strip()
-                if not pluginoutput:
-                    pluginoutput = _("Manually set to %s by %s") % (
-                        escaping.escape_attribute(statename),
-                        user.id,
-                    )
-                perfdata = request.var("_fake_perfdata")
-                if perfdata:
-                    pluginoutput += "|" + perfdata
-                command = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
-                    "SERVICE" if cmdtag == "SVC" else cmdtag,
-                    spec,
-                    s,
-                    livestatus.lqencode(pluginoutput),
+        if request.var("_fake_check_result"):
+            state = request.var("_state")
+            statename = request.var(f"_state_{state}")
+            pluginoutput = request.get_str_input_mandatory("_fake_output").strip()
+
+            if not pluginoutput:
+                pluginoutput = _("Manually set to %s by %s") % (
+                    escaping.escape_attribute(statename),
+                    user.id,
                 )
-                return command, self.confirm_dialog_options(
-                    cmdtag,
-                    row,
-                    len(action_rows),
-                )
+
+            perfdata = request.var("_fake_perfdata")
+            if perfdata:
+                pluginoutput += "|" + perfdata
+
+            command = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
+                "SERVICE" if cmdtag == "SVC" else cmdtag,
+                spec,
+                state,
+                livestatus.lqencode(pluginoutput),
+            )
+
+            return command, self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            )
+
         return None
 
 

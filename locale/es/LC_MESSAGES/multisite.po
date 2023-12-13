@@ -302,10 +302,6 @@ msgid "% of port speed"
 msgstr "% de velocidad del puerto"
 
 #, no-python-format
-msgid "% of the specified time via GET request"
-msgstr ""
-
-#, no-python-format
 msgid "% time"
 msgstr "% tiempo"
 
@@ -4366,6 +4362,10 @@ msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
 "Avanzado: Desactivar el soporte de la extensión del nombre de host SSL/TLS "
 "(SNI)"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "Datos de autentificación local"
 
 msgid "Aerohive HiveManager"
 msgstr "HiveManager de Aerohive"
@@ -13105,6 +13105,10 @@ msgstr "Continúa el conteo cuando el evento es <b>reconocido</b>"
 msgid "Continue search"
 msgstr "Seguir buscando"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "Tiempo de espera de la conexión del proveedor de identidad"
+
 msgid "Control group:"
 msgstr "Grupo de control:"
 
@@ -16409,10 +16413,11 @@ msgstr "Despliegues"
 msgid "Deployment problems"
 msgstr "Problemas de despliegue"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "El estado de despliegue del host %s está dañado. Considere borrar el archivo "
 "archivo correspondiente en Check_MK-Server en %s y volver a registrar el "
@@ -19979,6 +19984,10 @@ msgstr "Es igual a"
 
 msgid "Error"
 msgstr "Error"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "Tratamiento de errores"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -42708,10 +42717,6 @@ msgstr ""
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Evitar las búsquedas de DNS mediante el uso de un archivo de caché"
 
-#, fuzzy
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr "Datos de autentificación local"
-
 msgid "Prevent host deletion after initialization"
 msgstr "Evitar el borrado de hosts tras la inicialización"
 
@@ -52252,6 +52257,10 @@ msgstr "Todavía no ha pasado nada."
 
 msgid "Stop"
 msgstr "Detener"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "Tiempo de procesamiento del evento"
 
 msgid "Stop and do not create hosts."
 msgstr "Deténgase y no cree hosts."
@@ -69727,6 +69736,11 @@ msgstr "Avisa si el valor del estado de la suscripción no es"
 msgid "Warn on unexpected active interface"
 msgstr "Advertencia sobre una interfaz activa inesperada"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "Advertir, si la edad de la página es mayor que esta"
 
@@ -69863,6 +69877,9 @@ msgstr "La advertencia comienza con"
 
 msgid "Warning threshold"
 msgstr "Umbral de advertencia"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 #, fuzzy
 msgid "Warning: "
@@ -75969,6 +75986,11 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Local Authentication Data"
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr "Datos de autentificación local"
 
 #~ msgid "Expire acknowledgement after"
 #~ msgstr "Expirar el reconocimiento después de"

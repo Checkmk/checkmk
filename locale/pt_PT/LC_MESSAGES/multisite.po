@@ -303,10 +303,6 @@ msgid "% of port speed"
 msgstr "% velocidade da porta"
 
 #, no-python-format
-msgid "% of the specified time via GET request"
-msgstr "% do tempo especificado através de um pedido GET"
-
-#, no-python-format
 msgid "% time"
 msgstr "% tempo"
 
@@ -4339,6 +4335,10 @@ msgstr "Opções disponíveis"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr "Avançado: Desactivar o suporte de extensão de hostname SSL/TLS (SNI)"
+
+#, fuzzy
+msgid "Advise re-authentication before termination:"
+msgstr "Reforçar a reautenticação após:"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -12990,6 +12990,10 @@ msgstr "Continue contando quando o evento for <b>conhecido</b>"
 msgid "Continue search"
 msgstr "Continuar a pesquisa"
 
+#, fuzzy
+msgid "Continue with other SNMP contexts on timeout"
+msgstr "Tempo limite de ligação do fornecedor de identidade"
+
 msgid "Control group:"
 msgstr "Grupo de controle:"
 
@@ -16271,10 +16275,11 @@ msgstr "Implantação"
 msgid "Deployment problems"
 msgstr "Problemas de implantação"
 
-#, python-format
+#, fuzzy
 msgid ""
-"Deployment status of host %s is corrupted. Consider deleting the "
-"corresponding file on Check_MK-Server at %s and re-registering host %s"
+"Deployment status of host {} is corrupted. Consider deleting the "
+"corresponding file on Check_MK-Server at {} and re-registering host {}. "
+"Exception: {}"
 msgstr ""
 "O estado de implantação do %s anfitrião está corrompido. Considere excluir o "
 "arquivo correspondente no Check_MK-Server em %s e recadastrar o host %s"
@@ -19806,6 +19811,10 @@ msgstr "É igual a"
 
 msgid "Error"
 msgstr "Erro"
+
+#, fuzzy
+msgid "Error Handling"
+msgstr "Tratamento de erros"
 
 #, python-format
 msgid "Error during discovery of %s"
@@ -42310,10 +42319,6 @@ msgstr "Regras Pretty-Print no arquivo de configuração do Console de Eventos"
 msgid "Prevent DNS lookups by use of a cache file"
 msgstr "Impedir consultas ao DNS através do uso de um arquivo cache"
 
-msgid "Prevent data loss of forms by forcing re-authentification after"
-msgstr ""
-"Evitar a perda de dados de formulários, forçando uma nova autenticação após"
-
 msgid "Prevent host deletion after initialization"
 msgstr "Evitar a exclusão do host após a inicialização"
 
@@ -51757,6 +51762,10 @@ msgstr "Ainda não aconteceu nada."
 
 msgid "Stop"
 msgstr "Pare"
+
+#, fuzzy
+msgid "Stop SNMP processing on timeout"
+msgstr "Tempo de processamento de eventos"
 
 msgid "Stop and do not create hosts."
 msgstr "Parar e não criar hospedeiros."
@@ -69031,6 +69040,11 @@ msgstr "Avisar se o valor do status da assinatura não for"
 msgid "Warn on unexpected active interface"
 msgstr "Alerta sobre interface ativa inesperada"
 
+msgid ""
+"Warn the user at a specificied time beforethe maximum session duration is "
+"reachedto aid users in preserving data."
+msgstr ""
+
 msgid "Warn, if the age of the page is older than this"
 msgstr "Avisar, se a idade da página for mais velha que esta"
 
@@ -69166,6 +69180,9 @@ msgstr "O aviso começa com"
 
 msgid "Warning threshold"
 msgstr "Limiar de advertência"
+
+msgid "Warning threshold must be smaller than maximum session duration"
+msgstr ""
 
 #, fuzzy
 msgid "Warning: "
@@ -75215,6 +75232,15 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#, no-python-format
+#~ msgid "% of the specified time via GET request"
+#~ msgstr "% do tempo especificado através de um pedido GET"
+
+#~ msgid "Prevent data loss of forms by forcing re-authentification after"
+#~ msgstr ""
+#~ "Evitar a perda de dados de formulários, forçando uma nova autenticação "
+#~ "após"
 
 #~ msgid "Expire acknowledgement after"
 #~ msgstr "Expirar o reconhecimento após"

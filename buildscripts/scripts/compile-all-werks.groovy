@@ -64,24 +64,21 @@ def main() {
                     dir("${checkout_dir}") {
                         sh("""
                         ./scripts/npm-ci
-                        echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' >${WORKSPACE}/index.html
+                        echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' >${WORKSPACE}/validate-werks.html
                         # still no need for jq!
-                        python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/index.html
-                        echo '</body></html>' >>${WORKSPACE}/index.html
-                        java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' --stdout --format gnu - <${WORKSPACE}/index.html >${WORKSPACE}/errors.txt
+                        python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("${WORKSPACE}/all_werks.json")).items())))' >>${WORKSPACE}/validate-werks.html
+                        echo '</body></html>' >>${WORKSPACE}/validate-werks.html
+                        java -jar node_modules/vnu-jar/build/dist/vnu.jar --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' --stdout --format gnu - <${WORKSPACE}/validate-werks.html >${WORKSPACE}/validate-werks.error.txt
                         """)
                     }
                 } catch(Exception) {
                     archiveArtifacts(
-                        artifacts: [
-                            "${WORKSPACE}/index.html",
-                            "${WORKSPACE}/errors.txt"
-                        ],
+                        artifacts: "${WORKSPACE}/validate-werks.*",
                         fingerprint: true,
                     );
                     sh("""
-                    cat "${WORKSPACE}/errors.txt"
-                    echo "Found invalid html. See errors above, compare the line numbers with index.html artifact."
+                    cat "${WORKSPACE}/validate-werks.error.txt"
+                    echo "Found invalid html. See errors above, compare the line numbers with validate-werks.html artifact."
                     """)
                 }
             }

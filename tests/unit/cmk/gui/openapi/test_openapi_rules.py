@@ -406,7 +406,7 @@ def test_create_rule_old_and_new_label_formats(
     ]
 
 
-def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
+def test_create_rule_missing_operator(clients: ClientRegistry) -> None:
     conditions: RuleConditions = {"service_description": {"operator": "one_of"}}
     resp, _ = _create_rule(
         clients=clients,
@@ -420,7 +420,7 @@ def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
     resp.assert_status_code(400)
 
 
-def test_create_rule_missing_operator(clients: ClientRegistry) -> None:
+def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
     conditions: RuleConditions = {"service_description": {"match_on": []}}
     resp, _ = _create_rule(
         clients=clients,

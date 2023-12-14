@@ -9,42 +9,42 @@
 #include <bitset>
 #include <cctype>
 #include <map>
+#include <string_view>
 #include <utility>
 
 #include "livestatus/Logger.h"
-#include "livestatus/strutil.h"
+
+using namespace std::string_view_literals;
 
 namespace column::attribute_list {
 
 // see MODATTR_FOO in nagios/common.h
-const std::map<std::string, unsigned long> known_attributes = {
-    {"notifications_enabled", 0},    {"active_checks_enabled", 1},
-    {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
-    {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},
-    {"performance_data_enabled", 6}, {"obsessive_handler_enabled", 7},
-    {"event_handler_command", 8},    {"check_command", 9},
-    {"normal_check_interval", 10},   {"retry_check_interval", 11},
-    {"max_check_attempts", 12},      {"freshness_checks_enabled", 13},
-    {"check_timeperiod", 14},        {"custom_variable", 15},
-    {"notification_timeperiod", 16}};
+const std::map<std::string_view, unsigned long> known_attributes = {
+    {"notifications_enabled"sv, 0},    {"active_checks_enabled"sv, 1},
+    {"passive_checks_enabled"sv, 2},   {"event_handler_enabled"sv, 3},
+    {"flap_detection_enabled"sv, 4},   {"failure_prediction_enabled"sv, 5},
+    {"performance_data_enabled"sv, 6}, {"obsessive_handler_enabled"sv, 7},
+    {"event_handler_command"sv, 8},    {"check_command"sv, 9},
+    {"normal_check_interval"sv, 10},   {"retry_check_interval"sv, 11},
+    {"max_check_attempts"sv, 12},      {"freshness_checks_enabled"sv, 13},
+    {"check_timeperiod"sv, 14},        {"custom_variable"sv, 15},
+    {"notification_timeperiod"sv, 16}};
 
 using modified_attributes = std::bitset<32>;
 
 std::string refValueFor(const std::string &value, Logger *logger) {
-    if (isdigit(value[0]) != 0) {
+    if (!value.empty() && std::isdigit(value[0]) != 0) {
         return value;
     }
-
-    std::vector<char> value_vec(value.begin(), value.end());
-    value_vec.push_back('\0');
-    char *scan = value_vec.data();
-
+    std::string_view val{value};
     modified_attributes values;
-    for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
-        auto it = known_attributes.find(t);
+    while (!val.empty()) {
+        auto attr = val.substr(0, val.find(','));
+        val.remove_prefix(std::min(val.size(), attr.size() + 1));
+        auto it = known_attributes.find(attr);
         if (it == known_attributes.end()) {
             Informational(logger)
-                << "Ignoring invalid value '" << t << "' for attribute list";
+                << "ignoring invalid value '" << attr << "' for attribute list";
             continue;
         }
         values[it->second] = true;
@@ -90,7 +90,7 @@ template <>
 std::string serialize(const column::attribute_list::AttributeBit &bit) {
     for (const auto &[k, v] : column::attribute_list::known_attributes) {
         if (v == bit.index && bit.value) {
-            return k;
+            return std::string{k};
         }
     }
     return {};

@@ -6,28 +6,19 @@
 from cmk.graphing.v1 import perfometer
 
 perfometer_aws_overall_hosts_health_perc = perfometer.Perfometer(
-    "aws_overall_hosts_health_perc",
-    perfometer.FocusRange(
-        perfometer.Closed(0),
-        perfometer.Closed(100),
-    ),
-    ["aws_overall_hosts_health_perc"],
+    name="aws_overall_hosts_health_perc",
+    focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
+    segments=["aws_overall_hosts_health_perc"],
 )
 
 perfometer_aws_bucket_size = perfometer.Perfometer(
-    "aws_bucket_size",
-    perfometer.FocusRange(
-        perfometer.Closed(0),
-        perfometer.Open(12148001999),
-    ),
-    ["aws_bucket_size"],
+    name="aws_bucket_size",
+    focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(12148001999)),
+    segments=["aws_bucket_size"],
 )
 
 perfometer_aws_s3_buckets = perfometer.Perfometer(
-    "aws_s3_buckets",
-    perfometer.FocusRange(
-        perfometer.Closed(0),
-        perfometer.Open(565),
-    ),
-    ["aws_s3_buckets"],
+    name="aws_s3_buckets",
+    focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(565)),
+    segments=["aws_s3_buckets"],
 )

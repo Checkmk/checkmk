@@ -6,22 +6,22 @@
 from cmk.graphing.v1 import Color, graph, Localizable, metric, Unit
 
 metric_active_connections = metric.Metric(
-    "active_connections",
-    Localizable("Active connections"),
-    Unit.COUNT,
-    Color.PURPLE,
+    name="active_connections",
+    title=Localizable("Active connections"),
+    unit=Unit.COUNT,
+    color=Color.PURPLE,
 )
 
 metric_idle_connections = metric.Metric(
-    "idle_connections",
-    Localizable("Idle connections"),
-    Unit.COUNT,
-    Color.DARK_PURPLE,
+    name="idle_connections",
+    title=Localizable("Idle connections"),
+    unit=Unit.COUNT,
+    color=Color.DARK_PURPLE,
 )
 
 graph_db_connections = graph.Graph(
-    "db_connections",
-    Localizable("DB Connections"),
+    name="db_connections",
+    title=Localizable("DB Connections"),
     simple_lines=[
         "active_connections",
         "idle_connections",

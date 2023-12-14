@@ -23,28 +23,28 @@ def test_minimal_range_error_upper_empty_name() -> None:
 def test_graph_error_empty_name() -> None:
     title = Localizable("Title")
     with pytest.raises(ValueError):
-        graph.Graph("", title, compound_lines=["metric-name"])
+        graph.Graph(name="", title=title, compound_lines=["metric-name"])
 
 
 def test_graph_error_missing_compound_lines_and_simple_lines() -> None:
     name = "name"
     title = Localizable("Title")
     with pytest.raises(AssertionError):
-        graph.Graph(name, title)
+        graph.Graph(name=name, title=title)
 
 
 def test_graph_error_compound_lines_empty_name() -> None:
     name = "name"
     title = Localizable("Title")
     with pytest.raises(ValueError):
-        graph.Graph(name, title, compound_lines=[""])
+        graph.Graph(name=name, title=title, compound_lines=[""])
 
 
 def test_graph_error_simple_lines_empty_name() -> None:
     name = "name"
     title = Localizable("Title")
     with pytest.raises(ValueError):
-        graph.Graph(name, title, simple_lines=[""])
+        graph.Graph(name=name, title=title, simple_lines=[""])
 
 
 def test_graph_error_optional_empty_name() -> None:
@@ -52,7 +52,7 @@ def test_graph_error_optional_empty_name() -> None:
     title = Localizable("Title")
     simple_lines = ["metric-name"]
     with pytest.raises(ValueError):
-        graph.Graph(name, title, simple_lines=simple_lines, optional=[""])
+        graph.Graph(name=name, title=title, simple_lines=simple_lines, optional=[""])
 
 
 def test_graph_error_conflicting_empty_name() -> None:
@@ -60,20 +60,20 @@ def test_graph_error_conflicting_empty_name() -> None:
     title = Localizable("Title")
     simple_lines = ["metric-name"]
     with pytest.raises(ValueError):
-        graph.Graph(name, title, simple_lines=simple_lines, conflicting=[""])
+        graph.Graph(name=name, title=title, simple_lines=simple_lines, conflicting=[""])
 
 
 def test_bidirectional_error_empty_name() -> None:
     title = Localizable("Title")
     lower = graph.Graph(
-        "lower",
-        Localizable("Title lower"),
+        name="lower",
+        title=Localizable("Title lower"),
         compound_lines=["metric-name-1"],
     )
     upper = graph.Graph(
-        "upper",
-        Localizable("Title upper"),
+        name="upper",
+        title=Localizable("Title upper"),
         compound_lines=["metric-name-2"],
     )
     with pytest.raises(ValueError):
-        graph.Bidirectional("", title, lower=lower, upper=upper)
+        graph.Bidirectional(name="", title=title, lower=lower, upper=upper)

@@ -15,12 +15,12 @@ from cmk.graphing.v1 import Color, Localizable, metric, perfometer, Unit
 
 def _make_perfometer(name: str, start_idx: int) -> perfometer.Perfometer:
     return perfometer.Perfometer(
-        name,
-        perfometer.FocusRange(
+        name=name,
+        focus_range=perfometer.FocusRange(
             perfometer.Closed(f"metric-name{start_idx+1}"),
             perfometer.Closed(f"metric-name{start_idx+2}"),
         ),
-        [
+        segments=[
             metric.WarningOf(f"metric-name{start_idx+3}"),
             metric.CriticalOf(f"metric-name{start_idx+4}"),
             metric.MinimumOf(f"metric-name{start_idx+5}", Color.BLUE),
@@ -160,7 +160,7 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         ),
         pytest.param(
             perfometer.Bidirectional(
-                "bidirectional",
+                name="bidirectional",
                 left=_make_perfometer("left", 0),
                 right=_make_perfometer("right", 14),
             ),
@@ -202,7 +202,7 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         ),
         pytest.param(
             perfometer.Stacked(
-                "stacked",
+                name="stacked",
                 lower=_make_perfometer("lower", 0),
                 upper=_make_perfometer("upper", 14),
             ),

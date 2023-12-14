@@ -698,9 +698,9 @@ def test_perfometer_renderer_stack(
 ) -> None:
     assert MetricometerRendererPerfometer(
         perfometer.Perfometer(
-            "name",
-            perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
-            segments,
+            name="name",
+            focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
+            segments=segments,
         ),
         translated_metrics,
     ).get_stack() == [list(value_projections) + [(14.73, "#bdbdbd")]]
@@ -709,9 +709,9 @@ def test_perfometer_renderer_stack(
 def test_perfometer_renderer_stack_same_values() -> None:
     assert MetricometerRendererPerfometer(
         perfometer.Perfometer(
-            "name",
-            perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
-            ["metric-name1", "metric-name2"],
+            name="name",
+            focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
+            segments=["metric-name1", "metric-name2"],
         ),
         {
             "metric-name1": {

@@ -6,12 +6,12 @@
 from cmk.graphing.v1 import translation
 
 translation_aws_network = translation.Translation(
-    "aws_network",
-    [
+    name="aws_network",
+    check_commands=[
         translation.PassiveCheck("aws_ec2_network_io"),
         translation.PassiveCheck("aws_rds_network_io"),
     ],
-    {
+    translations={
         "in": translation.RenamingAndScaling(
             "if_in_bps",
             8,
@@ -40,14 +40,14 @@ translation_aws_network = translation.Translation(
 )
 
 translation_aws_http = translation.Translation(
-    "aws_http",
-    [
+    name="aws_http",
+    check_commands=[
         translation.PassiveCheck("aws_elb_http_elb"),
         translation.PassiveCheck("aws_elb_http_backend"),
         translation.PassiveCheck("aws_elbv2_application_http_elb"),
         translation.PassiveCheck("aws_s3_requests_http_errors"),
     ],
-    {
+    translations={
         "http_4xx_perc": translation.Renaming("aws_http_4xx_perc"),
         "http_4xx_rate": translation.Renaming("aws_http_4xx_rate"),
         "http_5xx_perc": translation.Renaming("aws_http_5xx_perc"),
@@ -56,15 +56,17 @@ translation_aws_http = translation.Translation(
 )
 
 translation_aws_elb_backend_connection_errors = translation.Translation(
-    "aws_elb_backend_connection_errors",
-    [translation.PassiveCheck("aws_elb_backend_connection_errors")],
-    {"backend_connection_errors_rate": translation.Renaming("aws_backend_connection_errors_rate")},
+    name="aws_elb_backend_connection_errors",
+    check_commands=[translation.PassiveCheck("aws_elb_backend_connection_errors")],
+    translations={
+        "backend_connection_errors_rate": translation.Renaming("aws_backend_connection_errors_rate")
+    },
 )
 
 translation_aws_elbv2_application_connections = translation.Translation(
-    "aws_elbv2_application_connections",
-    [translation.PassiveCheck("aws_elbv2_application_connections")],
-    {
+    name="aws_elbv2_application_connections",
+    check_commands=[translation.PassiveCheck("aws_elbv2_application_connections")],
+    translations={
         "aws_Active_connections": translation.Renaming("aws_active_connections"),
         "aws_New_connections": translation.Renaming("aws_new_connections"),
         "aws_Rejected_connections": translation.Renaming("aws_rejected_connections"),

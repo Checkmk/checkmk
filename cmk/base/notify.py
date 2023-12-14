@@ -225,7 +225,7 @@ def do_notify(  # pylint: disable=too-many-branches
         notify_mode = "notify"
         if args:
             notify_mode = args[0]
-            if notify_mode not in ["stdin", "spoolfile", "replay", "send-bulks"]:
+            if notify_mode not in ["stdin", "spoolfile", "replay", "test", "send-bulks"]:
                 console.error("ERROR: Invalid call to check_mk --notify.\n\n")
                 notify_usage()
                 sys.exit(1)
@@ -251,6 +251,9 @@ def do_notify(  # pylint: disable=too-many-branches
             except (IndexError, ValueError):
                 replay_nr = 0
             notify_notify(raw_context_from_backlog(replay_nr))
+        elif notify_mode == "test":
+            assert isinstance(args[0], dict)
+            notify_notify(EventContext(args[0]))
         elif notify_mode == "stdin":
             notify_notify(events.raw_context_from_string(sys.stdin.read()))
         elif notify_mode == "send-bulks":
@@ -292,7 +295,11 @@ def convert_legacy_configuration() -> None:
         config.notification_logging = 10
 
 
-def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAnalysisInfo | None:
+def notify_notify(
+    raw_context: EventContext,
+    analyse: bool = False,
+    dispatch: bool = False,
+) -> NotifyAnalysisInfo | None:
     """
     This function processes one raw notification and decides wether it should be spooled or not.
     In the latter cased a local delivery is being done.
@@ -340,16 +347,18 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAna
         )
 
     if config.notification_spooling != "remote":
-        return locally_deliver_raw_context(raw_context, analyse=analyse)
+        return locally_deliver_raw_context(raw_context, analyse=analyse, dispatch=dispatch)
     return None
 
 
 def locally_deliver_raw_context(
-    raw_context: EventContext, analyse: bool = False
+    raw_context: EventContext,
+    analyse: bool = False,
+    dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
-        return notify_rulebased(raw_context, analyse=analyse)
+        return notify_rulebased(raw_context, analyse=analyse, dispatch=dispatch)
 
     except Exception:
         if cmk.utils.debug.enabled():
@@ -373,6 +382,21 @@ def notification_analyse_backlog(nr: int) -> NotifyAnalysisInfo | None:
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
     return notify_notify(raw_context, analyse=True)
+
+
+def notification_test(
+    raw_context: NotificationContext, dispatch: bool
+) -> NotifyAnalysisInfo | None:
+    global notify_mode
+    notify_mode = "test"
+    _initialize_logging()
+    contacts = events.livestatus_fetch_contacts(
+        HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
+    )
+    raw_context["CONTACTS"] = ",".join(contacts) if contacts else "?"
+    plugin_context = EventContext({})
+    plugin_context.update(cast(EventContext, raw_context))
+    return notify_notify(plugin_context, analyse=True, dispatch=dispatch)
 
 
 # .
@@ -412,7 +436,11 @@ def notify_keepalive() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def notify_rulebased(raw_context: EventContext, analyse: bool = False) -> NotifyAnalysisInfo:
+def notify_rulebased(
+    raw_context: EventContext,
+    analyse: bool = False,
+    dispatch: bool = False,
+) -> NotifyAnalysisInfo:
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
     # a triple of (locked, parameters, bulk). If locked is True, then a user
@@ -445,7 +473,9 @@ def notify_rulebased(raw_context: EventContext, analyse: bool = False) -> Notify
                 raw_context, rule, notifications, rule_info
             )
 
-    plugin_info = _process_notifications(raw_context, notifications, num_rule_matches, analyse)
+    plugin_info = _process_notifications(
+        raw_context, notifications, num_rule_matches, analyse, dispatch
+    )
 
     return rule_info, plugin_info
 
@@ -528,7 +558,11 @@ def _create_notifications(
 
 
 def _process_notifications(  # pylint: disable=too-many-branches
-    raw_context: EventContext, notifications: Notifications, num_rule_matches: int, analyse: bool
+    raw_context: EventContext,
+    notifications: Notifications,
+    num_rule_matches: int,
+    analyse: bool,
+    dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
     plugin_info: list[NotifyPluginInfo] = []
 
@@ -594,7 +628,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
                 for context in plugin_contexts:
                     plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
 
-                    if analyse:
+                    if analyse and not dispatch:
                         continue
                     if bulk:
                         do_bulk_notify(plugin_name, params, context, bulk)

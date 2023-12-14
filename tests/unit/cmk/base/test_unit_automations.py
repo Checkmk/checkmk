@@ -38,6 +38,7 @@ def test_registered_automations() -> None:
         "notification-analyse",
         "notification-get-bulks",
         "notification-replay",
+        "notification-test",
         "reload",
         "rename-hosts",
         "restart",

@@ -37,7 +37,6 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_brea
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -58,7 +57,12 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import TotpCredential, WebAuthnActionState, WebAuthnCredential
+from cmk.gui.type_defs import (
+    TotpCredential,
+    TwoFactorCredentials,
+    WebAuthnActionState,
+    WebAuthnCredential,
+)
 from cmk.gui.userdb import (
     is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
@@ -73,6 +77,7 @@ from cmk.gui.utils.urls import (
     DocReference,
     make_confirm_delete_link,
     makeactionuri,
+    makeuri,
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
@@ -636,6 +641,159 @@ class UserWebAuthnRegisterComplete(JsonPage):
 
 
 class UserLoginTwoFactor(Page):
+    @classmethod
+    def _render_backup_link(cls, origtarget: str) -> None:
+        html.open_div(class_="button_text")
+        html.a(
+            _("Use backup code"),
+            href=makeuri(request, [("_mode", "backup"), ("_origtarget", origtarget)]),
+        )
+        html.close_div()
+
+    @classmethod
+    def _render_totp_link(cls, origtarget: str) -> None:
+        html.open_div(class_="button_text")
+        html.a(
+            _("Use authenticator app"),
+            href=makeuri(request, [("_mode", "totp"), ("_origtarget", origtarget)]),
+        )
+        html.close_div()
+
+    @classmethod
+    def _render_totp(cls, available_methods: set[str]) -> None:
+        html.p(_("Enter the six-digit code from your authenticator app to log in."))
+        with html.form_context(
+            "totp_login", method="POST", add_transid=False, action="user_login_two_factor.py"
+        ):
+            html.prevent_password_auto_completion()
+            html.hidden_field(
+                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            )
+
+            html.open_div(id_="code_input")
+            html.label("%s:" % _("Two-factor code"), for_="_totp_code")
+            html.password_input("_totp_code", size=None)
+            html.close_div()
+
+            html.open_div(class_="button_text")
+            html.button("_use_totp_code", _("Submit"), cssclass="hot")
+            html.close_div()
+
+            if "backup_codes" in available_methods:
+                cls._render_backup_link(origtarget)
+
+            html.hidden_fields()
+
+    @classmethod
+    def _render_backup(cls, available_methods: set[str]) -> None:
+        html.p(_("Use one of your backup codes to sign in."))
+        with html.form_context(
+            "backup_code_login",
+            method="POST",
+            add_transid=False,
+            action="user_login_two_factor.py",
+        ):
+            html.prevent_password_auto_completion()
+            html.hidden_field(
+                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+            )
+
+            html.open_div(id_="code_input")
+            html.label("%s:" % _("Backup code"), for_="_backup_code")
+            html.password_input("_backup_code", size=None)
+            html.close_div()
+
+            html.open_div(class_="button_text")
+            html.button("_use_backup_code", _("Use backup code"), cssclass="hot")
+            html.close_div()
+
+            if "totp_credentials" in available_methods:
+                cls._render_totp_link(origtarget)
+
+            html.hidden_fields()
+
+    @classmethod
+    def _render_webauthn(cls, available_methods: set[str]) -> None:
+        html.p(_("Please follow your browser's instructions for authentication."))
+        html.prevent_password_auto_completion()
+        html.hidden_field(
+            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+        )
+        html.div("", id_="webauthn_message")
+        html.javascript("cmk.webauthn.login()")
+
+        if "backup_codes" in available_methods:
+            html.open_div(class_="button_text")
+            html.buttonlink(
+                text=_("Use backup code"),
+                href=makeuri(request, [("_mode", "backup"), ("_origtarget", origtarget)]),
+                class_=["mode_button"],
+            )
+            html.close_div()
+        if "totp_credentials" in available_methods:
+            cls._render_totp_link(origtarget)
+
+        html.hidden_fields()
+
+    @classmethod
+    def _render_multiple_methods(cls, available_methods: set[str]) -> None:
+        html.p(
+            _(
+                "You have multiple methods enabled. Please select the security method you want "
+                "to use to log in."
+            )
+        )
+        html.hidden_field(
+            "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+        )
+        if "totp_credentials" in available_methods:
+            html.open_div(class_="button_text")
+            html.buttonlink(
+                text=_("Authenticator app"),
+                href=makeuri(request, [("_mode", "totp"), ("_origtarget", origtarget)]),
+                class_=["mode_button"],
+            )
+            html.close_div()
+        if "webauthn_credentials" in available_methods:
+            html.open_div(class_="button_text")
+            html.buttonlink(
+                text=_("Security token"),
+                href=makeuri(request, [("_mode", "webauthn"), ("_origtarget", origtarget)]),
+                class_=["mode_button"],
+            )
+            html.close_div()
+        if "backup_codes" in available_methods:
+            cls._render_backup_link(origtarget)
+
+        html.hidden_fields()
+
+    @classmethod
+    def _check_totp_and_backup(
+        cls, available_methods: set[str], credentials: TwoFactorCredentials
+    ) -> None:
+        assert user.id is not None
+        origtarget = request.get_url_input("_origtarget", "index.py")
+        if "totp_credentials" in available_methods:
+            if totp_code := request.get_validated_type_input(Password, "_totp_code"):
+                totp_credential = credentials["totp_credentials"]
+                for credential in totp_credential:
+                    otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
+                    if otp.check_totp(
+                        totp_code.raw_bytes.decode(),
+                        otp.calculate_generation(datetime.datetime.now()),
+                    ):
+                        session.session_info.two_factor_completed = True
+                        raise HTTPRedirect(origtarget)
+                log_event_auth("Authenticator application (TOTP)")
+
+        if "backup_codes" in available_methods:
+            if backup_code := request.get_validated_type_input(Password, "_backup_code"):
+                if is_two_factor_backup_code_valid(user.id, backup_code):
+                    log_event_usermanagement(TwoFactorEventType.backup_used)
+                    session.session_info.two_factor_completed = True
+                    raise HTTPRedirect(origtarget)
+                log_event_auth("Backup code")
+
     def page(self) -> None:
         assert user.id is not None
 
@@ -643,6 +801,7 @@ class UserLoginTwoFactor(Page):
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
         make_header(html, _("Two-factor authentication"), Breadcrumb())
+        mode = request.get_url_input("_mode", "")
 
         html.open_div(id_="login")
 
@@ -662,147 +821,32 @@ class UserLoginTwoFactor(Page):
             raise MKGeneralException(_("Two-factor authentication not enabled"))
 
         credentials = load_two_factor_credentials(user.id)
-        totp_style = {
-            "label": "label_pass",
-            "input": "input_pass",
-            "button": "_use_totp_code",
-            "div": "",
-        }
-        backup_style = totp_style
-
-        html.label(
-            _("Two-factor authentication"),
-            for_="webauthn_message",
-            id_="label_webauthn",
-            class_="legend",
-        )
-
-        # WebAuthn
-        if credentials["webauthn_credentials"]:
-            with html.form_context(
-                "webauthn_login",
-                method="POST",
-                add_transid=False,
-                action="user_login_two_factor.py",
-            ):
-                html.prevent_password_auto_completion()
-                html.hidden_field(
-                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-                )
-
-                html.div("", id_="webauthn_message")
-                html.javascript("cmk.webauthn.login()")
-
-                html.hidden_fields()
-
+        available_methods = {method_name for method_name, m in credentials.items() if m}
+        html.h1(_("Two-factor authentication"))
+        if (
+            "webauthn_credentials" in available_methods
+            and "totp_credentials" in available_methods
+            and not mode
+        ):
+            self._render_multiple_methods(available_methods)
         # TOTP
-        if credentials["totp_credentials"]:
-            with html.form_context(
-                "totp_login", method="POST", add_transid=False, action="user_login_two_factor.py"
-            ):
-                html.prevent_password_auto_completion()
-                html.hidden_field(
-                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-                )
-
-                if totp_code := request.get_validated_type_input(Password, "_totp_code"):
-                    totp_credential = credentials["totp_credentials"]
-                    for credential in totp_credential:
-                        otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
-                        if otp.check_totp(
-                            totp_code.raw_bytes.decode(),
-                            otp.calculate_generation(datetime.datetime.now()),
-                        ):
-                            session.session_info.two_factor_completed = True
-                            raise HTTPRedirect(origtarget)
-                    log_event_auth("Authenticator application (TOTP)")
-
-                with foldable_container(
-                    treename="authenticator_app",
-                    id_="backup_container",
-                    isopen=False,
-                    title=_("Use Authenticator App"),
-                    indent=False,
-                    save_state=False,
-                ):
-                    html.label(
-                        "%s:" % _("OTP code"),
-                        id_=totp_style["label"],
-                        class_=["legend"],
-                        for_="_totp_code",
-                    )
-                    html.br()
-                    html.password_input("_totp_code", id_=totp_style["input"], size=None)
-
-                    html.open_div(id_="button_text")
-                    html.button(totp_style["button"], _("Use authenticator code"), cssclass="hot")
-                    html.close_div()
-
-                if user_errors:
-                    html.open_div(id_="login_error")
-                    html.show_user_errors()
-                    html.close_div()
-
-                html.hidden_fields()
-
+        elif "totp_credentials" in available_methods and (mode == "totp" or not mode):
+            self._render_totp(available_methods)
+        # WebAuthn
+        elif "webauthn_credentials" in available_methods and (mode == "webauthn" or not mode):
+            self._render_webauthn(available_methods)
         # Backup
-        if credentials["backup_codes"]:
-            if credentials["totp_credentials"]:
-                backup_style = {
-                    "label": "label_backup",
-                    "input": "input_backup",
-                    "button": "_use_backup_code",
-                    "div": "backup_foldable",
-                }
-            with html.form_context(
-                "backup_code_login",
-                method="POST",
-                add_transid=False,
-                action="user_login_two_factor.py",
-            ):
-                html.prevent_password_auto_completion()
-                html.hidden_field(
-                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-                )
+        elif "backup_codes" in available_methods and (mode == "backup" or not mode):
+            self._render_backup(available_methods)
 
-                if backup_code := request.get_validated_type_input(Password, "_backup_code"):
-                    if is_two_factor_backup_code_valid(user.id, backup_code):
-                        log_event_usermanagement(TwoFactorEventType.backup_used)
-                        session.session_info.two_factor_completed = True
-                        raise HTTPRedirect(origtarget)
-                    log_event_auth("Backup code")
+        self._check_totp_and_backup(available_methods, credentials)
 
-                html.open_div(class_=backup_style["div"])
-                with foldable_container(
-                    treename="backup_codes",
-                    id_="backup_container",
-                    isopen=False,
-                    title=_("Use backup code"),
-                    indent=False,
-                    save_state=False,
-                ):
-                    html.label(
-                        "%s:" % _("Backup code"),
-                        id_=backup_style["label"],
-                        class_=["legend", ""],
-                        for_="_backup_code",
-                    )
-                    html.br()
-                    html.password_input("_backup_code", id_=backup_style["input"], size=None)
+        if user_errors:
+            html.open_div(id_="login_error")
+            html.show_user_errors()
+            html.close_div()
 
-                    html.open_div(id_="button_text")
-                    html.button(backup_style["button"], _("Use backup code"), cssclass="hot")
-                    html.close_div()
-                html.close_div()
-
-                if user_errors:
-                    html.open_div(id_="login_error")
-                    html.show_user_errors()
-                    html.close_div()
-
-                html.close_div()
-                html.hidden_fields()
-
+        html.close_div()
         html.close_div()
         html.footer()
 

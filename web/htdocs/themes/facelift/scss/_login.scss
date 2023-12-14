@@ -140,7 +140,8 @@ body.login {
   #_login,
   #_saml2_login_button,
   #_use_totp_code,
-  #_use_backup_code {
+  #_use_backup_code,
+  input.mode_button {
     width: 100%;
     height: 29px;
     padding: 8.5px 16px;
@@ -217,88 +218,33 @@ body.login {
   }
 
   &.two_factor {
-    #webauthn_message {
-      position: absolute;
-      top: 83px;
-      right: 0;
-      left: 0;
-      padding: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      border-radius: 0;
-      box-shadow: none;
+    h1 {
+      margin-left: 0;
+      text-align: left;
+      padding-top: $spacing-double;
     }
 
-    #label_webauthn {
-      position: absolute;
-      top: 70px;
-      left: 40px;
+    p {
+      text-align: left;
     }
 
-    #label_pass {
-      position: absolute;
-      top: 153px;
-      left: 40px;
+    .button_text {
+      padding-top: $spacing-double;
     }
 
-    #label_backup {
-      position: absolute;
-      top: 258px;
-      left: 40px;
-    }
-
-    #input_pass {
-      position: absolute;
-      top: 146px;
-      left: 135px;
-    }
-
-    #input_backup {
-      position: absolute;
-      top: 251px;
-      left: 135px;
-    }
-
-    #_use_backup_code,
-    #_use_totp_code {
-      bottom: 20px;
-      left: 40px;
-      padding: 8px 16px;
-      position: absolute;
-      width: calc(100% - 80px);
-    }
-
-    div.backup_foldable {
-      .foldable .foldable_header {
-        top: 230px;
-      }
-      #_use_backup_code {
-        top: 288px;
+    #code_input {
+      text-align: left;
+      input {
+        height: $font-size-page-title;
       }
     }
 
-    #_use_totp_code {
-      bottom: unset;
-      top: 183px;
+    a {
+      text-decoration: underline;
     }
 
-    .foldable {
-      height: 140px;
-      .foldable_header {
-        position: absolute;
-        top: 125px;
-        left: 40px;
-
-        b {
-          font-weight: $font-weight-default;
-        }
-      }
-
-      .treeangle {
-        position: unset;
-        margin: 0;
-      }
+    input.mode_button {
+      background-color: $ux-theme-6;
     }
   }
 }

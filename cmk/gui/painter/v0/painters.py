@@ -28,6 +28,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.helpers import replace_action_url_macros
 from cmk.gui.painter_options import (
     paint_age,
     paint_age_or_never,
@@ -106,7 +107,7 @@ def register(
     painter_registry.register(PainterSvcPerfVal10)
     painter_registry.register(PainterSvcCheckCommand)
     painter_registry.register(PainterSvcCheckCommandExpanded)
-    painter_registry.register(PainterSvcNotesURLExpanded)
+    painter_registry.register(PainterSvcNotesURL)
     painter_registry.register(PainterSvcContacts)
     painter_registry.register(PainterSvcContactGroups)
     painter_registry.register(PainterServiceDescription)
@@ -150,7 +151,7 @@ def register(
     painter_registry.register(PainterHostPerfData)
     painter_registry.register(PainterHostCheckCommand)
     painter_registry.register(PainterHostCheckCommandExpanded)
-    painter_registry.register(PainterHostNotesURLExpanded)
+    painter_registry.register(PainterHostNotesURL)
     painter_registry.register(PainterHostStateAge)
     painter_registry.register(PainterHostCheckAge)
     painter_registry.register(PainterHostNextCheck)
@@ -862,27 +863,27 @@ class PainterSvcCheckCommandExpanded(Painter):
         return (None, row["service_check_command_expanded"])
 
 
-class PainterSvcNotesURLExpanded(Painter):
+class PainterSvcNotesURL(Painter):
     @property
     def ident(self) -> str:
-        return "svc_notes_url_expanded"
+        return "svc_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Service notes URL expanded")
+        return _("Notes URL for Services")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Notes URL expanded")
+        return _("Notes URL")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["service_notes_url_expanded"]
+        return ["service_notes_url"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        content: HTML = HTMLWriter.render_a(
-            row["service_notes_url_expanded"],
-            href=row["service_notes_url_expanded"],
-            target="_blank",
-        )
+        if raw_url := row.get("service_notes_url"):
+            url = replace_action_url_macros(raw_url, "service", row)
+            content: HTML = HTMLWriter.render_a(url, url, target="_blank")
+        else:
+            content = HTML()
         return (None, content)
 
 
@@ -2022,25 +2023,27 @@ class PainterHostCheckCommandExpanded(Painter):
         return (None, row["host_check_command_expanded"])
 
 
-class PainterHostNotesURLExpanded(Painter):
+class PainterHostNotesURL(Painter):
     @property
     def ident(self) -> str:
-        return "host_notes_url_expanded"
+        return "host_notes_url"
 
     def title(self, cell: Cell) -> str:
-        return _("Host notes URL expanded")
+        return _("Notes URL for Hosts")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Notes URL expanded")
+        return _("Notes URL")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["host_notes_url_expanded"]
+        return ["host_notes_url"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        content: HTML = HTMLWriter.render_a(
-            row["host_notes_url_expanded"], href=row["host_notes_url_expanded"], target="_blank"
-        )
+        if raw_url := row.get("host_notes_url"):
+            url = replace_action_url_macros(raw_url, "host", row)
+            content: HTML = HTMLWriter.render_a(url, url, target="_blank")
+        else:
+            content = HTML()
         return (None, content)
 
 

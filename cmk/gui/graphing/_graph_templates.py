@@ -265,7 +265,7 @@ def _to_metric_operation(
     if isinstance(expression, Constant):
         return MetricOpConstant(value=float(expression.value))
     if isinstance(expression, Metric):
-        sources = [
+        metrics = [
             MetricOpRRDSource(
                 site_id=lq_row["site"],
                 host_name=lq_row["host_name"],
@@ -281,12 +281,9 @@ def _to_metric_operation(
                 translated_metrics[expression.name]["scale"],
             )
         ]
-        if len(sources) > 1:
-            return MetricOpOperator(
-                operator_name="MERGE",
-                operands=sources,
-            )
-        return sources[0]
+        if len(metrics) > 1:
+            return MetricOpOperator(operator_name="MERGE", operands=metrics)
+        return metrics[0]
     if isinstance(expression, Sum):
         return MetricOpOperator(
             operator_name="+",

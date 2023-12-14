@@ -24,7 +24,7 @@ from cmk.gui.time_series import TimeSeries
 
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, TranslatedMetric
+from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData
 
 HorizontalRule = tuple[float, str, str, str]
 
@@ -47,11 +47,6 @@ class NeededElementForRRDDataKey:
     scale: float
 
 
-RetranslationMap = Mapping[
-    tuple[HostName, ServiceName], Mapping[MetricName, tuple[SiteId, TranslatedMetric]]
-]
-
-
 class MetricOperation(BaseModel, ABC, frozen=True):
     ident: str
 
@@ -62,10 +57,6 @@ class MetricOperation(BaseModel, ABC, frozen=True):
 
     @abstractmethod
     def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         raise NotImplementedError()
 
     @abstractmethod
@@ -107,9 +98,6 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield from ()
 
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return self
-
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         num_points, twindow = derive_num_points_twindow(rrd_data)
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
@@ -126,12 +114,6 @@ class MetricOpOperator(MetricOperation, frozen=True):
 
     def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield from (ne for o in self.operands for ne in o.needed_elements())
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return MetricOpOperator(
-            operator_name=self.operator_name,
-            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
-        )
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if result := time_series_math(
@@ -169,25 +151,6 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             self.consolidation_func_name,
             self.scale,
         )
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
-        metrics: list[MetricOperation] = [
-            MetricOpRRDSource(
-                site_id=site_id,
-                host_name=self.host_name,
-                service_name=self.service_name,
-                metric_name=name,
-                consolidation_func_name=self.consolidation_func_name,
-                scale=scale,
-            )
-            for name, scale in zip(trans["orig_name"], trans["scale"])
-        ]
-
-        if len(metrics) > 1:
-            return MetricOpOperator(operator_name="MERGE", operands=metrics)
-
-        return metrics[0]
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if (

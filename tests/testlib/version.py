@@ -27,7 +27,6 @@ logger = logging.getLogger()
 class CMKVersion:
     DEFAULT = "default"
     DAILY = "daily"
-    GIT = "git"
 
     def __init__(
         self, version_spec: str, edition: Edition, branch: str, branch_version: str
@@ -46,7 +45,7 @@ class CMKVersion:
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
     def _version(self, version_spec: str, branch: str, branch_version: str) -> str:
-        if version_spec in (self.DAILY, self.GIT):
+        if version_spec == self.DAILY:
             date_part = time.strftime("%Y.%m.%d")
             if branch.startswith("sandbox"):
                 return f"{date_part}-{branch.replace('/', '-')}"
@@ -54,6 +53,13 @@ class CMKVersion:
 
         if version_spec == self.DEFAULT:
             return self._get_default_version()
+
+        if version_spec.lower() == "git":
+            raise RuntimeError(
+                "The VERSION='GIT' semantic has been deprecated for system tests. If you want to"
+                " patch your omd version with your local changes from the git repository, you need"
+                " to manually f12 the corresponding directories."
+            )
 
         if ".cee" in version_spec or ".cre" in version_spec:
             raise Exception("Invalid version. Remove the edition suffix!")

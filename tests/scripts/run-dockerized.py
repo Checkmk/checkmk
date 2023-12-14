@@ -41,7 +41,7 @@ def main(raw_args):
     distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
     docker_tag = _os_environ_get("DOCKER_TAG", f"{current_base_branch_name()}-latest")
     version = version_from_env(
-        fallback_version_spec=CMKVersion.GIT,
+        fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name,
     )

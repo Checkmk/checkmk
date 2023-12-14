@@ -19,7 +19,7 @@ from tests.testlib.utils import is_containerized
 
 from tests.composition.utils import bake_agent, get_cre_agent_path
 
-site_factory = get_site_factory(prefix="comp_", update_from_git=False)
+site_factory = get_site_factory(prefix="comp_")
 
 
 # The scope of the site fixtures is "module" to avoid that changing the site properties in a module

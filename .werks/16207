@@ -1,0 +1,12 @@
+Title: host_tag_group: Fix 500 status code when creating a host_tag_group with id already in use
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1702550742
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Before this Werk, when trying to create a host_tag_group using an id belonging to an aux_tag the endpoint returned a status 500 (Internal Server Error). This Werk fixes that behaviour and now returns a status 400, informing that the id is in use.
+
+CMK-15167

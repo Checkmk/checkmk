@@ -209,19 +209,7 @@ def _transformed_params(
             "transformed params down-graded from dict: %r" % new_params
         )
 
-        # TODO: in case of known exceptions we don't want the transformed values be combined
-        #       with old keys. As soon as we can remove the workaround below we should not
-        #       handle any ruleset differently
-        if str(check_plugin.check_ruleset_name) in {"if", "filesystem"}:
-            # Valuespecs are currently Any...
-            return new_params  # type: ignore[no-any-return]
-
-        # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
-        #       missing keys - so for safety-reasons we keep keys that don't exist in the
-        #       transformed values
-        #       On the flipside this can lead to problems with the check itself and should
-        #       be vanished as soon as we can be sure no keys are deleted accidentally
-        return {**params, **new_params} if isinstance(params, dict) else new_params
+        return new_params  # type: ignore[no-any-return]
 
     except Exception as exc:
         msg = f"Transform failed: {debug_info}, error={exc!r}"

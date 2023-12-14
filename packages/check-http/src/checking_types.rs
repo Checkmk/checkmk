@@ -52,6 +52,38 @@ impl From<UpperLevels<u64>> for UpperLevels<f64> {
     }
 }
 
+#[cfg_attr(test, derive(PartialEq))]
+pub struct LowerLevels<T> {
+    pub warn: T,
+    pub crit: Option<T>,
+}
+
+impl<T> LowerLevels<T>
+where
+    T: PartialOrd,
+{
+    pub fn warn(warn: T) -> Self {
+        Self { warn, crit: None }
+    }
+
+    pub fn warn_crit(warn: T, crit: T) -> Self {
+        Self {
+            warn,
+            crit: Some(crit),
+        }
+    }
+
+    pub fn evaluate(&self, value: &T) -> Option<State> {
+        match self {
+            Self {
+                warn: _,
+                crit: Some(crit),
+            } if value < crit => Some(State::Crit),
+            Self { warn, crit: _ } if value < warn => Some(State::Warn),
+            _ => None,
+        }
+    }
+}
 pub struct Bounds<T> {
     pub lower: T,
     pub upper: Option<T>,
@@ -229,7 +261,7 @@ pub fn notice(state: State, text: &str) -> Vec<Option<CheckResult>> {
     }
 }
 
-pub fn check_levels<T: Display + Copy + PartialOrd>(
+pub fn check_upper_levels<T: Display + Copy + PartialOrd>(
     description: &str,
     value: T,
     unit: Option<&'static str>,
@@ -256,7 +288,56 @@ pub fn check_levels<T: Display + Copy + PartialOrd>(
 
     notice(
         state,
-        &format!("{}: {}{}{}", description, value, opt_unit, warn_crit_info),
+        &format!(
+            "{}: {}{}{}",
+            description,
+            value,
+            unit.unwrap_or_default(),
+            warn_crit_info
+        ),
+    )
+}
+
+// TODO(au): We could avoid some code duplication by handling
+// upper/lower levels more genericly with a Trait.
+// However, for now, the amount of duplicated code seems acceptable
+pub fn check_lower_levels<T: Display + Copy + PartialOrd>(
+    description: &str,
+    value: T,
+    unit: Option<&'static str>,
+    lower_levels: &Option<LowerLevels<T>>,
+) -> Vec<Option<CheckResult>> {
+    let state = match &lower_levels {
+        Some(ul) => ul.evaluate(&value).unwrap_or(State::Ok),
+        None => State::Ok,
+    };
+
+    let opt_unit = unit.unwrap_or_default();
+    let warn_crit_info = if let State::Warn | State::Crit = state {
+        match &lower_levels {
+            Some(LowerLevels { warn, crit: None }) => format!(" (warn below {}{})", warn, opt_unit),
+            Some(LowerLevels {
+                warn,
+                crit: Some(crit),
+            }) => format!(
+                " (warn/crit below {}{}/{}{})",
+                warn, opt_unit, crit, opt_unit
+            ),
+            _ => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    };
+
+    notice(
+        state,
+        &format!(
+            "{}: {}{}{}",
+            description,
+            value,
+            unit.unwrap_or_default(),
+            warn_crit_info
+        ),
     )
 }
 
@@ -267,7 +348,7 @@ mod test_check_levels {
     #[test]
     fn test_basic() {
         assert!(
-            check_levels("test", 0, None, &None)
+            check_upper_levels("test", 0, None, &None)
                 == vec![CheckResult::details(State::Ok, "test: 0")]
         )
     }
@@ -275,7 +356,7 @@ mod test_check_levels {
     #[test]
     fn test_warn_level_inactive() {
         assert!(
-            check_levels("test", 0, Some(" Bytes"), &Some(UpperLevels::warn(10)))
+            check_upper_levels("test", 0, Some(" Bytes"), &Some(UpperLevels::warn(10)))
                 == vec![CheckResult::details(State::Ok, "test: 0 Bytes")]
         )
     }
@@ -283,7 +364,7 @@ mod test_check_levels {
     #[test]
     fn test_warn_level_active() {
         assert!(
-            check_levels("test", 20, Some("%"), &Some(UpperLevels::warn(10)))
+            check_upper_levels("test", 20, Some("%"), &Some(UpperLevels::warn(10)))
                 == vec![
                     CheckResult::summary(State::Warn, "test: 20% (warn at 10%)"),
                     CheckResult::details(State::Warn, "test: 20% (warn at 10%)")
@@ -294,7 +375,7 @@ mod test_check_levels {
     #[test]
     fn test_warn_crit_levels() {
         assert!(
-            check_levels("test", 20, Some("%"), &Some(UpperLevels::warn_crit(10, 20)))
+            check_upper_levels("test", 20, Some("%"), &Some(UpperLevels::warn_crit(10, 20)))
                 == vec![
                     CheckResult::summary(State::Crit, "test: 20% (warn/crit at 10%/20%)"),
                     CheckResult::details(State::Crit, "test: 20% (warn/crit at 10%/20%)")

@@ -10,7 +10,7 @@ use reqwest::{
 };
 use std::time::{Duration, SystemTime};
 
-use crate::checking_types::{check_levels, notice, Bounds, CheckResult, State, UpperLevels};
+use crate::checking_types::{check_upper_levels, notice, Bounds, CheckResult, State, UpperLevels};
 use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 pub struct CheckParameters {
@@ -257,7 +257,7 @@ fn check_response_time(
     response_time_levels: Option<UpperLevels<f64>>,
     timeout: Duration,
 ) -> Vec<Option<CheckResult>> {
-    let mut ret = check_levels(
+    let mut ret = check_upper_levels(
         "Response time",
         response_time.as_secs_f64(),
         Some(" seconds"),
@@ -297,7 +297,7 @@ fn check_document_age(
         return notice(State::Crit, document_age_error);
     };
 
-    check_levels(
+    check_upper_levels(
         "Document age",
         age.as_secs(),
         Some(" seconds"),

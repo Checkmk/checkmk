@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Metric:
     name: str
     title: Localizable

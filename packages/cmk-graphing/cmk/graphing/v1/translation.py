@@ -81,7 +81,7 @@ class RenamingAndScaling:
         assert self.scale_by
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Translation:
     name: str
     check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]

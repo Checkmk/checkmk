@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass, KW_ONLY
+from dataclasses import dataclass
 
 from ._type_defs import Bound, Quantity
 
@@ -42,7 +42,7 @@ class FocusRange:
     upper: Closed | Open
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Perfometer:
     name: str
     focus_range: FocusRange
@@ -57,10 +57,9 @@ class Perfometer:
                 raise ValueError(s)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     name: str
-    _: KW_ONLY
     left: Perfometer
     right: Perfometer
 
@@ -69,10 +68,9 @@ class Bidirectional:
             raise ValueError(self.name)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Stacked:
     name: str
-    _: KW_ONLY
     lower: Perfometer
     upper: Perfometer
 

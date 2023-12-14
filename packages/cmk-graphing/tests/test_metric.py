@@ -13,7 +13,7 @@ def test_metric_error_empty_name() -> None:
     unit = Unit.COUNT
     color = Color.BLUE
     with pytest.raises(ValueError):
-        metric.Metric("", title, unit, color)
+        metric.Metric(name="", title=title, unit=unit, color=color)
 
 
 def test_warning_of_error_empty_name() -> None:

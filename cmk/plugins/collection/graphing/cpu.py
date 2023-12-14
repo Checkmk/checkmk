@@ -6,29 +6,29 @@
 from cmk.graphing.v1 import Color, graph, Localizable, metric, Unit
 
 metric_load1 = metric.Metric(
-    "load1",
-    Localizable("CPU load average of last minute"),
-    Unit.COUNT,
-    Color.LIGHT_BLUE,
+    name="load1",
+    title=Localizable("CPU load average of last minute"),
+    unit=Unit.COUNT,
+    color=Color.LIGHT_BLUE,
 )
 
 metric_load5 = metric.Metric(
-    "load5",
-    Localizable("CPU load average of last 5 minutes"),
-    Unit.COUNT,
-    Color.BLUE,
+    name="load5",
+    title=Localizable("CPU load average of last 5 minutes"),
+    unit=Unit.COUNT,
+    color=Color.BLUE,
 )
 
 metric_load15 = metric.Metric(
-    "load15",
-    Localizable("CPU load average of last 15 minutes"),
-    Unit.COUNT,
-    Color.DARK_BLUE,
+    name="load15",
+    title=Localizable("CPU load average of last 15 minutes"),
+    unit=Unit.COUNT,
+    color=Color.DARK_BLUE,
 )
 
 graph_cpu_load = graph.Graph(
-    "cpu_load",
-    Localizable("CPU Load - %(load1:max@count) CPU Cores"),
+    name="cpu_load",
+    title=Localizable("CPU Load - %(load1:max@count) CPU Cores"),
     compound_lines=["load1"],
     simple_lines=[
         "load5",

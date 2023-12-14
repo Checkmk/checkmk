@@ -897,8 +897,8 @@ def test_graph_template_from_template(
     [
         pytest.param(
             graph.Graph(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 compound_lines=[
                     "metric-name-1",
                     metric.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
@@ -1036,8 +1036,8 @@ def test_graph_template_from_template(
         ),
         pytest.param(
             graph.Graph(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 simple_lines=[
                     "metric-name-1",
                     metric.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
@@ -1172,8 +1172,8 @@ def test_graph_template_from_template(
         ),
         pytest.param(
             graph.Graph(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 minimal_range=graph.MinimalRange(0, 100.0),
                 simple_lines=["metric-name"],
             ),
@@ -1193,8 +1193,8 @@ def test_graph_template_from_template(
         ),
         pytest.param(
             graph.Graph(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 simple_lines=["metric-name"],
                 optional=["metric-name-opt"],
                 conflicting=["metric-name-confl"],
@@ -1228,11 +1228,11 @@ def test_graph_template_from_graph(
     [
         pytest.param(
             graph.Bidirectional(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 lower=graph.Graph(
-                    "name-lower",
-                    Localizable("Title lower"),
+                    name="name-lower",
+                    title=Localizable("Title lower"),
                     compound_lines=["metric-name-l1"],
                     simple_lines=[
                         "metric-name-l2",
@@ -1245,8 +1245,8 @@ def test_graph_template_from_graph(
                     conflicting=["metric-name-confl-l"],
                 ),
                 upper=graph.Graph(
-                    "name-upper",
-                    Localizable("Title upper"),
+                    name="name-upper",
+                    title=Localizable("Title upper"),
                     compound_lines=["metric-name-u1"],
                     simple_lines=[
                         "metric-name-u2",
@@ -1326,17 +1326,17 @@ def test_graph_template_from_graph(
         ),
         pytest.param(
             graph.Bidirectional(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 lower=graph.Graph(
-                    "name-lower",
-                    Localizable("Title lower"),
+                    name="name-lower",
+                    title=Localizable("Title lower"),
                     minimal_range=graph.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graph.Graph(
-                    "name-upper",
-                    Localizable("Title upper"),
+                    name="name-upper",
+                    title=Localizable("Title upper"),
                     minimal_range=graph.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),
@@ -1360,17 +1360,17 @@ def test_graph_template_from_graph(
         ),
         pytest.param(
             graph.Bidirectional(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 lower=graph.Graph(
-                    "name-lower",
-                    Localizable("Title lower"),
+                    name="name-lower",
+                    title=Localizable("Title lower"),
                     minimal_range=graph.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graph.Graph(
-                    "name-upper",
-                    Localizable("Title upper"),
+                    name="name-upper",
+                    title=Localizable("Title upper"),
                     simple_lines=["metric-name-u"],
                 ),
             ),
@@ -1393,16 +1393,16 @@ def test_graph_template_from_graph(
         ),
         pytest.param(
             graph.Bidirectional(
-                "name",
-                Localizable("Title"),
+                name="name",
+                title=Localizable("Title"),
                 lower=graph.Graph(
-                    "name-lower",
-                    Localizable("Title lower"),
+                    name="name-lower",
+                    title=Localizable("Title lower"),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graph.Graph(
-                    "name-upper",
-                    Localizable("Title upper"),
+                    name="name-upper",
+                    title=Localizable("Title upper"),
                     minimal_range=graph.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Reversible
 from typing import TypeVar
 
 __all__ = ["boil_down_parameters"]
@@ -17,7 +17,10 @@ T = TypeVar("T")
 def boil_down_parameters(
     parameters: Iterable[T], default: Mapping[str, T] | T
 ) -> Mapping[str, T] | T:
-    """
+    """Merge parameters.
+
+    If parameters contains exclusively of Mappings, this is the same as `merge_parameters`.
+    It features special handling of non-dict elements.
     first occurrance wins:
     >>> boil_down_parameters([{'a': 1},{'a': 2, 'b': 3}], {})
     {'a': 1, 'b': 3}
@@ -39,3 +42,22 @@ def boil_down_parameters(
         return {**default, **merged}  # type: ignore[dict-item]
     except TypeError:
         return merged or default
+
+
+def merge_parameters(
+    parameters: Reversible[Mapping[str, T]], default: Mapping[str, T]
+) -> Mapping[str, T]:
+    """
+    Merge dictionary based parameters.
+
+    The keys in the result are the union of the keys of the elements of `parameters`.
+    First occurrance wins:
+
+        >>> merge_parameters([{'a': 1},{'a': 2, 'b': 3}], {})
+        {'a': 1, 'b': 3}
+
+    """
+    merged = {**default}
+    for par in reversed(parameters):
+        merged.update(par)
+    return merged

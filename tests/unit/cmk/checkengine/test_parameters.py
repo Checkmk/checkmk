@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 
 
-def _default() -> LegacyCheckParameters:
+def _default() -> Mapping[str, int]:
     return {"default": 42}
 
 
-def _tp_values() -> list[tuple[str, LegacyCheckParameters]]:
+def _tp_values() -> list[tuple[str, Mapping[str, str]]]:
     return [("tp1", {"value": "from tp1"}), ("tp2", {"value": "from tp2"})]
 
 
@@ -27,11 +28,6 @@ class TestTimespecificParameterSet:
         )
         assert tsp.default == _default()
         assert tsp.timeperiod_values == tuple(_tp_values())
-
-    def test_from_paramters_legacy_tuple(self) -> None:
-        tsp = TimespecificParameterSet.from_parameters((1, 2))
-        assert tsp.default == (1, 2)
-        assert not tsp.timeperiod_values
 
     def test_from_parameters_constant_dict(self) -> None:
         tsp = TimespecificParameterSet.from_parameters(_default())
@@ -80,16 +76,16 @@ class TestTimespecificParameters:
             )
         ).evaluate(lambda x: True) == {"key": "I am only default, but the most specific rule!"}
 
-    def test_first_tuple_wins(self) -> None:
-        tuple_1: list[tuple[str, LegacyCheckParameters]] = [("tp3", (1, 1))]
-        tuple_2: list[tuple[str, LegacyCheckParameters]] = [("tp3", (2, 2))]
-        assert TimespecificParameters(
-            (
-                TimespecificParameterSet(_default(), _tp_values()),
-                TimespecificParameterSet(_default(), _tp_values() + tuple_1),
-                TimespecificParameterSet(_default(), tuple_2 + _tp_values()),
-            )
-        ).evaluate(lambda x: True) == (1, 1)
+    def test_keys_of_active_timeperiods_are_aggregated(self) -> None:
+        assert set(
+            TimespecificParameters(
+                (
+                    TimespecificParameterSet({"key1": ""}, []),
+                    TimespecificParameterSet({}, [("active_tp", {"key2": ""})]),
+                    TimespecificParameterSet({"key3": ""}, [("inactive_tp", {"key4": ""})]),
+                )
+            ).evaluate(lambda x: x == "active_tp")
+        ) == {"key1", "key2", "key3"}
 
 
 def test_parameters_features() -> None:

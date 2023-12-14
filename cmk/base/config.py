@@ -33,7 +33,7 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, assert_never, cast, Final, Literal, NamedTuple, overload, TypedDict
+from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, TypedDict
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -1675,7 +1675,7 @@ def compute_check_parameters(
     host: HostName,
     plugin_name: CheckPluginName,
     item: Item,
-    params: LegacyCheckParameters,
+    params: Mapping[str, object],
     configured_parameters: TimespecificParameters | None = None,
 ) -> TimespecificParameters:
     """Compute parameters for a check honoring factory settings,
@@ -1690,51 +1690,11 @@ def compute_check_parameters(
             matcher, host, plugin_name, check_plugin.check_ruleset_name, item
         )
 
-    return _update_with_configured_check_parameters(
-        _update_with_default_check_parameters(check_plugin.check_default_parameters, params),
-        configured_parameters,
-    )
-
-
-def _update_with_default_check_parameters(
-    check_default_parameters: ParametersTypeAlias | None,
-    params: LegacyCheckParameters,
-) -> LegacyCheckParameters:
-    if check_default_parameters is None:
-        return params
-
-    # Handle case where parameter is None but the type of the
-    # default value is a dictionary. This is for example the
-    # case if a check type has gotten parameters in a new version
-    # but inventory of the old version left None as a parameter.
-    # Also from now on we support that the inventory simply puts
-    # None as a parameter. We convert that to an empty dictionary
-    # that will be updated with the factory settings and default
-    # levels, if possible.
-    if params is None:
-        params = {}
-
-    if not isinstance(params, dict):
-        # if discovered params is not updateable, it wins
-        return params
-
-    default_params = unwrap_parameters(check_default_parameters)
-    if not isinstance(default_params, dict):
-        # if default params are not updatetable, discovered params win
-        return params
-
-    # Merge params from inventory onto default parameters (if params is not updateable, it wins):
-    return {**default_params, **params}
-
-
-def _update_with_configured_check_parameters(
-    params: LegacyCheckParameters,
-    configured_parameters: TimespecificParameters,
-) -> TimespecificParameters:
     return TimespecificParameters(
         [
             *configured_parameters.entries,
             TimespecificParameterSet.from_parameters(params),
+            TimespecificParameterSet.from_parameters(check_plugin.check_default_parameters or {}),
         ]
     )
 
@@ -1760,7 +1720,7 @@ def _get_configured_parameters(
     return TimespecificParameters(
         [
             # parameters configured via checkgroup_parameters
-            TimespecificParameterSet.from_parameters(cast(LegacyCheckParameters, p))
+            TimespecificParameterSet.from_parameters(p)
             for p in _get_checkgroup_parameters(matcher, host, str(ruleset_name), item, descr)
         ]
         + extra
@@ -1773,7 +1733,7 @@ def _get_checkgroup_parameters(
     checkgroup: RulesetName,
     item: Item,
     descr: ServiceName,
-) -> Sequence[object]:
+) -> Sequence[Mapping[str, object]]:
     rules = checkgroup_parameters.get(checkgroup)
     if rules is None:
         return []

@@ -13,7 +13,6 @@ from cmk.utils.version import Edition
 
 import cmk.gui.valuespec as legacy_valuespecs
 import cmk.gui.watolib.rulespecs as legacy_rulespecs
-from cmk.gui import wato, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.legacy_converter import (
@@ -24,6 +23,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 
 import cmk.rulesets.v1 as api_v1
@@ -433,22 +433,22 @@ def test_convert_to_legacy_valuespec(
 
 
 @pytest.mark.parametrize(
-    ["new_functionality", "new_topic", "expected"],
+    ["legacy_main_group", "new_topic", "expected"],
     [
         pytest.param(
-            api_v1.Functionality.SERVICE_MONITORING_RULES,
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
             api_v1.Topic.APPLICATIONS,
-            wato.RulespecGroupCheckParametersApplications,
+            legacy_wato_groups.RulespecGroupCheckParametersApplications,
             id="CheckParametersApplications",
         ),
     ],
 )
 def test_convert_to_legacy_rulespec_group(
-    new_functionality: api_v1.Functionality,
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     new_topic: api_v1.Topic,
-    expected: type[watolib.rulespecs.RulespecSubGroup],
+    expected: type[legacy_rulespecs.RulespecSubGroup],
 ) -> None:
-    assert _convert_to_legacy_rulespec_group(new_functionality, new_topic, _) == expected
+    assert _convert_to_legacy_rulespec_group(legacy_main_group, new_topic, _) == expected
 
 
 @pytest.mark.parametrize(
@@ -472,7 +472,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.CheckParameterRulespecWithItem(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
@@ -502,7 +502,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.CheckParameterRulespecWithoutItem(
                 check_group_name="test_rulespec",
-                group=wato.RulespecGroupCheckParametersApplications,
+                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
                     elements=[

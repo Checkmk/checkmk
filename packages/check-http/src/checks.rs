@@ -6,11 +6,16 @@ use httpdate::parse_http_date;
 use regex::Regex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
+    tls::TlsInfo,
     StatusCode, Version,
 };
 use std::time::{Duration, SystemTime};
+use x509_parser::{certificate::X509Certificate, prelude::FromDer};
 
-use crate::checking_types::{check_upper_levels, notice, Bounds, CheckResult, State, UpperLevels};
+use crate::checking_types::{
+    check_lower_levels, check_upper_levels, notice, Bounds, CheckResult, LowerLevels, State,
+    UpperLevels,
+};
 use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 pub struct CheckParameters {
@@ -22,6 +27,7 @@ pub struct CheckParameters {
     pub timeout: Duration,
     pub body_matchers: Vec<TextMatcher>,
     pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
+    pub certificate_levels: Option<LowerLevels<u64>>,
 }
 
 pub enum TextMatcher {
@@ -83,6 +89,10 @@ pub fn collect_response_checks(
                 .get("last-modified")
                 .or(response.headers.get("date")),
             params.document_age_levels,
+        ))
+        .chain(check_certificate(
+            response.tls_info,
+            params.certificate_levels,
         ))
         .flatten()
         .collect()
@@ -302,6 +312,33 @@ fn check_document_age(
         age.as_secs(),
         Some(" seconds"),
         &document_age_levels,
+    )
+}
+
+// TODO(au): Tests
+fn check_certificate(
+    tls_info: Option<TlsInfo>,
+    certificate_levels: Option<LowerLevels<u64>>,
+) -> Vec<Option<CheckResult>> {
+    let Some(cert) = tls_info.as_ref().and_then(|t| t.peer_certificate()) else {
+        // If the outer tlsinfo is None, we didn't fetch it -> OK
+        // If the inner peer cert is None, there is no certificate and we're talking plain HTTP.
+        // Otherwise the TLS handshake would already have failed.
+        return vec![];
+    };
+
+    let Ok((_, cert)) = X509Certificate::from_der(cert) else {
+        return notice(State::Unknown, "Unable to parse server certificate");
+    };
+    let Some(validity) = cert.validity().time_to_expiration() else {
+        return notice(State::Crit, "Invalid server certificate");
+    };
+
+    check_lower_levels(
+        "Server certificate validity",
+        validity.whole_days().max(0).unsigned_abs(),
+        Some(" days"),
+        &certificate_levels,
     )
 }
 

@@ -90,6 +90,11 @@ pub struct Cli {
     #[arg(long)]
     pub document_age_levels: Option<u64>,
 
+    /// WARN/CRIT levels for server certificate validity
+    /// Not relevant for HTTP connections without TLS.
+    #[arg(long, value_parser = parse_optional_pair::<u64>)]
+    pub certificate_levels: Option<(u64, Option<u64>)>,
+
     /// Text to send in HTTP body. This will set the HTTP method to POST if unset,
     /// but will not overwrite the method specified with --method.
     /// Also, no encoding (like url-encoding) will be applied.

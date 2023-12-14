@@ -34,6 +34,7 @@ pub struct ClientConfig {
     pub force_ip: Option<ForceIP>,
     pub min_tls_version: Option<TlsVersion>,
     pub max_tls_version: Option<TlsVersion>,
+    pub collect_tls_info: bool,
 }
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
@@ -83,6 +84,7 @@ pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
         .timeout(cfg.timeout)
         .user_agent(cfg.user_agent)
         .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+        .tls_info(cfg.collect_tls_info)
         .build()
 }
 

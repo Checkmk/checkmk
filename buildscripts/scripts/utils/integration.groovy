@@ -83,7 +83,6 @@ def run_make_targets(Map args) {
                     // Then execute the tests
 
                     // TODO: We still need here the VERSION/git semantic for the make targets:
-                    // * case VERSION="git" -> use daily build but patch it using f12
                     // * case VERSION="2.2.0-2023.06.07" -> use daily build of date as-is
                     try {
                         /* groovylint-disable NestedBlockDepth */
@@ -94,7 +93,7 @@ def run_make_targets(Map args) {
                                         sh("""RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' \
                                         EDITION='${args.EDITION}' \
                                         DOCKER_TAG='${args.DOCKER_TAG}' \
-                                        VERSION='${args.VERSION in ["git", "daily"] ? args.VERSION : args.cmk_version}' \
+                                        VERSION='${args.VERSION == "daily" ? args.VERSION : args.cmk_version}' \
                                         DISTRO='$DISTRO' \
                                         BRANCH='${args.BRANCH}' \
                                         make ${args.MAKE_TARGET}""");

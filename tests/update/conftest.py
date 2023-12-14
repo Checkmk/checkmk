@@ -172,7 +172,6 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
             current_branch_version(),
         ),
         prefix="update_",
-        update_from_git=False,
         update=update,
         update_conflict_mode=update_conflict_mode,
         enforce_english_gui=False,

@@ -25,7 +25,6 @@ import pytest
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
-    cmc_path,
     cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
@@ -58,7 +57,6 @@ class Site:
         version: CMKVersion,
         site_id: str,
         reuse: bool = True,
-        update_from_git: bool = False,
         admin_password: str = "cmk",
         update: bool = False,
         update_conflict_mode: str = "install",
@@ -68,8 +66,6 @@ class Site:
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
         self.version: Final = version
-
-        self.update_from_git = update_from_git
 
         self.reuse = reuse
 
@@ -667,9 +663,6 @@ class Site:
             self._enable_gui_debug_logging()
             self._tune_nagios()
 
-        if self.update_from_git:
-            self._update_with_f12_files()
-
         # The tmpfs is already mounted during "omd create". We have just created some
         # Checkmk configuration files and want to be sure they are used once the core
         # starts.
@@ -705,85 +698,6 @@ class Site:
             if not self.file_exists(f):
                 missing.append(f)
         return missing
-
-    def _update_with_f12_files(self) -> None:
-        paths: list[Path] = [
-            repo_path() / "omd/packages/omd",
-            repo_path() / "omd/packages/maintenance",
-            repo_path() / "omd/packages/check_mk/skel/etc/init.d",
-            repo_path() / "livestatus/api/python",
-            repo_path() / "bin",
-            repo_path() / "agents/special",
-            repo_path() / "agents/plugins",
-            repo_path() / "agents/windows/plugins",
-            repo_path() / "agents",
-            repo_path() / "cmk/base",
-            repo_path() / "cmk",
-            repo_path() / "web",
-            repo_path() / "inventory",
-            repo_path() / "notifications",
-            repo_path() / ".werks",
-            repo_path() / "active_checks",
-            repo_path() / "packages/cmk-agent-based",
-            repo_path() / "packages/cmk-agent-receiver",
-            repo_path() / "packages/cmk-graphing",
-            repo_path() / "packages/cmk-mkp-tool",
-            repo_path() / "packages/cmk-rulesets",
-            repo_path() / "packages/cmk-server-side-calls",
-            repo_path() / "packages/cmk-werks",
-            repo_path() / "packages/cmk-livestatus-client",
-        ]
-
-        if self.version.is_raw_edition():
-            # The module is only used in CRE
-            paths += [
-                repo_path() / "livestatus",
-            ]
-
-        if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
-            paths += [
-                cmc_path() / "bin",
-                cmc_path() / "agents/plugins",
-                cmc_path() / "web",
-                cmc_path() / "alert_handlers",
-                cmc_path() / "core",
-                # TODO: Do not invoke the chroot build mechanism here, which is very time
-                # consuming when not initialized yet
-                # cmc_path() / "agents",
-            ]
-
-        for path in paths:
-            if os.path.exists("%s/.f12" % path):
-                logger.info("Executing .f12 in '%s' ...", path)
-                try:
-                    subprocess.check_output(
-                        f"sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE={self.id} "
-                        "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
-                        "bash .f12",
-                        cwd=path,
-                        shell=True,
-                        stderr=subprocess.STDOUT,
-                        text=True,
-                    )
-                except subprocess.CalledProcessError as exc:
-                    logger.info("Executing .f12 in '%s' ... FAILED:\n%s", path, exc.output)
-                    raise
-                logger.info("Executing .f12 in '%s' ... DONE", path)
-            else:
-                logger.warning("Did not find .f12 in '%s'!", path)
-        assert self.is_stopped()
-
-        logger.info("Executing cmk-update-config ...")
-        try:
-            self.check_output(["cmk-update-config"])
-        except subprocess.CalledProcessError as exc:
-            logger.error(
-                "Executing cmk-update-config ... FAILED:\nstdout: %s\nstderr: %s\n",
-                exc.output,
-                exc.stderr,
-            )
-            raise
-        assert self.is_stopped()
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
@@ -1304,7 +1218,6 @@ class SiteFactory:
     def __init__(
         self,
         version: CMKVersion,
-        update_from_git: bool = False,
         prefix: str | None = None,
         update: bool = False,
         update_conflict_mode: str = "install",
@@ -1314,7 +1227,6 @@ class SiteFactory:
         self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
-        self._update_from_git = update_from_git
         self._update = update
         self._update_conflict_mode = update_conflict_mode
         self._enforce_english_gui = enforce_english_gui
@@ -1725,7 +1637,6 @@ class SiteFactory:
             version=self.version,
             site_id=site_id,
             reuse=False,
-            update_from_git=self._update_from_git,
             update=self._update,
             enforce_english_gui=self._enforce_english_gui,
         )
@@ -1746,7 +1657,6 @@ def get_site_factory(
     *,
     prefix: str,
     version: CMKVersion | None = None,
-    update_from_git: bool | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
     version = version or version_from_env(
@@ -1763,9 +1673,6 @@ def get_site_factory(
     return SiteFactory(
         version=version,
         prefix=prefix,
-        update_from_git=version.version_spec == CMKVersion.GIT
-        if update_from_git is None
-        else update_from_git,
     )
 
 

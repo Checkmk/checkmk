@@ -95,7 +95,7 @@ def pytest_configure(config):
     env_vars = {
         "BRANCH": current_base_branch_name(),
         "EDITION": "cee",
-        "VERSION": "git",
+        "VERSION": "daily",
         "DISTRO": "",
         "TZ": "",
         "REUSE": "0",

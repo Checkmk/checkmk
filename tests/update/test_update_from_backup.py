@@ -190,7 +190,6 @@ def test_update_from_backup_demo(
     site_factory_demo = SiteFactory(
         version=target_version,
         prefix="",
-        update_from_git=False,
         update=True,
         update_conflict_mode="keepold",
         enforce_english_gui=False,

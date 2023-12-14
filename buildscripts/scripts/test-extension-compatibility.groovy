@@ -42,7 +42,7 @@ HERE
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: ["ubuntu-20.04"],
         EDITION: "enterprise",
-        VERSION: "git",
+        VERSION: "daily",
         DOCKER_TAG: versioning.select_docker_tag(
             branch_name,
             "",

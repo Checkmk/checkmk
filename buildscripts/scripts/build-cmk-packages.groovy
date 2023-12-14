@@ -626,7 +626,7 @@ def get_valid_build_id(jobName) {
         calendar.setTime(lastBuild.getTime());
         def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);
 
-        if (currentBuildVersion in ["daily", "git"] &&
+        if (currentBuildVersion == "daily" &&
             lastBuildParameters.VERSION == currentBuildVersion &&
             lastBuildDay == currentBuildDay &&
             lastBuild.result.toString().equals("SUCCESS")

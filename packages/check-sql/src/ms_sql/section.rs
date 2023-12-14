@@ -46,16 +46,23 @@ const QUERY_BASED_SECTIONS: [&str; 3] = [
     AVAILABILITY_GROUPS_SECTION_NAME,
 ];
 
+#[derive(Debug, PartialEq)]
+pub enum SectionKind {
+    Sync,
+    Async,
+}
+
 pub struct Section {
     name: String,
     sep: Option<char>,
+    kind: SectionKind,
 }
 
 impl Section {
-    pub fn new(name: impl ToString) -> Self {
+    pub fn new(name: impl ToString, kind: SectionKind) -> Self {
         let name = name.to_string();
         let sep = get_section_separator(&name);
-        Self { name, sep }
+        Self { name, sep, kind }
     }
 
     pub fn to_header(&self) -> String {
@@ -68,6 +75,10 @@ impl Section {
 
     pub fn sep(&self) -> char {
         self.sep.unwrap_or(' ')
+    }
+
+    pub fn kind(&self) -> &SectionKind {
+        &self.kind
     }
 
     pub fn first_line<F>(&self, closure: F) -> String
@@ -121,9 +132,14 @@ pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
     let mut base: Vec<Section> = sections
         .get_filtered_always()
         .iter()
-        .map(Section::new)
+        .map(|n| Section::new(n, SectionKind::Sync))
         .collect();
-    base.extend(sections.get_filtered_cached().iter().map(Section::new));
+    base.extend(
+        sections
+            .get_filtered_cached()
+            .iter()
+            .map(|n| Section::new(n, SectionKind::Async)),
+    );
     base
 }
 
@@ -167,12 +183,16 @@ mssql:
       disabled: 
       - "backup"
 "#;
+        let sections = get_work_sections(&Config::from_string(CONFIG).unwrap().unwrap());
         assert_eq!(
-            get_work_sections(&Config::from_string(CONFIG).unwrap().unwrap())
+            sections
                 .iter()
-                .map(|s| s.name())
-                .collect::<Vec<&str>>(),
-            ["instance", "jobs"]
+                .map(|s| (s.name(), s.kind()))
+                .collect::<Vec<(&str, &SectionKind)>>(),
+            [
+                ("instance", &SectionKind::Sync),
+                ("jobs", &SectionKind::Async)
+            ]
         );
     }
 

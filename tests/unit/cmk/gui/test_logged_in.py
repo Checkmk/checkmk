@@ -100,7 +100,7 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
         ),
         (
             LoggedInSuperUser(),
-            "Superuser for unauthenticated pages",
+            "Superuser for internal use",
             "admin",
             ["admin"],
             "admin",

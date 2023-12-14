@@ -17,7 +17,7 @@ from typing import Literal
 import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.crypto.secrets import AutomationUserSecret, Secret, SiteInternalSecret
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
@@ -34,10 +34,25 @@ from cmk.gui.utils.urls import requested_file_name
 
 auth_logger = logger.getChild("auth")
 
-AuthFunction = Callable[[], UserId | None]
+
+class SiteInternalPseudoUser:
+    """Alternative type for UserIds
+
+    If one component talks to another it usually has to authenticate itself against the called
+    component. We used to use the automation user for this but that has several caveats:
+    - It can be misconfigured
+    - We need the password for this user so we store it in plaintext
+    - It might be synchronized among many sites in a distributed setup
+
+    So the idea is to have this pseudo user that is site specific and makes it possible to
+    authenticate one component to another without a username and without the danger that this might
+    get misconfigured."""
 
 
-def check_auth() -> tuple[UserId, AuthType]:
+AuthFunction = Callable[[], UserId | SiteInternalPseudoUser | None]
+
+
+def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
     """Try to authenticate a user from the current request.
 
     This will attempt to authenticate the user via all possible authentication types.
@@ -54,11 +69,12 @@ def check_auth() -> tuple[UserId, AuthType]:
         (_check_auth_by_remote_user, "web_server"),
         (_check_auth_by_basic_header, "basic_auth"),
         (_check_auth_by_bearer_header, "bearer"),
+        (_check_internal_token, "internal_token"),
         # Automation authentication via _username and _secret overrules everything else.
         (_check_auth_by_automation_credentials_in_request_values, "automation"),
     ]
 
-    selected: tuple[UserId, AuthType] | None = None
+    selected: tuple[UserId | SiteInternalPseudoUser, AuthType] | None = None
     user_id = None
     for auth_method, auth_type in auth_methods:
         # NOTE: It's important for these methods to always raise an exception whenever something
@@ -73,7 +89,7 @@ def check_auth() -> tuple[UserId, AuthType]:
                 AuthenticationFailureEvent(
                     user_error=str(e),
                     auth_method=auth_type,
-                    username=user_id,
+                    username=user_id if isinstance(user_id, UserId) else None,
                     remote_ip=request.remote_ip,
                 )
             )
@@ -82,7 +98,8 @@ def check_auth() -> tuple[UserId, AuthType]:
     if not selected:
         raise MKAuthException("Couldn't log in.")
 
-    _check_cme_login(selected[0])
+    if not isinstance(selected[0], SiteInternalPseudoUser):
+        _check_cme_login(selected[0])
 
     return selected
 
@@ -267,6 +284,19 @@ def _check_auth_by_bearer_header() -> UserId | None:
         MKAuthException: when the header is found but the credentials are not valid
     """
     return _check_auth_by_header("Bearer", _parse_bearer_token)
+
+
+def _check_internal_token() -> SiteInternalPseudoUser | None:
+    if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith(
+        "InternalToken "
+    ):
+        return None
+
+    _tokenname, token = auth_header.split("InternalToken ", maxsplit=1)
+
+    if SiteInternalSecret().check(Secret(base64.b64decode(token))):
+        return SiteInternalPseudoUser()
+    return None
 
 
 def _parse_bearer_token(token: str) -> tuple[str, str]:

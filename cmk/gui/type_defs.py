@@ -99,7 +99,15 @@ class WebAuthnActionState(TypedDict):
 
 
 SessionId = str
-AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
+AuthType = Literal[
+    "automation",
+    "basic_auth",
+    "bearer",
+    "cookie",
+    "http_header",
+    "internal_token",
+    "web_server",
+]
 
 
 @dataclass

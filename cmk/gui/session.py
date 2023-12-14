@@ -21,7 +21,7 @@ from cmk.utils.user import UserId
 
 import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
-from cmk.gui.auth import check_auth, parse_and_check_cookie
+from cmk.gui.auth import check_auth, parse_and_check_cookie, SiteInternalPseudoUser
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.log import AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
@@ -62,7 +62,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @property
     def persist_session(self) -> bool:
-        if isinstance(self.user, LoggedInNobody):
+        if isinstance(self.user, (LoggedInNobody, LoggedInSuperUser)):
             return False
 
         if not self.is_gui_session:
@@ -82,7 +82,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             self.user = LoggedInUser(user_name)
         else:
             self.user = LoggedInNobody()
-            # This seems weird. But the unittest go beserk if we change that...
+
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
             started_at=int(now.timestamp()),
@@ -113,6 +113,16 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             user_name,
             auth_type,
         )
+        return sess
+
+    @classmethod
+    def create_internal_session(cls) -> CheckmkFileBasedSession:
+        """This method is reserved for site internal inter component authenticated "sessions"
+
+        These should not really be sessions but currently everything is a session..."""
+
+        sess = cls()
+        sess.user = LoggedInSuperUser()
         return sess
 
     @classmethod
@@ -284,6 +294,9 @@ class FileBasedSession(SessionInterface):
         handled in login.py"""
 
         user_name, auth_type = check_auth()
+        if isinstance(user_name, SiteInternalPseudoUser):
+            return self.session_class.create_internal_session()
+
         userdb.session.on_succeeded_login(user_name, datetime.now())
 
         # Our REST API doesn't hand out session tokens, so every request is a new session.

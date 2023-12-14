@@ -243,7 +243,7 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                 title=_("Show space reserved for the <tt>root</tt> user"),
                 help=_(
                     # xgettext: no-python-format
-                    "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    "Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
                     "With this option you can have Checkmk display the current amount of reserved but yet unused "
                     "space."

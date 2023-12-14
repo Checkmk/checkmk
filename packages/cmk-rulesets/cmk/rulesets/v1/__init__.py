@@ -32,7 +32,7 @@ from cmk.rulesets.v1._form_spec import (
     Transform,
     Tuple,
 )
-from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
+from cmk.rulesets.v1._groups import CustomTopic, Topic
 
 # TODO localize will probably not stay here, but we want to find a consistent solution for all apis
 from cmk.rulesets.v1._localize import Localizable
@@ -67,9 +67,7 @@ __all__ = [
     "RuleEvalType",
     "ServiceRuleSpec",
     "SpecialAgentRuleSpec",
-    "CustomFunctionality",
     "CustomTopic",
-    "Functionality",
     "Topic",
     "Dictionary",
     "DictElement",

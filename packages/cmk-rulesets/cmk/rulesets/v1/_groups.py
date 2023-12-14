@@ -9,29 +9,11 @@ from enum import auto, Enum
 from cmk.rulesets.v1._localize import Localizable
 
 
-class Functionality(Enum):
-    ENFORCED_SERVICES = auto()
-    SERVICE_MONITORING_RULES = auto()
-    SERVICE_DISCOVERY_RULES = auto()
-
-
 class Topic(Enum):
     APPLICATIONS = auto()
     OPERATING_SYSTEM = auto()
     VIRTUALIZATION = auto()
     GENERAL = auto()
-
-
-@dataclass(frozen=True)
-class CustomFunctionality:
-    """
-    Args:
-        title: human-readable title of this group
-        help_text: description of the content of this functionality
-    """
-
-    title: Localizable
-    help_text: Localizable
 
 
 @dataclass(frozen=True)

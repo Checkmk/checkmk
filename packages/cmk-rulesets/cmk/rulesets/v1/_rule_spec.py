@@ -8,7 +8,7 @@ from enum import auto, Enum
 from typing import Callable
 
 from cmk.rulesets.v1._form_spec import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, TextInput
-from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
+from cmk.rulesets.v1._groups import CustomTopic, Topic
 from cmk.rulesets.v1._localize import Localizable
 
 
@@ -21,8 +21,6 @@ class RuleEvalType(Enum):
 class HostRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -34,7 +32,6 @@ class HostRuleSpec:
 class ServiceRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -51,11 +48,7 @@ class CheckParameterRuleSpecWithItem:
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
-    create_enforced_service = True
-
-    @property
-    def functionality(self) -> Functionality:
-        return Functionality.SERVICE_MONITORING_RULES
+    create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
         assert isinstance(self.item_form, (TextInput, DropdownChoice))
@@ -71,11 +64,7 @@ class CheckParameterRuleSpecWithoutItem:
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
-    create_enforced_service = True
-
-    @property
-    def functionality(self) -> Functionality:
-        return Functionality.SERVICE_MONITORING_RULES
+    create_enforced_service: bool = True
 
 
 @dataclass(frozen=True)
@@ -87,10 +76,6 @@ class EnforcedServiceRuleSpecWithItem:
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
-
-    @property
-    def functionality(self) -> Functionality:
-        return Functionality.ENFORCED_SERVICES
 
     def __post_init__(self) -> None:
         assert isinstance(self.item_form, (TextInput, DropdownChoice))
@@ -107,10 +92,6 @@ class EnforcedServiceRuleSpecWithoutItem:
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
-    @property
-    def functionality(self) -> Functionality:
-        return Functionality.ENFORCED_SERVICES
-
     def __post_init__(self) -> None:
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
@@ -120,7 +101,6 @@ class EnforcedServiceRuleSpecWithoutItem:
 class InventoryParameterRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -132,7 +112,6 @@ class InventoryParameterRuleSpec:
 class ActiveChecksRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -144,7 +123,6 @@ class ActiveChecksRuleSpec:
 class AgentConfigRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -156,7 +134,6 @@ class AgentConfigRuleSpec:
 class SpecialAgentRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -168,7 +145,6 @@ class SpecialAgentRuleSpec:
 class ExtraHostConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
@@ -180,7 +156,6 @@ class ExtraHostConfRuleSpec:
 class ExtraServiceConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
-    functionality: Functionality | CustomFunctionality
     parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str

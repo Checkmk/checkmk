@@ -11,10 +11,11 @@ from typing import Any, assert_never, Callable, TypeVar
 
 from cmk.utils.version import Edition
 
+import cmk.gui.wato as legacy_wato
 from cmk.gui import valuespec as legacy_valuespecs
-from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import (
@@ -73,7 +74,7 @@ def _convert_to_legacy_check_parameter_with_item_rulespec(
         check_group_name=to_convert.name,
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         group=_convert_to_legacy_rulespec_group(
-            to_convert.functionality, to_convert.topic, localizer
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
         ),
         item_spec=partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer),
         match_type="dict",
@@ -97,7 +98,7 @@ def _convert_to_legacy_check_parameter_without_item_rulespec(
         check_group_name=to_convert.name,
         title=partial(to_convert.title.localize, localizer),
         group=_convert_to_legacy_rulespec_group(
-            to_convert.functionality, to_convert.topic, localizer
+            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
         ),
         match_type="dict",
         parameter_valuespec=partial(
@@ -117,7 +118,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
 ) -> ManualCheckParameterRulespec:
     return ManualCheckParameterRulespec(
         group=_convert_to_legacy_rulespec_group(
-            to_convert.functionality, to_convert.topic, localizer
+            legacy_rulespecs.RulespecGroupEnforcedServices, to_convert.topic, localizer
         ),
         check_group_name=to_convert.name,
         parameter_valuespec=partial(
@@ -134,35 +135,28 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
 
 
 def _convert_to_legacy_rulespec_group(
-    functionality_to_convert: ruleset_api_v1.Functionality | ruleset_api_v1.CustomFunctionality,
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     topic_to_convert: ruleset_api_v1.Topic | ruleset_api_v1.CustomTopic,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecBaseGroup]:
-    if isinstance(functionality_to_convert, ruleset_api_v1.CustomFunctionality):
-        raise NotImplementedError
-
     if isinstance(topic_to_convert, ruleset_api_v1.Topic):
         return _get_builtin_legacy_sub_group_with_main_group(
-            functionality_to_convert, topic_to_convert
+            legacy_main_group, topic_to_convert, localizer
         )
     if isinstance(topic_to_convert, ruleset_api_v1.CustomTopic):
-        return _convert_to_custom_group(
-            _get_builtin_legacy_main_group(functionality_to_convert),
-            topic_to_convert.title,
-            localizer,
-        )
-    raise ValueError((functionality_to_convert, topic_to_convert))
+        return _convert_to_custom_group(legacy_main_group, topic_to_convert.title, localizer)
+    raise ValueError(topic_to_convert)
 
 
 def _convert_to_legacy_host_rule_spec_rulespec(
     to_convert: ruleset_api_v1.HostRuleSpec,
     localizer: Callable[[str], str],
+    config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
 ) -> legacy_rulespecs.HostRulespec:
     return legacy_rulespecs.HostRulespec(
-        group=_convert_to_legacy_rulespec_group(
-            to_convert.functionality, to_convert.topic, localizer
-        ),
-        name=to_convert.name,
+        # group will be adjusted when introducing more rulespec types
+        group=legacy_wato.RulespecGroupCheckParametersDiscovery,
+        name=config_scope_prefix(to_convert.name),
         valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
@@ -170,60 +164,34 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     )
 
 
-def _get_builtin_legacy_main_group(
-    functionality_to_convert: ruleset_api_v1.Functionality,
-) -> type[legacy_rulespecs.RulespecGroup]:
-    match functionality_to_convert:
-        case ruleset_api_v1.Functionality.SERVICE_MONITORING_RULES:
-            return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
-        case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
-            return legacy_rulespecs.RulespecGroupEnforcedServices
-        case ruleset_api_v1.Functionality.SERVICE_DISCOVERY_RULES:
-            return wato.RulespecGroupDiscoveryCheckParameters
-    assert_never(functionality_to_convert)
-
-
-def _get_builtin_legacy_sub_group_with_main_group(
-    functionality_to_convert: ruleset_api_v1.Functionality,
+def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-branches
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     topic_to_convert: ruleset_api_v1.Topic,
+    localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
-    match functionality_to_convert:
-        case ruleset_api_v1.Functionality.SERVICE_MONITORING_RULES:
-            match topic_to_convert:
-                case ruleset_api_v1.Topic.APPLICATIONS:
-                    return wato.RulespecGroupCheckParametersApplications
-                case ruleset_api_v1.Topic.VIRTUALIZATION:
-                    return wato.RulespecGroupCheckParametersVirtualization
-                case ruleset_api_v1.Topic.OPERATING_SYSTEM:
-                    return wato.RulespecGroupCheckParametersOperatingSystem
-                case ruleset_api_v1.Topic.GENERAL:
-                    raise NotImplementedError
+    match topic_to_convert:
+        case ruleset_api_v1.Topic.APPLICATIONS:
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
+                return legacy_wato_groups.RulespecGroupCheckParametersApplications
+            if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
+                return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
+            return _to_generated_builtin_sub_group(legacy_main_group, "Applications", localizer)
+        case ruleset_api_v1.Topic.GENERAL:
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
+                return legacy_rulespec_groups.RulespecGroupMonitoringConfigurationVarious
+            return _to_generated_builtin_sub_group(legacy_main_group, "General", localizer)
+        case ruleset_api_v1.Topic.OPERATING_SYSTEM:
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
+                return legacy_wato_groups.RulespecGroupCheckParametersOperatingSystem
+            return _to_generated_builtin_sub_group(legacy_main_group, "Operating System", localizer)
+        case ruleset_api_v1.Topic.VIRTUALIZATION:
+            if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
+                return legacy_wato_groups.RulespecGroupCheckParametersVirtualization
+            return _to_generated_builtin_sub_group(legacy_main_group, "Virtualization", localizer)
+        case other:
+            assert_never(other)
 
-            assert_never(topic_to_convert)
-
-        case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
-            match topic_to_convert:
-                case ruleset_api_v1.Topic.APPLICATIONS:
-                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
-                case ruleset_api_v1.Topic.VIRTUALIZATION:
-                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
-                case ruleset_api_v1.Topic.OPERATING_SYSTEM:
-                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
-                case ruleset_api_v1.Topic.GENERAL:
-                    raise NotImplementedError
-
-            assert_never(topic_to_convert)
-
-        case ruleset_api_v1.Functionality.SERVICE_DISCOVERY_RULES:
-            match topic_to_convert:
-                case ruleset_api_v1.Topic.GENERAL:
-                    return wato.RulespecGroupCheckParametersDiscovery
-                case ruleset_api_v1.Topic.APPLICATIONS | ruleset_api_v1.Topic.VIRTUALIZATION | ruleset_api_v1.Topic.OPERATING_SYSTEM:
-                    raise NotImplementedError
-
-            assert_never(topic_to_convert)
-
-    assert_never(functionality_to_convert)
+    raise NotImplementedError(topic_to_convert)
 
 
 def _convert_to_custom_group(
@@ -248,6 +216,15 @@ def _convert_to_custom_group(
     )
     rulespec_group_registry.register(group_class)
     return group_class
+
+
+def _to_generated_builtin_sub_group(
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    raw_title: str,
+    localizer: Callable[[str], str],
+) -> type[legacy_rulespecs.RulespecSubGroup]:
+    title = ruleset_api_v1.Localizable(raw_title)
+    return _convert_to_custom_group(legacy_main_group, title, localizer)
 
 
 @dataclass(frozen=True)

@@ -57,7 +57,7 @@ def fetch_rrd_data_for_graph(
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (perfvar, cf, scale), data in fetch_rrd_data(
+            for (perfvar, cf, scale), data in _fetch_rrd_data(
                 site,
                 host_name,
                 service_description,
@@ -147,7 +147,7 @@ def _group_needed_rrd_data_by_service(
     return by_service
 
 
-def fetch_rrd_data(
+def _fetch_rrd_data(
     site: SiteId,
     host_name: HostName,
     service_description: ServiceName,

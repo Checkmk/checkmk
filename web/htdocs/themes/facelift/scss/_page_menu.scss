@@ -908,3 +908,59 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
     padding-right: $spacing * 3;
   }
 }
+div#page_menu_popups div#popup_test_notifications #form_test_notifications {
+  .heading,
+  .dots,
+  .server_time {
+    display: None;
+  }
+
+  table.test_on {
+    width: 100%;
+    margin-left: 10px;
+    border-spacing: 0px 10px;
+
+    .legend {
+      width: 395px;
+    }
+
+    .button {
+      margin: 0px;
+      border: none;
+      border-radius: 0px;
+      border-top: 1px solid $line-color;
+      border-bottom: 1px solid $line-color;
+
+      &.active,
+      &:hover,
+      &:focus {
+        background-color: darken($input-button-hover-bg-color, 7%);
+      }
+    }
+
+    input#test_on_host {
+      border-radius: 4px 0 0 4px;
+      border-left: 1px solid $line-color;
+    }
+
+    input#test_on_service {
+      border-radius: 0 4px 4px 0;
+      border-right: 1px solid $line-color;
+    }
+  }
+
+  .foldable_header {
+    margin-left: 10px;
+  }
+}
+#advanced_opts_d_date_and_time {
+  .title {
+    font-size: $font-size-normal;
+  }
+  input[id^="date_advanced_opts_p_date_and_time"] {
+    margin-right: 10px;
+  }
+}
+input#_test_notifications {
+  margin-top: 20px;
+}

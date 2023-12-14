@@ -492,6 +492,18 @@ result_type_registry.register(NotificationAnalyseResult)
 
 
 @dataclass
+class NotificationTestResult(ABCAutomationResult):
+    result: NotifyAnalysisInfo | None
+
+    @staticmethod
+    def automation_call() -> str:
+        return "notification-test"
+
+
+result_type_registry.register(NotificationTestResult)
+
+
+@dataclass
 class NotificationGetBulksResult(ABCAutomationResult):
     result: NotifyBulks
 

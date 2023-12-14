@@ -335,3 +335,56 @@ export function toggle_rule_condition_type(select_id: string) {
     $(".condition").hide();
     $(".condition." + value).show();
 }
+
+export function toggle_test_notification_visibility(
+    source: string,
+    target: string,
+    hide_options: boolean
+) {
+    const source_element = document.getElementsByClassName(
+        source
+    )[0] as HTMLInputElement;
+    const target_element = document.getElementsByClassName(
+        target
+    )[0] as HTMLInputElement;
+    if (source_element && target_element) {
+        if (utils.has_class(target_element, "active")) {
+            utils.remove_class(target_element, "active");
+        }
+        utils.add_class(source_element, "active");
+    }
+    toggle_test_notification_options(hide_options);
+}
+
+function toggle_test_notification_options(hide_options: boolean) {
+    const service_choice = document.getElementById(
+        "general_opts_d_service_choice"
+    ) as HTMLDivElement;
+    const service_states = document.getElementById(
+        "general_opts_p_simulation_mode_1_d_svc_states"
+    ) as HTMLDivElement;
+    const host_states = document.getElementById(
+        "general_opts_p_simulation_mode_1_d_host_states"
+    ) as HTMLDivElement;
+    if (service_choice && service_states && host_states) {
+        const service_choice_tr = service_choice.parentNode!
+            .parentNode as HTMLElement;
+        const service_states_tr = service_states.parentNode!
+            .parentNode as HTMLElement;
+        const host_states_tr = host_states.parentNode!
+            .parentNode as HTMLElement;
+        if (!service_choice_tr || !service_states_tr || !host_states_tr) {
+            return;
+        }
+
+        if (hide_options) {
+            utils.add_class(service_choice_tr, "hidden");
+            utils.add_class(service_states_tr, "hidden");
+            utils.remove_class(host_states_tr, "hidden");
+        } else {
+            utils.remove_class(service_choice_tr, "hidden");
+            utils.remove_class(service_states_tr, "hidden");
+            utils.add_class(host_states_tr, "hidden");
+        }
+    }
+}

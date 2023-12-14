@@ -5,6 +5,7 @@
 """Modes for managing notification configuration"""
 
 import abc
+import json
 import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
@@ -12,7 +13,9 @@ from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
-from cmk.utils.notify_types import EventRule
+from cmk.utils.notify import NotificationContext
+from cmk.utils.notify_types import EventRule, NotifyAnalysisInfo
+from cmk.utils.statename import host_state_name, service_state_name
 from cmk.utils.version import edition, Edition
 
 import cmk.gui.forms as forms
@@ -39,13 +42,18 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuPopup,
     PageMenuSearch,
     PageMenuTopic,
 )
 from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeactionuri, makeuri
 from cmk.gui.valuespec import (
@@ -54,20 +62,27 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,
     Checkbox,
+    DatePicker,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
     EmailAddress,
     FixedValue,
+    Foldable,
+    HostState,
     ID,
     Integer,
     ListChoice,
     ListOf,
     ListOfStrings,
     MigrateNotUpdated,
+    MonitoredHostname,
+    MonitoredServiceDescription,
+    MonitoringState,
     RegExp,
     rule_option_elements,
     TextInput,
+    TimePicker,
     Tuple,
     UUID,
 )
@@ -79,6 +94,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_analyse,
     notification_get_bulks,
     notification_replay,
+    notification_test,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
@@ -550,6 +566,16 @@ class ModeNotifications(ABCNotificationsMode):
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
+                                PageMenuEntry(
+                                    title=_("Test notifications"),
+                                    name="test_notifications",
+                                    icon_name="analyze",
+                                    item=PageMenuPopup(
+                                        content=self._render_test_notifications(),
+                                    ),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
                             ],
                         ),
                     ],
@@ -643,6 +669,17 @@ class ModeNotifications(ABCNotificationsMode):
                 self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_notification_display_options()
 
+        elif request.has_var("_test_notifications"):
+            if transactions.check_transaction():
+                return redirect(
+                    mode_url(
+                        "notifications",
+                        test_notification="1",
+                        test_context=json.dumps(self._context_from_vars()),
+                        dispatch=request.var("dispatch", ""),
+                    )
+                )
+
         elif request.has_var("_replay"):
             if transactions.check_transaction():
                 nr = request.get_integer_input_mandatory("_replay")
@@ -659,6 +696,71 @@ class ModeNotifications(ABCNotificationsMode):
             )
         return redirect(self.mode_url())
 
+    def _context_from_vars(self) -> dict[str, Any]:
+        general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
+        self._vs_general_test_options().validate_value(general_test_options, "general_opts")
+
+        advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
+        self._vs_advanced_test_options().validate_value(advanced_test_options, "advanced_opts")
+
+        hostname = general_test_options["hostname_choice"]
+        context: dict[str, Any] = {
+            "HOSTNAME": hostname,
+            "HOSTALIAS": hostname,
+        }
+
+        simulation_mode = general_test_options["simulation_mode"]
+        assert isinstance(simulation_mode, tuple)
+        if "status_change" in simulation_mode:
+            context["NOTIFICATIONTYPE"] = "PROBLEM"
+            context["PREVIOUSHOSTHARDSTATE"] = host_state_name(
+                int(simulation_mode[1]["host_states"][0])
+            )
+            context["HOSTSTATE"] = host_state_name(int(simulation_mode[1]["host_states"][1]))
+            context["HOSTSTATEID"] = simulation_mode[1]["host_states"][1]
+        else:
+            context["NOTIFICATIONTYPE"] = "DOWNTIME"
+            context["PREVIOUSHOSTHARDSTATE"] = "UP"
+            context["HOSTSTATE"] = "UP"
+
+        notification_nr = str(advanced_test_options["notification_nr"])
+        if service_desc := general_test_options.get("service_choice"):
+            context["SERVICEDESC"] = service_desc
+
+            context["WHAT"] = "SERVICE"
+            context["SERVICENOTIFICATIONNUMBER"] = notification_nr
+            context["PREVIOUSSERVICEHARDSTATE"] = (
+                "OK"
+                if "downtime" in simulation_mode
+                else service_state_name(int(simulation_mode[1]["svc_states"][0]))
+            )
+            context["SERVICESTATE"] = (
+                "OK"
+                if "downtime" in simulation_mode
+                else service_state_name(int(simulation_mode[1]["svc_states"][1]))
+            )
+            context["SERVICESTATEID"] = simulation_mode[1]["svc_states"][1]
+        else:
+            context["WHAT"] = "HOST"
+            context["HOSTNOTIFICATIONNUMBER"] = notification_nr
+
+        date_and_time_opts = advanced_test_options["date_and_time"]
+        date = date_and_time_opts[0]
+        time_ = date_and_time_opts[1]
+        context["MICROTIME"] = str(
+            time.mktime(datetime.strptime(f"{date} {time_}", "%Y-%m-%d %H:%M").timetuple())
+            * 1000000.0
+        )
+
+        plugin_output = general_test_options["plugin_output"]
+        if context["WHAT"] == "SERVICE":
+            context["SERVICEOUTPUT"] = plugin_output
+            context["LONGSERVICEOUTPUT"] = plugin_output
+        else:
+            context["HOSTOUTPUT"] = plugin_output
+
+        return context
+
     def _get_notification_rules(self):
         return load_notification_rules()
 
@@ -673,10 +775,32 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def page(self) -> None:
+        context, analyse = self._analyse_result_from_request()
         self._show_no_fallback_contact_warning()
         self._show_bulk_notifications()
+        self._show_notification_test(context, analyse)
         self._show_notification_backlog()
-        self._show_rules()
+        self._show_rules(analyse)
+
+    def _analyse_result_from_request(
+        self,
+    ) -> tuple[NotificationContext | None, NotifyAnalysisInfo | None]:
+        if request.var("analyse"):
+            nr = request.get_integer_input_mandatory("analyse")
+            return NotificationContext({}), notification_analyse(nr).result
+        if request.var("test_notification"):
+            try:
+                context = json.loads(request.get_str_input_mandatory("test_context"))
+            except Exception as e:
+                raise MKUserError(None, "Failed to parse context from request.") from e
+
+            return (
+                context,
+                notification_test(
+                    raw_context=context, dispatch=bool(request.var("dispatch"))
+                ).result,
+            )
+        return None, None
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():
@@ -742,7 +866,95 @@ class ModeNotifications(ABCNotificationsMode):
                     )
         return True
 
-    def _show_notification_backlog(self):  # pylint: disable=too-many-branches
+    def _show_notification_test(
+        self,
+        context: NotificationContext | None,
+        analyse: NotifyAnalysisInfo | None,
+    ) -> None:
+        if context is None:
+            return
+
+        with table_element(
+            table_id="notification_test", title=_("Analysis: Test notifications"), sortable=False
+        ) as table:
+            table.row()
+            table.cell("&nbsp;", css=["buttons"])
+
+            html.icon_button(
+                None,
+                _("Show / hide notification context"),
+                "toggle_context",
+                onclick="cmk.wato.toggle_container('notification_context_test')",
+            )
+
+            if analyse:
+                table.cell(css=["buttons"])
+                analyse_rules, _analyse_plugins = analyse
+                if any("match" in entry for entry in analyse_rules):
+                    html.icon("checkmark", _("This notification matches"))
+                else:
+                    html.icon(
+                        "hyphen",
+                        _(
+                            "This notification does not match. See reasons in global notification rule list."
+                        ),
+                    )
+
+            date: str = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(float(context["MICROTIME"]) / 1000000.0)
+            )
+
+            table.cell(_("Date and time"), date, css=["nobr"])
+            nottype = context.get("NOTIFICATIONTYPE", "")
+            table.cell(_("Type"), nottype)
+
+            if nottype in ["PROBLEM", "RECOVERY"]:
+                if context.get("SERVICESTATE"):
+                    css = "state svcstate state"
+                    last_state_name = context["PREVIOUSSERVICEHARDSTATE"]
+                    last_state = {"OK": "0", "WARNING": "1", "CRITICAL": "2", "UNKNOWN": "3"}[
+                        last_state_name
+                    ]
+                    state = context["HOSTSTATEID"]
+                    state_name = context["SERVICESTATE"]
+                else:
+                    css = "state hstate hstate"
+                    last_state_name = context["PREVIOUSHOSTHARDSTATE"]
+                    last_state = {"UP": "0", "DOWN": "1", "UNREACHABLE": "2"}[last_state_name]
+                    state = context["HOSTSTATEID"]
+                    state_name = context["HOSTSTATE"]
+                table.cell(
+                    _("From"),
+                    HTMLWriter.render_span(last_state_name[:4], class_=["state_rounded_fill"]),
+                    css=[f"{css}{last_state}"],
+                )
+                table.cell(
+                    _("To"),
+                    HTMLWriter.render_span(state_name[:4], class_=["state_rounded_fill"]),
+                    css=[f"{css}{state}"],
+                )
+            else:
+                self._add_state_cells(table=table, nottype=nottype)
+
+            self._add_host_service_cells(
+                table=table,
+                context=context,
+            )
+            self._add_plugin_output_cells(table=table, context=context)
+
+            self._add_toggable_notification_context(
+                table=table,
+                context=context,
+                ident="notification_context_test",
+            )
+
+        # This dummy row is needed for not destroying the odd/even row highlighting
+        table.row(css=["notification_context hidden"])
+
+        if analyse is not None:
+            self._show_resulting_notifications(result=analyse)
+
+    def _show_notification_backlog(self):
         """Show recent notifications. We can use them for rule analysis"""
         if not self._show_backlog:
             return
@@ -802,64 +1014,81 @@ class ModeNotifications(ABCNotificationsMode):
                     if context.get("SERVICESTATE"):
                         statename = context["SERVICESTATE"][:4]
                         state = context["SERVICESTATEID"]
-                        css = ["state svcstate state%s" % state]
+                        css = [f"state svcstate state{state}"]
                     else:
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
-                        css = ["state hstate hstate%s" % state]
+                        css = [f"state hstate hstate{state}"]
                     table.cell(
                         _("State"),
                         HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
                         css=css,
                     )
-                elif nottype.startswith("DOWNTIME"):
-                    table.cell(_("State"))
-                    html.icon("downtime", _("Downtime"))
-                elif nottype.startswith("ACK"):
-                    table.cell(_("State"))
-                    html.icon("ack", _("Acknowledgement"))
-                elif nottype.startswith("FLAP"):
-                    table.cell(_("State"))
-                    html.icon("flapping", _("Flapping"))
                 else:
-                    table.cell(_("State"), "")
+                    self._add_state_cells(table=table, nottype=nottype)
 
-                table.cell(_("Host"), context.get("HOSTNAME", ""))
-                table.cell(_("Service"), context.get("SERVICEDESC", ""))
-                output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
-
-                table.cell(
-                    _("Plugin output"),
-                    cmk.gui.view_utils.format_plugin_output(
-                        output, shall_escape=active_config.escape_plugin_output
-                    ),
+                self._add_host_service_cells(
+                    table=table,
+                    context=context,
                 )
+                self._add_plugin_output_cells(table=table, context=context)
 
-                # Add toggleable notitication context
-                table.row(css=["notification_context hidden"], id_="notification_context_%d" % nr)
-                table.cell(colspan=8)
-
-                html.open_table()
-                for index, (key, val) in enumerate(sorted(context.items())):
-                    if index % 2 == 0:
-                        if index != 0:
-                            html.close_tr()
-                        html.open_tr()
-                    html.th(key)
-                    html.td(val)
-                html.close_table()
+                self._add_toggable_notification_context(
+                    table=table,
+                    context=context,
+                    ident=f"notification_context_{nr}",
+                )
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(css=["notification_context hidden"])
 
-    # TODO: Refactor this
-    def _show_rules(self):
-        # Do analysis
-        analyse = None
-        if request.var("analyse"):
-            nr = request.get_integer_input_mandatory("analyse")
-            analyse = notification_analyse(nr).result
+    def _add_state_cells(self, table: Table, nottype: str) -> None:
+        if nottype.startswith("DOWNTIME"):
+            table.cell(_("State"))
+            html.icon("downtime", _("Downtime"))
+        elif nottype.startswith("ACK"):
+            table.cell(_("State"))
+            html.icon("ack", _("Acknowledgement"))
+        elif nottype.startswith("FLAP"):
+            table.cell(_("State"))
+            html.icon("flapping", _("Flapping"))
+        else:
+            table.cell(_("State"), "")
 
+    def _add_host_service_cells(self, table: Table, context: NotificationContext) -> None:
+        table.cell(_("Host"), context.get("HOSTNAME", ""))
+        table.cell(_("Service"), context.get("SERVICEDESC", ""))
+
+    def _add_plugin_output_cells(self, table: Table, context: NotificationContext) -> None:
+        output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT", ""))
+        table.cell(
+            _("Plugin output"),
+            cmk.gui.view_utils.format_plugin_output(
+                output, shall_escape=active_config.escape_plugin_output
+            ),
+        )
+
+    def _add_toggable_notification_context(
+        self,
+        table: Table,
+        context: NotificationContext,
+        ident: str,
+    ) -> None:
+        table.row(css=["notification_context hidden"], id_=ident)
+        table.cell(colspan=8)
+
+        html.open_table()
+        for index, (key, val) in enumerate(sorted(context.items())):
+            if index % 2 == 0:
+                if index != 0:
+                    html.close_tr()
+                html.open_tr()
+            html.th(key)
+            html.td(val)
+        html.close_table()
+
+    # TODO: Refactor this
+    def _show_rules(self, analyse: NotifyAnalysisInfo | None) -> None:
         start_nr = 0
         rules = self._get_notification_rules()
         self._render_notification_rules(rules, show_title=True, analyse=analyse, start_nr=start_nr)
@@ -879,24 +1108,25 @@ class ModeNotifications(ABCNotificationsMode):
                 )
                 start_nr += len(user_rules)
 
-        if analyse:
-            with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
-                for contact, plugin, parameters, bulk in analyse[1]:
-                    table.row()
-                    if contact.startswith("mailto:"):
-                        contact = contact[7:]  # strip of fake-contact mailto:-prefix
-                    table.cell(_("Recipient"), contact)
-                    table.cell(_("Plugin"), self._vs_notification_scripts().value_to_html(plugin))
-                    table.cell(_("Plugin parameters"), ", ".join(parameters))
-                    table.cell(_("Bulking"))
-                    if bulk:
-                        html.write_text(_("Time horizon") + ": ")
-                        html.write_text(Age().value_to_html(bulk["interval"]))
-                        html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                        html.write_text(", %s " % (_("group by")))
-                        html.write_text(
-                            self._vs_notification_bulkby().value_to_html(bulk["groupby"])
-                        )
+        if request.var("analyse") and analyse is not None:
+            self._show_resulting_notifications(result=analyse)
+
+    def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
+        with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
+            for contact, plugin, parameters, bulk in result[1]:
+                table.row()
+                if contact.startswith("mailto:"):
+                    contact = contact[7:]  # strip of fake-contact mailto:-prefix
+                table.cell(_("Recipient"), contact)
+                table.cell(_("Plugin"), self._vs_notification_scripts().value_to_html(plugin))
+                table.cell(_("Plugin parameters"), ", ".join(parameters))
+                table.cell(_("Bulking"))
+                if bulk:
+                    html.write_text(_("Time horizon") + ": ")
+                    html.write_text(Age().value_to_html(bulk["interval"]))
+                    html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                    html.write_text(", %s " % (_("group by")))
+                    html.write_text(self._vs_notification_bulkby().value_to_html(bulk["groupby"]))
 
     def _vs_notification_scripts(self):
         return DropdownChoice(
@@ -904,6 +1134,168 @@ class ModeNotifications(ABCNotificationsMode):
             choices=notification_script_choices,
             default_value="mail",
         )
+
+    def _vs_test_on_options(self) -> None:
+        html.open_table(class_="test_on")
+        html.open_tr()
+        html.td(_("Test notifications on"), class_="legend")
+        html.open_td(class_="test_type")
+        html.jsbutton(
+            varname=(varname := "test_on_host"),
+            text="Host",
+            onclick=f'cmk.wato.toggle_test_notification_visibility("{varname}", "test_on_service", true)',
+            cssclass=f"{varname} active",
+        )
+        html.jsbutton(
+            varname=(varname := "test_on_service"),
+            text="Service",
+            onclick=f'cmk.wato.toggle_test_notification_visibility("{varname}", "test_on_host")',
+            cssclass=varname,
+        )
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+
+    def _vs_general_test_options(self) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "hostname_choice",
+                    MonitoredHostname(title=_("Host"), strict="True"),
+                ),
+                (
+                    "service_choice",
+                    MonitoredServiceDescription(
+                        title=_("Service"),
+                        autocompleter=ContextAutocompleterConfig(
+                            ident=MonitoredServiceDescription.ident,
+                            show_independent_of_context=True,
+                            strict=True,
+                            dynamic_params_callback_name="host_hinted_autocompleter",
+                        ),
+                    ),
+                ),
+                (
+                    "simulation_mode",
+                    CascadingDropdown(
+                        title=_("Simulate"),
+                        choices=[
+                            (
+                                "downtime",
+                                _("Start of downtime"),
+                                FixedValue(
+                                    value="DOWNTIME",
+                                    totext="",
+                                ),
+                            ),
+                            (
+                                "status_change",
+                                _("Status change"),
+                                Dictionary(
+                                    elements=[
+                                        (
+                                            "svc_states",
+                                            Tuple(
+                                                orientation="horizontal",
+                                                title_br=False,
+                                                elements=[
+                                                    MonitoringState(
+                                                        label=_("From"), default_value=0
+                                                    ),
+                                                    MonitoringState(label=_("to"), default_value=1),
+                                                ],
+                                            ),
+                                        ),
+                                        (
+                                            "host_states",
+                                            Tuple(
+                                                orientation="horizontal",
+                                                title_br=False,
+                                                elements=[
+                                                    HostState(label=_("From"), default_value=0),
+                                                    HostState(label=_("to"), default_value=1),
+                                                ],
+                                            ),
+                                        ),
+                                    ],
+                                    optional_keys=[],
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "plugin_output",
+                    TextInput(
+                        title=_("Plugin output"),
+                        placeholder=_("This is a notification test"),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        )
+
+    def _vs_advanced_test_options(self) -> Foldable:
+        return Foldable(
+            valuespec=Dictionary(
+                title=_("Advanced options"),
+                elements=[
+                    (
+                        "date_and_time",
+                        Tuple(
+                            orientation="horizontal",
+                            title_br=False,
+                            elements=[
+                                DatePicker(
+                                    title=_("Event date and time"),
+                                    default_value=time.strftime("%Y-%m-%d"),
+                                ),
+                                TimePicker(default_value=time.strftime("%H:%M")),
+                                TextInput(
+                                    title=timezone_utc_offset_str()
+                                    + " "
+                                    + _("Server time (currently: %s)")
+                                    % time.strftime("%m/%d/%Y %H:%M", time.localtime()),
+                                    cssclass="server_time",
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        "notification_nr",
+                        Integer(label="Notification number", default_value=1),
+                    ),
+                    (
+                        "dispatch",
+                        Checkbox(
+                            label=_("Dispatch notifications"),
+                            default_value=True,
+                        ),
+                    ),
+                ],
+                optional_keys=[],
+            )
+        )
+
+    def _render_test_notifications(self) -> HTML:
+        html.final_javascript(
+            'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
+        )
+        with output_funnel.plugged():
+            with html.form_context("test_notifications", method="POST"):
+                self._vs_test_on_options()
+                self._vs_general_test_options().render_input_as_form("general_opts", {})
+                self._vs_advanced_test_options().render_input("advanced_opts", "")
+                html.hidden_fields()
+
+            html.button(
+                varname="_test_notifications",
+                title=_("Test"),
+                cssclass="hot",
+                form="form_test_notifications",
+            )
+
+            return HTML(output_funnel.drain())
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):

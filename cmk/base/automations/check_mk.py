@@ -9,6 +9,7 @@ import functools
 import glob
 import io
 import itertools
+import json
 import logging
 import operator
 import os
@@ -86,6 +87,7 @@ from cmk.automations.results import (
     NotificationAnalyseResult,
     NotificationGetBulksResult,
     NotificationReplayResult,
+    NotificationTestResult,
     ReloadResult,
     RenameHostsResult,
     RestartResult,
@@ -2398,6 +2400,20 @@ class AutomationNotificationAnalyse(Automation):
 
 
 automations.register(AutomationNotificationAnalyse())
+
+
+class AutomationNotificationTest(Automation):
+    cmd = "notification-test"
+    needs_config = True
+    needs_checks = True  # TODO: Can we change this?
+
+    def execute(self, args: list[str]) -> NotificationTestResult:
+        context = json.loads(args[0])
+        dispatch = args[1]
+        return NotificationTestResult(notify.notification_test(context, dispatch == "True"))
+
+
+automations.register(AutomationNotificationTest())
 
 
 class AutomationGetBulks(Automation):

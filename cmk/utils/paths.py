@@ -93,6 +93,7 @@ predictions_dir = Path(var_dir, "prediction")
 auth_secret_file = omd_root / "etc/auth.secret"
 # the path for password_store.secret is also duplicated in omd cmk_password_store.h!
 password_store_secret_file = omd_root / "etc/password_store.secret"
+site_internal_secret_file = omd_root / "etc/site_internal.secret"
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")

@@ -13,6 +13,7 @@ import sys
 from omdlib.utils import chdir
 
 import cmk.utils.tty as tty
+from cmk.utils.crypto.secrets import SiteInternalSecret
 from cmk.utils.log import VERBOSE
 from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
 
@@ -39,6 +40,7 @@ def call_init_scripts(
     with chdir(site_dir):
         if command == "start":
             log_security_event(SiteStartStoppedEvent(event="start"))
+            SiteInternalSecret().regenerate()
         elif command == "stop":
             log_security_event(SiteStartStoppedEvent(event="stop"))
 

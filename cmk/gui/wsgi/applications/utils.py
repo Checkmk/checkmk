@@ -24,7 +24,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
@@ -61,6 +61,10 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
         with login.authenticate() as authenticated:
             if not authenticated:
                 return _handle_not_authenticated()
+
+            if isinstance(session.user, LoggedInSuperUser):
+                func()
+                return response
 
             user_id = session.user.ident
             if requested_file_name(request) != "user_change_pw":

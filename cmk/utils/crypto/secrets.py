@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import hashlib
 import hmac
 import secrets
@@ -12,6 +14,14 @@ from pathlib import Path
 
 import cmk.utils.paths as paths
 from cmk.utils.user import UserId
+
+
+class Secret:
+    def __init__(self, value: bytes) -> None:
+        self._value = value
+
+    def compare(self, other: Secret) -> bool:
+        return secrets.compare_digest(self._value, other._value)
 
 
 class _LocalSecret(ABC):
@@ -26,6 +36,13 @@ class _LocalSecret(ABC):
             self.secret = self.path.read_bytes()
             if self.secret:
                 return
+
+        self.regenerate()
+
+    def regenerate(self) -> None:
+        """generate new secret and store it
+
+        this does not care if the secret already exists"""
 
         self.secret = secrets.token_bytes(32)
         # TODO: mkdir is probably not really required here, just some cmc test failing.
@@ -81,6 +98,21 @@ class EncrypterSecret(_LocalSecret):
     @property
     def path(self) -> Path:
         return paths.auth_secret_file
+
+
+class SiteInternalSecret(_LocalSecret):
+    """Used to authenticate between site internal components, e.g. agent-receiver and rest_api"""
+
+    @property
+    def path(self) -> Path:
+        return paths.site_internal_secret_file
+
+    def _read(self) -> Secret:
+        return Secret(self.path.read_bytes())
+
+    def check(self, other: Secret) -> bool:
+        """Check if a given secret is the same as this one in a timing attack safe manner"""
+        return self._read().compare(other)
 
 
 class AutomationUserSecret:

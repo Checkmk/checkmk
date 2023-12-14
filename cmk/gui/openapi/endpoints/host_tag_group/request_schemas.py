@@ -6,11 +6,11 @@ import re
 from typing import Any
 
 from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import TAG_GROUP_NAME_PATTERN
+from cmk.utils.tags import TAG_GROUP_NAME_PATTERN, TagID
 
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.watolib.tags import tag_group_exists
+from cmk.gui.watolib.tags import load_all_tag_config_read_only, tag_group_exists
 
 from cmk import fields
 
@@ -85,6 +85,9 @@ class HostTagGroupId(fields.String):
             raise self.make_error("pattern", value=value)
         group_exists = tag_group_exists(value, builtin_included=True)
         if group_exists:
+            raise self.make_error("used", name=value)
+
+        if load_all_tag_config_read_only().aux_tag_list.exists(TagID(value)):
             raise self.make_error("used", name=value)
 
 

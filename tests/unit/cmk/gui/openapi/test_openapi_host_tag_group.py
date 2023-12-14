@@ -432,3 +432,23 @@ def test_host_tag_group_ident_with_newline(
 
     resp.assert_status_code(400)
     assert resp.json["fields"]["ident"][0].startswith(f"Invalid tag ID: {group_id!r}")
+
+
+def test_openapi_host_tag_group_creation_when_aux_tag_exists(
+    clients: ClientRegistry,
+) -> None:
+    tag_id = "test123"
+
+    aux_tag_data = {
+        "aux_tag_id": tag_id,
+        "title": "test",
+        "topic": "test",
+    }
+    clients.AuxTag.create(tag_data=aux_tag_data)
+
+    clients.HostTagGroup.create(
+        ident=tag_id,
+        title="test",
+        tags=[{"ident": "test", "title": "test"}],
+        expect_ok=False,
+    ).assert_status_code(400)

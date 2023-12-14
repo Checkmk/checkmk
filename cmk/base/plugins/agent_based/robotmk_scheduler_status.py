@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from enum import Enum
 from itertools import chain
 from time import time
-from typing import assert_never
+from typing import assert_never, Iterator, Literal
 
 from pydantic import BaseModel, Field, RootModel, TypeAdapter
 
@@ -25,15 +25,14 @@ class ConfigReadingError(BaseModel, frozen=True):
     ReadingError: str
 
 
+ConfigAdapter = TypeAdapter(ConfigFileContent | ConfigReadingError)
+
+
 def parse_robotmk_config(string_table: StringTable) -> Config | ConfigReadingError | None:
     if not string_table:
         return None
 
-    match (
-        config_data := TypeAdapter(ConfigFileContent | ConfigReadingError).validate_json(
-            string_table[0][0]
-        )
-    ):
+    match (config_data := ConfigAdapter.validate_json(string_table[0][0])):
         case ConfigReadingError():
             return config_data
         case ConfigFileContent():
@@ -65,59 +64,40 @@ register.agent_section(
 )
 
 
-class EnvironmentBuildStatusSuccess(BaseModel, frozen=True):
+class BuildOutcomeSuccess(BaseModel, frozen=True):
     duration: int = Field(alias="Success")
 
 
-class EnvironmentBuildStatusInProgress(BaseModel, frozen=True):
-    start_time: int = Field(alias="InProgress")
-
-
-class EnvironmentBuildStatusErrorNonZeroExit(Enum):
-    NonZeroExit = "NonZeroExit"
-
-
-class EnvironmentBuildStatusErrorTimeout(Enum):
-    Timeout = "Timeout"
-
-
-class EnviromentBuildStatusErrorMessage(BaseModel):
+class BuildOutcomeError(BaseModel, frozen=True):
     Error: str
 
 
-class EnvironmentBuildStatusFailure(BaseModel):
-    Failure: (
-        EnvironmentBuildStatusErrorNonZeroExit
-        | EnvironmentBuildStatusErrorTimeout
-        | EnviromentBuildStatusErrorMessage
-    )
+BuildOutcome = (
+    Literal["NotNeeded", "Timeout", "Terminated", "NonZeroExit"]
+    | BuildOutcomeError
+    | BuildOutcomeSuccess
+)
 
 
-class EnvironmentBuildStatusNotNeeded(Enum):
-    NotNeeded = "NotNeeded"
+class BuildStageComplete(BaseModel, frozen=True):
+    Complete: BuildOutcome
 
 
-class EnvironmentBuildStatusPending(Enum):
-    Pending = "Pending"
+class BuildStageInProgress(BaseModel, frozen=True):
+    start_time: int = Field(alias="InProgress")
 
 
-class EnvironmentBuildStates(RootModel, frozen=True):
-    root: Mapping[
-        str,
-        (
-            EnvironmentBuildStatusNotNeeded
-            | EnvironmentBuildStatusPending
-            | EnvironmentBuildStatusSuccess
-            | EnvironmentBuildStatusInProgress
-            | EnvironmentBuildStatusFailure
-        ),
-    ]
+EnvironmentBuildStage = Literal["Pending"] | BuildStageComplete | BuildStageInProgress
+
+
+class EnvironmentBuildStages(RootModel, frozen=True):
+    root: Mapping[str, EnvironmentBuildStage]
 
 
 def parse_robotmk_environment_build_states(
     string_table: StringTable,
-) -> EnvironmentBuildStates | None:
-    return EnvironmentBuildStates.model_validate_json(string_table[0][0]) if string_table else None
+) -> EnvironmentBuildStages | None:
+    return EnvironmentBuildStages.model_validate_json(string_table[0][0]) if string_table else None
 
 
 register.agent_section(
@@ -148,7 +128,7 @@ def discover_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStages | None,
 ) -> DiscoveryResult:
     if section_robotmk_config:
         yield Service()
@@ -158,13 +138,13 @@ def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStages | None,
 ) -> CheckResult:
     yield from _check_scheduler_status(
         section_robotmk_config=section_robotmk_config,
         section_robotmk_scheduler_phase=section_robotmk_scheduler_phase,
         section_robotmk_rcc_setup_failures=section_robotmk_rcc_setup_failures,
-        section_robotmk_environment_build_states=section_robotmk_environment_build_states,
+        section_robotmk_environment_build_stages=section_robotmk_environment_build_states,
         now=time(),
     )
 
@@ -174,7 +154,7 @@ def _check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
+    section_robotmk_environment_build_stages: EnvironmentBuildStages | None,
     now: float,
 ) -> CheckResult:
     if not section_robotmk_config:
@@ -191,8 +171,8 @@ def _check_scheduler_status(
     if section_robotmk_rcc_setup_failures:
         yield from _check_rcc_setup_failures(section_robotmk_rcc_setup_failures)
 
-    if section_robotmk_environment_build_states:
-        yield from _check_environment_build_states(section_robotmk_environment_build_states, now)
+    if section_robotmk_environment_build_stages:
+        yield from _check_environment_build_states(section_robotmk_environment_build_stages, now)
 
 
 def _check_config(config: Config | ConfigReadingError) -> CheckResult:
@@ -270,77 +250,70 @@ def _check_rcc_setup_failures(rcc_setup_failures: RCCSetupFailures) -> CheckResu
 
 
 def _check_environment_build_states(
-    environment_build_states: EnvironmentBuildStates,
+    environment_build_stages: EnvironmentBuildStages,
     now: float,
 ) -> CheckResult:
     yield from chain.from_iterable(
         _check_environment_build_status(suite_id, environment_build_status, now)
-        for suite_id, environment_build_status in environment_build_states.root.items()
+        for suite_id, environment_build_status in environment_build_stages.root.items()
     )
 
 
 def _check_environment_build_status(
     suite_id: str,
-    environment_build_status: EnvironmentBuildStatusNotNeeded
-    | EnvironmentBuildStatusPending
-    | EnvironmentBuildStatusSuccess
-    | EnvironmentBuildStatusInProgress
-    | EnvironmentBuildStatusFailure,
+    environment_build_stage: EnvironmentBuildStage,
     now: float,
 ) -> CheckResult:
-    match environment_build_status:
-        case EnvironmentBuildStatusSuccess():
-            yield _check_environment_build_success(suite_id, environment_build_status)
-        case EnvironmentBuildStatusInProgress():
-            yield _check_environment_build_in_progress(suite_id, environment_build_status, now)
-        case EnvironmentBuildStatusFailure():
-            yield _check_environment_build_failure(suite_id, environment_build_status.Failure)
-
-
-def _check_environment_build_success(
-    suite_id: str,
-    environment_build_success: EnvironmentBuildStatusSuccess,
-) -> Result:
-    return Result(
-        state=State.OK,
-        notice=f"Suite {suite_id}: Environment build took {render.timespan(environment_build_success.duration)}",
-    )
+    match environment_build_stage:
+        case BuildStageInProgress():
+            yield _check_environment_build_in_progress(suite_id, environment_build_stage, now)
+        case BuildStageComplete():
+            yield from _check_environment_build_complete(suite_id, environment_build_stage.Complete)
 
 
 def _check_environment_build_in_progress(
     suite_id: str,
-    environment_build_in_progress: EnvironmentBuildStatusInProgress,
+    environment_build_stage: BuildStageInProgress,
     now: float,
 ) -> Result:
     return Result(
         state=State.OK,
-        summary=f"Suite {suite_id}: Environment build currently running for {render.timespan(now - environment_build_in_progress.start_time)}",
+        summary=f"Suite {suite_id}: Environment build currently running for {render.timespan(now - environment_build_stage.start_time)}",
     )
 
 
-def _check_environment_build_failure(
-    suite_id: str,
-    environment_build_failure: EnvironmentBuildStatusErrorNonZeroExit
-    | EnvironmentBuildStatusErrorTimeout
-    | EnviromentBuildStatusErrorMessage,
-) -> Result:
-    match environment_build_failure:
-        case EnvironmentBuildStatusErrorNonZeroExit():
-            return Result(
+def _check_environment_build_complete(
+    suite_id: str, build_outcome: BuildOutcome
+) -> Iterator[Result]:
+    match build_outcome:
+        case "NonZeroExit":
+            yield Result(
                 state=State.CRIT,
                 summary=f"Suite {suite_id}: Environment building failed. Suite won't be scheduled.",
             )
-        case EnvironmentBuildStatusErrorTimeout():
-            return Result(
+        case "Timeout":
+            yield Result(
                 state=State.CRIT,
                 summary=f"Suite {suite_id}: Environment building timed out. Suite won't be scheduled.",
             )
-        case EnviromentBuildStatusErrorMessage():
-            return Result(
+        case "Terminated":
+            yield Result(
+                state=State.CRIT,
+                summary=f"Suite {suite_id}: Scheduler was terminated.",
+            )
+        case BuildOutcomeError():
+            yield Result(
                 state=State.CRIT,
                 summary=f"Suite {suite_id}: Error while attempting to build environment, see service details. Suite won't be scheduled.",
-                details=environment_build_failure.Error,
+                details=build_outcome.Error,
             )
+        case BuildOutcomeSuccess():
+            yield Result(
+                state=State.OK,
+                notice=f"Suite {suite_id}: Environment build took {render.timespan(build_outcome.duration)}",
+            )
+        case "NotNeeded":
+            pass
 
 
 register.check_plugin(

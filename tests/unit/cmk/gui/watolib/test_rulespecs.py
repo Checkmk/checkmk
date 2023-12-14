@@ -18,6 +18,7 @@ import cmk.gui.wato
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
+from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
 from cmk.gui.wato import register_check_parameters
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -1322,9 +1323,12 @@ def _expected_rulespec_group_choices():
 
 
 def test_rulespec_group_choices() -> None:
-    assert sorted(rulespec_group_registry.get_group_choices()) == sorted(
-        _expected_rulespec_group_choices()
-    )
+    actual_choices = [
+        g
+        for g in rulespec_group_registry.get_group_choices()
+        if not _is_dynamically_generated_group(g[0])
+    ]
+    assert sorted(actual_choices) == sorted(_expected_rulespec_group_choices())
 
 
 @pytest.mark.parametrize(
@@ -1368,7 +1372,12 @@ def test_rulespec_group_choices() -> None:
     ],
 )
 def test_rulespec_get_matching_group_names(term: str, result: Sequence[str]) -> None:
-    assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
+    actual_names = [
+        g
+        for g in rulespec_group_registry.get_matching_group_names(term)
+        if not _is_dynamically_generated_group(g)
+    ]
+    assert sorted(actual_names) == sorted(result)
 
 
 def test_rulespec_get_main_groups() -> None:
@@ -1443,7 +1452,15 @@ def test_rulespec_get_all_groups() -> None:
             "agents/agent_plugins",
         ]
 
-    assert sorted(rulespec_registry.get_all_groups()) == sorted(expected_rulespec_groups)
+    actual_rulespec_groups = [
+        g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)
+    ]
+    assert sorted(actual_rulespec_groups) == sorted(expected_rulespec_groups)
+
+
+def _is_dynamically_generated_group(group_name: str) -> bool:
+    # generated for the RulesetAPI v1
+    return group_name.split("/")[-1].startswith(GENERATED_GROUP_PREFIX)
 
 
 def test_rulespec_get_host_groups() -> None:
@@ -1480,7 +1497,11 @@ def test_rulespec_get_host_groups() -> None:
             "agents/windows_modules",
         ]
 
-    group_names = rulespec_group_registry.get_host_rulespec_group_names(True)
+    group_names = [
+        g
+        for g in rulespec_group_registry.get_host_rulespec_group_names(True)
+        if not _is_dynamically_generated_group(g)
+    ]
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 

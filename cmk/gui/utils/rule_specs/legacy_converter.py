@@ -26,6 +26,8 @@ from cmk.gui.watolib.rulespecs import (
 
 from cmk.rulesets import v1 as ruleset_api_v1
 
+GENERATED_GROUP_PREFIX = "gen-"
+
 
 def _localize_optional(
     to_localize: ruleset_api_v1.Localizable | None, localizer: Callable[[str], str]
@@ -136,28 +138,19 @@ def _convert_to_legacy_rulespec_group(
     topic_to_convert: ruleset_api_v1.Topic | ruleset_api_v1.CustomTopic,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecBaseGroup]:
-    if isinstance(functionality_to_convert, ruleset_api_v1.Functionality) and isinstance(
-        topic_to_convert, ruleset_api_v1.Topic
-    ):
-        return _get_builtin_legacy_sub_group_with_main_group(
-            functionality_to_convert, topic_to_convert
-        )
-    if isinstance(functionality_to_convert, ruleset_api_v1.Functionality) and isinstance(
-        topic_to_convert, ruleset_api_v1.CustomTopic
-    ):
-        identifier = f"{hash(topic_to_convert.title.localize(lambda x: x))}"
-        return _convert_to_custom_group(
-            identifier,
-            legacy_rulespecs.RulespecSubGroup,
-            {
-                "title": topic_to_convert.title.localize(localizer),
-                "main_group": _get_builtin_legacy_main_group(functionality_to_convert),
-                "sub_group_name": identifier,
-            },
-        )
     if isinstance(functionality_to_convert, ruleset_api_v1.CustomFunctionality):
         raise NotImplementedError
 
+    if isinstance(topic_to_convert, ruleset_api_v1.Topic):
+        return _get_builtin_legacy_sub_group_with_main_group(
+            functionality_to_convert, topic_to_convert
+        )
+    if isinstance(topic_to_convert, ruleset_api_v1.CustomTopic):
+        return _convert_to_custom_group(
+            _get_builtin_legacy_main_group(functionality_to_convert),
+            topic_to_convert.title,
+            localizer,
+        )
     raise ValueError((functionality_to_convert, topic_to_convert))
 
 
@@ -234,14 +227,25 @@ def _get_builtin_legacy_sub_group_with_main_group(
 
 
 def _convert_to_custom_group(
-    identifier: str,
-    base: type,
-    args: dict[str, str | type[legacy_rulespecs.RulespecGroup]],
-) -> type[legacy_rulespecs.RulespecBaseGroup]:
-    if identifier in rulespec_group_registry:
-        return rulespec_group_registry[identifier]
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    title: ruleset_api_v1.Localizable,
+    localizer: Callable[[str], str],
+) -> type[legacy_rulespecs.RulespecSubGroup]:
+    identifier = f"{GENERATED_GROUP_PREFIX}{hash(title.localize(lambda x: x))}"
+    if registered_group := rulespec_group_registry.get(f"{legacy_main_group().name}/{identifier}"):
+        if not issubclass(registered_group, legacy_rulespecs.RulespecSubGroup):
+            raise TypeError(registered_group)
+        return registered_group
 
-    group_class = type(identifier, (base,), args)
+    group_class = type(
+        identifier,
+        (legacy_rulespecs.RulespecSubGroup,),
+        {
+            "title": title.localize(localizer),
+            "main_group": legacy_main_group,
+            "sub_group_name": identifier,
+        },
+    )
     rulespec_group_registry.register(group_class)
     return group_class
 

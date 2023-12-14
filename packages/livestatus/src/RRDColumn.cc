@@ -8,6 +8,7 @@
 #include <rrd.h>
 
 #include <algorithm>
+#include <charconv>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
@@ -15,6 +16,7 @@
 #include <set>
 #include <stdexcept>
 #include <string_view>
+#include <system_error>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"

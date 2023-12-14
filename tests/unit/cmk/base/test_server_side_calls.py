@@ -405,7 +405,6 @@ def test_get_active_service_data(
     macros: Mapping[str, str],
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     active_check = ActiveCheck(
         active_check_plugins,
@@ -636,11 +635,8 @@ def test_get_active_service_data_warnings(
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
     expected_warning: str,
-    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
-
     active_check_config = ActiveCheck(
         active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
     )
@@ -808,10 +804,7 @@ def test_get_active_service_descriptions(
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
-
     active_check_config = ActiveCheck(
         active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
     )
@@ -848,11 +841,8 @@ def test_get_active_service_descriptions_warnings(
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
     expected_warning: str,
-    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
-
     active_check_config = ActiveCheck(
         {}, legacy_active_check_plugins, hostname, host_attrs, translations={}
     )

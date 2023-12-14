@@ -393,6 +393,19 @@ STAGES:
       TEXT_ON_SKIP: 'No check-sql files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-sql.txt"
 
+    # NOTE: This has to come *before* the neb & cmc packages, as they depend on
+    # livestatus. Their run scripts rebuild livestatus, "eating away" compiler
+    # invocations, leading to IWYU/clang-tidy/... not being called on enough
+    # files. The ordering is a bit ad hoc, perhaps we should keep the list of
+    # steps here in dependency order.
+    - NAME: 'Package livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+      DIR: 'packages/livestatus'
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
+      TEXT_ON_SKIP: 'No Livestatus files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
+
     - NAME: 'Package cmc'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/cmc'
@@ -463,14 +476,6 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: 'No cmk-werks package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
-
-    - NAME: 'Package livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/livestatus'
-      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-13.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
-      TEXT_ON_SKIP: 'No Livestatus files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
 
     - NAME: 'Package neb'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES

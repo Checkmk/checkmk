@@ -17,6 +17,7 @@ from cmk.gui import wato, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.legacy_converter import (
+    _convert_to_custom_group,
     _convert_to_legacy_levels,
     _convert_to_legacy_rulespec_group,
     _convert_to_legacy_valuespec,
@@ -666,6 +667,20 @@ def _compare_rulespec_groups(actual: object, expected: legacy_rulespecs.Rulespec
         assert expected.title == actual.title
     else:
         raise NotImplementedError()
+
+
+def test_generated_rulespec_group_single_registration():
+    first_group = _convert_to_custom_group(
+        legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+        api_v1.Localizable("test"),
+        lambda x: x,
+    )
+    second_group = _convert_to_custom_group(
+        legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+        api_v1.Localizable("test"),
+        lambda x: x,
+    )
+    assert first_group == second_group
 
 
 @pytest.mark.parametrize(

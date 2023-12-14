@@ -78,7 +78,6 @@ set(livestatus_headers
     ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
-    ${header_location}/strutil.h
     ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
@@ -167,7 +166,6 @@ set(livestatus_sources
     Store.cc
     StringFilter.cc
     StringUtils.cc
-    strutil.cc
     Table.cc
     TableColumns.cc
     TableCommands.cc

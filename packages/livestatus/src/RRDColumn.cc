@@ -21,59 +21,54 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/PnpUtils.h"
-#include "livestatus/strutil.h"
+
+using namespace std::string_view_literals;
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
                              const std::string &column_name) {
+    // We expect the following arguments: RPN:START_TIME:END_TIME:RESOLUTION
+    // Example: fs_used,1024,/:1426411073:1426416473:5
+    std::string_view args{arguments};
     auto invalid = [&column_name](const std::string &message) {
         throw std::runtime_error("invalid arguments for column '" +
                                  column_name + ": " + message);
     };
-    // We expect the following arguments: RPN:START_TIME:END_TIME:RESOLUTION
-    // Example: fs_used,1024,/:1426411073:1426416473:5
-    std::vector<char> args(arguments.begin(), arguments.end());
-    args.push_back('\0');
-    char *scan = args.data();
+    auto next = [&args]() {
+        auto field = args.substr(0, args.find(':'));
+        args.remove_prefix(std::min(args.size(), field.size() + 1));
+        return field;
+    };
+    auto next_non_empty = [&next, &invalid](const std::string &what) {
+        auto field = next();
+        if (field.empty()) {
+            invalid("missing " + what);
+        }
+        return field;
+    };
+    auto parse_number = [&invalid](std::string_view str,
+                                   const std::string &what) {
+        auto value = 0;
+        auto [ptr, ec] = std::from_chars(str.begin(), str.end(), value);
+        // TODO(sp) Error handling
+        if (ec != std::errc{} || ptr != str.end()) {
+            invalid("invalid number for " + what);
+        }
+        return value;
+    };
+    auto next_number = [&next_non_empty,
+                        &parse_number](const std::string &what) {
+        return parse_number(next_non_empty(what), what);
+    };
 
-    // Reverse Polish Notation Expression for extraction start RRD
-    char *rpn = next_token(&scan, ':');
-    if (rpn == nullptr || rpn[0] == 0) {
-        invalid("missing RPN expression for RRD");
-    }
-    this->rpn = rpn;
-
-    // Start time of queried range - UNIX time stamp
-    char *start_time = next_token(&scan, ':');
-    if (start_time == nullptr || start_time[0] == 0 || atol(start_time) <= 0) {
-        invalid("missing, negative or overflowed start time");
-    }
-    this->start_time = atol(start_time);
-
-    // End time - UNIX time stamp
-    char *end_time = next_token(&scan, ':');
-    if (end_time == nullptr || end_time[0] == 0 || atol(end_time) <= 0) {
-        invalid(" missing, negative or overflowed end time");
-    }
-    this->end_time = atol(end_time);
-
-    // Resolution in seconds - might output less
-    char *resolution = next_token(&scan, ':');
-    if (resolution == nullptr || resolution[0] == 0 || atoi(resolution) <= 0) {
-        invalid("missing or negative resolution");
-    }
-    this->resolution = atoi(resolution);
-
-    // Optional limit of data points
-    const char *max_entries = next_token(&scan, ':');
-    if (max_entries == nullptr) {
-        max_entries = "400";  // RRDTool default
-    }
-    if (max_entries[0] == 0 || atoi(max_entries) < 10) {
-        invalid("Wrong input for max rows");
-    }
-    this->max_entries = atoi(max_entries);
-
-    if (next_token(&scan, ':') != nullptr) {
+    this->rpn = next_non_empty("RPN expression");
+    this->start_time = next_number("start time");
+    this->end_time = next_number("end time");
+    this->resolution = next_number("resolution");
+    auto max_entries = next();
+    this->max_entries = max_entries.empty()
+                            ? 400
+                            : parse_number(max_entries, "maximum entries");
+    if (!args.empty()) {
         invalid("too many arguments");
     }
 }
@@ -89,8 +84,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
 }
 
 namespace {
-bool isVariableName(const std::string &token) {
-    using namespace std::string_view_literals;
+bool isVariableName(std::string_view token) {
     auto is_operator = [](char c) {
         return "+-/*"sv.find_first_of(c) != std::string_view::npos;
     };
@@ -112,22 +106,22 @@ std::string replace_all(const std::string &str, const std::string &chars,
     return result;
 }
 
-std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
+std::pair<Metric::Name, std::string> getVarAndCF(std::string_view str) {
     const size_t dot_pos = str.find_last_of('.');
     if (dot_pos != std::string::npos) {
-        const Metric::Name head{str.substr(0, dot_pos)};
-        const std::string tail = str.substr(dot_pos);
-        if (tail == ".max") {
+        const Metric::Name head{std::string{str.substr(0, dot_pos)}};
+        auto tail = str.substr(dot_pos);
+        if (tail == ".max"sv) {
             return std::make_pair(head, "MAX");
         }
-        if (tail == ".min") {
+        if (tail == ".min"sv) {
             return std::make_pair(head, "MIN");
         }
-        if (tail == ".average") {
+        if (tail == ".average"sv) {
             return std::make_pair(head, "AVERAGE");
         }
     }
-    return std::make_pair(Metric::Name{str}, "MAX");
+    return std::make_pair(Metric::Name{std::string{str}}, "MAX");
 }
 
 struct Data {
@@ -184,9 +178,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::vector<char> rpn_copy(_args.rpn.begin(), _args.rpn.end());
-    rpn_copy.push_back('\0');
-    char *scan = rpn_copy.data();
+    std::string_view rpn{_args.rpn};
+    auto next = [&rpn]() {
+        auto token = rpn.substr(0, rpn.find(','));
+        rpn.remove_prefix(std::min(rpn.size(), token.size() + 1));
+        return token;
+    };
 
     // map from RRD variable names to perf variable names. The latter ones
     // can contain several special characters (like @ and -) which the RRD
@@ -194,8 +191,8 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     unsigned next_variable_number = 0;
     std::set<std::string> touched_rrds;
 
-    while (const char *tok = next_token(&scan, ',')) {
-        const std::string token = tok;
+    while (!rpn.empty()) {
+        auto token = next();
         if (!converted_rpn.empty()) {
             converted_rpn += ",";
         }

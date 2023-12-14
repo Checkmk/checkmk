@@ -21,6 +21,8 @@ def main() {
         """.stripMargin());
 
     stage("Checkout repositories") {
+        // this will checkout the repo at "${WORKSPACE}/${repo_name}"
+        // but check again if you modify it here
         provide_clone("checkmk_kube_agent", "ssh-git-gerrit-jenkins");
         provide_clone("cma", "ssh-git-gerrit-jenkins");
     }
@@ -32,8 +34,8 @@ def main() {
                     sh("""
                         scripts/run-pipenv run echo build venv...
                         scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk ./ > cmk.json
-                        scripts/run-pipenv run python3 -m cmk.utils.werks collect cma cma > cma.json
-                        scripts/run-pipenv run python3 -m cmk.utils.werks collect checkmk_kube_agent checkmk_kube_agent > kube.json
+                        scripts/run-pipenv run python3 -m cmk.utils.werks collect cma ${WORKSPACE}/cma > cma.json
+                        scripts/run-pipenv run python3 -m cmk.utils.werks collect checkmk_kube_agent ${WORKSPACE}/checkmk_kube_agent > kube.json
 
                         # jq -s '.[0] * .[1] * .[2]' cma.json cmk.json kube.json > all_werks.json
                         # no need to install jq!!!!!
@@ -62,7 +64,7 @@ def main() {
                             ./scripts/npm-ci
                             echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
                             # still no need for jq!
-                            python3 -c 'import json; print("\\n".join((f"\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html
+                            python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html
                             echo '</body></html>' >> validate-werks.html
                             java \
                                 -jar node_modules/vnu-jar/build/dist/vnu.jar \
@@ -74,7 +76,7 @@ def main() {
                         """);
                     } catch(Exception e) {
                         archiveArtifacts(
-                            artifacts: "validate-werks.*",
+                            artifacts: "validate-werks.*, all_werks.json",
                             fingerprint: true,
                         );
                         sh("""

@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use check_http::checking_types::{Bounds, UpperLevels};
+use check_http::checking_types::{Bounds, LowerLevels, UpperLevels};
 use check_http::checks::{CheckParameters, TextMatcher};
 use check_http::http::{self, ClientConfig, RequestConfig};
 use check_http::output::Output;
@@ -55,6 +55,7 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 .map(map_tls_version)
                 .or(args.tls_version.as_ref().map(map_tls_version)),
             max_tls_version: args.tls_version.as_ref().map(map_tls_version),
+            collect_tls_info: args.certificate_levels.is_some(),
         },
         RequestConfig {
             url: args.url,
@@ -131,6 +132,10 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                         }),
                 )
                 .collect(),
+            certificate_levels: args.certificate_levels.map(|val| match val {
+                (x, None) => LowerLevels::warn(x),
+                (x, Some(y)) => LowerLevels::warn_crit(x, y),
+            }),
         },
     )
 }

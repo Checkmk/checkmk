@@ -7,6 +7,7 @@ use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
+    tls::TlsInfo,
     Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 
@@ -28,6 +29,7 @@ pub struct ProcessedResponse {
     pub status: StatusCode,
     pub headers: HeaderMap,
     pub body: Option<ReqwestResult<Body>>,
+    pub tls_info: Option<TlsInfo>,
 }
 
 pub struct Body {
@@ -38,11 +40,12 @@ pub struct Body {
 pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
     let fetch_body = !cfg.without_body;
 
-    let response = prepare_request(client, cfg).send().await?;
+    let mut response = prepare_request(client, cfg).send().await?;
 
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
+    let tls_info = response.extensions_mut().remove::<TlsInfo>();
     let body = if fetch_body {
         Some(process_body(response.bytes().await, &headers))
     } else {
@@ -54,6 +57,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
         status,
         headers,
         body,
+        tls_info,
     })
 }
 

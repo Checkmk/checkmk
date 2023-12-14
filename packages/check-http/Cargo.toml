@@ -31,3 +31,4 @@ httpdate = { version = "*" }
 mime = { version = "*" }
 encoding_rs = { version = "*" }
 regex = { version = "*" }
+x509-parser = { version = "*" }

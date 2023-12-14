@@ -76,6 +76,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             force_ip: None,
             min_tls_version: None,
             max_tls_version: None,
+            collect_tls_info: false,
         },
         RequestConfig {
             url: format!("http://{}:{}", LOCALHOST_DNS, port),
@@ -98,6 +99,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             timeout: Duration::from_secs(1),
             body_matchers: vec![],
             header_matchers: vec![],
+            certificate_levels: None,
         },
     )
 }

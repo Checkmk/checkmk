@@ -31,7 +31,12 @@ class SkippedDumps:
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore
+    SKIPPED_CHECKS = [
+        "agent-2.2.0p12-redis-6.10.16:Redis 127.0.0.1:6379 Server Info",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p12-redis-6.10.16:Redis 127.0.0.1:6379 Persistence",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0-ontapi-9.10:Systemtime netapp1-01",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0-ontapi-9.10:Systemtime netapp1-02",  # TODO: dynamic data need to be regexed
+    ]
 
 
 class CheckModes(IntEnum):

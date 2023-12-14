@@ -32,7 +32,7 @@ from cmk.gui.plugins.openapi.endpoints.time_periods.response_schemas import (
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.plugins.openapi.utils import FIELDS, problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
@@ -123,6 +123,15 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         raise ProblemException(
             405, http.client.responses[405], "You cannot change the built-in time period"
         )
+
+    if _is_alias_in_use(body.get("alias"), name):
+        return problem(
+            status=400,
+            title="Bad Request",
+            detail="These fields have problems: alias",
+            fields=FIELDS({"alias": f"Timeperiod alias '{body['alias']}' already exists"}),
+        )
+
     try:
         time_period = load_timeperiod(name)
     except TimePeriodNotFoundError:
@@ -414,3 +423,14 @@ def _to_checkmk_format(
     time_period.update(periods)
 
     return time_period
+
+
+def _is_alias_in_use(alias: str | None, name: str) -> bool:
+    if alias is None:
+        return False
+
+    for timeperiod_name, time_period in load_timeperiods().items():
+        if time_period["alias"] == alias and timeperiod_name != name:
+            return True
+
+    return False

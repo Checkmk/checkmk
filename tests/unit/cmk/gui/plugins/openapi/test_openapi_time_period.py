@@ -705,3 +705,43 @@ def test_create_timeperiod_name_with_newline(
         resp.json["fields"]["name"][0]
         == f"{timeperiod_name!r} does not match pattern '^[-a-z0-9A-Z_]+\\\\Z'."
     )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_update_with_same_alias(clients: ClientRegistry) -> None:
+    timeperiod_name = "test_name"
+    timeperiod_data: dict[str, object] = {
+        "alias": "time_period_alias",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+
+    clients.TimePeriod.create(time_period_data={"name": timeperiod_name, **timeperiod_data})
+
+    clients.TimePeriod.edit(time_period_id=timeperiod_name, time_period_data=timeperiod_data)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_update_alias_in_use(clients: ClientRegistry) -> None:
+    timeperiod_name = "test_name"
+
+    timeperiod_data: dict[str, object] = {
+        "alias": "time_period_alias",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+
+    other_timeperiod_data: dict[str, object] = {
+        "alias": "other_time_period_alias",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+
+    clients.TimePeriod.create(time_period_data={"name": timeperiod_name, **timeperiod_data})
+    clients.TimePeriod.create(time_period_data={"name": "other_test_name", **other_timeperiod_data})
+
+    clients.TimePeriod.edit(
+        time_period_id=timeperiod_name,
+        time_period_data={"alias": "other_time_period_alias"},
+        expect_ok=False,
+    ).assert_status_code(400)

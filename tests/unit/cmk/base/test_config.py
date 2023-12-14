@@ -1341,6 +1341,7 @@ def test_host_config_custom_checks(
                             (
                                 TimespecificParameterSet({"param1": 1}, ()),
                                 TimespecificParameterSet({}, ()),
+                                TimespecificParameterSet({}, ()),
                             )
                         ),
                         discovered_parameters={},
@@ -1357,6 +1358,7 @@ def test_host_config_custom_checks(
                         parameters=TimespecificParameters(
                             (
                                 TimespecificParameterSet({"param2": 2}, ()),
+                                TimespecificParameterSet({}, ()),
                                 TimespecificParameterSet({}, ()),
                             )
                         ),

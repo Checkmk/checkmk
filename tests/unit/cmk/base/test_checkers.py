@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping
 
 import pytest
 from pytest import MonkeyPatch
@@ -14,7 +14,6 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.checkers as checkers
@@ -25,178 +24,9 @@ from cmk.agent_based.v1 import Metric, Result, State
 
 
 def make_timespecific_params_list(
-    entries: Iterable[LegacyCheckParameters],
+    entries: Iterable[Mapping[str, object]],
 ) -> TimespecificParameters:
     return TimespecificParameters([TimespecificParameterSet.from_parameters(e) for e in entries])
-
-
-@pytest.mark.parametrize(
-    "rules,active_timeperiods,expected_result",
-    [
-        (make_timespecific_params_list([(1, 1), (2, 2)]), ["tp1", "tp2"], (1, 1)),
-        (
-            make_timespecific_params_list([(1, 1), {"tp_default_value": (2, 2), "tp_values": []}]),
-            ["tp1", "tp2"],
-            (1, 1),
-        ),
-        (
-            make_timespecific_params_list([{"tp_default_value": (2, 2), "tp_values": []}, (1, 1)]),
-            ["tp1", "tp2"],
-            (2, 2),
-        ),
-        (
-            make_timespecific_params_list(
-                [{"tp_default_value": (2, 2), "tp_values": [("tp1", (3, 3))]}, (1, 1)]
-            ),
-            ["tp1", "tp2"],
-            (3, 3),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": (2, 2), "tp_values": [("tp2", (4, 4)), ("tp1", (3, 3))]},
-                    (1, 1),
-                ]
-            ),
-            ["tp1", "tp2"],
-            (4, 4),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
-                    (1, 1),
-                ]
-            ),
-            ["tp2"],
-            (2, 2),
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    (1, 1),
-                    {"tp_default_value": (2, 2), "tp_values": [("tp1", (4, 4)), ("tp3", (3, 3))]},
-                ]
-            ),
-            [],
-            (1, 1),
-        ),
-        (make_timespecific_params_list([{1: 1}]), ["tp1", "tp2"], {1: 1}),
-        (
-            make_timespecific_params_list([{1: 1}, {"tp_default_value": {2: 2}, "tp_values": []}]),
-            ["tp1", "tp2"],
-            {1: 1, 2: 2},
-        ),
-        (
-            make_timespecific_params_list(
-                [{"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]}, {1: 1}]
-            ),
-            ["tp1", "tp2"],
-            {1: 1, 2: 2, 3: 3},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp1", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1", "tp2"],
-            {1: 5, 2: 4, 3: 6},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1", "tp2"],
-            {1: 1, 2: 4, 3: 6},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {"tp_default_value": {2: 4}, "tp_values": [("tp3", {1: 5}), ("tp2", {3: 6})]},
-                    {"tp_default_value": {2: 2}, "tp_values": [("tp1", {3: 3})]},
-                    {1: 1},
-                ]
-            ),
-            ["tp1"],
-            {1: 1, 2: 4, 3: 3},
-        ),
-        # (Old) tuple based default params
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {"key": (1, 1)},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            ["tp"],
-            {"key": (2, 2)},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {"key": (1, 1)},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            [],
-            {"key": (1, 1)},
-        ),
-        (
-            make_timespecific_params_list(
-                [
-                    {
-                        "tp_default_value": {},
-                        "tp_values": [
-                            (
-                                "tp",
-                                {
-                                    "key": (2, 2),
-                                },
-                            )
-                        ],
-                    },
-                    (3, 3),
-                ]
-            ),
-            [],
-            {},
-        ),
-    ],
-)
-def test_time_resolved_check_parameters(
-    monkeypatch: MonkeyPatch,
-    rules: TimespecificParameters,
-    active_timeperiods: Sequence[str],
-    expected_result: LegacyCheckParameters,
-) -> None:
-    assert expected_result == rules.evaluate(lambda tp: tp in active_timeperiods)
 
 
 @pytest.mark.parametrize(

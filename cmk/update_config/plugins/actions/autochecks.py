@@ -250,5 +250,9 @@ def _transform_params_safely(
     if param_copy != params:
         logger.warning(f"transform_value() for ruleset '{ruleset_name}' altered input")
 
-    assert isinstance(new_params, dict), f"transformed params not a dict: {new_params!r}"
+    if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
+        raise TypeError(
+            f"Parameter transformation for {ruleset_name} resulted in non-dict: {new_params!r}"
+        )
+
     return new_params

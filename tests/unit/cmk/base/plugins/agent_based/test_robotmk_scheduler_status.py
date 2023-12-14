@@ -8,15 +8,13 @@ from pathlib import Path
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.robotmk_scheduler_status import (
     _check_scheduler_status,
+    BuildOutcomeError,
+    BuildOutcomeSuccess,
+    BuildStageComplete,
+    BuildStageInProgress,
     ConfigReadingError,
     discover_scheduler_status,
-    EnviromentBuildStatusErrorMessage,
-    EnvironmentBuildStates,
-    EnvironmentBuildStatusErrorNonZeroExit,
-    EnvironmentBuildStatusFailure,
-    EnvironmentBuildStatusInProgress,
-    EnvironmentBuildStatusNotNeeded,
-    EnvironmentBuildStatusSuccess,
+    EnvironmentBuildStages,
     RCCSetupFailures,
     SchedulerPhase,
 )
@@ -147,11 +145,11 @@ def test_check_scheduler_status_standard() -> None:
                 shared_holotree=[],
                 holotree_init=[],
             ),
-            section_robotmk_environment_build_states=EnvironmentBuildStates(
+            section_robotmk_environment_build_stages=EnvironmentBuildStages(
                 root={
-                    "system": EnvironmentBuildStatusNotNeeded.NotNeeded,
-                    "rcc": EnvironmentBuildStatusSuccess(Success=67),
-                    "piggyback": EnvironmentBuildStatusSuccess(Success=123),
+                    "system": BuildStageComplete(Complete="NotNeeded"),
+                    "rcc": BuildStageComplete(Complete=BuildOutcomeSuccess(Success=67)),
+                    "piggyback": BuildStageComplete(Complete=BuildOutcomeSuccess(Success=123)),
                 }
             ),
             now=1,
@@ -189,9 +187,9 @@ def test_check_scheduler_rcc_setup_failures() -> None:
                 shared_holotree=[],
                 holotree_init=["piggyback"],
             ),
-            section_robotmk_environment_build_states=EnvironmentBuildStates(
+            section_robotmk_environment_build_stages=EnvironmentBuildStages(
                 root={
-                    "system": EnvironmentBuildStatusNotNeeded.NotNeeded,
+                    "system": BuildStageComplete(Complete="NotNeeded"),
                 }
             ),
             now=1,
@@ -233,12 +231,12 @@ def test_check_scheduler_status_environment_building_in_progress() -> None:
                 shared_holotree=[],
                 holotree_init=[],
             ),
-            section_robotmk_environment_build_states=EnvironmentBuildStates(
+            section_robotmk_environment_build_stages=EnvironmentBuildStages(
                 root={
-                    "system": EnvironmentBuildStatusNotNeeded.NotNeeded,
-                    "rcc": EnvironmentBuildStatusInProgress(InProgress=1578),
-                    "piggyback": EnvironmentBuildStatusSuccess(Success=123),
-                }
+                    "system": BuildStageComplete(Complete="NotNeeded"),
+                    "rcc": BuildStageInProgress(InProgress=1578),
+                    "piggyback": BuildStageComplete(Complete=BuildOutcomeSuccess(Success=123)),
+                },
             ),
             now=1656.123,
         )
@@ -278,14 +276,12 @@ def test_check_scheduler_status_environment_building_failures() -> None:
                 shared_holotree=[],
                 holotree_init=[],
             ),
-            section_robotmk_environment_build_states=EnvironmentBuildStates(
+            section_robotmk_environment_build_stages=EnvironmentBuildStages(
                 root={
-                    "system": EnvironmentBuildStatusNotNeeded.NotNeeded,
-                    "rcc": EnvironmentBuildStatusFailure(
-                        Failure=EnvironmentBuildStatusErrorNonZeroExit.NonZeroExit
-                    ),
-                    "piggyback": EnvironmentBuildStatusFailure(
-                        Failure=EnviromentBuildStatusErrorMessage(Error="RCC binary not found")
+                    "system": BuildStageComplete(Complete="NotNeeded"),
+                    "rcc": BuildStageComplete(Complete="NonZeroExit"),
+                    "piggyback": BuildStageComplete(
+                        Complete=BuildOutcomeError(Error="RCC binary not found")
                     ),
                 }
             ),
@@ -326,7 +322,7 @@ def test_check_scheduler_status_config_error() -> None:
             ),
             section_robotmk_scheduler_phase=None,
             section_robotmk_rcc_setup_failures=None,
-            section_robotmk_environment_build_states=None,
+            section_robotmk_environment_build_stages=None,
             now=1,
         )
     ) == [
@@ -344,7 +340,7 @@ def test_check_scheduler_status_no_data() -> None:
             section_robotmk_config=None,
             section_robotmk_scheduler_phase=None,
             section_robotmk_rcc_setup_failures=None,
-            section_robotmk_environment_build_states=None,
+            section_robotmk_environment_build_stages=None,
             now=1,
         )
     )

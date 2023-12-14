@@ -71,6 +71,7 @@ class AttemptsConfig(BaseModel, frozen=True):
 
 class SuiteExecutionReport(BaseModel, frozen=True):
     suite_id: str
+    timestamp: str
     attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
     rebot: RebotOutcomeResult | RebotOutcomeError | None
     config: AttemptsConfig

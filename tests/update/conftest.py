@@ -86,7 +86,8 @@ class TestParams:
         for base_version, interactive_mode in itertools.product(
             BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
         )
-        if interactive_mode == (base_version.version != BaseVersions.MIN_VERSION)
+        # interactive mode enabled for some specific distros
+        if interactive_mode == (os.environ.get("DISTRO") in ["ubuntu-22.04", "almalinux-9"])
     ]
 
 

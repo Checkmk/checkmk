@@ -24,27 +24,15 @@ from cmk.gui.time_series import TimeSeries
 
 from ._graph_render_config import GraphRenderOptions
 from ._timeseries import AugmentedTimeSeries, derive_num_points_twindow, time_series_math
-from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData
+from ._type_defs import GraphConsoldiationFunction, LineType, Operators, RRDData, RRDDataKey
 
 HorizontalRule = tuple[float, str, str, str]
 
 
 @dataclass(frozen=True)
-class NeededElementForTranslation:
+class TranslationKey:
     host_name: HostName
     service_name: ServiceName
-
-
-@dataclass(frozen=True)
-class NeededElementForRRDDataKey:
-    # TODO Intermediate step, will be cleaned up:
-    # Relates to MetricOperation::rrd with SiteId, etc.
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: str
-    consolidation_func_name: GraphConsoldiationFunction | None
-    scale: float
 
 
 class MetricOperation(BaseModel, ABC, frozen=True):
@@ -56,7 +44,7 @@ class MetricOperation(BaseModel, ABC, frozen=True):
         raise NotImplementedError()
 
     @abstractmethod
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -95,7 +83,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_constant"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
@@ -112,8 +100,8 @@ class MetricOpOperator(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_operator"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (ne for o in self.operands for ne in o.needed_elements())
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from (k for o in self.operands for k in o.keys())
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if result := time_series_math(
@@ -142,8 +130,8 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     def name() -> str:
         return "metric_op_rrd"
 
-    def needed_elements(self) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield NeededElementForRRDDataKey(
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield RRDDataKey(
             self.site_id,
             self.host_name,
             self.service_name,
@@ -154,7 +142,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
 
     def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
         if (
-            key := (
+            key := RRDDataKey(
                 self.site_id,
                 self.host_name,
                 self.service_name,

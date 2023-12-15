@@ -7,7 +7,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple, TypedDict
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -46,29 +46,40 @@ class AutocheckServiceWithNodes(NamedTuple):
     nodes: Sequence[HostName]
 
 
-# If we switched to something less stupid than "LegacyCheckParameters", see
-# if we can use pydantic
+class AutocheckDict(TypedDict):
+    check_plugin_name: str
+    item: str | None
+    parameters: Mapping[str, object]
+    service_labels: Mapping[str, str]
+
+
 class AutocheckEntry(NamedTuple):
     check_plugin_name: CheckPluginName
     item: Item
-    parameters: LegacyCheckParameters
+    parameters: Mapping[str, object]
     service_labels: Mapping[str, str]
 
     @staticmethod
-    def _parse_parameters(parameters: object) -> LegacyCheckParameters:
-        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
-        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
-            return parameters
-        # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
+    def _parse_parameters(parameters: object) -> Mapping[str, object]:
+        if isinstance(parameters, dict):
+            return {str(k): v for k, v in parameters.items()}
+
         raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
 
+    @staticmethod
+    def _parse_labels(labels: object) -> Mapping[str, str]:
+        if isinstance(labels, dict):
+            return {str(k): str(v) for k, v in labels.items()}
+
+        raise ValueError(f"Invalid autocheck: invalid labels: {labels!r}")
+
     @classmethod
-    def load(cls, raw_dict: Mapping[str, Any]) -> AutocheckEntry:
+    def load(cls, raw_dict: Mapping[str, object]) -> AutocheckEntry:
         return cls(
-            check_plugin_name=CheckPluginName(raw_dict["check_plugin_name"]),
+            check_plugin_name=CheckPluginName(str(raw_dict["check_plugin_name"])),
             item=None if (raw_item := raw_dict["item"]) is None else str(raw_item),
             parameters=cls._parse_parameters(raw_dict["parameters"]),
-            service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
+            service_labels=cls._parse_labels(raw_dict["service_labels"]),
         )
 
     def id(self) -> ServiceID:
@@ -78,10 +89,10 @@ class AutocheckEntry(NamedTuple):
         """
         return ServiceID(self.check_plugin_name, self.item)
 
-    def comparator(self) -> tuple[LegacyCheckParameters, Mapping[str, str]]:
+    def comparator(self) -> tuple[Mapping[str, object], Mapping[str, str]]:
         return self.parameters, self.service_labels
 
-    def dump(self) -> Mapping[str, Any]:
+    def dump(self) -> AutocheckDict:
         return {
             "check_plugin_name": str(self.check_plugin_name),
             "item": self.item,

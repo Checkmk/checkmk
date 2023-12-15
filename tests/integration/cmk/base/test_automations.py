@@ -417,7 +417,7 @@ def test_automation_set_autochecks(site: Site) -> None:
     hostname = HostName("blablahost")
     new_items: SetAutochecksTable = {
         ("df", "xxx"): ("Filesystem xxx", {}, {"xyz": "123"}, [hostname]),
-        ("uptime", None): ("Uptime", None, {}, [hostname]),
+        ("uptime", None): ("Uptime", {}, {}, [hostname]),
     }
 
     try:

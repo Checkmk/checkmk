@@ -6,8 +6,8 @@ use check_sql::setup;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let config = setup::init(std::env::args_os())?;
-    match config.exec().await {
+    let (config, environment) = setup::init(std::env::args_os())?;
+    match config.exec(&environment).await {
         Ok(output) => {
             print!("{output}");
             log::info!("Success");

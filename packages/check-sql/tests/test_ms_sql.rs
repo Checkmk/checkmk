@@ -6,11 +6,13 @@ mod common;
 use std::collections::HashSet;
 
 use check_sql::ms_sql::{
-    api::{self, SqlInstance},
+    api::{self, SqlInstance, SqlInstanceBuilder},
     client::{self, Client},
     queries,
     section::{self, Section, SectionKind},
 };
+
+use check_sql::setup::Env;
 
 use check_sql::config::{
     ms_sql::{Config, Endpoint},
@@ -52,10 +54,10 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local() {
-    let instances = api::obtain_sql_instances_from_registry(&Endpoint::default())
+    let builders = api::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
+    let all: Vec<SqlInstance> = to_instances([&builders.0[..], &builders.1[..]].concat());
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
     names.sort();
@@ -66,13 +68,13 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
-    let instances = api::obtain_sql_instances_from_registry(&Endpoint::default())
+    let builders = api::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
-    let names: Vec<String> = [&instances.0[..], &instances.1[..]]
+    let names: Vec<String> = [&builders.0[..], &builders.1[..]]
         .concat()
         .into_iter()
-        .map(|i| i.name)
+        .map(|i| i.get_name())
         .collect();
 
     for name in names {
@@ -120,13 +122,20 @@ async fn test_remote_connection() {
     }
 }
 
+fn to_instances(builders: Vec<SqlInstanceBuilder>) -> Vec<SqlInstance> {
+    builders
+        .into_iter()
+        .map(|i| i.build())
+        .collect::<Vec<SqlInstance>>()
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
+        let builders = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
-        let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
+        let all = to_instances([&builders.0[..], &builders.1[..]].concat());
         assert!(all.iter().all(is_instance_good));
         let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
         names.sort();
@@ -148,10 +157,10 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
+        let instances = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
-        let is = [&instances.0[..], &instances.1[..]].concat();
+        let is = to_instances([&instances.0[..], &instances.1[..]].concat());
 
         let cfg = Config::from_string(&create_remote_config(endpoint))
             .unwrap()
@@ -545,10 +554,10 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
+        let instances = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
-        let is = [&instances.0[..], &instances.1[..]].clone().concat();
+        let is = to_instances([&instances.0[..], &instances.1[..]].clone().concat());
         let ms_sql = Config::from_string(
             r"---
 mssql:
@@ -708,7 +717,7 @@ async fn test_find_no_detect_local() {
         check_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
             .unwrap()
             .unwrap();
-    let instances = api::find_all_instances(&mssql).await.unwrap();
+    let instances = api::find_all_instance_builders(&mssql).await.unwrap();
     assert_eq!(instances.len(), 0);
 }
 
@@ -722,7 +731,7 @@ async fn test_find_no_detect_two_custom_instances_local() {
     ))
     .unwrap()
     .unwrap();
-    let instances = api::find_all_instances(&mssql).await.unwrap();
+    let instances = to_instances(api::find_all_instance_builders(&mssql).await.unwrap());
     assert_eq!(instances.len(), 1);
     assert_eq!(instances[0].name, "MSSQLSERVER");
     assert!(instances[0].edition.contains(" Edition"));
@@ -745,7 +754,7 @@ async fn test_find_no_detect_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = api::find_all_instances(&mssql).await.unwrap();
+        let instances = api::find_all_instance_builders(&mssql).await.unwrap();
         assert_eq!(instances.len(), 0);
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
@@ -766,7 +775,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = api::find_all_instances(&mssql).await.unwrap();
+        let instances = to_instances(api::find_all_instance_builders(&mssql).await.unwrap());
         assert_eq!(instances.len(), 1);
         assert_eq!(instances[0].name, "MSSQLSERVER");
         assert!(instances[0].edition.contains(" Edition"));
@@ -787,7 +796,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
 async fn test_check_config_exec_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
     let check_config = CheckConfig::load_file(file.path()).unwrap();
-    assert!(check_config.exec().await.is_ok());
+    assert!(check_config.exec(&Env::default()).await.is_ok());
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -795,7 +804,7 @@ async fn test_check_config_exec_local() {
     let file = tools::create_local_config();
     let res = CheckConfig::load_file(file.path());
     #[cfg(windows)]
-    assert!(res.unwrap().exec().await.is_ok());
+    assert!(res.unwrap().exec(&Env::default()).await.is_ok());
     #[cfg(unix)]
     assert!(res.is_err());
 }

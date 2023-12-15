@@ -26,6 +26,18 @@ pub struct Args {
     #[arg(long)]
     pub log_dir: Option<PathBuf>,
 
+    /// Use custom temp dir
+    #[arg(long)]
+    pub temp_dir: Option<PathBuf>,
+
+    /// All sections are generated as sync
+    #[arg(long)]
+    pub disable_caching: bool,
+
+    ///  
+    #[arg(long)]
+    pub clean_caches: bool,
+
     /// Use custom config file
     #[arg(short, long)]
     pub config_file: Option<PathBuf>,

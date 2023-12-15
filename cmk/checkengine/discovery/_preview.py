@@ -47,7 +47,7 @@ class CheckPreviewEntry:
     check_plugin_name: str
     ruleset_name: RulesetName | None
     item: Item
-    discovered_parameters: LegacyCheckParameters
+    discovered_parameters: Mapping[str, object]
     effective_parameters: LegacyCheckParameters
     description: str
     state: int | None

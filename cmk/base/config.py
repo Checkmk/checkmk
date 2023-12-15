@@ -2649,7 +2649,7 @@ class ConfigCache:
                     check_plugin_name="custom",
                     ruleset_name=None,
                     item=entry["service_description"],
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     effective_parameters=None,
                     description=entry["service_description"],
                     state=None,

@@ -17,7 +17,6 @@ from cmk.utils.validatedstr import ValidatedString
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 
@@ -63,8 +62,7 @@ class ConfiguredService(NamedTuple):
     item: Item
     description: ServiceName
     parameters: TimespecificParameters
-    # Explicitly optional b/c enforced services don't have disocvered params.
-    discovered_parameters: LegacyCheckParameters | None
+    discovered_parameters: Mapping[str, object]
     service_labels: Mapping[str, ServiceLabel]
     is_enforced: bool
 

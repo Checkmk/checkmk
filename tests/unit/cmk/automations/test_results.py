@@ -113,7 +113,7 @@ class TestTryDiscoveryResult:
                     check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
                     item=None,
-                    discovered_parameters=None,
+                    discovered_parameters={},
                     effective_parameters=None,
                     description="description",
                     state=0,

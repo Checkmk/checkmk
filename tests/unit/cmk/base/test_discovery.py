@@ -101,7 +101,7 @@ def service_table() -> ServicesTable:
                 new=AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
-                    "Test Description New Item 1",
+                    {},
                     {},
                 ),
                 previous=None,
@@ -114,7 +114,7 @@ def service_table() -> ServicesTable:
                 new=AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
-                    "Test Description New Item 2",
+                    {},
                     {},
                 ),
                 previous=None,
@@ -127,7 +127,7 @@ def service_table() -> ServicesTable:
                 previous=AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
-                    "Test Description Vanished Item 1",
+                    {},
                     {},
                 ),
                 new=None,
@@ -140,7 +140,7 @@ def service_table() -> ServicesTable:
                 previous=AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
-                    "Test Description Vanished Item 2",
+                    {},
                     {},
                 ),
                 new=None,
@@ -159,7 +159,7 @@ def grouped_services() -> ServicesByTransition:
                     new=AutocheckEntry(
                         CheckPluginName("check_plugin_name"),
                         "New Item 1",
-                        "Test Description New Item 1",
+                        {},
                         {},
                     ),
                     previous=None,
@@ -171,7 +171,7 @@ def grouped_services() -> ServicesByTransition:
                     new=AutocheckEntry(
                         CheckPluginName("check_plugin_name"),
                         "New Item 2",
-                        "Test Description New Item 2",
+                        {},
                         {},
                     ),
                     previous=None,
@@ -185,7 +185,7 @@ def grouped_services() -> ServicesByTransition:
                     previous=AutocheckEntry(
                         CheckPluginName("check_plugin_name"),
                         "Vanished Item 1",
-                        "Test Description Vanished Item 1",
+                        {},
                         {},
                     ),
                     new=None,
@@ -197,7 +197,7 @@ def grouped_services() -> ServicesByTransition:
                     previous=AutocheckEntry(
                         CheckPluginName("check_plugin_name"),
                         "Vanished Item 2",
-                        "Test Description Vanished Item 2",
+                        {},
                         {},
                     ),
                     new=None,

@@ -10,7 +10,16 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, ListOf, RegExp, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    Dictionary,
+    FixedValue,
+    ListOf,
+    RegExp,
+    TextInput,
+    Tuple,
+)
 
 
 def _item_spec() -> TextInput:
@@ -41,10 +50,30 @@ def _parameter_valuespec() -> Dictionary:
                                 allow_empty=False,
                                 mode="complete",
                             ),
-                            SimpleLevels(
-                                Age,
+                            Alternative(
                                 title=_("Maximum runtime of a keyword run"),
-                                default_levels=(0, 0),
+                                elements=[
+                                    FixedValue(
+                                        value=None,
+                                        title=_("No Levels"),
+                                        totext=_("Do not impose levels, always be OK"),
+                                    ),
+                                    Tuple(
+                                        title=_("Fixed Levels"),
+                                        elements=(
+                                            Age(
+                                                title=_("Warning at"),
+                                                default_value=0,
+                                                display=["minutes", "seconds"],
+                                            ),
+                                            Age(
+                                                title=_("Critical at"),
+                                                default_value=0,
+                                                display=["minutes", "seconds"],
+                                            ),
+                                        ),
+                                    ),
+                                ],
                             ),
                         ],
                     ),

@@ -46,7 +46,7 @@ class SuiteConfig(TypedDict):
     target: str
     execution_config: ExecutionConfig
     robot_framework_params: NotRequired[RobotFrameworkParams]
-    rcc: NotRequired[RccConfig]
+    rcc: NotRequired[RccConfig | None]
     headed_execution: NotRequired[str]
     piggyback_host: NotRequired[str]
     working_directory_cleanup: (

@@ -14,6 +14,7 @@ from omdlib.utils import chdir
 
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
+from cmk.utils.log.security_event import log_security_event, SiteStartStoppedEvent
 
 logger = logging.getLogger("cmk.omd")
 
@@ -28,6 +29,7 @@ def call_init_scripts(
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
+        log_security_event(SiteStartStoppedEvent(event="restart"))
         # TODO: Why is the result of call_init_scripts not returned?
         call_init_scripts(site_dir, "stop", daemon)
         call_init_scripts(site_dir, "start", daemon)
@@ -35,6 +37,11 @@ def call_init_scripts(
 
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site_dir):
+        if command == "start":
+            log_security_event(SiteStartStoppedEvent(event="start"))
+        elif command == "stop":
+            log_security_event(SiteStartStoppedEvent(event="stop"))
+
         if daemon:
             success = _call_init_script(f"{site_dir}/etc/init.d/{daemon}", command)
 

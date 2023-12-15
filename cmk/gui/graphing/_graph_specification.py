@@ -215,7 +215,7 @@ class AdditionalGraphHTML(BaseModel, frozen=True):
     html: str
 
 
-class GraphRecipeBase(BaseModel, frozen=True):
+class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit: str
     explicit_vertical_range: tuple[float | None, float | None]
@@ -227,9 +227,6 @@ class GraphRecipeBase(BaseModel, frozen=True):
     render_options: GraphRenderOptions = GraphRenderOptions()
     data_range: GraphDataRange | None = None
     mark_requested_end_time: bool = False
-
-
-class GraphRecipe(GraphRecipeBase, frozen=True):
     # https://docs.pydantic.dev/2.4/concepts/serialization/#subclass-instances-for-fields-of-basemodel-dataclasses-typeddict
     # https://docs.pydantic.dev/2.4/concepts/serialization/#serializing-with-duck-typing
     specification: SerializeAsAny[GraphSpecification]

@@ -31,11 +31,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
-    CachedPluginType,
     CheckmkSection,
     ControllerSection,
     Plugin,
     PluginSection,
+    render_plugin_type,
 )
 
 
@@ -58,7 +58,6 @@ def _check_cmk_agent_installation(
     agent_info: CheckmkSection,
     controller_info: Optional[ControllerSection],
 ) -> CheckResult:
-
     yield from _check_version(
         agent_info.get("version"),
         __version__,
@@ -419,13 +418,7 @@ def _format_cached_plugin(plugin: CachedPlugin) -> str:
     if plugin.plugin_type is None:
         return f"{plugin.plugin_name} ({plugin_info})"
 
-    name_mapping = {
-        CachedPluginType.PLUGIN: "Agent plugin",
-        CachedPluginType.LOCAL: "Local check",
-        CachedPluginType.ORACLE: "mk_oracle plugin",
-    }
-
-    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
+    return f"{plugin.plugin_name} ({render_plugin_type(plugin.plugin_type)}, {plugin_info})"
 
 
 def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:

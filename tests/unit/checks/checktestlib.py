@@ -305,12 +305,17 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery function."""
 
-    def __init__(self, entry: tuple[str | None, dict | str | tuple | None]) -> None:
-        self.item, self.default_params = entry
+    @staticmethod
+    def _normalize_params(p: dict | None) -> dict:
+        return {} if p is None else p
+
+    def __init__(self, entry: tuple[str | None, dict | None]) -> None:
+        self.item = entry[0]
+        self.default_params = self._normalize_params(entry[1])
         assert self.item is None or isinstance(self.item, str)
 
     @property
-    def tuple(self):
+    def tuple(self) -> tuple[str | None, dict]:
         return self.item, self.default_params
 
     def __repr__(self) -> str:
@@ -326,8 +331,8 @@ class DiscoveryResult:
     get lost in the laziness.
     """
 
-    def __init__(self, result: Sequence[tuple[str | None, dict | str | tuple | None]] = ()) -> None:
-        self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
+    def __init__(self, result: Sequence[tuple[str | None, dict | None]] = ()) -> None:
+        self.entries = sorted((DiscoveryEntry(e) for e in result), key=repr)
 
     def __eq__(self, other):
         return self.entries == other.entries

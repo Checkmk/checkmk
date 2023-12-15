@@ -322,16 +322,15 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
             )
 
     # Paint horizontal rules like warn and crit
-    rules = graph_artwork.horizontal_rules
-    for position, _label, color_from_rule, title in rules:
-        if v_range_from <= position <= v_range_to:
+    for horizontal_rule in graph_artwork.horizontal_rules:
+        if v_range_from <= horizontal_rule.value <= v_range_to:
             pdf_document.render_line(
                 t_orig,
-                trans_v(position),
+                trans_v(horizontal_rule.value),
                 right,
-                trans_v(position),
+                trans_v(horizontal_rule.value),
                 width=rule_line_width,
-                color=parse_color(color_from_rule),
+                color=parse_color(horizontal_rule.color),
             )
 
     # Paint legend
@@ -382,16 +381,17 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
         for curve in graph_artwork.curves:
             legend_top -= legend_lineskip
             texts = [str(curve["title"])]
-            for scalar, title in scalars:
+            for scalar, _title in scalars:
                 texts.append(curve["scalars"][scalar][1])
             paint_legend_line(parse_color(curve["color"]), texts)
 
         if graph_artwork.horizontal_rules:
             pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
-            for value, readable, color_from_artwork, title in graph_artwork.horizontal_rules:
+            for horizontal_rule in graph_artwork.horizontal_rules:
                 legend_top -= legend_lineskip
                 paint_legend_line(
-                    parse_color(color_from_artwork), [str(title), None, None, None, readable]
+                    parse_color(horizontal_rule.color),
+                    [str(horizontal_rule.title), None, None, None, horizontal_rule.rendered_value],
                 )
 
     if graph_artwork.mark_requested_end_time:

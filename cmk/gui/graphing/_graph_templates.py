@@ -173,13 +173,13 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
 def _horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> list[HorizontalRule]:
+) -> Sequence[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
         try:
             if (result := entry.expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
-                    (
+                    HorizontalRule(
                         result.value,
                         result.unit_info["render"](result.value),
                         result.color,

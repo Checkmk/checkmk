@@ -4,6 +4,8 @@
 
 use crate::config::yaml::{Get, Yaml};
 use anyhow::{anyhow, bail, Context, Result};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use yaml_rust::YamlLoader;
@@ -105,6 +107,7 @@ pub struct Config {
     mode: Mode,
     custom_instances: Vec<CustomInstance>,
     configs: Vec<Config>,
+    hash: String,
 }
 
 impl Default for Config {
@@ -117,6 +120,7 @@ impl Default for Config {
             mode: Mode::Port,
             custom_instances: vec![],
             configs: vec![],
+            hash: String::new(),
         }
     }
 }
@@ -144,6 +148,9 @@ impl Config {
     }
 
     fn parse_main_from_yaml(root: &Yaml) -> Result<Option<Self>> {
+        let mut hasher = DefaultHasher::new();
+        root.hash(&mut hasher);
+        let hash = format!("{:016X}", hasher.finish());
         let main = root.get(keys::MAIN);
         if main.is_badvalue() {
             bail!("main key is absent");
@@ -171,6 +178,7 @@ impl Config {
             mode: Mode::from_yaml(main)?,
             custom_instances: custom_instances?,
             configs: configs?,
+            hash,
         }))
     }
     pub fn endpoint(&self) -> Endpoint {
@@ -721,6 +729,8 @@ pub mod trace_tools {
 
 #[cfg(test)]
 mod tests {
+    use self::data::TEST_CONFIG;
+
     use super::*;
     use yaml_rust::YamlLoader;
     mod data {
@@ -898,6 +908,7 @@ piggyback:
                 mode: Mode::Port,
                 custom_instances: vec![],
                 configs: vec![],
+                hash: String::new(),
             }
         );
     }
@@ -1211,6 +1222,26 @@ mssql:
 "
         );
         Config::from_string(&source).unwrap().unwrap()
+    }
+
+    #[test]
+    fn test_calc_hash() {
+        let c1 = Config::from_string(TEST_CONFIG).unwrap().unwrap();
+        let c2 = Config::from_string(&(TEST_CONFIG.to_string() + "\n# xxx"))
+            .unwrap()
+            .unwrap();
+        let c3 = Config::from_string(
+            &(TEST_CONFIG.to_string()
+                + r#"
+    - main:
+      authentication: # mandatory
+        username: "f" # mandatory"#),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(c1.hash.len(), 16);
+        assert_eq!(c1.hash, c2.hash);
+        assert_ne!(c1.hash, c3.hash);
     }
 
     #[test]

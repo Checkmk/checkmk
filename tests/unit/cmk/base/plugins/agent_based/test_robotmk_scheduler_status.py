@@ -29,6 +29,7 @@ from cmk.plugins.lib.robotmk_config import (
     PiggybackHost,
     RCCConfig,
     RCCEnvironmentConfig,
+    RCCProfileConfigDefault,
     RetryStrategy,
     RobotFrameworkConfig,
     SessionConfigCurrent,
@@ -45,7 +46,7 @@ _CONFIG = Config(
     results_directory=Path("C:\\robotmk\\results"),
     rcc_config=RCCConfig(
         binary_path=Path("C:\\robotmk\\rcc.exe"),
-        profile_config=None,
+        profile_config=RCCProfileConfigDefault.Default,
     ),
     suites={
         "system": SuiteConfig(

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Literal, NotRequired, TypedDict
 
 
-class RCCProfileConfig(TypedDict):
+class RCCProfileConfigCustom(TypedDict):
     http_proxy: Literal["no_proxy"] | tuple[Literal["use_proxy"], str]
     https_proxy: Literal["no_proxy"] | tuple[Literal["use_proxy"], str]
 
@@ -56,5 +56,5 @@ class SuiteConfig(TypedDict):
 
 class Config(TypedDict):
     suites_base_dir: str
-    rcc_profile_config: NotRequired[RCCProfileConfig]
     suites: Sequence[SuiteConfig]
+    rcc_profile_config: Literal["default"] | tuple[Literal["custom"], RCCProfileConfigCustom]

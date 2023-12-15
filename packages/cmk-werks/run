@@ -173,7 +173,7 @@ run_bandit() {
     # We would like to put everything into pyproject.toml, so running just "bandit" would do the
     # right thing. But bandit is totally obscure & complicated regarding configuration, see several
     # issues like https://github.com/PyCQA/bandit/issues/606.  :-/
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high cmk tests
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=medium cmk tests
 }
 
 run_format() {

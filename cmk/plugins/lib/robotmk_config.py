@@ -10,14 +10,22 @@ from pathlib import PurePath
 from pydantic import BaseModel, Field
 
 
-class RCCProfileConfig(BaseModel, frozen=True):
+class RCCProfileConfigDefault(Enum):
+    Default = "Default"
+
+
+class CustomRCCProfileConfig(BaseModel, frozen=True):
     name: str
     path: PurePath
 
 
+class RCCProfileConfigCustom(BaseModel, frozen=True):
+    Custom: CustomRCCProfileConfig
+
+
 class RCCConfig(BaseModel, frozen=True):
     binary_path: PurePath
-    profile_config: RCCProfileConfig | None
+    profile_config: RCCProfileConfigDefault | RCCProfileConfigCustom
 
 
 class RobotFrameworkConfig(BaseModel, frozen=True):

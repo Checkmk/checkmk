@@ -164,9 +164,9 @@ def test_replace_expression() -> None:
         pytest.param(
             "one=5;7;6;; power=5;9;10;; output=5;2;3;;",
             [
-                (7.0, "7.00", "#ffd000", "Warning"),
-                (10.0, "10.0 W", "#ff3232", "Critical power"),
-                (-2.0, "-2 ", "#ffd000", "Warning output"),
+                HorizontalRule(7.0, "7.00", "#ffd000", "Warning"),
+                HorizontalRule(10.0, "10.0 W", "#ff3232", "Critical power"),
+                HorizontalRule(-2.0, "-2 ", "#ffd000", "Warning output"),
             ],
             id="Thresholds present",
         ),

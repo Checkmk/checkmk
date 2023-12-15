@@ -500,16 +500,21 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     # Render scalar values
     if graph_artwork.horizontal_rules:
         first = True
-        for _value, readable, color, rule_title in graph_artwork.horizontal_rules:
+        for horizontal_rule in graph_artwork.horizontal_rules:
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
-            html.write_html(render_color_icon(color))
-            html.write_text(str(rule_title))
+            html.write_html(render_color_icon(horizontal_rule.color))
+            html.write_text(str(horizontal_rule.title))
             html.close_td()
 
             # A colspan of 5 has to be used here, since the pin that is added by a click into
             # the graph introduces a new column.
-            html.td(readable, colspan=5, class_="scalar", style=font_size_style)
+            html.td(
+                horizontal_rule.rendered_value,
+                colspan=5,
+                class_="scalar",
+                style=font_size_style,
+            )
             html.close_tr()
             first = False
 

@@ -45,6 +45,18 @@ hp_proliant_locale = {
     18: "virtual",
 }
 
+
+def sanitize_item(item: str) -> str:
+    r"""Sanitize null byte in item
+
+    We observed some devices to send "\x00" (null-byte) as their name.
+    Not all components delt well with it, so we replace it here
+    with r"\x00" (literal backslash-x-zero-zero).
+    As of Checkmk 2.3, this should in fact no longer be necessary.
+    """
+    return item.replace("\x00", r"\x00")
+
+
 #   .--da cntlr------------------------------------------------------------.
 #   |                     _                    _   _                       |
 #   |                  __| | __ _    ___ _ __ | |_| |_ __                  |
@@ -135,14 +147,12 @@ hp_proliant_cpu_status2nagios_map = {
 
 
 def inventory_hp_proliant_cpu(info):
-    if len(info) > 0:
-        return [(line[0], None) for line in info]
-    return []
+    yield from ((sanitize_item(line[0]), {}) for line in info)
 
 
 def check_hp_proliant_cpu(item, params, info):
     for line in info:
-        if line[0] == item:
+        if sanitize_item(line[0]) == item:
             index, slot, name, status = line
             snmp_status = hp_proliant_cpu_status_map[int(status)]
             status = hp_proliant_cpu_status2nagios_map[snmp_status]
@@ -184,15 +194,9 @@ hp_proliant_fans_locale = {
 
 
 def inventory_hp_proliant_fans(info):
-    if len(info) > 0:
-        items = []
-        for line in [l for l in info if l[2] == "3"]:
-            label = "other"
-            if int(line[1]) in hp_proliant_fans_locale:
-                label = hp_proliant_fans_locale[int(line[1])]
-            items.append((f"{line[0]} ({label})", None))
-        return items
-    return []
+    for line in [l for l in info if l[2] == "3"]:
+        label = hp_proliant_fans_locale.get(int(line[1]), "other")
+        yield sanitize_item(f"{line[0]} ({label})"), {}
 
 
 def check_hp_proliant_fans(item, params, info):
@@ -201,7 +205,7 @@ def check_hp_proliant_fans(item, params, info):
         if len(line) > 1 and int(line[1]) in hp_proliant_fans_locale:
             label = hp_proliant_fans_locale[int(line[1])]
 
-        if f"{line[0]} ({label})" == item:
+        if sanitize_item(f"{line[0]} ({label})") == item:
             index, _name, _present, speed, status, currentSpeed = line
             snmp_status = hp_proliant_fans_status_map[int(status)]
             status = hp_proliant_status2nagios_map[snmp_status]

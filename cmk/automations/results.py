@@ -242,7 +242,6 @@ result_type_registry.register(SetAutochecksResult)
 SetAutochecksTable = dict[
     tuple[str, Item], tuple[ServiceName, LegacyCheckParameters, Labels, list[HostName]]
 ]
-SetAutochecksTablePre20 = dict[tuple[str, Item], tuple[dict[str, Any], Labels]]
 
 
 @dataclass

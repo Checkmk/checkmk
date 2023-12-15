@@ -22,7 +22,7 @@ from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import livestatus
 
@@ -95,7 +95,6 @@ from cmk.automations.results import (
     ServiceInfo,
     SetAutochecksResult,
     SetAutochecksTable,
-    SetAutochecksTablePre20,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
 )
@@ -774,7 +773,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # from a new inventory.
     def execute(self, args: list[str]) -> SetAutochecksResult:
         hostname = HostName(args[0])
-        new_items: SetAutochecksTable | SetAutochecksTablePre20 = ast.literal_eval(sys.stdin.read())
+        new_items: SetAutochecksTable = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
 
@@ -791,22 +790,20 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 checks_dir=checks_dir,
             )
 
-        # Fix data from version <2.0
-        new_services: list[AutocheckServiceWithNodes] = []
-        for (raw_check_plugin_name, item), (
-            _descr,
-            params,
-            raw_service_labels,
-            found_on_nodes,
-        ) in _transform_pre_20_items(new_items).items():
-            check_plugin_name = CheckPluginName(raw_check_plugin_name)
-
-            new_services.append(
-                AutocheckServiceWithNodes(
-                    AutocheckEntry(check_plugin_name, item, params, raw_service_labels),
-                    found_on_nodes,
-                )
+        new_services = [
+            AutocheckServiceWithNodes(
+                AutocheckEntry(
+                    CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                ),
+                found_on_nodes,
             )
+            for (raw_check_plugin_name, item), (
+                _descr,
+                params,
+                raw_service_labels,
+                found_on_nodes,
+            ) in new_items.items()
+        ]
 
         if hostname in config_cache.hosts_config.clusters:
             set_autochecks_of_cluster(
@@ -821,34 +818,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         self._trigger_discovery_check(config_cache, hostname)
         return SetAutochecksResult()
-
-
-def _transform_pre_20_items(
-    new_items: SetAutochecksTablePre20 | SetAutochecksTable,
-) -> SetAutochecksTable:
-    if _is_20_set_autochecks_format(new_items):
-        return cast(SetAutochecksTable, new_items)
-
-    fixed_items: SetAutochecksTable = {}
-    for (check_type, item), (data_container, service_labels) in cast(
-        SetAutochecksTablePre20, new_items
-    ).items():
-        fixed_items[(check_type, item)] = (
-            data_container["service_description"],
-            data_container["params"],
-            service_labels,
-            data_container["found_on_nodes"],
-        )
-    return fixed_items
-
-
-def _is_20_set_autochecks_format(new_items: SetAutochecksTablePre20 | SetAutochecksTable) -> bool:
-    # try-inventory in 2.0 generates a different data format if it detects that the remote version
-    # is too old (<2.0). It reports a shorter tuple. The paramstring gets repurposed and
-    # acts as generic data container.
-    for _key, value in new_items.items():
-        return len(value) > 2
-    return True
 
 
 automations.register(AutomationSetAutochecks())

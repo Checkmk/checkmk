@@ -9,7 +9,7 @@ checkname = "hp_proliant_cpu"
 
 info = [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]]
 
-discovery = {"": [("0", None), ("1", None)]}
+discovery = {"": [("0", {}), ("1", {})]}
 
 checks = {
     "": [

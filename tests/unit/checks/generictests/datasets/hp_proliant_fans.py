@@ -18,12 +18,12 @@ info = [
 
 discovery = {
     "": [
-        ("1 (system)", None),
-        ("2 (system)", None),
-        ("3 (system)", None),
-        ("4 (system)", None),
-        ("5 (system)", None),
-        ("6 (system)", None),
+        ("1 (system)", {}),
+        ("2 (system)", {}),
+        ("3 (system)", {}),
+        ("4 (system)", {}),
+        ("5 (system)", {}),
+        ("6 (system)", {}),
     ]
 }
 

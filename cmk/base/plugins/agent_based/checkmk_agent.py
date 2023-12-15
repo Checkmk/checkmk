@@ -32,12 +32,12 @@ from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-lay
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
-    CachedPluginType,
     CheckmkSection,
     CMKAgentUpdateSection,
     ControllerSection,
     Plugin,
     PluginSection,
+    render_plugin_type,
 )
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
@@ -530,13 +530,7 @@ def _format_cached_plugin(plugin: CachedPlugin) -> str:
     if plugin.plugin_type is None:
         return f"{plugin.plugin_name} ({plugin_info})"
 
-    name_mapping = {
-        CachedPluginType.PLUGIN: "Agent plugin",
-        CachedPluginType.LOCAL: "Local check",
-        CachedPluginType.ORACLE: "mk_oracle plugin",
-    }
-
-    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
+    return f"{plugin.plugin_name} ({render_plugin_type(plugin.plugin_type)}, {plugin_info})"
 
 
 def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:

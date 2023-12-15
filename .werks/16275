@@ -1,0 +1,9 @@
+Title: Crash of Checkmk Agent service if MRPE plugins are used
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1702646733
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+

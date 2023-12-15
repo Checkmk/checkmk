@@ -1333,7 +1333,12 @@ class LocalConnection(SingleSiteConnection):
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context."
             )
-        super().__init__("unix:" + omd_root + "/tmp/run/live", SiteId("local"), *args, **kwargs)
+        super().__init__(
+            "unix:" + omd_root + "/tmp/run/live",  # nosec B108 # BNS:7a2427
+            SiteId("local"),
+            *args,
+            **kwargs,
+        )
 
 
 def _combine_query(query: str, headers: str | list[str]) -> str:

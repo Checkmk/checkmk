@@ -30,3 +30,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:eb967b` | `B324` | Sha1 hmac is fine and is the prefered standard for totp, bandit only sees the use of sha1. |
 | `BNS:2aa916` | `B601` | nas_db_env is sanitized with shlex.quote |
 | `BNS:501305` | `B323` | Intended behaviour and configurable via option. |
+| `BNS:7a2427` | `B108` | False positive, the temp file/directory is located inside a safe directory. |

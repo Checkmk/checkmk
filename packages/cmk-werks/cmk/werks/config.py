@@ -33,8 +33,7 @@ def _load_current_version(defines_make: Path) -> str:
 
 def load_config(werk_config: Path, defines_make: Path) -> Config:
     data: dict[str, object] = {}
-    # TODO: config should be converted to json!
-    exec(  # pylint: disable=exec-used # BNS:aee528
+    exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
         werk_config.read_text(encoding="utf-8"), data, data
     )
 

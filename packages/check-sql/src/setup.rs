@@ -9,7 +9,39 @@ use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, FileSpec, LogSpecification};
 use std::env::ArgsOs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+#[derive(Default)]
+pub struct Env {
+    temp_dir: Option<PathBuf>,
+    log_dir: Option<PathBuf>,
+}
+
+impl Env {
+    pub fn new(args: &Args) -> Self {
+        let log_dir = Env::build_dir(&args.log_dir, &constants::ENV_LOG_DIR.as_deref());
+        let temp_dir = Env::build_dir(&args.temp_dir, &constants::ENV_TEMP_DIR.as_deref());
+        Self { temp_dir, log_dir }
+    }
+
+    pub fn temp_dir(&self) -> Option<&Path> {
+        self.temp_dir.as_deref()
+    }
+
+    pub fn log_dir(&self) -> Option<&Path> {
+        self.log_dir.as_deref()
+    }
+
+    fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
+        if dir.is_some() {
+            dir.as_deref()
+        } else {
+            fallback.as_deref()
+        }
+        .map(PathBuf::from)
+        .filter(|p| Path::is_dir(p))
+    }
+}
 
 pub enum SendTo {
     Null,
@@ -17,13 +49,14 @@ pub enum SendTo {
     Stdout,
 }
 
-pub fn init(args: ArgsOs) -> Result<CheckConfig> {
+pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
     let args = Args::parse_from(args);
-    init_logging(&args)?;
-    get_check_config(&args)
+    let environment = Env::new(&args);
+    init_logging(&args, &environment)?;
+    Ok((get_check_config(&args)?, environment))
 }
 
-fn init_logging(args: &Args) -> Result<()> {
+fn init_logging(args: &Args, environment: &Env) -> Result<()> {
     let level = &args.logging_level();
     let send_to = if args.display_log {
         SendTo::Stderr
@@ -31,13 +64,7 @@ fn init_logging(args: &Args) -> Result<()> {
         SendTo::Null
     };
 
-    let log_dir = if args.log_dir.is_some() {
-        args.log_dir.as_deref()
-    } else {
-        constants::ENV_LOG_DIR.as_deref().filter(|&p| p.exists())
-    };
-
-    apply_logging_parameters(level, log_dir, send_to)?;
+    apply_logging_parameters(level, environment.log_dir(), send_to)?;
     Ok(())
 }
 

@@ -11,9 +11,11 @@ use crate::config::{
 };
 use crate::ms_sql::queries;
 use crate::ms_sql::section::SectionKind;
+use crate::setup::Env;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use tiberius::{ColumnData, Query, Row};
@@ -37,7 +39,7 @@ pub trait Column<'a> {
 #[derive(Clone, Debug, Default)]
 pub struct SqlInstanceBuilder {
     alias: Option<String>,
-    name: Option<String>,
+    pub name: Option<String>,
     id: Option<String>,
     edition: Option<String>,
     version: Option<String>,
@@ -46,6 +48,7 @@ pub struct SqlInstanceBuilder {
     dynamic_port: Option<u16>,
     endpoint: Option<Endpoint>,
     computer_name: Option<String>,
+    temp_dir: Option<PathBuf>,
 }
 
 impl SqlInstanceBuilder {
@@ -97,6 +100,11 @@ impl SqlInstanceBuilder {
         self
     }
 
+    pub fn temp_dir(mut self, temp_dir: &Option<&Path>) -> Self {
+        self.temp_dir = temp_dir.map(|s| s.into());
+        self
+    }
+
     pub fn row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
             .id(row.get_value_by_idx(1))
@@ -111,6 +119,14 @@ impl SqlInstanceBuilder {
                 row.get_optional_value_by_idx(6)
                     .and_then(|s| s.parse::<u16>().ok()),
             )
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone().unwrap_or_default().to_uppercase()
+    }
+
+    pub fn get_endpoint(&self) -> Option<&Endpoint> {
+        self.endpoint.as_ref()
     }
 
     pub fn build(self) -> SqlInstance {
@@ -1099,19 +1115,23 @@ impl<'a> Column<'a> for Row {
 }
 
 impl CheckConfig {
-    pub async fn exec(&self) -> Result<String> {
+    pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
             let dumb_header = Self::generate_dumb_header(ms_sql);
-            let data = generate_data(ms_sql).await.unwrap_or_else(|e| {
-                log::error!("Error generating data: {e}");
-                format!("{e}\n")
-            });
-            let mut output: Vec<String> = Vec::new();
-            for config in ms_sql.configs() {
-                let configs_data = generate_data(config).await.unwrap_or_else(|e| {
+            let data = generate_data(ms_sql, environment)
+                .await
+                .unwrap_or_else(|e| {
                     log::error!("Error generating data: {e}");
                     format!("{e}\n")
                 });
+            let mut output: Vec<String> = Vec::new();
+            for config in ms_sql.configs() {
+                let configs_data = generate_data(config, environment)
+                    .await
+                    .unwrap_or_else(|e| {
+                        log::error!("Error generating data: {e}");
+                        format!("{e}\n")
+                    });
                 output.push(configs_data);
             }
             Ok(dumb_header + &data + &output.join(""))
@@ -1133,13 +1153,19 @@ impl CheckConfig {
 
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
-async fn generate_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    let instances = find_instances_to_use(ms_sql).await?;
-    if instances.is_empty() {
+async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
+    let builders = find_usable_instance_builders(ms_sql).await?;
+    if builders.is_empty() {
         return Ok("ERROR: Failed to gather SQL server instances".to_string());
     } else {
-        log::info!("Found {} SQL server instances", instances.len())
+        log::info!("Found {} SQL server instances", builders.len())
     }
+
+    let instances = builders
+        .into_iter()
+        .map(|b: SqlInstanceBuilder| b.temp_dir(&environment.temp_dir()).build())
+        .collect::<Vec<SqlInstance>>();
+
     let sections = section::get_work_sections(ms_sql);
     Ok(generate_instance_entries(&instances)
         + &generate_result(&instances, &sections, ms_sql).await?)
@@ -1155,26 +1181,32 @@ fn generate_instance_entries(instances: &[SqlInstance]) -> String {
         .join("")
 }
 
-async fn find_instances_to_use(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
-    Ok(find_all_instances(ms_sql)
+async fn find_usable_instance_builders(
+    ms_sql: &config::ms_sql::Config,
+) -> Result<Vec<SqlInstanceBuilder>> {
+    Ok(find_all_instance_builders(ms_sql)
         .await?
         .into_iter()
-        .filter(|i| ms_sql.is_instance_allowed(&i.name))
-        .collect::<Vec<SqlInstance>>())
+        .filter(|i| ms_sql.is_instance_allowed(&i.get_name()))
+        .collect::<Vec<SqlInstanceBuilder>>())
 }
 
-pub async fn find_all_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
+pub async fn find_all_instance_builders(
+    ms_sql: &config::ms_sql::Config,
+) -> Result<Vec<SqlInstanceBuilder>> {
     let already_detected = if ms_sql.discovery().detect() {
-        find_detectable_instances(ms_sql).await
+        find_detectable_instance_builders(ms_sql).await
     } else {
         Vec::new()
     };
-    add_custom_instances(ms_sql, &already_detected).await
+    add_custom_instance_builders(ms_sql, &already_detected).await
 }
 
 /// find instances described in the config but not detected by the discovery
-async fn find_detectable_instances(ms_sql: &config::ms_sql::Config) -> Vec<SqlInstance> {
-    get_sql_instances(&ms_sql.endpoint())
+async fn find_detectable_instance_builders(
+    ms_sql: &config::ms_sql::Config,
+) -> Vec<SqlInstanceBuilder> {
+    get_instance_builders(&ms_sql.endpoint())
         .await
         .unwrap_or_else(|e| {
             log::warn!("Error discovering instances: {e}");
@@ -1183,17 +1215,17 @@ async fn find_detectable_instances(ms_sql: &config::ms_sql::Config) -> Vec<SqlIn
 }
 
 /// find instances described in the config but not detected by the discovery
-async fn add_custom_instances(
+async fn add_custom_instance_builders(
     ms_sql: &config::ms_sql::Config,
-    detected: &[SqlInstance],
-) -> Result<Vec<SqlInstance>> {
+    detected: &[SqlInstanceBuilder],
+) -> Result<Vec<SqlInstanceBuilder>> {
     let (mut sql_instances, name_to_custom_instance_map) = process_detected(ms_sql, detected);
 
     for (name, instance) in name_to_custom_instance_map.into_iter() {
         match create_from_config(&instance.endpoint()).await {
             Ok(mut client) => {
                 if let Some(properties) = ensure_required_instance(&mut client, name).await {
-                    sql_instances.push(make_sql_instance(instance, &properties));
+                    sql_instances.push(make_instance_builder(instance, &properties));
                 }
             }
             Err(e) => {
@@ -1226,7 +1258,10 @@ async fn ensure_required_instance(
     None
 }
 
-fn make_sql_instance(instance: &CustomInstance, properties: &SqlInstanceProperties) -> SqlInstance {
+fn make_instance_builder(
+    instance: &CustomInstance,
+    properties: &SqlInstanceProperties,
+) -> SqlInstanceBuilder {
     SqlInstanceBuilder::new()
         .name(properties.name.to_uppercase())
         .alias(
@@ -1239,37 +1274,48 @@ fn make_sql_instance(instance: &CustomInstance, properties: &SqlInstanceProperti
         .computer_name(&Some(properties.machine_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
-        .build()
 }
 /// returns
 /// - SQL instances which are not touched by customizing
 /// - map of instances to be found
 fn process_detected<'a>(
     ms_sql: &'a config::ms_sql::Config,
-    detected: &[SqlInstance],
-) -> (Vec<SqlInstance>, HashMap<&'a String, &'a CustomInstance>) {
+    detected: &[SqlInstanceBuilder],
+) -> (
+    Vec<SqlInstanceBuilder>,
+    HashMap<&'a String, &'a CustomInstance>,
+) {
     let mut name_to_custom_instance_map: HashMap<&String, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
     let sql_instances = detected
         .iter()
-        .filter_map(
-            |sql_instance| match name_to_custom_instance_map.get(&sql_instance.name) {
+        .filter_map(|instance_builder| {
+            match name_to_custom_instance_map.get(&instance_builder.get_name()) {
                 None => {
-                    log::info!("Add detected instance {} as absent", sql_instance.name);
-                    Some(sql_instance.clone())
+                    log::info!(
+                        "Add detected instance {} as absent",
+                        &instance_builder.get_name()
+                    );
+                    Some(instance_builder.clone())
                 }
-                Some(instance) if instance.endpoint() == sql_instance.endpoint => {
-                    log::info!("Add detected instance {}: as same", sql_instance.name);
-                    name_to_custom_instance_map.remove(&sql_instance.name);
-                    Some(sql_instance.clone())
+                Some(instance) if Some(&instance.endpoint()) == instance_builder.get_endpoint() => {
+                    log::info!(
+                        "Add detected instance {}: as same",
+                        &instance_builder.get_name()
+                    );
+                    name_to_custom_instance_map.remove(&instance_builder.get_name());
+                    Some(instance_builder.clone())
                 }
                 _ => {
-                    log::info!("Skip detected instance {} as customized", sql_instance.name);
+                    log::info!(
+                        "Skip detected instance {} as customized",
+                        instance_builder.get_name()
+                    );
                     None
                 }
-            },
-        )
-        .collect::<Vec<SqlInstance>>();
+            }
+        })
+        .collect::<Vec<SqlInstanceBuilder>>();
     (sql_instances, name_to_custom_instance_map)
 }
 
@@ -1326,15 +1372,15 @@ fn short_query(query: &str) -> String {
 }
 
 /// return all MS SQL instances installed
-async fn get_sql_instances(endpoint: &Endpoint) -> Result<Vec<SqlInstance>> {
-    let all = obtain_sql_instances_from_registry(endpoint).await?;
+async fn get_instance_builders(endpoint: &Endpoint) -> Result<Vec<SqlInstanceBuilder>> {
+    let all = obtain_instance_builders_from_registry(endpoint).await?;
     Ok([&all.0[..], &all.1[..]].concat().to_vec())
 }
 
 /// [low level helper] return all MS SQL instances installed
-pub async fn obtain_sql_instances_from_registry(
+pub async fn obtain_instance_builders_from_registry(
     endpoint: &Endpoint,
-) -> Result<(Vec<SqlInstance>, Vec<SqlInstance>)> {
+) -> Result<(Vec<SqlInstanceBuilder>, Vec<SqlInstanceBuilder>)> {
     match client::create_from_config(endpoint).await {
         Ok(mut client) => Ok((
             exec_win_registry_sql_instances_query(
@@ -1362,7 +1408,7 @@ async fn exec_win_registry_sql_instances_query(
     client: &mut Client,
     endpoint: &Endpoint,
     query: &str,
-) -> Result<Vec<SqlInstance>> {
+) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_query(client, query).await?;
     if let Some(rows) = answers.get(0) {
         let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
@@ -1381,16 +1427,15 @@ fn to_sql_instance(
     rows: &Answer,
     endpoint: &Endpoint,
     computer_name: Option<String>,
-) -> Vec<SqlInstance> {
+) -> Vec<SqlInstanceBuilder> {
     rows.iter()
         .map(|r| {
             SqlInstanceBuilder::new()
                 .row(r)
                 .computer_name(&computer_name)
                 .endpoint(endpoint)
-                .build()
         })
-        .collect::<Vec<SqlInstance>>()
+        .collect::<Vec<SqlInstanceBuilder>>()
         .to_vec()
 }
 

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="var-annotated"
-
 import typing
 
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.hp_proliant import sanitize_item
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 
@@ -23,9 +22,9 @@ class HpProRaid(typing.NamedTuple):
 
 
 def parse_hp_proliant_raid(string_table):
-    parsed = {}
+    parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
-        itemname = f"{name} {number}".strip()
+        itemname = sanitize_item(f"{name} {number}".strip())
         parsed.setdefault(
             itemname,
             HpProRaid(

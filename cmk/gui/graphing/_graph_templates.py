@@ -37,7 +37,6 @@ from ._expression import (
 from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
-    GraphRecipeBase,
     GraphSpecification,
     HorizontalRule,
     MetricOpConstant,
@@ -110,20 +109,10 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return None
 
-        graph_recipe = create_graph_recipe_from_template(
+        return create_graph_recipe_from_template(
             graph_template_tuned,
             translated_metrics,
             row,
-        )
-
-        return GraphRecipe(
-            title=graph_recipe.title,
-            metrics=graph_recipe.metrics,
-            unit=graph_recipe.unit,
-            explicit_vertical_range=graph_recipe.explicit_vertical_range,
-            horizontal_rules=graph_recipe.horizontal_rules,
-            omit_zero_metrics=graph_recipe.omit_zero_metrics,
-            consolidation_function=graph_recipe.consolidation_function,
             specification=TemplateGraphSpecification(
                 site=self.site,
                 host_name=self.host_name,
@@ -206,8 +195,11 @@ def _horizontal_rules_from_thresholds(
 
 
 def create_graph_recipe_from_template(
-    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric], row: Row
-) -> GraphRecipeBase:
+    graph_template: GraphTemplate,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    row: Row,
+    specification: GraphSpecification,
+) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
         unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
         return GraphMetric(
@@ -243,7 +235,7 @@ def create_graph_recipe_from_template(
     if painter_options.get("show_internal_graph_and_metric_ids"):
         title = title + f" (Graph ID: {graph_template.id})"
 
-    return GraphRecipeBase(
+    return GraphRecipe(
         title=title,
         metrics=metrics,
         unit=units.pop(),
@@ -253,6 +245,7 @@ def create_graph_recipe_from_template(
         ),  # e.g. lines for WARN and CRIT
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function or "max",
+        specification=specification,
     )
 
 

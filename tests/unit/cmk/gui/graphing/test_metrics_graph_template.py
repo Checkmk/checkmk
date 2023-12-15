@@ -22,12 +22,13 @@ from cmk.gui.graphing._expression import (
 )
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
-    GraphRecipeBase,
+    GraphRecipe,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
 )
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._utils import GraphTemplate, MetricDefinition, ScalarDefinition
 from cmk.gui.metrics import translate_perf_data
 
@@ -140,10 +141,15 @@ def test_create_graph_recipe_from_template() -> None:
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )
     lq_row = {"site": "", "host_name": "", "service_description": ""}
+    specification = TemplateGraphSpecification(
+        site=SiteId("Site"),
+        host_name=HostName("Host-Name"),
+        service_description="Service description",
+    )
 
     assert gt.create_graph_recipe_from_template(
-        graph_template, translated_metrics, lq_row
-    ) == GraphRecipeBase(
+        graph_template, translated_metrics, lq_row, specification
+    ) == GraphRecipe(
         title="Used space",
         metrics=[
             GraphMetric(
@@ -210,6 +216,7 @@ def test_create_graph_recipe_from_template() -> None:
         horizontal_rules=[],
         omit_zero_metrics=False,
         consolidation_function="max",
+        specification=specification,
     )
 
 

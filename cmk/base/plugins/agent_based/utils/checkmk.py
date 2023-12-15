@@ -35,6 +35,18 @@ class CachedPluginType(StrEnum):
     MRPE = "mrpe"
 
 
+def render_plugin_type(plugin_type: CachedPluginType) -> str:
+    match plugin_type:
+        case CachedPluginType.MRPE:
+            return "MRPE plugin"
+        case CachedPluginType.PLUGIN:
+            return "Agent plugin"
+        case CachedPluginType.LOCAL:
+            return "Local check"
+        case CachedPluginType.ORACLE:
+            return "mk_oracle plugin"
+
+
 class CachedPlugin(NamedTuple):
     plugin_type: CachedPluginType | None
     plugin_name: str

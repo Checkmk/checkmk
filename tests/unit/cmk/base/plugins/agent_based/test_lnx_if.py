@@ -1208,6 +1208,7 @@ def test_inventory_lnx_if_no_bonding() -> None:
                 "alias": "wlp3s0",
             },
             inventory_columns={
+                "name": "",
                 "speed": 0,
                 "phys_address": "AA:AA:AA:AA:AA:AA",
                 "oper_status": 2,
@@ -1268,6 +1269,7 @@ def test_inventory_lnx_if_with_bonding() -> None:
                 "alias": "wlp3s0",
             },
             inventory_columns={
+                "name": "",
                 "speed": 0,
                 "phys_address": "BB:BB:BB:BB:BB:BB",
                 "oper_status": 2,

@@ -562,6 +562,7 @@ def test_registered_painters() -> None:
         "invinterface_description",
         "invinterface_index",
         "invinterface_last_change",
+        "invinterface_name",
         "invinterface_oper_status",
         "invinterface_phys_address",
         "invinterface_port_type",

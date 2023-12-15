@@ -368,6 +368,7 @@ def _make_inventory_interface(
         oper_status=int(interface.attributes.oper_status),
         phys_address=mac,
         bond=bond_map.get(mac),
+        name="",
     )
 
 

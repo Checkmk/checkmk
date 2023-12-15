@@ -19,6 +19,7 @@ SECTION_INV_IF = SectionInvIf(
             index="1",
             descr="Vlan-interface1",
             alias="",
+            name="Vlan1",
             type="6",
             speed=0,
             oper_status=1,
@@ -30,6 +31,7 @@ SECTION_INV_IF = SectionInvIf(
             index="32769",
             descr="port-channel 1",
             alias="",
+            name="Po1",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -41,6 +43,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49152",
             descr="AUX0",
             alias="",
+            name="",
             type="23",
             speed=0,
             oper_status=1,
@@ -52,6 +55,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49153",
             descr="gigabitEthernet 1/0/1",
             alias="Uplink sw-ks-01",
+            name="gi1/0/1",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -63,6 +67,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49154",
             descr="gigabitEthernet 1/0/2",
             alias="Uplink sw-ks-01",
+            name="gi1/0/2",
             type="6",
             speed=0,
             oper_status=2,
@@ -74,6 +79,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49155",
             descr="gigabitEthernet 1/0/3",
             alias="pve-muc",
+            name="gi1/0/3",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -85,6 +91,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49156",
             descr="gigabitEthernet 1/0/4",
             alias="pve-muc-ipmi",
+            name="gi1/0/4",
             type="6",
             speed=0,
             oper_status=2,
@@ -96,6 +103,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49157",
             descr="gigabitEthernet 1/0/5",
             alias="monitoring",
+            name="gi1/0/5",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -107,6 +115,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49158",
             descr="gigabitEthernet 1/0/6",
             alias="monitoring-ipmi",
+            name="gi1/0/6",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -118,6 +127,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49159",
             descr="gigabitEthernet 1/0/7",
             alias="pve-muc",
+            name="gi1/0/7",
             type="6",
             speed=10000000,
             oper_status=1,
@@ -129,6 +139,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49160",
             descr="gigabitEthernet 1/0/8",
             alias="pve-muc1-ipmi",
+            name="gi1/0/8",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -140,6 +151,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49161",
             descr="gigabitEthernet 1/0/9",
             alias="esxi",
+            name="gi1/0/9",
             type="6",
             speed=0,
             oper_status=2,
@@ -151,6 +163,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49162",
             descr="gigabitEthernet 1/0/10",
             alias="",
+            name="gi1/0/10",
             type="6",
             speed=0,
             oper_status=2,
@@ -162,6 +175,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49163",
             descr="gigabitEthernet 1/0/11",
             alias="",
+            name="gi1/0/11",
             type="6",
             speed=0,
             oper_status=2,
@@ -173,6 +187,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49164",
             descr="gigabitEthernet 1/0/12",
             alias="",
+            name="gi1/0/12",
             type="6",
             speed=0,
             oper_status=2,
@@ -184,6 +199,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49165",
             descr="gigabitEthernet 1/0/13",
             alias="",
+            name="gi1/0/13",
             type="6",
             speed=0,
             oper_status=2,
@@ -195,6 +211,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49166",
             descr="gigabitEthernet 1/0/14",
             alias="",
+            name="gi1/0/14",
             type="6",
             speed=0,
             oper_status=2,
@@ -206,6 +223,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49167",
             descr="gigabitEthernet 1/0/15",
             alias="",
+            name="gi1/0/15",
             type="6",
             speed=1000000000,
             oper_status=1,
@@ -217,6 +235,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49168",
             descr="gigabitEthernet 1/0/16",
             alias="",
+            name="gi1/0/16",
             type="6",
             speed=0,
             oper_status=2,
@@ -228,6 +247,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49169",
             descr="gigabitEthernet 1/0/17",
             alias="",
+            name="gi1/0/17",
             type="6",
             speed=0,
             oper_status=2,
@@ -239,6 +259,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49170",
             descr="gigabitEthernet 1/0/18",
             alias="",
+            name="gi1/0/18",
             type="6",
             speed=0,
             oper_status=2,
@@ -250,6 +271,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49171",
             descr="gigabitEthernet 1/0/19",
             alias="",
+            name="gi1/0/19",
             type="6",
             speed=0,
             oper_status=2,
@@ -261,6 +283,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49172",
             descr="gigabitEthernet 1/0/20",
             alias="",
+            name="gi1/0/20",
             type="6",
             speed=0,
             oper_status=2,
@@ -272,6 +295,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49173",
             descr="gigabitEthernet 1/0/21",
             alias="",
+            name="gi1/0/21",
             type="6",
             speed=0,
             oper_status=2,
@@ -283,6 +307,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49174",
             descr="gigabitEthernet 1/0/22",
             alias="",
+            name="gi1/0/22",
             type="6",
             speed=0,
             oper_status=2,
@@ -294,6 +319,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49175",
             descr="gigabitEthernet 1/0/23",
             alias=" ",
+            name="gi1/0/23",
             type="6",
             speed=0,
             oper_status=2,
@@ -305,6 +331,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49176",
             descr="gigabitEthernet 1/0/24",
             alias=" ",
+            name="gi1/0/24",
             type="6",
             speed=0,
             oper_status=2,
@@ -316,6 +343,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49177",
             descr="gigabitEthernet 1/0/25",
             alias="",
+            name="gi1/0/25",
             type="6",
             speed=0,
             oper_status=2,
@@ -327,6 +355,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49178",
             descr="gigabitEthernet 1/0/26",
             alias="",
+            name="gi1/0/26",
             type="6",
             speed=0,
             oper_status=2,
@@ -338,6 +367,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49179",
             descr="gigabitEthernet 1/0/27",
             alias="",
+            name="gi1/0/27",
             type="6",
             speed=0,
             oper_status=2,
@@ -349,6 +379,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49180",
             descr="gigabitEthernet 1/0/28",
             alias="",
+            name="gi1/0/28",
             type="6",
             speed=0,
             oper_status=2,
@@ -360,6 +391,7 @@ SECTION_INV_IF = SectionInvIf(
             index="49181",
             descr="gigabitEthernet 1/0/28",
             alias="",
+            name="gi1/0/28",
             type="6",
             speed=0,
             oper_status=2,
@@ -380,6 +412,7 @@ def test_parse_inv_if() -> None:
                     [
                         "1",
                         "Vlan-interface1",
+                        "Vlan1",
                         "",
                         "6",
                         "1000000000",
@@ -392,6 +425,7 @@ def test_parse_inv_if() -> None:
                     [
                         "32769",
                         "port-channel 1",
+                        "Po1",
                         "",
                         "6",
                         "1000000000",
@@ -401,10 +435,11 @@ def test_parse_inv_if() -> None:
                         [116, 218, 136, 88, 22, 17],
                         "758725259",
                     ],
-                    ["49152", "AUX0", "", "23", "0", "0", "1", "1", [], "0"],
+                    ["49152", "AUX0", "", "", "23", "0", "0", "1", "1", [], "0"],
                     [
                         "49153",
                         "gigabitEthernet 1/0/1",
+                        "gi1/0/1",
                         "Uplink sw-ks-01",
                         "6",
                         "1000000000",
@@ -417,6 +452,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49154",
                         "gigabitEthernet 1/0/2",
+                        "gi1/0/2",
                         "Uplink sw-ks-01",
                         "6",
                         "0",
@@ -429,6 +465,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49155",
                         "gigabitEthernet 1/0/3",
+                        "gi1/0/3",
                         "pve-muc",
                         "6",
                         "1000000000",
@@ -441,6 +478,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49156",
                         "gigabitEthernet 1/0/4",
+                        "gi1/0/4",
                         "pve-muc-ipmi",
                         "6",
                         "0",
@@ -453,6 +491,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49157",
                         "gigabitEthernet 1/0/5",
+                        "gi1/0/5",
                         "monitoring",
                         "6",
                         "1000000000",
@@ -465,6 +504,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49158",
                         "gigabitEthernet 1/0/6",
+                        "gi1/0/6",
                         "monitoring-ipmi",
                         "6",
                         "1000000000",
@@ -477,6 +517,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49159",
                         "gigabitEthernet 1/0/7",
+                        "gi1/0/7",
                         "pve-muc",
                         "6",
                         "10000000",
@@ -489,6 +530,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49160",
                         "gigabitEthernet 1/0/8",
+                        "gi1/0/8",
                         "pve-muc1-ipmi",
                         "6",
                         "1000000000",
@@ -501,6 +543,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49161",
                         "gigabitEthernet 1/0/9",
+                        "gi1/0/9",
                         "esxi",
                         "6",
                         "0",
@@ -513,6 +556,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49162",
                         "gigabitEthernet 1/0/10",
+                        "gi1/0/10",
                         "",
                         "6",
                         "0",
@@ -525,6 +569,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49163",
                         "gigabitEthernet 1/0/11",
+                        "gi1/0/11",
                         "",
                         "6",
                         "0",
@@ -537,6 +582,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49164",
                         "gigabitEthernet 1/0/12",
+                        "gi1/0/12",
                         "",
                         "6",
                         "0",
@@ -549,6 +595,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49165",
                         "gigabitEthernet 1/0/13",
+                        "gi1/0/13",
                         "",
                         "6",
                         "0",
@@ -561,6 +608,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49166",
                         "gigabitEthernet 1/0/14",
+                        "gi1/0/14",
                         "",
                         "6",
                         "0",
@@ -573,6 +621,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49167",
                         "gigabitEthernet 1/0/15",
+                        "gi1/0/15",
                         "",
                         "6",
                         "1000000000",
@@ -585,6 +634,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49168",
                         "gigabitEthernet 1/0/16",
+                        "gi1/0/16",
                         "",
                         "6",
                         "0",
@@ -597,6 +647,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49169",
                         "gigabitEthernet 1/0/17",
+                        "gi1/0/17",
                         "",
                         "6",
                         "0",
@@ -609,6 +660,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49170",
                         "gigabitEthernet 1/0/18",
+                        "gi1/0/18",
                         "",
                         "6",
                         "0",
@@ -621,6 +673,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49171",
                         "gigabitEthernet 1/0/19",
+                        "gi1/0/19",
                         "",
                         "6",
                         "0",
@@ -633,6 +686,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49172",
                         "gigabitEthernet 1/0/20",
+                        "gi1/0/20",
                         "",
                         "6",
                         "0",
@@ -645,6 +699,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49173",
                         "gigabitEthernet 1/0/21",
+                        "gi1/0/21",
                         "",
                         "6",
                         "0",
@@ -657,6 +712,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49174",
                         "gigabitEthernet 1/0/22",
+                        "gi1/0/22",
                         "",
                         "6",
                         "0",
@@ -669,6 +725,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49175",
                         "gigabitEthernet 1/0/23",
+                        "gi1/0/23",
                         " ",
                         "6",
                         "0",
@@ -681,6 +738,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49176",
                         "gigabitEthernet 1/0/24",
+                        "gi1/0/24",
                         " ",
                         "6",
                         "0",
@@ -693,6 +751,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49177",
                         "gigabitEthernet 1/0/25",
+                        "gi1/0/25",
                         "",
                         "6",
                         "0",
@@ -705,6 +764,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49178",
                         "gigabitEthernet 1/0/26",
+                        "gi1/0/26",
                         "",
                         "6",
                         "0",
@@ -717,6 +777,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49179",
                         "gigabitEthernet 1/0/27",
+                        "gi1/0/27",
                         "",
                         "6",
                         "0",
@@ -729,6 +790,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49180",
                         "gigabitEthernet 1/0/28",
+                        "gi1/0/28",
                         "",
                         "6",
                         "0",
@@ -741,6 +803,7 @@ def test_parse_inv_if() -> None:
                     [
                         "49181",
                         "gigabitEthernet 1/0/28",
+                        "gi1/0/28",
                         "",
                         "6",
                         "0",
@@ -775,6 +838,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "Vlan1",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -792,6 +856,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "Po1",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -809,6 +874,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "",
                         "speed": 0,
                         "phys_address": "",
                         "oper_status": 1,
@@ -825,6 +891,7 @@ def test_inventory_if() -> None:
                         "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "name": "gi1/0/1",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -842,6 +909,7 @@ def test_inventory_if() -> None:
                         "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "name": "gi1/0/2",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -859,6 +927,7 @@ def test_inventory_if() -> None:
                         "alias": "pve-muc",
                     },
                     inventory_columns={
+                        "name": "gi1/0/3",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -876,6 +945,7 @@ def test_inventory_if() -> None:
                         "alias": "pve-muc-ipmi",
                     },
                     inventory_columns={
+                        "name": "gi1/0/4",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -893,6 +963,7 @@ def test_inventory_if() -> None:
                         "alias": "monitoring",
                     },
                     inventory_columns={
+                        "name": "gi1/0/5",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -910,6 +981,7 @@ def test_inventory_if() -> None:
                         "alias": "monitoring-ipmi",
                     },
                     inventory_columns={
+                        "name": "gi1/0/6",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -927,6 +999,7 @@ def test_inventory_if() -> None:
                         "alias": "pve-muc",
                     },
                     inventory_columns={
+                        "name": "gi1/0/7",
                         "speed": 10000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -944,6 +1017,7 @@ def test_inventory_if() -> None:
                         "alias": "pve-muc1-ipmi",
                     },
                     inventory_columns={
+                        "name": "gi1/0/8",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -961,6 +1035,7 @@ def test_inventory_if() -> None:
                         "alias": "esxi",
                     },
                     inventory_columns={
+                        "name": "gi1/0/9",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -978,6 +1053,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/10",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -995,6 +1071,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/11",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1012,6 +1089,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/12",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1029,6 +1107,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/13",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1046,6 +1125,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/14",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1063,6 +1143,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/15",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -1080,6 +1161,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/16",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1097,6 +1179,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/17",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1114,6 +1197,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/18",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1131,6 +1215,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/19",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1148,6 +1233,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/20",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1165,6 +1251,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/21",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1182,6 +1269,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/22",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1199,6 +1287,7 @@ def test_inventory_if() -> None:
                         "alias": " ",
                     },
                     inventory_columns={
+                        "name": "gi1/0/23",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1216,6 +1305,7 @@ def test_inventory_if() -> None:
                         "alias": " ",
                     },
                     inventory_columns={
+                        "name": "gi1/0/24",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1233,6 +1323,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/25",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1250,6 +1341,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/26",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1267,6 +1359,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/27",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1284,6 +1377,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/28",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1301,6 +1395,7 @@ def test_inventory_if() -> None:
                         "alias": "",
                     },
                     inventory_columns={
+                        "name": "gi1/0/28",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,

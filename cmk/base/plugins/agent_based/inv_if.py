@@ -44,11 +44,12 @@ def _process_last_change(last_change_str: str) -> float:
 def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Interface]:
     """
     >>> from pprint import pprint
-    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '6',
+    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'Gi1/0/8', 'pve-muc1-ipmi', '6',
     ... '1000000000', '1000', '1', '1', [116, 218, 136, 88, 22, 17], '761116702'])))
     [Interface(index='49160',
                descr='gigabitEthernet 1/0/8',
                alias='pve-muc1-ipmi',
+               name='Gi1/0/8',
                type='6',
                speed=1000000000,
                oper_status=1,
@@ -56,20 +57,20 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
                admin_status=1,
                last_change=7611167.02,
                bond=None)]
-    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '231',
+    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'Gi1/0/8', 'pve-muc1-ipmi', '231',
     ... '1000000000', '1000', '1', '1', [116, 218, 136, 88, 22, 17], '761116702'])))
     []
-    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '6',
+    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'Gi1/0/8', 'pve-muc1-ipmi', '6',
     ... '', '1000', '1', '1', [116, 218, 136, 88, 22, 17], '761116702'])))
     []
-    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '6',
+    >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'Gi1/0/8', 'pve-muc1-ipmi', '6',
     ... '1000000000', '1000', '1', '1', [116, 218, 136, 88, 22, 17], ''])))
     []
-    >>> pprint(list(_process_sub_table(["NULL", "NULL", "", "NULL", "NULL", "", "NULL", "NULL",
+    >>> pprint(list(_process_sub_table(["NULL", "NULL", "NULL", "", "NULL", "NULL", "", "NULL", "NULL",
     ... [78, 85, 76, 76], "NULL"]))) # innovaphone IP811
     []
     """
-    index, descr, alias, type_, speed, high_speed, oper_status, admin_status = (
+    index, descr, name, alias, type_, speed, high_speed, oper_status, admin_status = (
         str(x) for x in sub_table[:-2]
     )
     last_change = str(sub_table[-1])
@@ -82,6 +83,7 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
     yield Interface(
         index=index,
         descr=descr,
+        name=name,
         alias=alias,
         type=type_,
         speed=int(high_speed) * 1000 * 1000 if high_speed else int(speed),
@@ -112,6 +114,7 @@ register.snmp_section(
             oids=[
                 "2.2.1.1",  # ifIndex
                 "2.2.1.2",  # ifDescr
+                "31.1.1.1.1",  # ifName
                 "31.1.1.1.18",  # ifAlias
                 "2.2.1.3",  # ifType
                 "2.2.1.5",  # ifSpeed

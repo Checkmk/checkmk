@@ -7,7 +7,7 @@ import copy
 from collections.abc import Callable, Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
@@ -32,7 +32,7 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName,
     Callable[
         [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
-        LegacyCheckParameters,
+        Mapping[str, object],
     ],
 ] = {
     CheckPluginName("aironet_clients"): (lambda p: {}),
@@ -178,13 +178,16 @@ def _fix_entry(
     )
 
 
+T = TypeVar("T", bound=LegacyCheckParameters)
+
+
 def _transformed_params(
     logger: Logger,
     plugin_name: CheckPluginName,
-    params: LegacyCheckParameters,
+    params: T,
     all_rulesets: RulesetCollection,
     hostname: str,
-) -> LegacyCheckParameters:
+) -> Mapping[str, object] | T:
     check_plugin = register.get_check_plugin(plugin_name)
     if check_plugin is None:
         return params
@@ -205,11 +208,8 @@ def _transformed_params(
         new_params = _transform_params_safely(params, ruleset, ruleset_name, logger)
 
         assert new_params or not params, "non-empty params vanished"
-        assert not isinstance(params, dict) or isinstance(new_params, dict), (
-            "transformed params down-graded from dict: %r" % new_params
-        )
 
-        return new_params  # type: ignore[no-any-return]
+        return new_params
 
     except Exception as exc:
         msg = f"Transform failed: {debug_info}, error={exc!r}"
@@ -223,7 +223,7 @@ def _transformed_params(
 # TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value
 def _transform_params_safely(
     params: LegacyCheckParameters, ruleset: Ruleset, ruleset_name: str, logger: Logger
-) -> Any:
+) -> Mapping[str, object]:
     """Safely converts <params> using <transform_value> function
     Write warning in the log if <transform_value> alters input. Such behavior is not allowed and
     the warning helps us to detect bad legacy/old transform functions.
@@ -233,4 +233,6 @@ def _transform_params_safely(
     new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
     if param_copy != params:
         logger.warning(f"transform_value() for ruleset '{ruleset_name}' altered input")
+
+    assert isinstance(new_params, dict), f"transformed params not a dict: {new_params!r}"
     return new_params

@@ -8,7 +8,9 @@ from collections.abc import Mapping, Sequence
 import pytest
 from polyfactory.factories import DataclassFactory
 
-from cmk.plugins.proxmox_ve.server_side_calls.special_agent import config
+from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
+    special_agent_proxmox_ve as config,
+)
 from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, PlainTextSecret, StoredSecret
 
 

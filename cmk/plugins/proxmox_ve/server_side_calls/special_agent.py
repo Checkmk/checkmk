@@ -49,7 +49,7 @@ def commands_function(
     yield SpecialAgentCommand(command_arguments=command_arguments)
 
 
-config = SpecialAgentConfig(
+special_agent_proxmox_ve = SpecialAgentConfig(
     name="proxmox_ve",
     parameter_parser=Params.model_validate,
     commands_function=commands_function,

@@ -392,6 +392,7 @@ def test_dependencies_are_declared() -> None:
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
         "pipfile",  # used in tests and in helper script pin_dependencies.py
+        "libcst",  # used in a helper script in doc/treasures
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

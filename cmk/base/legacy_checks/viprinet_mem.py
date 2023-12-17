@@ -27,6 +27,13 @@ def discover_viprinet_mem(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
+def check_viprinet_mem(_no_item, _no_params, info):
+    return (
+        0,
+        "Memory used: %s" % get_bytes_human_readable(saveint(info[0][0])),
+    )
+
+
 check_info["viprinet_mem"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_mem,
     detect=DETECT_VIPRINET,
@@ -36,8 +43,5 @@ check_info["viprinet_mem"] = LegacyCheckDefinition(
     ),
     service_name="Memory",
     discovery_function=discover_viprinet_mem,
-    check_function=lambda _no_item, _no_params, info: (
-        0,
-        "Memory used: %s" % get_bytes_human_readable(saveint(info[0][0])),
-    ),
+    check_function=check_viprinet_mem,
 )

@@ -126,11 +126,15 @@ def discover_eltek_battery_supply(section):
     yield from ((item, {}) for item in section["supply"])
 
 
+def check_eltek_battery_supply(item, params, parsed):
+    return check_elphase(item, params, parsed["supply"])
+
+
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
     service_name="Battery %s",
     sections=["eltek_battery"],
     discovery_function=discover_eltek_battery_supply,
-    check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
+    check_function=check_eltek_battery_supply,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         # suggested by customer

@@ -409,13 +409,17 @@ def discover_jolokia_metrics_cache_hits(info):
     )
 
 
+def check_jolokia_metrics_cache_hits(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
+    )
+
+
 check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
     service_name="JVM %s Cache Usage",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_cache_hits,
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
-    ),
+    check_function=check_jolokia_metrics_cache_hits,
 )
 
 
@@ -426,16 +430,20 @@ def discover_jolokia_metrics_in_memory(info):
     )
 
 
-check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
-    service_name="JVM %s In Memory",
-    sections=["jolokia_metrics"],
-    discovery_function=discover_jolokia_metrics_in_memory,
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+def check_jolokia_metrics_in_memory(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount"],
         ["InMemoryHits", "InMemoryMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
+    service_name="JVM %s In Memory",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_in_memory,
+    check_function=check_jolokia_metrics_in_memory,
 )
 
 
@@ -446,16 +454,20 @@ def discover_jolokia_metrics_on_disk(info):
     )
 
 
-check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
-    service_name="JVM %s On Disk",
-    sections=["jolokia_metrics"],
-    discovery_function=discover_jolokia_metrics_on_disk,
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+def check_jolokia_metrics_on_disk(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["OnDiskHitPercentage", "DiskStoreObjectCount"],
         ["OnDiskHits", "OnDiskMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
+    service_name="JVM %s On Disk",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_on_disk,
+    check_function=check_jolokia_metrics_on_disk,
 )
 
 
@@ -466,16 +478,20 @@ def discover_jolokia_metrics_off_heap(info):
     )
 
 
-check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
-    service_name="JVM %s Off Heap",
-    sections=["jolokia_metrics"],
-    discovery_function=discover_jolokia_metrics_off_heap,
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+def check_jolokia_metrics_off_heap(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount"],
         ["OffHeapHits", "OffHeapMisses"],
         item,
         parsed,
-    ),
+    )
+
+
+check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
+    service_name="JVM %s Off Heap",
+    sections=["jolokia_metrics"],
+    discovery_function=discover_jolokia_metrics_off_heap,
+    check_function=check_jolokia_metrics_off_heap,
 )
 
 
@@ -483,11 +499,15 @@ def discover_jolokia_metrics_writer(info):
     return inventory_jolokia_metrics_cache(["WriterQueueLength", "WriterMaxQueueSize"], info)
 
 
+def check_jolokia_metrics_writer(item, _no_params, parsed):
+    return check_jolokia_metrics_cache(
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
+    )
+
+
 check_info["jolokia_metrics.writer"] = LegacyCheckDefinition(
     service_name="JVM %s Cache Writer",
     sections=["jolokia_metrics"],
     discovery_function=discover_jolokia_metrics_writer,
-    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
-    ),
+    check_function=check_jolokia_metrics_writer,
 )

@@ -72,24 +72,29 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
     return state, infotext, perfdata
 
 
+def check_netapp_api_cpu(item, params, parsed):
+    return check_netapp_api_cpu_utilization(item, params, parsed, "clustermode")
+
+
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization Node %s",
     discovery_function=inventory_netapp_api_cpu,
-    check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
-        item, params, parsed, "clustermode"
-    ),
+    check_function=check_netapp_api_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )
+
+
+def check_netapp_api_cpu_utilization_7mode(item, params, parsed):
+    return check_netapp_api_cpu_utilization(item, params, parsed, "7mode")
+
 
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = LegacyCheckDefinition(
     service_name="CPU utilization",
     sections=["netapp_api_cpu"],
     discovery_function=inventory_netapp_api_cpu_utilization,
-    check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
-        item, params, parsed, "7mode"
-    ),
+    check_function=check_netapp_api_cpu_utilization_7mode,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )

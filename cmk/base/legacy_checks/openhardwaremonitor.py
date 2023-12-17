@@ -163,6 +163,10 @@ def discover_openhardwaremonitor(parsed):
     return inventory_openhardwaremonitor("Clock", parsed)
 
 
+def check_openhardwaremonitor_clock(item, params, parsed):
+    return check_openhardwaremonitor("Clock", item, params, parsed)
+
+
 #   .--clock---------------------------------------------------------------.
 #   |                            _            _                            |
 #   |                        ___| | ___   ___| | __                        |
@@ -176,9 +180,7 @@ check_info["openhardwaremonitor"] = LegacyCheckDefinition(
     parse_function=parse_openhardwaremonitor,
     service_name="Clock %s",
     discovery_function=discover_openhardwaremonitor,
-    check_function=lambda item, params, parsed: check_openhardwaremonitor(
-        "Clock", item, params, parsed
-    ),
+    check_function=check_openhardwaremonitor_clock,
 )
 
 # .
@@ -232,6 +234,10 @@ def discover_openhardwaremonitor_power(parsed):
     return inventory_openhardwaremonitor("Power", parsed)
 
 
+def check_openhardwaremonitor_power(item, params, parsed):
+    return check_openhardwaremonitor("Power", item, params, parsed)
+
+
 # .
 #   .--power---------------------------------------------------------------.
 #   |                                                                      |
@@ -246,9 +252,7 @@ check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
     service_name="Power %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_power,
-    check_function=lambda item, params, parsed: check_openhardwaremonitor(
-        "Power", item, params, parsed
-    ),
+    check_function=check_openhardwaremonitor_power,
 )
 
 # .

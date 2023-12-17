@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -27,6 +27,11 @@ def parse_viprinet_power(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_viprinet_power(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 check_info["viprinet_power"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_power,
     detect=DETECT_VIPRINET,
@@ -35,6 +40,6 @@ check_info["viprinet_power"] = LegacyCheckDefinition(
         oids=["5"],
     ),
     service_name="Power-Supply",
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    discovery_function=discover_viprinet_power,
     check_function=check_viprinet_power,
 )

@@ -54,6 +54,10 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
         yield state, f"{text}: {state_readable}"
 
 
+def discover_fireeye_raid(parsed):
+    return inventory_fireeye_generic(parsed.get("raid", []), False)
+
+
 check_info["fireeye_raid"] = LegacyCheckDefinition(
     detect=DETECT,
     fetch=[
@@ -68,7 +72,7 @@ check_info["fireeye_raid"] = LegacyCheckDefinition(
     ],
     parse_function=parse_fireeye_raid,
     service_name="RAID status",
-    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
+    discovery_function=discover_fireeye_raid,
     check_function=check_fireeye_raid,
 )
 
@@ -92,9 +96,13 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
                 yield state, f"{text}: {state_readable}"
 
 
+def discover_fireeye_raid_disks(parsed):
+    return inventory_fireeye_generic(parsed.get("disks", []), True)
+
+
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
     service_name="Disk status %s",
     sections=["fireeye_raid"],
-    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
+    discovery_function=discover_fireeye_raid_disks,
     check_function=check_fireeye_raid_disks,
 )

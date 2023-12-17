@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -30,6 +30,11 @@ def parse_viprinet_firmware(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_viprinet_firmware(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
 check_info["viprinet_firmware"] = LegacyCheckDefinition(
     parse_function=parse_viprinet_firmware,
     detect=DETECT_VIPRINET,
@@ -38,6 +43,6 @@ check_info["viprinet_firmware"] = LegacyCheckDefinition(
         oids=["4", "7"],
     ),
     service_name="Firmware Version",
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    discovery_function=discover_viprinet_firmware,
     check_function=check_viprinet_firmware,
 )

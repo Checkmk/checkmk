@@ -61,6 +61,10 @@ def parse_fireeye_fans(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_fans(info):
+    return inventory_fireeye_generic(info, True)
+
+
 check_info["fireeye_fans"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_fans,
     detect=DETECT,
@@ -69,6 +73,6 @@ check_info["fireeye_fans"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="Fan %s",
-    discovery_function=lambda info: inventory_fireeye_generic(info, True),
+    discovery_function=discover_fireeye_fans,
     check_function=check_fireeye_fans,
 )

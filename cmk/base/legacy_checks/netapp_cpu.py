@@ -21,6 +21,10 @@ def parse_netapp_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
+def discover_netapp_cpu(info):
+    return [(None, {})]
+
+
 check_info["netapp_cpu"] = LegacyCheckDefinition(
     parse_function=parse_netapp_cpu,
     detect=all_of(
@@ -31,7 +35,7 @@ check_info["netapp_cpu"] = LegacyCheckDefinition(
         oids=["3"],
     ),
     service_name="CPU utilization",
-    discovery_function=lambda info: [(None, {})],
+    discovery_function=discover_netapp_cpu,
     check_function=check_netapp_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

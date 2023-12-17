@@ -44,10 +44,14 @@ def check_zorp_connections(item, params, parsed):
     )
 
 
+def discover_zorp_connections(parsed):
+    return [(None, {})]
+
+
 check_info["zorp_connections"] = LegacyCheckDefinition(
     parse_function=parse_zorp_connections,
     service_name="Zorp Connections",
-    discovery_function=lambda parsed: [(None, {})],
+    discovery_function=discover_zorp_connections,
     check_function=check_zorp_connections,
     check_ruleset_name="zorp_connections",
     check_default_parameters={

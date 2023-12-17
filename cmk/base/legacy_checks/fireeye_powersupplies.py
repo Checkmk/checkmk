@@ -28,6 +28,10 @@ def parse_fireeye_powersupplies(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_powersupplies(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_powersupplies"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_powersupplies,
     detect=DETECT,
@@ -36,6 +40,6 @@ check_info["fireeye_powersupplies"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="Power supplies summary",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_powersupplies,
     check_function=check_fireeye_powersupplies,
 )

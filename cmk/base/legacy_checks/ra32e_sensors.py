@@ -113,6 +113,10 @@ def check_ra32e_sensors(item, params, parsed):
     return check_temperature(temperature, params, unique_name)
 
 
+def discover_ra32e_sensors(x):
+    return inventory_ra32e_sensors(x, "temperature")
+
+
 check_info["ra32e_sensors"] = LegacyCheckDefinition(
     detect=DETECT_RA32E,
     fetch=[
@@ -147,7 +151,7 @@ check_info["ra32e_sensors"] = LegacyCheckDefinition(
     ],
     parse_function=parse_ra32e_sensors,
     service_name="Temperature %s",
-    discovery_function=lambda x: inventory_ra32e_sensors(x, "temperature"),
+    discovery_function=discover_ra32e_sensors,
     check_function=check_ra32e_sensors,
     check_ruleset_name="temperature",
     check_default_parameters={
@@ -174,10 +178,14 @@ def check_ra32e_humidity_sensors(item, params, parsed):
     return check_humidity(humidity, params)
 
 
+def discover_ra32e_sensors_humidity(x):
+    return inventory_ra32e_sensors(x, "humidity")
+
+
 check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["ra32e_sensors"],
-    discovery_function=lambda x: inventory_ra32e_sensors(x, "humidity"),
+    discovery_function=discover_ra32e_sensors_humidity,
     check_function=check_ra32e_humidity_sensors,
     check_ruleset_name="humidity",
     check_default_parameters={
@@ -200,10 +208,14 @@ def check_ra32e_sensors_voltage(item, params, parsed):
     return next(check_elphase(item, params, parsed["voltage"]))
 
 
+def discover_ra32e_sensors_voltage(x):
+    return inventory_ra32e_sensors(x, "voltage")
+
+
 check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
     service_name="Voltage %s",
     sections=["ra32e_sensors"],
-    discovery_function=lambda x: inventory_ra32e_sensors(x, "voltage"),
+    discovery_function=discover_ra32e_sensors_voltage,
     check_function=check_ra32e_sensors_voltage,
     check_ruleset_name="ups_outphase",
     check_default_parameters={
@@ -226,10 +238,14 @@ def check_ra32e_power_sensors(item, params, parsed):
     return next(check_elphase(item, params, parsed["power"]))
 
 
+def discover_ra32e_sensors_power(x):
+    return inventory_ra32e_sensors(x, "power")
+
+
 check_info["ra32e_sensors.power"] = LegacyCheckDefinition(
     service_name="Power State %s",
     sections=["ra32e_sensors"],
-    discovery_function=lambda x: inventory_ra32e_sensors(x, "power"),
+    discovery_function=discover_ra32e_sensors_power,
     check_function=check_ra32e_power_sensors,
     check_ruleset_name="ups_outphase",
 )

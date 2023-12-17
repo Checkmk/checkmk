@@ -34,6 +34,10 @@ def parse_fireeye_sys_image(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_sys_image(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_sys_image"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_sys_image,
     detect=DETECT,
@@ -42,6 +46,6 @@ check_info["fireeye_sys_image"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     service_name="System image",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_sys_image,
     check_function=check_fireeye_sys_image,
 )

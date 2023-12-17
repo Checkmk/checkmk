@@ -26,12 +26,16 @@ def check_dotnet_clrmemory(item, params, parsed):
     )
 
 
+def discover_dotnet_clrmemory(parsed):
+    return inventory_wmi_table_instances(
+        parsed, filt=wmi_filter_global_only, levels=dotnet_clrmemory_defaultlevels
+    )
+
+
 check_info["dotnet_clrmemory"] = LegacyCheckDefinition(
     parse_function=parse_wmi_table,
     service_name="DotNet Memory Management %s",
-    discovery_function=lambda parsed: inventory_wmi_table_instances(
-        parsed, filt=wmi_filter_global_only, levels=dotnet_clrmemory_defaultlevels
-    ),
+    discovery_function=discover_dotnet_clrmemory,
     check_function=check_dotnet_clrmemory,
     check_ruleset_name="clr_memory",
 )

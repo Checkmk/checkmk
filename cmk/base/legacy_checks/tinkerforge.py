@@ -129,34 +129,53 @@ def check_tinkerforge_motion(item, params, parsed):
         return 0, "No motion detected", [("motion", reading)]
 
 
+def discover_tinkerforge(parsed):
+    return inventory_tinkerforge("master", parsed)
+
+
 check_info["tinkerforge"] = LegacyCheckDefinition(
     parse_function=parse_tinkerforge,
     service_name="Master %s",
-    discovery_function=lambda parsed: inventory_tinkerforge("master", parsed),
+    discovery_function=discover_tinkerforge,
     check_function=check_tinkerforge_master,
 )
+
+
+def discover_tinkerforge_temperature(parsed):
+    return inventory_tinkerforge("temperature", parsed)
+
 
 check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("temperature", parsed),
+    discovery_function=discover_tinkerforge_temperature,
     check_function=check_tinkerforge_temperature,
     check_ruleset_name="temperature",
 )
 
+
+def discover_tinkerforge_ambient(parsed):
+    return inventory_tinkerforge("ambient", parsed)
+
+
 check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
     service_name="Ambient Light %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
+    discovery_function=discover_tinkerforge_ambient,
     check_function=check_tinkerforge_ambient,
     check_ruleset_name="brightness",
     check_default_parameters={"levels": None},
 )
 
+
+def discover_tinkerforge_humidity(parsed):
+    return inventory_tinkerforge("humidity", parsed)
+
+
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("humidity", parsed),
+    discovery_function=discover_tinkerforge_humidity,
     check_function=check_tinkerforge_humidity,
     check_ruleset_name="humidity",
     # based on customers investigation
@@ -166,10 +185,15 @@ check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
     },
 )
 
+
+def discover_tinkerforge_motion(parsed):
+    return inventory_tinkerforge("motion", parsed)
+
+
 check_info["tinkerforge.motion"] = LegacyCheckDefinition(
     service_name="Motion Detector %s",
     sections=["tinkerforge"],
-    discovery_function=lambda parsed: inventory_tinkerforge("motion", parsed),
+    discovery_function=discover_tinkerforge_motion,
     check_function=check_tinkerforge_motion,
     check_ruleset_name="motion",
 )

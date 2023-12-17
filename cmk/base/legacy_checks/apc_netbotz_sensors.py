@@ -135,6 +135,11 @@ _OIDS = [
     "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
 ]
 
+
+def discover_apc_netbotz_sensors(parsed):
+    return inventory_apc_netbotz_sensors_temp(parsed, "temp")
+
+
 check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
     fetch=[
@@ -153,7 +158,7 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
     ],
     parse_function=parse_apc_netbotz_sensors,
     service_name="Temperature %s",
-    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
+    discovery_function=discover_apc_netbotz_sensors,
     check_function=lambda item, params, parsed: check_apc_netbotz_sensors_temp(
         item, params, parsed, "temp"
     ),
@@ -163,6 +168,11 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
         "levels_lower": (25.0, 20.0),
     },
 )
+
+
+def discover_apc_netbotz_sensors_dewpoint(parsed):
+    return inventory_apc_netbotz_sensors_temp(parsed, "dewpoint")
+
 
 # .
 #   .--dewpoint------------------------------------------------------------.
@@ -179,7 +189,7 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
 check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
     service_name="Dew point %s",
     sections=["apc_netbotz_sensors"],
-    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
+    discovery_function=discover_apc_netbotz_sensors_dewpoint,
     check_function=lambda item, params, info: check_apc_netbotz_sensors_temp(
         item, params, info, "dewpoint"
     ),

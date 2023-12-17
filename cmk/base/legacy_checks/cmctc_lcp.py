@@ -221,73 +221,123 @@ check_info["cmctc_lcp"] = LegacyCheckDefinition(
     parse_function=parse_cmctc_lcp,
 )
 
+
+def discover_cmctc_lcp_access(info):
+    return inventory_cmctc_lcp(info, "access")
+
+
 check_info["cmctc_lcp.access"] = LegacyCheckDefinition(
     service_name="Access %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "access"),
+    discovery_function=discover_cmctc_lcp_access,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "access"),
 )
+
+
+def discover_cmctc_lcp_blower(info):
+    return inventory_cmctc_lcp(info, "blower")
+
 
 check_info["cmctc_lcp.blower"] = LegacyCheckDefinition(
     service_name="Blower %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "blower"),
+    discovery_function=discover_cmctc_lcp_blower,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "blower"),
 )
+
+
+def discover_cmctc_lcp_blowergrade(info):
+    return inventory_cmctc_lcp(info, "blowergrade")
+
 
 check_info["cmctc_lcp.blowergrade"] = LegacyCheckDefinition(
     service_name="Blower Grade %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "blowergrade"),
+    discovery_function=discover_cmctc_lcp_blowergrade,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "blowergrade"),
 )
+
+
+def discover_cmctc_lcp_current(info):
+    return inventory_cmctc_lcp(info, "current")
+
 
 check_info["cmctc_lcp.current"] = LegacyCheckDefinition(
     service_name="Current %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "current"),
+    discovery_function=discover_cmctc_lcp_current,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "current"),
 )
+
+
+def discover_cmctc_lcp_flow(info):
+    return inventory_cmctc_lcp(info, "flow")
+
 
 check_info["cmctc_lcp.flow"] = LegacyCheckDefinition(
     service_name="Waterflow %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "flow"),
+    discovery_function=discover_cmctc_lcp_flow,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "flow"),
 )
+
+
+def discover_cmctc_lcp_humidity(info):
+    return inventory_cmctc_lcp(info, "humidity")
+
 
 check_info["cmctc_lcp.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "humidity"),
+    discovery_function=discover_cmctc_lcp_humidity,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "humidity"),
 )
+
+
+def discover_cmctc_lcp_position(info):
+    return inventory_cmctc_lcp(info, "position")
+
 
 check_info["cmctc_lcp.position"] = LegacyCheckDefinition(
     service_name="Position %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "position"),
+    discovery_function=discover_cmctc_lcp_position,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "position"),
 )
+
+
+def discover_cmctc_lcp_regulator(info):
+    return inventory_cmctc_lcp(info, "regulator")
+
 
 check_info["cmctc_lcp.regulator"] = LegacyCheckDefinition(
     service_name="Regulator %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "regulator"),
+    discovery_function=discover_cmctc_lcp_regulator,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "regulator"),
 )
+
+
+def discover_cmctc_lcp_status(info):
+    return inventory_cmctc_lcp(info, "status")
+
 
 check_info["cmctc_lcp.status"] = LegacyCheckDefinition(
     service_name="Status %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "status"),
+    discovery_function=discover_cmctc_lcp_status,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "status"),
 )
+
+
+def discover_cmctc_lcp_user(info):
+    return inventory_cmctc_lcp(info, "user")
+
 
 check_info["cmctc_lcp.user"] = LegacyCheckDefinition(
     service_name="User Sensor %s",
     sections=["cmctc_lcp"],
-    discovery_function=lambda info: inventory_cmctc_lcp(info, "user"),
+    discovery_function=discover_cmctc_lcp_user,
     check_function=lambda item, params, info: check_cmctc_lcp(item, params, info, "user"),
 )
 

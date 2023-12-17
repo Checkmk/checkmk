@@ -80,10 +80,14 @@ def check_aws_s3_objects(item, params, parsed):
         yield 0, "[Tags] %s" % ", ".join(tag_infos)
 
 
+def discover_aws_s3(p):
+    return inventory_aws_generic(p, ["BucketSizeBytes", "NumberOfObjects"])
+
+
 check_info["aws_s3"] = LegacyCheckDefinition(
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Objects %s",
-    discovery_function=lambda p: inventory_aws_generic(p, ["BucketSizeBytes", "NumberOfObjects"]),
+    discovery_function=discover_aws_s3,
     check_function=check_aws_s3_objects,
     check_ruleset_name="aws_s3_buckets_objects",
 )

@@ -342,10 +342,14 @@ def parse_drbd(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_drbd(info):
+    return inventory_drbd(info, "drbd")
+
+
 check_info["drbd"] = LegacyCheckDefinition(
     parse_function=parse_drbd,
     service_name="DRBD %s status",
-    discovery_function=lambda info: inventory_drbd(info, "drbd"),
+    discovery_function=discover_drbd,
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
 )
@@ -381,10 +385,14 @@ def check_drbd_net(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_net(info):
+    return inventory_drbd(info, "drbd.net")
+
+
 check_info["drbd.net"] = LegacyCheckDefinition(
     service_name="DRBD %s net",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
+    discovery_function=discover_drbd_net,
     check_function=check_drbd_net,
 )
 
@@ -406,10 +414,14 @@ def check_drbd_disk(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_disk(info):
+    return inventory_drbd(info, "drbd.disk")
+
+
 check_info["drbd.disk"] = LegacyCheckDefinition(
     service_name="DRBD %s disk",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
+    discovery_function=discover_drbd_disk,
     check_function=check_drbd_disk,
 )
 
@@ -443,9 +455,13 @@ def check_drbd_stats(item, _no_params, info):
     return (3, "Undefined state")
 
 
+def discover_drbd_stats(info):
+    return inventory_drbd(info, "drbd.stats")
+
+
 check_info["drbd.stats"] = LegacyCheckDefinition(
     service_name="DRBD %s stats",
     sections=["drbd"],
-    discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
+    discovery_function=discover_drbd_stats,
     check_function=check_drbd_stats,
 )

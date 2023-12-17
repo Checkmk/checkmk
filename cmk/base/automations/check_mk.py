@@ -477,7 +477,7 @@ def active_check_preview_rows(
                 item=active_service.description,
                 old_discovered_parameters={},
                 new_discovered_parameters={},
-                effective_parameters=None,
+                effective_parameters={},
                 description=active_service.description,
                 state=None,
                 output=make_output(active_service.description),

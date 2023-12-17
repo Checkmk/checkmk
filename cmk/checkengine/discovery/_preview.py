@@ -20,8 +20,7 @@ from cmk.utils.timeperiod import timeperiod_active
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
-from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParametersPreview
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,
@@ -50,7 +49,7 @@ class CheckPreviewEntry:
     item: Item
     old_discovered_parameters: Mapping[str, object]
     new_discovered_parameters: Mapping[str, object]
-    effective_parameters: LegacyCheckParameters
+    effective_parameters: TimespecificParametersPreview | Mapping[str, object]
     description: str
     state: int | None
     output: str

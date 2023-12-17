@@ -18,7 +18,6 @@ from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 __all__ = [
@@ -34,7 +33,7 @@ __all__ = [
 
 
 ComputeCheckParameters = Callable[
-    [HostName, CheckPluginName, Item, LegacyCheckParameters],
+    [HostName, CheckPluginName, Item, Mapping[str, object]],
     TimespecificParameters,
 ]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]

@@ -371,8 +371,8 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
         nodes_of={},
     )
 
-    assert matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset) == {}
-    assert matcher.get_host_merged_dict(HostName("xyz"), ruleset=dict_ruleset) == {}
+    assert not matcher.get_host_merged_dict(HostName("abc"), ruleset=dict_ruleset)
+    assert not matcher.get_host_merged_dict(HostName("xyz"), ruleset=dict_ruleset)
     assert matcher.get_host_merged_dict(HostName("host1"), ruleset=dict_ruleset) == {
         "hu": "BLA",
         "ho": "BLA",

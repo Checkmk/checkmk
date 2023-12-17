@@ -21,7 +21,7 @@ from cmk.utils.labels import (
     LabelGroups,
     Labels,
 )
-from cmk.utils.parameters import boil_down_parameters
+from cmk.utils.parameters import merge_parameters
 from cmk.utils.regex import regex
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
@@ -201,10 +201,7 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
-        default: Mapping[str, TRuleValue] = {}
-        merged = boil_down_parameters(self.get_host_values(hostname, ruleset), default)
-        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
-        return merged
+        return merge_parameters(self.get_host_values(hostname, ruleset), default={})
 
     def get_host_values(
         self,
@@ -290,15 +287,14 @@ class RulesetMatcher:
         The first dict setting a key defines the final value.
 
         """
-        default: Mapping[str, TRuleValue] = {}
-        merged = boil_down_parameters(
-            self.get_service_ruleset_values(
-                self._service_match_object(hostname, description), ruleset
+        return merge_parameters(
+            list(
+                self.get_service_ruleset_values(
+                    self._service_match_object(hostname, description), ruleset
+                )
             ),
-            default,
+            default={},
         )
-        assert isinstance(merged, dict)  # remove along with LegacyCheckParameters
-        return merged
 
     def service_extra_conf(
         self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
@@ -868,15 +864,15 @@ class RulesetOptimizer:
         return labels
 
     def _ruleset_labels_of_service(self, hostname: HostName, service_desc: ServiceName) -> Labels:
-        default: Labels = {}
-        merged = boil_down_parameters(
-            self._ruleset_matcher.get_service_ruleset_values(
-                RulesetMatchObject(hostname, service_desc), self._label_manager.service_label_rules
+        return merge_parameters(
+            list(
+                self._ruleset_matcher.get_service_ruleset_values(
+                    RulesetMatchObject(hostname, service_desc),
+                    self._label_manager.service_label_rules,
+                )
             ),
-            default,
+            default={},
         )
-        assert isinstance(merged, dict)
-        return merged
 
 
 def _tags_cache_id(tag_or_label_spec: object) -> object:

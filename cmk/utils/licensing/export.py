@@ -17,7 +17,7 @@ from uuid import UUID
 from dateutil.relativedelta import relativedelta
 from typing_extensions import TypedDict
 
-LicenseUsageReportVersion: Final[str] = "2.1"
+LicenseUsageReportVersion: Final[str] = "2.2"
 
 
 class RawLicenseUsageReport(TypedDict):
@@ -282,6 +282,8 @@ class RawLicenseUsageSample(TypedDict):
     num_services_cloud: int
     num_services_shadow: int
     num_services_excluded: int
+    num_services_synthetic: int
+    num_services_synthetic_excluded: int
     extension_ntop: bool
 
 
@@ -318,6 +320,8 @@ class LicenseUsageSample:
     num_services_cloud: int
     num_services_shadow: int
     num_services_excluded: int
+    num_services_synthetic: int
+    num_services_synthetic_excluded: int
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
@@ -338,6 +342,8 @@ class LicenseUsageSample:
             "num_services_cloud": self.num_services_cloud,
             "num_services_shadow": self.num_services_shadow,
             "num_services_excluded": self.num_services_excluded,
+            "num_services_synthetic": self.num_services_synthetic,
+            "num_services_synthetic_excluded": self.num_services_synthetic_excluded,
             "extension_ntop": self.extension_ntop,
         }
 
@@ -357,6 +363,9 @@ class LicenseUsageSample:
 
         if version in ["2.0", "2.1"]:
             return cls._parse_sample_v2_0
+
+        if version in ["2.2"]:
+            return cls._parse_sample_v2_2
 
         raise UnknownSampleParserError("Unknown report version: %r" % version)
 
@@ -392,6 +401,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=0,
+            num_services_synthetic=0,
+            num_services_synthetic_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -427,6 +438,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
+            num_services_synthetic=0,
+            num_services_synthetic_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -462,6 +475,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
+            num_services_synthetic=0,
+            num_services_synthetic_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -500,6 +515,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
+            num_services_synthetic=0,
+            num_services_synthetic_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -538,6 +555,48 @@ class LicenseUsageSample:
             num_services_cloud=raw_sample["num_services_cloud"],
             num_services_shadow=raw_sample["num_services_shadow"],
             num_services_excluded=raw_sample["num_services_excluded"],
+            num_services_synthetic=0,
+            num_services_synthetic_excluded=0,
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v2_2(
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError("Parse sample 2.2: Wrong sample type: %r" % type(raw_sample))
+
+        if not (raw_instance_id := raw_sample.get("instance_id")):
+            raise ValueError("Parse sample 2.2: No such instance ID")
+
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError("Parse sample 2.2: No such site hash")
+
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
+        return cls(
+            instance_id=UUID(raw_instance_id),
+            site_hash=site_hash,
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=raw_sample["num_hosts_cloud"],
+            num_hosts_shadow=raw_sample["num_hosts_shadow"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_services=raw_sample["num_services"],
+            num_services_cloud=raw_sample["num_services_cloud"],
+            num_services_shadow=raw_sample["num_services_shadow"],
+            num_services_excluded=raw_sample["num_services_excluded"],
+            num_services_synthetic=raw_sample["num_services_synthetic"],
+            num_services_synthetic_excluded=raw_sample["num_services_synthetic_excluded"],
             extension_ntop=extensions.ntop,
         )
 

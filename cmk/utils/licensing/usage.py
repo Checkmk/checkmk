@@ -52,6 +52,7 @@ CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
 _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
+_SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
 
 
 class DoCreateSample(Protocol):
@@ -131,6 +132,14 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         - that are shadow services
     num_services_excluded: Services
         - with the "cmk/licensing:excluded" label
+    num_services_synthetic Services
+        - with the check_command: robotmk_test
+        - that are not shadow services
+        - without the "cmk/licensing:excluded" label
+    num_services_synthetic_excluded: Services
+        - with the check_command: robotmk_test
+        - that are not shadow services
+        - with the "cmk/licensing:excluded" label
 
     Shadow objects: 0: active, 1: passive, 2: shadow
     """
@@ -146,6 +155,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     hosts_counter = _get_hosts_counter()
     services_counter = _get_services_counter()
     cloud_counter = _get_cloud_counter()
+    synthetic_monitoring_counter = _get_synthetic_monitoring_counter()
 
     general_infos = cmk_version.get_general_version_infos()
     extensions = _load_extensions()
@@ -165,6 +175,8 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         num_services_cloud=cloud_counter.services,
         num_services_shadow=services_counter.num_shadow,
         num_services_excluded=services_counter.num_excluded,
+        num_services_synthetic=synthetic_monitoring_counter.num_services,
+        num_services_synthetic_excluded=synthetic_monitoring_counter.num_excluded,
         sample_time=sample_time,
         timezone=now.tz,
         extension_ntop=extensions.ntop,
@@ -261,6 +273,37 @@ def _get_cloud_counter() -> HostsOrServicesCloudCounter:
             "\nFilter: check_type != 2"
             f"\nFilter: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             f"\nFilter: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+        )
+    )
+
+
+class HostsOrServicesSyntheticCounter(NamedTuple):
+    num_services: int
+    num_excluded: int
+
+    @classmethod
+    def make(cls, livestatus_response: Sequence[Sequence[Any]]) -> HostsOrServicesSyntheticCounter:
+        stats = livestatus_response[0]
+        return cls(num_services=int(stats[0]), num_excluded=int(stats[1]))
+
+
+def _get_synthetic_monitoring_counter() -> HostsOrServicesSyntheticCounter:
+    return HostsOrServicesSyntheticCounter.make(
+        _get_from_livestatus(
+            "GET services"
+            "\nStats: host_check_type != 2"
+            "\nStats: check_type != 2"
+            f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            "\nStatsAnd: 5"
+            f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+            "\nStatsOr: 2"
+            "\nStats: host_check_type != 2"
+            "\nStats: check_type != 2"
+            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            "\nStatsAnd: 4"
         )
     )
 

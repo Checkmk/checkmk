@@ -116,7 +116,7 @@ class TestTryDiscoveryResult:
                     item=None,
                     old_discovered_parameters={},
                     new_discovered_parameters={},
-                    effective_parameters=None,
+                    effective_parameters={},
                     description="description",
                     state=0,
                     output="output",

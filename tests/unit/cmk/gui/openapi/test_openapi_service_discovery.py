@@ -34,7 +34,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             None,
             {},
             {},
-            (5.0, 10.0),
+            {"levels": (5.0, 10.0)},
             "CPU load",
             0,
             "15 min load: 1.32 at 8 Cores (0.17 per Core)",

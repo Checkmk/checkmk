@@ -2744,7 +2744,7 @@ class ConfigCache:
                     item=entry["service_description"],
                     new_discovered_parameters={},
                     old_discovered_parameters={},
-                    effective_parameters=None,
+                    effective_parameters={},
                     description=entry["service_description"],
                     state=None,
                     output=make_output(entry["service_description"]),

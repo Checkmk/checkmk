@@ -44,6 +44,10 @@ def parse_netapp_fcpio(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
+def discover_netapp_fcpio(info):
+    return [(None, {})]
+
+
 check_info["netapp_fcpio"] = LegacyCheckDefinition(
     parse_function=parse_netapp_fcpio,
     detect=all_of(
@@ -54,7 +58,7 @@ check_info["netapp_fcpio"] = LegacyCheckDefinition(
         oids=["20", "21"],
     ),
     service_name="FCP I/O",
-    discovery_function=lambda info: [(None, {})],
+    discovery_function=discover_netapp_fcpio,
     check_function=check_netapp_fcpio,
     check_ruleset_name="netapp_fcportio",
     check_default_parameters={},

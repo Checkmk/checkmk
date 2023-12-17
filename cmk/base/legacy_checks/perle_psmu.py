@@ -22,10 +22,14 @@ def check_perle_psmu_powersupplies(item, params, parsed):
         yield from check_elphase(item, params, parsed)
 
 
+def discover_perle_psmu(info):
+    return inventory_perle_psmu(info, "psustate")
+
+
 check_info["perle_psmu"] = LegacyCheckDefinition(
     # section is already migrated!
     service_name="Power supply %s",
-    discovery_function=lambda info: inventory_perle_psmu(info, "psustate"),
+    discovery_function=discover_perle_psmu,
     check_function=check_perle_psmu_powersupplies,
     check_ruleset_name="el_inphase",
 )
@@ -38,9 +42,13 @@ def check_perle_psmu_fans(item, _no_params, parsed):
     return None
 
 
+def discover_perle_psmu_fan(info):
+    return inventory_perle_psmu(info, "fanstate")
+
+
 check_info["perle_psmu.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     sections=["perle_psmu"],
-    discovery_function=lambda info: inventory_perle_psmu(info, "fanstate"),
+    discovery_function=discover_perle_psmu_fan,
     check_function=check_perle_psmu_fans,
 )

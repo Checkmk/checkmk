@@ -95,6 +95,10 @@ def check_papouch_th2e_sensors_temp(item, params, parsed, what):
     return None
 
 
+def discover_papouch_th2e_sensors(parsed):
+    return inventory_papouch_th2e_sensors_temp(parsed, "temp")
+
+
 check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "th2e"), startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1")
@@ -105,12 +109,17 @@ check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
     ),
     parse_function=parse_papouch_th2e_sensors,
     service_name="Temperature %s",
-    discovery_function=lambda parsed: inventory_papouch_th2e_sensors_temp(parsed, "temp"),
+    discovery_function=discover_papouch_th2e_sensors,
     check_function=lambda item, params, parsed: check_papouch_th2e_sensors_temp(
         item, params, parsed, "temp"
     ),
     check_ruleset_name="temperature",
 )
+
+
+def discover_papouch_th2e_sensors_dewpoint(parsed):
+    return inventory_papouch_th2e_sensors_temp(parsed, "dewpoint")
+
 
 # .
 #   .--dew point-----------------------------------------------------------.
@@ -126,7 +135,7 @@ check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
 check_info["papouch_th2e_sensors.dewpoint"] = LegacyCheckDefinition(
     service_name="Dew point %s",
     sections=["papouch_th2e_sensors"],
-    discovery_function=lambda parsed: inventory_papouch_th2e_sensors_temp(parsed, "dewpoint"),
+    discovery_function=discover_papouch_th2e_sensors_dewpoint,
     check_function=lambda item, params, parsed: check_papouch_th2e_sensors_temp(
         item, params, parsed, "dewpoint"
     ),

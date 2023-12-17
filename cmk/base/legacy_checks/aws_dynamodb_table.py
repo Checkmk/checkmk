@@ -169,10 +169,14 @@ def check_aws_dynamodb_latency(item, params, parsed):
         raise IgnoreResultsError("Currently no data from AWS")
 
 
+def discover_aws_dynamodb_table_read_capacity(p):
+    return inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"])
+
+
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Read Capacity",
     sections=["aws_dynamodb_table"],
-    discovery_function=lambda p: inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"]),
+    discovery_function=discover_aws_dynamodb_table_read_capacity,
     check_function=check_aws_dynamodb_read_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
@@ -180,12 +184,15 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     },
 )
 
+
+def discover_aws_dynamodb_table_write_capacity(p):
+    return inventory_aws_generic_single(p, ["Sum_ConsumedWriteCapacityUnits"])
+
+
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Write Capacity",
     sections=["aws_dynamodb_table"],
-    discovery_function=lambda p: inventory_aws_generic_single(
-        p, ["Sum_ConsumedWriteCapacityUnits"]
-    ),
+    discovery_function=discover_aws_dynamodb_table_write_capacity,
     check_function=check_aws_dynamodb_write_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={

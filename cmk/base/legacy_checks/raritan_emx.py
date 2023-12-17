@@ -135,12 +135,21 @@ def check_raritan_emx_fan(item, _no_params, parsed):
     return None
 
 
+def discover_raritan_emx_fan(parsed):
+    return inventory_raritan_emx(parsed, "fanspeed")
+
+
 check_info["raritan_emx.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
     sections=["raritan_emx"],
-    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
+    discovery_function=discover_raritan_emx_fan,
     check_function=check_raritan_emx_fan,
 )
+
+
+def discover_raritan_emx_binary(parsed):
+    return inventory_raritan_emx(parsed, "binary")
+
 
 # .
 #   .--binary--------------------------------------------------------------.
@@ -155,6 +164,6 @@ check_info["raritan_emx.fan"] = LegacyCheckDefinition(
 check_info["raritan_emx.binary"] = LegacyCheckDefinition(
     service_name="Door %s",
     sections=["raritan_emx"],
-    discovery_function=lambda parsed: inventory_raritan_emx(parsed, "binary"),
+    discovery_function=discover_raritan_emx_binary,
     check_function=check_raritan_sensors_binary,
 )

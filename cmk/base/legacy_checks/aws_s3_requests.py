@@ -90,10 +90,14 @@ def check_aws_s3_requests(item, params, metrics):
         )
 
 
+def discover_aws_s3_requests(p):
+    return inventory_aws_generic(p, ["AllRequests"])
+
+
 check_info["aws_s3_requests"] = LegacyCheckDefinition(
     parse_function=parse_aws_s3,
     service_name="AWS/S3 Requests %s",
-    discovery_function=lambda p: inventory_aws_generic(p, ["AllRequests"]),
+    discovery_function=discover_aws_s3_requests,
     check_function=check_aws_s3_requests,
     check_ruleset_name="aws_s3_requests",
 )
@@ -120,12 +124,14 @@ def check_aws_s3_http_errors(item, params, metrics):
     )
 
 
+def discover_aws_s3_requests_http_errors(p):
+    return inventory_aws_generic(p, ["AllRequests", "4xxErrors", "5xxErrors"])
+
+
 check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
     service_name="AWS/S3 HTTP Errors %s",
     sections=["aws_s3_requests"],
-    discovery_function=lambda p: inventory_aws_generic(
-        p, ["AllRequests", "4xxErrors", "5xxErrors"]
-    ),
+    discovery_function=discover_aws_s3_requests_http_errors,
     check_function=check_aws_s3_http_errors,
     check_ruleset_name="aws_s3_http_errors",
 )
@@ -172,10 +178,14 @@ def check_aws_s3_latency(item, params, metrics):
     return check_aws_metrics(metric_infos)
 
 
+def discover_aws_s3_requests_latency(p):
+    return inventory_aws_generic(p, ["TotalRequestLatency"])
+
+
 check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
     service_name="AWS/S3 Latency %s",
     sections=["aws_s3_requests"],
-    discovery_function=lambda p: inventory_aws_generic(p, ["TotalRequestLatency"]),
+    discovery_function=discover_aws_s3_requests_latency,
     check_function=check_aws_s3_latency,
     check_ruleset_name="aws_s3_latency",
 )
@@ -209,10 +219,14 @@ def check_aws_s3_traffic_stats(item, params, metrics):
     )
 
 
+def discover_aws_s3_requests_traffic_stats(p):
+    return inventory_aws_generic(p, ["BytesDownloaded", "BytesUploaded"])
+
+
 check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
     service_name="AWS/S3 Traffic Stats %s",
     sections=["aws_s3_requests"],
-    discovery_function=lambda p: inventory_aws_generic(p, ["BytesDownloaded", "BytesUploaded"]),
+    discovery_function=discover_aws_s3_requests_traffic_stats,
     check_function=check_aws_s3_traffic_stats,
 )
 
@@ -245,11 +259,13 @@ def check_aws_s3_select_object(item, params, metrics):
     )
 
 
+def discover_aws_s3_requests_select_object(p):
+    return inventory_aws_generic(p, ["SelectBytesScanned", "SelectBytesReturned"])
+
+
 check_info["aws_s3_requests.select_object"] = LegacyCheckDefinition(
     service_name="AWS/S3 SELECT Object %s",
     sections=["aws_s3_requests"],
-    discovery_function=lambda p: inventory_aws_generic(
-        p, ["SelectBytesScanned", "SelectBytesReturned"]
-    ),
+    discovery_function=discover_aws_s3_requests_select_object,
     check_function=check_aws_s3_select_object,
 )

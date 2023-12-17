@@ -19,11 +19,13 @@ def check_wmi_webservices(item, params, parsed):
     )
 
 
+def discover_wmi_webservices(p):
+    return inventory_wmi_table_instances(p)  # pylint: disable=unnecessary-lambda
+
+
 check_info["wmi_webservices"] = LegacyCheckDefinition(
     parse_function=parse_wmi_table,
     service_name="Web Service %s",
-    discovery_function=lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
-        p
-    ),
+    discovery_function=discover_wmi_webservices,
     check_function=check_wmi_webservices,
 )

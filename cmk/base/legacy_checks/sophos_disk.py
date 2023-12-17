@@ -29,6 +29,10 @@ def check_sophos_disk(item, params, parsed):
     )
 
 
+def discover_sophos_disk(parsed):
+    return [(None, {})] if parsed is not None else None
+
+
 check_info["sophos_disk"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
@@ -37,7 +41,7 @@ check_info["sophos_disk"] = LegacyCheckDefinition(
     ),
     parse_function=parse_sophos_disk,
     service_name="Disk usage",
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    discovery_function=discover_sophos_disk,
     check_function=check_sophos_disk,
     check_ruleset_name="sophos_disk",
 )

@@ -30,6 +30,10 @@ def parse_fireeye_lic_active(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_lic_active(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_lic_active"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_lic_active,
     detect=DETECT,
@@ -38,6 +42,6 @@ check_info["fireeye_lic_active"] = LegacyCheckDefinition(
         oids=["10", "11", "12"],
     ),
     service_name="Active Licenses",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_lic_active,
     check_function=check_fireeye_lic_active,
 )

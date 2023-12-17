@@ -24,6 +24,10 @@ def parse_fireeye_smtp_conn(string_table: StringTable) -> StringTable:
     return string_table
 
 
+def discover_fireeye_smtp_conn(info):
+    return inventory_fireeye_generic(info, False)
+
+
 check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
     parse_function=parse_fireeye_smtp_conn,
     detect=DETECT,
@@ -32,6 +36,6 @@ check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
         oids=["46"],
     ),
     service_name="SMTP Connections",
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    discovery_function=discover_fireeye_smtp_conn,
     check_function=check_fireeye_smtp_conn,
 )

@@ -104,6 +104,10 @@ def parse_raritan_px_sensors(string_table):
     return parse_raritan_sensors(pre_parsed)
 
 
+def discover_raritan_px_sensors(parsed):
+    return inventory_raritan_sensors_temp(parsed, "temp")
+
+
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -123,10 +127,15 @@ check_info["raritan_px_sensors"] = LegacyCheckDefinition(
     ),
     parse_function=parse_raritan_px_sensors,
     service_name="Temperature %s",
-    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
+    discovery_function=discover_raritan_px_sensors,
     check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
 )
+
+
+def discover_raritan_px_sensors_humidity(parsed):
+    return inventory_raritan_sensors(parsed, "humidity")
+
 
 # .
 #   .--humidity------------------------------------------------------------.
@@ -141,9 +150,14 @@ check_info["raritan_px_sensors"] = LegacyCheckDefinition(
 check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
     sections=["raritan_px_sensors"],
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
+    discovery_function=discover_raritan_px_sensors_humidity,
     check_function=check_raritan_sensors,
 )
+
+
+def discover_raritan_px_sensors_binary(parsed):
+    return inventory_raritan_sensors(parsed, "binary")
+
 
 # .
 #   .--binary--------------------------------------------------------------.
@@ -158,6 +172,6 @@ check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
 check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
     service_name="Contact %s",
     sections=["raritan_px_sensors"],
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary"),
+    discovery_function=discover_raritan_px_sensors_binary,
     check_function=check_raritan_sensors_binary,
 )

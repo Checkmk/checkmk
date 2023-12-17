@@ -142,6 +142,10 @@ def check_security_master(item, _no_params, parsed):
     return status, msg
 
 
+def discover_security_master(parsed):
+    return inventory_security_master_sensors(parsed, "smoke")
+
+
 check_info["security_master"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
     fetch=[
@@ -152,7 +156,7 @@ check_info["security_master"] = LegacyCheckDefinition(
     ],
     parse_function=parse_security_master,
     service_name="Sensor %s",
-    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
+    discovery_function=discover_security_master,
     check_function=check_security_master,
 )
 
@@ -181,10 +185,14 @@ def check_security_master_humidity(item, params, parsed):
     return check_humidity(sensor["value"], params)
 
 
+def discover_security_master_humidity(parsed):
+    return inventory_security_master_sensors(parsed, "humidity")
+
+
 check_info["security_master.humidity"] = LegacyCheckDefinition(
     service_name="Sensor %s",
     sections=["security_master"],
-    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
+    discovery_function=discover_security_master_humidity,
     check_function=check_security_master_humidity,
     check_ruleset_name="humidity",
 )
@@ -218,10 +226,14 @@ def check_security_master_temperature(item, params, parsed):
     )
 
 
+def discover_security_master_temp(parsed):
+    return inventory_security_master_sensors(parsed, "temp")
+
+
 check_info["security_master.temp"] = LegacyCheckDefinition(
     service_name="Sensor %s",
     sections=["security_master"],
-    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "temp"),
+    discovery_function=discover_security_master_temp,
     check_function=check_security_master_temperature,
     check_ruleset_name="temperature",
     check_default_parameters={

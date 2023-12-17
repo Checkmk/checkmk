@@ -46,19 +46,28 @@ check_info["nvidia"] = LegacyCheckDefinition(
 )
 
 
+def discover_nvidia_temp(info):
+    return inventory_nvidia_temp(False, info)
+
+
 check_info["nvidia.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["nvidia"],
-    discovery_function=lambda info: inventory_nvidia_temp(False, info),
+    discovery_function=discover_nvidia_temp,
     check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 65.0)},
 )
 
+
+def discover_nvidia_temp_core(info):
+    return inventory_nvidia_temp(True, info)
+
+
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
     service_name="Temperature %s",
     sections=["nvidia"],
-    discovery_function=lambda info: inventory_nvidia_temp(True, info),
+    discovery_function=discover_nvidia_temp_core,
     check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (90.0, 95.0)},

@@ -13,32 +13,13 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
 
-
-class LogicalSpaceAttributes(BaseModel):
-    enforcement: bool
-    used: int
-
-
-class SpaceAttributes(BaseModel):
-    available: int
-    afs_total: int
-    logical_space: LogicalSpaceAttributes
-
-
-class SvmAttributes(BaseModel):
-    name: str
-    uuid: str
-
-
-class FilesAttributes(BaseModel):
-    maximum: int
-    used: int
+MEGA = 1024 * 1024
 
 
 class VolumeModel(BaseModel):
@@ -60,15 +41,12 @@ class VolumeModel(BaseModel):
     "volume-id-attributes.instance-uuid" -> uuid
     "volume-id-attributes.owning-vserver-name" -> svm.name
     "volume-id-attributes.name" -> name
-    "volume-id-attributes.node" -> NA  # ! HELP missing?
+    "volume-id-attributes.node" -> NA  # ! missing in the new API
     "volume-id-attributes.msid" -> msid
 
     "volume-inode-attributes.files-total" -> files.maximum
     "volume-inode-attributes.files-used" -> files.used
     ============
-
-    FIXME:
-    - Can I ignore the NA fields? - check during plugin migration
 
     """
 
@@ -76,130 +54,74 @@ class VolumeModel(BaseModel):
     state: str | None = None
     name: str
     msid: int
-    space: SpaceAttributes | None = None
-    svm: SvmAttributes
-    files: FilesAttributes | None = None
+    space_available: int | None = None  # None because sometime this data is not present
+    space_total: int | None = None  # None because sometime this data is not present
+    logical_enforcement: bool | None = None  # None because sometime this data is not present
+    logical_used: int | None = None  # None because sometime this data is not present
+    svm_name: str
+    svm_uuid: str
+    files_maximum: int | None = None  # None because sometime this data is not present
+    files_used: int | None = None  # None because sometime this data is not present
 
+    def size_total(self) -> float | None:
+        return self.space_total / MEGA if self.space_total is not None else None
 
-def get_volumes(connection: HostConnection) -> Iterator[VolumeModel]:
-    field_query = {
-        "uuid",
-        "state",
-        "name",
-        "msid",
-        "space.available",
-        "space.afs_total",
-        "space.logical_space.enforcement",
-        "space.logical_space.used",
-        "svm.name",
-        "svm.uuid",
-        "files.maximum",
-        "files.used",
-    }
+    def size_available(self) -> float | None:
+        return self.space_available / MEGA if self.space_available is not None else None
 
-    yield from (
-        VolumeModel.model_validate(element.to_dict())
-        for element in NetAppResource.Volume.get_collection(
-            connection=connection, fields=",".join(field_query)
+    def item_name(self) -> str:
+        return f"{self.svm_name}:{self.name}"
+
+    def incomplete(self) -> bool:
+        return (
+            self.space_total is None
+            or self.files_maximum is None
+            or self.space_available is None
+            or self.files_used is None
+            or self.logical_enforcement is None
+            or self.logical_used is None
         )
-    )
 
 
-class VolumeCounter(BaseModel):
-    name: str
-    value: int
-
-
-class VolumeCountersRowModel(BaseModel):
+class VolumeCountersModel(BaseModel):
+    # node_name:svm_name:volume_name:volume_uuid
+    # "mcc_darz_a-01:FlexPodXCS_NFS_Frank:Test_300T:00b3e6b1-5781-11ee-b0c8-00a098c54c0b"
     id: str
-    counters: Sequence[VolumeCounter]
 
+    fcp_write_data: int
+    fcp_read_latency: int | float  # also float because computed in plugins
+    iscsi_write_latency: int | float  # also float because computed in plugins
+    read_latency: int | float  # also float because computed in plugins
+    nfs_write_ops: int
+    fcp_read_ops: int
+    fcp_read_data: int
+    cifs_write_ops: int
+    iscsi_read_latency: int | float  # also float because computed in plugins
+    nfs_write_latency: int | float  # also float because computed in plugins
+    iscsi_read_ops: int
+    total_read_ops: int
+    cifs_read_latency: int | float  # also float because computed in plugins
+    nfs_read_latency: int | float  # also float because computed in plugins
+    iscsi_read_data: int
+    bytes_written: int
+    cifs_write_data: int
+    iscsi_write_data: int
+    iscsi_write_ops: int
+    fcp_write_latency: int | float  # also float because computed in plugins
+    fcp_write_ops: int
+    nfs_read_ops: int
+    bytes_read: int
+    cifs_read_ops: int
+    write_latency: int | float  # also float because computed in plugins
+    cifs_read_data: int
+    nfs_read_data: int
+    total_write_ops: int
+    nfs_write_data: int
+    cifs_write_latency: int | float  # also float because computed in plugins
 
-volumes_counters_field_query = {
-    "fcp.write_data",
-    "fcp.read_latency",
-    "iscsi.write_latency",
-    "read_latency",
-    "nfs.write_ops",
-    "fcp.read_ops",
-    "fcp.read_data",
-    "cifs.write_ops",
-    "iscsi.read_latency",
-    "nfs.write_latency",
-    "iscsi.read_ops",
-    "total_read_ops",
-    "cifs.read_latency",
-    "nfs.read_latency",
-    "iscsi.read_data",
-    "bytes_written",
-    "cifs.write_data",
-    "iscsi.write_data",
-    "iscsi.write_ops",
-    "fcp.write_latency",
-    "fcp.write_ops",
-    "nfs.read_ops",
-    "bytes_read",
-    "cifs.read_ops",
-    "write_latency",
-    "cifs.read_data",
-    "nfs.read_data",
-    "total_write_ops",
-    "nfs.write_data",
-    "cifs.write_latency",
-}
-
-
-def get_volume_counters(
-    connection: HostConnection, volume_id: str
-) -> Iterator[VolumeCountersRowModel]:
-    # fcp_write_data -> fcp.write_data
-    # fcp_read_latency -> fcp.read_latency
-    # iscsi_write_latency -> iscsi.write_latency
-    # read_latency -> read_latency
-    # nfs_write_ops -> nfs.write_ops
-    # fcp_read_ops -> fcp.read_ops
-    # fcp_read_data -> fcp.read_data
-    # cifs_write_ops -> cifs.write_ops
-    # iscsi_read_latency -> iscsi.read_latency
-    # nfs_write_latency -> nfs.write_latency
-    # iscsi_read_ops -> iscsi.read_ops
-    # read_ops -> total_read_ops
-    # cifs_read_latency -> cifs.read_latency
-    # nfs_read_latency -> nfs.read_latency
-    # iscsi_read_data -> iscsi.read_data
-    # san_read_ops  # ! missing
-    # san_read_data # ! missing
-    # san_read_latency # ! missing
-    # write_data -> bytes_written
-    # cifs_write_data -> cifs.write_data
-    # iscsi_write_data -> iscsi.write_data
-    # san_write_latency # ! missing
-    # san_write_data # ! missing
-    # iscsi_write_ops -> iscsi.write_ops
-    # san_write_ops # ! missing
-    # fcp_write_latency -> fcp.write_latency
-    # fcp_write_ops -> fcp.write_ops
-    # nfs_read_ops -> nfs.read_ops
-    # read_data -> bytes_read
-    # cifs_read_ops -> cifs.read_ops
-    # write_latency -> write_latency
-    # cifs_read_data -> cifs.read_data
-    # nfs_read_data -> nfs.read_data
-    # write_ops -> total_write_ops
-    # nfs_write_data -> nfs.write_data
-    # cifs_write_latency -> cifs.write_latency
-
-    yield from (
-        VolumeCountersRowModel.model_validate(element.to_dict())
-        for element in NetAppResource.CounterRow.get_collection(
-            "volume",
-            id=volume_id,
-            connection=connection,
-            fields="counters",
-            max_records=None,  # type: ignore # pylint disable=arg-type not working
-            **{"counters.name": "|".join(volumes_counters_field_query)},
-        )
-    )
+    def item_name(self) -> str:
+        # compute key removing first part of id
+        return self.id[self.id.find(":") + 1 :]
 
 
 class DiskModel(BaseModel):

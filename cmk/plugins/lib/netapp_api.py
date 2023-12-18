@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import Result, Service, State, type_defs
+from cmk.agent_based.v2 import get_rate, GetRateError, Metric, Result, Service, State, type_defs
 
 CPUSection = TypedDict(
     "CPUSection",
@@ -225,3 +225,113 @@ def get_summary_check(
             )
 
     return check_summary
+
+
+def single_volume_metrics(
+    counter_names: Sequence[tuple[str, str, str]],
+    counter_values: Mapping[str, float],
+    value_store: MutableMapping[str, Any],
+    time_now: float,
+) -> Iterable[Metric]:
+    def _create_key(protocol: str, mode: str, field: str) -> str:
+        return "_".join([protocol, mode, field]) if protocol else "_".join([mode, field])
+
+    base = {}
+    metrics_map = {"write_ops": "write_ops_s"}
+
+    for key in counter_names:
+        protocol = key[0]
+        mode = key[1]
+        field = key[2]
+
+        counter_name = _create_key(*key)
+
+        if (counter_value := counter_values.get(counter_name)) is None:
+            continue
+
+        try:
+            delta = get_rate(
+                value_store, counter_name, time_now, counter_value, raise_overflow=True
+            )
+        except GetRateError:
+            continue
+
+        # Quite hacky.. this base information is used later on by the "latency" field
+        if field == "ops":
+            # the strip() is used to create a key like "...read_ops" or "...write_ops" (... is the "protocol")
+            # those keys where "...read_ops" and "...write_ops" for the old netapp ontap api
+            # and are "...total_read_ops", "...total_write_ops" for the new netapp rest api
+            base[counter_name.replace("total_", "")] = 1.0 if delta == 0.0 else float(delta)
+
+        if mode in ["read", "write"] and field == "latency":
+            # See https://library.netapp.com/ecmdocs/ECMP1608437/html/GUID-04407796-688E-489D-901C-A6C9EAC2A7A2.html
+            # for scaling issues:
+            # read_latency           micro
+            # write_latency          micro
+            # other_latency          micro
+            # nfs_read_latency       micro
+            # nfs_write_latency      micro
+            # nfs_other_latency      micro
+            # cifs_read_latency      micro
+            # cifs_write_latency     micro
+            # cifs_other_latency     micro
+            # san_read_latency       micro
+            # san_write_latency      micro
+            # san_other_latency      micro
+            #
+            # === 7-Mode environments only ===
+            # fcp_read_latency       milli
+            # fcp_write_latency      milli
+            # fcp_other_latency      milli
+            # iscsi_read_latency     milli
+            # iscsi_write_latency    milli
+            # iscsi_other_latency    milli
+            #
+            # FIXME The metric system expects milliseconds but should get seconds
+            if protocol in ["fcp", "iscsi"]:
+                divisor = 1.0
+            else:
+                divisor = 1000.0
+            delta /= (
+                divisor
+                * base[
+                    _create_key(
+                        protocol,
+                        mode,
+                        "ops",
+                    )
+                ]
+            )  # fixed: true-division
+        yield Metric(metrics_map.get(counter_name, counter_name), delta)
+
+
+def combine_netapp_api_volumes(
+    volumes_in_group: list[str], section: Mapping[str, Mapping[str, int | str]]
+) -> tuple[Mapping[str, float], Mapping[str, str]]:
+    combined_volume: dict[str, Any] = {}
+    volumes_not_online = {}
+
+    for volume_name in volumes_in_group:
+        volume = section[volume_name]
+
+        state = str(volume.get("state"))
+        if state != "online":
+            volumes_not_online[volume_name] = state
+
+        else:
+            for k, v in volume.items():
+                if isinstance(v, int):
+                    combined_volume.setdefault(k, 0.0)
+                    combined_volume[k] += v
+                elif isinstance(v, str):
+                    # if it is a string I keep a value just to be able to
+                    # build a pydantic model when returned
+                    combined_volume[k] = v
+
+    n_vols_online = len(volumes_in_group) - len(volumes_not_online)
+    if n_vols_online:
+        for k, vs in combined_volume.items():
+            if k.endswith("latency"):
+                combined_volume[k] = float(vs) / n_vols_online
+
+    return combined_volume, volumes_not_online

@@ -492,7 +492,7 @@ check_metrics["check_mk-nfsmounts"] = do_not_display_fs_size_translation
 check_metrics["check_mk-cifsmounts"] = do_not_display_fs_size_translation
 check_metrics["check_mk-proxmox_ve_disk_usage"] = do_not_display_fs_size_translation
 
-check_metrics["check_mk-netapp_api_volumes"] = {
+netapp_volumes_metrics: dict[str, CheckMetricEntry] = {
     "fs_used": {"scale": MB},
     "fs_free": {"scale": MB},
     "fs_used_percent": {
@@ -523,6 +523,10 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency": {"scale": m},
     "iscsi_other_latency": {"scale": m},
 }
+
+check_metrics["check_mk-netapp_api_volumes"] = netapp_volumes_metrics
+check_metrics["check_mk-netapp_ontap_volumes"] = netapp_volumes_metrics
+
 disk_utilization_translation: dict[str, CheckMetricEntry] = {
     "disk_utilization": {"scale": 100.0},
 }

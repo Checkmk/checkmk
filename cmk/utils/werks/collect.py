@@ -164,7 +164,8 @@ def main(flavor: Literal["cma", "cmk", "checkmk_kube_agent"], repo_path: Path) -
     all_werks_by_id: dict[str, dict] = {}
     # TODO: think about whether werks share the same werk_filename on all branches...
     for werk_filename, werk_by_branch in werk_files_by_name_and_branch.items():
-        if not werk_filename.isdigit():
+        werk_id = werk_filename.removesuffix(".md")
+        if not werk_id.isdigit():
             logger.warning("ignoring werk %s (filename is not digit)", werk_filename)
             continue
 
@@ -196,7 +197,7 @@ def main(flavor: Literal["cma", "cmk", "checkmk_kube_agent"], repo_path: Path) -
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
         werk_dict.pop("version")
         # WebsiteWerk is not really needed here, but we want to make sure we comply to the WebsiteWerk schema.
-        all_werks_by_id[werk_filename] = WebsiteWerk(
+        all_werks_by_id[werk_id] = WebsiteWerk(
             versions=versions,
             product=flavor,
             **werk_dict,  # type: ignore

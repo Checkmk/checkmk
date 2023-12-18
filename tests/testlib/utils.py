@@ -66,32 +66,20 @@ def cmc_path() -> Path:
     return repo_path() / "enterprise"
 
 
-def cme_path() -> Path:
-    return repo_path() / "managed"
-
-
-def cce_path() -> Path:
-    return repo_path() / "cloud"
-
-
-def cse_path() -> Path:
-    return repo_path() / "saas"
-
-
 def is_enterprise_repo() -> bool:
     return cmc_path().exists()
 
 
 def is_managed_repo() -> bool:
-    return cme_path().exists()
+    return (repo_path() / "omd" / "packages" / "managed").exists()
 
 
 def is_cloud_repo() -> bool:
-    return cce_path().exists()
+    return (repo_path() / "omd" / "packages" / "cloud").exists()
 
 
 def is_saas_repo() -> bool:
-    return cse_path().exists()
+    return (repo_path() / "omd" / "packages" / "saas").exists()
 
 
 def is_containerized() -> bool:

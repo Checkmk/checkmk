@@ -26,7 +26,6 @@ from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
     cmc_path,
-    cme_path,
     cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
@@ -751,11 +750,6 @@ class Site:
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
                 # cmc_path() / "agents",
-            ]
-
-        if os.path.exists(cme_path()) and self.version.is_managed_edition():
-            paths += [
-                cme_path(),
             ]
 
         for path in paths:

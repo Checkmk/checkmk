@@ -27,18 +27,18 @@
                 "*",
                 "web/*",
                 "web/htdocs/js/modules/*",
+                "web/htdocs/js/modules/*",
                 "web/htdocs/js/modules/figures/*",
                 "web/htdocs/js/modules/node_visualization/*",
-                "enterprise/web/htdocs/js/modules/*",
-                "enterprise/web/htdocs/js/modules/figures/*",
-                "enterprise/web/htdocs/js/modules/license_usage/*",
-                "enterprise/web/htdocs/js/modules/ntop/*"
+                "web/htdocs/js/modules/cee/*",
+                "web/htdocs/js/modules/cee/figures/*",
+                "web/htdocs/js/modules/cee/license_usage/*",
+                "web/htdocs/js/modules/cee/ntop/*"
             ]
         }
     },
     "include": [
         "./web/**/*",
-        "./enterprise/web/**/*"
     ],
     "exclude": [
         "node_modules"

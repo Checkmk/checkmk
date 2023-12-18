@@ -207,7 +207,7 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{web/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
 	cd ..; scripts/npm-ci && scripts/check-typescript-types.sh

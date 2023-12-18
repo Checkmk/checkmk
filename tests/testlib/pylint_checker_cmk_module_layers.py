@@ -268,6 +268,9 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.views")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.pages")),
+            _in_component(
+                imported=imported, component=Component("cmk.cee.robotmk.bakery.rulespecs")
+            ),
         )
     )
 
@@ -492,7 +495,7 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
     )
 
 
-def _allowed_by_robotmk(
+def _allowed_for_robotmk(
     *,
     imported: ModuleName,
     component: Component,
@@ -564,7 +567,7 @@ _COMPONENTS = (
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
     (Component("cmk.active_checks"), _is_default_allowed_import),
-    (Component("cmk.cee.robotmk"), _allowed_by_robotmk),
+    (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

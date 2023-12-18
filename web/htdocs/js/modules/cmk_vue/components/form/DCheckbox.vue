@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {VueComponentSpec} from "cmk_vue/types";
 
-import {ref, onMounted} from "vue";
+import {ref, onMounted, onBeforeMount} from "vue";
+import {clicked_checkbox_label} from "cmk_vue/utils";
 
 interface VueCheckboxComponentSpec extends VueComponentSpec {
     config: {
@@ -15,31 +16,27 @@ const props = defineProps<{
 
 const value = ref(true);
 
-function collect(): any {
-    return value.value;
-}
-
-function debug_info(): void {
-    console.log("Checkbox input", props.component.config.label, value.value);
-}
-
 onMounted(() => {
     value.value = props.component.config.value;
 });
 
-defineExpose({
-    collect,
-    debug_info,
-});
+const emit = defineEmits<{
+    (e: "update-value", value: any): void;
+}>();
+function send_value_upstream(new_value: string) {
+    emit("update-value", parseInt(new_value));
+}
 </script>
 <template>
-    <div class="container">
+    <span class="checkbox">
         <input
             class="vue_checkbox"
             type="checkbox"
             v-model="value"
-            onclick="console.log('boom')"
+            @input="send_value_upstream(event.target.value)"
         />
-        <label>{{ component.config.label }}</label>
-    </div>
+        <label :onclick="clicked_checkbox_label">{{
+            component.config.label
+        }}</label>
+    </span>
 </template>

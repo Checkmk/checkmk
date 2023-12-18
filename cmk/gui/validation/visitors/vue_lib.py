@@ -5,26 +5,52 @@
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.gui.validation.ir.elements import FormElement
+from cmk.gui.i18n import _
+from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
+
+from cmk.rulesets.v1.form_specs import FormSpec
 
 
 @dataclass(kw_only=True)
-class GenericComponent:
+class VueFormSpecComponent:
     component_type: str
     title: str | None
     help: str | None
-    validation_errors: list[str]
+    validation_errors: list[str] | None
     config: dict[str, Any]
 
     def __init__(
         self,
-        node: FormElement,
+        form_spec: FormSpec,
         component_type: str,
         config: dict[str, Any],
         validation_errors: list[str] | None = None,
     ):
-        self.title = node.details.label_text
-        self.help = node.details.help
+        self.title = None if form_spec.title is None else form_spec.title.localize(_)
+        self.help = None if form_spec.help_text is None else form_spec.help_text.localize(_)
         self.component_type = component_type
-        self.validation_errors = [] if validation_errors is None else validation_errors
+        self.validation_errors = validation_errors
         self.config = config
+
+
+@dataclass
+class ValidationError:
+    message: str
+    field_id: str | None = None
+
+    def __hash__(self) -> int:
+        return hash(f"{self.message}")
+
+    def __eq__(self, other: object) -> bool:
+        return hash(self) == hash(other)
+
+
+# Experimental only registry (not an actual registry)
+form_spec_registry: dict[str, LoadedRuleSpec] = {}
+
+
+@dataclass(kw_only=True)
+class VueAppConfig:
+    id: str
+    app_name: str
+    component: dict[str, Any]

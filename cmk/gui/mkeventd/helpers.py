@@ -36,3 +36,11 @@ def eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config(
         ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
     )
+
+
+def save_active_rule_packs() -> None:
+    ec.save_rule_packs(
+        ec.load_rule_packs(),
+        active_config.mkeventd_pprint_rules,
+        ec.active_config_dir(),
+    )

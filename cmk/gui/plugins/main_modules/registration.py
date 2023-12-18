@@ -11,11 +11,12 @@ from functools import partial
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.pages
-from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, visuals, wato
+from cmk.gui import autocompleters, crash_reporting, dashboard, hooks, mobile, views, visuals, wato
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.mkeventd.helpers import save_active_rule_packs
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
@@ -43,8 +44,8 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
 
 def register_sites_options() -> None:
+    hooks.register_builtin("mkeventd-activate-changes", save_active_rule_packs)
     filters.MultipleSitesFilter.sites_options = cre_sites_options
-
     autocompleter_registry.register_expression("sites")(
         partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
     )

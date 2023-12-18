@@ -40,6 +40,7 @@ import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -1061,6 +1062,7 @@ class Rule:
         self.id: str = id_
         self.rule_options: RuleOptions = options
         self.value: RuleValue = value
+        self._single_base_ruleset_representation: Sequence[RuleSpec] | None = None
 
     def clone(self, preserve_id: bool = False) -> Rule:
         return Rule(
@@ -1152,6 +1154,14 @@ class Rule:
         return self._to_config(
             use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder
         )
+
+    def to_single_base_ruleset(self) -> Sequence[RuleSpec]:
+        """Returns a new ruleset only containing this rule and its conditions"""
+        if self._single_base_ruleset_representation is not None:
+            return self._single_base_ruleset_representation
+        rule_dict = self.to_config(UseHostFolder.HOST_FOLDER_FOR_BASE)
+        self._single_base_ruleset_representation = [rule_dict]
+        return self._single_base_ruleset_representation
 
     def to_web_api(self) -> RuleSpec:
         return self._to_config(use_host_folder=UseHostFolder.NONE)
@@ -1284,22 +1294,8 @@ class Rule:
         )
 
     def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
-        matcher = cmk.base.export.get_ruleset_matcher()
-
-        rule_dict = self.to_config()
-        rule_dict["condition"]["host_folder"] = self.folder.path_for_gui_rule_matching()
-
-        # The cache uses some id(ruleset) to build indexes for caches. When we are using
-        # dynamically allocated ruleset list objects, that are quickly invalidated, it
-        # may happen that the address space is reused for other objects, resulting in
-        # duplicate id() results for different rulesets (because ID returns the memory
-        # address the object is located at).
-        # Since we do not work with regular rulesets here, we need to clear the cache
-        # (that is not useful in this situation)
-        matcher.ruleset_optimizer.clear_ruleset_caches()
-
-        ruleset = [rule_dict]
-
+        matcher = _get_ruleset_matcher()
+        ruleset = self.to_single_base_ruleset()
         if match_service_conditions:
             if list(matcher.get_service_ruleset_values(match_object, ruleset)):
                 return
@@ -1683,3 +1679,8 @@ def find_timeperiod_usage_in_time_specific_parameters(
                 )
                 used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
     return used_in
+
+
+@request_memoize()
+def _get_ruleset_matcher():
+    return cmk.base.export.get_ruleset_matcher()

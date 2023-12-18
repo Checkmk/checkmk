@@ -195,6 +195,7 @@ def _allowed_by_cmk_base(
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.bakery.plugins")),
         )
     )
 

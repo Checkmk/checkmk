@@ -165,7 +165,7 @@ ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
     packages/cloud/cloud.make \
-    $(REPO_PATH)/managed/managed.make
+    packages/managed/managed.make
 endif
 ifeq ($(EDITION),cloud)
 include \

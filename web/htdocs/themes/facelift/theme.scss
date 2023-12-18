@@ -48,10 +48,3 @@
   @include ntop;
   @include license_usage;
 }
-
-// Note: In case you add something here, you will have to add some dummy files
-// to buildscripts/scripts/lib/versioning.groovy (see patch_themes())
-@import "../facelift/scss/cme/_managed.scss";
-@if $MANAGED == "yes" {
-  @include managed;
-}

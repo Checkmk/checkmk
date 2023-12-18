@@ -27,15 +27,15 @@ WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
-                              $(foreach edir,. enterprise managed, \
+                              $(foreach edir,. enterprise, \
                                   $(foreach subdir,* */* */*/* */*/*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
 
 SCSS_SOURCES := $(wildcard \
-					$(foreach edir,. enterprise managed, \
+					$(foreach edir,. enterprise, \
 						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
 
 
-PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
+PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons))
 
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
@@ -277,7 +277,7 @@ node_modules/.bin/prettier: .ran-npm
 $(JAVASCRIPT_MINI): .ran-webpack
 $(THEME_CSS_FILES): .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) CLOUD=$(CLOUD) SAAS=$(SAAS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff

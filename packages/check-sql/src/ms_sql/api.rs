@@ -10,7 +10,6 @@ use crate::config::{
     CheckConfig,
 };
 use crate::ms_sql::queries;
-use crate::ms_sql::section::SectionKind;
 use crate::setup::Env;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
@@ -235,8 +234,7 @@ impl SqlInstance {
                 }
             }
             Err(err) => {
-                let instance_section =
-                    Section::new(section::INSTANCE_SECTION_NAME, SectionKind::Sync); // this is important section always present
+                let instance_section = Section::new(section::INSTANCE_SECTION_NAME, None); // this is important section always present
                 result += &instance_section.to_header();
                 result += &self.generate_state_entry(false, instance_section.sep());
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
@@ -1200,7 +1198,7 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
 }
 
 fn generate_instance_entries(instances: &[SqlInstance]) -> String {
-    let section = Section::new(section::INSTANCE_SECTION_NAME, SectionKind::Sync);
+    let section = Section::new(section::INSTANCE_SECTION_NAME, None);
     section.to_header() // as in old plugin
      + &instances
         .iter()

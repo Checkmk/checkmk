@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import cmc_path, cme_path, repo_path
+from tests.testlib import cmc_path, repo_path
 
 from ..conftest import ChangedFiles
 
@@ -57,7 +57,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
     "path",
     [
         p  #
-        for base_path in [repo_path(), cmc_path(), cme_path()]  #
+        for base_path in [repo_path(), cmc_path()]  #
         for dir_path in check_paths  #
         for p in [base_path / dir_path]
         if p.exists()

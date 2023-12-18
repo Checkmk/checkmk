@@ -41,6 +41,51 @@ h3.table {
   @include table-header-mixin;
 }
 
+div.two_factor_overview > table {
+  margin-top: 2 * $spacing;
+
+  &:first-of-type {
+    margin-top: $spacing;
+  }
+
+  table.groupheader {
+    @include table-header-mixin;
+  }
+
+  td > div,
+  td > i {
+    display: block;
+    margin: $spacing 0;
+  }
+
+  div.backup_codes {
+    overflow: hidden;
+
+    div.legend,
+    div.legend + div.inline {
+      float: left;
+    }
+
+    div.legend {
+      max-width: 230px;
+      overflow: hidden;
+      white-space: nowrap;
+
+      + div.inline {
+        margin-left: 0.5 * $spacing;
+      }
+    }
+
+    + div {
+      clear: left;
+    }
+  }
+
+  input.button {
+    margin-left: 0;
+  }
+}
+
 /*-------------------------------------------------------------------------.
 |                                       _                                  |
 |                       _ __ ___   __ _(_)_ __                             |

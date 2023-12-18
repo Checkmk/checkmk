@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import logging
 from collections.abc import Iterable, Sequence
 
+from netapp_ontap import resources as NetAppResource
 from netapp_ontap.host_connection import HostConnection
 
 from cmk.plugins.netapp import models  # pylint: disable=cmk-module-layer-violation
@@ -18,7 +18,7 @@ __version__ = "2.3.0b1"
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
 
-def section(section_header: str, generator: Iterable, logger: logging.Logger) -> None:
+def write_section(section_header: str, generator: Iterable, logger: logging.Logger) -> None:
     section_header = f"netapp_ontap_{section_header}"
     with SectionWriter(section_header) as writer:
         for element in generator:
@@ -29,12 +29,47 @@ def section(section_header: str, generator: Iterable, logger: logging.Logger) ->
 
 
 def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
-    yield from models.get_volumes(connection)
+    field_query = {
+        "uuid",
+        "state",
+        "name",
+        "msid",
+        "space.available",
+        "space.afs_total",
+        "space.logical_space.enforcement",
+        "space.logical_space.used",
+        "svm.name",
+        "svm.uuid",
+        "files.maximum",
+        "files.used",
+    }
+
+    for element in NetAppResource.Volume.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.VolumeModel(
+            uuid=element_data["uuid"],
+            state=element_data.get("state"),
+            name=element_data["name"],
+            msid=element_data["msid"],
+            space_available=element_data.get("space", {}).get("available"),
+            space_total=element_data.get("space", {}).get("afs_total"),
+            logical_enforcement=element_data.get("space", {})
+            .get("logical_space", {})
+            .get("enforcement"),
+            logical_used=element_data.get("space", {}).get("logical_space", {}).get("used"),
+            svm_name=element_data.get("svm", {}).get("name"),
+            svm_uuid=element_data.get("svm", {}).get("uuid"),
+            files_maximum=element_data.get("files", {}).get("maximum"),
+            files_used=element_data.get("files", {}).get("used"),
+        )
 
 
 def fetch_volumes_counters(
     connection: HostConnection, volumes: Sequence[models.VolumeModel]
-) -> Iterable[models.VolumeCountersRowModel]:
+) -> Iterable[models.VolumeCountersModel]:
     """
     res = NetAppResource.CounterRow.get_collection("volume", id="mcc_darz_a-01:FlexPodXCS_NFS_Frank:Test_300T:00b3e6b1-5781-11ee-b0c8-00a098c54c0b", fields="*")
     id is composed in this way: node.name:svm.name:name(volume):uuid(volume)
@@ -43,14 +78,127 @@ def fetch_volumes_counters(
 
     """
 
-    for volume in volumes:
-        volume_counters = list(
-            models.get_volume_counters(
-                connection=connection, volume_id=f"*:{volume.svm.name}:{volume.name}:{volume.uuid}"
-            )
-        )
+    volumes_counters_field_query = {
+        "fcp.write_data",
+        "fcp.read_latency",
+        "iscsi.write_latency",
+        "read_latency",
+        "nfs.write_ops",
+        "fcp.read_ops",
+        "fcp.read_data",
+        "cifs.write_ops",
+        "iscsi.read_latency",
+        "nfs.write_latency",
+        "iscsi.read_ops",
+        "total_read_ops",
+        "cifs.read_latency",
+        "nfs.read_latency",
+        "iscsi.read_data",
+        "bytes_written",
+        "cifs.write_data",
+        "iscsi.write_data",
+        "iscsi.write_ops",
+        "fcp.write_latency",
+        "fcp.write_ops",
+        "nfs.read_ops",
+        "bytes_read",
+        "cifs.read_ops",
+        "write_latency",
+        "cifs.read_data",
+        "nfs.read_data",
+        "total_write_ops",
+        "nfs.write_data",
+        "cifs.write_latency",
+    }
 
-        yield from volume_counters
+    for volume in volumes:
+        # fcp_write_data -> fcp.write_data
+        # fcp_read_latency -> fcp.read_latency
+        # iscsi_write_latency -> iscsi.write_latency
+        # read_latency -> read_latency
+        # nfs_write_ops -> nfs.write_ops
+        # fcp_read_ops -> fcp.read_ops
+        # fcp_read_data -> fcp.read_data
+        # cifs_write_ops -> cifs.write_ops
+        # iscsi_read_latency -> iscsi.read_latency
+        # nfs_write_latency -> nfs.write_latency
+        # iscsi_read_ops -> iscsi.read_ops
+        # read_ops -> total_read_ops
+        # cifs_read_latency -> cifs.read_latency
+        # nfs_read_latency -> nfs.read_latency
+        # iscsi_read_data -> iscsi.read_data
+        # san_read_ops  # ! missing
+        # san_read_data # ! missing
+        # san_read_latency # ! missing
+        # write_data -> bytes_written
+        # cifs_write_data -> cifs.write_data
+        # iscsi_write_data -> iscsi.write_data
+        # san_write_latency # ! missing
+        # san_write_data # ! missing
+        # iscsi_write_ops -> iscsi.write_ops
+        # san_write_ops # ! missing
+        # fcp_write_latency -> fcp.write_latency
+        # fcp_write_ops -> fcp.write_ops
+        # nfs_read_ops -> nfs.read_ops
+        # read_data -> bytes_read
+        # cifs_read_ops -> cifs.read_ops
+        # write_latency -> write_latency
+        # cifs_read_data -> cifs.read_data
+        # nfs_read_data -> nfs.read_data
+        # write_ops -> total_write_ops
+        # nfs_write_data -> nfs.write_data
+        # cifs_write_latency -> cifs.write_latency
+
+        volume_id = f"*:{volume.svm_name}:{volume.name}:{volume.uuid}"
+
+        for element in NetAppResource.CounterRow.get_collection(
+            "volume",
+            id=volume_id,
+            connection=connection,
+            fields="counters",
+            max_records=None,  # type: ignore
+            **{"counters.name": "|".join(volumes_counters_field_query)},
+        ):
+            element_serialized = element.to_dict()
+
+            counters_collection = {}
+            counters = element_serialized["counters"]
+            for counter in counters:
+                counters_collection[counter["name"]] = counter["value"]
+
+            yield models.VolumeCountersModel(
+                id=element_serialized["id"],
+                fcp_write_data=counters_collection["fcp.write_data"],
+                fcp_read_latency=counters_collection["fcp.read_latency"],
+                iscsi_write_latency=counters_collection["iscsi.write_latency"],
+                read_latency=counters_collection["read_latency"],
+                nfs_write_ops=counters_collection["nfs.write_ops"],
+                fcp_read_ops=counters_collection["fcp.read_ops"],
+                fcp_read_data=counters_collection["fcp.read_data"],
+                cifs_write_ops=counters_collection["cifs.write_ops"],
+                iscsi_read_latency=counters_collection["iscsi.read_latency"],
+                nfs_write_latency=counters_collection["nfs.write_latency"],
+                iscsi_read_ops=counters_collection["iscsi.read_ops"],
+                total_read_ops=counters_collection["total_read_ops"],
+                cifs_read_latency=counters_collection["cifs.read_latency"],
+                nfs_read_latency=counters_collection["nfs.read_latency"],
+                iscsi_read_data=counters_collection["iscsi.read_data"],
+                bytes_written=counters_collection["bytes_written"],
+                cifs_write_data=counters_collection["cifs.write_data"],
+                iscsi_write_data=counters_collection["iscsi.write_data"],
+                iscsi_write_ops=counters_collection["iscsi.write_ops"],
+                fcp_write_latency=counters_collection["fcp.write_latency"],
+                fcp_write_ops=counters_collection["fcp.write_ops"],
+                nfs_read_ops=counters_collection["nfs.read_ops"],
+                bytes_read=counters_collection["bytes_read"],
+                cifs_read_ops=counters_collection["cifs.read_ops"],
+                write_latency=counters_collection["write_latency"],
+                cifs_read_data=counters_collection["cifs.read_data"],
+                nfs_read_data=counters_collection["nfs.read_data"],
+                total_write_ops=counters_collection["total_write_ops"],
+                nfs_write_data=counters_collection["nfs.write_data"],
+                cifs_write_latency=counters_collection["cifs.write_latency"],
+            )
 
 
 def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
@@ -59,9 +207,9 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
 
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
-    section("volumes", volumes, logger)
-    section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
-    # section("disks_rest", fetch_disks(connection), logger)
+    write_section("volumes", volumes, logger)
+    write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
+    # write_section("disks_rest", fetch_disks(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

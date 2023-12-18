@@ -49,6 +49,7 @@ pub struct SqlInstanceBuilder {
     endpoint: Option<Endpoint>,
     computer_name: Option<String>,
     temp_dir: Option<PathBuf>,
+    hash: Option<String>,
 }
 
 impl SqlInstanceBuilder {
@@ -104,6 +105,10 @@ impl SqlInstanceBuilder {
         self.temp_dir = temp_dir.map(|s| s.into());
         self
     }
+    pub fn hash<S: Into<String>>(mut self, hash: S) -> Self {
+        self.hash = Some(hash.into());
+        self
+    }
 
     pub fn row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
@@ -142,6 +147,8 @@ impl SqlInstanceBuilder {
             available: None,
             endpoint: self.endpoint.unwrap_or_default(),
             computer_name: self.computer_name,
+            temp_dir: self.temp_dir.unwrap_or_default(),
+            hash: self.hash.unwrap_or_default(),
         }
     }
 }
@@ -159,6 +166,8 @@ pub struct SqlInstance {
     pub available: Option<bool>,
     endpoint: Endpoint,
     computer_name: Option<String>,
+    temp_dir: PathBuf,
+    hash: String,
 }
 
 impl SqlInstance {
@@ -178,6 +187,14 @@ impl SqlInstance {
 
     pub fn full_name(&self) -> String {
         format!("{}/{}", self.endpoint.hostname(), self.name)
+    }
+
+    pub fn hash(&self) -> &str {
+        &self.hash
+    }
+
+    pub fn temp_dir(&self) -> &Path {
+        &self.temp_dir
     }
 
     /// not tested, because it is a bit legacy
@@ -281,9 +298,18 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
     ) -> String {
+        let body = self.generate_section_body(client, endpoint, section).await;
+        section.to_header() + body.as_str()
+    }
+
+    async fn generate_section_body(
+        &self,
+        client: &mut Client,
+        endpoint: &Endpoint,
+        section: &Section,
+    ) -> String {
         let sep = section.sep();
-        let databases = self.generate_databases(client).await;
-        let body = match section.name() {
+        match section.name() {
             section::INSTANCE_SECTION_NAME => {
                 self.generate_state_entry(true, section.sep())
                     + &self.generate_details_entry(client, section.sep()).await
@@ -301,25 +327,27 @@ impl SqlInstance {
                 .await
             }
             section::TABLE_SPACES_SECTION_NAME => {
+                let databases = self.generate_databases(client).await;
                 self.generate_table_spaces_section(endpoint, &databases, sep)
                     .await
             }
-            section::BACKUP_SECTION_NAME => {
-                self.generate_backup_section(client, &databases, sep).await
-            }
+            section::BACKUP_SECTION_NAME => self.generate_backup_section(client, sep).await,
             section::TRANSACTION_LOG_SECTION_NAME => {
+                let databases = self.generate_databases(client).await;
                 self.generate_transaction_logs_section(endpoint, &databases, sep)
                     .await
             }
             section::DATAFILES_SECTION_NAME => {
+                let databases = self.generate_databases(client).await;
                 self.generate_datafiles_section(endpoint, &databases, sep)
                     .await
             }
             section::DATABASES_SECTION_NAME => {
-                self.generate_databases_section(client, queries::QUERY_DATABASES, sep, &databases)
+                self.generate_databases_section(client, queries::QUERY_DATABASES, sep)
                     .await
             }
             section::CLUSTERS_SECTION_NAME => {
+                let databases = self.generate_databases(client).await;
                 self.generate_clusters_section(endpoint, &databases, sep)
                     .await
             }
@@ -333,8 +361,7 @@ impl SqlInstance {
                 self.generate_query_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
-        };
-        section.to_header() + body.as_str()
+        }
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
@@ -410,15 +437,12 @@ impl SqlInstance {
         result
     }
 
-    pub async fn generate_backup_section(
-        &self,
-        client: &mut Client,
-        databases: &[String],
-        sep: char,
-    ) -> String {
+    pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
+        let databases = self.generate_databases(client).await;
+
         let result = run_query(client, queries::QUERY_BACKUP)
             .await
-            .map(|rows| self.process_backup_rows(&rows, databases, sep));
+            .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
             Ok(output) => output,
             Err(err) => {
@@ -500,8 +524,8 @@ impl SqlInstance {
         client: &mut Client,
         query: &str,
         sep: char,
-        databases: &[String],
     ) -> String {
+        let databases = self.generate_databases(client).await;
         run_query(client, query)
             .await
             .map(|rows| to_databases_entries(&self.name, &rows, sep))
@@ -1163,7 +1187,11 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
 
     let instances = builders
         .into_iter()
-        .map(|b: SqlInstanceBuilder| b.temp_dir(&environment.temp_dir()).build())
+        .map(|b: SqlInstanceBuilder| {
+            b.temp_dir(&environment.temp_dir())
+                .hash(ms_sql.hash())
+                .build()
+        })
         .collect::<Vec<SqlInstance>>();
 
     let sections = section::get_work_sections(ms_sql);

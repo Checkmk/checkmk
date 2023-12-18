@@ -295,12 +295,9 @@ async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endp
 }
 
 async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
-    let databases = instance.generate_databases(client).await;
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
-    let result = instance
-        .generate_backup_section(client, &databases, '|')
-        .await;
+    let result = instance.generate_backup_section(client, '|').await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= (to_be_found.len() + 1), "{:?}", lines);
 
@@ -384,9 +381,8 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
 async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
-    let databases = instance.generate_databases(client).await;
     let result = instance
-        .generate_databases_section(client, queries::QUERY_DATABASES, '|', &databases)
+        .generate_databases_section(client, queries::QUERY_DATABASES, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -417,9 +413,8 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
 async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
-    let databases = instance.generate_databases(client).await;
     let result = instance
-        .generate_databases_section(client, queries::BAD_QUERY, '|', &databases)
+        .generate_databases_section(client, queries::BAD_QUERY, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();

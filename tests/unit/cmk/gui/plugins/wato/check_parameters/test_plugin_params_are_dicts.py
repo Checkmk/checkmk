@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.unit.cmk.conftest import import_plugins
-
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
 from cmk.gui.valuespec import Dictionary, Transform
@@ -21,7 +19,6 @@ _KNOWN_OFFENDERS = {
 }
 
 
-@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_plugin_parameters_are_dict() -> None:
     findings = set()
     for element in rulespec_registry.values():

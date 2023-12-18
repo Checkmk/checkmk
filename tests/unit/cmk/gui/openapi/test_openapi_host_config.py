@@ -13,7 +13,6 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
 
-from tests.unit.cmk.conftest import import_plugins
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from livestatus import SiteId
@@ -1248,7 +1247,6 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 @managedtest
 @freeze_time("2022-11-05")
-@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:

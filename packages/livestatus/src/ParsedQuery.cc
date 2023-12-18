@@ -57,7 +57,7 @@ void checkNoArguments(std::string_view str) {
 }
 }  // namespace
 
-ParsedQuery::ParsedQuery(const std::list<std::string> &lines,
+ParsedQuery::ParsedQuery(const std::vector<std::string> &lines,
                          const Table &table, OutputBuffer &output)
     : user{std::make_unique<NoAuthUser>()} {
     FilterStack filters;

@@ -620,7 +620,7 @@ bool NebCore::pnp4nagiosEnabled() const {
 }
 
 void NebCore::logRequest(const std::string &line,
-                         const std::list<std::string> &lines) {
+                         const std::vector<std::string> &lines) {
     Informational log(_logger);
     log << "request: " << line;
     if (_logger->isLoggable(LogLevel::debug)) {

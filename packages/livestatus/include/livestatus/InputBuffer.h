@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <functional>
 #include <iosfwd>
-#include <list>
+#include <queue>
 #include <string>
 #include <vector>
 class Logger;
@@ -36,7 +36,7 @@ public:
                 std::chrono::milliseconds idle_timeout);
     Result readRequest();
     std::string nextLine();
-    std::list<std::string> getLines();
+    std::vector<std::string> getLines();
 
 private:
     const int _fd;
@@ -46,7 +46,7 @@ private:
     std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;
-    std::list<std::string> _request_lines;
+    std::queue<std::string> _request_lines;
     Logger *const _logger;
 
     [[nodiscard]] bool shouldTerminate() const { return should_terminate_(); }

@@ -8,7 +8,6 @@
 
 #include <chrono>
 #include <functional>
-#include <list>
 #include <memory>
 #include <optional>
 #include <string>
@@ -30,7 +29,7 @@ class Table;
 
 class ParsedQuery {
 public:
-    ParsedQuery(const std::list<std::string> &lines, const Table &table,
+    ParsedQuery(const std::vector<std::string> &lines, const Table &table,
                 OutputBuffer &output);
 
     std::unordered_set<std::string> all_column_names;

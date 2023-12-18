@@ -73,7 +73,7 @@ size_t Store::numCachedLogMessages() {
     return _log_cache.numCachedLogMessages();
 }
 
-bool Store::answerGetRequest(const std::list<std::string> &lines,
+bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);

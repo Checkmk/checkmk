@@ -401,6 +401,17 @@ def _is_allowed_for_plugins(
     )
 
 
+def _is_allowed_for_robotmk_agent_based_cee_plugins(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return _in_component(
+        imported=imported,
+        component=Component("cmk.cee.robotmk.checking.plugins"),
+    )
+
+
 def _is_allowed_for_agent_based_plugin(
     *,
     imported: ModuleName,
@@ -554,6 +565,10 @@ _COMPONENTS = (
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
+    (
+        Component("cmk.plugins.robotmk.agent_based.cee"),
+        _is_allowed_for_robotmk_agent_based_cee_plugins,
+    ),
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),

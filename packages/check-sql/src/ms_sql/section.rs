@@ -55,14 +55,18 @@ pub enum SectionKind {
 pub struct Section {
     name: String,
     sep: Option<char>,
-    kind: SectionKind,
+    cache_age: Option<u32>,
 }
 
 impl Section {
-    pub fn new(name: impl ToString, kind: SectionKind) -> Self {
+    pub fn new(name: impl ToString, cache_age: Option<u32>) -> Self {
         let name = name.to_string();
         let sep = get_section_separator(&name);
-        Self { name, sep, kind }
+        Self {
+            name,
+            sep,
+            cache_age,
+        }
     }
 
     pub fn to_header(&self) -> String {
@@ -78,7 +82,19 @@ impl Section {
     }
 
     pub fn kind(&self) -> &SectionKind {
-        &self.kind
+        if self.cache_age.is_some() {
+            &SectionKind::Async
+        } else {
+            &SectionKind::Sync
+        }
+    }
+
+    pub fn cache_age(&self) -> u32 {
+        if let Some(v) = self.cache_age {
+            v
+        } else {
+            0
+        }
     }
 
     pub fn first_line<F>(&self, closure: F) -> String
@@ -132,13 +148,13 @@ pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
     let mut base: Vec<Section> = sections
         .get_filtered_always()
         .iter()
-        .map(|n| Section::new(n, SectionKind::Sync))
+        .map(|n| Section::new(n, None))
         .collect();
     base.extend(
         sections
             .get_filtered_cached()
             .iter()
-            .map(|n| Section::new(n, SectionKind::Async)),
+            .map(|n| Section::new(n, Some(ms_sql.sections().cache_age()))),
     );
     base
 }

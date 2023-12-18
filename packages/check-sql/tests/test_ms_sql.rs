@@ -9,7 +9,7 @@ use check_sql::ms_sql::{
     api::{self, SqlInstance, SqlInstanceBuilder},
     client::{self, Client},
     queries,
-    section::{self, Section, SectionKind},
+    section::{self, Section},
 };
 
 use check_sql::setup::Env;
@@ -214,7 +214,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
         section::MIRRORING_SECTION_NAME,
         section::AVAILABILITY_GROUPS_SECTION_NAME,
     ] {
-        validate_query_error(i, e, &Section::new(name, SectionKind::Sync)).await;
+        validate_query_error(i, e, &Section::new(name, None)).await;
     }
     validate_mirroring_section(i, e).await;
     validate_availability_groups_section(i, e).await;
@@ -478,7 +478,7 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
     let result = instance
         .generate_query_section(
             endpoint,
-            &Section::new(section::JOBS_SECTION_NAME, section::SectionKind::Sync),
+            &Section::new(section::JOBS_SECTION_NAME, None),
             None,
         )
         .await;
@@ -515,7 +515,7 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
 }
 
 async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint) {
-    let section = &Section::new(section::MIRRORING_SECTION_NAME, section::SectionKind::Sync);
+    let section = &Section::new(section::MIRRORING_SECTION_NAME, None);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)
         .await
@@ -528,10 +528,7 @@ async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint)
 }
 
 async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: &Endpoint) {
-    let section = &Section::new(
-        section::AVAILABILITY_GROUPS_SECTION_NAME,
-        section::SectionKind::Sync,
-    );
+    let section = &Section::new(section::AVAILABILITY_GROUPS_SECTION_NAME, None);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)
         .await

@@ -6,7 +6,7 @@ use crate::constants;
 use clap::Parser;
 use std::path::PathBuf;
 
-#[derive(Parser)]
+#[derive(Parser, Default)]
 #[command(about = "Check SQL plugin.", version = constants::VERSION)]
 pub struct Args {
     /// Enable verbose output. Use once (-v) for logging level DEBUG and twice (-vv) for logging

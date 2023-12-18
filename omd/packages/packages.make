@@ -164,19 +164,19 @@ endif
 ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/cloud/cloud.make \
+    packages/cloud/cloud.make \
     $(REPO_PATH)/managed/managed.make
 endif
 ifeq ($(EDITION),cloud)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/cloud/cloud.make
+    packages/cloud/cloud.make
 endif
 ifeq ($(EDITION),saas)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/cloud/cloud.make \
-    $(REPO_PATH)/saas/saas.make
+    packages/cloud/cloud.make \
+    packages/saas/saas.make
 else
 # Ship nagvis for all but saas edition: CMK-14926
 include packages/nagvis/nagvis.make

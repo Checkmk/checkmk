@@ -90,7 +90,7 @@ def _filter_thresholds_for_relation(
 def _parse_specified_thresholds(
     thresholds: Sequence[EntSensorThreshold],
     specified_relation: Literal[
-        EntSensorThresholdRelation.GREATER_OR_EQUAL, EntSensorThresholdRelation.LESS_THAN
+        EntSensorThresholdRelation.GREATER_OR_EQUAL, EntSensorThresholdRelation.LESS_OR_EQUAL
     ],
     factor: float,
 ) -> _Levels:
@@ -310,7 +310,7 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
                     )
                     dev_levels_lower = _parse_specified_thresholds(
                         thresholds[sensor_id],
-                        EntSensorThresholdRelation.LESS_THAN,
+                        EntSensorThresholdRelation.LESS_OR_EQUAL,
                         factor,
                     )
 

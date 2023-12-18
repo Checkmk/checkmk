@@ -174,7 +174,7 @@ def _allow_default_plus_fetchers_checkers_and_snmplib(
     )
 
 
-def _allowed_by_cmk_base(
+def _allowed_for_base(
     *,
     imported: ModuleName,
     component: Component,
@@ -194,6 +194,18 @@ def _allowed_by_cmk_base(
             ),
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _allowed_for_base_cee(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allowed_for_base(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.licensing")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.bakery.plugins")),
         )
@@ -520,7 +532,8 @@ _COMPONENTS = (
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
-    (Component("cmk.base"), _allowed_by_cmk_base),
+    (Component("cmk.base"), _allowed_for_base_cee),
+    (Component("cmk.base.cee"), _allowed_for_base_cee),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),

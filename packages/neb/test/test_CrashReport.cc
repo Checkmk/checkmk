@@ -6,12 +6,12 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
@@ -147,7 +147,7 @@ TEST_F(CrashReportTableFixture, TestTable) {
 }
 
 namespace {
-std::string query(Table &table, const std::list<std::string> &q) {
+std::string query(Table &table, const std::vector<std::string> &q) {
     OutputBuffer output{-1, [] { return false; }, table.logger()};
     Query{ParsedQuery{q, table, output},
           table,

@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -281,7 +280,7 @@ private:
     void *implInternal() const override { return const_cast<NebCore *>(this); }
 
     void logRequest(const std::string &line,
-                    const std::list<std::string> &lines);
+                    const std::vector<std::string> &lines);
     bool handleGet(InputBuffer &input, OutputBuffer &output,
                    const std::string &line, const std::string &table_name);
     void answerCommandRequest(const ExternalCommand &command);

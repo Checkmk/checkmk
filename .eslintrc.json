@@ -52,7 +52,7 @@
     "overrides": [
         {
             "files": [
-                "enterprise/web/htdocs/**/*.ts"
+                "web/htdocs/js/modules/cee/**/*.ts"
             ],
             "rules": {
                 "license-header/header": [ "error", "./resources/enterprise-license-header.js" ]

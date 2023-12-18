@@ -27,8 +27,7 @@ WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
-                              $(foreach edir,. enterprise, \
-                                  $(foreach subdir,* */* */*/* */*/*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
+                              $(foreach subdir,* */* */*/* */*/*/* */*/*/*/*,web/htdocs/js/$(subdir).[jt]s)))
 
 SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise, \
@@ -264,6 +263,9 @@ node_modules/.bin/prettier: .ran-npm
 	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/prettier
+
+js:
+	echo $(JAVASCRIPT_SOURCES)
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
 # list all targets separately.

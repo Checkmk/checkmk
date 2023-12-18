@@ -29,9 +29,7 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
                               $(foreach subdir,* */* */*/* */*/*/* */*/*/*/*,web/htdocs/js/$(subdir).[jt]s)))
 
-SCSS_SOURCES := $(wildcard \
-					$(foreach edir,. enterprise, \
-						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
+SCSS_SOURCES := $(wildcard $(foreach subdir,* */* */*/*,web/htdocs/themes/$(subdir)/*.scss))
 
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons))

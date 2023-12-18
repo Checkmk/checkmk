@@ -23,7 +23,7 @@ make -C .. WEBPACK_MODE="${WEBPACK_MODE:-development}" ${JAVASCRIPT_MINI} ${THEM
 
 echo "Update site $SITE..."
 
-echo "Copy CRE files..."
+echo "Copy files..."
 # shellcheck disable=SC2046 # yes, we want word splitting for the loops below
 sudo rsync -arxR \
     htdocs/css \
@@ -35,18 +35,6 @@ sudo rsync -arxR \
     htdocs/sounds \
     $(for i in ${THEME_RESOURCES}; do echo "${i#"$REPO_PATH/web/"}"; done) \
     "$ROOT/share/check_mk/web/"
-
-# Also deploy all other directories of same type
-if [ "${ALL_EDITIONS:-1}" != 0 ]; then
-    for WHAT in enterprise managed; do
-        if [ -e ../$WHAT/web/.f12 ]; then
-            (
-                cd ../$WHAT/web
-                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
-            )
-        fi
-    done
-fi
 
 if [ "$KILL_SITE_APACHE" = "1" ]; then
     echo "KILLING site apache of $SITE"

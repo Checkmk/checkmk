@@ -30,8 +30,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
                 "8": {
                     "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
-                        "dev_levels_lower": None,
-                        "dev_levels_upper": (46.0, 56.0),
+                        "dev_levels_lower": (-5, -5),
+                        "dev_levels_upper": (46, 56),
                         "dev_state": (1, "warning"),
                         "raw_env_mon_state": "2",
                         "reading": 49,
@@ -56,7 +56,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
                 "8": {
                     "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
-                        "dev_levels_lower": None,
+                        "dev_levels_lower": (46, -5),
                         "dev_levels_upper": (56.0, 56.0),
                         "dev_state": (1, "warning"),
                         "raw_env_mon_state": "2",
@@ -105,8 +105,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
                 "8": {
                     "Switch 1 - Inlet Temp Sensor 1010": {"obsolete": True},
                     "Switch 1 - Inlet Temp Sensor": {
-                        "dev_levels_lower": None,
-                        "dev_levels_upper": (56.0, 56.0),
+                        "dev_levels_lower": (-5, -5),
+                        "dev_levels_upper": (56, 56),
                         "dev_state": (1, "warning"),
                         "raw_env_mon_state": "2",
                         "reading": 49,

@@ -389,13 +389,13 @@ div#top_heading {
         justify-content: center;
         float: left;
         margin: $spacing-quarter $spacing-half $spacing-quarter 0;
-        &.disabled {
+
+        &.disabled a {
           pointer-events: none;
-          a {
-            background-color: $input-button-hover-bg-color;
-            opacity: 0.5;
-          }
+          background-color: $input-button-hover-bg-color;
+          opacity: 0.5;
         }
+
         a {
           display: flex;
           align-items: center;

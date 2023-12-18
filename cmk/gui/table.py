@@ -488,21 +488,28 @@ class Table:
                 html.hidden_fields()
             html.close_tr()
 
+        oddeven_name = "even"
         for nr, row in enumerate(rows):
             # Intermediate header
             if isinstance(row, GroupHeader):
                 # Show the header only, if at least one (non-header) row follows
                 if nr < len(rows) - 1 and not isinstance(rows[nr + 1], GroupHeader):
                     html.open_tr(class_="groupheader")
-                    html.open_td(colspan=num_cols)
-                    html.h3(row.title)
+                    html.open_td(class_="groupheader", colspan=num_cols)
+                    html.open_table(
+                        class_="groupheader", cellspacing="0", cellpadding="0", border="0"
+                    )
+                    html.open_tr()
+                    html.td(row.title)
+                    html.close_tr()
+                    html.close_table()
                     html.close_td()
                     html.close_tr()
 
                     self._render_headers(actions_enabled, actions_visible, empty_columns)
+                    oddeven_name = "even"
                 continue
 
-            oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
 
             if isinstance(row.css, list):
@@ -519,6 +526,7 @@ class Table:
 
                 html.td(cell.content, class_=cell.css, colspan=cell.colspan)
             html.close_tr()
+            oddeven_name = "even" if oddeven_name == "odd" else "odd"
 
         if not rows and search_term:
             html.open_tr(class_=["data", "odd0", "no_match"])

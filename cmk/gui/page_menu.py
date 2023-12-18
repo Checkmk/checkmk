@@ -656,7 +656,10 @@ class PageMenuRenderer:
         for entry in entries:
             classes = ["suggestion"]
             classes += self._get_entry_css_classes(entry)
-            html.open_div(class_=classes)
+            html.open_div(
+                class_=classes,
+                title=entry.disabled_tooltip if not entry.is_enabled else None,
+            )
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()

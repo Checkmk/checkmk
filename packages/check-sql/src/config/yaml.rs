@@ -71,21 +71,20 @@ impl Get for Yaml {
             log::debug!("{key} no vector, using default {default:?}");
             return default.iter().filter_map(map_str).collect();
         }
-        value
-            .as_vec()
-            .unwrap_or({
-                log::error!("Bad value in {key} {:?} (expected vector)", value);
-                &vec![]
-            })
-            .iter()
-            .filter_map(|v| match v.as_str() {
-                Some(v) => map_str(&v),
-                None => {
-                    log::error!("Bad value in {key} (expected string)");
-                    None
-                }
-            })
-            .collect()
+        if let Some(v) = value.as_vec() {
+            v.iter()
+                .filter_map(|v| match v.as_str() {
+                    Some(v) => map_str(&v),
+                    None => {
+                        log::error!("Bad value in {key} (expected string)");
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            log::error!("Bad value in {key} {:?} (expected vector)", value);
+            vec![]
+        }
     }
 
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml> {
@@ -199,5 +198,16 @@ vector:
         let yaml = load_from_str("bad: [a, '3']").unwrap();
         let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
         assert_eq!(z, ["a", "3"]);
+        let yaml = load_from_str(
+            r#"
+---
+  bad:
+    - aa
+    - bb
+"#,
+        )
+        .unwrap();
+        let z = yaml[0].get_string_vector("bad", &["1", "", "2"]);
+        assert_eq!(z, ["aa", "bb"]);
     }
 }

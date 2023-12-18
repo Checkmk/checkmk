@@ -11,6 +11,7 @@ import pprint
 import re
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, overload
 
@@ -18,6 +19,7 @@ from flask import current_app, session
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.log as log
 import cmk.gui.utils as utils
@@ -25,6 +27,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -59,10 +62,29 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
-def use_vue_rendering():
-    return active_config.experimental_features.get("use_vue_rendering") or html.request.has_var(
-        "use_vue_rendering"
-    )
+class ExperimentalRenderMode(Enum):
+    BACKEND = "backend"
+    FRONTEND = "frontend"
+    BACKEND_AND_FRONTEND = "backend_and_frontend"
+
+
+@request_memoize()
+def get_render_mode() -> ExperimentalRenderMode:
+    # Settings via url overwrite config based settings
+    if (rendering_mode := html.request.var("experimental_render_mode", None)) is None:
+        rendering_mode = active_config.experimental_features.get(
+            "render_mode", ExperimentalRenderMode.BACKEND.value
+        )
+
+    match rendering_mode:
+        case ExperimentalRenderMode.BACKEND.value:
+            return ExperimentalRenderMode.BACKEND
+        case ExperimentalRenderMode.FRONTEND.value:
+            return ExperimentalRenderMode.FRONTEND
+        case ExperimentalRenderMode.BACKEND_AND_FRONTEND.value:
+            return ExperimentalRenderMode.BACKEND_AND_FRONTEND
+        case _:
+            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
 
 
 def inject_js_profiling_code():
@@ -554,7 +576,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         force: bool = False,
     ) -> None:
         javascript_files = [main_javascript]
-        if use_vue_rendering():
+        if get_render_mode() != ExperimentalRenderMode.BACKEND:
             javascript_files.append("vue")
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))

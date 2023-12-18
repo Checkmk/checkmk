@@ -832,10 +832,14 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
             title=_("Experimental features"),
             elements=[
                 (
-                    "use_vue_rendering",
-                    Checkbox(
-                        title=_("Use vue rendering"),
-                        default_value=False,
+                    "render_mode",
+                    DropdownChoice(
+                        title=_("Rendering mode for valuespecs and tables"),
+                        choices=[
+                            ("backend", "Backend"),
+                            ("frontend", "Frontend"),
+                            ("backend_and_frontend", "Backend and Frontend"),
+                        ],
                     ),
                 ),
                 (

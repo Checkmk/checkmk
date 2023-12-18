@@ -271,7 +271,7 @@ def create_vue_app_config(vue_visitor: VueGeneratingVisitor, app_id: str) -> dic
     )
 
 
-def render_vue(valuespec, field_id, default_value):
+def show_vue(valuespec, field_id, default_value):
     """Renders the valuespec via vue within a div
     The value to be rendered
     - might be taken from the request, which also enables validation

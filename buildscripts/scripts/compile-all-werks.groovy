@@ -101,7 +101,7 @@ def main() {
                 sh("""
                     rsync --verbose \
                         -e "ssh -o StrictHostKeyChecking=no -i ${keyfile} -p ${WEB_STAGING_PORT}" \
-                        ${WORKSPACE}/all_werks.json \
+                        ${checkout_dir}/all_werks.json \
                         ${user}@${target}:${target_path}
                 """);
             }

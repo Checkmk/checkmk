@@ -19,7 +19,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html, use_vue_rendering
+from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -42,7 +42,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, render_vue
+from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, show_vue
 from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -327,11 +327,17 @@ class ABCEditGlobalSettingMode(WatoMode):
                 _("Resetted configuration variable %s to its default.") % self._varname
             )
         else:
-            new_value = self._valuespec.from_html_vars("ve")
-            if use_vue_rendering():
-                new_value = parse_and_validate_vue(self._valuespec, self._vue_field_id())
+            match get_render_mode():
+                case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                    new_value = parse_and_validate_vue(self._valuespec, self._vue_field_id())
+                    # For testing, validate this datatype/value again within legacy valuespec
+                    # This should not throw any errors
+                    self._valuespec.validate_datatype(new_value, "ve")
+                    self._valuespec.validate_value(new_value, "ve")
+                case ExperimentalRenderMode.BACKEND:
+                    new_value = self._valuespec.from_html_vars("ve")
+                    self._valuespec.validate_value(new_value, "ve")
 
-            self._valuespec.validate_value(new_value, "ve")
             self._current_settings[self._varname] = new_value
             msg = HTML(
                 _("Changed global configuration variable %s to %s.")
@@ -394,14 +400,21 @@ class ABCEditGlobalSettingMode(WatoMode):
                 forms.section(_("Configuration variable:"))
                 html.tt(self._varname)
 
-            if use_vue_rendering():
-                forms.section(_("Current setting as VUE"))
-                render_vue(self._valuespec, self._vue_field_id(), value)
-                forms.section(_("Legacy valuespec (input data is ignored)"))
-            else:
-                forms.section(_("Current setting"))
-            self._valuespec.render_input("ve", value)
-            self._valuespec.set_focus("ve")
+            match get_render_mode():
+                case ExperimentalRenderMode.BACKEND:
+                    forms.section(_("Current setting"))
+                    self._valuespec.render_input("ve", value)
+                    self._valuespec.set_focus("ve")
+                case ExperimentalRenderMode.FRONTEND:
+                    forms.section(_("Current setting as VUE"))
+                    show_vue(self._valuespec, self._vue_field_id(), value)
+                case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                    forms.section(_("Current setting as VUE"))
+                    show_vue(self._valuespec, self._vue_field_id(), value)
+                    forms.section(_("Current setting (display only)"))
+                    self._valuespec.render_input("ve", value)
+                    self._valuespec.set_focus("ve")
+
             html.help(self._valuespec.help())
 
             if is_configured_globally:

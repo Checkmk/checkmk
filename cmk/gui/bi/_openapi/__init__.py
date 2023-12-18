@@ -267,7 +267,7 @@ class BIAggregationStateResponseSchema(Schema):
 
 @Endpoint(
     constructors.domain_type_action_href("bi_aggregation", "aggregation_state"),
-    "cmk/get_bi_aggregation_state",
+    "cmk/bi_aggregation_state_post",
     method="post",
     convert_response=False,
     request_schema=BIAggregationStateRequestSchema,
@@ -277,12 +277,34 @@ class BIAggregationStateResponseSchema(Schema):
     skip_locking=True,
     update_config_generation=False,
 )
-def get_bi_aggregation_state(params: Mapping[str, Any]) -> Response:
+def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
+
+    # This endpoint is being kept for backward compatibility.
+    # We now provide the same endpoint via the GET method.
+
     user.need_permission("wato.bi_rules")
     filter_config = params.get("body", {})
     filter_names = filter_config.get("filter_names")
     filter_groups = filter_config.get("filter_groups")
+    return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
+
+
+@Endpoint(
+    constructors.domain_type_action_href("bi_aggregation", "aggregation_state"),
+    "cmk/bi_aggregation_state_get",
+    method="get",
+    convert_response=False,
+    query_params=[BIAggregationStateRequestSchema],
+    response_schema=BIAggregationStateResponseSchema,
+    permissions_required=RO_PERMISSIONS,
+    tag_group="Monitoring",
+)
+def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
+    """Get the state of BI aggregations"""
+    user.need_permission("wato.bi_rules")
+    filter_names = params.get("filter_names")
+    filter_groups = params.get("filter_groups")
     return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
 
 
@@ -695,7 +717,8 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(put_bi_rule)
     endpoint_registry.register(post_bi_rule)
     endpoint_registry.register(delete_bi_rule)
-    endpoint_registry.register(get_bi_aggregation_state)
+    endpoint_registry.register(bi_aggregation_state_post)
+    endpoint_registry.register(bi_aggregation_state_get)
     endpoint_registry.register(get_bi_aggregation)
     endpoint_registry.register(put_bi_aggregation)
     endpoint_registry.register(post_bi_aggregation)

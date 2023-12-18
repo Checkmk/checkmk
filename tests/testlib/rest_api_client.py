@@ -2295,10 +2295,30 @@ class BiAggregationClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_aggregation_state(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+    def get_aggregation_state_post(
+        self,
+        body: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/aggregation_state/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get_aggregation_state(
+        self,
+        query_params: dict[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        url = f"/domain-types/{self.domain}/actions/aggregation_state/invoke"
+        if query_params is not None:
+            url += f"?{urllib.parse.urlencode(_only_set_keys(query_params))}"
+
+        return self.request(
+            "get",
+            url=url,
             expect_ok=expect_ok,
         )
 

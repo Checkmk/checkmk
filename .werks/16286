@@ -1,0 +1,20 @@
+Title: bi: new endpoint to get bi aggregation state via GET method
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1702896901
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a new endpoint which replicates the following endpoint
+
+POST - /domain-types/bi_aggregation/actions/aggregation_state/invoke
+
+We now provide the same behaviour via a GET endpoint.
+
+GET - /domain-types/bi_aggregation/actions/aggregation_state/invoke
+
+This means that the parameters "filter_names" and "filter_groups" which
+are passed as request parameters for the POST endpoint, have to be passed
+as query parameters for this new GET endpoint.

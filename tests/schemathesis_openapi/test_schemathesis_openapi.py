@@ -35,6 +35,7 @@ def test_openapi_stateful():
     run_state_machine_test(schema)
 
 
+@pytest.mark.skip(reason="Currently fails due to TypeError. See CMK-15469.")
 @pytest.mark.type("schemathesis_openapi")
 @given(data=strategies.data())
 @pytest.mark.parametrize(

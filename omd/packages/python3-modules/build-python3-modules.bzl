@@ -35,6 +35,7 @@ build_cmd = """
     set -e
     # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
+    export TMPDIR="/tmp"
 
     # Path to external dependencies
     # SRCS contains a whitespace seperated list of paths to dependencies.
@@ -56,11 +57,6 @@ build_cmd = """
     mkdir -p $$HOME/$(OUTS)
 
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
-
-    # Set up rust toolchain (probably better done bazel wide?)
-    export RUSTUP_HOME="/opt/rust/rustup"
-    export TMPDIR="/tmp"
-    export PATH="/opt/rust/cargo/bin:$$PWD/$$EXT_DEPS_PATH/python/python/bin/:$$PATH"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
     # Keep in sync with scripts/run-pipenv

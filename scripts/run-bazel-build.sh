@@ -74,8 +74,10 @@ bazel build \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=PATH="$PATH" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    ${RUSTUP_HOME:+--action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     --host_action_env=PATH="$PATH" \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    ${RUSTUP_HOME:+--host_action_env=RUSTUP_HOME="$RUSTUP_HOME"} \
     --experimental_ui_max_stdouterr_bytes=10000000 \
     --experimental_remote_cache_async \
     --experimental_remote_cache_compression \

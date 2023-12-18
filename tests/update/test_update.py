@@ -124,18 +124,6 @@ def test_update(  # pylint: disable=too-many-branches
         _ = get_services_with_status(target_data[hostname], 2)  # Crit
         _ = get_services_with_status(target_data[hostname], 3)  # Unknown
 
-        # TODO: 'Nullmailer Queue' service is not found after the update. See CMK-14150.
-        nullmailer_service = "Nullmailer Queue"
-        if nullmailer_service in base_data[hostname]:
-            base_data[hostname].pop(nullmailer_service)
-            base_ok_services[hostname].remove(nullmailer_service)
-
-        # TODO: 'OMD <sitename> apache' service is not found after the update. See CMK-14120.
-        apache_service = f"OMD {test_site.id} apache"
-        if apache_service in base_data[hostname]:
-            base_data[hostname].pop(apache_service)
-            base_ok_services[hostname].remove(apache_service)
-
         not_found_services = [
             service for service in base_data[hostname] if service not in target_data[hostname]
         ]

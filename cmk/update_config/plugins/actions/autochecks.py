@@ -160,7 +160,7 @@ def _fix_entry(
     """Change names of removed plugins to the new ones and transform parameters"""
     new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name, entry.check_plugin_name)
 
-    explicit_transform = _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(
+    explicit_parameters_transform = _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(
         new_plugin_name, lambda x: x
     )
 
@@ -170,7 +170,7 @@ def _fix_entry(
         parameters=_transformed_params(
             logger,
             new_plugin_name or entry.check_plugin_name,
-            explicit_transform(entry.parameters),
+            explicit_parameters_transform(entry.parameters),
             all_rulesets,
             hostname,
         ),

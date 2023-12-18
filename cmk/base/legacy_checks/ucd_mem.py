@@ -30,7 +30,8 @@ from cmk.base.config import check_info
 
 
 def inventory_ucd_mem(parsed):
-    return [("", {})] if parsed else []
+    if parsed:
+        yield "", {}
 
 
 def check_ucd_mem(item, params, parsed):

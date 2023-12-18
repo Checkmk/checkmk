@@ -18,7 +18,8 @@ from cmk.agent_based.v2.type_defs import StringTable
 
 def inventory_cmc_temp(info):
     # There are always two sensors
-    return [("1", {}), ("2", {})]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_cmc_temp(item, params, info):

@@ -19,7 +19,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version
+from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
@@ -209,6 +209,7 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
         else:
             # use SiteFactory for non-interactive site creation
             site = sf.get_site("central")
+            restart_httpd()
 
     return site
 

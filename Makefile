@@ -183,6 +183,7 @@ setversion:
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
+	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif

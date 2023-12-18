@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::client::{self, create_from_config, Client};
-use super::section::{self, Section};
+use super::section::{self, Section, SectionKind};
 use crate::config::{
     self,
     ms_sql::{AuthType, CustomInstance, Endpoint},
@@ -11,6 +11,7 @@ use crate::config::{
 };
 use crate::ms_sql::queries;
 use crate::setup::Env;
+
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
@@ -196,6 +197,10 @@ impl SqlInstance {
         &self.temp_dir
     }
 
+    pub fn hostname(&self) -> String {
+        self.endpoint.hostname()
+    }
+
     /// not tested, because it is a bit legacy
     pub fn legacy_name(&self) -> String {
         if self.name != "MSSQLSERVER" {
@@ -307,7 +312,7 @@ impl SqlInstance {
         section: &Section,
     ) -> String {
         let sep = section.sep();
-        match section.name() {
+        let body = match section.name() {
             section::INSTANCE_SECTION_NAME => {
                 self.generate_state_entry(true, section.sep())
                     + &self.generate_details_entry(client, section.sep()).await
@@ -359,7 +364,17 @@ impl SqlInstance {
                 self.generate_query_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
-        }
+        };
+
+        if section.kind() == &SectionKind::Async {
+            self.store_section_body(section.name()).await;
+        };
+
+        body
+    }
+
+    async fn store_section_body(&self, name: &str) {
+        let _file_name = format!("{}-{}-{}-{}", self.hostname(), self.name, self.hash(), name);
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
@@ -1139,6 +1154,7 @@ impl<'a> Column<'a> for Row {
 impl CheckConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
+            CheckConfig::create_cache_dir(environment, ms_sql);
             let dumb_header = Self::generate_dumb_header(ms_sql);
             let data = generate_data(ms_sql, environment)
                 .await
@@ -1170,6 +1186,23 @@ impl CheckConfig {
             .map(Section::to_header)
             .collect::<Vec<String>>()
             .join("")
+    }
+
+    fn create_cache_dir(environment: &Env, ms_sql: &config::ms_sql::Config) {
+        if let Some(cache_dir) = environment.cache_dir().map(|d| d.join(ms_sql.hash())) {
+            if cache_dir.is_dir() {
+                log::info!("Cache dir exists");
+            } else if cache_dir.exists() {
+                log::error!("Cache dir exists but isn't usable(not a directory)");
+            } else {
+                log::info!("Cache dir to be created");
+                std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
+                    log::error!("Failed to create root cache dir: {e}");
+                });
+            }
+        } else {
+            log::error!("Cache dir exists but is not usable");
+        }
     }
 }
 

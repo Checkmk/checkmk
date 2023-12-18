@@ -1,5 +1,4 @@
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -49,15 +48,6 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
         site.openapi.activate_changes_and_wait_for_completion()
         site.reschedule_services(hostname)
         host_services = site.get_host_services(hostname)
-
-        # TODO: the 'Postfix status' service found in CRIT state after discovery in some distros.
-        #   Related: CMK-13774
-        postfix_status_service = "Postfix status"
-        if (
-            os.environ.get("DISTRO") in ["centos-8", "almalinux-9", "sles-12sp5"]
-            and postfix_status_service in host_services
-        ):
-            host_services.pop(postfix_status_service)
 
         yield host_services
 

@@ -67,7 +67,7 @@ def cmc_path() -> Path:
 
 
 def is_enterprise_repo() -> bool:
-    return cmc_path().exists()
+    return (repo_path() / "omd" / "packages" / "enterprise").exists()
 
 
 def is_managed_repo() -> bool:

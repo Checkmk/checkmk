@@ -162,7 +162,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
-            os << "client connection terminated: " << res;
+            os << "terminating client connection: " << res;
             output.setError(OutputBuffer::ResponseCode::incomplete_request,
                             os.str());
         }
@@ -201,9 +201,10 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         return false;
     }
     logRequest(line, {});
-    Warning(logger()) << "Invalid request '" << line << "'";
+    Warning(logger()) << "terminating client connection: invalid request '"
+                      << line << "'";
     output.setError(OutputBuffer::ResponseCode::invalid_request,
-                    "Invalid request method");
+                    "terminating client connection: invalid request method");
     return false;
 }
 

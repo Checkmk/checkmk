@@ -214,7 +214,6 @@ impl SqlInstance {
         match self.create_client(endpoint, None).await {
             Ok(mut client) => {
                 for section in sections.iter() {
-                    result += &section.to_header();
                     result += &self.generate_section(&mut client, endpoint, section).await;
                 }
             }
@@ -284,7 +283,7 @@ impl SqlInstance {
     ) -> String {
         let sep = section.sep();
         let databases = self.generate_databases(client).await;
-        match section.name() {
+        let body = match section.name() {
             section::INSTANCE_SECTION_NAME => {
                 self.generate_state_entry(true, section.sep())
                     + &self.generate_details_entry(client, section.sep()).await
@@ -334,7 +333,8 @@ impl SqlInstance {
                 self.generate_query_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
-        }
+        };
+        section.to_header() + body.as_str()
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {

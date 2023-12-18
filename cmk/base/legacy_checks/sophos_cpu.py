@@ -23,7 +23,7 @@ def check_sophos_cpu(item, params, parsed):
 
 
 def discover_sophos_cpu(parsed):
-    return [(None, {})] if parsed is not None else None
+    yield None, {}
 
 
 check_info["sophos_cpu"] = LegacyCheckDefinition(

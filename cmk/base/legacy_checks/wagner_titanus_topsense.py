@@ -88,7 +88,7 @@ def parse_wagner_titanus_topsens(info):
 
 
 def inventory_wagner_titanus_topsense_info(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_info(item, _no_params, info):
@@ -133,7 +133,7 @@ check_info["wagner_titanus_topsense.info"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_overall_status(info):
-    return [(None, None)]
+    yield None, {}
 
 
 def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
@@ -168,7 +168,8 @@ check_info["wagner_titanus_topsense.overall_status"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_alarm(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_alarm(item, _no_params, info):
@@ -218,7 +219,8 @@ check_info["wagner_titanus_topsense.alarm"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_smoke(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_smoke(item, _no_params, info):
@@ -260,7 +262,8 @@ check_info["wagner_titanus_topsense.smoke"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_chamber_deviation(info):
-    return [("1", None), ("2", None)]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
@@ -296,10 +299,8 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_airflow_deviation(info):
-    return [
-        ("1", {}),
-        ("2", {}),
-    ]
+    yield "1", {}
+    yield "2", {}
 
 
 def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
@@ -344,7 +345,8 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
 
 
 def inventory_wagner_titanus_topsense_temp(info):
-    return [("Ambient 1", {}), ("Ambient 2", {})]
+    yield "Ambient 1", {}
+    yield "Ambient 2", {}
 
 
 def check_wagner_titanus_topsense_temp(item, params, info):

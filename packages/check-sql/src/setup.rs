@@ -32,6 +32,10 @@ impl Env {
         self.log_dir.as_deref()
     }
 
+    pub fn cache_dir(&self) -> Option<PathBuf> {
+        self.temp_dir().map(|temp_dir| temp_dir.join("cache"))
+    }
+
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
         if dir.is_some() {
             dir.as_deref()
@@ -128,5 +132,29 @@ mod tests {
             spec.as_pathbuf(None),
             PathBuf::from("_").join("check-sql.log")
         );
+    }
+    #[test]
+    fn test_env_dir_exist() {
+        let args = Args {
+            log_dir: Some(PathBuf::from(".")),
+            temp_dir: Some(PathBuf::from(".")),
+            ..Default::default()
+        };
+        let e = Env::new(&args);
+        assert_eq!(e.log_dir(), Some(Path::new(".")));
+        assert_eq!(e.temp_dir(), Some(Path::new(".")));
+        assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("cache")));
+    }
+    #[test]
+    fn test_env_dir_absent() {
+        let args = Args {
+            log_dir: Some(PathBuf::from("weird-dir")),
+            temp_dir: Some(PathBuf::from("burr-dir")),
+            ..Default::default()
+        };
+        let e = Env::new(&args);
+        assert!(e.log_dir().is_none());
+        assert!(e.temp_dir().is_none());
+        assert!(e.cache_dir().is_none());
     }
 }

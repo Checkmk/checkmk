@@ -56,7 +56,7 @@ bool ProcessServiceGroup(Query &query, const User &user,
 }  // namespace
 
 void TableServicesByGroup::answerQuery(Query &query, const User &user,
-                                       ICore &core) {
+                                       const ICore &core) {
     // If we know the service group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";

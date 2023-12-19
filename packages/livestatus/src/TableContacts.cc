@@ -149,7 +149,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableContacts::answerQuery(Query &query, const User & /*user*/,
-                                ICore &core) {
+                                const ICore &core) {
     core.all_of_contacts(
         [&query](const IContact &r) { return query.processDataset(Row{&r}); });
 }

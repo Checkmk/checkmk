@@ -76,7 +76,7 @@ private:
     bool doStats() const;
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
-    void doWait(const ICore &core);
+    void doWait(ICore &core);
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // _stats_groups.

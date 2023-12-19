@@ -603,7 +603,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
 }
 
-void TableServices::answerQuery(Query &query, const User &user, ICore &core) {
+void TableServices::answerQuery(Query &query, const User &user,
+                                const ICore &core) {
     auto process = [&](const IService &s) {
         return !user.is_authorized_for_service(s) ||
                query.processDataset(Row{&s});

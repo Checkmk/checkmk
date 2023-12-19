@@ -269,7 +269,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     return it->second;
 }
 
-void Query::doWait(const ICore &core) {
+void Query::doWait(ICore &core) {
     if (parsed_query_.wait_condition->is_contradiction() &&
         parsed_query_.wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
@@ -283,11 +283,10 @@ void Query::doWait(const ICore &core) {
             return;
         }
     }
-    _table.core()->triggers().wait_for(
-        parsed_query_.wait_trigger, parsed_query_.wait_timeout,
-        [this, &wait_object] {
-            return parsed_query_.wait_condition->accepts(
-                wait_object, *parsed_query_.user,
-                parsed_query_.timezone_offset);
-        });
+    core.triggers().wait_for(parsed_query_.wait_trigger,
+                             parsed_query_.wait_timeout, [this, &wait_object] {
+                                 return parsed_query_.wait_condition->accepts(
+                                     wait_object, *parsed_query_.user,
+                                     parsed_query_.timezone_offset);
+                             });
 }

@@ -33,13 +33,13 @@ namespace {
 
 class LogRow {
 public:
-    LogRow(const LogEntry &entry_, ICore *mc)
+    LogRow(const LogEntry &entry_, const ICore &core)
         : entry{&entry_}
-        , hst{mc->find_host(entry_.host_name())}
-        , svc{mc->find_service(entry_.host_name(),
-                               entry_.service_description())}
-        , ctc{mc->find_contact(entry_.contact_name())}
-        , command{mc->find_command(entry_.command_name())} {}
+        , hst{core.find_host(entry_.host_name())}
+        , svc{core.find_service(entry_.host_name(),
+                                entry_.service_description())}
+        , ctc{core.find_contact(entry_.contact_name())}
+        , command{core.find_command(entry_.command_name())} {}
 
     const LogEntry *entry;
     const IHost *hst;
@@ -148,7 +148,7 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 }  // namespace
 
-void TableLog::answerQuery(Query &query, const User &user, ICore &core) {
+void TableLog::answerQuery(Query &query, const User &user, const ICore &core) {
     auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
@@ -163,7 +163,7 @@ void TableLog::answerQuery(Query &query, const User &user, ICore &core) {
     };
 
     auto process = [is_authorized, &core, &query](const LogEntry &entry) {
-        LogRow r{entry, &core};
+        LogRow r{entry, core};
         return !is_authorized(r) || query.processDataset(Row{&r});
     };
     _log_cache->for_each(log_filter, process);

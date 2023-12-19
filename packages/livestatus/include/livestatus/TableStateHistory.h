@@ -31,7 +31,8 @@ public:
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    void answerQuery(Query &query, const User &user, ICore &core) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
     [[nodiscard]] std::shared_ptr<Column> column(
         std::string colname) const override;
     static std::unique_ptr<Filter> createPartialFilter(const Query &query);

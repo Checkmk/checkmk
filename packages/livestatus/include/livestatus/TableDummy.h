@@ -19,7 +19,7 @@ public:
     [[nodiscard]] std::string name() const override { return "dummy"; }
     [[nodiscard]] std::string namePrefix() const override { return "dummy_"; }
     void answerQuery(Query & /*unused*/, const User & /*unused*/,
-                     ICore & /*unused*/) override {}
+                     const ICore & /*unused*/) override {}
 };
 
 #endif  //  TableDummy_h

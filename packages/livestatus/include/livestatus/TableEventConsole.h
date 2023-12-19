@@ -30,7 +30,7 @@ class User;
 
 class ECRow {
 public:
-    ECRow(ICore *mc, const std::vector<std::string> &headers,
+    ECRow(const ICore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
     static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
@@ -67,7 +67,8 @@ class TableEventConsole : public Table {
 public:
     explicit TableEventConsole(ICore *mc);
 
-    void answerQuery(Query &query, const User &user, ICore &core) override;
+    void answerQuery(Query &query, const User &user,
+                     const ICore &core) override;
 };
 
 #endif  // TableEventConsole_h

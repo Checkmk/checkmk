@@ -42,7 +42,6 @@ from collections.abc import Sequence
 
 import cmk.utils
 import cmk.utils.render
-from cmk.utils.tags import TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -55,7 +54,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age
-from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
+from cmk.gui.type_defs import ColumnName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
@@ -1182,90 +1181,3 @@ class CheckPeriodIcon(Icon):
             if row["%s_in_check_period" % what] == 0:
                 return "pause", _("This host is currently not being checked")
         return None
-
-
-# .
-#   .--robotmk-------------------------------------------------------------.
-#   |                        _           _             _                   |
-#   |              _ __ ___ | |__   ___ | |_ _ __ ___ | | __               |
-#   |             | '__/ _ \| '_ \ / _ \| __| '_ ` _ \| |/ /               |
-#   |             | | | (_) | |_) | (_) | |_| | | | | |   <                |
-#   |             |_|  \___/|_.__/ \___/ \__|_| |_| |_|_|\_\               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-class RobotmkIcon(Icon):
-    @classmethod
-    def ident(cls) -> str:
-        return "robotmk"
-
-    @classmethod
-    def title(cls) -> str:
-        return _("Robot Framework: Last log")
-
-    def service_columns(self) -> list[str]:
-        return ["labels"]
-
-    def render(
-        self,
-        what: str,
-        row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
-    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-        if not row.get("service_labels", {}).get("robotmk/html_last_log"):
-            return None
-
-        return (
-            "robotmk",
-            self.title(),
-            makeuri_contextless(
-                request,
-                [
-                    ("report_type", self.ident()),
-                    ("site", row["site"]),
-                    ("host", row["host_name"]),
-                    ("service", row["service_description"]),
-                ],
-                filename="robotmk.py",
-            ),
-        )
-
-
-class RobotmkErrorIcon(Icon):
-    @classmethod
-    def ident(cls) -> str:
-        return "robotmk_error"
-
-    @classmethod
-    def title(cls) -> str:
-        return _("Robot Framework: Last error log")
-
-    def service_columns(self) -> list[str]:
-        return ["labels"]
-
-    def render(
-        self,
-        what: str,
-        row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
-    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-        if not row.get("service_labels", {}).get("robotmk/html_last_error_log"):
-            return None
-
-        return (
-            "robotmk_error",
-            self.title(),
-            makeuri_contextless(
-                request,
-                [
-                    ("report_type", self.ident()),
-                    ("site", row["site"]),
-                    ("host", row["host_name"]),
-                    ("service", row["service_description"]),
-                ],
-                filename="robotmk.py",
-            ),
-        )

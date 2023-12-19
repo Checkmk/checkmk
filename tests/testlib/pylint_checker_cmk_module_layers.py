@@ -266,6 +266,7 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.views")),
         )
     )
 

@@ -80,7 +80,9 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
     return it->second->createColumn(colname2, rest.substr(sep_pos + 1));
 }
 
-Row Table::get(const std::string & /*unused*/) const { return Row{nullptr}; }
+Row Table::get(const std::string & /*unused*/, const ICore & /*core*/) const {
+    return Row{nullptr};
+}
 
 Row Table::getDefault(const ICore & /*core*/) const { return Row{nullptr}; }
 

@@ -154,7 +154,8 @@ void TableContacts::answerQuery(Query &query, const User & /*user*/,
         [&query](const IContact &r) { return query.processDataset(Row{&r}); });
 }
 
-Row TableContacts::get(const std::string &primary_key) const {
+Row TableContacts::get(const std::string &primary_key,
+                       const ICore &core) const {
     // "name" is the primary key
-    return Row{core()->find_contact(primary_key)};
+    return Row{core.find_contact(primary_key)};
 }

@@ -69,7 +69,7 @@ ParsedQuery::ParsedQuery(const std::vector<std::string> &lines,
         return table.core()->find_user(std::string{name});
     };
     auto get = [&table](std::string_view primary_key) {
-        return table.get(std::string{primary_key});
+        return table.get(std::string{primary_key}, *table.core());
     };
     for (const auto &line_str : lines) {
         std::string_view line{line_str};

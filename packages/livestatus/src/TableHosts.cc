@@ -774,7 +774,7 @@ void TableHosts::answerQuery(Query &query, const User &user,
     core.all_of_hosts([&process](const IHost &h) { return process(h); });
 }
 
-Row TableHosts::get(const std::string &primary_key) const {
+Row TableHosts::get(const std::string &primary_key, const ICore &core) const {
     // "name" is the primary key
-    return Row{core()->find_host(primary_key)};
+    return Row{core.find_host(primary_key)};
 }

@@ -109,7 +109,8 @@ public:
     virtual void answerQuery(Query &query, const User &user,
                              const ICore &core) = 0;
 
-    [[nodiscard]] virtual Row get(const std::string &primary_key) const;
+    [[nodiscard]] virtual Row get(const std::string &primary_key,
+                                  const ICore &core) const;
 
     // We have funny single-row tables without a primary key!
     [[nodiscard]] virtual Row getDefault(const ICore &core) const;

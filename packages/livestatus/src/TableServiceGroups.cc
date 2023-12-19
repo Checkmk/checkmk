@@ -151,7 +151,8 @@ void TableServiceGroups::answerQuery(Query &query, const User &user,
         [&process](const IServiceGroup &r) { return process(r); });
 }
 
-Row TableServiceGroups::get(const std::string &primary_key) const {
+Row TableServiceGroups::get(const std::string &primary_key,
+                            const ICore &core) const {
     // "name" is the primary key
-    return Row{core()->find_servicegroup(primary_key)};
+    return Row{core.find_servicegroup(primary_key)};
 }

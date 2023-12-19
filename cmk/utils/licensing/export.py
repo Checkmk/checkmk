@@ -17,7 +17,7 @@ from uuid import UUID
 from dateutil.relativedelta import relativedelta
 from typing_extensions import TypedDict
 
-LicenseUsageReportVersion: Final[str] = "2.2"
+LicenseUsageReportVersion: Final[str] = "3.0"
 
 
 class RawLicenseUsageReport(TypedDict):
@@ -364,8 +364,8 @@ class LicenseUsageSample:
         if version in ["2.0", "2.1"]:
             return cls._parse_sample_v2_0
 
-        if version in ["2.2"]:
-            return cls._parse_sample_v2_2
+        if version in ["3.0"]:
+            return cls._parse_sample_v3_0
 
         raise UnknownSampleParserError("Unknown report version: %r" % version)
 
@@ -561,7 +561,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v2_2(
+    def _parse_sample_v3_0(
         cls,
         raw_sample: object,
         *,
@@ -569,13 +569,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 2.2: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 3.0: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError("Parse sample 2.2: No such instance ID")
+            raise ValueError("Parse sample 3.0: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 2.2: No such site hash")
+            raise ValueError("Parse sample 3.0: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(

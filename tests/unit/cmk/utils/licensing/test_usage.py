@@ -219,7 +219,7 @@ def test_serialize_license_usage_report() -> None:
                 history=history.for_report(),
             )
         )
-        == b"LQ't#$x~}Qi Qa]aQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Qhbfchd43\\fg7f\\c_5c\\h3d7\\7a4d2g`6ee3gQ[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q?F>0D6CG:46D0DJ?E96E:4Qi _[ Q?F>0D6CG:46D0DJ?E96E:406I4=F565Qi _[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        == b"LQ't#$x~}Qi Qb]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Qhbfchd43\\fg7f\\c_5c\\h3d7\\7a4d2g`6ee3gQ[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q?F>0D6CG:46D0DJ?E96E:4Qi _[ Q?F>0D6CG:46D0DJ?E96E:406I4=F565Qi _[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -698,7 +698,7 @@ def test_serialize_license_usage_report() -> None:
         ),
         pytest.param(
             {
-                "VERSION": "2.2",
+                "VERSION": "3.0",
                 "history": [
                     {
                         "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",
@@ -751,7 +751,7 @@ def test_serialize_license_usage_report() -> None:
                     ),
                 ]
             ),
-            id="2.2",
+            id="3.0",
         ),
     ],
 )

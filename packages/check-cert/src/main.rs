@@ -145,6 +145,10 @@ struct Args {
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
     not_after: Vec<u32>,
 
+    /// Max allowed validity (difference between not_before and not_after, in days)
+    #[arg(long)]
+    max_validity: Option<u32>,
+
     /// Response time levels in milliseconds [WARN:CRIT]
     #[arg(
         long,
@@ -226,6 +230,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))
+            .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
             .build(),
     ));
     collection.join(&mut verification::check(

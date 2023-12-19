@@ -9,12 +9,12 @@ from typing import Literal
 import pytest
 
 from cmk.server_side_calls.v1 import (
-    get_http_proxy,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
     noop_parser,
+    parse_http_proxy,
     PlainTextSecret,
     Secret,
     StoredSecret,
@@ -97,7 +97,7 @@ def test_get_http_proxy(
 ) -> None:
     http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
 
-    assert get_http_proxy(proxy_type, proxy_value, http_proxies) == expected_result
+    assert parse_http_proxy(proxy_type, proxy_value, http_proxies) == expected_result
 
 
 def test_noop_parser() -> None:

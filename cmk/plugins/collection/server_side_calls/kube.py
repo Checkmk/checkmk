@@ -10,11 +10,11 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_http_proxy,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
     noop_parser,
+    parse_http_proxy,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -51,7 +51,7 @@ def _usage_endpoint(
         f"--{prefix}-endpoint",
         str(params["endpoint_v2"]),
         "--usage-proxy",
-        get_http_proxy(proxy_type, proxy_value, http_proxies),
+        parse_http_proxy(proxy_type, proxy_value, http_proxies),
     ]
     if params.get("verify-cert"):
         args.append("--usage-verify-cert")
@@ -102,7 +102,7 @@ def generate_kube_command(  # pylint: disable=too-many-branches
     args.extend(
         [
             "--api-server-proxy",
-            get_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
     )
     if api_timeouts := api_params.get("timeout"):

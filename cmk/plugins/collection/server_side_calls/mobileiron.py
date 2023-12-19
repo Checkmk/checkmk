@@ -9,10 +9,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
-    get_http_proxy,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_http_proxy,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -50,7 +50,7 @@ def generate_mobileiron_command(
         proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            get_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
 
     for expression in params.android_regex:

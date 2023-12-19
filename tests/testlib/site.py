@@ -1207,6 +1207,10 @@ class Site:
                 dirs_exist_ok=True,
             )
 
+            # Rename files to get better handling by the browser when opening a crash file
+            for crash_info in Path("var/check_mk/crashes").glob("**/crash.info"):
+                crash_info.rename(crash_info.parent / (crash_info.stem + ".json"))
+
     def result_dir(self) -> str:
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
 

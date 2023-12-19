@@ -73,7 +73,7 @@ class CrashReportStore:
                     k if isinstance(k, str) else json.dumps(k, cls=RobustJSONEncoder): v
                     for k, v in m.items()
                 }
-        return json.dumps(crash_info, cls=RobustJSONEncoder)
+        return json.dumps(crash_info, cls=RobustJSONEncoder, sort_keys=True, indent=4)
 
     def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
         crash_dir = crash.crash_dir()

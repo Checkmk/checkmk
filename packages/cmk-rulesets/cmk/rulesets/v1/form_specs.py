@@ -9,7 +9,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import ClassVar, Generic, Literal, TypeVar
 
-from cmk.rulesets.v1._localize import Localizable
+from ._localize import Localizable
 
 _T = TypeVar("_T")
 

@@ -5,7 +5,8 @@
 
 import pytest
 
-from cmk.rulesets.v1 import FixedValue, Localizable
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import FixedValue
 
 
 @pytest.mark.parametrize(

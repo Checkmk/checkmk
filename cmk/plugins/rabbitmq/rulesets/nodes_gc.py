@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import (
-    CheckParameterRuleSpecWithItem,
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import (
     DataSize,
     DictElement,
     Dictionary,
@@ -13,11 +13,10 @@ from cmk.rulesets.v1 import (
     Float,
     Integer,
     Levels,
-    Localizable,
     Migrate,
     TextInput,
-    Topic,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
 
 
 def _migrate_lower_upper(

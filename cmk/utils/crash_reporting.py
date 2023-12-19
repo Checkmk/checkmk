@@ -67,13 +67,25 @@ class CrashReportStore:
 
     @staticmethod
     def dump_crash_info(crash_info: CrashInfo | bytes) -> str:
-        if isinstance(crash_info, dict) and (m := crash_info.get("details", {}).get("section")):
-            if isinstance(m, dict):
-                crash_info["details"]["section"] = {
-                    k if isinstance(k, str) else json.dumps(k, cls=RobustJSONEncoder): v
-                    for k, v in m.items()
-                }
-        return json.dumps(crash_info, cls=RobustJSONEncoder, sort_keys=True, indent=4)
+        return json.dumps(
+            CrashReportStore._dump_crash_info(crash_info),
+            cls=RobustJSONEncoder,
+            sort_keys=True,
+            indent=4,
+        )
+
+    @classmethod
+    def _dump_crash_info(cls, d: Any) -> Any:
+        if not isinstance(d, dict):
+            return d
+        return {
+            k
+            if isinstance(k, str)
+            else json.dumps(k, cls=RobustJSONEncoder): cls._dump_crash_info(v)
+            if isinstance(v, dict)
+            else v
+            for k, v in d.items()
+        }
 
     def _prepare_crash_dump_directory(self, crash: ABCCrashReport) -> None:
         crash_dir = crash.crash_dir()

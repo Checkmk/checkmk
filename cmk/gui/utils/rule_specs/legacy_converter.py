@@ -433,7 +433,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.CascadingDropdown():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
-        case ruleset_api_v1.MonitoringState():
+        case ruleset_api_v1.ServiceState():
             return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
         case ruleset_api_v1.List():
@@ -608,19 +608,15 @@ def _convert_to_legacy_tuple(
 
 
 def _convert_to_legacy_monitoring_state(
-    to_convert: ruleset_api_v1.MonitoringState, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.ServiceState, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
-        "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
     if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = (
-            to_convert.prefill_value.value
-            if isinstance(to_convert.prefill_value, enum.Enum)
-            else to_convert.prefill_value
-        )
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
     return legacy_valuespecs.MonitoringState(**converted_kwargs)
 
 
@@ -629,8 +625,8 @@ def _convert_to_legacy_dropdown_choice(
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (
-            element.choice.value if isinstance(element.choice, enum.Enum) else element.choice,
-            element.display.localize(localizer),
+            element.name.value if isinstance(element.name, enum.Enum) else element.name,
+            element.title.localize(localizer),
         )
         for element in to_convert.elements
     ]
@@ -681,10 +677,10 @@ def _convert_to_legacy_cascading_dropdown(
 ) -> legacy_valuespecs.CascadingDropdown:
     legacy_choices = [
         (
-            element.ident.value if isinstance(element.ident, enum.StrEnum) else element.ident,
+            element.name.value if isinstance(element.name, enum.StrEnum) else element.name,
             element.parameter_form.title.localize(localizer)
             if hasattr(element.parameter_form, "title") and element.parameter_form.title is not None
-            else str(element.ident),
+            else str(element.name),
             _convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
         for element in to_convert.elements

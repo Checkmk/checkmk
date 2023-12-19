@@ -9,8 +9,7 @@ from cmk.rulesets.v1 import (
     Dictionary,
     Localizable,
     Migrate,
-    MonitoringState,
-    State,
+    ServiceState,
     Topic,
 )
 
@@ -19,30 +18,30 @@ def _parameter_form_zypper() -> Dictionary:
     return Dictionary(
         elements={
             "security": DictElement(
-                parameter_form=MonitoringState(
+                parameter_form=ServiceState(
                     title=Localizable("State when security updates are pending"),
-                    prefill_value=State.CRIT,
+                    prefill_value=ServiceState.CRIT,
                 ),
             ),
             "recommended": DictElement(
-                parameter_form=MonitoringState(
+                parameter_form=ServiceState(
                     title=Localizable("State when recommended updates are pending"),
-                    prefill_value=State.WARN,
+                    prefill_value=ServiceState.WARN,
                 ),
             ),
             "other": DictElement(
-                parameter_form=MonitoringState(
+                parameter_form=ServiceState(
                     title=Localizable(
                         "State when updates are pending, which are neither recommended or a "
                         "security update"
                     ),
-                    prefill_value=State.OK,
+                    prefill_value=ServiceState.OK,
                 ),
             ),
             "locks": DictElement(
-                parameter_form=MonitoringState(
+                parameter_form=ServiceState(
                     title=Localizable("State when packages are locked"),
-                    prefill_value=State.WARN,
+                    prefill_value=ServiceState.WARN,
                 ),
             ),
         },

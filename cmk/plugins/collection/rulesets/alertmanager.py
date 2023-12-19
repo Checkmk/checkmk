@@ -20,9 +20,9 @@ from cmk.rulesets.v1 import (
     List,
     Localizable,
     Migrate,
-    MonitoringState,
     RuleEvalType,
     ServiceDiscoveryRuleSpec,
+    ServiceState,
     TextInput,
     Topic,
 )
@@ -61,9 +61,9 @@ def _discovery_parameters_form_alertmanager():
                     title=Localizable("Service creation"),
                     elements=[
                         CascadingDropdownElement(
-                            ident=ServiceNumber.MULTIPLE,
+                            name=ServiceNumber.MULTIPLE,
+                            title=Localizable("Create services for alert rule groups"),
                             parameter_form=Dictionary(
-                                title=Localizable("Create services for alert rule groups"),
                                 elements={
                                     "min_amount_rules": DictElement(
                                         parameter_form=Integer(
@@ -92,10 +92,9 @@ def _discovery_parameters_form_alertmanager():
                             ),
                         ),
                         CascadingDropdownElement(
-                            ident=ServiceNumber.ONE,
-                            parameter_form=FixedValue(
-                                value=None, title=Localizable("Create one service per alert rule")
-                            ),
+                            name=ServiceNumber.ONE,
+                            title=Localizable("Create one service per alert rule"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ],
                     transform=Migrate(raw_to_form=migrate_dropdown_ident),
@@ -149,23 +148,23 @@ def form_alert_remapping():
                         title=Localizable("States"),
                         elements={
                             "inactive": DictElement(
-                                parameter_form=MonitoringState(title=Localizable("inactive")),
+                                parameter_form=ServiceState(title=Localizable("inactive")),
                                 required=True,
                             ),
                             "pending": DictElement(
-                                parameter_form=MonitoringState(title=Localizable("pending")),
+                                parameter_form=ServiceState(title=Localizable("pending")),
                                 required=True,
                             ),
                             "firing": DictElement(
-                                parameter_form=MonitoringState(title=Localizable("firing")),
+                                parameter_form=ServiceState(title=Localizable("firing")),
                                 required=True,
                             ),
                             "none": DictElement(
-                                parameter_form=MonitoringState(title=Localizable("none")),
+                                parameter_form=ServiceState(title=Localizable("none")),
                                 required=True,
                             ),
                             "not_applicable": DictElement(
-                                parameter_form=MonitoringState(title=Localizable("n/a")),
+                                parameter_form=ServiceState(title=Localizable("n/a")),
                                 required=True,
                             ),
                         },

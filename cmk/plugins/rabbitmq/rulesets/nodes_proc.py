@@ -20,7 +20,8 @@ from cmk.rulesets.v1 import (
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     fd_perc = CascadingDropdownElement(
-        ident="fd_perc",
+        name="fd_perc",
+        title=Localizable("Percentual levels for used processes"),
         parameter_form=Tuple(
             title=Localizable("Percentual levels for used processes"),
             elements=[
@@ -30,7 +31,8 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         ),
     )
     fd_abs = CascadingDropdownElement(
-        ident="fd_abs",
+        name="fd_abs",
+        title=Localizable("Absolute levels for total number of used processes"),
         parameter_form=Tuple(
             title=Localizable("Absolute levels for total number of used processes"),
             elements=[

@@ -161,10 +161,6 @@ struct Args {
     /// Allow self-signed certificates
     #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
     allow_self_signed: bool,
-
-    /// Disable SNI extension
-    #[arg(long, action = clap::ArgAction::SetTrue)]
-    disable_sni: bool,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -194,7 +190,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.port,
         FetcherConfig::builder()
             .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
-            .use_sni(!args.disable_sni)
             .build(),
     ) {
         Ok(chain) => chain,

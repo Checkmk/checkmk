@@ -11,7 +11,6 @@ use typed_builder::TypedBuilder;
 #[derive(Debug, TypedBuilder)]
 pub struct Config {
     timeout: Option<Duration>,
-    use_sni: bool,
 }
 
 pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<Vec<u8>>> {
@@ -22,8 +21,7 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
     let connector = connector_builder.build();
     connector
         .configure()
-        .context("Cannot configure connection")?
-        .use_server_name_indication(config.use_sni);
+        .context("Cannot configure connection")?;
     let mut stream = connector.connect(server, stream)?;
     let chain = stream
         .ssl()

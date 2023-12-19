@@ -181,7 +181,8 @@ void TableHostGroups::answerQuery(Query &query, const User &user,
     core.all_of_host_groups(
         [&process](const IHostGroup &hg) { return process(hg); });
 }
-Row TableHostGroups::get(const std::string &primary_key) const {
+Row TableHostGroups::get(const std::string &primary_key,
+                         const ICore &core) const {
     // "name" is the primary key
-    return Row{core()->find_hostgroup(primary_key)};
+    return Row{core.find_hostgroup(primary_key)};
 }

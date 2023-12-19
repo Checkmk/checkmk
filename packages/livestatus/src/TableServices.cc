@@ -646,8 +646,9 @@ void TableServices::answerQuery(Query &query, const User &user,
     core.all_of_services([&process](const IService &s) { return process(s); });
 }
 
-Row TableServices::get(const std::string &primary_key) const {
+Row TableServices::get(const std::string &primary_key,
+                       const ICore &core) const {
     // "host_name;description" is the primary key
     const auto &[host_name, description] = mk::splitCompositeKey2(primary_key);
-    return Row{core()->find_service(host_name, description)};
+    return Row{core.find_service(host_name, description)};
 }

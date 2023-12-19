@@ -251,13 +251,17 @@ def _handle_fetcher_options(
     file_cache_options = defaults or FileCacheOptions()
 
     if options.get("cache", False):
-        file_cache_options = file_cache_options._replace(disabled=False, use_outdated=True)
+        file_cache_options = dataclasses.replace(
+            file_cache_options, disabled=False, use_outdated=True
+        )
 
     if options.get("no-cache", False):
-        file_cache_options = file_cache_options._replace(disabled=True, use_outdated=False)
+        file_cache_options = dataclasses.replace(
+            file_cache_options, disabled=True, use_outdated=False
+        )
 
     if options.get("no-tcp", False):
-        file_cache_options = file_cache_options._replace(tcp_use_only_cache=True)
+        file_cache_options = dataclasses.replace(file_cache_options, tcp_use_only_cache=True)
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()
@@ -1956,7 +1960,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        file_cache_options = file_cache_options._replace(use_outdated=True)
+        file_cache_options = dataclasses.replace(file_cache_options, use_outdated=True)
     else:
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
@@ -2341,7 +2345,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        file_cache_options = file_cache_options._replace(keep_outdated=True)
+        file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     fetcher = CMKFetcher(

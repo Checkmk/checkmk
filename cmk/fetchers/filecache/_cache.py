@@ -51,6 +51,7 @@ import enum
 import logging
 import os
 from collections.abc import Mapping, Sized
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
@@ -295,7 +296,8 @@ class NoCache(FileCache[_TRawData]):
         raise TypeError("NoCache")
 
 
-class FileCacheOptions(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class FileCacheOptions:
     # TODO(ml): Split between fetcher and checker options; maybe also find
     # better names.
 

@@ -218,6 +218,51 @@ def test_uptime_check_zero() -> None:
                 ),
             ],
         ),
+        (  # SUP-16709
+            [
+                [
+                    "22",
+                ],
+                [
+                    "[uptime_solaris_start]",
+                ],
+                [
+                    "SunOS",
+                    "ssssssss",
+                    "5.55",
+                    "11.1.11.111.1",
+                    "sssss",
+                    "sssss",
+                    "sssss",
+                    "nnnnnnnnnnnnnnn",
+                ],
+                [
+                    "ssssssss",
+                ],
+                [
+                    "3:19am",
+                    "up<",
+                    "1",
+                    "minute,",
+                    "0",
+                    "users,",
+                    "load",
+                    "average:",
+                    "1.79,",
+                    "0.44,",
+                    "0.15",
+                ],
+                ["unix:0:system_misc:snaptime", "5931.036430995"],
+                [
+                    "[uptime_solaris_end]",
+                ],
+            ],
+            [
+                Result(state=State.OK, summary="Up since Apr 15 2018 18:49:38"),
+                Result(state=State.OK, summary="Uptime: 22 seconds"),
+                Metric("uptime", 22.0),
+            ],
+        ),
     ],
 )
 def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -> None:

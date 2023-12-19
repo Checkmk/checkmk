@@ -1,0 +1,11 @@
+Title: solaris: uptime: AssertionError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1702989839
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+Shortly after rebooting, solaris uptime command returned a timestamp that could
+not be parsed by the checkmk agent.

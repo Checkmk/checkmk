@@ -71,7 +71,7 @@ def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type:ignore
     uptime_struct["from_boot_time"] = from_boot_time
     uptime_struct["uname"] = " ".join(info[0])
     uptime_struct["zonename"] = info[1][0]
-    uptime_match = re.match(r".*up (.*), +\d+ user.*", " ".join(info[2]))
+    uptime_match = re.match(r".*up<? (.*), +\d+ user.*", " ".join(info[2]))
     assert uptime_match
     uptime_struct["uptime_parsed"] = parse_human_read_uptime(uptime_match.group(1))
     uptime_struct["snaptime"] = float(info[3][1])

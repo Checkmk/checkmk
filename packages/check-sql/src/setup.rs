@@ -11,9 +11,11 @@ use flexi_logger::{self, FileSpec, LogSpecification};
 use std::env::ArgsOs;
 use std::path::{Path, PathBuf};
 
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub struct Env {
+    /// guaranteed to contain dir or None
     temp_dir: Option<PathBuf>,
+    /// guaranteed to contain dir or None
     log_dir: Option<PathBuf>,
 }
 
@@ -24,14 +26,17 @@ impl Env {
         Self { temp_dir, log_dir }
     }
 
+    /// guaranteed to return temp dir or None
     pub fn temp_dir(&self) -> Option<&Path> {
         self.temp_dir.as_deref()
     }
 
+    /// guaranteed to return log dir or None
     pub fn log_dir(&self) -> Option<&Path> {
         self.log_dir.as_deref()
     }
 
+    /// guaranteed to return cache dir or None
     pub fn cache_dir(&self) -> Option<PathBuf> {
         self.temp_dir().map(|temp_dir| temp_dir.join("cache"))
     }
@@ -44,6 +49,31 @@ impl Env {
         }
         .map(PathBuf::from)
         .filter(|p| Path::is_dir(p))
+    }
+
+    pub fn calc_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
+        self.cache_dir().map(|d| d.join(sub))
+    }
+
+    pub fn obtain_cache_sub_dir(&self, sub: &str) -> Option<PathBuf> {
+        if let Some(cache_dir) = self.calc_cache_sub_dir(sub) {
+            if cache_dir.is_dir() {
+                log::info!("Cache dir exists");
+                Some(cache_dir)
+            } else if cache_dir.exists() {
+                log::error!("Cache dir exists but isn't usable(not a directory)");
+                None
+            } else {
+                log::info!("Cache dir to be created");
+                std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
+                    log::error!("Failed to create root cache dir: {e}");
+                });
+                cache_dir.is_dir().then_some(cache_dir)
+            }
+        } else {
+            log::error!("Cache dir exists but is not usable");
+            None
+        }
     }
 }
 
@@ -144,6 +174,10 @@ mod tests {
         assert_eq!(e.log_dir(), Some(Path::new(".")));
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
         assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("cache")));
+        assert_eq!(
+            e.calc_cache_sub_dir("aa"),
+            Some(PathBuf::from(".").join("cache").join("aa"))
+        );
     }
     #[test]
     fn test_env_dir_absent() {
@@ -156,5 +190,7 @@ mod tests {
         assert!(e.log_dir().is_none());
         assert!(e.temp_dir().is_none());
         assert!(e.cache_dir().is_none());
+        assert!(e.calc_cache_sub_dir("aa").is_none());
+        assert!(e.obtain_cache_sub_dir("a").is_none());
     }
 }

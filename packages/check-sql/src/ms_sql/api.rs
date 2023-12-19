@@ -11,11 +11,12 @@ use crate::config::{
 };
 use crate::ms_sql::queries;
 use crate::setup::Env;
+use crate::utils;
 
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::Instant;
 
 use tiberius::{ColumnData, Query, Row};
@@ -240,7 +241,7 @@ impl SqlInstance {
             }
             Err(err) => {
                 let instance_section = Section::new(section::INSTANCE_SECTION_NAME, None); // this is important section always present
-                result += &instance_section.to_header();
+                result += &instance_section.to_plain_header();
                 result += &self.generate_state_entry(false, instance_section.sep());
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
             }
@@ -301,8 +302,17 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
     ) -> String {
-        let body = self.generate_section_body(client, endpoint, section).await;
-        section.to_header() + body.as_str()
+        let body = match self.read_data_from_cache(section.name(), section.cache_age() as u64) {
+            Some(from_cache) => from_cache,
+            None => {
+                let from_sql = self.generate_section_body(client, endpoint, section).await;
+                if section.kind() == &SectionKind::Async {
+                    self.write_data_in_cache(section.name(), &from_sql);
+                };
+                from_sql
+            }
+        };
+        section.to_work_header() + body.as_str()
     }
 
     async fn generate_section_body(
@@ -312,7 +322,7 @@ impl SqlInstance {
         section: &Section,
     ) -> String {
         let sep = section.sep();
-        let body = match section.name() {
+        match section.name() {
             section::INSTANCE_SECTION_NAME => {
                 self.generate_state_entry(true, section.sep())
                     + &self.generate_details_entry(client, section.sep()).await
@@ -364,21 +374,45 @@ impl SqlInstance {
                 self.generate_query_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
-        };
-
-        if section.kind() == &SectionKind::Async {
-            self.store_section_body(section.name(), &body).await;
-        };
-
-        body
+        }
     }
 
-    async fn store_section_body(&self, name: &str, body: &str) {
+    fn read_data_from_cache(&self, name: &str, cache_age: u64) -> Option<String> {
+        if cache_age == 0 {
+            return None;
+        }
+        if let Some(path) = self
+            .environment
+            .obtain_cache_sub_dir(self.hash())
+            .map(|d| d.join(self.make_cache_entry_name(name)))
+        {
+            match utils::get_modified_age(&path) {
+                Ok(file_age) if file_age <= cache_age => {
+                    log::info!("Cache file {path:?} is new enough for {cache_age} cache_age",);
+                    std::fs::read_to_string(&path)
+                        .map_err(|e| {
+                            log::error!("{e} reading cache file {:?}", &path);
+                            e
+                        })
+                        .ok()
+                }
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    fn write_data_in_cache(&self, name: &str, body: &str) {
         if let Some(dir) = self.environment.obtain_cache_sub_dir(self.hash()) {
-            let file_name = format!("{};{};{}.mssql", self.hostname(), self.name, name);
+            let file_name = self.make_cache_entry_name(name);
             std::fs::write(dir.join(file_name), body)
                 .unwrap_or_else(|e| log::error!("Error {e} writing cache"));
         }
+    }
+
+    fn make_cache_entry_name(&self, name: &str) -> String {
+        format!("{};{};{}.mssql", self.hostname(), self.name, name)
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
@@ -1155,12 +1189,6 @@ impl<'a> Column<'a> for Row {
     }
 }
 
-fn touch_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
-    std::fs::File::create(path.as_ref().join(".touch"))?;
-    std::fs::remove_file(path.as_ref().join(".touch"))?;
-    Ok(path.as_ref().to_path_buf())
-}
-
 impl CheckConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
@@ -1196,13 +1224,13 @@ impl CheckConfig {
     fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
         section::get_work_sections(ms_sql)
             .iter()
-            .map(Section::to_header)
+            .map(Section::to_plain_header)
             .collect::<Vec<String>>()
             .join("")
     }
 
     fn prepare_cache_sub_dir(environment: &Env, hash: &str) {
-        match environment.obtain_cache_sub_dir(hash).map(touch_dir) {
+        match environment.obtain_cache_sub_dir(hash).map(utils::touch_dir) {
             Some(Err(e)) => log::error!("Error touching dir: {e}, caching may be not possible"),
             Some(Ok(p)) => log::info!("Using cache dir {p:?}"),
             None => log::warn!("No cache dir defined, caching is not possible"),
@@ -1232,10 +1260,10 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
 
 fn generate_instance_entries(instances: &[SqlInstance]) -> String {
     let section = Section::new(section::INSTANCE_SECTION_NAME, None);
-    section.to_header() // as in old plugin
+    section.to_plain_header() // as in old plugin
      + &instances
         .iter()
-        .flat_map(|i| [section.to_header(), i.generate_leading_entry(section.sep())])
+        .flat_map(|i| [section.to_plain_header(), i.generate_leading_entry(section.sep())])
         .collect::<Vec<String>>()
         .join("")
 }

@@ -5,6 +5,7 @@
 use crate::config::{self};
 use crate::emit::header;
 use crate::ms_sql::queries;
+use crate::utils;
 use anyhow::Result;
 
 use tiberius::Row;
@@ -69,8 +70,24 @@ impl Section {
         }
     }
 
-    pub fn to_header(&self) -> String {
+    pub fn to_plain_header(&self) -> String {
         header(&self.name, self.sep)
+    }
+
+    pub fn to_work_header(&self) -> String {
+        header(&(self.name.clone() + &self.cached_header()), self.sep)
+    }
+
+    fn cached_header(&self) -> String {
+        self.cache_age
+            .map(|age| {
+                format!(
+                    ":cached({}:{})",
+                    utils::get_utc_now().unwrap_or_default(),
+                    age
+                )
+            })
+            .unwrap_or_default()
     }
 
     pub fn name(&self) -> &str {
@@ -175,6 +192,19 @@ fn get_section_separator(name: &str) -> Option<char> {
 mod tests {
     use super::*;
     use crate::config::ms_sql::Config;
+
+    #[test]
+    fn test_section_header() {
+        let section = Section::new("instance", None);
+        assert_eq!(section.to_plain_header(), "<<<mssql_instance:sep(124)>>>\n");
+        assert_eq!(section.to_work_header(), "<<<mssql_instance:sep(124)>>>\n");
+        let section = Section::new("instance", Some(100));
+        assert_eq!(section.to_plain_header(), "<<<mssql_instance:sep(124)>>>\n");
+        assert!(section
+            .to_work_header()
+            .starts_with("<<<mssql_instance:cached("));
+        assert!(section.to_work_header().ends_with("100):sep(124)>>>\n"));
+    }
 
     #[test]
     fn test_work_sections() {

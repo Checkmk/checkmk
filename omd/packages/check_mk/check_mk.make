@@ -17,13 +17,22 @@ CHECK_MK_TAROPTS := \
 	--exclude=.gitignore --exclude=*.swp --exclude=.f12 \
 	--exclude=__pycache__ --exclude=*.pyc
 
+CHECK_MK_WERKS_PATH := $(CHECK_MK_WORK_DIR)/werks
+CHECK_MK_CHANGELOG_PATH := $(CHECK_MK_WORK_DIR)/ChangeLog
+
 # It is used from top-level Makefile and this makefile as an intermediate step.
 # We should end up with one central place to care for packaging our files
 # without the need to have shared logic between like this.
 include ../artifacts.make
 
-$(CHECK_MK_RAW_PRECOMPILED_WERKS) $(REPO_PATH)/ChangeLog:
-	$(MAKE) -C $(REPO_PATH) $@
+$(CHECK_MK_WERKS_PATH): $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
+	$(MKDIR) $(ENTERPRISE_WORK_DIR)
+	PYTHONPATH=$(REPO_PATH) \
+	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks precompile $(REPO_PATH)/.werks $@ --filter-by-edition cre
+
+$(CHECK_MK_CHANGELOG_PATH): $(CHECK_MK_WERKS_PATH) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
+	PYTHONPATH=$(REPO_PATH) \
+	    $(PACKAGE_PYTHON3_MODULES_PYTHON) -m cmk.utils.werks changelog $@ $<
 
 # RPM/DEB build are currently working on the same working directory and would
 # influence each other. Need to be cleaned up later
@@ -35,7 +44,7 @@ ifneq ($(CI),)
 endif
 	$(MAKE) -C $(REPO_PATH) $@
 
-$(CHECK_MK_BUILD): $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(REPO_PATH)/ChangeLog $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+$(CHECK_MK_BUILD): $(CHECK_MK_WERKS_PATH) $(CHECK_MK_CHANGELOG_PATH) $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(MAKE) -C $(REPO_PATH)/locale mo
 	$(MAKE) -C $(REPO_PATH)/bin
@@ -71,7 +80,7 @@ endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
-	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
+	install -m 644 $(CHECK_MK_WERKS_PATH) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
@@ -96,7 +105,8 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
-	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS,ChangeLog} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
+	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
+	install -m 644 $(CHECK_MK_CHANGELOG_PATH) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	tar -c -C $(REPO_PATH)/doc $(CHECK_MK_TAROPTS) --exclude plugin-api \
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 	tar -c -C $(REPO_PATH)/doc \

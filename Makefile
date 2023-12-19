@@ -23,8 +23,6 @@ ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
 
-WERKS              := $(wildcard .werks/[0-9]*)
-
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
                               $(foreach subdir,* */* */*/* */*/*/* */*/*/*/*,web/htdocs/js/$(subdir).[jt]s)))
@@ -47,7 +45,7 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: announcement all build check check-binaries check-permissions check-version \
+.PHONY: announcement all build check check-binaries check-permissions \
         clean css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
@@ -80,11 +78,6 @@ check-binaries:
 	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
-
-check-version:
-	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
-	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
-	    false ; }
 
 check-setup:
 	echo "From here on we check the successful setup of some parts ..."
@@ -153,12 +146,6 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_A
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
-
-$(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks precompile .werks .werks/werks --filter-by-edition cre
-
-$(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -292,8 +279,6 @@ clean:
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       web/htdocs/themes/*/theme.css \
-	       .werks/werks \
-	       ChangeLog \
 	       announce*
 
 css: .ran-webpack

@@ -20,12 +20,16 @@
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Query.h"
+#include "livestatus/Row.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableCrashReports.h"
+#include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
 #include "neb/Comment.h"   // IWYU pragma: keep
 #include "neb/Downtime.h"  // IWYU pragma: keep
 #include "neb/NebCore.h"
+
+class ICore;
 
 namespace fs = std::filesystem;
 
@@ -147,15 +151,18 @@ TEST_F(CrashReportTableFixture, TestTable) {
 }
 
 namespace {
-std::string query(Table &table, const std::vector<std::string> &q) {
+std::string query(Table &table, ICore &core,
+                  const std::vector<std::string> &q) {
     OutputBuffer output{-1, [] { return false; }, table.logger()};
-    Query{ParsedQuery{q, table, output},
+    Query{ParsedQuery{q, table, output,
+                      [](auto &) { return std::unique_ptr<User>{}; },
+                      [](auto &) { return Row{nullptr}; }},
           table,
           Encoding::utf8,
           5000,
           output,
           table.logger()}
-        .process();
+        .process(core);
     return output.str();
 }
 }  // namespace
@@ -163,12 +170,13 @@ std::string query(Table &table, const std::vector<std::string> &q) {
 TEST_F(CrashReportTableFixture, TestListCrashReports) {
     ASSERT_TRUE(fs::exists(basepath));
     EXPECT_EQ("component;id\n" + component + ";" + uuid + "\n",
-              query(table, {}));
+              query(table, core, {}));
 }
 
 TEST_F(CrashReportTableFixture, TestGetOneCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
-    EXPECT_EQ(json + "\n", query(table, {"Columns: file:f0:" + component + "/" +
-                                             uuid + "/" + crash_info,
-                                         "Filter: id = " + uuid}));
+    EXPECT_EQ(json + "\n", query(table, core,
+                                 {"Columns: file:f0:" + component + "/" + uuid +
+                                      "/" + crash_info,
+                                  "Filter: id = " + uuid}));
 }

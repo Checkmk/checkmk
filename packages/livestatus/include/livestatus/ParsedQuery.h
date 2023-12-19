@@ -29,8 +29,12 @@ class Table;
 
 class ParsedQuery {
 public:
-    ParsedQuery(const std::vector<std::string> &lines, const Table &table,
-                OutputBuffer &output);
+    ParsedQuery(
+        const std::vector<std::string> &lines, const Table &table,
+        OutputBuffer &output,
+        const std::function<std::unique_ptr<const User>(const std::string &)>
+            &find_user,
+        const std::function<Row(const std::string &)> &get);
 
     std::unordered_set<std::string> all_column_names;
     std::vector<std::shared_ptr<Column>> columns;
@@ -82,14 +86,14 @@ private:
     void parseOutputFormatLine(std::string_view line);
     void parseKeepAliveLine(std::string_view line);
     void parseResponseHeaderLine(std::string_view line);
-    void parseAuthUserHeader(
-        std::string_view line,
-        const std::function<std::unique_ptr<const User>(std::string_view name)>
-            &find_user);
+    void parseAuthUserHeader(std::string_view line,
+                             const std::function<std::unique_ptr<const User>(
+                                 const std::string &name)> &find_user);
     void parseWaitTimeoutLine(std::string_view line);
     void parseWaitTriggerLine(std::string_view line);
-    void parseWaitObjectLine(std::string_view line,
-                             const std::function<Row(std::string_view)> &get);
+    void parseWaitObjectLine(
+        std::string_view line,
+        const std::function<Row(const std::string &)> &get);
     void parseLocaltimeLine(std::string_view line);
 };
 

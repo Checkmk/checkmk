@@ -46,13 +46,12 @@ void Query::badGateway(const std::string &message) const {
 
 bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
-bool Query::process() {
+bool Query::process(ICore &core) {
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
     auto renderer = Renderer::make(parsed_query_.output_format, _output.os(),
                                    _output.getLogger(),
                                    parsed_query_.separators, _data_encoding);
-    auto &core = *_table.core();
     doWait(core);
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!

@@ -5,6 +5,7 @@
 
 #include "livestatus/Store.h"
 
+#include <functional>
 #include <utility>
 
 #include "livestatus/ICore.h"
@@ -77,13 +78,16 @@ bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
-    return Query{ParsedQuery{lines, table, output},
-                 table,
-                 _mc->dataEncoding(),
-                 _mc->maxResponseSize(),
-                 output,
-                 logger()}
-        .process();
+    return Query{
+        ParsedQuery{lines, table, output,
+                    [this](auto &name) { return _mc->find_user(name); },
+                    [this, &table](auto &key) { return table.get(key, *_mc); }},
+        table,
+        _mc->dataEncoding(),
+        _mc->maxResponseSize(),
+        output,
+        logger()}
+        .process(*_mc);
 }
 
 void Store::addTable(Table &table) {

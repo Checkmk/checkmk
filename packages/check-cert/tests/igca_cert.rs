@@ -4,9 +4,8 @@ use check_cert::checker::certificate::{self, Config as CertConfig};
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
 
 static SERIAL: &str = "39:11:45:10:94";
-static SUBJECT: &str =
+static ISSUER: &str =
     "C=FR, ST=France, L=Paris, O=PM/SGDN, OU=DCSSI, CN=IGC/A, Email=igca@sgdn.pm.gouv.fr";
-static ISSUER: &str = SUBJECT;
 static SIG_ALG: &str = "RSA";
 static PUBKEY_ALG: &str = "RSA";
 static PUBKEY_SZ: usize = 2048;
@@ -21,7 +20,9 @@ fn test_cert_ok() {
         DER,
         CertConfig::builder()
             .serial(s(SERIAL))
-            .subject(s(SUBJECT))
+            .subject_cn(s("IGC/A"))
+            .subject_o(s("PM/SGDN"))
+            .subject_ou(s("DCSSI"))
             .issuer(s(ISSUER))
             .signature_algorithm(s(SIG_ALG))
             .pubkey_algorithm(s(PUBKEY_ALG))
@@ -33,7 +34,9 @@ fn test_cert_ok() {
         format!(
             "OK - \
             Serial: {SERIAL}, \
-            Subject: {SUBJECT}, \
+            Subject CN: IGC/A, \
+            Subject O: PM/SGDN, \
+            Subject OU: DCSSI, \
             Issuer: {ISSUER}, \
             Signature algorithm: {SIG_ALG}, \
             Public key algorithm: {PUBKEY_ALG}, \
@@ -49,7 +52,9 @@ fn test_cert_wrong_serial() {
         DER,
         CertConfig::builder()
             .serial(s(serial))
-            .subject(s(SUBJECT))
+            .subject_cn(s("IGC/A"))
+            .subject_o(s("PM/SGDN"))
+            .subject_ou(s("DCSSI"))
             .issuer(s(ISSUER))
             .build(),
     );
@@ -58,7 +63,9 @@ fn test_cert_wrong_serial() {
         format!(
             "WARNING - \
             Serial is {SERIAL} but expected {serial} (!), \
-            Subject: {SUBJECT}, \
+            Subject CN: IGC/A, \
+            Subject O: PM/SGDN, \
+            Subject OU: DCSSI, \
             Issuer: {ISSUER}"
         )
     );

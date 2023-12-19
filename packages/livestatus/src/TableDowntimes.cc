@@ -79,12 +79,12 @@ TableDowntimes::TableDowntimes(ICore *mc) : Table(mc) {
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
         offsets, [](const IDowntime &r) { return !r.pending(); }));
-    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
         return &r.rawData<IDowntime>()->host();
     }),
                            LockComments::yes, LockDowntimes::no);
     TableServices::addColumns(
-        this, "service_",
+        this, *mc, "service_",
         offsets.add([](Row r) { return r.rawData<IDowntime>()->service(); }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::no);
 }

@@ -26,7 +26,7 @@ struct ServiceAndGroup {
 TableServicesByHostGroup::TableServicesByHostGroup(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
-        this, "",
+        this, *mc, "",
         offsets.add([](Row r) { return r.rawData<ServiceAndGroup>()->svc; }),
         TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {

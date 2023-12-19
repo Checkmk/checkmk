@@ -28,7 +28,7 @@ struct service_and_group {
 TableServicesByGroup::TableServicesByGroup(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
-        this, "",
+        this, *mc, "",
         offsets.add([](Row r) { return r.rawData<service_and_group>()->svc; }),
         TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableServiceGroups::addColumns(

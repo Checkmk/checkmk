@@ -33,7 +33,7 @@ TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc)
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID",
         offsets));
-    TableEventConsoleEvents::addColumns(this);
+    TableEventConsoleEvents::addColumns(this, *mc);
 }
 
 std::string TableEventConsoleHistory::name() const {

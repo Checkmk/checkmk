@@ -68,7 +68,7 @@ std::vector<::column::service_list::Entry> getServices(const IHost &hst,
 }  // namespace
 
 TableHosts::TableHosts(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{}, LockComments::yes,
+    addColumns(this, *mc, "", ColumnOffsets{}, LockComments::yes,
                LockDowntimes::yes);
 }
 
@@ -77,11 +77,11 @@ std::string TableHosts::name() const { return "hosts"; }
 std::string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, const std::string &prefix,
+void TableHosts::addColumns(Table *table, const ICore &core,
+                            const std::string &prefix,
                             const ColumnOffsets &offsets,
                             LockComments lock_comments,
                             LockDowntimes lock_downtimes) {
-    auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn<IHost>>(
         prefix + "name", "Host name", offsets,
         [](const IHost &r) { return r.name(); }));
@@ -387,9 +387,10 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "contacts", "A list of all contacts of this object", offsets,
         [](const IHost &r) { return r.contacts(); }));
 
-    auto get_downtimes = [mc, lock_downtimes](const IHost &r) {
-        return lock_downtimes == LockDowntimes::yes ? mc->downtimes(r)
-                                                    : mc->downtimes_unlocked(r);
+    auto get_downtimes = [&core, lock_downtimes](const IHost &r) {
+        return lock_downtimes == LockDowntimes::yes
+                   ? core.downtimes(r)
+                   : core.downtimes_unlocked(r);
     };
     table->addColumn(
         std::make_unique<ListColumn<IHost, std::unique_ptr<const IDowntime>>>(
@@ -415,9 +416,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [mc, lock_comments](const IHost &r) {
-        return lock_comments == LockComments::yes ? mc->comments(r)
-                                                  : mc->comments_unlocked(r);
+    auto get_comments = [&core, lock_comments](const IHost &r) {
+        return lock_comments == LockComments::yes ? core.comments(r)
+                                                  : core.comments_unlocked(r);
     };
     table->addColumn(
         std::make_unique<ListColumn<IHost, std::unique_ptr<const IComment>>>(
@@ -551,7 +552,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                                 ListColumn<IHost, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        *mc, offsets));
+        core, offsets));
 
     table->addColumn(std::make_unique<IntColumn<IHost>>(
         prefix + "num_services", "The total number of services of the host",
@@ -617,38 +618,39 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<BoolColumn<IHost>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
-        offsets, [mc](const IHost &r) { return mc->isPnpGraphPresent(r); }));
+        offsets,
+        [&core](const IHost &r) { return core.isPnpGraphPresent(r); }));
     table->addColumn(std::make_unique<TimeColumn<IHost>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        offsets, [mc](const IHost &r) {
-            return mk_inventory_last(mc->paths()->inventory_directory() /
+        offsets, [&core](const IHost &r) {
+            return mk_inventory_last(core.paths()->inventory_directory() /
                                      r.name());
         }));
 
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
-        BlobFileReader<IHost>{[mc](const IHost &r) {
-            return mc->paths()->inventory_directory() / r.name();
+        BlobFileReader<IHost>{[&core](const IHost &r) {
+            return core.paths()->inventory_directory() / r.name();
         }}));
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
-        BlobFileReader<IHost>{[mc](const IHost &r) {
-            return mc->paths()->inventory_directory() / (r.name() + ".gz");
+        BlobFileReader<IHost>{[&core](const IHost &r) {
+            return core.paths()->inventory_directory() / (r.name() + ".gz");
         }}));
     table->addColumn(std::make_unique<BlobColumn<IHost>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
-        offsets, BlobFileReader<IHost>{[mc](const IHost &r) {
-            return mc->paths()->structured_status_directory() / r.name();
+        offsets, BlobFileReader<IHost>{[&core](const IHost &r) {
+            return core.paths()->structured_status_directory() / r.name();
         }}));
     table->addColumn(std::make_unique<ListColumn<IHost>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
-        [mc](const IHost &r, const Column &col) {
-            const auto logwatch_directory = mc->paths()->logwatch_directory();
+        [&core](const IHost &r, const Column &col) {
+            const auto logwatch_directory = core.paths()->logwatch_directory();
             auto dir = logwatch_directory.empty() || r.name().empty()
                            ? std::filesystem::path()
                            : logwatch_directory / pnp_cleanup(r.name());
@@ -658,7 +660,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<IHost>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
-        [mc](const IHost & /*r*/) { return mc->paths()->logwatch_directory(); },
+        [&core](const IHost & /*r*/) {
+            return core.paths()->logwatch_directory();
+        },
         [](const std::string &args) { return std::filesystem::path{args}; }));
 
     table->addColumn(std::make_unique<DoubleColumn<IHost>>(
@@ -724,7 +728,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets,
-        [mc](const IHost &r) { return mc->metrics(r, mc->loggerRRD()); }));
+        [&core](const IHost &r) { return core.metrics(r, core.loggerRRD()); }));
     table->addColumn(std::make_unique<IntColumn<IHost>>(
         prefix + "smartping_timeout",
         "Maximum expected time between two received packets in ms", offsets,

@@ -22,7 +22,9 @@
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
+#include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/Logfile.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
@@ -43,12 +45,13 @@ enum {
 using namespace std::chrono_literals;
 
 TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
-    : Table(mc), _log_cache(log_cache) {
-    addColumns(this, "", ColumnOffsets{});
+    : Table{mc}, log_cache_{log_cache} {
+    addColumns(this, *mc, "", ColumnOffsets{});
 }
 
 // static
-void TableStateHistory::addColumns(Table *table, const std::string &prefix,
+void TableStateHistory::addColumns(Table *table, const ICore &core,
+                                   const std::string &prefix,
                                    const ColumnOffsets &offsets) {
     table->addColumn(std::make_unique<TimeColumn<HostServiceState>>(
         prefix + "time", "Time of the log event (seconds since 1/1/1970)",
@@ -178,11 +181,11 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
 
     // join host and service tables
     TableHosts::addColumns(
-        table, prefix + "current_host_",
+        table, core, prefix + "current_host_",
         offsets.add([](Row r) { return r.rawData<HostServiceState>()->_host; }),
         LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        table, prefix + "current_service_", offsets.add([](Row r) {
+        table, core, prefix + "current_service_", offsets.add([](Row r) {
             return r.rawData<HostServiceState>()->_service;
         }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
@@ -192,32 +195,38 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
+namespace {
+const Logfile::map_type *getEntries(Logfile *logfile,
+                                    size_t max_lines_per_log_file) {
     constexpr unsigned classmask =
         (1U << static_cast<int>(LogEntry::Class::alert)) |
         (1U << static_cast<int>(LogEntry::Class::program)) |
         (1U << static_cast<int>(LogEntry::Class::state));
-    return logfile->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
+    return logfile->getEntriesFor(max_lines_per_log_file, classmask);
 }
 
-void TableStateHistory::getPreviousLogentry(
-    const LogFiles &log_files, LogFiles::const_iterator &it_logs,
-    const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
+void getPreviousLogentry(const LogFiles &log_files,
+                         LogFiles::const_iterator &it_logs,
+                         const Logfile::map_type *&entries,
+                         Logfile::const_iterator &it_entries,
+                         size_t max_lines_per_log_file) {
     while (it_entries == entries->begin()) {
         // open previous logfile
         if (it_logs == log_files.begin()) {
             return;
         }
         --it_logs;
-        entries = getEntries(it_logs->second.get());
+        entries = getEntries(it_logs->second.get(), max_lines_per_log_file);
         it_entries = entries->end();
     }
     --it_entries;
 }
 
-LogEntry *TableStateHistory::getNextLogentry(
-    const LogFiles &log_files, LogFiles::const_iterator &it_logs,
-    const Logfile::map_type *&entries, Logfile::const_iterator &it_entries) {
+LogEntry *getNextLogentry(const LogFiles &log_files,
+                          LogFiles::const_iterator &it_logs,
+                          const Logfile::map_type *&entries,
+                          Logfile::const_iterator &it_entries,
+                          size_t max_lines_per_log_file) {
     if (it_entries != entries->end()) {
         ++it_entries;
     }
@@ -228,13 +237,12 @@ LogEntry *TableStateHistory::getNextLogentry(
             return nullptr;
         }
         ++it_logs;
-        entries = getEntries(it_logs->second.get());
+        entries = getEntries(it_logs->second.get(), max_lines_per_log_file);
         it_entries = entries->begin();
     }
     return it_entries->second.get();
 }
 
-namespace {
 class TimeperiodTransition {
 public:
     explicit TimeperiodTransition(const std::string &str) {
@@ -273,13 +281,14 @@ std::unique_ptr<Filter> TableStateHistory::createPartialFilter(
 }
 
 void TableStateHistory::answerQuery(Query &query, const User &user,
-                                    const ICore & /*core*/) {
-    _log_cache->apply([this, &query, &user](const LogFiles &log_cache) {
-        answerQueryInternal(query, user, log_cache);
+                                    const ICore &core) {
+    log_cache_->apply([this, &query, &user, &core](const LogFiles &log_cache) {
+        answerQueryInternal(query, user, core, log_cache);
     });
 }
 
 void TableStateHistory::answerQueryInternal(Query &query, const User &user,
+                                            const ICore &core,
                                             const LogFiles &log_files) {
     if (log_files.begin() == log_files.end()) {
         return;
@@ -287,7 +296,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     auto object_filter = createPartialFilter(query);
 
     // This flag might be set to true by the return value of processDataset(...)
-    _abort_query = false;
+    abort_query_ = false;
 
     // Keep track of the historic state of services/hosts here
     std::map<HostServiceKey, HostServiceState *> state_info;
@@ -339,7 +348,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Determine initial logentry
-    const auto *entries = getEntries(it_logs->second.get());
+    auto max_lines_per_log_file = core.maxLinesPerLogFile();
+    const auto *entries =
+        getEntries(it_logs->second.get(), max_lines_per_log_file);
     Logfile::const_iterator it_entries;
     if (!entries->empty() && it_logs != newest_log) {
         it_entries = entries->end();
@@ -361,13 +372,15 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     std::map<std::string, int> notification_periods;
 
     while (LogEntry *entry =
-               getNextLogentry(log_files, it_logs, entries, it_entries)) {
-        if (_abort_query) {
+               getNextLogentry(log_files, it_logs, entries, it_entries,
+                               max_lines_per_log_file)) {
+        if (abort_query_) {
             break;
         }
 
         if (entry->time() >= until) {
-            getPreviousLogentry(log_files, it_logs, entries, it_entries);
+            getPreviousLogentry(log_files, it_logs, entries, it_entries,
+                                max_lines_per_log_file);
             break;
         }
         if (only_update && entry->time() >= since) {
@@ -394,9 +407,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
         HostServiceKey key = nullptr;
         bool is_service = false;
-        const auto *entry_host = core()->find_host(entry->host_name());
-        const auto *entry_service = core()->find_service(
-            entry->host_name(), entry->service_description());
+        const auto *entry_host = core.find_host(entry->host_name());
+        const auto *entry_service =
+            core.find_service(entry->host_name(), entry->service_description());
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -593,7 +606,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
     }
 
     // Create final reports
-    if (!_abort_query) {
+    if (!abort_query_) {
         for (const auto &[key, hst] : state_info) {
             // No trace since the last two nagios startup -> host/service has
             // vanished
@@ -828,7 +841,7 @@ void TableStateHistory::process(
     hss->computePerStateDurations(query_timeframe);
 
     // if (hss->_duration > 0)
-    _abort_query =
+    abort_query_ =
         user.is_authorized_for_object(hss->_host, hss->_service, false) &&
         !query.processDataset(Row{hss});
 

@@ -19,11 +19,11 @@ class IHost;
 
 TableEventConsoleEvents::TableEventConsoleEvents(ICore *mc)
     : TableEventConsole{mc} {
-    addColumns(this);
+    addColumns(this, *mc);
 }
 
 // static
-void TableEventConsoleEvents::addColumns(Table *table) {
+void TableEventConsoleEvents::addColumns(Table *table, const ICore &core) {
     const ColumnOffsets offsets{};
     table->addColumn(ECRow::makeIntColumn(
         "event_id", "The unique ID for this event", offsets));
@@ -90,7 +90,7 @@ void TableEventConsoleEvents::addColumns(Table *table) {
         ECRow::makeListColumn("event_match_groups_syslog_application",
                               "The syslog application match groups", offsets));
 
-    TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
+    TableHosts::addColumns(table, core, "host_", offsets.add([](Row r) {
         return r.rawData<ECRow>()->host();
     }),
                            LockComments::yes, LockDowntimes::yes);

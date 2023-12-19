@@ -23,7 +23,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 render=lambda v: render.physical_precision(v, 4, _("bar")),
                 js_render="v => cmk.number_format.physical_precision(v, 4, 'bar')",
             )
-        case Unit.BITS_IEC:
+        case Unit.BIT_IEC:
             return UnitInfo(
                 title=_("Bits"),
                 symbol=unit.value,
@@ -32,7 +32,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes, 2, 'bits')",
             )
-        case Unit.BITS_IEC_PER_SECOND:
+        case Unit.BIT_IEC_PER_SECOND:
             return UnitInfo(
                 title=_("Bits per second"),
                 symbol=unit.value,
@@ -42,7 +42,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes, 2, 'bits') + '/s'",
             )
-        case Unit.BITS_SI:
+        case Unit.BIT_SI:
             return UnitInfo(
                 title=_("Bits"),
                 symbol=unit.value,
@@ -51,7 +51,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes, 2, 'bits')",
             )
-        case Unit.BITS_SI_PER_SECOND:
+        case Unit.BIT_SI_PER_SECOND:
             return UnitInfo(
                 title=_("Bits per second"),
                 symbol=unit.value,
@@ -61,14 +61,14 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes, 2, 'bits') + '/s'",
             )
-        case Unit.BYTES_IEC:
+        case Unit.BYTE_IEC:
             return UnitInfo(
                 title=_("Bytes"),
                 symbol=unit.value,
                 render=lambda v: render.fmt_bytes(v, unit_prefix_type=render.IECUnitPrefixes),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes)",
             )
-        case Unit.BYTES_IEC_PER_DAY:
+        case Unit.BYTE_IEC_PER_DAY:
             # Output in bytes/days, value is in bytes/s
             return UnitInfo(
                 title=_("Bytes per day"),
@@ -78,7 +78,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v * 86400.0, cmk.number_format.IECUnitPrefixes) + '/d'",
             )
-        case Unit.BYTES_IEC_PER_OPERATION:
+        case Unit.BYTE_IEC_PER_OPERATION:
             return UnitInfo(
                 title=_("Bytes per operation"),
                 symbol=unit.value,
@@ -87,7 +87,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes) + '/op'",
             )
-        case Unit.BYTES_IEC_PER_SECOND:
+        case Unit.BYTE_IEC_PER_SECOND:
             return UnitInfo(
                 title=_("Bytes per second"),
                 symbol=unit.value,
@@ -96,14 +96,14 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes) + '/s'",
             )
-        case Unit.BYTES_SI:
+        case Unit.BYTE_SI:
             return UnitInfo(
                 title=_("Bytes"),
                 symbol=unit.value,
                 render=lambda v: render.fmt_bytes(v, unit_prefix_type=render.SIUnitPrefixes),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes)",
             )
-        case Unit.BYTES_SI_PER_DAY:
+        case Unit.BYTE_SI_PER_DAY:
             # Output in bytes/days, value is in bytes/s
             return UnitInfo(
                 title=_("Bytes per day"),
@@ -113,7 +113,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v * 86400.0, cmk.number_format.SIUnitPrefixes) + '/d'",
             )
-        case Unit.BYTES_SI_PER_OPERATION:
+        case Unit.BYTE_SI_PER_OPERATION:
             return UnitInfo(
                 title=_("Bytes per operation"),
                 symbol=unit.value,
@@ -122,7 +122,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 ),
                 js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes) + '/op'",
             )
-        case Unit.BYTES_SI_PER_SECOND:
+        case Unit.BYTE_SI_PER_SECOND:
             return UnitInfo(
                 title=_("Bytes per second"),
                 symbol=unit.value,

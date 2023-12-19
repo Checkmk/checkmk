@@ -29,21 +29,21 @@ metric_aws_glacier_num_archives = metrics.Metric(
 metric_aws_glacier_vault_size = metrics.Metric(
     name="aws_glacier_vault_size",
     title=Localizable("Vault size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
 metric_aws_glacier_total_vault_size = metrics.Metric(
     name="aws_glacier_total_vault_size",
     title=Localizable("Total size of all vaults"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
 metric_aws_glacier_largest_vault_size = metrics.Metric(
     name="aws_glacier_largest_vault_size",
     title=Localizable("Largest vault size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.YELLOW,
 )
 
@@ -57,14 +57,14 @@ metric_aws_num_objects = metrics.Metric(
 metric_aws_bucket_size = metrics.Metric(
     name="aws_bucket_size",
     title=Localizable("Bucket size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
 metric_aws_largest_bucket_size = metrics.Metric(
     name="aws_largest_bucket_size",
     title=Localizable("Largest bucket size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.YELLOW,
 )
 
@@ -274,7 +274,7 @@ metric_aws_rds_replica_lag = metrics.Metric(
 metric_aws_rds_oldest_replication_slot_lag = metrics.Metric(
     name="aws_rds_oldest_replication_slot_lag",
     title=Localizable("Oldest Replication Slot Lag Size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
@@ -3391,21 +3391,21 @@ metric_aws_http_fixed_response = metrics.Metric(
 metric_aws_proc_bytes = metrics.Metric(
     name="aws_proc_bytes",
     title=Localizable("Processed Bytes"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.PURPLE,
 )
 
 metric_aws_proc_bytes_tls = metrics.Metric(
     name="aws_proc_bytes_tls",
     title=Localizable("TLS Processed Bytes"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.PURPLE,
 )
 
 metric_aws_ipv6_proc_bytes = metrics.Metric(
     name="aws_ipv6_proc_bytes",
     title=Localizable("IPv6 Processed Bytes"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.LIGHT_PURPLE,
 )
 
@@ -3461,28 +3461,28 @@ metric_aws_tcp_target_rst = metrics.Metric(
 metric_aws_s3_downloads = metrics.Metric(
     name="aws_s3_downloads",
     title=Localizable("Download"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.YELLOW,
 )
 
 metric_aws_s3_uploads = metrics.Metric(
     name="aws_s3_uploads",
     title=Localizable("Upload"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.LIGHT_GREEN,
 )
 
 metric_aws_s3_select_object_scanned = metrics.Metric(
     name="aws_s3_select_object_scanned",
     title=Localizable("SELECT Object Scanned"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.LIGHT_GREEN,
 )
 
 metric_aws_s3_select_object_returned = metrics.Metric(
     name="aws_s3_select_object_returned",
     title=Localizable("SELECT Object Returned"),
-    unit=Unit.BYTES_IEC_PER_SECOND,
+    unit=Unit.BYTE_IEC_PER_SECOND,
     color=Color.LIGHT_BLUE,
 )
 
@@ -3601,7 +3601,7 @@ metric_aws_rds_subnet_per_db_subnet_groups = metrics.Metric(
 metric_aws_rds_allocated_storage = metrics.Metric(
     name="aws_rds_allocated_storage",
     title=Localizable("Allocated storage"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.LIGHT_GREEN,
 )
 
@@ -3629,14 +3629,14 @@ metric_aws_ebs_block_store_snapshots = metrics.Metric(
 metric_aws_ebs_block_store_space_standard = metrics.Metric(
     name="aws_ebs_block_store_space_standard",
     title=Localizable("Magnetic volumes space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.PURPLE,
 )
 
 metric_aws_ebs_block_store_space_io1 = metrics.Metric(
     name="aws_ebs_block_store_space_io1",
     title=Localizable("Provisioned IOPS SSD (io1) space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.LIGHT_PURPLE,
 )
 
@@ -3650,7 +3650,7 @@ metric_aws_ebs_block_store_iops_io1 = metrics.Metric(
 metric_aws_ebs_block_store_space_io2 = metrics.Metric(
     name="aws_ebs_block_store_space_io2",
     title=Localizable("Provisioned IOPS SSD (io2) space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.YELLOW,
 )
 
@@ -3664,28 +3664,28 @@ metric_aws_ebs_block_store_iops_io2 = metrics.Metric(
 metric_aws_ebs_block_store_space_gp2 = metrics.Metric(
     name="aws_ebs_block_store_space_gp2",
     title=Localizable("General Purpose SSD (gp2) space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
 metric_aws_ebs_block_store_space_gp3 = metrics.Metric(
     name="aws_ebs_block_store_space_gp3",
     title=Localizable("General Purpose SSD (gp3) space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.YELLOW,
 )
 
 metric_aws_ebs_block_store_space_sc1 = metrics.Metric(
     name="aws_ebs_block_store_space_sc1",
     title=Localizable("Cold HDD space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.ORANGE,
 )
 
 metric_aws_ebs_block_store_space_st1 = metrics.Metric(
     name="aws_ebs_block_store_space_st1",
     title=Localizable("Throughput Optimized HDD space"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.YELLOW,
 )
 
@@ -4070,7 +4070,7 @@ metric_aws_lambda_code_size_in_percent = metrics.Metric(
 metric_aws_lambda_code_size_absolute = metrics.Metric(
     name="aws_lambda_code_size_absolute",
     title=Localizable("Code Size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.LIGHT_BLUE,
 )
 
@@ -4084,7 +4084,7 @@ metric_aws_lambda_memory_size_in_percent = metrics.Metric(
 metric_aws_lambda_memory_size_absolute = metrics.Metric(
     name="aws_lambda_memory_size_absolute",
     title=Localizable("Memory Size"),
-    unit=Unit.BYTES_IEC,
+    unit=Unit.BYTE_IEC,
     color=Color.PURPLE,
 )
 

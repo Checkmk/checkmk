@@ -109,9 +109,25 @@ struct Args {
     #[arg(long)]
     subject_ou: Option<String>,
 
-    /// Expected issuer
+    /// Expected issuer common name (CN)
     #[arg(long)]
-    issuer: Option<String>,
+    issuer_cn: Option<String>,
+
+    /// Expected issuer organization (O)
+    #[arg(long)]
+    issuer_o: Option<String>,
+
+    /// Expected issuer organizational unit (OU)
+    #[arg(long)]
+    issuer_ou: Option<String>,
+
+    /// Expected issuer state or province (ST)
+    #[arg(long)]
+    issuer_st: Option<String>,
+
+    /// Expected issuer country (C)
+    #[arg(long)]
+    issuer_c: Option<String>,
 
     /// Expected signature algorithm
     #[arg(long)]
@@ -203,7 +219,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .subject_cn(args.subject_cn)
             .subject_o(args.subject_o)
             .subject_ou(args.subject_ou)
-            .issuer(args.issuer)
+            .issuer_cn(args.issuer_cn)
+            .issuer_o(args.issuer_o)
+            .issuer_ou(args.issuer_ou)
+            .issuer_st(args.issuer_st)
+            .issuer_c(args.issuer_c)
             .signature_algorithm(
                 args.signature_algorithm
                     .map(|sig| String::from(sig.as_str())),

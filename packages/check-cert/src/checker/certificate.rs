@@ -13,7 +13,7 @@ use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
-use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo, X509Name};
+use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo};
 
 macro_rules! unwrap_into {
     ($($e:expr),* $(,)?) => {
@@ -51,7 +51,11 @@ pub struct Config {
     subject_cn: Option<String>,
     subject_o: Option<String>,
     subject_ou: Option<String>,
-    issuer: Option<String>,
+    issuer_cn: Option<String>,
+    issuer_o: Option<String>,
+    issuer_ou: Option<String>,
+    issuer_st: Option<String>,
+    issuer_c: Option<String>,
     not_after: Option<LevelsChecker<Duration>>,
 }
 
@@ -84,7 +88,41 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 expected
             )
         }),
-        check_issuer(cert.tbs_certificate.issuer(), config.issuer),
+        config.issuer_cn.map(|expected| {
+            check_eq!(
+                "Issuer CN",
+                first_of(&mut cert.tbs_certificate.issuer().iter_common_name()),
+                expected
+            )
+        }),
+        config.issuer_o.map(|expected| {
+            check_eq!(
+                "Issuer O",
+                first_of(&mut cert.tbs_certificate.issuer().iter_organization()),
+                expected
+            )
+        }),
+        config.issuer_ou.map(|expected| {
+            check_eq!(
+                "Issuer OU",
+                first_of(&mut cert.tbs_certificate.issuer().iter_organizational_unit()),
+                expected
+            )
+        }),
+        config.issuer_st.map(|expected| {
+            check_eq!(
+                "Issuer ST",
+                first_of(&mut cert.tbs_certificate.issuer().iter_state_or_province()),
+                expected
+            )
+        }),
+        config.issuer_c.map(|expected| {
+            check_eq!(
+                "Issuer C",
+                first_of(&mut cert.tbs_certificate.issuer().iter_country()),
+                expected
+            )
+        }),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
@@ -163,10 +201,6 @@ fn check_pubkey_size(
             expected
         )
     })
-}
-
-fn check_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| check_eq!("Issuer", issuer.to_string(), expected))
 }
 
 fn check_validity_not_after(

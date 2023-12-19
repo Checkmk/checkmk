@@ -10,7 +10,7 @@ from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.collection.server_side_calls.check_form_submit import active_check_config as config
 from cmk.plugins.collection.server_side_calls.check_form_submit import UrlParams
-from cmk.server_side_calls.v1 import HostConfig
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
 
 
 class HostConfigFactory(DataclassFactory):
@@ -25,7 +25,10 @@ class HostConfigFactory(DataclassFactory):
                 "name": "foo",
                 "url_details": UrlParams(),
             },
-            HostConfigFactory.build(address="test"),
+            HostConfigFactory.build(
+                resolved_address="test",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             [
                 "test",
             ],
@@ -36,7 +39,10 @@ class HostConfigFactory(DataclassFactory):
                 "name": "foo",
                 "url_details": UrlParams(port=80),
             },
-            HostConfigFactory.build(address="test"),
+            HostConfigFactory.build(
+                resolved_address="test",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             [
                 "test",
                 "--port",

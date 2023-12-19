@@ -10,7 +10,7 @@ from polyfactory.factories import DataclassFactory
 from pytest_mock import MockerFixture
 
 from cmk.plugins.collection.server_side_calls.prometheus import special_agent_prometheus
-from cmk.server_side_calls.v1 import HostConfig
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
 from cmk.special_agents.utils.prometheus import extract_connection_args
 
 
@@ -41,7 +41,11 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(address="1.2.3.4", name="prometheus"),
+            HostConfigFactory.build(
+                resolved_address="1.2.3.4",
+                name="prometheus",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             {
                 "api_url": "http://1.2.3.4/api/v1/",
                 "auth": ("user", "secret"),
@@ -69,7 +73,11 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(address="1.2.3.4", name="prometheus"),
+            HostConfigFactory.build(
+                resolved_address="1.2.3.4",
+                name="prometheus",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             {
                 "auth": ("user", "very_secret"),
                 "api_url": "https://my-host.com/api/v1/",
@@ -97,7 +105,11 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(address="1.2.3.4", name="prometheus"),
+            HostConfigFactory.build(
+                resolved_address="1.2.3.4",
+                name="prometheus",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             {
                 "api_url": "https://my-host.com/api/v1/",
                 "token": "token",
@@ -129,7 +141,11 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(address="1.2.3.4", name="prometheus"),
+            HostConfigFactory.build(
+                resolved_address="1.2.3.4",
+                name="prometheus",
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+            ),
             {
                 "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
                 "token": "very_secret",

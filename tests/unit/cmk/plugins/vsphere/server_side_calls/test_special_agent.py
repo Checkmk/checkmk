@@ -11,7 +11,9 @@ from cmk.plugins.vsphere.server_side_calls.special_agent import commands_functio
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentCommand,
     StoredSecret,
@@ -100,9 +102,10 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name="host",
-                address="1.2.3.4",
+                resolved_address="1.2.3.4",
                 alias="host",
-                ip_family=IPAddressFamily.IPV4,
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
             {},
         )

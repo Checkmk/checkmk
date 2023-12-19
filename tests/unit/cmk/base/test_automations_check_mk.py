@@ -11,6 +11,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 import cmk.utils.resulttype as result
+from cmk.utils.hostaddress import HostAddress
 
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
@@ -275,6 +276,7 @@ def test_automation_active_check_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *_: host_attrs)
     monkeypatch.setattr(check_mk.AutomationActiveCheck, "_get_resouce_macros", lambda *_: {})
 

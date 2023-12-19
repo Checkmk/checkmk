@@ -4,20 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shlex
+import socket
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Protocol
+from typing import Any, assert_never, Callable, Iterable, Literal, Protocol
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.translations import TranslationOptions
 
 import cmk.base.config as base_config
 import cmk.base.core_config as core_config
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base import plugin_contexts
 
 from cmk.server_side_calls.v1 import (
@@ -25,7 +28,9 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentConfig,
     StoredSecret,
@@ -124,20 +129,64 @@ def _get_host_address_config(
     )
 
 
-def _get_host_config(host_name: str, host_attrs: Mapping[str, str]) -> HostConfig:
-    ip_family = (
-        IPAddressFamily.IPV4 if host_attrs["_ADDRESS_FAMILY"] == "4" else IPAddressFamily.IPV6
+def _get_ip_family(ip_family: ip_lookup.AddressFamily) -> IPAddressFamily:
+    match ip_family:
+        case ip_lookup.AddressFamily.NO_IP:
+            return IPAddressFamily.NO_IP
+        case ip_lookup.AddressFamily.IPv4:
+            return IPAddressFamily.IPV4
+        case ip_lookup.AddressFamily.IPv6:
+            return IPAddressFamily.IPV6
+        case ip_lookup.AddressFamily.DUAL_STACK:
+            return IPAddressFamily.DUAL_STACK
+        case _:
+            assert_never(ip_family)
+
+
+def _get_resolved_ip_family(
+    ip_family: socket.AddressFamily | None,
+) -> ResolvedIPAddressFamily | None:
+    match ip_family:
+        case socket.AF_INET:
+            return ResolvedIPAddressFamily.IPV4
+        case socket.AF_INET6:
+            return ResolvedIPAddressFamily.IPV6
+
+    return None
+
+
+def get_host_config(host_name: HostName, config_cache: base_config.ConfigCache) -> HostConfig:
+    ip_family = base_config.ConfigCache.address_family(host_name)
+    ipv4address = base_config.ipaddresses.get(host_name)
+    ipv6address = base_config.ipv6addresses.get(host_name)
+
+    additional_addresses = config_cache.additional_ipaddresses(host_name)
+    additional_ipv4addresses, additional_ipv6addresses = additional_addresses
+
+    address_config = NetworkAddressConfig(
+        ip_family=_get_ip_family(ip_family),
+        ipv4_address=str(ipv4address) if ipv4address else None,
+        ipv6_address=str(ipv6address) if ipv6address else None,
+        additional_ipv4_addresses=additional_ipv4addresses,
+        additional_ipv6_addresses=additional_ipv6addresses,
+    )
+
+    resolved_ip_family = base_config.resolve_address_family(config_cache, host_name, ip_family)
+
+    customer = (
+        base_config.current_customer if cmk_version.edition() is cmk_version.Edition.CME else None
     )
 
     return HostConfig(
         name=host_name,
-        address=address if (address := host_attrs["address"]) else None,
-        alias=host_attrs["alias"],
-        ip_family=ip_family,
-        ipv4address=ipv4 if (ipv4 := host_attrs.get("_ADDRESS_4")) else None,
-        ipv6address=ipv6 if (ipv6 := host_attrs.get("_ADDRESS_6")) else None,
-        additional_ipv4addresses=[a for a in host_attrs["_ADDRESSES_4"].split(" ") if a],
-        additional_ipv6addresses=[a for a in host_attrs["_ADDRESSES_6"].split(" ") if a],
+        alias=config_cache.alias(host_name),
+        resolved_address=base_config.ip_address_of(config_cache, host_name, ip_family),
+        resolved_ip_family=_get_resolved_ip_family(resolved_ip_family),
+        address_config=address_config,
+        custom_attributes=base_config.get_custom_host_attributes(config_cache, host_name),
+        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
+        labels=config_cache.labels(host_name),
+        customer=customer,
     )
 
 
@@ -270,6 +319,7 @@ class ActiveCheck:
         plugins: Mapping[str, ActiveCheckConfig],
         legacy_plugins: Mapping[str, Mapping[str, Any]],
         host_name: HostName,
+        host_config: HostConfig,
         host_attrs: Mapping[str, str],
         translations: TranslationOptions,
         macros: Mapping[str, str] | None = None,
@@ -279,6 +329,7 @@ class ActiveCheck:
         self._plugins = plugins
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
+        self.host_config = host_config
         self.host_alias = host_attrs["alias"]
         self.host_attrs = host_attrs
         self.translations = translations
@@ -334,7 +385,6 @@ class ActiveCheck:
     def _iterate_services(
         self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
-        host_config = _get_host_config(self.host_name, self.host_attrs)
         http_proxies = {
             id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
             for id, proxy in base_config.http_proxies.items()
@@ -342,7 +392,7 @@ class ActiveCheck:
 
         for param_dict in plugin_params:
             params = active_check.parameter_parser(param_dict)
-            for service in active_check.commands_function(params, host_config, http_proxies):
+            for service in active_check.commands_function(params, self.host_config, http_proxies):
                 arguments = _replace_passwords(
                     self.host_name,
                     self.stored_passwords,
@@ -536,6 +586,7 @@ class SpecialAgent:
         legacy_plugins: Mapping[str, InfoFunc],
         host_name: HostName,
         host_address: HostAddress | None,
+        host_config: HostConfig,
         host_attrs: Mapping[str, str],
         stored_passwords: Mapping[str, str],
         macros: Mapping[str, str] | None,
@@ -544,6 +595,7 @@ class SpecialAgent:
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_address = host_address
+        self.host_config = host_config
         self.host_attrs = host_attrs
         self.stored_passwords = stored_passwords
 
@@ -582,14 +634,15 @@ class SpecialAgent:
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        host_config = _get_host_config(self.host_name, self.host_attrs)
         http_proxies = {
             id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
             for id, proxy in base_config.http_proxies.items()
         }
 
         parsed_params = special_agent.parameter_parser(params)
-        for command in special_agent.commands_function(parsed_params, host_config, http_proxies):
+        for command in special_agent.commands_function(
+            parsed_params, self.host_config, http_proxies
+        ):
             path = self._make_source_path(special_agent.name)
             args = _replace_passwords(
                 self.host_name, self.stored_passwords, command.command_arguments

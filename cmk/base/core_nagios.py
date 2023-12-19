@@ -492,6 +492,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         load_active_checks()[1],
         config.active_check_info,
         hostname,
+        server_side_calls.get_host_config(hostname, config_cache),
         host_attrs,
         stored_passwords=stored_passwords,
         translations=config.get_service_translations(config_cache.ruleset_matcher, hostname),

@@ -445,6 +445,7 @@ def active_check_preview_rows(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
+        server_side_calls.get_host_config(host_name, config_cache),
         host_attrs,
         config.get_service_translations(ruleset_matcher, host_name),
     )
@@ -1300,6 +1301,7 @@ class AutomationAnalyseServices(Automation):
             load_active_checks()[1],
             config.active_check_info,
             host_name,
+            server_side_calls.get_host_config(host_name, config_cache),
             host_attrs,
             translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
         )
@@ -2152,6 +2154,7 @@ class AutomationActiveCheck(Automation):
             load_active_checks()[1],
             config.active_check_info,
             host_name,
+            server_side_calls.get_host_config(host_name, config_cache),
             host_attrs,
             translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
             macros={**host_macros, **resource_macros},

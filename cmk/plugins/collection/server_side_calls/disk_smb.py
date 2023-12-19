@@ -35,8 +35,8 @@ def check_disk_smb_arguments(
         if params.host != "use_parent_host":
             return params.host[1]
 
-        if host_config.address:
-            return host_config.address
+        if host_config.resolved_address:
+            return host_config.resolved_address
 
         raise ValueError("No IP address available")
 

@@ -11,10 +11,12 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    NetworkAddressConfig,
     noop_parser,
     parse_http_proxy,
     parse_secret,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     StoredSecret,
 )
@@ -124,17 +126,20 @@ def test_noop_parser() -> None:
         pytest.param(
             HostConfig(
                 name="hostname",
-                address="0.0.0.1",
+                resolved_address="0.0.0.1",
                 alias="host_alias",
-                ip_family=IPAddressFamily.IPV4,
-                ipv4address="0.0.0.2",
-                ipv6address="fe80::240",
-                additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
-                additional_ipv6addresses=[
-                    "fe80::241",
-                    "fe80::242",
-                    "fe80::243",
-                ],
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+                address_config=NetworkAddressConfig(
+                    ip_family=IPAddressFamily.DUAL_STACK,
+                    ipv4_address="0.0.0.2",
+                    ipv6_address="fe80::240",
+                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+                    additional_ipv6_addresses=[
+                        "fe80::241",
+                        "fe80::242",
+                        "fe80::243",
+                    ],
+                ),
             ),
             ["0.0.0.2", "0.0.0.4", "0.0.0.5"],
             ["fe80::240", "fe80::241", "fe80::242", "fe80::243"],
@@ -143,17 +148,20 @@ def test_noop_parser() -> None:
         pytest.param(
             HostConfig(
                 name="hostname",
-                address="0.0.0.1",
+                resolved_address="0.0.0.1",
                 alias="host_alias",
-                ip_family=IPAddressFamily.IPV4,
-                ipv4address="",
-                ipv6address="",
-                additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
-                additional_ipv6addresses=[
-                    "fe80::241",
-                    "fe80::242",
-                    "fe80::243",
-                ],
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+                address_config=NetworkAddressConfig(
+                    ip_family=IPAddressFamily.DUAL_STACK,
+                    ipv4_address=None,
+                    ipv6_address=None,
+                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+                    additional_ipv6_addresses=[
+                        "fe80::241",
+                        "fe80::242",
+                        "fe80::243",
+                    ],
+                ),
             ),
             ["0.0.0.4", "0.0.0.5"],
             ["fe80::241", "fe80::242", "fe80::243"],
@@ -164,5 +172,5 @@ def test_noop_parser() -> None:
 def test_host_config_properties(
     host_config: HostConfig, expected_all_ipv4: Sequence[str], expected_all_ipv6: Sequence[str]
 ) -> None:
-    assert host_config.all_ipv4addresses == expected_all_ipv4
-    assert host_config.all_ipv6addresses == expected_all_ipv6
+    assert host_config.address_config.all_ipv4_addresses == expected_all_ipv4
+    assert host_config.address_config.all_ipv6_addresses == expected_all_ipv6

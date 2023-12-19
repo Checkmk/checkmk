@@ -34,8 +34,8 @@ def commands_function(
 
     if details.hosts:
         args += [*details.hosts]
-    elif host_config.address:
-        args += [host_config.address]
+    elif host_config.resolved_address:
+        args += [host_config.resolved_address]
     else:
         raise ValueError("No IP address available")
 

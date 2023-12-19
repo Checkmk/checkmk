@@ -18,21 +18,31 @@ from cmk.plugins.collection.server_side_calls.http import (
     ProxySettings,
     URLMode,
 )
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    PlainTextSecret,
+    ResolvedIPAddressFamily,
+    StoredSecret,
+)
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    address="0.0.0.1",
+    resolved_address="0.0.0.1",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
-    ipv4address="0.0.0.2",
-    ipv6address="fe80::240",
-    additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
-    additional_ipv6addresses=[
-        "fe80::241",
-        "fe80::242",
-        "fe80::243",
-    ],
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ipv4_address="0.0.0.2",
+        ipv6_address="fe80::240",
+        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+        additional_ipv6_addresses=[
+            "fe80::241",
+            "fe80::242",
+            "fe80::243",
+        ],
+        ip_family=IPAddressFamily.DUAL_STACK,
+    ),
 )
 
 

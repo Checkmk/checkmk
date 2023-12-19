@@ -12,8 +12,10 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    NetworkAddressConfig,
     parse_secret,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -56,10 +58,20 @@ special_agent_example = SpecialAgentConfig(
 def test_active_check_config() -> None:
     host_config = HostConfig(
         name="hostname",
-        address="0.0.0.1",
+        resolved_address="0.0.0.1",
         alias="host_alias",
-        ip_family=IPAddressFamily.IPV4,
-        ipv4address="0.0.0.1",
+        resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+        address_config=NetworkAddressConfig(
+            ip_family=IPAddressFamily.DUAL_STACK,
+            ipv4_address="0.0.0.1",
+            ipv6_address=None,
+            additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+            additional_ipv6_addresses=[
+                "fe80::241",
+                "fe80::242",
+                "fe80::243",
+            ],
+        ),
     )
     params = {
         "protocol": "HTTP",

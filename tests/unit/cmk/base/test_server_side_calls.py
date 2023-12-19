@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
@@ -10,18 +11,20 @@ from typing import NamedTuple
 import pytest
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.server_side_calls import (
     _get_host_address_config,
-    _get_host_config,
     ActiveCheck,
     ActiveCheckError,
     ActiveServiceData,
     ActiveServiceDescription,
     commandline_arguments,
+    get_host_config,
     HostAddressConfiguration,
     InfoFunc,
     SpecialAgent,
@@ -34,7 +37,9 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     SpecialAgentCommand,
     SpecialAgentConfig,
     StoredSecret,
@@ -49,6 +54,55 @@ HOST_ATTRS = {
     "_ADDRESSES_6": "",
     "display_name": "my_host",
 }
+
+HOST_CONFIG = HostConfig(
+    name="hostname",
+    resolved_address="0.0.0.1",
+    alias="host_alias",
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.DUAL_STACK,
+        ipv4_address="0.0.0.2",
+        ipv6_address="fe80::240",
+        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+        additional_ipv6_addresses=[
+            "fe80::241",
+            "fe80::242",
+            "fe80::243",
+        ],
+    ),
+)
+
+
+class ConfigCacheMock:
+    def __init__(
+        self,
+        alias: str,
+        additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
+        tags: Mapping[str, str],
+        labels: Mapping[str, str],
+    ):
+        self._tags = tags
+        self._labels = labels
+        self._alias = alias
+        self._additional_ipaddresses = additional_ipaddresses
+
+    @staticmethod
+    def address_family(host_name: str) -> ip_lookup.AddressFamily:
+        host_family_mapping = {"host_name": ip_lookup.AddressFamily.DUAL_STACK}
+        return host_family_mapping[host_name]
+
+    def additional_ipaddresses(self, _host_name: str) -> tuple[Sequence[str], Sequence[str]]:
+        return self._additional_ipaddresses
+
+    def alias(self, _host_name: str) -> str:
+        return self._alias
+
+    def labels(self, _host_name: str) -> Mapping[str, str]:
+        return self._labels
+
+    def tags(self, _host_name: str) -> Mapping[str, str]:
+        return self._tags
 
 
 class TestSpecialAgentLegacyConfiguration(NamedTuple):
@@ -410,6 +464,7 @@ def test_get_active_service_data(
         active_check_plugins,
         legacy_active_check_plugins,
         hostname,
+        HOST_CONFIG,
         host_attrs,
         translations={},
         macros=macros,
@@ -469,6 +524,7 @@ def test_test_get_active_service_data_crash(
         active_check_plugins,
         legacy_active_check_plugins,
         HostName("test_host"),
+        HOST_CONFIG,
         HOST_ATTRS,
         translations={},
     )
@@ -530,6 +586,7 @@ def test_test_get_active_service_data_crash_with_debug(
         active_check_plugins,
         legacy_active_check_plugins,
         HostName("test_host"),
+        HOST_CONFIG,
         HOST_ATTRS,
         translations={},
     )
@@ -638,7 +695,12 @@ def test_get_active_service_data_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     active_check_config = ActiveCheck(
-        active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
+        active_check_plugins,
+        legacy_active_check_plugins,
+        hostname,
+        HOST_CONFIG,
+        host_attrs,
+        translations={},
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
@@ -806,7 +868,12 @@ def test_get_active_service_descriptions(
     expected_result: Sequence[ActiveServiceDescription],
 ) -> None:
     active_check_config = ActiveCheck(
-        active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
+        active_check_plugins,
+        legacy_active_check_plugins,
+        hostname,
+        HOST_CONFIG,
+        host_attrs,
+        translations={},
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -844,7 +911,7 @@ def test_get_active_service_descriptions_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     active_check_config = ActiveCheck(
-        {}, legacy_active_check_plugins, hostname, host_attrs, translations={}
+        {}, legacy_active_check_plugins, hostname, HOST_CONFIG, host_attrs, translations={}
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -891,86 +958,44 @@ def test_get_host_address_config(
     assert host_config == expected_result
 
 
-@pytest.mark.parametrize(
-    "hostname, host_attrs, expected_result",
-    [
-        pytest.param(
-            "myhost",
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.2 127.0.0.3",
-                "_ADDRESSES_4_1": "127.0.0.2",
-                "_ADDRESSES_4_2": "127.0.0.3",
-                "_ADDRESSES_6": "",
-            },
-            HostConfig(
-                name="myhost",
-                address="127.0.0.1",
-                alias="my_host_alias",
-                ip_family=IPAddressFamily.IPV4,
-                ipv4address="127.0.0.1",
-                ipv6address=None,
-                additional_ipv4addresses=["127.0.0.2", "127.0.0.3"],
-                additional_ipv6addresses=[],
-            ),
-            id="ipv4 address",
+def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = ConfigCacheMock(
+        "alias",
+        ([], [HostAddress("fe80::241"), HostAddress("fe80::242"), HostAddress("fe80::243")]),
+        {"tag1": "value1", "tag2": "value2"},
+        {"label1": "value1", "label2": "value2"},
+    )
+
+    monkeypatch.setattr(base_config, "ConfigCache", ConfigCacheMock)
+    monkeypatch.setattr(base_config, "ipaddresses", {"host_name": ""})
+    monkeypatch.setattr(base_config, "ipv6addresses", {"host_name": HostAddress("::1")})
+    monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
+    monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
+    monkeypatch.setattr(base_config, "current_customer", "customer")
+    monkeypatch.setattr(base_config, "ip_address_of", lambda *args: HostAddress("::1"))
+    monkeypatch.setattr(
+        base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}
+    )
+
+    host_config = get_host_config(HostName("host_name"), config_cache)  # type: ignore[arg-type]
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="alias",
+        resolved_address="::1",
+        address_config=NetworkAddressConfig(
+            ip_family=IPAddressFamily.DUAL_STACK,
+            ipv4_address=None,
+            ipv6_address="::1",
+            additional_ipv4_addresses=[],
+            additional_ipv6_addresses=["fe80::241", "fe80::242", "fe80::243"],
         ),
-        pytest.param(
-            "myhost",
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_6": "fe80::240",
-                "address": "fe80::240",
-                "_ADDRESS_FAMILY": "6",
-                "_ADDRESSES_4": "",
-                "_ADDRESSES_6": "fe80::241 fe80::242",
-            },
-            HostConfig(
-                name="myhost",
-                address="fe80::240",
-                alias="my_host_alias",
-                ip_family=IPAddressFamily.IPV6,
-                ipv4address=None,
-                ipv6address="fe80::240",
-                additional_ipv4addresses=[],
-                additional_ipv6addresses=["fe80::241", "fe80::242"],
-            ),
-            id="ipv6 address",
-        ),
-        pytest.param(
-            "myhost",
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "",
-                "address": "",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "",
-                "_ADDRESSES_6": "",
-            },
-            HostConfig(
-                name="myhost",
-                address=None,
-                alias="my_host_alias",
-                ip_family=IPAddressFamily.IPV4,
-                ipv4address=None,
-                ipv6address=None,
-                additional_ipv4addresses=[],
-                additional_ipv6addresses=[],
-            ),
-            id="no address",
-        ),
-    ],
-)
-def test_get_host_config(
-    hostname: str,
-    host_attrs: base_config.ObjectAttributes,
-    expected_result: HostConfig,
-) -> None:
-    host_config = _get_host_config(hostname, host_attrs)
-    assert host_config == expected_result
+        resolved_ip_family=ResolvedIPAddressFamily.IPV6,
+        custom_attributes={"attr1": "value1"},
+        tags={"tag1": "value1", "tag2": "value2"},
+        labels={"label1": "value1", "label2": "value2"},
+        customer=None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -1179,6 +1204,7 @@ def test_iter_special_agent_commands(
         legacy_plugins,
         HostName("test_host"),
         HostAddress("127.0.0.1"),
+        HOST_CONFIG,
         host_attrs,
         stored_passwords,
         {"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
@@ -1219,7 +1245,14 @@ def test_iter_special_agent_commands_crash(
     )
 
     special_agent = SpecialAgent(
-        plugins, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), HOST_ATTRS, {}, {}
+        plugins,
+        legacy_plugins,
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        HOST_ATTRS,
+        {},
+        {},
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1262,7 +1295,14 @@ def test_iter_special_agent_commands_crash_with_debug(
     )
 
     special_agent = SpecialAgent(
-        plugins, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), HOST_ATTRS, {}, {}
+        plugins,
+        legacy_plugins,
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        HOST_ATTRS,
+        {},
+        {},
     )
 
     with pytest.raises(
@@ -1276,7 +1316,7 @@ def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
 
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}, {}
+        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
     )
     agent_path = special_agent._make_source_path("test_agent")
 
@@ -1291,7 +1331,7 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     local_agent_path.touch()
 
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}, {}
+        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
     )
     agent_path = special_agent._make_source_path("test_agent")
 

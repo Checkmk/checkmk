@@ -36,11 +36,11 @@ from cmk.checkengine.parser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
+import cmk.base.server_side_calls as server_side_calls
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
 from cmk.base.plugins.server_side_calls import load_special_agents
-from cmk.base.server_side_calls import SpecialAgent
 
 from ._api import Source
 from ._sources import (
@@ -169,11 +169,12 @@ class _Builder:
                 macros = self.config_cache.get_host_macros_from_attributes(
                     self.host_name, host_attrs
                 )
-                special_agent = SpecialAgent(
+                special_agent = server_side_calls.SpecialAgent(
                     load_special_agents()[1],
                     config.special_agent_info,
                     self.host_name,
                     self.ipaddress,
+                    server_side_calls.get_host_config(self.host_name, self.config_cache),
                     host_attrs,
                     cmk.utils.password_store.load(),
                     macros=macros,

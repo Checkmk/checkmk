@@ -13,8 +13,8 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    IPAddressFamily,
     parse_secret,
+    ResolvedIPAddressFamily,
     Secret,
 )
 
@@ -39,14 +39,14 @@ class Parameters(BaseModel):
 def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Literal["-6", "-4"]]:
     # Use the address family of the monitored host by default
     address_family = params.address_family or (
-        "ipv6" if host_config.ip_family is IPAddressFamily.IPV6 else "ipv4"
+        "ipv6" if host_config.resolved_ip_family is ResolvedIPAddressFamily.IPV6 else "ipv4"
     )
 
     if address_family == "ipv6":
         # FIXME: migrating to the new API revealed that these can be none. Should we raise?
         # I think this is what happend before (silly as it is)
-        return host_config.ipv6address or "", "-6"
-    return host_config.ipv4address or "", "-4"
+        return host_config.address_config.ipv6_address or "", "-6"
+    return host_config.address_config.ipv4_address or "", "-4"
 
 
 def check_smtp_arguments(  # pylint: disable=too-many-branches

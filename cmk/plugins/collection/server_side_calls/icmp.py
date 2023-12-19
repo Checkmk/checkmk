@@ -13,7 +13,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    IPAddressFamily,
+    ResolvedIPAddressFamily,
 )
 
 
@@ -43,12 +43,12 @@ class ICMPParams(BaseModel):
 
 
 class AddressCmdArgs(NamedTuple):
-    ip_family: IPAddressFamily
+    ip_family: ResolvedIPAddressFamily | None
     address_args: Sequence[str | IPv4Address | IPv6Address]
 
     def to_list(self) -> list[str]:
         addresses = [str(a) for a in self.address_args]
-        if self.ip_family == IPAddressFamily.IPV6:
+        if self.ip_family == ResolvedIPAddressFamily.IPV6:
             return ["-6", *addresses]
         return addresses
 
@@ -89,38 +89,43 @@ def get_common_arguments(params: ICMPParams) -> list[str]:
 
 
 def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> AddressCmdArgs:
+    address_config = host_config.address_config
     match params.address:
         case AddressType.ADDRESS:
-            if not host_config.address:
+            if not host_config.resolved_address:
                 raise ValueError("No IP address available")
-            return AddressCmdArgs(host_config.ip_family, [host_config.address])
+            return AddressCmdArgs(host_config.resolved_ip_family, [host_config.resolved_address])
         case AddressType.ALIAS:
-            return AddressCmdArgs(host_config.ip_family, [host_config.alias])
+            return AddressCmdArgs(host_config.resolved_ip_family, [host_config.alias])
         case AddressType.ALL_IP4vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPV4, host_config.all_ipv4addresses)
+            return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, address_config.all_ipv4_addresses)
         case AddressType.ALL_IP6vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPV6, host_config.all_ipv6addresses)
+            return AddressCmdArgs(ResolvedIPAddressFamily.IPV6, address_config.all_ipv6_addresses)
         case AddressType.ADDITIONAL_IP4vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPV4, host_config.additional_ipv4addresses)
+            return AddressCmdArgs(
+                ResolvedIPAddressFamily.IPV4, address_config.additional_ipv4_addresses
+            )
         case AddressType.ADDITIONAL_IP6vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPV6, host_config.additional_ipv6addresses)
+            return AddressCmdArgs(
+                ResolvedIPAddressFamily.IPV6, address_config.additional_ipv6_addresses
+            )
 
     if (
         params.address == AddressType.INDEXED_IPv4ADDRESS
         and params.address_index is not None
-        and params.address_index <= len(host_config.additional_ipv4addresses)
+        and params.address_index <= len(address_config.additional_ipv4_addresses)
     ):
-        ipv4address = host_config.additional_ipv4addresses[params.address_index - 1]
-        return AddressCmdArgs(IPAddressFamily.IPV4, [ipv4address])
+        ipv4address = address_config.additional_ipv4_addresses[params.address_index - 1]
+        return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, [ipv4address])
     if (
         params.address == AddressType.INDEXED_IPv6ADDRESS
         and params.address_index is not None
-        and params.address_index <= len(host_config.additional_ipv6addresses)
+        and params.address_index <= len(address_config.additional_ipv6_addresses)
     ):
-        ipv6address = host_config.additional_ipv6addresses[params.address_index - 1]
-        return AddressCmdArgs(IPAddressFamily.IPV6, [ipv6address])
+        ipv6address = address_config.additional_ipv6_addresses[params.address_index - 1]
+        return AddressCmdArgs(ResolvedIPAddressFamily.IPV6, [ipv6address])
     if params.address == AddressType.EXPLICIT and params.explicit_address:
-        return AddressCmdArgs(IPAddressFamily.IPV4, [params.explicit_address])
+        return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, [params.explicit_address])
 
     raise ValueError("Invalid address parameters")
 

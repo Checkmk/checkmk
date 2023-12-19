@@ -28,6 +28,11 @@ class AttemptOutcomeOtherError(BaseModel, frozen=True):
     OtherError: str
 
 
+class AttemptReport(BaseModel, frozen=True):
+    index: int
+    outcome: AttemptOutcome | AttemptOutcomeOtherError
+
+
 def _parse_xml(xml_value: str) -> Rebot:
     return Rebot.model_validate(xmltodict.parse(xml_value))
 
@@ -72,7 +77,7 @@ class AttemptsConfig(BaseModel, frozen=True):
 class SuiteExecutionReport(BaseModel, frozen=True):
     suite_id: str
     timestamp: str
-    attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
+    attempts: Sequence[AttemptReport]
     rebot: RebotOutcomeResult | RebotOutcomeError | None
     config: AttemptsConfig
 
@@ -85,7 +90,7 @@ class SuiteRebotReport:
 
 @dataclass(frozen=True, kw_only=True)
 class SuiteReport:
-    attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
+    attempts: Sequence[AttemptReport]
     config: AttemptsConfig
     rebot: SuiteRebotReport | RebotOutcomeError | None
 

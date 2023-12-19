@@ -11,7 +11,7 @@ from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, StatusV7
 from cmk.plugins.lib.robotmk_suite_and_test_checking import message_if_rebot_is_too_old
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
-    AttemptOutcomeOtherError,
+    AttemptReport,
     AttemptsConfig,
     RebotOutcomeError,
     Section,
@@ -53,10 +53,7 @@ def _check_suite_execution_report(
         now=now,
     )
 
-    yield from chain.from_iterable(
-        _check_attempt(attempt_number, attempt)
-        for attempt_number, attempt in enumerate(report.attempts, start=1)
-    )
+    yield from chain.from_iterable(_check_attempt_report(attempt) for attempt in report.attempts)
 
 
 def _check_rebot(
@@ -123,31 +120,28 @@ def _check_runtime(
     )
 
 
-def _check_attempt(
-    attempt_number: int,
-    attempt_outcome: AttemptOutcome | AttemptOutcomeOtherError,
-) -> CheckResult:
-    if isinstance(attempt_outcome, AttemptOutcome):
+def _check_attempt_report(report: AttemptReport) -> CheckResult:
+    if isinstance(attempt_outcome := report.outcome, AttemptOutcome):
         match attempt_outcome:
             case AttemptOutcome.RobotFrameworkFailure:
                 yield Result(
                     state=State.WARN,
-                    summary=f"Attempt {attempt_number}: Robot Framework failure",
+                    summary=f"Attempt {report.index}: Robot Framework failure",
                 )
             case AttemptOutcome.EnvironmentFailure:
                 yield Result(
                     state=State.WARN,
-                    summary=f"Attempt {attempt_number}: Environment failure",
+                    summary=f"Attempt {report.index}: Environment failure",
                 )
             case AttemptOutcome.TimedOut:
                 yield Result(
                     state=State.WARN,
-                    summary=f"Attempt {attempt_number}: Timeout",
+                    summary=f"Attempt {report.index}: Timeout",
                 )
     else:
         yield Result(
             state=State.WARN,
-            summary=f"Attempt {attempt_number}: Error, see service details",
+            summary=f"Attempt {report.index}: Error, see service details",
             details=attempt_outcome.OtherError,
         )
 

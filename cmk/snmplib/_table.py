@@ -205,7 +205,7 @@ def get_snmpwalk(
                 context=context,
             )
         except SNMPContextTimeout:
-            if not backend.config.snmpv3_contexts_skip_on_timeout:
+            if context_config.timeout_policy == "stop":
                 raise
 
             console.vverbose(f"Timeout for SNMP context {context}.  Skipping for now.")

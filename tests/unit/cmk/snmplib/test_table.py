@@ -26,6 +26,7 @@ from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,
     SNMPBackendEnum,
+    SNMPContextConfig,
     SNMPContextTimeout,
     SNMPHostConfig,
     SNMPTable,
@@ -48,7 +49,6 @@ SNMPConfig = SNMPHostConfig(
     timing={},
     oid_range_limits={},
     snmpv3_contexts=[],
-    snmpv3_contexts_skip_on_timeout=False,
     character_encoding="ascii",
     snmp_backend=SNMPBackendEnum.CLASSIC,
 )
@@ -178,7 +178,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE
 
 
-def test_walk_passes_on_timeout_with_snmpv3_context_skip_on_timeout() -> None:
+def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:
     class Backend(SNMPBackend):
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
@@ -186,15 +186,25 @@ def test_walk_passes_on_timeout_with_snmpv3_context_skip_on_timeout() -> None:
         def walk(self, /, *args: object, **kw: object) -> NoReturn:
             raise SNMPContextTimeout
 
+    section_name = SectionName("section")
     with pytest.raises(MKSNMPError) as excinfo:
         _snmp_table.get_snmpwalk(
-            None,
+            section_name,
             ".1.2.3",
             ".4.5.6",
             walk_cache={},
             save_walk_cache=False,
             backend=Backend(
-                SNMPConfig._replace(snmpv3_contexts_skip_on_timeout=True),
+                SNMPConfig._replace(
+                    credentials=(),  # for `is_snmpv3_host`
+                    snmpv3_contexts=[
+                        SNMPContextConfig(
+                            section=section_name,
+                            contexts=[""],
+                            timeout_policy="continue",
+                        )
+                    ],
+                ),
                 logging.getLogger("test"),
             ),
         )
@@ -203,7 +213,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_skip_on_timeout() -> None:
     assert type(excinfo.value) is not SNMPContextTimeout
 
 
-def test_walk_raises_on_timeout_without_snmpv3_context_skip_on_timeout() -> None:
+def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None:
     class Backend(SNMPBackend):
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
@@ -211,15 +221,25 @@ def test_walk_raises_on_timeout_without_snmpv3_context_skip_on_timeout() -> None
         def walk(self, /, *args: object, **kw: object) -> NoReturn:
             raise SNMPContextTimeout
 
+    section_name = SectionName("section")
     with pytest.raises(MKSNMPError) as excinfo:
         _snmp_table.get_snmpwalk(
-            None,
+            section_name,
             ".1.2.3",
             ".4.5.6",
             walk_cache={},
             save_walk_cache=False,
             backend=Backend(
-                SNMPConfig._replace(snmpv3_contexts_skip_on_timeout=False),
+                SNMPConfig._replace(
+                    credentials=(),  # for `is_snmpv3_host`
+                    snmpv3_contexts=[
+                        SNMPContextConfig(
+                            section=section_name,
+                            contexts=[""],
+                            timeout_policy="stop",
+                        )
+                    ],
+                ),
                 logging.getLogger("test"),
             ),
         )

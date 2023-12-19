@@ -2132,8 +2132,6 @@ class ConfigCache:
                         host_name, snmpv3_contexts
                     )
                 ],
-                # TODO: see CMK-14501 and CMK-14504
-                snmpv3_contexts_skip_on_timeout=True,
                 character_encoding=self._snmp_character_encoding(host_name),
                 snmp_backend=self.get_snmp_backend(host_name),
             ),

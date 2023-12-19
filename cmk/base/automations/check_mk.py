@@ -2083,7 +2083,6 @@ class AutomationDiagHost(Automation):
             },
             oid_range_limits=snmp_config.oid_range_limits,
             snmpv3_contexts=snmp_config.snmpv3_contexts,
-            snmpv3_contexts_skip_on_timeout=snmp_config.snmpv3_contexts_skip_on_timeout,
             character_encoding=snmp_config.character_encoding,
             snmp_backend=snmp_config.snmp_backend,
         )

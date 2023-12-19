@@ -160,15 +160,15 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     std::vector<std::string> argv_s{
         "rrdtool xport",  // name of program (ignored)
         "-s",
-        std::to_string(_args.start_time),
+        std::to_string(args_.start_time),
         "-e",
-        std::to_string(_args.end_time),
+        std::to_string(args_.end_time),
         "--step",
-        std::to_string(_args.resolution)};
+        std::to_string(args_.resolution)};
 
-    if (_args.max_entries > 0) {
+    if (args_.max_entries > 0) {
         argv_s.emplace_back("-m");
-        argv_s.emplace_back(std::to_string(_args.max_entries));
+        argv_s.emplace_back(std::to_string(args_.max_entries));
     }
 
     // We have an RPN like fs_used,1024,*. In order for that to work, we need to
@@ -180,7 +180,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     // faster) way is to look for the names of variables within our RPN
     // expressions and create DEFs just for them - if the according RRD exists.
     std::string converted_rpn;  // convert foo.max -> foo-max
-    std::string_view rpn{_args.rpn};
+    std::string_view rpn{args_.rpn};
     auto next = [&rpn]() {
         auto token = rpn.substr(0, rpn.find(','));
         rpn.remove_prefix(std::min(rpn.size(), token.size() + 1));
@@ -212,7 +212,7 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
         // by '_' here.
         auto [var, cf] = getVarAndCF(token);
         auto location =
-            _mc->metricLocation(host_name, service_description, var);
+            core_->metricLocation(host_name, service_description, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');
@@ -248,9 +248,9 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     // RRDTool on the issue
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
-    auto *logger = _mc->loggerRRD();
-    const auto rrdcached_socket = _mc->paths()->rrdcached_socket();
-    if (_mc->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
+    auto *logger = core_->loggerRRD();
+    const auto rrdcached_socket = core_->paths()->rrdcached_socket();
+    if (core_->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
         !touched_rrds.empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)

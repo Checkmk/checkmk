@@ -34,8 +34,8 @@ public:
     using C = std::chrono::system_clock;
     using value_type = std::variant<C::time_point, unsigned long, double>;
 
-    RRDDataMaker(ICore *mc, RRDColumnArgs args)
-        : _mc{mc}, _args{std::move(args)} {}
+    RRDDataMaker(const ICore &core, RRDColumnArgs args)
+        : core_{&core}, args_{std::move(args)} {}
 
     std::vector<value_type> operator()(
         const IHost &hst, std::chrono::seconds timezone_offset) const;
@@ -43,8 +43,8 @@ public:
         const IService &svc, std::chrono::seconds timezone_offset) const;
 
 private:
-    ICore *_mc;
-    const RRDColumnArgs _args;
+    const ICore *core_;
+    RRDColumnArgs args_;
 
     [[nodiscard]] std::vector<value_type> make(
         const std::string &host_name, const std::string &service_description,

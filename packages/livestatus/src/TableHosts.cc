@@ -551,7 +551,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                                 ListColumn<IHost, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        mc, offsets));
+        *mc, offsets));
 
     table->addColumn(std::make_unique<IntColumn<IHost>>(
         prefix + "num_services", "The total number of services of the host",

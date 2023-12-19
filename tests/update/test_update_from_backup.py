@@ -175,10 +175,8 @@ def test_update_from_backup_demo(
     base_hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
     base_services = {}
-    base_ok_services = {}
     for hostname in base_hostnames:
         base_services[hostname] = base_site.get_host_services(hostname)
-        base_ok_services[hostname] = get_services_with_status(base_services[hostname], 0)
 
         assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
 

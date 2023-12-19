@@ -1,8 +1,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-#
-CHECK_MK_RAW_PRECOMPILED_WERKS := $(REPO_PATH)/.werks/werks
 
 CHECK_MK_ANNOUNCE_VERSION=$(VERSION)-$(shell git rev-parse --short=12 HEAD)
 CHECK_MK_ANNOUNCE_TAR_FILE := announce-$(CHECK_MK_ANNOUNCE_VERSION).tar.gz

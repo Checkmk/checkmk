@@ -92,11 +92,11 @@ $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
 ifeq ($(ENTERPRISE),yes)
-$(REPO_PATH)/agents/plugins/cmk-update-agent:
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
-
-$(REPO_PATH)/agents/plugins/cmk-update-agent-32:
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
+$(SOURCE_BUILT_AGENT_UPDATER):
+	@echo "ERROR: Should have already been built by artifact providing jobs"
+	@echo "If you don't need the artifacts, you can use "
+	@echo "'scripts/fake-windows-artifacts' to continue with stub files"
+	@exit 1
 endif
 
 $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
@@ -183,6 +183,7 @@ setversion:
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
+	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk_update_agent.py
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' omd/packages/enterprise/bin/cmcdump
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion

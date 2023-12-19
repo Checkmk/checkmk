@@ -86,7 +86,6 @@ def test_registered_pages() -> None:
         "download_agent_output",
         "download_crash_report",
         "download_diagnostics_dump",
-        "download_robotmk_report",
         "edit_bookmark_list",
         "edit_dashboard",
         "edit_dashboards",
@@ -112,8 +111,6 @@ def test_registered_pages() -> None:
         "message",
         "prediction_graph",
         "parent_child_topology",
-        "robotmk",
-        "robotmk_report",
         "search_open",
         "set_all_sites",
         "side",
@@ -230,6 +227,9 @@ def test_registered_pages() -> None:
             "noauth:cognito_sso",
             "noauth:cognito_callback",
             "cognito_logout",
+            "robotmk_suite_log",
+            "robotmk_suite_report",
+            "download_robotmk_suite_report",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

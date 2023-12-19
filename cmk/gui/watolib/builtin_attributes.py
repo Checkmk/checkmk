@@ -994,6 +994,7 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             gui_fields.IPMIParameters,
             description="IPMI credentials",
             required=False,
+            allow_none=True,
         )
 
 

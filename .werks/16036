@@ -1,0 +1,13 @@
+Title: host_config: 500 status code with no explicit IPMI credentials configured
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1702993286
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+When calling the <code>host_config/collections/all</code> endpoint with IPMI credentials activated and set
+to <code>No explicit credentials</code> the endpoint returns a status 500 (Internal Server Error).
+
+Now the information is correctly returned.

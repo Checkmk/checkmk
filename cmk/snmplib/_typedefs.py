@@ -8,6 +8,7 @@ import copy
 import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, Protocol, Self
 
 from cmk.utils.exceptions import MKSNMPError
@@ -72,6 +73,13 @@ def ensure_str(value: str | bytes, *, encoding: str | None) -> str:
         return value.decode("latin1")
 
 
+@dataclass(frozen=True, kw_only=True)
+class SNMPContextConfig:
+    section: SectionName | None
+    contexts: Sequence[SNMPContext]
+    timeout_policy: Literal["stop", "continue"]
+
+
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(NamedTuple):
     is_ipv6_primary: bool
@@ -84,13 +92,7 @@ class SNMPHostConfig(NamedTuple):
     bulk_walk_size_of: int
     timing: SNMPTiming
     oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
-    snmpv3_contexts: Sequence[
-        tuple[
-            SectionName | None,
-            Sequence[SNMPContext],
-            Literal["continue_on_timeout", "stop_on_timeout"],
-        ]
-    ]
+    snmpv3_contexts: Sequence[SNMPContextConfig]
     snmpv3_contexts_skip_on_timeout: bool
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
@@ -105,9 +107,9 @@ class SNMPHostConfig(NamedTuple):
     ) -> Sequence[SNMPContext]:
         if not section_name or not self.is_snmpv3_host:
             return [""]
-        for sn, contexts, _error_handling in self.snmpv3_contexts:
-            if sn is None or sn == section_name:
-                return contexts
+        for ctx in self.snmpv3_contexts:
+            if ctx.section is None or ctx.section == section_name:
+                return ctx.contexts
         return [""]
 
     def serialize(self) -> Mapping[str, object]:

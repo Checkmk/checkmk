@@ -89,6 +89,7 @@ from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.snmplib import (  # these are required in the modules' namespace to load the configuration!
     SNMPBackendEnum,
+    SNMPContextConfig,
     SNMPCredentials,
     SNMPHostConfig,
     SNMPTiming,
@@ -2079,6 +2080,17 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             return self.__snmp_config[(host_name, ip_address, source_type)]
 
+        def _timeout_policy(
+            policy: Literal["stop_on_timeout", "continue_on_timeout"]
+        ) -> Literal["stop", "continue"]:
+            match policy:
+                case "stop_on_timeout":
+                    return "stop"
+                case "continue_on_timeout":
+                    return "continue"
+                case _:
+                    assert_never(policy)
+
         return self.__snmp_config.setdefault(
             (host_name, ip_address, source_type),
             SNMPHostConfig(
@@ -2111,8 +2123,12 @@ class ConfigCache:
                     )
                 },
                 snmpv3_contexts=[
-                    (SectionName(name) if name is not None else None, contexts, error_handling)
-                    for name, contexts, error_handling in self.ruleset_matcher.get_host_values(
+                    SNMPContextConfig(
+                        section=SectionName(name) if name is not None else None,
+                        contexts=contexts,
+                        timeout_policy=_timeout_policy(timeout_policy),
+                    )
+                    for name, contexts, timeout_policy in self.ruleset_matcher.get_host_values(
                         host_name, snmpv3_contexts
                     )
                 ],

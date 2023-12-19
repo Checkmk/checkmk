@@ -141,7 +141,7 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableServiceGroups::answerQuery(Query &query, const User &user,
-                                     ICore &core) {
+                                     const ICore &core) {
     auto process = [&](const IServiceGroup &group) {
         return !user.is_authorized_for_service_group(group) ||
                query.processDataset(Row{&group});

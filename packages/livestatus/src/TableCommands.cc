@@ -34,7 +34,7 @@ void TableCommands::addColumns(Table *table, const std::string &prefix,
 }
 
 void TableCommands::answerQuery(Query &query, const User & /*user*/,
-                                ICore &core) {
+                                const ICore &core) {
     for (auto &cmd : core.commands()) {
         if (!query.processDataset(Row{&cmd})) {
             break;

@@ -172,7 +172,8 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
         "The total number of services with the state UNKNOWN of hosts in this group",
         offsets, HostListState{HostListState::Type::num_svc_hard_unknown}));
 }
-void TableHostGroups::answerQuery(Query &query, const User &user, ICore &core) {
+void TableHostGroups::answerQuery(Query &query, const User &user,
+                                  const ICore &core) {
     auto process = [&](const IHostGroup &hg) {
         return !user.is_authorized_for_host_group(hg) ||
                query.processDataset(Row{&hg});

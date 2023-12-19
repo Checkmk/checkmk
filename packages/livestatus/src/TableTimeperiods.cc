@@ -67,7 +67,7 @@ std::string TableTimeperiods::name() const { return "timeperiods"; }
 std::string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query &query, const User & /*user*/,
-                                   ICore &core) {
+                                   const ICore &core) {
     core.all_of_timeperiods([&query](const ITimeperiod &r) {
         return query.processDataset(Row{&r});
     });

@@ -744,7 +744,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [](const IHost &r) { return r.previous_hard_state(); }));
 }
 
-void TableHosts::answerQuery(Query &query, const User &user, ICore &core) {
+void TableHosts::answerQuery(Query &query, const User &user,
+                             const ICore &core) {
     auto process = [&](const IHost &hst) {
         return !user.is_authorized_for_host(hst) ||
                query.processDataset(Row{&hst});

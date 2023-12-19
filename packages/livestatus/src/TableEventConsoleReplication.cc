@@ -30,6 +30,6 @@ std::string TableEventConsoleReplication::namePrefix() const {
 
 void TableEventConsoleReplication::answerQuery(Query &query,
                                                const User & /*user*/,
-                                               ICore & /*core*/) {
+                                               const ICore & /*core*/) {
     query.processDataset(Row{this});
 }

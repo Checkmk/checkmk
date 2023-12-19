@@ -42,7 +42,7 @@ void TableColumns::addTable(const Table &table) {
 }
 
 void TableColumns::answerQuery(Query &query, const User & /*user*/,
-                               ICore & /*core*/) {
+                               const ICore & /*core*/) {
     for (const auto &[name, table] : tables_) {
         table->any_column(
             [&](const auto &c) { return !query.processDataset(Row{c.get()}); });

@@ -43,11 +43,11 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(ICore *mc, const Table &table, Query &query,
+    ECTableConnection(const ICore &mc, const Table &table, Query &query,
                       std::function<bool(const ECRow &)> is_authorized)
-        : EventConsoleConnection(mc->loggerLivestatus(),
-                                 mc->paths()->event_console_status_socket())
-        , mc_{mc}
+        : EventConsoleConnection{mc.loggerLivestatus(),
+                                 mc.paths()->event_console_status_socket()}
+        , mc_{&mc}
         , table_{&table}
         , query_{&query}
         , is_authorized_{std::move(is_authorized)} {}
@@ -181,14 +181,14 @@ private:
         }
     }
 
-    ICore *mc_;
+    const ICore *mc_;
     const Table *table_;
     Query *query_;
     std::function<bool(const ECRow &)> is_authorized_;
 };
 }  // namespace
 
-ECRow::ECRow(ICore *mc, const std::vector<std::string> &headers,
+ECRow::ECRow(const ICore *mc, const std::vector<std::string> &headers,
              const std::vector<std::string> &columns) {
     auto column_it = columns.cbegin();
     for (const auto &header : headers) {
@@ -288,10 +288,10 @@ std::function<bool(const ECRow &)> get_authorizer(const Table &table,
 }  // namespace
 
 void TableEventConsole::answerQuery(Query &query, const User &user,
-                                    ICore &core) {
+                                    const ICore &core) {
     if (core.mkeventdEnabled()) {
         try {
-            ECTableConnection{&core, *this, query, get_authorizer(*this, user)}
+            ECTableConnection{core, *this, query, get_authorizer(*this, user)}
                 .run();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());

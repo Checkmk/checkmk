@@ -1,0 +1,18 @@
+Title: solaris: uptime: Cannot render negative timespan
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1702991355
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+Solaris server may keep a bad time when moved to different hardware.
+This is corrected some minutes after booting via NTP server.
+
+If the checkmk client is used before the time has been corrected, it was
+possible that a negative time span was reported for the time since the last
+start. This caused a crash in the check.
+
+The new behaviour is, that the check will report an UNKNOWN status alongside the
+message: "Your Solaris system reported to be booted in the future."

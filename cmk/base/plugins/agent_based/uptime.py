@@ -97,6 +97,12 @@ def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type: ignor
             + uptimes_summary
         )
 
+    if uptime_sec is not None and uptime_sec < 0:
+        return uptime.Section(
+            uptime_sec=None,
+            message="Your Solaris system reported to be booted in the future.",
+        )
+
     return uptime.Section(
         uptime_sec,
         message,

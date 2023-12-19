@@ -2072,21 +2072,3 @@ perfometer_info.append(
         "total": 100.0,
     },
 )
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "robotmk_suite_runtime",
-        "half_value": 3600,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "robotmk_test_runtime",
-        "half_value": 1800,
-        "exponent": 2,
-    }
-)

@@ -922,6 +922,23 @@ def test_openapi_host_config_effective_attributes_schema_regression(
     )
 
 
+def test_openapi_host_config_ipmi_credentials_empty(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "management_ipmi_credentials": None,
+            "management_snmp_community": None,
+        },
+    ).assert_status_code(200)
+    resp = clients.HostConfig.get("heute")
+    resp.assert_status_code(200)
+    assert resp.json["extensions"]["attributes"]["management_ipmi_credentials"] is None
+    assert resp.json["extensions"]["attributes"]["management_snmp_community"] is None
+
+
 @managedtest
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:

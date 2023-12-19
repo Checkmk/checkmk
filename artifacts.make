@@ -30,8 +30,8 @@ SOURCE_BUILT_LINUX_AGENTS := \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl.gz
 ifeq ($(ENTERPRISE),yes)
 SOURCE_BUILT_AGENT_UPDATER := \
-	$(REPO_PATH)/agents/plugins/cmk-update-agent \
-	$(REPO_PATH)/agents/plugins/cmk-update-agent-32
+	$(REPO_PATH)/enterprise/agents/plugins/cmk-update-agent \
+	$(REPO_PATH)/enterprise/agents/plugins/cmk-update-agent-32
 else
 SOURCE_BUILT_AGENT_UPDATER :=
 endif

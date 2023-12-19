@@ -6,8 +6,8 @@ mssql:
     sections:
       always: 
         - "instance"
-        - "backup"
       cached:
+        - "backup"
       disabled: 
       - "counters"
     discovery:
@@ -20,8 +20,8 @@ mssql:
       sections:
         always: 
         - "instance"
-        - "databases"
         cached:
+        - "databases"
       discovery:
         detect: yes
         include: [ "SQLEXPRESS_NAME"]

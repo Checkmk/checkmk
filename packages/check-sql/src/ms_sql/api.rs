@@ -48,7 +48,7 @@ pub struct SqlInstanceBuilder {
     dynamic_port: Option<u16>,
     endpoint: Option<Endpoint>,
     computer_name: Option<String>,
-    temp_dir: Option<PathBuf>,
+    environment: Option<Env>,
     hash: Option<String>,
 }
 
@@ -101,8 +101,8 @@ impl SqlInstanceBuilder {
         self
     }
 
-    pub fn temp_dir(mut self, temp_dir: &Option<&Path>) -> Self {
-        self.temp_dir = temp_dir.map(|s| s.into());
+    pub fn environment(mut self, environment: &Env) -> Self {
+        self.environment = environment.clone().into();
         self
     }
     pub fn hash<S: Into<String>>(mut self, hash: S) -> Self {
@@ -147,7 +147,7 @@ impl SqlInstanceBuilder {
             available: None,
             endpoint: self.endpoint.unwrap_or_default(),
             computer_name: self.computer_name,
-            temp_dir: self.temp_dir.unwrap_or_default(),
+            environment: self.environment.unwrap_or_default(),
             hash: self.hash.unwrap_or_default(),
         }
     }
@@ -166,7 +166,7 @@ pub struct SqlInstance {
     pub available: Option<bool>,
     endpoint: Endpoint,
     computer_name: Option<String>,
-    temp_dir: PathBuf,
+    environment: Env,
     hash: String,
 }
 
@@ -193,8 +193,8 @@ impl SqlInstance {
         &self.hash
     }
 
-    pub fn temp_dir(&self) -> &Path {
-        &self.temp_dir
+    pub fn temp_dir(&self) -> Option<&Path> {
+        self.environment.temp_dir()
     }
 
     pub fn hostname(&self) -> String {
@@ -367,14 +367,18 @@ impl SqlInstance {
         };
 
         if section.kind() == &SectionKind::Async {
-            self.store_section_body(section.name()).await;
+            self.store_section_body(section.name(), &body).await;
         };
 
         body
     }
 
-    async fn store_section_body(&self, name: &str) {
-        let _file_name = format!("{}-{}-{}-{}", self.hostname(), self.name, self.hash(), name);
+    async fn store_section_body(&self, name: &str, body: &str) {
+        if let Some(dir) = self.environment.obtain_cache_sub_dir(self.hash()) {
+            let file_name = format!("{};{};{}.mssql", self.hostname(), self.name, name);
+            std::fs::write(dir.join(file_name), body)
+                .unwrap_or_else(|e| log::error!("Error {e} writing cache"));
+        }
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
@@ -1151,10 +1155,17 @@ impl<'a> Column<'a> for Row {
     }
 }
 
+fn touch_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
+    std::fs::File::create(path.as_ref().join(".touch"))?;
+    std::fs::remove_file(path.as_ref().join(".touch"))?;
+    Ok(path.as_ref().to_path_buf())
+}
+
 impl CheckConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
-            CheckConfig::create_cache_dir(environment, ms_sql);
+            CheckConfig::prepare_cache_sub_dir(environment, ms_sql.hash());
+            log::info!("Generating main data");
             let dumb_header = Self::generate_dumb_header(ms_sql);
             let data = generate_data(ms_sql, environment)
                 .await
@@ -1164,6 +1175,8 @@ impl CheckConfig {
                 });
             let mut output: Vec<String> = Vec::new();
             for config in ms_sql.configs() {
+                log::info!("Generating configs data");
+                CheckConfig::prepare_cache_sub_dir(environment, config.hash());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
@@ -1188,20 +1201,11 @@ impl CheckConfig {
             .join("")
     }
 
-    fn create_cache_dir(environment: &Env, ms_sql: &config::ms_sql::Config) {
-        if let Some(cache_dir) = environment.cache_dir().map(|d| d.join(ms_sql.hash())) {
-            if cache_dir.is_dir() {
-                log::info!("Cache dir exists");
-            } else if cache_dir.exists() {
-                log::error!("Cache dir exists but isn't usable(not a directory)");
-            } else {
-                log::info!("Cache dir to be created");
-                std::fs::create_dir_all(&cache_dir).unwrap_or_else(|e| {
-                    log::error!("Failed to create root cache dir: {e}");
-                });
-            }
-        } else {
-            log::error!("Cache dir exists but is not usable");
+    fn prepare_cache_sub_dir(environment: &Env, hash: &str) {
+        match environment.obtain_cache_sub_dir(hash).map(touch_dir) {
+            Some(Err(e)) => log::error!("Error touching dir: {e}, caching may be not possible"),
+            Some(Ok(p)) => log::info!("Using cache dir {p:?}"),
+            None => log::warn!("No cache dir defined, caching is not possible"),
         }
     }
 }
@@ -1218,11 +1222,7 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
 
     let instances = builders
         .into_iter()
-        .map(|b: SqlInstanceBuilder| {
-            b.temp_dir(&environment.temp_dir())
-                .hash(ms_sql.hash())
-                .build()
-        })
+        .map(|b: SqlInstanceBuilder| b.environment(environment).hash(ms_sql.hash()).build())
         .collect::<Vec<SqlInstance>>();
 
     let sections = section::get_work_sections(ms_sql);

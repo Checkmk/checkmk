@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import perfometer
+from cmk.graphing.v1 import perfometers
 
-perfometer_active_connections = perfometer.Perfometer(
+perfometer_active_connections = perfometers.Perfometer(
     name="active_connections",
-    focus_range=perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(565)),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(565)),
     segments=["active_connections"],
 )

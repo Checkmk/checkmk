@@ -6,30 +6,30 @@
 import cmk.utils.debug
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import graph, metric, perfometer, translation
+from cmk.graphing.v1 import graphs, metrics, perfometers, translation
 
 
 def load_graphing_plugins() -> (
     DiscoveredPlugins[
-        metric.Metric
+        metrics.Metric
         | translation.Translation
-        | perfometer.Perfometer
-        | perfometer.Bidirectional
-        | perfometer.Stacked
-        | graph.Graph
-        | graph.Bidirectional
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
     ]
 ):
     return discover_plugins(
         PluginGroup.GRAPHING,
         {
-            metric.Metric: "metric_",
+            metrics.Metric: "metric_",
             translation.Translation: "translation_",
-            perfometer.Perfometer: "perfometer_",
-            perfometer.Bidirectional: "perfometer_",
-            perfometer.Stacked: "perfometer_",
-            graph.Graph: "graph_",
-            graph.Bidirectional: "graph_",
+            perfometers.Perfometer: "perfometer_",
+            perfometers.Bidirectional: "perfometer_",
+            perfometers.Stacked: "perfometer_",
+            graphs.Graph: "graph_",
+            graphs.Bidirectional: "graph_",
         },
         raise_errors=cmk.utils.debug.enabled(),
     )

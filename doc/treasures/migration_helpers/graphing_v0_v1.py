@@ -49,10 +49,10 @@ from cmk.gui.utils.speaklater import LazyString  # pylint: disable=cmk-module-la
 
 from cmk.graphing.v1 import (
     Color,
-    graph,
+    graphs,
     Localizable,
-    metric,
-    perfometer,
+    metrics,
+    perfometers,
     PhysicalUnit,
     ScientificUnit,
     translation,
@@ -191,12 +191,12 @@ class _Distance:
         )
 
 
-def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metric.Metric:
+def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metrics.Metric:
     if (legacy_color := info["color"]).startswith("#"):
         rgb = _rgb_from_hexstr(legacy_color)
     else:
         rgb = _rgb_from_legacy_wheel(legacy_color)
-    return metric.Metric(
+    return metrics.Metric(
         name=name,
         title=Localizable(str(info["title"])),
         unit=_parse_legacy_unit(info["unit"]),
@@ -209,7 +209,7 @@ def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metric.Metric:
 
 def _parse_legacy_metric_infos(
     debug: bool, unparseables: list[Unparseable], metric_info: Mapping[str, MetricInfo]
-) -> Iterator[metric.Metric]:
+) -> Iterator[metrics.Metric]:
     for name, info in metric_info.items():
         try:
             yield _parse_legacy_metric_info(name, info)
@@ -310,38 +310,38 @@ def _drop_consolidation_func_name(expression: str) -> str:
 
 def _parse_scalar_name(
     scalar_name: str, metric_name: str
-) -> metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf:
+) -> metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf:
     match scalar_name:
         case "warn":
-            return metric.WarningOf(metric_name)
+            return metrics.WarningOf(metric_name)
         case "crit":
-            return metric.CriticalOf(metric_name)
+            return metrics.CriticalOf(metric_name)
         case "min":
-            return metric.MinimumOf(metric_name, color=Color.GRAY)
+            return metrics.MinimumOf(metric_name, color=Color.GRAY)
         case "max":
-            return metric.MaximumOf(metric_name, color=Color.GRAY)
+            return metrics.MaximumOf(metric_name, color=Color.GRAY)
     raise ValueError(scalar_name)
 
 
 def _make_percent(
     percent_value: (
-        str | metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf
+        str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
     ),
     metric_name: str,
     explicit_title: str,
     explicit_color: Color,
-) -> metric.Fraction:
-    return metric.Fraction(
+) -> metrics.Fraction:
+    return metrics.Fraction(
         Localizable(explicit_title),
         Unit.PERCENTAGE,
         explicit_color,
-        dividend=metric.Product(
+        dividend=metrics.Product(
             # Title, unit, color have no impact
             Localizable(""),
             Unit.NUMBER,
             Color.GRAY,
             [
-                metric.Constant(
+                metrics.Constant(
                     # Title, unit, color have no impact
                     Localizable(""),
                     Unit.NUMBER,
@@ -351,7 +351,7 @@ def _make_percent(
                 percent_value,
             ],
         ),
-        divisor=metric.MaximumOf(
+        divisor=metrics.MaximumOf(
             # Color has no impact
             metric_name,
             color=Color.GRAY,
@@ -363,15 +363,15 @@ def _parse_single_expression(
     expression: str, explicit_title: str, explicit_color: Color
 ) -> (
     str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
 ):
     expression = _drop_consolidation_func_name(expression)
     if percent := expression.endswith("(%)"):
@@ -398,15 +398,15 @@ def _parse_single_expression(
 def _resolve_stack(
     stack: Sequence[
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
         | _Operators
     ],
     explicit_title: str,
@@ -414,41 +414,41 @@ def _resolve_stack(
     explicit_color: Color,
 ) -> (
     str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
 ):
     resolved: list[
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ] = []
     for element in stack:
         if (isinstance(element, str) and element not in ("+", "*", "-", "/")) or isinstance(
             element,
             (
-                metric.Constant,
-                metric.WarningOf,
-                metric.CriticalOf,
-                metric.MinimumOf,
-                metric.MaximumOf,
-                metric.Sum,
-                metric.Product,
-                metric.Difference,
-                metric.Fraction,
+                metrics.Constant,
+                metrics.WarningOf,
+                metrics.CriticalOf,
+                metrics.MinimumOf,
+                metrics.MaximumOf,
+                metrics.Sum,
+                metrics.Product,
+                metrics.Difference,
+                metrics.Fraction,
             ),
         ):
             resolved.append(element)
@@ -460,7 +460,7 @@ def _resolve_stack(
         match element:
             case "+":
                 resolved.append(
-                    metric.Sum(
+                    metrics.Sum(
                         Localizable(explicit_title),
                         explicit_color,
                         [left, right],
@@ -468,7 +468,7 @@ def _resolve_stack(
                 )
             case "*":
                 resolved.append(
-                    metric.Product(
+                    metrics.Product(
                         Localizable(explicit_title),
                         _parse_legacy_unit(explicit_unit_name),
                         explicit_color,
@@ -477,7 +477,7 @@ def _resolve_stack(
                 )
             case "-":
                 resolved.append(
-                    metric.Difference(
+                    metrics.Difference(
                         Localizable(explicit_title),
                         explicit_color,
                         minuend=left,
@@ -487,18 +487,18 @@ def _resolve_stack(
             case "/":
                 # Handle zero division by always adding a tiny bit to the divisor
                 resolved.append(
-                    metric.Fraction(
+                    metrics.Fraction(
                         Localizable(explicit_title),
                         _parse_legacy_unit(explicit_unit_name),
                         explicit_color,
                         dividend=left,
-                        divisor=metric.Sum(
+                        divisor=metrics.Sum(
                             # Title, color have no impact
                             Localizable(""),
                             Color.GRAY,
                             [
                                 right,
-                                metric.Constant(
+                                metrics.Constant(
                                     # Title, unit, color have no impact
                                     Localizable(""),
                                     Unit.NUMBER,
@@ -517,15 +517,15 @@ def _parse_expression(
     expression: str, explicit_title: str
 ) -> (
     str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
 ):
     if "#" in expression:
         expression, explicit_hexstr_color = expression.rsplit("#", 1)
@@ -546,15 +546,15 @@ def _parse_expression(
     stack: list[
         _Operators
         | str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ] = []
     for word in expression.split(","):
         match word:
@@ -577,32 +577,32 @@ def _parse_expression(
 def _raw_metric_names(
     quantity: (
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ),
 ) -> Iterator[str]:
     match quantity:
         case str():
             yield quantity
-        case metric.WarningOf() | metric.CriticalOf() | metric.MinimumOf() | metric.MaximumOf():
+        case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
             yield quantity.name
-        case metric.Sum():
+        case metrics.Sum():
             for s in quantity.summands:
                 yield from _raw_metric_names(s)
-        case metric.Product():
+        case metrics.Product():
             for f in quantity.factors:
                 yield from _raw_metric_names(f)
-        case metric.Difference():
+        case metrics.Difference():
             yield from _raw_metric_names(quantity.minuend)
             yield from _raw_metric_names(quantity.subtrahend)
-        case metric.Fraction():
+        case metrics.Fraction():
             yield from _raw_metric_names(quantity.dividend)
             yield from _raw_metric_names(quantity.divisor)
 
@@ -610,15 +610,15 @@ def _raw_metric_names(
 def _perfometer_name(
     segments: Sequence[
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ],
 ) -> str:
     return "_".join([n for s in segments for n in _raw_metric_names(s)])
@@ -626,7 +626,7 @@ def _perfometer_name(
 
 def _parse_legacy_linear_perfometer(
     legacy_linear_perfometer: _LinearPerfometerSpec,
-) -> perfometer.Perfometer:
+) -> perfometers.Perfometer:
     if "condition" in legacy_linear_perfometer:
         # Note: there are perfometers with 'condition' which exclude each other.
         # We have to migrate them manually.
@@ -637,11 +637,11 @@ def _parse_legacy_linear_perfometer(
 
     legacy_total = legacy_linear_perfometer["total"]
     segments = [_parse_expression(s, "") for s in legacy_linear_perfometer["segments"]]
-    return perfometer.Perfometer(
+    return perfometers.Perfometer(
         name=_perfometer_name(segments),
-        focus_range=perfometer.FocusRange(
-            perfometer.Closed(0),
-            perfometer.Closed(
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Closed(
                 legacy_total
                 if isinstance(legacy_total, (int, float))
                 else _parse_expression(legacy_total, "")
@@ -657,13 +657,13 @@ def _compute_85_border(base: int | float, half_value: int | float) -> int:
 
 def _parse_legacy_logarithmic_perfometer(
     legacy_logarithmic_perfometer: LogarithmicPerfometerSpec,
-) -> perfometer.Perfometer:
+) -> perfometers.Perfometer:
     segments = [_parse_expression(legacy_logarithmic_perfometer["metric"], "")]
-    return perfometer.Perfometer(
+    return perfometers.Perfometer(
         name=_perfometer_name(segments),
-        focus_range=perfometer.FocusRange(
-            perfometer.Closed(0),
-            perfometer.Open(
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Open(
                 _compute_85_border(
                     legacy_logarithmic_perfometer["exponent"],
                     legacy_logarithmic_perfometer["half_value"],
@@ -676,7 +676,7 @@ def _parse_legacy_logarithmic_perfometer(
 
 def _parse_legacy_dual_perfometer(
     legacy_dual_perfometer: _DualPerfometerSpec,
-) -> perfometer.Bidirectional:
+) -> perfometers.Bidirectional:
     legacy_left, legacy_right = legacy_dual_perfometer["perfometers"]
 
     if legacy_left["type"] == "linear":
@@ -693,7 +693,7 @@ def _parse_legacy_dual_perfometer(
     else:
         raise ValueError(legacy_right)
 
-    return perfometer.Bidirectional(
+    return perfometers.Bidirectional(
         name=f"{left.name}_{right.name}",
         left=left,
         right=right,
@@ -702,7 +702,7 @@ def _parse_legacy_dual_perfometer(
 
 def _parse_legacy_stacked_perfometer(
     legacy_stacked_perfometer: _StackedPerfometerSpec,
-) -> perfometer.Stacked:
+) -> perfometers.Stacked:
     legacy_upper, legacy_lower = legacy_stacked_perfometer["perfometers"]
 
     if legacy_upper["type"] == "linear":
@@ -719,7 +719,7 @@ def _parse_legacy_stacked_perfometer(
     else:
         raise ValueError(legacy_lower)
 
-    return perfometer.Stacked(
+    return perfometers.Stacked(
         name=f"{lower.name}_{upper.name}",
         lower=lower,
         upper=upper,
@@ -730,7 +730,7 @@ def _parse_legacy_perfometer_infos(
     debug: bool,
     unparseables: list[Unparseable],
     perfometer_info: Sequence[PerfometerSpec],
-) -> Iterator[perfometer.Perfometer | perfometer.Bidirectional | perfometer.Stacked]:
+) -> Iterator[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]:
     for idx, info in enumerate(perfometer_info):
         try:
             if info["type"] == "linear":
@@ -752,15 +752,15 @@ def _parse_legacy_metric(
     legacy_metric: tuple[str, str] | tuple[str, str, str]
 ) -> (
     str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
 ):
     expression, _line_type, *rest = legacy_metric
     return _parse_expression(expression, str(rest[0]) if rest else "")
@@ -795,9 +795,9 @@ def _parse_legacy_metrics(
 
 def _parse_legacy_scalars(
     legacy_scalars: Sequence[str | tuple[str, str | LazyString]]
-) -> Sequence[str | metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf]:
+) -> Sequence[str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf]:
     quantities: list[
-        str | metric.WarningOf | metric.CriticalOf | metric.MinimumOf | metric.MaximumOf
+        str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
     ] = []
     for legacy_scalar in legacy_scalars:
         if isinstance(legacy_scalar, str):
@@ -812,10 +812,10 @@ def _parse_legacy_scalars(
             quantity,
             (
                 str,
-                metric.WarningOf,
-                metric.CriticalOf,
-                metric.MinimumOf,
-                metric.MaximumOf,
+                metrics.WarningOf,
+                metrics.CriticalOf,
+                metrics.MinimumOf,
+                metrics.MaximumOf,
             ),
         ):
             quantities.append(quantity)
@@ -827,12 +827,12 @@ def _parse_legacy_scalars(
 
 def _parse_legacy_range(
     legacy_range: tuple[str | int | float, str | int | float] | None
-) -> graph.MinimalRange | None:
+) -> graphs.MinimalRange | None:
     if legacy_range is None:
         return None
 
     legacy_lower, legacy_upper = legacy_range
-    return graph.MinimalRange(
+    return graphs.MinimalRange(
         lower=(
             legacy_lower
             if isinstance(legacy_lower, (int | float))
@@ -848,7 +848,7 @@ def _parse_legacy_range(
 
 def _parse_legacy_graph_info(
     name: str, info: RawGraphTemplate
-) -> tuple[graph.Graph | None, graph.Graph | None]:
+) -> tuple[graphs.Graph | None, graphs.Graph | None]:
     quantities = _parse_legacy_scalars(info.get("scalars", []))
 
     (
@@ -858,9 +858,9 @@ def _parse_legacy_graph_info(
         upper_simple_lines,
     ) = _parse_legacy_metrics(info["metrics"])
 
-    lower: graph.Graph | None = None
+    lower: graphs.Graph | None = None
     if lower_compound_lines or lower_simple_lines:
-        lower = graph.Graph(
+        lower = graphs.Graph(
             name=name,
             title=Localizable(str(info["title"])),
             minimal_range=_parse_legacy_range(info.get("range")),
@@ -870,9 +870,9 @@ def _parse_legacy_graph_info(
             conflicting=info.get("conflicting_metrics", []),
         )
 
-    upper: graph.Graph | None = None
+    upper: graphs.Graph | None = None
     if upper_compound_lines or upper_simple_lines:
-        upper = graph.Graph(
+        upper = graphs.Graph(
             name=name,
             title=Localizable(str(info["title"])),
             minimal_range=_parse_legacy_range(info.get("range")),
@@ -889,7 +889,7 @@ def _parse_legacy_graph_infos(
     debug: bool,
     unparseables: list[Unparseable],
     graph_info: AutomaticDict,
-) -> Iterator[graph.Graph | graph.Bidirectional]:
+) -> Iterator[graphs.Graph | graphs.Bidirectional]:
     for name, info in graph_info.items():
         try:
             lower, upper = _parse_legacy_graph_info(name, info)
@@ -901,7 +901,7 @@ def _parse_legacy_graph_infos(
             continue
 
         if lower is not None and upper is not None:
-            yield graph.Bidirectional(
+            yield graphs.Bidirectional(
                 name=f"{lower.name}_{upper.name}",
                 title=Localizable(str(info["title"])),
                 lower=lower,
@@ -962,7 +962,7 @@ def _color_repr(color: Color) -> str:
 
 
 def _inst_repr(
-    namespace: Literal["metric", "translation", "perfometer", "graph"],
+    namespace: Literal["metrics", "translation", "perfometers", "graphs"],
     inst: object,
     args: Sequence[str],
 ) -> str:
@@ -970,15 +970,15 @@ def _inst_repr(
     return f"{namespace}.{inst.__class__.__name__}({', '.join(args)}{trailing_comma})"
 
 
-def _metric_repr(metric_: metric.Metric) -> str:
+def _metric_repr(metric: metrics.Metric) -> str:
     return _inst_repr(
-        "metric",
-        metric_,
+        "metrics",
+        metric,
         [
-            _kwarg_repr("name", _name_repr(metric_.name)),
-            _kwarg_repr("title", _title_repr(metric_.title)),
-            _kwarg_repr("unit", _unit_repr(metric_.unit)),
-            _kwarg_repr("color", _color_repr(metric_.color)),
+            _kwarg_repr("name", _name_repr(metric.name)),
+            _kwarg_repr("title", _title_repr(metric.title)),
+            _kwarg_repr("unit", _unit_repr(metric.unit)),
+            _kwarg_repr("color", _color_repr(metric.color)),
         ],
     )
 
@@ -986,66 +986,66 @@ def _metric_repr(metric_: metric.Metric) -> str:
 def _quantity_repr(
     quantity: (
         str
-        | metric.Constant
-        | metric.WarningOf
-        | metric.CriticalOf
-        | metric.MinimumOf
-        | metric.MaximumOf
-        | metric.Sum
-        | metric.Product
-        | metric.Difference
-        | metric.Fraction
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
     ),
 ) -> str:
     match quantity:
         case str():
             return _name_repr(quantity)
-        case metric.Constant():
+        case metrics.Constant():
             args = [
                 _title_repr(quantity.title),
                 _unit_repr(quantity.unit),
                 _color_repr(quantity.color),
                 str(quantity.value),
             ]
-        case metric.WarningOf():
+        case metrics.WarningOf():
             args = [
                 _name_repr(quantity.name),
             ]
-        case metric.CriticalOf():
+        case metrics.CriticalOf():
             args = [
                 _name_repr(quantity.name),
             ]
-        case metric.MinimumOf():
-            args = [
-                _name_repr(quantity.name),
-                _color_repr(quantity.color),
-            ]
-        case metric.MaximumOf():
+        case metrics.MinimumOf():
             args = [
                 _name_repr(quantity.name),
                 _color_repr(quantity.color),
             ]
-        case metric.Sum():
+        case metrics.MaximumOf():
+            args = [
+                _name_repr(quantity.name),
+                _color_repr(quantity.color),
+            ]
+        case metrics.Sum():
             args = [
                 _title_repr(quantity.title),
                 _color_repr(quantity.color),
                 _list_repr([_quantity_repr(f) for f in quantity.summands]),
             ]
-        case metric.Product():
+        case metrics.Product():
             args = [
                 _title_repr(quantity.title),
                 _unit_repr(quantity.unit),
                 _color_repr(quantity.color),
                 _list_repr([_quantity_repr(f) for f in quantity.factors]),
             ]
-        case metric.Difference():
+        case metrics.Difference():
             args = [
                 _title_repr(quantity.title),
                 _color_repr(quantity.color),
                 _kwarg_repr("minuend", _quantity_repr(quantity.minuend)),
                 _kwarg_repr("subtrahend", _quantity_repr(quantity.subtrahend)),
             ]
-        case metric.Fraction():
+        case metrics.Fraction():
             args = [
                 _title_repr(quantity.title),
                 _unit_repr(quantity.unit),
@@ -1053,7 +1053,7 @@ def _quantity_repr(
                 _kwarg_repr("dividend", _quantity_repr(quantity.dividend)),
                 _kwarg_repr("divisor", _quantity_repr(quantity.divisor)),
             ]
-    return _inst_repr("metric", quantity, args)
+    return _inst_repr("metrics", quantity, args)
 
 
 def _check_command_repr(
@@ -1114,24 +1114,24 @@ def _bound_value_repr(
     bound_value: int
     | float
     | str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction,
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction,
 ) -> str:
     if isinstance(bound_value, (int, float)):
         return str(bound_value)
     return _quantity_repr(bound_value)
 
 
-def _bound_repr(bound: perfometer.Closed | perfometer.Open) -> str:
+def _bound_repr(bound: perfometers.Closed | perfometers.Open) -> str:
     return _inst_repr(
-        "perfometer",
+        "perfometers",
         bound,
         [
             _bound_value_repr(bound.value),
@@ -1139,9 +1139,9 @@ def _bound_repr(bound: perfometer.Closed | perfometer.Open) -> str:
     )
 
 
-def _focus_range_repr(focus_range: perfometer.FocusRange) -> str:
+def _focus_range_repr(focus_range: perfometers.FocusRange) -> str:
     return _inst_repr(
-        "perfometer",
+        "perfometers",
         focus_range,
         [
             _bound_repr(focus_range.lower),
@@ -1150,57 +1150,57 @@ def _focus_range_repr(focus_range: perfometer.FocusRange) -> str:
     )
 
 
-def _perfometer_repr(perfometer_: perfometer.Perfometer) -> str:
+def _perfometer_repr(perfometer: perfometers.Perfometer) -> str:
     return _inst_repr(
-        "perfometer",
-        perfometer_,
+        "perfometers",
+        perfometer,
         [
-            _kwarg_repr("name", _name_repr(perfometer_.name)),
-            _kwarg_repr("focus_range", _focus_range_repr(perfometer_.focus_range)),
-            _kwarg_repr("segments", _list_repr([_quantity_repr(s) for s in perfometer_.segments])),
+            _kwarg_repr("name", _name_repr(perfometer.name)),
+            _kwarg_repr("focus_range", _focus_range_repr(perfometer.focus_range)),
+            _kwarg_repr("segments", _list_repr([_quantity_repr(s) for s in perfometer.segments])),
         ],
     )
 
 
-def _p_bidirectional_repr(perfometer_: perfometer.Bidirectional) -> str:
+def _p_bidirectional_repr(perfometer: perfometers.Bidirectional) -> str:
     return _inst_repr(
-        "perfometer",
-        perfometer_,
+        "perfometers",
+        perfometer,
         [
-            _kwarg_repr("name", _name_repr(perfometer_.name)),
-            _kwarg_repr("left", _perfometer_repr(perfometer_.left)),
-            _kwarg_repr("right", _perfometer_repr(perfometer_.right)),
+            _kwarg_repr("name", _name_repr(perfometer.name)),
+            _kwarg_repr("left", _perfometer_repr(perfometer.left)),
+            _kwarg_repr("right", _perfometer_repr(perfometer.right)),
         ],
     )
 
 
-def _p_stacked_repr(perfometer_: perfometer.Stacked) -> str:
+def _p_stacked_repr(perfometer: perfometers.Stacked) -> str:
     return _inst_repr(
-        "perfometer",
-        perfometer_,
+        "perfometers",
+        perfometer,
         [
-            _kwarg_repr("name", _name_repr(perfometer_.name)),
-            _kwarg_repr("lower", _perfometer_repr(perfometer_.lower)),
-            _kwarg_repr("upper", _perfometer_repr(perfometer_.upper)),
+            _kwarg_repr("name", _name_repr(perfometer.name)),
+            _kwarg_repr("lower", _perfometer_repr(perfometer.lower)),
+            _kwarg_repr("upper", _perfometer_repr(perfometer.upper)),
         ],
     )
 
 
 def perfometer_repr(
-    perfometer_: perfometer.Perfometer | perfometer.Bidirectional | perfometer.Stacked,
+    perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
 ) -> str:
-    match perfometer_:
-        case perfometer.Perfometer():
-            return _perfometer_repr(perfometer_)
-        case perfometer.Bidirectional():
-            return _p_bidirectional_repr(perfometer_)
-        case perfometer.Stacked():
-            return _p_stacked_repr(perfometer_)
+    match perfometer:
+        case perfometers.Perfometer():
+            return _perfometer_repr(perfometer)
+        case perfometers.Bidirectional():
+            return _p_bidirectional_repr(perfometer)
+        case perfometers.Stacked():
+            return _p_stacked_repr(perfometer)
 
 
-def _minimal_range_repr(minimal_range: graph.MinimalRange) -> str:
+def _minimal_range_repr(minimal_range: graphs.MinimalRange) -> str:
     return _inst_repr(
-        "graph",
+        "graphs",
         minimal_range,
         [
             _bound_value_repr(minimal_range.lower),
@@ -1209,53 +1209,51 @@ def _minimal_range_repr(minimal_range: graph.MinimalRange) -> str:
     )
 
 
-def _g_graph_repr(graph_: graph.Graph) -> str:
+def _g_graph_repr(graph: graphs.Graph) -> str:
     args = [
-        _kwarg_repr("name", _name_repr(graph_.name)),
-        _kwarg_repr("title", _title_repr(graph_.title)),
+        _kwarg_repr("name", _name_repr(graph.name)),
+        _kwarg_repr("title", _title_repr(graph.title)),
     ]
-    if graph_.minimal_range:
-        args.append(_kwarg_repr("minimal_range", _minimal_range_repr(graph_.minimal_range)))
-    if graph_.compound_lines:
+    if graph.minimal_range:
+        args.append(_kwarg_repr("minimal_range", _minimal_range_repr(graph.minimal_range)))
+    if graph.compound_lines:
         args.append(
             _kwarg_repr(
-                "compound_lines", _list_repr([_quantity_repr(l) for l in graph_.compound_lines])
+                "compound_lines", _list_repr([_quantity_repr(l) for l in graph.compound_lines])
             )
         )
-    if graph_.simple_lines:
+    if graph.simple_lines:
         args.append(
-            _kwarg_repr(
-                "simple_lines", _list_repr([_quantity_repr(l) for l in graph_.simple_lines])
-            )
+            _kwarg_repr("simple_lines", _list_repr([_quantity_repr(l) for l in graph.simple_lines]))
         )
-    if graph_.optional:
-        args.append(_kwarg_repr("optional", _list_repr([_name_repr(o) for o in graph_.optional])))
-    if graph_.conflicting:
+    if graph.optional:
+        args.append(_kwarg_repr("optional", _list_repr([_name_repr(o) for o in graph.optional])))
+    if graph.conflicting:
         args.append(
-            _kwarg_repr("conflicting", _list_repr([_name_repr(o) for o in graph_.conflicting]))
+            _kwarg_repr("conflicting", _list_repr([_name_repr(o) for o in graph.conflicting]))
         )
-    return _inst_repr("graph", graph_, args)
+    return _inst_repr("graphs", graph, args)
 
 
-def _g_bidirectional_repr(graph_: graph.Bidirectional) -> str:
+def _g_bidirectional_repr(graph: graphs.Bidirectional) -> str:
     return _inst_repr(
-        "graph",
-        graph_,
+        "graphs",
+        graph,
         [
-            _kwarg_repr("name", _name_repr(graph_.name)),
-            _kwarg_repr("title", _title_repr(graph_.title)),
-            _kwarg_repr("lower", _g_graph_repr(graph_.lower)),
-            _kwarg_repr("upper", _g_graph_repr(graph_.upper)),
+            _kwarg_repr("name", _name_repr(graph.name)),
+            _kwarg_repr("title", _title_repr(graph.title)),
+            _kwarg_repr("lower", _g_graph_repr(graph.lower)),
+            _kwarg_repr("upper", _g_graph_repr(graph.upper)),
         ],
     )
 
 
-def _graph_repr(graph_: graph.Graph | graph.Bidirectional) -> str:
-    match graph_:
-        case graph.Graph():
-            return _g_graph_repr(graph_)
-        case graph.Bidirectional():
-            return _g_bidirectional_repr(graph_)
+def _graph_repr(graph: graphs.Graph | graphs.Bidirectional) -> str:
+    match graph:
+        case graphs.Graph():
+            return _g_graph_repr(graph)
+        case graphs.Bidirectional():
+            return _g_bidirectional_repr(graph)
 
 
 # .
@@ -1313,13 +1311,13 @@ def _load_module(filepath: Path) -> types.ModuleType:
 def _migrate_file_content(
     debug: bool, path: Path, unparseables: list[Unparseable]
 ) -> Iterator[
-    metric.Metric
+    metrics.Metric
     | translation.Translation
-    | perfometer.Perfometer
-    | perfometer.Bidirectional
-    | perfometer.Stacked
-    | graph.Graph
-    | graph.Bidirectional,
+    | perfometers.Perfometer
+    | perfometers.Bidirectional
+    | perfometers.Stacked
+    | graphs.Graph
+    | graphs.Bidirectional,
 ]:
     module = _load_module(path)
 
@@ -1337,25 +1335,25 @@ def _migrate_file_content(
 
 
 def _obj_repr(
-    obj: metric.Metric
+    obj: metrics.Metric
     | translation.Translation
-    | perfometer.Perfometer
-    | perfometer.Bidirectional
-    | perfometer.Stacked
-    | graph.Graph
-    | graph.Bidirectional,
+    | perfometers.Perfometer
+    | perfometers.Bidirectional
+    | perfometers.Stacked
+    | graphs.Graph
+    | graphs.Bidirectional,
 ) -> str:
     def _obj_var_name() -> str:
         return obj.name.replace(".", "_").replace("-", "_")
 
     match obj:
-        case metric.Metric():
+        case metrics.Metric():
             return f"metric_{_obj_var_name()} = {_metric_repr(obj)}"
         case translation.Translation():
             return f"translation_{_obj_var_name()} = {translation_repr(obj)}"
-        case perfometer.Perfometer() | perfometer.Bidirectional() | perfometer.Stacked():
+        case perfometers.Perfometer() | perfometers.Bidirectional() | perfometers.Stacked():
             return f"perfometer_{_obj_var_name()} = {perfometer_repr(obj)}"
-        case graph.Graph() | graph.Bidirectional():
+        case graphs.Graph() | graphs.Bidirectional():
             return f"graph_{_obj_var_name()} = {_graph_repr(obj)}"
 
 

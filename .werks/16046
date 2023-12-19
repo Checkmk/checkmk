@@ -1,0 +1,12 @@
+Title: Improve "Acknowledge problems" command dialog
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1702972658
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The command dialog "Acknowledge problems" in views is reworked to improve usability.
+The possible options are now more verbose, explaining more clearly what they do. Also, these options' defaults can be accessed directly from the command dialog via the link "Edit defaults".
+The removal of acknowledgments is moved into a separate command "Remove acknowledgments" that can be found in the page menu "Commands".

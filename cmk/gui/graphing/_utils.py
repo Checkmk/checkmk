@@ -564,14 +564,14 @@ def _parse_check_command(
 
 
 def _parse_translation(
-    translation: translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
+    translation: translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
 ) -> CheckMetricEntry:
     match translation:
-        case translations.Renaming():
+        case translations.RenameTo():
             return {"name": translation.rename_to}
-        case translations.Scaling():
+        case translations.ScaleBy():
             return {"scale": translation.scale_by}
-        case translations.RenamingAndScaling():
+        case translations.RenameToAndScaleBy():
             return {"name": translation.rename_to, "scale": translation.scale_by}
 
 

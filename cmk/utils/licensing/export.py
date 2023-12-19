@@ -17,7 +17,7 @@ from uuid import UUID
 from dateutil.relativedelta import relativedelta
 from typing_extensions import TypedDict
 
-LicenseUsageReportVersion: Final[str] = "3.0"
+LicensingProtocolVersion: Final[str] = "3.0"
 
 
 class RawLicenseUsageReport(TypedDict):

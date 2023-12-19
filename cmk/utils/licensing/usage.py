@@ -23,8 +23,8 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
-    LicenseUsageReportVersion,
     LicenseUsageSample,
+    LicensingProtocolVersion,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -100,7 +100,7 @@ def try_update_license_usage(
         save_license_usage_report(
             report_file_path,
             RawLicenseUsageReport(
-                VERSION=LicenseUsageReportVersion,
+                VERSION=LicensingProtocolVersion,
                 history=history.for_report(),
             ),
         )

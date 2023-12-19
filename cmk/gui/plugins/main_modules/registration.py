@@ -35,7 +35,6 @@ from cmk.gui import (
     notifications,
     painter_options,
     prediction,
-    robotmk,
     sidebar,
     sites,
     user_message,
@@ -244,7 +243,6 @@ def register() -> None:
         snapin_registry,
         endpoint_registry,
     )
-    robotmk.register(page_registry)
     cron.register(page_registry)
     node_visualization.register(page_registry, filter_registry)
     notifications.register(page_registry, permission_section_registry)

@@ -6,12 +6,12 @@
 from ._active_checks import ActiveCheckCommand, ActiveCheckConfig
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
 from ._utils import (
-    get_http_proxy,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
     noop_parser,
+    parse_http_proxy,
     PlainTextSecret,
     Secret,
     StoredSecret,
@@ -20,7 +20,7 @@ from ._utils import (
 __all__ = [
     "ActiveCheckConfig",
     "ActiveCheckCommand",
-    "get_http_proxy",
+    "parse_http_proxy",
     "get_secret_from_params",
     "HostConfig",
     "HTTPProxy",

@@ -114,7 +114,7 @@ class HTTPProxy:
         ...     HostConfig,
         ...     HTTPProxy,
         ...     SpecialAgentCommand,
-        ...     get_http_proxy
+        ...     parse_http_proxy
         ... )
 
         >>> class ExampleParams(BaseModel):
@@ -128,7 +128,7 @@ class HTTPProxy:
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = [
         ...         "--proxy",
-        ...         get_http_proxy(params.proxy_type, params.proxy_value, http_proxies)
+        ...         parse_http_proxy(params.proxy_type, params.proxy_value, http_proxies)
         ...     ]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
@@ -236,7 +236,7 @@ def get_secret_from_params(
             raise ValueError(f"{secret_type} is not a valid secret type")
 
 
-def get_http_proxy(
+def parse_http_proxy(
     proxy_type: Literal["global", "environment", "url", "no_proxy"],
     proxy_value: str | None,
     http_proxies: Mapping[str, HTTPProxy],
@@ -262,7 +262,7 @@ def get_http_proxy(
         ...     SpecialAgentCommand,
         ...     HostConfig,
         ...     HTTPProxy,
-        ...     get_http_proxy
+        ...     parse_http_proxy
         ... )
 
 
@@ -271,7 +271,7 @@ def get_http_proxy(
         ...     host_config: HostConfig,
         ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
-        ...     proxy = get_http_proxy("global", "example_proxy", http_proxies)
+        ...     proxy = parse_http_proxy("global", "example_proxy", http_proxies)
         ...     args = ["--proxy", proxy]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """

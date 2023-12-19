@@ -9,10 +9,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_http_proxy,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_http_proxy,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -43,7 +43,7 @@ def agent_cisco_meraki_arguments(
         proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            get_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
 
     if params.sections is not None:

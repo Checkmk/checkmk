@@ -46,7 +46,7 @@ class ActiveCheckCommand:
     command_arguments: Sequence[str | Secret]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ActiveCheckConfig(Generic[_ParsedParameters]):
     """
     Defines an active check

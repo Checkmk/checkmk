@@ -39,7 +39,7 @@ class SpecialAgentCommand:
     stdin: str | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SpecialAgentConfig(Generic[_ParsedParameters]):
     """
     Defines a special agent

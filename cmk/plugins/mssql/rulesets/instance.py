@@ -8,8 +8,7 @@ from cmk.rulesets.v1 import (
     DictElement,
     Dictionary,
     Localizable,
-    MonitoringState,
-    State,
+    ServiceState,
     TextInput,
     Topic,
 )
@@ -19,7 +18,9 @@ def _parameter_form_mssql_instance() -> Dictionary:
     return Dictionary(
         elements={
             "map_connection_state": DictElement(
-                MonitoringState(title=Localizable("Connection status"), prefill_value=State.CRIT)
+                ServiceState(
+                    title=Localizable("Connection status"), prefill_value=ServiceState.CRIT
+                )
             ),
         }
     )

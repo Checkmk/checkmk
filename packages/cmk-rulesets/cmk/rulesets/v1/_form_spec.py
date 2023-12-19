@@ -7,7 +7,7 @@ import ast
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
+from typing import ClassVar, Generic, Literal, TypeVar
 
 from cmk.rulesets.v1._localize import Localizable
 
@@ -208,13 +208,10 @@ class InvalidElementValidator:
     error_msg: Localizable | None = None
 
 
-_DropdownChoiceElementType = str | int | float | bool | enum.Enum | None
-
-
 @dataclass(frozen=True)
 class DropdownChoiceElement:
-    choice: _DropdownChoiceElementType
-    display: Localizable
+    name: str
+    title: Localizable
 
 
 @dataclass(frozen=True)
@@ -246,20 +243,19 @@ class DropdownChoice:
     label: Localizable | None = None
     help_text: Localizable | None = None
 
-    prefill_selection: _DropdownChoiceElementType = None
+    prefill_selection: str | None = None
 
-    deprecated_elements: Sequence[_DropdownChoiceElementType] | None = None
+    deprecated_elements: Sequence[str] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
-    transform: Transform[_DropdownChoiceElementType] | Migrate[
-        _DropdownChoiceElementType
-    ] | None = None
+    transform: Transform[str] | Migrate[str] | None = None
 
-    custom_validate: Callable[[_DropdownChoiceElementType], object] | None = None
+    custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True)
 class CascadingDropdownElement:
-    ident: str
+    name: str
+    title: Localizable
     parameter_form: "FormSpec"
 
 
@@ -286,7 +282,7 @@ class CascadingDropdown:
     transform: Transform[object] | Migrate[object] | None = None
 
     def __post_init__(self) -> None:
-        avail_idents = [elem.ident for elem in self.elements]
+        avail_idents = [elem.name for elem in self.elements]
         if self.prefill_selection is not None and self.prefill_selection not in avail_idents:
             raise ValueError("Default element is not one of the specified elements")
 
@@ -344,29 +340,27 @@ class Dictionary:
             assert key.isidentifier(), f"'{key}' is not a valid python identifier"
 
 
-class State(enum.Enum):
-    # Don't use IntEnum to prevent "state.CRIT < state.UNKNOWN" from evaluating to True.
-    OK = 0
-    WARN = 1
-    CRIT = 2
-    UNKNOWN = 3
-
-
 @dataclass(frozen=True)
-class MonitoringState:
-    elements: Sequence[DropdownChoiceElement] = field(
-        default_factory=lambda: [
-            DropdownChoiceElement(choice=state, display=Localizable(state.name)) for state in State
-        ]
-    )
+class ServiceState:
+    """Specifies the configuration of a service state.
+
+    >>> state_form_spec = ServiceState(
+    ...     title=Localizable("State if somthing happens"),
+    ...     prefill_value=ServiceState.WARN,
+    ... )
+    """
+
+    OK: ClassVar[Literal[0]] = 0
+    WARN: ClassVar[Literal[1]] = 1
+    CRIT: ClassVar[Literal[2]] = 2
+    UNKNOWN: ClassVar[Literal[3]] = 3
 
     title: Localizable | None = None
-    label: Localizable | None = None
     help_text: Localizable | None = None
 
-    prefill_value: State = State.OK
+    prefill_value: Literal[0, 1, 2, 3] = 0
 
-    transform: Transform[State] | Migrate[State] | None = None
+    transform: Transform[Literal[0, 1, 2, 3]] | Migrate[Literal[0, 1, 2, 3]] | None = None
 
 
 @dataclass(frozen=True)
@@ -537,7 +531,7 @@ FormSpec = (
     | DropdownChoice
     | CascadingDropdown
     | Dictionary
-    | MonitoringState
+    | ServiceState
     | List
     | FixedValue
     | TimeSpan

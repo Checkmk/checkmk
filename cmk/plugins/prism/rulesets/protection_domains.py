@@ -25,15 +25,9 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
                         "Configure the target state of the protection domain sync state."
                     ),
                     elements=[
-                        DropdownChoiceElement(
-                            choice="Enabled", display=Localizable("Sync enabled")
-                        ),
-                        DropdownChoiceElement(
-                            choice="Disabled", display=Localizable("Sync disabled")
-                        ),
-                        DropdownChoiceElement(
-                            choice="Synchronizing", display=Localizable("Syncing")
-                        ),
+                        DropdownChoiceElement(name="Enabled", title=Localizable("Sync enabled")),
+                        DropdownChoiceElement(name="Disabled", title=Localizable("Sync disabled")),
+                        DropdownChoiceElement(name="Synchronizing", title=Localizable("Syncing")),
                     ],
                     prefill_selection="Disabled",
                 )

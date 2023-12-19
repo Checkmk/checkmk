@@ -46,19 +46,17 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ["new_valuespec", "expected"],
     [
         pytest.param(
-            api_v1.MonitoringState(),
+            api_v1.ServiceState(),
             legacy_valuespecs.MonitoringState(),
             id="minimal MonitoringState",
         ),
         pytest.param(
-            api_v1.MonitoringState(
+            api_v1.ServiceState(
                 title=api_v1.Localizable("title"),
-                label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_valuespecs.MonitoringState(
                 title=_("title"),
-                label=_("label"),
                 help=_("help text"),
                 default_value=0,
             ),
@@ -73,11 +71,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.Dictionary(
                 elements={
                     "key_req": api_v1.DictElement(
-                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
+                        api_v1.ServiceState(title=api_v1.Localizable("title")),
                         required=True,
                     ),
                     "key_read_only": api_v1.DictElement(
-                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
+                        api_v1.ServiceState(title=api_v1.Localizable("title")),
                         read_only=True,
                     ),
                 },
@@ -253,11 +251,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.DropdownChoice(
                 elements=[
+                    api_v1.DropdownChoiceElement(name="true", title=api_v1.Localizable("Enabled")),
                     api_v1.DropdownChoiceElement(
-                        choice=True, display=api_v1.Localizable("Enabled")
-                    ),
-                    api_v1.DropdownChoiceElement(
-                        choice=False, display=api_v1.Localizable("Disabled")
+                        name="false", title=api_v1.Localizable("Disabled")
                     ),
                 ],
                 no_elements_text=api_v1.Localizable("No elements"),
@@ -266,7 +262,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
-                prefill_selection=True,
+                prefill_selection="true",
                 invalid_element_validation=api_v1.InvalidElementValidator(
                     mode=api_v1.InvalidElementMode.KEEP,
                     display=api_v1.Localizable("invalid choice title"),
@@ -274,14 +270,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
             ),
             legacy_valuespecs.DropdownChoice(
-                choices=[(True, _("Enabled")), (False, _("Disabled"))],
+                choices=[("true", _("Enabled")), ("false", _("Disabled"))],
                 empty_text=_("No elements"),
                 deprecated_choices=[],
                 read_only=True,
                 title=_("title"),
                 label=_("label"),
                 help=_("help text"),
-                default_value=True,
+                default_value="true",
                 invalid_choice=None,
                 invalid_choice_title=_("invalid choice title"),
                 invalid_choice_error=_("invalid choice msg"),
@@ -297,7 +293,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.CascadingDropdown(
                 elements=[
                     api_v1.CascadingDropdownElement(
-                        ident="first", parameter_form=api_v1.TextInput()
+                        name="first",
+                        title=api_v1.Localizable("Spec title"),
+                        parameter_form=api_v1.TextInput(),
                     )
                 ],
                 prefill_selection=None,
@@ -312,7 +310,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.CascadingDropdown(
                 elements=[
                     api_v1.CascadingDropdownElement(
-                        ident="first",
+                        name="first",
+                        title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
                     )
                 ],
@@ -330,7 +329,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.CascadingDropdown(
                 elements=[
                     api_v1.CascadingDropdownElement(
-                        ident="first",
+                        name="first",
+                        title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.TextInput(),
                     )
                 ],
@@ -464,7 +464,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.Dictionary,
                     elements={
                         "key": api_v1.DictElement(
-                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
                         ),
                     },
                 ),
@@ -494,7 +494,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.Dictionary,
                     elements={
                         "key": api_v1.DictElement(
-                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
                         ),
                     },
                 ),
@@ -524,7 +524,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.Dictionary,
                     elements={
                         "key": api_v1.DictElement(
-                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
                         ),
                     },
                 ),
@@ -572,7 +572,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.Dictionary,
                     elements={
                         "key": api_v1.DictElement(
-                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
                         ),
                     },
                 ),
@@ -797,7 +797,8 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             api_v1.CascadingDropdown(
                 elements=[
                     api_v1.CascadingDropdownElement(
-                        ident="key_new",
+                        name="key_new",
+                        title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.TextInput(
                             transform=api_v1.Migrate(raw_to_form=lambda x: f"{x}_new")
                         ),
@@ -886,7 +887,8 @@ def test_migrate(
             api_v1.CascadingDropdown(
                 elements=[
                     api_v1.CascadingDropdownElement(
-                        ident="key_new",
+                        name="key_new",
+                        title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.TextInput(
                             transform=api_v1.Transform(
                                 raw_to_form=lambda x: f"{x}_new",
@@ -932,7 +934,7 @@ def test_transform(
         api_v1.Dictionary(elements={}),
         api_v1.DropdownChoice(elements=[]),
         api_v1.CascadingDropdown(elements=[]),
-        api_v1.MonitoringState(),
+        api_v1.ServiceState(),
         api_v1.List(parameter_form=api_v1.Integer()),
     ],
 )

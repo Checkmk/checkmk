@@ -11,8 +11,7 @@ from cmk.rulesets.v1 import (
     Integer,
     List,
     Localizable,
-    MonitoringState,
-    State,
+    ServiceState,
     TextInput,
     Topic,
 )
@@ -38,8 +37,9 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                                 required=True,
                             ),
                             "state": DictElement(
-                                parameter_form=MonitoringState(
-                                    title=Localizable("State if violated"), prefill_value=State.WARN
+                                parameter_form=ServiceState(
+                                    title=Localizable("State if violated"),
+                                    prefill_value=ServiceState.WARN,
                                 ),
                                 required=True,
                             ),

@@ -18,7 +18,6 @@
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/Column.h"
-#include "livestatus/ICore.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
 #include "livestatus/StringUtils.h"
@@ -57,19 +56,17 @@ void checkNoArguments(std::string_view str) {
 }
 }  // namespace
 
-ParsedQuery::ParsedQuery(const std::vector<std::string> &lines,
-                         const Table &table, OutputBuffer &output)
+ParsedQuery::ParsedQuery(
+    const std::vector<std::string> &lines, const Table &table,
+    OutputBuffer &output,
+    const std::function<std::unique_ptr<const User>(const std::string &)>
+        &find_user,
+    const std::function<Row(const std::string &)> &get)
     : user{std::make_unique<NoAuthUser>()} {
     FilterStack filters;
     FilterStack wait_conditions;
     auto make_column = [&table](std::string_view colname) {
         return table.column(std::string{colname});
-    };
-    auto find_user = [&table](std::string_view name) {
-        return table.core()->find_user(std::string{name});
-    };
-    auto get = [&table](std::string_view primary_key) {
-        return table.get(std::string{primary_key}, *table.core());
     };
     for (const auto &line_str : lines) {
         std::string_view line{line_str};
@@ -378,9 +375,9 @@ void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
 
 void ParsedQuery::parseAuthUserHeader(
     std::string_view line,
-    const std::function<std::unique_ptr<const User>(std::string_view)>
+    const std::function<std::unique_ptr<const User>(const std::string &)>
         &find_user) {
-    user = find_user(line);
+    user = find_user(std::string{line});
 }
 
 void ParsedQuery::parseColumnsLine(std::string_view line,
@@ -495,8 +492,8 @@ void ParsedQuery::parseWaitTriggerLine(std::string_view line) {
 }
 
 void ParsedQuery::parseWaitObjectLine(
-    std::string_view line, const std::function<Row(std::string_view)> &get) {
-    wait_object = get(line);
+    std::string_view line, const std::function<Row(const std::string &)> &get) {
+    wait_object = get(std::string{line});
     if (wait_object.isNull()) {
         throw std::runtime_error("primary key '" + std::string{line} +
                                  "' not found or not supported by this table");

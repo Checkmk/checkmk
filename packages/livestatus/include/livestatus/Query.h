@@ -34,7 +34,7 @@ public:
     Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
           size_t max_response_size, OutputBuffer &output, Logger *logger);
 
-    bool process();
+    bool process(ICore &core);
 
     // NOTE: We cannot make this 'const' right now, it increments _current_line
     // and calls the non-const getAggregatorsFor() member function.

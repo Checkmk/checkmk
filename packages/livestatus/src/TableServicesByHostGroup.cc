@@ -40,8 +40,9 @@ std::string TableServicesByHostGroup::name() const {
 
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByHostGroup::answerQuery(Query &query, const User &user) {
-    core()->all_of_host_groups([&user, &query](const IHostGroup &hg) {
+void TableServicesByHostGroup::answerQuery(Query &query, const User &user,
+                                           ICore &core) {
+    core.all_of_host_groups([&user, &query](const IHostGroup &hg) {
         return hg.all([&hg, &user, &query](const IHost &host) {
             return host.all_of_services(
                 [&hg, &user, &query](const IService &svc) {

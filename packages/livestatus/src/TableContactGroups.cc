@@ -33,8 +33,9 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
-void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
-    core()->all_of_contact_groups([&query](const IContactGroup &r) {
+void TableContactGroups::answerQuery(Query &query, const User & /*user*/,
+                                     ICore &core) {
+    core.all_of_contact_groups([&query](const IContactGroup &r) {
         return query.processDataset(Row{&r});
     });
 }

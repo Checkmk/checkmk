@@ -55,18 +55,19 @@ bool ProcessServiceGroup(Query &query, const User &user,
 }
 }  // namespace
 
-void TableServicesByGroup::answerQuery(Query &query, const User &user) {
+void TableServicesByGroup::answerQuery(Query &query, const User &user,
+                                       ICore &core) {
     // If we know the service group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
-        if (const auto *sg = core()->find_servicegroup(*value)) {
+        if (const auto *sg = core.find_servicegroup(*value)) {
             ProcessServiceGroup(query, user, *sg);
         }
         return;
     }
     // In the general case, we have to process all service groups.
     Debug(logger()) << "using full table scan";
-    core()->all_of_service_groups([&query, &user](const auto &sg) {
+    core.all_of_service_groups([&query, &user](const auto &sg) {
         return ProcessServiceGroup(query, user, sg);
     });
 }

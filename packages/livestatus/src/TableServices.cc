@@ -603,7 +603,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
 }
 
-void TableServices::answerQuery(Query &query, const User &user) {
+void TableServices::answerQuery(Query &query, const User &user, ICore &core) {
     auto process = [&](const IService &s) {
         return !user.is_authorized_for_service(s) ||
                query.processDataset(Row{&s});
@@ -612,7 +612,7 @@ void TableServices::answerQuery(Query &query, const User &user) {
     // If we know the host, we use it directly.
     if (auto value = query.stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        if (const auto *hst = core()->find_host(*value)) {
+        if (const auto *hst = core.find_host(*value)) {
             hst->all_of_services(
                 [&process](const IService &s) { return process(s); });
         }
@@ -622,7 +622,7 @@ void TableServices::answerQuery(Query &query, const User &user) {
     // If we know the service group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
-        if (const auto *sg = core()->find_servicegroup(*value)) {
+        if (const auto *sg = core.find_servicegroup(*value)) {
             sg->all([&process](const IService &s) { return process(s); });
         }
         return;
@@ -631,7 +631,7 @@ void TableServices::answerQuery(Query &query, const User &user) {
     // If we know the host group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("host_groups")) {
         Debug(logger()) << "using host group index with '" << *value << "'";
-        if (const auto *hg = core()->find_hostgroup(*value)) {
+        if (const auto *hg = core.find_hostgroup(*value)) {
             hg->all([&process](const IHost &h) {
                 return h.all_of_services(
                     [&process](const IService &s) { return process(s); });
@@ -642,8 +642,7 @@ void TableServices::answerQuery(Query &query, const User &user) {
 
     // In the general case, we have to process all services.
     Debug(logger()) << "using full table scan";
-    core()->all_of_services(
-        [&process](const IService &s) { return process(s); });
+    core.all_of_services([&process](const IService &s) { return process(s); });
 }
 
 Row TableServices::get(const std::string &primary_key) const {

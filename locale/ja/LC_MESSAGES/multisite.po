@@ -3988,21 +3988,6 @@ msgstr "チューニング構成を追加する"
 msgid "Add tunnel"
 msgstr "トンネルを追加"
 
-msgid "Add unmonitored & remove vanished services and host labels"
-msgstr ""
-"監視されていないサービスを追加し、消失したサービスとホストラベルを削除する"
-
-msgid "Add unmonitored services and new host labels"
-msgstr "監視されていないサービスと新しいホストラベルを追加する"
-
-msgid "Add unmonitored services and new host labels, remove vanished services"
-msgstr ""
-"監視されていないサービスと新しいホストラベルを追加し、消失したサービスを削除"
-"する"
-
-msgid "Add unmonitored services, new host labels"
-msgstr "監視されていないサービス、新しいホストラベルを追加します"
-
 msgid "Add user"
 msgstr "ユーザーを追加する"
 
@@ -5761,9 +5746,10 @@ msgstr ""
 msgid "An absolute path to a CA certificate"
 msgstr "CA証明書への絶対パス"
 
+#, fuzzy
 msgid ""
-"An absolute path to the filename (in case of MRPE) or to a directory in case "
-"of local / plugin"
+"An absolute path to the configuration file (in case of MRPE) or to a "
+"directory in case of local / plugin"
 msgstr ""
 "ファイル名(MRPEの場合)またはローカル/プラグインのディレクトリへの絶対パス"
 
@@ -6766,6 +6752,10 @@ msgstr "自動ページリロード"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード。"
+
+#, python-brace-format
+msgid "Automatic rediscovery parameter {param} not implemented"
+msgstr ""
 
 msgid "Automatic renewal"
 msgstr "自動更新"
@@ -10205,18 +10195,6 @@ msgstr ""
 "のルールを使用して、これらのホストのインラインSNMPを無効にすることができま"
 "す。"
 
-#, no-python-format
-msgid ""
-"Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
-"and Unix as used space. Usually, 5% are being reserved for root when a new "
-"filesystem is being created. With this option you can have Checkmk display "
-"the current amount of reserved but yet unused space."
-msgstr ""
-"Check_MKは、LinuxおよびUnixの<tt>root</tt>ユーザー用に予約されているスペース"
-"を使用済みスペースとして扱います。通常、新しいファイルシステムが作成されると"
-"きに、5%がroot用に予約されています。このオプションを使用すると、Checkmkに、予"
-"約されているが未使用のスペースの現在の量を表示させることができます。"
-
 msgid ""
 "Check_MK usually uses an interval of one minute for the active Checkmk check "
 "and for legacy checks. Here you can specify a larger interval. Please note, "
@@ -10459,6 +10437,18 @@ msgstr "Checkmk固有"
 
 msgid "Checkmk state"
 msgstr "Checkmkの状態"
+
+#, fuzzy, no-python-format
+msgid ""
+"Checkmk treats space that is reserved for the <tt>root</tt> user on Linux "
+"and Unix as used space. Usually, 5% are being reserved for root when a new "
+"filesystem is being created. With this option you can have Checkmk display "
+"the current amount of reserved but yet unused space."
+msgstr ""
+"Check_MKは、LinuxおよびUnixの<tt>root</tt>ユーザー用に予約されているスペース"
+"を使用済みスペースとして扱います。通常、新しいファイルシステムが作成されると"
+"きに、5%がroot用に予約されています。このオプションを使用すると、Checkmkに、予"
+"約されているが未使用のスペースの現在の量を表示させることができます。"
 
 msgid "Checkmk versions"
 msgstr "Checkmkバージョン"
@@ -12465,7 +12455,8 @@ msgstr "統合機能"
 msgid "Constant value %.2f"
 msgstr "定数値 %.2f"
 
-msgid "Consumed Load Balancer Capacity Units"
+#, fuzzy
+msgid "Consumed Load Balancer Capacity unit=Units"
 msgstr "消費されたロードバランサー容量ユニット"
 
 msgid "Consumed capacity"
@@ -13899,11 +13890,19 @@ msgstr "カスタムパスプレフィックス"
 msgid "Custom probe state"
 msgstr "カスタムプローブの状態"
 
+#, fuzzy
+msgid "Custom profile"
+msgstr "カスタムタイトル"
+
 msgid "Custom search query"
 msgstr "カスタム検索クエリ"
 
 msgid "Custom service attributes"
 msgstr "カスタムサービス属性"
+
+#, fuzzy
+msgid "Custom service configuration update"
+msgstr "ホストとサービスの構成ルール"
 
 msgid "Custom service name"
 msgstr "カスタムサービス名"
@@ -14878,6 +14877,10 @@ msgstr "検出されたサービスのデフォルトパラメータ"
 
 msgid "Default parameters when no time period matches"
 msgstr "期間が一致しない場合のデフォルト パラメータ"
+
+#, fuzzy
+msgid "Default profile"
+msgstr "デフォルトのユーザープロファイル"
 
 msgid "Default reporting timerange"
 msgstr "デフォルトのレポート時間範囲"
@@ -16864,7 +16867,9 @@ msgid "Displays a single metric of a specific host and service."
 msgstr "特定のホストとサービスの単一のメトリックを表示します。"
 
 #, fuzzy
-msgid "Displays a sorted list of services according to a selected metric."
+msgid ""
+"Displays a sorted list of services according to a selected metric. Note: In "
+"rare cases some metrics might be missing."
 msgstr "選択した状態のサービス量を表示します。"
 
 msgid "Displays a static text to the user."
@@ -19196,6 +19201,9 @@ msgstr "グループに入る"
 msgid "Enter layout mode"
 msgstr "レイアウトモードに入る"
 
+msgid "Enter performance data to show in notifications etc. ..."
+msgstr ""
+
 msgid ""
 "Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
 "running including the protocol. Stop after the top level domain (TLD), so "
@@ -19309,6 +19317,10 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasysスイッチ:温度"
 
 msgid "Enterprise feature"
+msgstr "エンタープライズ機能"
+
+#, fuzzy
+msgid "Enterprise features"
 msgstr "エンタープライズ機能"
 
 msgid "Entersekt Certificate Expiration"
@@ -20772,6 +20784,10 @@ msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "ジョインランチャーサービスの失敗"
+
+#, fuzzy
+msgid "Fake check result"
+msgstr "フェイクチェック結果"
 
 msgid "Fake check results"
 msgstr "フェイクチェック結果"
@@ -26475,6 +26491,12 @@ msgstr ""
 "プロセスの現在の数とそれらのさまざまな状態の詳細な統計を含む1つの新しいサービ"
 "スがあります。"
 
+#, python-format
+msgid ""
+"If you are looking for a way to test your notification settings, try '%s' in "
+"Setup > Notifications"
+msgstr ""
+
 msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
@@ -28246,6 +28268,9 @@ msgstr "シャードの初期化"
 
 msgid "Initiator"
 msgstr "イニシエータ"
+
+msgid "Inject JavaScript profiling code"
+msgstr ""
 
 msgid "Inline SNMP"
 msgstr "インラインSNMP"
@@ -30256,6 +30281,10 @@ msgstr "ドロップキューの長さのレベル"
 msgid "Levels for Fireeye License Expiration"
 msgstr "Fireeyeライセンスの有効期限のレベル"
 
+#, fuzzy
+msgid "Levels for GC run rate"
+msgstr "GC実行率の低レベル"
+
 msgid "Levels for Gude PDU Devices"
 msgstr "Gude PDU デバイスのレベル"
 
@@ -30442,6 +30471,10 @@ msgstr "断片化されたパケットのレートのレベル"
 msgid "Levels for rate of incoming IPv4 packets blocked"
 msgstr "ブロックされた着信IPv4パケットのレートのレベル"
 
+#, fuzzy
+msgid "Levels for rate of memory per second reclaimed by GC"
+msgstr "GCによって回収されたメモリレートの下位レベル"
+
 msgid "Levels for rate of normalized packets"
 msgstr "正規化されたパケットのレートのレベル"
 
@@ -30462,6 +30495,10 @@ msgstr "残りの供給のレベル"
 
 msgid "Levels for remaining undo retention"
 msgstr "元に戻す保持を維持するためのレベル"
+
+#, fuzzy
+msgid "Levels for runtime run queue"
+msgstr "ランタイム実行キューの下位レベル"
 
 msgid "Levels for sessions used"
 msgstr "使用したセッションのレベル"
@@ -30552,6 +30589,10 @@ msgstr "重要なアップデート保留による強制再起動までの時間
 
 msgid "Levels for total amount of connections"
 msgstr "接続の合計量のレベル"
+
+#, fuzzy
+msgid "Levels for total number of GC runs"
+msgstr "GC実行総数の上位レベル"
 
 msgid "Levels for total number of items"
 msgstr "アイテム総数のレベル"
@@ -32026,9 +32067,6 @@ msgstr "ファン速度レベルが低い"
 msgid "Lower health levels"
 msgstr "より低いヘルスレベル"
 
-msgid "Lower level for GC run rate"
-msgstr "GC実行率の低レベル"
-
 msgid "Lower level for delivered message rate"
 msgstr "配信メッセージレートの下位レベル"
 
@@ -32043,12 +32081,6 @@ msgstr "このノードのエグゼキュータの数の下位レベル"
 
 msgid "Lower level for published message rate"
 msgstr "公開メッセージレートの下位レベル"
-
-msgid "Lower level for rate of memory reclaimed by GC"
-msgstr "GCによって回収されたメモリレートの下位レベル"
-
-msgid "Lower level for runtime run queue"
-msgstr "ランタイム実行キューの下位レベル"
 
 msgid "Lower level for total number of channels"
 msgstr "チャネル総数の下位レベル"
@@ -32783,10 +32815,6 @@ msgid ""
 msgstr ""
 "通知が正しくセットアップされているかどうかをテストするために、コアが手動でホ"
 "ストやサービスに通知を送信します。"
-
-#, python-format
-msgid "Manually set check results to %s?"
-msgstr "手動でチェック結果を %s に設定しますか?"
 
 #, python-format
 msgid "Manually set to %s by %s"
@@ -36616,6 +36644,10 @@ msgstr "適用できません"
 msgid "Not authenticated"
 msgstr "認証されていません"
 
+#, fuzzy
+msgid "Not available"
+msgstr "利用不可"
+
 msgid "Not available duration"
 msgstr "使用不可期間"
 
@@ -38188,11 +38220,14 @@ msgstr ""
 "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
 "ストのみを対象とします。"
 
+#, python-format
+msgid ""
+"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
+"the Core MKP is installed."
+msgstr ""
+
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
-
-msgid "Only discover new host labels"
-msgstr "新しいホストラベルを検出するだけです"
 
 msgid "Only display SLA Name"
 msgstr "SLA名を表示するだけ"
@@ -42830,9 +42865,6 @@ msgstr "検索を絞り込む"
 msgid "Refresh"
 msgstr "リフレッシュ"
 
-msgid "Refresh all services (tabula rasa), add new host labels"
-msgstr "すべてのサービス (tabula rasa)を更新し、新しいホストラベルを追加します"
-
 msgid "Refresh all services and host labels (tabula rasa)"
 msgstr "すべてのサービスとホストラベルを更新します(タブララサ)"
 
@@ -44415,6 +44447,11 @@ msgstr "Robotmk"
 #, fuzzy
 msgid "Robotmk (Windows)"
 msgstr "RobotMKのログ"
+
+msgid ""
+"Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
+"Robot Framework tests as Checkmk services."
+msgstr ""
 
 #, fuzzy
 msgid "Robotmk Suite Status"
@@ -46838,9 +46875,6 @@ msgstr "セッションタイムアウト:"
 msgid "Session type"
 msgstr "セッションタイプ"
 
-msgid "Set"
-msgstr "セット"
-
 msgid "Set IPv4 address"
 msgstr "IPv4アドレスを設定する"
 
@@ -46939,6 +46973,10 @@ msgstr "プラグインとローカルチェックの実行モードを設定し
 
 msgid "Set expected router mode"
 msgstr "予想されるルーターモードを設定する"
+
+#, fuzzy, python-format
+msgid "Set fake check result to ‘%s’?"
+msgstr "手動でチェック結果を %s に設定しますか?"
 
 msgid "Set field delimiter"
 msgstr "フィールド区切り文字を設定する"
@@ -47178,6 +47216,10 @@ msgstr "プラグインとローカルチェックのタイムアウトを設定
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "自動リロードを無効にするには、\"0\"に設定します。"
+
+#, fuzzy, python-format
+msgid "Set to '%s'"
+msgstr "%s' を '%s' に切り替えます"
 
 msgid "Set upper Levels"
 msgstr "上位レベルを設定する"
@@ -51278,6 +51320,10 @@ msgstr "同期"
 msgid "Synology Updates"
 msgstr "Synologyの更新"
 
+#, fuzzy
+msgid "Synthetic services"
+msgstr "Systemdサービス"
+
 msgid "Syslog Facility"
 msgstr "Syslogファシリティ"
 
@@ -51891,6 +51937,10 @@ msgstr "テストイベントが生成され、Event Consoleに送信されま�
 
 msgid "Test hostname before activation"
 msgstr "アクティベーション前にホスト名をテストする"
+
+#, fuzzy
+msgid "Test notification"
+msgstr "最終通知"
 
 msgid "Test runtime"
 msgstr "テストランタイム"
@@ -61271,33 +61321,6 @@ msgstr "1秒あたりの合計IO操作"
 msgid "Total Index Size"
 msgstr "インデックスの合計サイズ"
 
-#, fuzzy
-msgid "Total Localizable('Running On-Demand F instances') vCPUs"
-msgstr "実行中のオンデマンドインスタンスの合計"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand G instances') vCPUs"
-msgstr "実行中のオンデマンドインスタンスの合計"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
-msgstr "実行中のオンデマンドインスタンスの合計"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand P instances') vCPUs"
-msgstr "実行中のオンデマンドインスタンスの合計"
-
-#, fuzzy
-msgid ""
-"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
-"instances') vCPUs"
-msgstr ""
-"オンデマンドスタンダード（A, C, D, H, I, M, R, T, Z）インスタンスを起動する"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand X instances') vCPUs"
-msgstr "実行中のオンデマンドインスタンスの合計"
-
 msgid "Total Magnetic volumes space"
 msgstr "合計磁気ボリュームスペース"
 
@@ -61665,6 +61688,10 @@ msgid "Total restarts"
 msgstr "合計再起動回数"
 
 msgid "Total running On-Demand Instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running On-Demand Instances of type z1d"
 msgstr "実行中のオンデマンドインスタンスの合計"
 
 #, fuzzy
@@ -63347,6 +63374,310 @@ msgstr "実行中のオンデマンドインスタンスの合計"
 msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "実行中のオンデマンドインスタンスの合計"
 
+#, fuzzy
+msgid "Total running on-demand instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type a1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c4"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5ad"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5d"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5n"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6g"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gd"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cg1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cr1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3en"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type f1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3s"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4ad"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4dn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type h1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hi1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hs1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3en"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type inf1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m4"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5a"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5ad"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5d"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5dn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5n"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5zn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6g"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6gd"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6i"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type mac1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3dn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p4d"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r4"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5a"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5ad"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5b"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5d"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5dn"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5n"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6g"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6gd"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t2"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3a"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t4g"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-12tb1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-18tb1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-24tb1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-6tb1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-9tb1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type vt1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1e"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x2gd"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
 msgid "Total service problems"
 msgstr "サービス問題の合計"
 
@@ -63385,6 +63716,33 @@ msgstr "1秒あたりの合計スループット"
 
 msgid "Total timeout of check"
 msgstr "チェックの合計タイムアウト"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid ""
+"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
+"Z) instances') vCPUs"
+msgstr ""
+"オンデマンドスタンダード（A, C, D, H, I, M, R, T, Z）インスタンスを起動する"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
+msgstr "実行中のオンデマンドインスタンスの合計"
 
 msgid "Total usable RAM"
 msgstr "使用可能なRAMの合計"
@@ -64681,9 +65039,6 @@ msgstr "上限クリティカルレベル"
 msgid "Upper fan speed levels"
 msgstr "ファンの上限速度レベル"
 
-msgid "Upper level for GC run rate"
-msgstr "GC実行率の上位レベル"
-
 msgid "Upper level for blocked tasks"
 msgstr "ブロックされたタスクの上位レベル"
 
@@ -64714,17 +65069,8 @@ msgstr "公開メッセージレートの上位レベル"
 msgid "Upper level for queue length"
 msgstr "キューの長さの上位レベル"
 
-msgid "Upper level for rate of memory reclaimed by GC"
-msgstr "GCによって回収されたメモリレートの上位レベル"
-
-msgid "Upper level for runtime run queue"
-msgstr "ランタイム実行キューの上位レベル"
-
 msgid "Upper level for stuck tasks"
 msgstr "スタックタスクの上位レベル"
-
-msgid "Upper level for total number of GC runs"
-msgstr "GC実行総数の上位レベル"
 
 msgid "Upper level for total number of channels"
 msgstr "チャネル総数の上位レベル"
@@ -65400,6 +65746,10 @@ msgstr "ピギーバックを使用する"
 
 #, fuzzy
 msgid "Use RCC for isolated execution"
+msgstr "接続にはSSLを使用します。"
+
+#, fuzzy, python-format
+msgid "Use RCC for isolated execution (%s in Robotmk Core)"
 msgstr "接続にはSSLを使用します。"
 
 msgid "Use Reporting"
@@ -67690,6 +68040,9 @@ msgid "Wh"
 msgstr "Wh"
 
 msgid "What is the occasion?"
+msgstr ""
+
+msgid "What is the purpose?"
 msgstr ""
 
 msgid ""
@@ -72936,6 +73289,10 @@ msgstr "バックグラウンドジョブとして実行"
 msgid "running"
 msgstr "稼働中"
 
+#, fuzzy
+msgid "runs"
+msgstr "GCが実行されます"
+
 msgid "s"
 msgstr "s"
 
@@ -73368,6 +73725,41 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Set"
+#~ msgstr "セット"
+
+#~ msgid "Add unmonitored & remove vanished services and host labels"
+#~ msgstr ""
+#~ "監視されていないサービスを追加し、消失したサービスとホストラベルを削除する"
+
+#~ msgid "Add unmonitored services and new host labels"
+#~ msgstr "監視されていないサービスと新しいホストラベルを追加する"
+
+#~ msgid ""
+#~ "Add unmonitored services and new host labels, remove vanished services"
+#~ msgstr ""
+#~ "監視されていないサービスと新しいホストラベルを追加し、消失したサービスを削"
+#~ "除する"
+
+#~ msgid "Add unmonitored services, new host labels"
+#~ msgstr "監視されていないサービス、新しいホストラベルを追加します"
+
+#~ msgid "Only discover new host labels"
+#~ msgstr "新しいホストラベルを検出するだけです"
+
+#~ msgid "Refresh all services (tabula rasa), add new host labels"
+#~ msgstr ""
+#~ "すべてのサービス (tabula rasa)を更新し、新しいホストラベルを追加します"
+
+#~ msgid "Upper level for GC run rate"
+#~ msgstr "GC実行率の上位レベル"
+
+#~ msgid "Upper level for rate of memory reclaimed by GC"
+#~ msgstr "GCによって回収されたメモリレートの上位レベル"
+
+#~ msgid "Upper level for runtime run queue"
+#~ msgstr "ランタイム実行キューの上位レベル"
 
 #, no-python-format
 #~ msgid "% of the specified time via GET request"

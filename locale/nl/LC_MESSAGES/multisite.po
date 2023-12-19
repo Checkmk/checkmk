@@ -4075,20 +4075,6 @@ msgstr "Afstemmingsconfiguratie toevoegen"
 msgid "Add tunnel"
 msgstr "Tunnel toevoegen"
 
-msgid "Add unmonitored & remove vanished services and host labels"
-msgstr "Voeg onbewaakte & verwijder verdwenen diensten en hostlabels toe"
-
-msgid "Add unmonitored services and new host labels"
-msgstr "Voeg services zonder toezicht en nieuwe hostlabels toe"
-
-msgid "Add unmonitored services and new host labels, remove vanished services"
-msgstr ""
-"Voeg services zonder toezicht en nieuwe hostlabels toe, verwijder verdwenen "
-"services"
-
-msgid "Add unmonitored services, new host labels"
-msgstr "Voeg diensten zonder toezicht toe, nieuwe host labels"
-
 msgid "Add user"
 msgstr "Gebruiker toevoegen"
 
@@ -5916,9 +5902,10 @@ msgstr ""
 msgid "An absolute path to a CA certificate"
 msgstr "Een absoluut pad naar een CA-certificaat"
 
+#, fuzzy
 msgid ""
-"An absolute path to the filename (in case of MRPE) or to a directory in case "
-"of local / plugin"
+"An absolute path to the configuration file (in case of MRPE) or to a "
+"directory in case of local / plugin"
 msgstr ""
 "Een absoluut pad naar de bestandsnaam (in het geval van MRPE) of naar een "
 "directory in het geval van een lokale / plugin"
@@ -6944,6 +6931,10 @@ msgstr "Automatisch herladen van pagina's"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
+
+#, python-brace-format
+msgid "Automatic rediscovery parameter {param} not implemented"
+msgstr ""
 
 #, fuzzy
 msgid "Automatic renewal"
@@ -10472,19 +10463,6 @@ msgstr ""
 "apparaten die problemen hebben met sommige SNMP-implementaties. U kunt deze "
 "regel gebruiken om het SNMP-backend voor deze hosts te selecteren."
 
-#, no-python-format
-msgid ""
-"Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
-"and Unix as used space. Usually, 5% are being reserved for root when a new "
-"filesystem is being created. With this option you can have Checkmk display "
-"the current amount of reserved but yet unused space."
-msgstr ""
-"Check_MK behandelt ruimte die gereserveerd is voor de <tt>root</tt> "
-"gebruiker op Linux en Unix als gebruikte ruimte. Meestal wordt 5% "
-"gereserveerd voor root wanneer een nieuw bestandssysteem wordt aangemaakt. "
-"Met deze optie kunt u Checkmk de huidige hoeveelheid gereserveerde maar nog "
-"ongebruikte ruimte laten weergeven."
-
 #, fuzzy
 msgid ""
 "Check_MK usually uses an interval of one minute for the active Checkmk check "
@@ -10734,6 +10712,19 @@ msgstr "Checkmk specifiek"
 
 msgid "Checkmk state"
 msgstr "Checkmk staat"
+
+#, fuzzy, no-python-format
+msgid ""
+"Checkmk treats space that is reserved for the <tt>root</tt> user on Linux "
+"and Unix as used space. Usually, 5% are being reserved for root when a new "
+"filesystem is being created. With this option you can have Checkmk display "
+"the current amount of reserved but yet unused space."
+msgstr ""
+"Check_MK behandelt ruimte die gereserveerd is voor de <tt>root</tt> "
+"gebruiker op Linux en Unix als gebruikte ruimte. Meestal wordt 5% "
+"gereserveerd voor root wanneer een nieuw bestandssysteem wordt aangemaakt. "
+"Met deze optie kunt u Checkmk de huidige hoeveelheid gereserveerde maar nog "
+"ongebruikte ruimte laten weergeven."
 
 msgid "Checkmk versions"
 msgstr "Checkmk versies"
@@ -12811,7 +12802,8 @@ msgstr "Consolidatiefuncties"
 msgid "Constant value %.2f"
 msgstr "Constante waarde %.2f"
 
-msgid "Consumed Load Balancer Capacity Units"
+#, fuzzy
+msgid "Consumed Load Balancer Capacity unit=Units"
 msgstr "Verbruikte Load Balancer-capaciteitseenheden"
 
 msgid "Consumed capacity"
@@ -14269,11 +14261,19 @@ msgstr "Aangepast pad voorvoegsel"
 msgid "Custom probe state"
 msgstr "Aangepaste sondestatus"
 
+#, fuzzy
+msgid "Custom profile"
+msgstr "Aangepaste titel"
+
 msgid "Custom search query"
 msgstr "Aangepaste zoekopdracht"
 
 msgid "Custom service attributes"
 msgstr "Aangepaste dienstkenmerken"
+
+#, fuzzy
+msgid "Custom service configuration update"
+msgstr "Regel voor gastheer- en dienstconfiguratie"
 
 msgid "Custom service name"
 msgstr "Naam aangepaste dienst"
@@ -15255,6 +15255,10 @@ msgstr "Standaardparameters voor gedetecteerde diensten"
 
 msgid "Default parameters when no time period matches"
 msgstr "Standaardparameters wanneer geen tijdsperiode overeenkomt"
+
+#, fuzzy
+msgid "Default profile"
+msgstr "Standaard gebruikersprofiel"
 
 msgid "Default reporting timerange"
 msgstr "Standaard timerbereik voor rapportage"
@@ -17279,7 +17283,9 @@ msgid "Displays a single metric of a specific host and service."
 msgstr "Geeft een enkele metric weer van een specifieke host en service."
 
 #, fuzzy
-msgid "Displays a sorted list of services according to a selected metric."
+msgid ""
+"Displays a sorted list of services according to a selected metric. Note: In "
+"rare cases some metrics might be missing."
 msgstr "Toont het aantal diensten in een geselecteerde staat."
 
 msgid "Displays a static text to the user."
@@ -19649,6 +19655,9 @@ msgstr "Voer groep in"
 msgid "Enter layout mode"
 msgstr "Ga naar de lay-outmodus"
 
+msgid "Enter performance data to show in notifications etc. ..."
+msgstr ""
+
 msgid ""
 "Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
 "running including the protocol. Stop after the top level domain (TLD), so "
@@ -19764,6 +19773,10 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatuur"
 
 msgid "Enterprise feature"
+msgstr "Ondernemingsfunctie"
+
+#, fuzzy
+msgid "Enterprise features"
 msgstr "Ondernemingsfunctie"
 
 msgid "Entersekt Certificate Expiration"
@@ -21242,6 +21255,10 @@ msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "Storingen van de join launcher service"
+
+#, fuzzy
+msgid "Fake check result"
+msgstr "Valse controleresultaten"
 
 msgid "Fake check results"
 msgstr "Valse controleresultaten"
@@ -27087,6 +27104,12 @@ msgstr ""
 "zal er een nieuwe dienst zijn met gedetailleerde statistieken van het "
 "huidige aantal clients en processen en hun verschillende toestanden."
 
+#, python-format
+msgid ""
+"If you are looking for a way to test your notification settings, try '%s' in "
+"Setup > Notifications"
+msgstr ""
+
 msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
@@ -28932,6 +28955,9 @@ msgstr "Scherven initialiseren"
 
 msgid "Initiator"
 msgstr "Initiatiefnemer"
+
+msgid "Inject JavaScript profiling code"
+msgstr ""
 
 msgid "Inline SNMP"
 msgstr "Inline SNMP"
@@ -30979,6 +31005,10 @@ msgstr "Niveaus voor Drop Queue lengte"
 msgid "Levels for Fireeye License Expiration"
 msgstr "Niveaus voor Fireeye Licentie Afloop"
 
+#, fuzzy
+msgid "Levels for GC run rate"
+msgstr "Lager niveau voor GC run rate"
+
 msgid "Levels for Gude PDU Devices"
 msgstr "Niveaus voor Gude PDU apparaten"
 
@@ -31169,6 +31199,11 @@ msgid "Levels for rate of incoming IPv4 packets blocked"
 msgstr ""
 "Niveaus voor de snelheid van inkomende IPv4-pakketten die worden geblokkeerd"
 
+#, fuzzy
+msgid "Levels for rate of memory per second reclaimed by GC"
+msgstr ""
+"Onderste niveau voor snelheid van geheugen dat door GC wordt teruggewonnen"
+
 msgid "Levels for rate of normalized packets"
 msgstr "Niveaus voor snelheid van genormaliseerde pakketten"
 
@@ -31191,6 +31226,10 @@ msgstr "Niveaus voor resterend aanbod"
 
 msgid "Levels for remaining undo retention"
 msgstr "Niveaus voor resterende ongedaanmaking"
+
+#, fuzzy
+msgid "Levels for runtime run queue"
+msgstr "Lager niveau voor runtime run queue"
 
 msgid "Levels for sessions used"
 msgstr "Niveaus voor gebruikte sessies"
@@ -31283,6 +31322,10 @@ msgstr ""
 
 msgid "Levels for total amount of connections"
 msgstr "Niveaus voor totaal aantal verbindingen"
+
+#, fuzzy
+msgid "Levels for total number of GC runs"
+msgstr "Bovenste niveau voor totaal aantal GC-runs"
 
 msgid "Levels for total number of items"
 msgstr "Niveaus voor totaal aantal items"
@@ -32793,9 +32836,6 @@ msgstr "Lagere ventilatorsnelheden"
 msgid "Lower health levels"
 msgstr "Lagere gezondheidsniveaus"
 
-msgid "Lower level for GC run rate"
-msgstr "Lager niveau voor GC run rate"
-
 msgid "Lower level for delivered message rate"
 msgstr "Lager niveau voor afgeleverd bericht"
 
@@ -32811,13 +32851,6 @@ msgstr "Lager niveau voor het aantal uitvoerders van dit knooppunt"
 
 msgid "Lower level for published message rate"
 msgstr "Lager niveau voor gepubliceerde berichtsnelheid"
-
-msgid "Lower level for rate of memory reclaimed by GC"
-msgstr ""
-"Onderste niveau voor snelheid van geheugen dat door GC wordt teruggewonnen"
-
-msgid "Lower level for runtime run queue"
-msgstr "Lager niveau voor runtime run queue"
 
 msgid "Lower level for total number of channels"
 msgstr "Onderste niveau voor totaal aantal kanalen"
@@ -33563,10 +33596,6 @@ msgid ""
 msgstr ""
 "Laat de kern handmatig een melding sturen naar een host of dienst om te "
 "testen of meldingen correct zijn ingesteld"
-
-#, fuzzy, python-format
-msgid "Manually set check results to %s?"
-msgstr "<b>controleerresultaten handmatig instellen op %s</b> voor"
 
 #, python-format
 msgid "Manually set to %s by %s"
@@ -37464,6 +37493,10 @@ msgstr "Niet van toepassing"
 msgid "Not authenticated"
 msgstr "Niet geauthenticeerd"
 
+#, fuzzy
+msgid "Not available"
+msgstr "niet beschikbaar"
+
 msgid "Not available duration"
 msgstr "Niet beschikbaar duur"
 
@@ -39084,11 +39117,14 @@ msgstr ""
 "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
 "overeenkomt met een van deze reguliere expressies."
 
+#, python-format
+msgid ""
+"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
+"the Core MKP is installed."
+msgstr ""
+
 msgid "Only discover monitors in the following states"
 msgstr "Ontdek alleen monitors in de volgende staten"
-
-msgid "Only discover new host labels"
-msgstr "Ontdek alleen nieuwe host labels"
 
 msgid "Only display SLA Name"
 msgstr "Alleen SLA-naam weergeven"
@@ -43813,9 +43849,6 @@ msgstr "Zoekopdracht verfijnen"
 msgid "Refresh"
 msgstr "Vernieuwen"
 
-msgid "Refresh all services (tabula rasa), add new host labels"
-msgstr "Vernieuw alle diensten (tabula rasa), voeg nieuwe host labels toe"
-
 msgid "Refresh all services and host labels (tabula rasa)"
 msgstr "Vernieuw alle diensten en hostlabels (tabula rasa)"
 
@@ -45406,6 +45439,11 @@ msgstr "Verslag indienen"
 #, fuzzy
 msgid "Robotmk (Windows)"
 msgstr "RobotMK logboeken"
+
+msgid ""
+"Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
+"Robot Framework tests as Checkmk services."
+msgstr ""
 
 #, fuzzy
 msgid "Robotmk Suite Status"
@@ -47876,10 +47914,6 @@ msgstr "Sessie timeout:"
 msgid "Session type"
 msgstr "Sessie type"
 
-#, fuzzy
-msgid "Set"
-msgstr "Verzonden"
-
 msgid "Set IPv4 address"
 msgstr "IPv4-adres instellen"
 
@@ -47978,6 +48012,10 @@ msgstr "Uitvoeringsmodus instellen voor plugins en lokale controles"
 
 msgid "Set expected router mode"
 msgstr "Verwachte router-modus instellen"
+
+#, fuzzy, python-format
+msgid "Set fake check result to ‘%s’?"
+msgstr "<b>controleerresultaten handmatig instellen op %s</b> voor"
 
 msgid "Set field delimiter"
 msgstr "Veldscheidingsteken instellen"
@@ -48231,6 +48269,10 @@ msgstr "Timeouts instellen voor plugins en lokale controles"
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "Zet op \"0\" om het automatisch herladen uit te schakelen."
+
+#, fuzzy, python-format
+msgid "Set to '%s'"
+msgstr "Verander '%s' naar '%s'"
 
 msgid "Set upper Levels"
 msgstr "Bovenste niveaus instellen"
@@ -52438,6 +52480,10 @@ msgstr "Synchroniseren"
 msgid "Synology Updates"
 msgstr "Synology Updates"
 
+#, fuzzy
+msgid "Synthetic services"
+msgstr "Systemd diensten"
+
 msgid "Syslog Facility"
 msgstr "Syslog faciliteit"
 
@@ -53071,6 +53117,10 @@ msgstr "Testgebeurtenis gegenereerd en naar Event Console gestuurd."
 
 msgid "Test hostname before activation"
 msgstr "Test hostnaam vóór activering"
+
+#, fuzzy
+msgid "Test notification"
+msgstr "laatste mededeling"
 
 #, fuzzy
 msgid "Test runtime"
@@ -62961,32 +63011,6 @@ msgstr "Totaal IO operaties per seconde"
 msgid "Total Index Size"
 msgstr "Totale indexomvang"
 
-#, fuzzy
-msgid "Total Localizable('Running On-Demand F instances') vCPUs"
-msgstr "Totaal draaiende On-Demand Instances"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand G instances') vCPUs"
-msgstr "Totaal draaiende On-Demand Instances"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
-msgstr "Totaal draaiende On-Demand Instances"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand P instances') vCPUs"
-msgstr "Totaal draaiende On-Demand Instances"
-
-#, fuzzy
-msgid ""
-"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
-"instances') vCPUs"
-msgstr "Lopende On-Demand Standaard (A, C, D, H, I, M, R, T, Z) instanties"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand X instances') vCPUs"
-msgstr "Totaal draaiende On-Demand Instances"
-
 msgid "Total Magnetic volumes space"
 msgstr "Totale magnetische volumes ruimte"
 
@@ -63360,6 +63384,10 @@ msgid "Total restarts"
 msgstr "Totaal herstarts"
 
 msgid "Total running On-Demand Instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running On-Demand Instances of type z1d"
 msgstr "Totaal draaiende On-Demand Instances"
 
 #, fuzzy
@@ -65042,6 +65070,310 @@ msgstr "Totaal draaiende On-Demand Instances"
 msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "Totaal draaiende On-Demand Instances"
 
+#, fuzzy
+msgid "Total running on-demand instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type a1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c4"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5ad"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5d"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5n"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6g"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gd"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cg1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cr1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3en"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type f1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3s"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4ad"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4dn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type h1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hi1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hs1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3en"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type inf1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m4"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5a"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5ad"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5d"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5dn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5n"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5zn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6g"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6gd"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6i"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type mac1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3dn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p4d"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r4"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5a"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5ad"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5b"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5d"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5dn"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5n"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6g"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6gd"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t2"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3a"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t4g"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-12tb1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-18tb1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-24tb1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-6tb1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-9tb1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type vt1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1e"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x2gd"
+msgstr "Totaal draaiende On-Demand Instances"
+
 msgid "Total service problems"
 msgstr "Totaal service problemen"
 
@@ -65080,6 +65412,32 @@ msgstr "Totale doorvoer per seconde"
 
 msgid "Total timeout of check"
 msgstr "Totale time-out van controle"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid ""
+"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
+"Z) instances') vCPUs"
+msgstr "Lopende On-Demand Standaard (A, C, D, H, I, M, R, T, Z) instanties"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
+msgstr "Totaal draaiende On-Demand Instances"
 
 msgid "Total usable RAM"
 msgstr "Totaal bruikbare RAM"
@@ -66400,9 +66758,6 @@ msgstr "Bovenste kritieke niveau"
 msgid "Upper fan speed levels"
 msgstr "Bovenste ventilatorsnelheidsniveaus"
 
-msgid "Upper level for GC run rate"
-msgstr "Bovenste niveau voor GC run rate"
-
 msgid "Upper level for blocked tasks"
 msgstr "Bovenste niveau voor geblokkeerde taken"
 
@@ -66434,18 +66789,8 @@ msgstr "Bovenste niveau voor gepubliceerde berichtsnelheid"
 msgid "Upper level for queue length"
 msgstr "Bovenste niveau voor wachtrijlengte"
 
-msgid "Upper level for rate of memory reclaimed by GC"
-msgstr ""
-"Bovenste niveau voor snelheid van geheugen dat door GC wordt teruggewonnen"
-
-msgid "Upper level for runtime run queue"
-msgstr "Bovenste niveau voor runtime wachtrij"
-
 msgid "Upper level for stuck tasks"
 msgstr "Bovenste niveau voor vastzittende taken"
-
-msgid "Upper level for total number of GC runs"
-msgstr "Bovenste niveau voor totaal aantal GC-runs"
 
 msgid "Upper level for total number of channels"
 msgstr "Bovenste niveau voor het totale aantal kanalen"
@@ -67139,6 +67484,10 @@ msgstr "Gebruik Piggyback"
 
 #, fuzzy
 msgid "Use RCC for isolated execution"
+msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy, python-format
+msgid "Use RCC for isolated execution (%s in Robotmk Core)"
 msgstr "Gebruik SSL voor de verbinding."
 
 msgid "Use Reporting"
@@ -69495,6 +69844,9 @@ msgid "Wh"
 msgstr "Wh"
 
 msgid "What is the occasion?"
+msgstr ""
+
+msgid "What is the purpose?"
 msgstr ""
 
 msgid ""
@@ -74979,6 +75331,10 @@ msgstr "als achtergrondtaak uitvoeren"
 msgid "running"
 msgstr "lopen"
 
+#, fuzzy
+msgid "runs"
+msgstr "GC loopt"
+
 msgid "s"
 msgstr "s"
 
@@ -75413,6 +75769,42 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Sent"
+#~ msgid "Set"
+#~ msgstr "Verzonden"
+
+#~ msgid "Add unmonitored & remove vanished services and host labels"
+#~ msgstr "Voeg onbewaakte & verwijder verdwenen diensten en hostlabels toe"
+
+#~ msgid "Add unmonitored services and new host labels"
+#~ msgstr "Voeg services zonder toezicht en nieuwe hostlabels toe"
+
+#~ msgid ""
+#~ "Add unmonitored services and new host labels, remove vanished services"
+#~ msgstr ""
+#~ "Voeg services zonder toezicht en nieuwe hostlabels toe, verwijder "
+#~ "verdwenen services"
+
+#~ msgid "Add unmonitored services, new host labels"
+#~ msgstr "Voeg diensten zonder toezicht toe, nieuwe host labels"
+
+#~ msgid "Only discover new host labels"
+#~ msgstr "Ontdek alleen nieuwe host labels"
+
+#~ msgid "Refresh all services (tabula rasa), add new host labels"
+#~ msgstr "Vernieuw alle diensten (tabula rasa), voeg nieuwe host labels toe"
+
+#~ msgid "Upper level for GC run rate"
+#~ msgstr "Bovenste niveau voor GC run rate"
+
+#~ msgid "Upper level for rate of memory reclaimed by GC"
+#~ msgstr ""
+#~ "Bovenste niveau voor snelheid van geheugen dat door GC wordt teruggewonnen"
+
+#~ msgid "Upper level for runtime run queue"
+#~ msgstr "Bovenste niveau voor runtime wachtrij"
 
 #, fuzzy
 #~| msgid "Local Authentication Data"

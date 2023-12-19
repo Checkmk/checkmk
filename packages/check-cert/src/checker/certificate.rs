@@ -7,7 +7,7 @@ use crate::check::{
 };
 use time::Duration;
 use typed_builder::TypedBuilder;
-use x509_parser::certificate::X509Certificate;
+use x509_parser::certificate::{Validity, X509Certificate};
 use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
@@ -57,6 +57,7 @@ pub struct Config {
     issuer_st: Option<String>,
     issuer_c: Option<String>,
     not_after: Option<LevelsChecker<Duration>>,
+    max_validity: Option<Duration>,
 }
 
 pub fn check(der: &[u8], config: Config) -> Collection {
@@ -132,6 +133,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             cert.validity().not_after,
         )
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize))),
+        check_max_validity(cert.validity(), config.max_validity),
     ))
 }
 
@@ -219,6 +221,29 @@ fn check_validity_not_after(
             ),
             LevelsCheckerArgs::builder().label("validity").build(),
         ),
+    })
+}
+
+fn check_max_validity(
+    validity: &Validity,
+    max_validity: Option<Duration>,
+) -> Option<SimpleCheckResult> {
+    max_validity.map(|max_validity| {
+        if let Some(total_validity) = validity.not_after - validity.not_before {
+            match total_validity <= max_validity {
+                true => SimpleCheckResult::ok(format!(
+                    "Max validity {} days",
+                    total_validity.whole_days()
+                )),
+                false => SimpleCheckResult::warn(format!(
+                    "Max validity is {} days but expected at most {}",
+                    total_validity.whole_days(),
+                    max_validity.whole_days(),
+                )),
+            }
+        } else {
+            SimpleCheckResult::crit("Invalid certificate validity")
+        }
     })
 }
 

@@ -35,7 +35,7 @@ from cmk.graphing.v1 import (
     perfometers,
     PhysicalUnit,
     ScientificUnit,
-    translation,
+    translations,
     Unit,
 )
 
@@ -531,31 +531,31 @@ graph_info = AutomaticDict("manual_graph_template")
 
 
 def _parse_check_command(
-    check_command: translation.PassiveCheck
-    | translation.ActiveCheck
-    | translation.HostCheckCommand
-    | translation.NagiosPlugin,
+    check_command: translations.PassiveCheck
+    | translations.ActiveCheck
+    | translations.HostCheckCommand
+    | translations.NagiosPlugin,
 ) -> str:
     match check_command:
-        case translation.PassiveCheck():
+        case translations.PassiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk-")
                 else f"check_mk-{check_command.name}"
             )
-        case translation.ActiveCheck():
+        case translations.ActiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk_active-")
                 else f"check_mk_active-{check_command.name}"
             )
-        case translation.HostCheckCommand():
+        case translations.HostCheckCommand():
             return (
                 check_command.name
                 if check_command.name.startswith("check-mk-")
                 else f"check-mk-{check_command.name}"
             )
-        case translation.NagiosPlugin():
+        case translations.NagiosPlugin():
             return (
                 check_command.name
                 if check_command.name.startswith("check_")
@@ -564,21 +564,21 @@ def _parse_check_command(
 
 
 def _parse_translation(
-    translation_: translation.Renaming | translation.Scaling | translation.RenamingAndScaling,
+    translation: translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
 ) -> CheckMetricEntry:
-    match translation_:
-        case translation.Renaming():
-            return {"name": translation_.rename_to}
-        case translation.Scaling():
-            return {"scale": translation_.scale_by}
-        case translation.RenamingAndScaling():
-            return {"name": translation_.rename_to, "scale": translation_.scale_by}
+    match translation:
+        case translations.Renaming():
+            return {"name": translation.rename_to}
+        case translations.Scaling():
+            return {"scale": translation.scale_by}
+        case translations.RenamingAndScaling():
+            return {"name": translation.rename_to, "scale": translation.scale_by}
 
 
 def add_graphing_plugins(
     plugins: DiscoveredPlugins[
         metrics.Metric
-        | translation.Translation
+        | translations.Translation
         | perfometers.Perfometer
         | perfometers.Bidirectional
         | perfometers.Stacked
@@ -595,11 +595,11 @@ def add_graphing_plugins(
                 "color": parse_color(plugin.color),
             }
 
-        elif isinstance(plugin, translation.Translation):
+        elif isinstance(plugin, translations.Translation):
             for check_command in plugin.check_commands:
                 check_metrics[_parse_check_command(check_command)] = {
-                    MetricName(old_name): _parse_translation(translation_)
-                    for old_name, translation_ in plugin.translations.items()
+                    MetricName(old_name): _parse_translation(translation)
+                    for old_name, translation in plugin.translations.items()
                 }
 
 
@@ -796,15 +796,15 @@ def lookup_metric_translations_for_check_command(
 
 def find_matching_translation(
     metric_name: MetricName,
-    translations: Mapping[MetricName, CheckMetricEntry],
+    translations_: Mapping[MetricName, CheckMetricEntry],
 ) -> CheckMetricEntry:
-    if translation_ := translations.get(metric_name):
-        return translation_
-    for orig_metric_name, translation_ in translations.items():
+    if translation := translations_.get(metric_name):
+        return translation
+    for orig_metric_name, translation in translations_.items():
         if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
             metric_name
         ):  # Regex entry
-            return translation_
+            return translation
     return {}
 
 

@@ -6,13 +6,13 @@
 import cmk.utils.debug
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import graphs, metrics, perfometers, translation
+from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
 
 def load_graphing_plugins() -> (
     DiscoveredPlugins[
         metrics.Metric
-        | translation.Translation
+        | translations.Translation
         | perfometers.Perfometer
         | perfometers.Bidirectional
         | perfometers.Stacked
@@ -24,7 +24,7 @@ def load_graphing_plugins() -> (
         PluginGroup.GRAPHING,
         {
             metrics.Metric: "metric_",
-            translation.Translation: "translation_",
+            translations.Translation: "translation_",
             perfometers.Perfometer: "perfometer_",
             perfometers.Bidirectional: "perfometer_",
             perfometers.Stacked: "perfometer_",

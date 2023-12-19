@@ -55,7 +55,7 @@ from cmk.graphing.v1 import (
     perfometers,
     PhysicalUnit,
     ScientificUnit,
-    translation,
+    translations,
     Unit,
 )
 
@@ -78,7 +78,7 @@ def _show_exception(e: Exception) -> None:
 
 @dataclass(frozen=True)
 class Unparseable:
-    namespace: Literal["metric", "translation", "perfometer", "graph"]
+    namespace: Literal["metrics", "translations", "perfometers", "graphs"]
     name: str
 
 
@@ -224,40 +224,45 @@ def _parse_legacy_check_metrics(
     debug: bool,
     unparseables: list[Unparseable],
     check_metrics: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
-) -> Iterator[translation.Translation]:
+) -> Iterator[translations.Translation]:
     by_translations: dict[
         tuple[
             tuple[
                 str,
-                translation.Renaming | translation.Scaling | translation.RenamingAndScaling,
+                translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
             ],
             ...,
         ],
         list[
-            translation.PassiveCheck
-            | translation.ActiveCheck
-            | translation.HostCheckCommand
-            | translation.NagiosPlugin
+            translations.PassiveCheck
+            | translations.ActiveCheck
+            | translations.HostCheckCommand
+            | translations.NagiosPlugin
         ],
     ] = {}
     for name, info in check_metrics.items():
-        check_command: translation.PassiveCheck | translation.ActiveCheck | translation.HostCheckCommand | translation.NagiosPlugin
+        check_command: (
+            translations.PassiveCheck
+            | translations.ActiveCheck
+            | translations.HostCheckCommand
+            | translations.NagiosPlugin
+        )
         if name.startswith("check_mk-"):
-            check_command = translation.PassiveCheck(name[9:])
+            check_command = translations.PassiveCheck(name[9:])
         elif name.startswith("check_mk_active-"):
-            check_command = translation.ActiveCheck(name[16:])
+            check_command = translations.ActiveCheck(name[16:])
         elif name.startswith("check-mk-"):
-            check_command = translation.HostCheckCommand(name[9:])
+            check_command = translations.HostCheckCommand(name[9:])
         elif name.startswith("check_"):
-            check_command = translation.NagiosPlugin(name[6:])
+            check_command = translations.NagiosPlugin(name[6:])
         else:
-            unparseables.append(Unparseable("translation", name))
+            unparseables.append(Unparseable("translations", name))
             raise ValueError(name)
 
         translations_: list[
             tuple[
                 str,
-                translation.Renaming | translation.Scaling | translation.RenamingAndScaling,
+                translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
             ]
         ] = []
         for legacy_name, attrs in info.items():
@@ -266,13 +271,13 @@ def _parse_legacy_check_metrics(
                     translations_.append(
                         (
                             legacy_name,
-                            translation.RenamingAndScaling(attrs["name"], attrs["scale"]),
+                            translations.RenamingAndScaling(attrs["name"], attrs["scale"]),
                         )
                     )
                 case True, False:
-                    translations_.append((legacy_name, translation.Renaming(attrs["name"])))
+                    translations_.append((legacy_name, translations.Renaming(attrs["name"])))
                 case False, True:
-                    translations_.append((legacy_name, translation.Scaling(attrs["scale"])))
+                    translations_.append((legacy_name, translations.Scaling(attrs["scale"])))
                 case _:
                     continue
 
@@ -283,7 +288,7 @@ def _parse_legacy_check_metrics(
     for sorted_translations, check_commands in by_translations.items():
         name = "_".join([c.name for c in check_commands])
         try:
-            yield translation.Translation(
+            yield translations.Translation(
                 name=name,
                 check_commands=check_commands,
                 translations=dict(sorted_translations),
@@ -292,7 +297,7 @@ def _parse_legacy_check_metrics(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("translation", name))
+            unparseables.append(Unparseable("translations", name))
 
 
 _Operators = Literal["+", "*", "-", "/"]
@@ -745,7 +750,7 @@ def _parse_legacy_perfometer_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("perfometer", str(idx)))
+            unparseables.append(Unparseable("perfometers", str(idx)))
 
 
 def _parse_legacy_metric(
@@ -897,7 +902,7 @@ def _parse_legacy_graph_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("graph", name))
+            unparseables.append(Unparseable("graphs", name))
             continue
 
         if lower is not None and upper is not None:
@@ -962,7 +967,7 @@ def _color_repr(color: Color) -> str:
 
 
 def _inst_repr(
-    namespace: Literal["metrics", "translation", "perfometers", "graphs"],
+    namespace: Literal["metrics", "translations", "perfometers", "graphs"],
     inst: object,
     args: Sequence[str],
 ) -> str:
@@ -1057,13 +1062,13 @@ def _quantity_repr(
 
 
 def _check_command_repr(
-    check_command: translation.PassiveCheck
-    | translation.ActiveCheck
-    | translation.HostCheckCommand
-    | translation.NagiosPlugin,
+    check_command: translations.PassiveCheck
+    | translations.ActiveCheck
+    | translations.HostCheckCommand
+    | translations.NagiosPlugin,
 ) -> str:
     return _inst_repr(
-        "translation",
+        "translations",
         check_command,
         [
             _name_repr(check_command.name),
@@ -1072,24 +1077,24 @@ def _check_command_repr(
 
 
 def _translation_ty_repr(
-    translation_ty: translation.Renaming | translation.Scaling | translation.RenamingAndScaling,
+    translation_ty: translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
 ) -> str:
     match translation_ty:
-        case translation.Renaming():
+        case translations.Renaming():
             args = [_name_repr(translation_ty.rename_to)]
-        case translation.Scaling():
+        case translations.Scaling():
             args = [str(translation_ty.scale_by)]
-        case translation.RenamingAndScaling():
+        case translations.RenamingAndScaling():
             args = [
                 _name_repr(translation_ty.rename_to),
                 str(translation_ty.scale_by),
             ]
-    return _inst_repr("translation", translation_ty, args)
+    return _inst_repr("translations", translation_ty, args)
 
 
-def translation_repr(translation_: translation.Translation) -> str:
+def translation_repr(translation_: translations.Translation) -> str:
     return _inst_repr(
-        "translation",
+        "translations",
         translation_,
         [
             _kwarg_repr("name", _name_repr(translation_.name)),
@@ -1312,7 +1317,7 @@ def _migrate_file_content(
     debug: bool, path: Path, unparseables: list[Unparseable]
 ) -> Iterator[
     metrics.Metric
-    | translation.Translation
+    | translations.Translation
     | perfometers.Perfometer
     | perfometers.Bidirectional
     | perfometers.Stacked
@@ -1336,7 +1341,7 @@ def _migrate_file_content(
 
 def _obj_repr(
     obj: metrics.Metric
-    | translation.Translation
+    | translations.Translation
     | perfometers.Perfometer
     | perfometers.Bidirectional
     | perfometers.Stacked
@@ -1349,7 +1354,7 @@ def _obj_repr(
     match obj:
         case metrics.Metric():
             return f"metric_{_obj_var_name()} = {_metric_repr(obj)}"
-        case translation.Translation():
+        case translations.Translation():
             return f"translation_{_obj_var_name()} = {translation_repr(obj)}"
         case perfometers.Perfometer() | perfometers.Bidirectional() | perfometers.Stacked():
             return f"perfometer_{_obj_var_name()} = {perfometer_repr(obj)}"
@@ -1359,9 +1364,9 @@ def _obj_repr(
 
 def _order_unparseables(
     unparseables_by_path: Mapping[Path, Sequence[Unparseable]]
-) -> Mapping[Path, Mapping[Literal["metric", "translation", "perfometer", "graph"], set[str]]]:
+) -> Mapping[Path, Mapping[Literal["metrics", "translations", "perfometers", "graphs"], set[str]]]:
     ordered: dict[
-        Path, dict[Literal["metric", "translation", "perfometer", "graph"], set[str]]
+        Path, dict[Literal["metrics", "translations", "perfometers", "graphs"], set[str]]
     ] = {}
     for path, unparseables in unparseables_by_path.items():
         for unparseable in unparseables:

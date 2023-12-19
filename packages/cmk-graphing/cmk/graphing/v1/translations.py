@@ -11,9 +11,9 @@ __all__ = [
     "ActiveCheck",
     "HostCheckCommand",
     "NagiosPlugin",
-    "Renaming",
-    "Scaling",
-    "RenamingAndScaling",
+    "RenameTo",
+    "ScaleBy",
+    "RenameToAndScaleBy",
 ]
 
 
@@ -54,7 +54,7 @@ class NagiosPlugin:
 
 
 @dataclass(frozen=True)
-class Renaming:
+class RenameTo:
     rename_to: str
 
     def __post_init__(self) -> None:
@@ -63,7 +63,7 @@ class Renaming:
 
 
 @dataclass(frozen=True)
-class Scaling:
+class ScaleBy:
     scale_by: int | float
 
     def __post_init__(self) -> None:
@@ -71,7 +71,7 @@ class Scaling:
 
 
 @dataclass(frozen=True)
-class RenamingAndScaling:
+class RenameToAndScaleBy:
     rename_to: str
     scale_by: int | float
 
@@ -85,7 +85,7 @@ class RenamingAndScaling:
 class Translation:
     name: str
     check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]
-    translations: Mapping[str, Renaming | Scaling | RenamingAndScaling]
+    translations: Mapping[str, RenameTo | ScaleBy | RenameToAndScaleBy]
 
     def __post_init__(self) -> None:
         if not self.name:

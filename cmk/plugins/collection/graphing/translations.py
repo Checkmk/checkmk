@@ -8,20 +8,20 @@ from cmk.graphing.v1 import translations
 translation_citrix_serverload = translations.Translation(
     name="citrix_serverload",
     check_commands=[translations.PassiveCheck("citrix_serverload")],
-    translations={"perf": translations.RenamingAndScaling("citrix_load", 0.01)},
+    translations={"perf": translations.RenameToAndScaleBy("citrix_load", 0.01)},
 )
 
 translation_genau_fan = translations.Translation(
     name="genau_fan",
     check_commands=[translations.PassiveCheck("genau_fan")],
-    translations={"rpm": translations.Renaming("fan")},
+    translations={"rpm": translations.RenameTo("fan")},
 )
 
 translation_ibm_svc_nodestats_disk_latency = translations.Translation(
     name="ibm_svc_nodestats_disk_latency",
     check_commands=[translations.PassiveCheck("ibm_svc_nodestats_disk_latency")],
     translations={
-        "read_latency": translations.Scaling(0.001),
-        "write_latency": translations.Scaling(0.001),
+        "read_latency": translations.ScaleBy(0.001),
+        "write_latency": translations.ScaleBy(0.001),
     },
 )

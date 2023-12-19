@@ -30,34 +30,34 @@ def test_nagios_plugin_error() -> None:
 
 def test_renaming_error_empty_rename_to() -> None:
     with pytest.raises(ValueError):
-        translations.Renaming("")
+        translations.RenameTo("")
 
 
 def test_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translations.Scaling(0)
+        translations.ScaleBy(0)
 
 
 def test_renaming_and_scaling_error_empty_rename_to() -> None:
     with pytest.raises(ValueError):
-        translations.RenamingAndScaling("", 1)
+        translations.RenameToAndScaleBy("", 1)
 
 
 def test_renaming_and_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translations.RenamingAndScaling("new-metric-name", 0)
+        translations.RenameToAndScaleBy("new-metric-name", 0)
 
 
 def test_translation_error_empty_name() -> None:
     check_commands = [translations.PassiveCheck("passive-check")]
-    translations_ = {"old-metric-name": translations.Renaming("new-metric-name")}
+    translations_ = {"old-metric-name": translations.RenameTo("new-metric-name")}
     with pytest.raises(ValueError):
         translations.Translation(name="", check_commands=check_commands, translations=translations_)
 
 
 def test_translation_error_missing_check_commands() -> None:
     name = "name"
-    translations_ = {"old-metric-name": translations.Renaming("new-metric-name")}
+    translations_ = {"old-metric-name": translations.RenameTo("new-metric-name")}
     with pytest.raises(AssertionError):
         translations.Translation(name=name, check_commands=[], translations=translations_)
 
@@ -76,5 +76,5 @@ def test_translation_error_empty_old_name() -> None:
         translations.Translation(
             name=name,
             check_commands=check_commands,
-            translations={"": translations.Renaming("new-metric-name")},
+            translations={"": translations.RenameTo("new-metric-name")},
         )

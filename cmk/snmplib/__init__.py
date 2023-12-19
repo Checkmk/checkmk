@@ -23,6 +23,7 @@ from ._typedefs import RangeLimit as RangeLimit
 from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
 from ._typedefs import SNMPContext as SNMPContext
+from ._typedefs import SNMPContextConfig as SNMPContextConfig
 from ._typedefs import SNMPContextTimeout as SNMPContextTimeout
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPHostConfig as SNMPHostConfig

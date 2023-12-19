@@ -5,19 +5,19 @@
 
 from typing import TypeAlias
 
-from . import metric
+from . import metrics
 
 Quantity: TypeAlias = (
     str
-    | metric.Constant
-    | metric.WarningOf
-    | metric.CriticalOf
-    | metric.MinimumOf
-    | metric.MaximumOf
-    | metric.Sum
-    | metric.Product
-    | metric.Difference
-    | metric.Fraction
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
 )
 
 Bound: TypeAlias = int | float | Quantity

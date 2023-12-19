@@ -9,12 +9,12 @@ from typing import Literal
 import pytest
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
     noop_parser,
     parse_http_proxy,
+    parse_secret,
     PlainTextSecret,
     Secret,
     StoredSecret,
@@ -41,12 +41,12 @@ from cmk.server_side_calls.v1 import (
 def test_get_secret_from_params(
     secret_type: Literal["store", "password"], secret_value: str, expected_result: Secret
 ) -> None:
-    assert get_secret_from_params(secret_type, secret_value) == expected_result
+    assert parse_secret(secret_type, secret_value) == expected_result
 
 
 def test_get_secret_from_params_invalid_type() -> None:
     with pytest.raises(ValueError, match="invalid is not a valid secret type"):
-        get_secret_from_params("invalid", "password1234")  # type: ignore[arg-type]
+        parse_secret("invalid", "password1234")  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

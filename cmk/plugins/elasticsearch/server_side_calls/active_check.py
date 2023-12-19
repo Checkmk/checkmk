@@ -11,8 +11,8 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
+    parse_secret,
     Secret,
 )
 
@@ -41,7 +41,7 @@ def commands_function(
     if params.user is not None:
         args += ["-u", params.user]
     if params.password is not None:
-        args += ["-s", get_secret_from_params(params.password[0], params.password[1])]
+        args += ["-s", parse_secret(params.password[0], params.password[1])]
     if params.port is not None:
         args += ["-p", str(params.port)]
     if params.index:

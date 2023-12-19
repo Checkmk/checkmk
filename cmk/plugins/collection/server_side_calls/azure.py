@@ -9,10 +9,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -54,7 +54,7 @@ def generate_azure_command(  # pylint: disable=too-many-branches
         "--client",
         params.client,
         "--secret",
-        get_secret_from_params(secret_type, secret_value),
+        parse_secret(secret_type, secret_value),
     ]
 
     args += ["--authority", params.authority]

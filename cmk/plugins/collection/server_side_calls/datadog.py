@@ -9,10 +9,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -70,8 +70,8 @@ def generate_datadog_command(
     app_key_type, app_key_value = params.instance.app_key
     args: list[str | Secret] = [
         host_config.name,
-        get_secret_from_params(api_key_type, api_key_value),
-        get_secret_from_params(app_key_type, app_key_value),
+        parse_secret(api_key_type, api_key_value),
+        parse_secret(app_key_type, app_key_value),
         params.instance.api_host,
     ]
 

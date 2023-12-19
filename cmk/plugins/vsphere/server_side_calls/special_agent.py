@@ -10,9 +10,9 @@ from typing import assert_never, Literal
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -60,7 +60,7 @@ def commands_function(
         "-u",
         params.user,
         "-s",
-        get_secret_from_params(*params.secret),
+        parse_secret(*params.secret),
         "-i",
         ",".join(params.infos),
         "--spaces",

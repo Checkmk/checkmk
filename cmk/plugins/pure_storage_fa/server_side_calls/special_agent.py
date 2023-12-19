@@ -9,8 +9,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -39,7 +39,7 @@ def commands_function(
     else:
         command_arguments += ["--cert-server-name", str(params.ssl)]
 
-    command_arguments += ["--api-token", get_secret_from_params(*params.api_token)]
+    command_arguments += ["--api-token", parse_secret(*params.api_token)]
 
     yield SpecialAgentCommand(
         command_arguments=[*command_arguments, host_config.address or host_config.name]

@@ -10,11 +10,11 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     noop_parser,
     parse_http_proxy,
+    parse_secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -66,7 +66,7 @@ def generate_kube_command(  # pylint: disable=too-many-branches
     args = ["--cluster", params["cluster-name"]]
     args.extend(["--kubernetes-cluster-hostname", host_config.name])
     secret_type, secret_value = params["token"]
-    args.extend(["--token", get_secret_from_params(secret_type, secret_value)])
+    args.extend(["--token", parse_secret(secret_type, secret_value)])
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])

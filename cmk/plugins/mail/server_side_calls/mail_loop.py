@@ -10,9 +10,9 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     Secret,
 )
 
@@ -67,9 +67,7 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
             args.append(f"--send-username={username}")
             secret_type, secret_value = password
             args.append(
-                get_secret_from_params(
-                    secret_type, secret_value, display_format="--send-password=%s"
-                )
+                parse_secret(secret_type, secret_value, display_format="--send-password=%s")
             )
     elif send_protocol == "EWS":
         if not connection_params.disable_tls:
@@ -87,7 +85,7 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
             basic_secret_type, basic_secret_value = password
             args += [
                 f"--send-username={username}",
-                get_secret_from_params(
+                parse_secret(
                     basic_secret_type, basic_secret_value, display_format="--send-password=%s"
                 ),
             ]
@@ -96,7 +94,7 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
             client_secret_type, client_secret_value = client_secret
             args += [
                 f"--send-client-id={client_id}",
-                get_secret_from_params(
+                parse_secret(
                     client_secret_type,
                     client_secret_value,
                     display_format="--send-client-secret=%s",

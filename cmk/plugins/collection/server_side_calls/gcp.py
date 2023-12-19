@@ -11,9 +11,9 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -46,7 +46,7 @@ def agent_gcp_arguments(
         "--project",
         params.project,
         "--credentials",
-        get_secret_from_params(params.credentials[0], params.credentials[1]),
+        parse_secret(params.credentials[0], params.credentials[1]),
         "--date",
         today.isoformat(),
     ]

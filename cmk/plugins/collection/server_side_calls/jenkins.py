@@ -9,9 +9,9 @@ from typing import Iterator, Mapping, Sequence
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -45,7 +45,7 @@ def agent_jenkins_config(
         "-u",
         params.user,
         "-s",
-        get_secret_from_params(secret_type, secret_value),
+        parse_secret(secret_type, secret_value),
     ]
 
     if params.sections:

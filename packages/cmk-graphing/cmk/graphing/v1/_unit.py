@@ -15,18 +15,18 @@ from ._localize import Localizable
 class Unit(Enum):
     # CMK
     BAR = "bar"
-    BITS_IEC = "bits"  # factor 1024
-    BITS_IEC_PER_SECOND = "bits/s"  # factor 1024
-    BITS_SI = "bits"  # factor 1000
-    BITS_SI_PER_SECOND = "bits/s"  # factor 1000
-    BYTES_IEC = "bytes"  # factor 1024
-    BYTES_IEC_PER_DAY = "bytes/d"  # factor 1024
-    BYTES_IEC_PER_OPERATION = "bytes/op"  # factor 1024
-    BYTES_IEC_PER_SECOND = "bytes/s"  # factor 1024
-    BYTES_SI = "bytes"  # factor 1000
-    BYTES_SI_PER_DAY = "bytes/d"  # factor 1000
-    BYTES_SI_PER_OPERATION = "bytes/op"  # factor 1000
-    BYTES_SI_PER_SECOND = "bytes/s"  # factor 1000
+    BIT_IEC = "bits"  # factor 1024
+    BIT_IEC_PER_SECOND = "bits/s"  # factor 1024
+    BIT_SI = "bits"  # factor 1000
+    BIT_SI_PER_SECOND = "bits/s"  # factor 1000
+    BYTE_IEC = "bytes"  # factor 1024
+    BYTE_IEC_PER_DAY = "bytes/d"  # factor 1024
+    BYTE_IEC_PER_OPERATION = "bytes/op"  # factor 1024
+    BYTE_IEC_PER_SECOND = "bytes/s"  # factor 1024
+    BYTE_SI = "bytes"  # factor 1000
+    BYTE_SI_PER_DAY = "bytes/d"  # factor 1000
+    BYTE_SI_PER_OPERATION = "bytes/op"  # factor 1000
+    BYTE_SI_PER_SECOND = "bytes/s"  # factor 1000
     COUNT = ""  # integer
     DECIBEL = "dB"
     DECIBEL_MILLIVOLT = "dBmV"

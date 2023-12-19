@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import itertools
 import logging
 import os
@@ -1013,7 +1014,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         if snmp_backend_override is not None:
-            snmp_config = snmp_config._replace(snmp_backend=snmp_backend_override)
+            snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
         _do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
@@ -1097,7 +1098,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         if snmp_backend_override is not None:
-            snmp_config = snmp_config._replace(snmp_backend=snmp_backend_override)
+            snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
 
         backend = snmp_factory.make_backend(snmp_config, log.logger)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)

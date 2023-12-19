@@ -5,6 +5,7 @@
 
 # TODO This module should be freed from base deps.
 
+import dataclasses
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
@@ -85,7 +86,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.host_name, self.ipaddress, SourceType.HOST
         )
         if self._backend_override is not None:
-            snmp_config = snmp_config._replace(snmp_backend=self._backend_override)
+            snmp_config = dataclasses.replace(snmp_config, snmp_backend=self._backend_override)
 
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
@@ -149,7 +150,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.host_name, self.ipaddress, SourceType.MANAGEMENT
         )
         if self._backend_override is not None:
-            snmp_config = snmp_config._replace(snmp_backend=self._backend_override)
+            snmp_config = dataclasses.replace(snmp_config, snmp_backend=self._backend_override)
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,

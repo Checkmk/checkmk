@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import logging
 from collections.abc import Sequence
 from functools import partial
@@ -195,7 +196,8 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
             walk_cache={},
             save_walk_cache=False,
             backend=Backend(
-                SNMPConfig._replace(
+                dataclasses.replace(
+                    SNMPConfig,
                     credentials=(),  # for `is_snmpv3_host`
                     snmpv3_contexts=[
                         SNMPContextConfig(
@@ -230,7 +232,8 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
             walk_cache={},
             save_walk_cache=False,
             backend=Backend(
-                SNMPConfig._replace(
+                dataclasses.replace(
+                    SNMPConfig,
                     credentials=(),  # for `is_snmpv3_host`
                     snmpv3_contexts=[
                         SNMPContextConfig(

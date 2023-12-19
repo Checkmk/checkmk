@@ -5,6 +5,7 @@
 
 import abc
 import copy
+import dataclasses
 import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
@@ -85,7 +86,8 @@ class SNMPContextConfig:
 
 
 # Wraps the configuration of a host into a single object for the SNMP code
-class SNMPHostConfig(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class SNMPHostConfig:
     is_ipv6_primary: bool
     hostname: HostName
     ipaddress: HostAddress
@@ -116,7 +118,7 @@ class SNMPHostConfig(NamedTuple):
         return SNMPContextConfig.default()
 
     def serialize(self) -> Mapping[str, object]:
-        serialized = self._asdict()
+        serialized = dataclasses.asdict(self)
         serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
         serialized["oid_range_limits"] = {
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
@@ -161,7 +163,7 @@ class SNMPBackend(abc.ABC):
 
     @port.setter
     def port(self, new_port: int) -> None:
-        self.config = self.config._replace(port=new_port)
+        self.config = dataclasses.replace(self.config, port=new_port)
 
     @abc.abstractmethod
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import logging
 
 import pytest
@@ -48,14 +49,14 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
 
 
 def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
-    snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
+    snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
     if InlineSNMPBackend is not None:
         assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
-        snmp_config = snmp_config._replace(snmp_backend="bla")  # type: ignore[arg-type]
+        snmp_config = dataclasses.replace(snmp_config, snmp_backend="bla")  # type: ignore[arg-type]
         if InlineSNMPBackend is not None:
             assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
         else:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 import socket
@@ -479,8 +480,8 @@ class TestSNMPFetcherDeserialization:
 
     def test_fetcher_deserialization_snmpv3_credentials(self, fetcher: SNMPFetcher) -> None:
         # snmp_config is Final, but for testing...
-        fetcher.snmp_config = fetcher.snmp_config._replace(  # type: ignore[misc]
-            credentials=("authNoPriv", "md5", "md5", "abc"),
+        fetcher.snmp_config = dataclasses.replace(  # type: ignore[misc]
+            fetcher.snmp_config, credentials=("authNoPriv", "md5", "md5", "abc")
         )
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert other.snmp_config.credentials == fetcher.snmp_config.credentials

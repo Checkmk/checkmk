@@ -97,9 +97,17 @@ struct Args {
     #[arg(long)]
     serial: Option<String>,
 
-    /// Expected subject
+    /// Expected subject common name (CN)
     #[arg(long)]
-    subject: Option<String>,
+    subject_cn: Option<String>,
+
+    /// Expected subject organization (O)
+    #[arg(long)]
+    subject_o: Option<String>,
+
+    /// Expected subject organizational unit (OU)
+    #[arg(long)]
+    subject_ou: Option<String>,
 
     /// Expected issuer
     #[arg(long)]
@@ -192,7 +200,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &chain[0],
         CertChecks::builder()
             .serial(args.serial)
-            .subject(args.subject)
+            .subject_cn(args.subject_cn)
+            .subject_o(args.subject_o)
+            .subject_ou(args.subject_ou)
             .issuer(args.issuer)
             .signature_algorithm(
                 args.signature_algorithm

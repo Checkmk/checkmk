@@ -13,7 +13,7 @@ use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
-use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
+use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo, X509Name};
 
 macro_rules! unwrap_into {
     ($($e:expr),* $(,)?) => {
@@ -35,6 +35,12 @@ macro_rules! check_eq {
     };
 }
 
+fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) -> &'a str {
+    iter.next()
+        .and_then(|a| a.as_str().ok())
+        .unwrap_or_default()
+}
+
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
@@ -42,7 +48,9 @@ pub struct Config {
     pubkey_size: Option<usize>,
     serial: Option<String>,
     signature_algorithm: Option<String>,
-    subject: Option<String>,
+    subject_cn: Option<String>,
+    subject_o: Option<String>,
+    subject_ou: Option<String>,
     issuer: Option<String>,
     not_after: Option<LevelsChecker<Duration>>,
 }
@@ -55,7 +63,27 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
     Collection::from(&mut unwrap_into!(
         check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial),
-        check_subject(cert.tbs_certificate.subject(), config.subject),
+        config.subject_cn.map(|expected| {
+            check_eq!(
+                "Subject CN",
+                first_of(&mut cert.tbs_certificate.subject().iter_common_name()),
+                expected
+            )
+        }),
+        config.subject_o.map(|expected| {
+            check_eq!(
+                "Subject O",
+                first_of(&mut cert.tbs_certificate.subject().iter_organization()),
+                expected
+            )
+        }),
+        config.subject_ou.map(|expected| {
+            check_eq!(
+                "Subject OU",
+                first_of(&mut cert.tbs_certificate.subject().iter_organizational_unit()),
+                expected
+            )
+        }),
         check_issuer(cert.tbs_certificate.issuer(), config.issuer),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
@@ -71,13 +99,6 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| check_eq!("Serial", serial.to_lowercase(), expected.to_lowercase()))
-}
-
-fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| {
-        // subject string has the form: `CN=domain`
-        check_eq!("Subject", subject.to_string(), expected)
-    })
 }
 
 fn check_signature_algorithm(

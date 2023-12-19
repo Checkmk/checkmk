@@ -70,7 +70,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
-    expected.map(|expected| check_eq!("Serial", serial, expected))
+    expected.map(|expected| check_eq!("Serial", serial.to_lowercase(), expected.to_lowercase()))
 }
 
 fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
@@ -165,4 +165,35 @@ fn check_validity_not_after(
             LevelsCheckerArgs::builder().label("validity").build(),
         ),
     })
+}
+
+#[cfg(test)]
+mod test_check_serial {
+    use super::{check_serial, SimpleCheckResult};
+
+    fn s(s: &str) -> String {
+        String::from(s)
+    }
+
+    #[test]
+    fn test_case_insensitive() {
+        let result = Some(SimpleCheckResult::ok("Serial: aa:11:bb:22:cc"));
+
+        assert_eq!(
+            check_serial(s("aa:11:bb:22:cc"), Some(s("aa:11:bb:22:cc"))),
+            result
+        );
+        assert_eq!(
+            check_serial(s("AA:11:BB:22:CC"), Some(s("aa:11:bb:22:cc"))),
+            result
+        );
+        assert_eq!(
+            check_serial(s("aa:11:bb:22:cc"), Some(s("AA:11:BB:22:CC"))),
+            result
+        );
+        assert_eq!(
+            check_serial(s("AA:11:bb:22:CC"), Some(s("aa:11:BB:22:cc"))),
+            result
+        );
+    }
 }

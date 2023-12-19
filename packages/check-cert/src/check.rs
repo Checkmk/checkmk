@@ -282,6 +282,7 @@ where
 }
 
 #[derive(Debug, Default, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Summary {
     state: State,
     text: String,
@@ -313,6 +314,7 @@ impl Display for Summary {
 }
 
 #[derive(Debug, Default)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
     summary: Summary,
 }

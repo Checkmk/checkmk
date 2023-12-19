@@ -82,6 +82,6 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
 
 Row Table::get(const std::string & /*unused*/) const { return Row{nullptr}; }
 
-Row Table::getDefault() const { return Row{nullptr}; }
+Row Table::getDefault(const ICore & /*core*/) const { return Row{nullptr}; }
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

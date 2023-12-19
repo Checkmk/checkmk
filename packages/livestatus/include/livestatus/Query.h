@@ -22,6 +22,7 @@
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Renderer.h"
 
+class ICore;
 enum class Encoding;
 class Logger;
 class OutputBuffer;
@@ -75,7 +76,7 @@ private:
     bool doStats() const;
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
-    void doWait();
+    void doWait(const ICore &core);
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // _stats_groups.

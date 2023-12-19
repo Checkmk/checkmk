@@ -111,7 +111,7 @@ public:
     [[nodiscard]] virtual Row get(const std::string &primary_key) const;
 
     // We have funny single-row tables without a primary key!
-    [[nodiscard]] virtual Row getDefault() const;
+    [[nodiscard]] virtual Row getDefault(const ICore &core) const;
 
     template <typename T>
     [[nodiscard]] const T *rowData(Row row) const {

@@ -52,12 +52,13 @@ bool Query::process() {
     auto renderer = Renderer::make(parsed_query_.output_format, _output.os(),
                                    _output.getLogger(),
                                    parsed_query_.separators, _data_encoding);
-    doWait();
+    auto &core = *_table.core();
+    doWait(core);
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, *parsed_query_.user, *_table.core());
+    _table.answerQuery(*this, *parsed_query_.user, core);
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
@@ -268,7 +269,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     return it->second;
 }
 
-void Query::doWait() {
+void Query::doWait(const ICore &core) {
     if (parsed_query_.wait_condition->is_contradiction() &&
         parsed_query_.wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
@@ -276,7 +277,7 @@ void Query::doWait() {
     }
     auto wait_object = parsed_query_.wait_object;
     if (!parsed_query_.wait_condition->is_tautology() && wait_object.isNull()) {
-        wait_object = _table.getDefault();
+        wait_object = _table.getDefault(core);
         if (wait_object.isNull()) {
             invalidRequest("missing WaitObject");
             return;

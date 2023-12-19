@@ -339,4 +339,4 @@ void TableStatus::answerQuery(Query &query, const User & /*user*/,
     query.processDataset(Row{&core});
 }
 
-Row TableStatus::getDefault() const { return Row{core()}; }
+Row TableStatus::getDefault(const ICore &core) const { return Row{&core}; }

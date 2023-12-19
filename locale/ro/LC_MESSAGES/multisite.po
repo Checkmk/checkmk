@@ -4096,22 +4096,6 @@ msgstr "Adaugă configurație de ajustare"
 msgid "Add tunnel"
 msgstr "Adaugă tunel"
 
-msgid "Add unmonitored & remove vanished services and host labels"
-msgstr ""
-"Adăugați servicii și etichete de gazdă nemonitorizate și eliminați "
-"serviciile dispărute"
-
-msgid "Add unmonitored services and new host labels"
-msgstr "Adăugați servicii nemonitorizate și noi etichete de gazdă"
-
-msgid "Add unmonitored services and new host labels, remove vanished services"
-msgstr ""
-"Adăugați servicii nemonitorizate și noi etichete de gazdă, eliminați "
-"serviciile dispărute"
-
-msgid "Add unmonitored services, new host labels"
-msgstr "Adăugați servicii nemonitorizate, noi etichete de gazdă"
-
 msgid "Add user"
 msgstr "Adăugați un utilizator"
 
@@ -5957,9 +5941,10 @@ msgstr ""
 msgid "An absolute path to a CA certificate"
 msgstr "O cale absolută către un certificat CA"
 
+#, fuzzy
 msgid ""
-"An absolute path to the filename (in case of MRPE) or to a directory in case "
-"of local / plugin"
+"An absolute path to the configuration file (in case of MRPE) or to a "
+"directory in case of local / plugin"
 msgstr ""
 "O cale absolută către numele fișierului (în cazul MRPE) sau către un "
 "director în cazul plugin-ului local / plugin"
@@ -6997,6 +6982,10 @@ msgstr "Reîncărcarea automată a paginii"
 #, python-format
 msgid "Automatic page reload in %d seconds."
 msgstr "Reîncărcarea automată a paginii în %d secunde."
+
+#, python-brace-format
+msgid "Automatic rediscovery parameter {param} not implemented"
+msgstr ""
 
 msgid "Automatic renewal"
 msgstr "Reînnoire automată"
@@ -10544,19 +10533,6 @@ msgstr ""
 "Puteți utiliza această regulă pentru a dezactiva Inline SNMP pentru aceste "
 "gazde."
 
-#, no-python-format
-msgid ""
-"Check_MK treats space that is reserved for the <tt>root</tt> user on Linux "
-"and Unix as used space. Usually, 5% are being reserved for root when a new "
-"filesystem is being created. With this option you can have Checkmk display "
-"the current amount of reserved but yet unused space."
-msgstr ""
-"Check_MK tratează spațiul care este rezervat pentru utilizatorul <tt>root</"
-"tt> pe Linux și Unix ca spațiu utilizat. De obicei, 5% sunt rezervate pentru "
-"root atunci când se creează un nou sistem de fișiere. Cu această opțiune "
-"puteți face ca Checkmk să afișeze cantitatea actuală de spațiu rezervat, dar "
-"încă neutilizat."
-
 msgid ""
 "Check_MK usually uses an interval of one minute for the active Checkmk check "
 "and for legacy checks. Here you can specify a larger interval. Please note, "
@@ -10803,6 +10779,19 @@ msgstr "Checkmk specific"
 
 msgid "Checkmk state"
 msgstr "Verificați starea Checkmk"
+
+#, fuzzy, no-python-format
+msgid ""
+"Checkmk treats space that is reserved for the <tt>root</tt> user on Linux "
+"and Unix as used space. Usually, 5% are being reserved for root when a new "
+"filesystem is being created. With this option you can have Checkmk display "
+"the current amount of reserved but yet unused space."
+msgstr ""
+"Check_MK tratează spațiul care este rezervat pentru utilizatorul <tt>root</"
+"tt> pe Linux și Unix ca spațiu utilizat. De obicei, 5% sunt rezervate pentru "
+"root atunci când se creează un nou sistem de fișiere. Cu această opțiune "
+"puteți face ca Checkmk să afișeze cantitatea actuală de spațiu rezervat, dar "
+"încă neutilizat."
 
 msgid "Checkmk versions"
 msgstr "Versiuni Checkmk"
@@ -12892,7 +12881,8 @@ msgstr "Funcții de consolidare"
 msgid "Constant value %.2f"
 msgstr "Valoare constantă %.2f"
 
-msgid "Consumed Load Balancer Capacity Units"
+#, fuzzy
+msgid "Consumed Load Balancer Capacity unit=Units"
 msgstr "Unități de capacitate de echilibrare a încărcăturii consumate"
 
 msgid "Consumed capacity"
@@ -14363,11 +14353,19 @@ msgstr "Prefix de cale personalizat"
 msgid "Custom probe state"
 msgstr "Starea sondei personalizate"
 
+#, fuzzy
+msgid "Custom profile"
+msgstr "Titlu personalizat"
+
 msgid "Custom search query"
 msgstr "Interogare de căutare personalizată"
 
 msgid "Custom service attributes"
 msgstr "Atributele serviciilor personalizate"
+
+#, fuzzy
+msgid "Custom service configuration update"
+msgstr "Regula de configurare a gazdei și a serviciului"
 
 msgid "Custom service name"
 msgstr "Numele serviciului personalizat"
@@ -15349,6 +15347,10 @@ msgstr "Parametrii impliciți pentru serviciile detectate"
 msgid "Default parameters when no time period matches"
 msgstr ""
 "Parametrii impliciți atunci când nu se potrivește nicio perioadă de timp"
+
+#, fuzzy
+msgid "Default profile"
+msgstr "Profil de utilizator implicit"
 
 msgid "Default reporting timerange"
 msgstr "Interval de timp de raportare implicit"
@@ -17387,7 +17389,9 @@ msgid "Displays a single metric of a specific host and service."
 msgstr "Afișează o singură măsurătoare a unei anumite gazde și servicii."
 
 #, fuzzy
-msgid "Displays a sorted list of services according to a selected metric."
+msgid ""
+"Displays a sorted list of services according to a selected metric. Note: In "
+"rare cases some metrics might be missing."
 msgstr "Afișează cantitatea de servicii într-un stat selectat."
 
 msgid "Displays a static text to the user."
@@ -19761,6 +19765,9 @@ msgstr "Introduceți grupul"
 msgid "Enter layout mode"
 msgstr "Intrați în modul layout"
 
+msgid "Enter performance data to show in notifications etc. ..."
+msgstr ""
+
 msgid ""
 "Enter the Fully Qualified Domain Name (FQDN) where your Checkmk server is "
 "running including the protocol. Stop after the top level domain (TLD), so "
@@ -19886,6 +19893,10 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatura"
 
 msgid "Enterprise feature"
+msgstr "Caracteristica Enterprise"
+
+#, fuzzy
+msgid "Enterprise features"
 msgstr "Caracteristica Enterprise"
 
 msgid "Entersekt Certificate Expiration"
@@ -21374,6 +21385,10 @@ msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "Eșecuri ale serviciului de lansare a îmbinării"
+
+#, fuzzy
+msgid "Fake check result"
+msgstr "Rezultate false ale verificărilor"
 
 msgid "Fake check results"
 msgstr "Rezultate false ale verificărilor"
@@ -27245,6 +27260,12 @@ msgstr ""
 "detectată, va exista un serviciu nou cu statistici detaliate privind numărul "
 "actual de clienți și procese și diferitele lor stări."
 
+#, python-format
+msgid ""
+"If you are looking for a way to test your notification settings, try '%s' in "
+"Setup > Notifications"
+msgstr ""
+
 msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
 "please choose port number greater than 1024."
@@ -29118,6 +29139,9 @@ msgstr "Inițializarea cioburilor"
 
 msgid "Initiator"
 msgstr "Inițiator"
+
+msgid "Inject JavaScript profiling code"
+msgstr ""
 
 msgid "Inline SNMP"
 msgstr "SNMP în linie"
@@ -31167,6 +31191,10 @@ msgstr "Niveluri pentru lungimea cozii de așteptare"
 msgid "Levels for Fireeye License Expiration"
 msgstr "Niveluri de expirare a licenței Fireeye"
 
+#, fuzzy
+msgid "Levels for GC run rate"
+msgstr "Nivelul inferior pentru rata de alergare a GC"
+
 msgid "Levels for Gude PDU Devices"
 msgstr "Niveluri pentru dispozitivele Gude PDU"
 
@@ -31353,6 +31381,10 @@ msgstr "Niveluri pentru rata pachetelor fragmentate"
 msgid "Levels for rate of incoming IPv4 packets blocked"
 msgstr "Niveluri pentru rata de blocare a pachetelor IPv4 primite"
 
+#, fuzzy
+msgid "Levels for rate of memory per second reclaimed by GC"
+msgstr "Nivelul inferior pentru rata de memorie recuperată de GC"
+
 msgid "Levels for rate of normalized packets"
 msgstr "Niveluri pentru rata pachetelor normalizate"
 
@@ -31374,6 +31406,10 @@ msgstr "Nivelurile pentru oferta rămasă"
 
 msgid "Levels for remaining undo retention"
 msgstr "Niveluri de păstrare a restului de nedescris"
+
+#, fuzzy
+msgid "Levels for runtime run queue"
+msgstr "Nivel inferior pentru coada de execuție în timpul execuției"
 
 msgid "Levels for sessions used"
 msgstr "Niveluri pentru sesiunile utilizate"
@@ -31467,6 +31503,10 @@ msgstr ""
 
 msgid "Levels for total amount of connections"
 msgstr "Niveluri pentru numărul total de conexiuni"
+
+#, fuzzy
+msgid "Levels for total number of GC runs"
+msgstr "Nivelul superior pentru numărul total de rulări GC"
 
 msgid "Levels for total number of items"
 msgstr "Niveluri pentru numărul total de articole"
@@ -32975,9 +33015,6 @@ msgstr "Niveluri mai mici de viteză a ventilatorului"
 msgid "Lower health levels"
 msgstr "Niveluri de sănătate mai scăzute"
 
-msgid "Lower level for GC run rate"
-msgstr "Nivelul inferior pentru rata de alergare a GC"
-
 msgid "Lower level for delivered message rate"
 msgstr "Nivelul inferior pentru rata mesajelor livrate"
 
@@ -32994,12 +33031,6 @@ msgstr "Nivelul inferior pentru numărul de executanți ai acestui nod"
 
 msgid "Lower level for published message rate"
 msgstr "Nivelul inferior pentru rata mesajelor publicate"
-
-msgid "Lower level for rate of memory reclaimed by GC"
-msgstr "Nivelul inferior pentru rata de memorie recuperată de GC"
-
-msgid "Lower level for runtime run queue"
-msgstr "Nivel inferior pentru coada de execuție în timpul execuției"
 
 msgid "Lower level for total number of channels"
 msgstr "Nivelul inferior pentru numărul total de canale"
@@ -33758,10 +33789,6 @@ msgid ""
 msgstr ""
 "Permiteți manual nucleului să trimită o notificare către o gazdă sau un "
 "serviciu pentru a testa dacă notificările sunt configurate corect."
-
-#, python-format
-msgid "Manually set check results to %s?"
-msgstr "Setarea manuală a rezultatelor verificării la %s?"
 
 #, python-format
 msgid "Manually set to %s by %s"
@@ -37677,6 +37704,10 @@ msgstr "Nu se aplică"
 msgid "Not authenticated"
 msgstr "Nu este autentificat"
 
+#, fuzzy
+msgid "Not available"
+msgstr "nu este disponibil"
+
 msgid "Not available duration"
 msgstr "Nu este disponibilă durata"
 
@@ -39292,11 +39323,14 @@ msgstr ""
 "Aveți grijă doar de gazdele care primesc date piggyback de la gazde al căror "
 "nume se potrivește cu una dintre aceste expresii regulate."
 
+#, python-format
+msgid ""
+"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
+"the Core MKP is installed."
+msgstr ""
+
 msgid "Only discover monitors in the following states"
 msgstr "Descoperiți numai monitoarele din următoarele state"
-
-msgid "Only discover new host labels"
-msgstr "Descoperă numai etichete noi pentru gazde"
 
 msgid "Only display SLA Name"
 msgstr "Afișează numai numele SLA"
@@ -44047,10 +44081,6 @@ msgstr "Rafinează căutarea"
 msgid "Refresh"
 msgstr "Reîmprospătare"
 
-msgid "Refresh all services (tabula rasa), add new host labels"
-msgstr ""
-"Actualizați toate serviciile (tabula rasa), adăugați noi etichete de gazdă"
-
 msgid "Refresh all services and host labels (tabula rasa)"
 msgstr "Reîmprospătați toate serviciile și etichetele de gazdă (tabula rasa)"
 
@@ -45664,6 +45694,11 @@ msgstr "Robotmk"
 
 msgid "Robotmk (Windows)"
 msgstr "Robotmk (Windows)"
+
+msgid ""
+"Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
+"Robot Framework tests as Checkmk services."
+msgstr ""
 
 #, fuzzy
 msgid "Robotmk Suite Status"
@@ -48165,9 +48200,6 @@ msgstr "Sesiune timeout:"
 msgid "Session type"
 msgstr "Tipul de sesiune"
 
-msgid "Set"
-msgstr "Set"
-
 msgid "Set IPv4 address"
 msgstr "Setați adresa IPv4"
 
@@ -48266,6 +48298,10 @@ msgstr "Setați modul de execuție pentru plugin-uri și verificări locale"
 
 msgid "Set expected router mode"
 msgstr "Setați modul router așteptat"
+
+#, fuzzy, python-format
+msgid "Set fake check result to ‘%s’?"
+msgstr "Setarea manuală a rezultatelor verificării la %s?"
 
 msgid "Set field delimiter"
 msgstr "Setați delimitatorul de câmp"
@@ -48520,6 +48556,10 @@ msgstr "Setați timeout-uri pentru plugin-uri și verificări locale"
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "Setați la \"0\" pentru a dezactiva reîncărcarea automată."
+
+#, fuzzy, python-format
+msgid "Set to '%s'"
+msgstr "Comutați '%s' la '%s'"
 
 msgid "Set upper Levels"
 msgstr "Setați nivelurile superioare"
@@ -52773,6 +52813,10 @@ msgstr "Sincronizare"
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
 
+#, fuzzy
+msgid "Synthetic services"
+msgstr "Servicii Systemd"
+
 msgid "Syslog Facility"
 msgstr "Unitatea Syslog"
 
@@ -53402,6 +53446,10 @@ msgstr "Eveniment de testare generat și trimis către Consola de evenimente."
 
 msgid "Test hostname before activation"
 msgstr "Testați numele de gazdă înainte de activare"
+
+#, fuzzy
+msgid "Test notification"
+msgstr "ultima notificare"
 
 msgid "Test runtime"
 msgstr "Timpul de execuție a testului"
@@ -63391,32 +63439,6 @@ msgstr "Operațiuni IO totale pe secundă"
 msgid "Total Index Size"
 msgstr "Dimensiunea totală a indicelui"
 
-#, fuzzy
-msgid "Total Localizable('Running On-Demand F instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand G instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand Inf instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand P instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid ""
-"Total Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) "
-"instances') vCPUs"
-msgstr "Funcționare la cerere Instanțe standard (A, C, D, H, I, M, R, T, Z)"
-
-#, fuzzy
-msgid "Total Localizable('Running On-Demand X instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
 msgid "Total Magnetic volumes space"
 msgstr "Volumele magnetice totale spațiu"
 
@@ -63790,6 +63812,10 @@ msgid "Total restarts"
 msgstr "Total reporniri"
 
 msgid "Total running On-Demand Instances"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand Instances of type z1d"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
@@ -65472,6 +65498,310 @@ msgstr "Totalul instanțelor On-Demand care rulează"
 msgid "Total running On-Demand z1d.xlarge Instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
+#, fuzzy
+msgid "Total running on-demand instances"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type a1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c4"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5ad"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5d"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c5n"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6g"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gd"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type c6gn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cc2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cg1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type cr1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type d3en"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type f1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g3s"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4ad"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type g4dn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type h1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hi1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type hs1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type i3en"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type inf1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m4"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5a"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5ad"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5d"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5dn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5n"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m5zn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6g"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6gd"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type m6i"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type mac1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p3dn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type p4d"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r4"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5a"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5ad"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5b"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5d"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5dn"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r5n"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6g"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type r6gd"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t2"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t3a"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type t4g"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-12tb1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-18tb1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-24tb1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-6tb1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type u-9tb1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type vt1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x1e"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running on-demand instances of type x2gd"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
 msgid "Total service problems"
 msgstr "Total probleme de serviciu"
 
@@ -65510,6 +65840,32 @@ msgstr "Debit total pe secundă"
 
 msgid "Total timeout of check"
 msgstr "Timeout total al verificării"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid ""
+"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
+"Z) instances') vCPUs"
+msgstr "Funcționare la cerere Instanțe standard (A, C, D, H, I, M, R, T, Z)"
+
+#, fuzzy
+msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
 
 msgid "Total usable RAM"
 msgstr "Total RAM utilizabil"
@@ -66821,9 +67177,6 @@ msgstr "Nivelul critic superior"
 msgid "Upper fan speed levels"
 msgstr "Nivelurile superioare ale vitezei ventilatorului"
 
-msgid "Upper level for GC run rate"
-msgstr "Nivelul superior pentru rata de alergare a GC"
-
 msgid "Upper level for blocked tasks"
 msgstr "Nivelul superior pentru sarcini blocate"
 
@@ -66857,17 +67210,8 @@ msgstr "Nivelul superior pentru rata mesajelor publicate"
 msgid "Upper level for queue length"
 msgstr "Nivelul superior pentru lungimea cozii de așteptare"
 
-msgid "Upper level for rate of memory reclaimed by GC"
-msgstr "Nivelul superior pentru rata de memorie recuperată de GC"
-
-msgid "Upper level for runtime run queue"
-msgstr "Nivelul superior pentru coada de execuție în timp de execuție"
-
 msgid "Upper level for stuck tasks"
 msgstr "Nivelul superior pentru sarcini blocate"
-
-msgid "Upper level for total number of GC runs"
-msgstr "Nivelul superior pentru numărul total de rulări GC"
 
 msgid "Upper level for total number of channels"
 msgstr "Nivelul superior pentru numărul total de canale"
@@ -67571,6 +67915,10 @@ msgstr "Utilizați Piggyback"
 
 #, fuzzy
 msgid "Use RCC for isolated execution"
+msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy, python-format
+msgid "Use RCC for isolated execution (%s in Robotmk Core)"
 msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Use Reporting"
@@ -69947,6 +70295,9 @@ msgid "Wh"
 msgstr "Wh"
 
 msgid "What is the occasion?"
+msgstr ""
+
+msgid "What is the purpose?"
 msgstr ""
 
 msgid ""
@@ -75443,6 +75794,10 @@ msgstr "rulează ca sarcină de fundal"
 msgid "running"
 msgstr "pornit"
 
+#, fuzzy
+msgid "runs"
+msgstr "GC rulează"
+
 msgid "s"
 msgstr "s"
 
@@ -75880,6 +76235,42 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Set"
+#~ msgstr "Set"
+
+#~ msgid "Add unmonitored & remove vanished services and host labels"
+#~ msgstr ""
+#~ "Adăugați servicii și etichete de gazdă nemonitorizate și eliminați "
+#~ "serviciile dispărute"
+
+#~ msgid "Add unmonitored services and new host labels"
+#~ msgstr "Adăugați servicii nemonitorizate și noi etichete de gazdă"
+
+#~ msgid ""
+#~ "Add unmonitored services and new host labels, remove vanished services"
+#~ msgstr ""
+#~ "Adăugați servicii nemonitorizate și noi etichete de gazdă, eliminați "
+#~ "serviciile dispărute"
+
+#~ msgid "Add unmonitored services, new host labels"
+#~ msgstr "Adăugați servicii nemonitorizate, noi etichete de gazdă"
+
+#~ msgid "Only discover new host labels"
+#~ msgstr "Descoperă numai etichete noi pentru gazde"
+
+#~ msgid "Refresh all services (tabula rasa), add new host labels"
+#~ msgstr ""
+#~ "Actualizați toate serviciile (tabula rasa), adăugați noi etichete de gazdă"
+
+#~ msgid "Upper level for GC run rate"
+#~ msgstr "Nivelul superior pentru rata de alergare a GC"
+
+#~ msgid "Upper level for rate of memory reclaimed by GC"
+#~ msgstr "Nivelul superior pentru rata de memorie recuperată de GC"
+
+#~ msgid "Upper level for runtime run queue"
+#~ msgstr "Nivelul superior pentru coada de execuție în timp de execuție"
 
 #, no-python-format
 #~ msgid "% of the specified time via GET request"

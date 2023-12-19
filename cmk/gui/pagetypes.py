@@ -1839,9 +1839,14 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
     def requested_page_by_name(
         cls, instances: OverridableInstances[_SelfPageRenderer], name: str
     ) -> _SelfPageRenderer:
-        if owner := request.var("owner"):
+        if raw_owner := request.var("owner"):
+            try:
+                owner = UserId(raw_owner)
+            except ValueError as e:
+                raise MKUserError("owner", str(e)) from e
+
             cls.need_overriding_permission("see_user")
-            if foreign := instances.find_foreign_page(UserId(owner), name):
+            if foreign := instances.find_foreign_page(owner, name):
                 return foreign
 
         page = instances.find_page(name)

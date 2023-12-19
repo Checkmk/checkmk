@@ -44,7 +44,7 @@
 using namespace std::string_literals;
 
 TableServices::TableServices(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
+    addColumns(this, *mc, "", ColumnOffsets{}, AddHosts::yes, LockComments::yes,
                LockDowntimes::yes);
 }
 
@@ -53,11 +53,11 @@ std::string TableServices::name() const { return "services"; }
 std::string TableServices::namePrefix() const { return "service_"; }
 
 // static
-void TableServices::addColumns(Table *table, const std::string &prefix,
+void TableServices::addColumns(Table *table, const ICore &core,
+                               const std::string &prefix,
                                const ColumnOffsets &offsets, AddHosts add_hosts,
                                LockComments lock_comments,
                                LockDowntimes lock_downtimes) {
-    auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(std::make_unique<StringColumn<IService>>(
@@ -75,31 +75,31 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const IService &r) { return r.check_command_expanded(); }));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
-        offsets, BlobFileReader<IService>{[mc](const IService &r) {
-            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
-                   "suite_last_log.html";
+        offsets, BlobFileReader<IService>{[&core](const IService &r) {
+            return core.paths()->robotmk_html_log_directory() /
+                   r.robotmk_dir() / "suite_last_log.html";
         }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
-        BlobFileReader<IService>{[mc](const IService &r) {
-            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
-                   "suite_last_log.html.gz";
+        BlobFileReader<IService>{[&core](const IService &r) {
+            return core.paths()->robotmk_html_log_directory() /
+                   r.robotmk_dir() / "suite_last_log.html.gz";
             ;
         }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{[mc](const IService &r) {
-            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
-                   "suite_last_error_log.html";
+        BlobFileReader<IService>{[&core](const IService &r) {
+            return core.paths()->robotmk_html_log_directory() /
+                   r.robotmk_dir() / "suite_last_error_log.html";
         }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{[mc](const IService &r) {
-            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
-                   "suite_last_error_log.html.gz";
+        BlobFileReader<IService>{[&core](const IService &r) {
+            return core.paths()->robotmk_html_log_directory() /
+                   r.robotmk_dir() / "suite_last_error_log.html.gz";
             ;
         }}));
 
@@ -314,7 +314,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<IntColumn<IService>>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
-        offsets, [mc](const IService &r) { return mc->isPnpGraphPresent(r); }));
+        offsets,
+        [&core](const IService &r) { return core.isPnpGraphPresent(r); }));
 
     // columns of type double
     table->addColumn(std::make_unique<DoubleColumn<IService>>(
@@ -370,9 +371,10 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "contacts", "A list of all contacts of this object", offsets,
         [](const IService &r) { return r.contacts(); }));
 
-    auto get_downtimes = [mc, lock_downtimes](const IService &s) {
-        return lock_downtimes == LockDowntimes::yes ? mc->downtimes(s)
-                                                    : mc->downtimes_unlocked(s);
+    auto get_downtimes = [&core, lock_downtimes](const IService &s) {
+        return lock_downtimes == LockDowntimes::yes
+                   ? core.downtimes(s)
+                   : core.downtimes_unlocked(s);
     };
     table->addColumn(std::make_unique<
                      ListColumn<IService, std::unique_ptr<const IDowntime>>>(
@@ -395,9 +397,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         get_downtimes));
 
-    auto get_comments = [mc, lock_comments](const IService &s) {
-        return lock_comments == LockComments::yes ? mc->comments(s)
-                                                  : mc->comments_unlocked(s);
+    auto get_comments = [&core, lock_comments](const IService &s) {
+        return lock_comments == LockComments::yes ? core.comments(s)
+                                                  : core.comments_unlocked(s);
     };
     table->addColumn(
         std::make_unique<ListColumn<IService, std::unique_ptr<const IComment>>>(
@@ -420,7 +422,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         get_comments));
 
     if (add_hosts == AddHosts::yes) {
-        TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
+        TableHosts::addColumns(table, core, "host_", offsets.add([](Row r) {
             return &r.rawData<IService>()->host();
         }),
                                LockComments::yes, LockDowntimes::yes);
@@ -520,13 +522,14 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<IService>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        offsets,
-        [mc](const IService &r) { return mc->metrics(r, mc->loggerRRD()); }));
+        offsets, [&core](const IService &r) {
+            return core.metrics(r, core.loggerRRD());
+        }));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<ListColumn<
                                 IService, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        *mc, offsets));
+        core, offsets));
     table->addColumn(std::make_unique<TimeColumn<IService>>(
         prefix + "cached_at",
         "For checks that base on cached agent data the time when this data was created. 0 for other services.",
@@ -565,16 +568,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const IService &r) { return r.pending_flex_downtime(); }));
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<IService>>(
         prefix + "prediction_file", "Fetch prediction data", offsets,
-        [mc](const IService &r) {
-            return mc->paths()->prediction_directory() /
+        [&core](const IService &r) {
+            return core.paths()->prediction_directory() /
                    pnp_cleanup(r.host_name()) / pnp_cleanup(r.description());
         },
         [](const std::string &args) { return std::filesystem::path{args}; }));
     table->addColumn(std::make_unique<ListColumn<IService>>(
         prefix + "prediction_files", "List currently available predictions",
-        offsets, [mc](const IService &r, const Column & /* col */) {
+        offsets, [&core](const IService &r, const Column & /* col */) {
             auto out = std::vector<std::string>{};
-            const auto path = mc->paths()->prediction_directory() /
+            const auto path = core.paths()->prediction_directory() /
                               pnp_cleanup(r.host_name()) /
                               pnp_cleanup(r.description());
             if (!std::filesystem::directory_entry{path}.is_directory()) {

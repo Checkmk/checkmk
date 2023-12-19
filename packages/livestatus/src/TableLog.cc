@@ -119,12 +119,12 @@ TableLog::TableLog(ICore *mc, LogCache *log_cache)
         offsets_entry, [](const LogEntry &r) { return r.command_name(); }));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, *mc, "current_host_", offsets.add([](Row r) {
         return r.rawData<LogRow>()->hst;
     }),
                            LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
-        this, "current_service_",
+        this, *mc, "current_service_",
         offsets.add([](Row r) { return r.rawData<LogRow>()->svc; }),
         TableServices::AddHosts::no, LockComments::yes, LockDowntimes::yes);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {

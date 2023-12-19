@@ -65,12 +65,12 @@ TableComments::TableComments(ICore *mc) : Table(mc) {
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         offsets, [](const IComment &r) { return r.expire_time(); }));
 
-    TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
+    TableHosts::addColumns(this, *mc, "host_", offsets.add([](Row r) {
         return &r.rawData<IComment>()->host();
     }),
                            LockComments::no, LockDowntimes::yes);
     TableServices::addColumns(
-        this, "service_",
+        this, *mc, "service_",
         offsets.add([](Row r) { return r.rawData<IComment>()->service(); }),
         TableServices::AddHosts::no, LockComments::no, LockDowntimes::yes);
 }

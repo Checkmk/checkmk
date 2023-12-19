@@ -17,7 +17,7 @@ public:
     explicit TableEventConsoleEvents(ICore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
-    static void addColumns(Table *table);
+    static void addColumns(Table *table, const ICore &core);
 };
 
 #endif  // TableEventConsoleEvents_h

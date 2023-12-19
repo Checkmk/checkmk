@@ -4,8 +4,6 @@ use check_cert::checker::certificate::{self, Config as CertConfig};
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
 
 static SERIAL: &str = "39:11:45:10:94";
-static ISSUER: &str =
-    "C=FR, ST=France, L=Paris, O=PM/SGDN, OU=DCSSI, CN=IGC/A, Email=igca@sgdn.pm.gouv.fr";
 static SIG_ALG: &str = "RSA";
 static PUBKEY_ALG: &str = "RSA";
 static PUBKEY_SZ: usize = 2048;
@@ -23,7 +21,11 @@ fn test_cert_ok() {
             .subject_cn(s("IGC/A"))
             .subject_o(s("PM/SGDN"))
             .subject_ou(s("DCSSI"))
-            .issuer(s(ISSUER))
+            .issuer_cn(s("IGC/A"))
+            .issuer_o(s("PM/SGDN"))
+            .issuer_ou(s("DCSSI"))
+            .issuer_st(s("France"))
+            .issuer_c(s("FR"))
             .signature_algorithm(s(SIG_ALG))
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
@@ -37,7 +39,11 @@ fn test_cert_ok() {
             Subject CN: IGC/A, \
             Subject O: PM/SGDN, \
             Subject OU: DCSSI, \
-            Issuer: {ISSUER}, \
+            Issuer CN: IGC/A, \
+            Issuer O: PM/SGDN, \
+            Issuer OU: DCSSI, \
+            Issuer ST: France, \
+            Issuer C: FR, \
             Signature algorithm: {SIG_ALG}, \
             Public key algorithm: {PUBKEY_ALG}, \
             Public key size: {PUBKEY_SZ}"
@@ -55,7 +61,11 @@ fn test_cert_wrong_serial() {
             .subject_cn(s("IGC/A"))
             .subject_o(s("PM/SGDN"))
             .subject_ou(s("DCSSI"))
-            .issuer(s(ISSUER))
+            .issuer_cn(s("IGC/A"))
+            .issuer_o(s("PM/SGDN"))
+            .issuer_ou(s("DCSSI"))
+            .issuer_st(s("France"))
+            .issuer_c(s("FR"))
             .build(),
     );
     assert_eq!(
@@ -66,7 +76,11 @@ fn test_cert_wrong_serial() {
             Subject CN: IGC/A, \
             Subject O: PM/SGDN, \
             Subject OU: DCSSI, \
-            Issuer: {ISSUER}"
+            Issuer CN: IGC/A, \
+            Issuer O: PM/SGDN, \
+            Issuer OU: DCSSI, \
+            Issuer ST: France, \
+            Issuer C: FR"
         )
     );
 }

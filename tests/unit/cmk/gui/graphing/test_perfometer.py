@@ -143,24 +143,14 @@ def test_get_first_matching_perfometer(
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
             },
-            -4,
-            id="fourth from last",
+            -2,
+            id="second to last",
         ),
         pytest.param(
             {
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
             },
-            -3,
-            id="third from last",
-        ),
-        pytest.param(
-            {"robotmk_suite_runtime": {}},
-            -2,
-            id="second from last",
-        ),
-        pytest.param(
-            {"robotmk_test_runtime": {}},
             -1,
             id="very last perfometer",
         ),

@@ -30,11 +30,13 @@ import cmk.rulesets.v1 as api_v1
 
 
 def _v1_custom_text_validate(value: str) -> None:
-    api_v1.DisallowEmpty(error_msg=api_v1.Localizable("Fill this"))(value)
-    api_v1.MatchRegex(regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed"))(value)
+    api_v1.validators.DisallowEmpty(error_msg=api_v1.Localizable("Fill this"))(value)
+    api_v1.validators.MatchRegex(
+        regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed")
+    )(value)
 
     if value == "admin":
-        raise api_v1.ValidationError(api_v1.Localizable("Forbidden"))
+        raise api_v1.validators.ValidationError(api_v1.Localizable("Forbidden"))
 
 
 def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
@@ -46,12 +48,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ["new_valuespec", "expected"],
     [
         pytest.param(
-            api_v1.ServiceState(),
+            api_v1.form_specs.ServiceState(),
             legacy_valuespecs.MonitoringState(),
             id="minimal MonitoringState",
         ),
         pytest.param(
-            api_v1.ServiceState(
+            api_v1.form_specs.ServiceState(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -63,19 +65,19 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="MonitoringState",
         ),
         pytest.param(
-            api_v1.Dictionary(elements={}),
+            api_v1.form_specs.Dictionary(elements={}),
             legacy_valuespecs.Dictionary(elements=[]),
             id="minimal Dictionary",
         ),
         pytest.param(
-            api_v1.Dictionary(
+            api_v1.form_specs.Dictionary(
                 elements={
-                    "key_req": api_v1.DictElement(
-                        api_v1.ServiceState(title=api_v1.Localizable("title")),
+                    "key_req": api_v1.form_specs.DictElement(
+                        api_v1.form_specs.ServiceState(title=api_v1.Localizable("title")),
                         required=True,
                     ),
-                    "key_read_only": api_v1.DictElement(
-                        api_v1.ServiceState(title=api_v1.Localizable("title")),
+                    "key_read_only": api_v1.form_specs.DictElement(
+                        api_v1.form_specs.ServiceState(title=api_v1.Localizable("title")),
                         read_only=True,
                     ),
                 },
@@ -100,12 +102,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Dictionary",
         ),
         pytest.param(
-            api_v1.Integer(),
+            api_v1.form_specs.Integer(),
             legacy_valuespecs.Integer(),
             id="minimal Integer",
         ),
         pytest.param(
-            api_v1.Integer(
+            api_v1.form_specs.Integer(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
@@ -124,12 +126,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Integer",
         ),
         pytest.param(
-            api_v1.Float(),
+            api_v1.form_specs.Float(),
             legacy_valuespecs.Float(),
             id="minimal Float",
         ),
         pytest.param(
-            api_v1.Float(
+            api_v1.form_specs.Float(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
@@ -150,12 +152,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Float",
         ),
         pytest.param(
-            api_v1.DataSize(),
+            api_v1.form_specs.DataSize(),
             legacy_valuespecs.Filesize(),
             id="minimal DataSize",
         ),
         pytest.param(
-            api_v1.DataSize(
+            api_v1.form_specs.DataSize(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
@@ -172,12 +174,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="DataSize",
         ),
         pytest.param(
-            api_v1.Percentage(),
+            api_v1.form_specs.Percentage(),
             legacy_valuespecs.Percentage(),
             id="minimal Percentage",
         ),
         pytest.param(
-            api_v1.Percentage(
+            api_v1.form_specs.Percentage(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
@@ -196,12 +198,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Percentage",
         ),
         pytest.param(
-            api_v1.TextInput(),
+            api_v1.form_specs.TextInput(),
             legacy_valuespecs.TextInput(),
             id="minimal TextInput",
         ),
         pytest.param(
-            api_v1.TextInput(
+            api_v1.form_specs.TextInput(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
                 input_hint="firstname",
@@ -220,15 +222,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="TextInput",
         ),
         pytest.param(
-            api_v1.Tuple(elements=[]),
+            api_v1.form_specs.Tuple(elements=[]),
             legacy_valuespecs.Tuple(elements=[]),
             id="minimal Tuple",
         ),
         pytest.param(
-            api_v1.Tuple(
+            api_v1.form_specs.Tuple(
                 elements=[
-                    api_v1.TextInput(title=api_v1.Localizable("child title 1")),
-                    api_v1.TextInput(title=api_v1.Localizable("child title 2")),
+                    api_v1.form_specs.TextInput(title=api_v1.Localizable("child title 1")),
+                    api_v1.form_specs.TextInput(title=api_v1.Localizable("child title 2")),
                 ],
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
@@ -244,15 +246,17 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Tuple",
         ),
         pytest.param(
-            api_v1.DropdownChoice(elements=[]),
+            api_v1.form_specs.DropdownChoice(elements=[]),
             legacy_valuespecs.DropdownChoice(choices=[], invalid_choice="complain"),
             id="minimal DropdownChoice",
         ),
         pytest.param(
-            api_v1.DropdownChoice(
+            api_v1.form_specs.DropdownChoice(
                 elements=[
-                    api_v1.DropdownChoiceElement(name="true", title=api_v1.Localizable("Enabled")),
-                    api_v1.DropdownChoiceElement(
+                    api_v1.form_specs.DropdownChoiceElement(
+                        name="true", title=api_v1.Localizable("Enabled")
+                    ),
+                    api_v1.form_specs.DropdownChoiceElement(
                         name="false", title=api_v1.Localizable("Disabled")
                     ),
                 ],
@@ -263,8 +267,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
                 prefill_selection="true",
-                invalid_element_validation=api_v1.InvalidElementValidator(
-                    mode=api_v1.InvalidElementMode.KEEP,
+                invalid_element_validation=api_v1.form_specs.InvalidElementValidator(
+                    mode=api_v1.form_specs.InvalidElementMode.KEEP,
                     display=api_v1.Localizable("invalid choice title"),
                     error_msg=api_v1.Localizable("invalid choice msg"),
                 ),
@@ -285,17 +289,17 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="DropdownChoice",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(elements=[], prefill_selection=None),
+            api_v1.form_specs.CascadingDropdown(elements=[], prefill_selection=None),
             legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title=""),
             id="minimal CascadingDropdown",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(
+            api_v1.form_specs.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.TextInput(),
+                        parameter_form=api_v1.form_specs.TextInput(),
                     )
                 ],
                 prefill_selection=None,
@@ -307,12 +311,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown no valuespec title",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(
+            api_v1.form_specs.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
+                        parameter_form=api_v1.form_specs.TextInput(
+                            title=api_v1.Localizable("Spec title")
+                        ),
                     )
                 ],
                 prefill_selection=None,
@@ -326,12 +332,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown valuespec title",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(
+            api_v1.form_specs.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.TextInput(),
+                        parameter_form=api_v1.form_specs.TextInput(),
                     )
                 ],
                 title=api_v1.Localizable("parent title"),
@@ -349,14 +355,17 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown",
         ),
         pytest.param(
-            api_v1.List(parameter_form=api_v1.Tuple(elements=[])),
+            api_v1.form_specs.List(parameter_form=api_v1.form_specs.Tuple(elements=[])),
             legacy_valuespecs.ListOf(valuespec=legacy_valuespecs.Tuple(elements=[])),
             id="minimal ListOf",
         ),
         pytest.param(
-            api_v1.List(
-                parameter_form=api_v1.Tuple(
-                    elements=[api_v1.TextInput(), api_v1.Integer(unit=api_v1.Localizable("km"))]
+            api_v1.form_specs.List(
+                parameter_form=api_v1.form_specs.Tuple(
+                    elements=[
+                        api_v1.form_specs.TextInput(),
+                        api_v1.form_specs.Integer(unit=api_v1.Localizable("km")),
+                    ]
                 ),
                 title=api_v1.Localizable("list title"),
                 help_text=api_v1.Localizable("list help"),
@@ -378,12 +387,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="ListOf",
         ),
         pytest.param(
-            api_v1.FixedValue(value=True),
+            api_v1.form_specs.FixedValue(value=True),
             legacy_valuespecs.FixedValue(value=True, totext=""),
             id="minimal FixedValue",
         ),
         pytest.param(
-            api_v1.FixedValue(
+            api_v1.form_specs.FixedValue(
                 value="enabled",
                 title=api_v1.Localizable("Enable the option"),
                 label=api_v1.Localizable("The option is enabled"),
@@ -398,20 +407,20 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="FixedValue",
         ),
         pytest.param(
-            api_v1.TimeSpan(),
+            api_v1.form_specs.TimeSpan(),
             legacy_valuespecs.Age(),
             id="minimal Age",
         ),
         pytest.param(
-            api_v1.TimeSpan(
+            api_v1.form_specs.TimeSpan(
                 title=api_v1.Localizable("age title"),
                 label=api_v1.Localizable("age label"),
                 help_text=api_v1.Localizable("help text"),
                 displayed_units=[
-                    api_v1.DisplayUnits.DAYS,
-                    api_v1.DisplayUnits.HOURS,
-                    api_v1.DisplayUnits.MINUTES,
-                    api_v1.DisplayUnits.SECONDS,
+                    api_v1.form_specs.DisplayUnits.DAYS,
+                    api_v1.form_specs.DisplayUnits.HOURS,
+                    api_v1.form_specs.DisplayUnits.MINUTES,
+                    api_v1.form_specs.DisplayUnits.SECONDS,
                 ],
                 prefill_value=100,
             ),
@@ -427,7 +436,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ],
 )
 def test_convert_to_legacy_valuespec(
-    new_valuespec: api_v1.FormSpec, expected: legacy_valuespecs.ValueSpec
+    new_valuespec: api_v1.form_specs.FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
     _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
 
@@ -437,7 +446,7 @@ def test_convert_to_legacy_valuespec(
     [
         pytest.param(
             legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
-            api_v1.Topic.APPLICATIONS,
+            api_v1.rule_specs.Topic.APPLICATIONS,
             legacy_wato_groups.RulespecGroupCheckParametersApplications,
             id="CheckParametersApplications",
         ),
@@ -445,7 +454,7 @@ def test_convert_to_legacy_valuespec(
 )
 def test_convert_to_legacy_rulespec_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
-    new_topic: api_v1.Topic,
+    new_topic: api_v1.rule_specs.Topic,
     expected: type[legacy_rulespecs.RulespecSubGroup],
 ) -> None:
     assert _convert_to_legacy_rulespec_group(legacy_main_group, new_topic, _) == expected
@@ -455,16 +464,18 @@ def test_convert_to_legacy_rulespec_group(
     ["new_rulespec", "expected"],
     [
         pytest.param(
-            api_v1.CheckParameterRuleSpecWithItem(
+            api_v1.rule_specs.CheckParameterRuleSpecWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
-                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
-                    api_v1.Dictionary,
+                    api_v1.form_specs.Dictionary,
                     elements={
-                        "key": api_v1.DictElement(
-                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
+                        "key": api_v1.form_specs.DictElement(
+                            api_v1.form_specs.ServiceState(
+                                title=api_v1.Localizable("valuespec title")
+                            )
                         ),
                     },
                 ),
@@ -486,15 +497,17 @@ def test_convert_to_legacy_rulespec_group(
             id="CheckParameterRuleSpecWithItem",
         ),
         pytest.param(
-            api_v1.CheckParameterRuleSpecWithoutItem(
+            api_v1.rule_specs.CheckParameterRuleSpecWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 parameter_form=partial(
-                    api_v1.Dictionary,
+                    api_v1.form_specs.Dictionary,
                     elements={
-                        "key": api_v1.DictElement(
-                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
+                        "key": api_v1.form_specs.DictElement(
+                            api_v1.form_specs.ServiceState(
+                                title=api_v1.Localizable("valuespec title")
+                            )
                         ),
                     },
                 ),
@@ -515,16 +528,18 @@ def test_convert_to_legacy_rulespec_group(
             id="CheckParameterRuleSpecWithoutItem",
         ),
         pytest.param(
-            api_v1.EnforcedServiceRuleSpecWithItem(
+            api_v1.rule_specs.EnforcedServiceRuleSpecWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
-                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
-                    api_v1.Dictionary,
+                    api_v1.form_specs.Dictionary,
                     elements={
-                        "key": api_v1.DictElement(
-                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
+                        "key": api_v1.form_specs.DictElement(
+                            api_v1.form_specs.ServiceState(
+                                title=api_v1.Localizable("valuespec title")
+                            )
                         ),
                     },
                 ),
@@ -545,11 +560,11 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithItem",
         ),
         pytest.param(
-            api_v1.EnforcedServiceRuleSpecWithItem(
+            api_v1.rule_specs.EnforcedServiceRuleSpecWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
-                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
+                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
                 parameter_form=None,
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -564,15 +579,17 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithItem no parameters",
         ),
         pytest.param(
-            api_v1.EnforcedServiceRuleSpecWithoutItem(
+            api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 parameter_form=partial(
-                    api_v1.Dictionary,
+                    api_v1.form_specs.Dictionary,
                     elements={
-                        "key": api_v1.DictElement(
-                            api_v1.ServiceState(title=api_v1.Localizable("valuespec title"))
+                        "key": api_v1.form_specs.DictElement(
+                            api_v1.form_specs.ServiceState(
+                                title=api_v1.Localizable("valuespec title")
+                            )
                         ),
                     },
                 ),
@@ -592,10 +609,10 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithoutItem",
         ),
         pytest.param(
-            api_v1.EnforcedServiceRuleSpecWithoutItem(
+            api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.Topic.APPLICATIONS,
+                topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 parameter_form=None,
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -693,7 +710,7 @@ def test_generated_rulespec_group_single_registration():
 )
 def test_convert_validation(input_value: str) -> None:
     converted_spec = _convert_to_legacy_valuespec(
-        api_v1.TextInput(custom_validate=_v1_custom_text_validate), _
+        api_v1.form_specs.TextInput(custom_validate=_v1_custom_text_validate), _
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -728,16 +745,18 @@ def test_convert_validation(input_value: str) -> None:
 )
 def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -> None:
     def _v1_custom_list_validate(value: Sequence[object]) -> None:
-        api_v1.DisallowEmpty(error_msg=api_v1.Localizable("Empty list"))(value)
+        api_v1.validators.DisallowEmpty(error_msg=api_v1.Localizable("Empty list"))(value)
 
         if len(value) > 2:
-            raise api_v1.ValidationError(api_v1.Localizable("Max number of elements exceeded"))
+            raise api_v1.validators.ValidationError(
+                api_v1.Localizable("Max number of elements exceeded")
+            )
 
         if len(set(value)) != len(value):
-            raise api_v1.ValidationError(api_v1.Localizable("Duplicate elements"))
+            raise api_v1.validators.ValidationError(api_v1.Localizable("Duplicate elements"))
 
-    v1_api_list = api_v1.List(
-        parameter_form=api_v1.Tuple(elements=[api_v1.TextInput()]),
+    v1_api_list = api_v1.form_specs.List(
+        parameter_form=api_v1.form_specs.Tuple(elements=[api_v1.form_specs.TextInput()]),
         custom_validate=_v1_custom_list_validate,
     )
 
@@ -760,21 +779,25 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     ["parameter_form", "old_value", "expected_transformed_value"],
     [
         pytest.param(
-            api_v1.Integer(
-                transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
+            api_v1.form_specs.Integer(
+                transform=api_v1.form_specs.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
             ),
             2,
             4,
             id="integer migration",
         ),
         pytest.param(
-            api_v1.Tuple(
+            api_v1.form_specs.Tuple(
                 elements=[
-                    api_v1.Integer(
-                        transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
+                    api_v1.form_specs.Integer(
+                        transform=api_v1.form_specs.Migrate(
+                            raw_to_form=lambda x: _narrow_type(x, int) * 2
+                        )
                     ),
-                    api_v1.Percentage(
-                        transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, float) * 2)
+                    api_v1.form_specs.Percentage(
+                        transform=api_v1.form_specs.Migrate(
+                            raw_to_form=lambda x: _narrow_type(x, float) * 2
+                        )
                     ),
                 ]
             ),
@@ -783,9 +806,13 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             id="migrate nested element",
         ),
         pytest.param(
-            api_v1.Dictionary(
-                elements={"key2": api_v1.DictElement(parameter_form=api_v1.Integer())},
-                transform=api_v1.Migrate(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key2": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer()
+                    )
+                },
+                transform=api_v1.form_specs.Migrate(
                     raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]}
                 ),
             ),
@@ -794,17 +821,17 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             id="migrate top level element",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(
+            api_v1.form_specs.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingDropdownElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.TextInput(
-                            transform=api_v1.Migrate(raw_to_form=lambda x: f"{x}_new")
+                        parameter_form=api_v1.form_specs.TextInput(
+                            transform=api_v1.form_specs.Migrate(raw_to_form=lambda x: f"{x}_new")
                         ),
                     )
                 ],
-                transform=api_v1.Migrate(
+                transform=api_v1.form_specs.Migrate(
                     raw_to_form=lambda x: (
                         f"{_narrow_type(x, tuple)[0]}_new",
                         _narrow_type(x, tuple)[1],
@@ -818,7 +845,9 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     ],
 )
 def test_migrate(
-    parameter_form: api_v1.FormSpec, old_value: object, expected_transformed_value: object
+    parameter_form: api_v1.form_specs.FormSpec,
+    old_value: object,
+    expected_transformed_value: object,
 ) -> None:
     legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
     actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
@@ -829,8 +858,8 @@ def test_migrate(
     ["parameter_form", "old_value", "expected_transformed_value"],
     [
         pytest.param(
-            api_v1.Integer(
-                transform=api_v1.Transform(
+            api_v1.form_specs.Integer(
+                transform=api_v1.form_specs.Transform(
                     raw_to_form=lambda x: _narrow_type(x, int) * 2,
                     form_to_raw=lambda x: x // 2,
                 )
@@ -840,8 +869,8 @@ def test_migrate(
             id="transform same",
         ),
         pytest.param(
-            api_v1.Integer(
-                transform=api_v1.Transform(
+            api_v1.form_specs.Integer(
+                transform=api_v1.form_specs.Transform(
                     raw_to_form=lambda x: _narrow_type(x, int) * 2,
                     form_to_raw=lambda x: x // 4,
                 )
@@ -851,16 +880,16 @@ def test_migrate(
             id="transform different",
         ),
         pytest.param(
-            api_v1.Tuple(
+            api_v1.form_specs.Tuple(
                 elements=[
-                    api_v1.Integer(
-                        transform=api_v1.Transform(
+                    api_v1.form_specs.Integer(
+                        transform=api_v1.form_specs.Transform(
                             raw_to_form=lambda x: _narrow_type(x, int) * 2,
                             form_to_raw=lambda x: x // 2,
                         )
                     ),
-                    api_v1.Percentage(
-                        transform=api_v1.Transform(
+                    api_v1.form_specs.Percentage(
+                        transform=api_v1.form_specs.Transform(
                             raw_to_form=lambda x: _narrow_type(x, float) * 2,
                             form_to_raw=lambda x: x / 2,
                         )
@@ -872,9 +901,13 @@ def test_migrate(
             id="transform nested element",
         ),
         pytest.param(
-            api_v1.Dictionary(
-                elements={"key2": api_v1.DictElement(parameter_form=api_v1.Integer())},
-                transform=api_v1.Transform(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "key2": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer()
+                    )
+                },
+                transform=api_v1.form_specs.Transform(
                     raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]},
                     form_to_raw=lambda x: {"key": x["key2"]},
                 ),
@@ -884,20 +917,20 @@ def test_migrate(
             id="transform top level element",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(
+            api_v1.form_specs.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingDropdownElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.TextInput(
-                            transform=api_v1.Transform(
+                        parameter_form=api_v1.form_specs.TextInput(
+                            transform=api_v1.form_specs.Transform(
                                 raw_to_form=lambda x: f"{x}_new",
                                 form_to_raw=lambda x: f"{x.removesuffix('_new')}",
                             )
                         ),
                     )
                 ],
-                transform=api_v1.Transform(
+                transform=api_v1.form_specs.Transform(
                     raw_to_form=lambda x: (
                         f"{ _narrow_type(x, tuple)[0]}_new",
                         _narrow_type(x, tuple)[1],
@@ -915,7 +948,9 @@ def test_migrate(
     ],
 )
 def test_transform(
-    parameter_form: api_v1.FormSpec, old_value: object, expected_transformed_value: object
+    parameter_form: api_v1.form_specs.FormSpec,
+    old_value: object,
+    expected_transformed_value: object,
 ) -> None:
     legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
     actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
@@ -925,20 +960,20 @@ def test_transform(
 @pytest.mark.parametrize(
     "form_spec",
     [
-        api_v1.Integer(),
-        api_v1.Float(),
-        api_v1.DataSize(),
-        api_v1.Percentage(),
-        api_v1.TextInput(),
-        api_v1.Tuple(elements=[]),
-        api_v1.Dictionary(elements={}),
-        api_v1.DropdownChoice(elements=[]),
-        api_v1.CascadingDropdown(elements=[]),
-        api_v1.ServiceState(),
-        api_v1.List(parameter_form=api_v1.Integer()),
+        api_v1.form_specs.Integer(),
+        api_v1.form_specs.Float(),
+        api_v1.form_specs.DataSize(),
+        api_v1.form_specs.Percentage(),
+        api_v1.form_specs.TextInput(),
+        api_v1.form_specs.Tuple(elements=[]),
+        api_v1.form_specs.Dictionary(elements={}),
+        api_v1.form_specs.DropdownChoice(elements=[]),
+        api_v1.form_specs.CascadingDropdown(elements=[]),
+        api_v1.form_specs.ServiceState(),
+        api_v1.form_specs.List(parameter_form=api_v1.form_specs.Integer()),
     ],
 )
-def test_form_spec_attributes(form_spec: api_v1.FormSpec) -> None:
+def test_form_spec_attributes(form_spec: api_v1.form_specs.FormSpec) -> None:
     try:
         _ = form_spec.title
         _ = form_spec.transform
@@ -973,7 +1008,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
     ["api_levels", "legacy_levels"],
     [
         pytest.param(
-            api_v1.Levels(upper=None, lower=None, form_spec=api_v1.Integer),
+            api_v1.form_specs.Levels(upper=None, lower=None, form_spec=api_v1.form_specs.Integer),
             legacy_valuespecs.Dictionary(
                 elements=[
                     (
@@ -998,10 +1033,10 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="empty",
         ),
         pytest.param(
-            api_v1.Levels(
-                form_spec=api_v1.Integer,
+            api_v1.form_specs.Levels(
+                form_spec=api_v1.form_specs.Integer,
                 lower=(
-                    api_v1.FixedLevels(prefill_value=(1.0, 2.0)),
+                    api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
                     None,
                 ),
                 upper=None,
@@ -1033,11 +1068,11 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="lower fixed",
         ),
         pytest.param(
-            api_v1.Levels(
-                form_spec=api_v1.Integer,
+            api_v1.form_specs.Levels(
+                form_spec=api_v1.form_specs.Integer,
                 lower=None,
                 upper=(
-                    api_v1.FixedLevels(prefill_value=(1.0, 2.0)),
+                    api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
                     None,
                 ),
             ),
@@ -1070,14 +1105,14 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="upper fixed",
         ),
         pytest.param(
-            api_v1.Levels(
-                form_spec=api_v1.Integer,
+            api_v1.form_specs.Levels(
+                form_spec=api_v1.form_specs.Integer,
                 lower=(
-                    api_v1.FixedLevels(prefill_value=(1.0, 2.0)),
+                    api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
                     None,
                 ),
                 upper=(
-                    api_v1.FixedLevels(prefill_value=(1.0, 2.0)),
+                    api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
                     None,
                 ),
             ),
@@ -1111,12 +1146,12 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="lower+upper fixed",
         ),
         pytest.param(
-            api_v1.Levels(
-                form_spec=api_v1.Integer,
+            api_v1.form_specs.Levels(
+                form_spec=api_v1.form_specs.Integer,
                 lower=None,
                 upper=(
-                    api_v1.FixedLevels(prefill_value=(1.0, 2.0)),
-                    api_v1.PredictiveLevels(
+                    api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
+                    api_v1.form_specs.PredictiveLevels(
                         prefill_abs_diff=(5.0, 10.0),
                         prefill_rel_diff=(50.0, 80.0),
                         prefill_stddev_diff=(2.0, 3.0),
@@ -1310,6 +1345,6 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
     ],
 )
 def test_level_conversion(
-    api_levels: api_v1.Levels, legacy_levels: legacy_valuespecs.Dictionary
+    api_levels: api_v1.form_specs.Levels, legacy_levels: legacy_valuespecs.Dictionary
 ) -> None:
     _compare_specs(_convert_to_legacy_levels(api_levels, _), legacy_levels)

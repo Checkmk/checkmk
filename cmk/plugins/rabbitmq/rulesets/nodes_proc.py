@@ -3,19 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import (
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import (
     CascadingDropdown,
     CascadingDropdownElement,
-    CheckParameterRuleSpecWithItem,
     DictElement,
     Dictionary,
     Integer,
-    Localizable,
     Percentage,
     TextInput,
-    Topic,
     Tuple,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:

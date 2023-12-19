@@ -7,9 +7,25 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Callable
 
-from cmk.rulesets.v1._form_spec import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, TextInput
-from cmk.rulesets.v1._groups import CustomTopic, Topic
-from cmk.rulesets.v1._localize import Localizable
+from ._localize import Localizable
+from .form_specs import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, TextInput
+
+
+class Topic(Enum):
+    APPLICATIONS = auto()
+    OPERATING_SYSTEM = auto()
+    VIRTUALIZATION = auto()
+    GENERAL = auto()
+
+
+@dataclass(frozen=True)
+class CustomTopic:
+    """
+    Args:
+        title: human-readable title of this group
+    """
+
+    title: Localizable
 
 
 class RuleEvalType(Enum):

@@ -4,18 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.rulesets.v1 import (
-    CheckParameterRuleSpecWithItem,
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     DisplayUnits,
     Integer,
-    Localizable,
     TextInput,
     TimeSpan,
-    Topic,
     Tuple,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
 
 
 def _parameter_form_wlan_controllers_clients():

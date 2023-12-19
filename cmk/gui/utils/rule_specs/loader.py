@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from cmk.utils.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.rulesets.v1 import (
+from cmk.rulesets.v1.rule_specs import (
     ActiveChecksRuleSpec,
     AgentAccessRuleSpec,
     AgentConfigRuleSpec,

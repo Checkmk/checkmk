@@ -9,7 +9,8 @@ from typing import ContextManager
 
 import pytest
 
-from cmk.rulesets.v1 import DisallowEmpty, InRange, Localizable, MatchRegex, ValidationError
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.validators import DisallowEmpty, InRange, MatchRegex, ValidationError
 
 
 @pytest.mark.parametrize(

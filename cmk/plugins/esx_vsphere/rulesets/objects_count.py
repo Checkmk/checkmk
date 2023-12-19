@@ -4,17 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.rulesets.v1 import (
-    CheckParameterRuleSpecWithoutItem,
+from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Integer,
     List,
-    Localizable,
     ServiceState,
     TextInput,
-    Topic,
 )
+from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithoutItem, Topic
 
 
 def _parameter_form_esx_vsphere_objects_count() -> Dictionary:

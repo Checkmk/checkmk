@@ -6,24 +6,24 @@
 from collections.abc import Mapping
 from enum import StrEnum
 
-from cmk.rulesets.v1 import (
+from cmk.rulesets.v1 import Localizable, validators
+from cmk.rulesets.v1.form_specs import (
     CascadingDropdown,
     CascadingDropdownElement,
-    CheckParameterRuleSpecWithItem,
-    CheckParameterRuleSpecWithoutItem,
     DictElement,
     Dictionary,
-    DisallowEmpty,
     FixedValue,
-    InRange,
     Integer,
     List,
-    Localizable,
     Migrate,
-    RuleEvalType,
-    ServiceDiscoveryRuleSpec,
     ServiceState,
     TextInput,
+)
+from cmk.rulesets.v1.rule_specs import (
+    CheckParameterRuleSpecWithItem,
+    CheckParameterRuleSpecWithoutItem,
+    RuleEvalType,
+    ServiceDiscoveryRuleSpec,
     Topic,
 )
 
@@ -70,7 +70,7 @@ def _discovery_parameters_form_alertmanager():
                                             title=Localizable(
                                                 "Minimum amount of alert rules in a group to create a group service"
                                             ),
-                                            custom_validate=InRange(min_value=1),
+                                            custom_validate=validators.InRange(min_value=1),
                                             prefill_value=3,
                                             help_text=Localizable(
                                                 "Below the specified value alert rules will be monitored as a"
@@ -176,7 +176,7 @@ def form_alert_remapping():
         ),
         title=Localizable("Remap alert rule states"),
         help_text=Localizable("Configure the monitoring state for Alertmanager rules."),
-        custom_validate=DisallowEmpty(),
+        custom_validate=validators.DisallowEmpty(),
         prefill_value=[
             {
                 "map": {
@@ -205,7 +205,8 @@ rule_spec_alertmanager_rule_state = CheckParameterRuleSpecWithItem(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
     item_form=TextInput(
-        title=Localizable("Name of Alert rules/Alert rule groups"), custom_validate=DisallowEmpty()
+        title=Localizable("Name of Alert rules/Alert rule groups"),
+        custom_validate=validators.DisallowEmpty(),
     ),
     parameter_form=_check_parameters_form_alertmanager,
     title=Localizable("Alertmanager rule states"),

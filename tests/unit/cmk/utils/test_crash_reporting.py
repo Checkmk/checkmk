@@ -6,6 +6,7 @@
 # pylint: disable=redefined-outer-name
 import copy
 import itertools
+import json
 import shutil
 import struct
 import uuid
@@ -166,7 +167,7 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "crash_info, expected",
+    "crash_info",
     [
         pytest.param(
             {
@@ -179,7 +180,6 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
             id="crash_info with tuple as dict key in section details",
         ),
         pytest.param(
@@ -193,15 +193,13 @@ def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
             id="crash_info with list as str as dict key in section details",
         ),
         pytest.param(
             {"foo": "bar"},
-            '{"foo": "bar"}',
             id="default",
         ),
     ],
 )
-def test_crash_report_json_dump(crash_info: CrashInfo, expected: str) -> None:
-    assert CrashReportStore.dump_crash_info(crash_info) == expected
+def test_crash_report_json_dump(crash_info: CrashInfo) -> None:
+    assert json.loads(CrashReportStore.dump_crash_info(crash_info)) == crash_info

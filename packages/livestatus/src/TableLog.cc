@@ -148,8 +148,8 @@ bool rowWithoutHost(const LogRow &lr) {
 }
 }  // namespace
 
-void TableLog::answerQuery(Query &query, const User &user) {
-    auto log_filter = constructFilter(query, core()->maxLinesPerLogFile());
+void TableLog::answerQuery(Query &query, const User &user, ICore &core) {
+    auto log_filter = constructFilter(query, core.maxLinesPerLogFile());
     if (log_filter.classmask == 0) {
         return;
     }
@@ -162,9 +162,8 @@ void TableLog::answerQuery(Query &query, const User &user) {
                                              rowWithoutHost(lr));
     };
 
-    auto process = [is_authorized, core = core(),
-                    &query](const LogEntry &entry) {
-        LogRow r{entry, core};
+    auto process = [is_authorized, &core, &query](const LogEntry &entry) {
+        LogRow r{entry, &core};
         return !is_authorized(r) || query.processDataset(Row{&r});
     };
     _log_cache->for_each(log_filter, process);

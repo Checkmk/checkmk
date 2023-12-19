@@ -93,8 +93,8 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
-void TableDowntimes::answerQuery(Query &query, const User &user) {
-    core()->all_of_downtimes([&query, &user](const IDowntime &dt) {
+void TableDowntimes::answerQuery(Query &query, const User &user, ICore &core) {
+    core.all_of_downtimes([&query, &user](const IDowntime &dt) {
         return !user.is_authorized_for_object(&dt.host(), dt.service(),
                                               false) ||
                query.processDataset(Row{&dt});

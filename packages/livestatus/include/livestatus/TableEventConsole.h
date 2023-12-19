@@ -67,7 +67,7 @@ class TableEventConsole : public Table {
 public:
     explicit TableEventConsole(ICore *mc);
 
-    void answerQuery(Query &query, const User &user) override;
+    void answerQuery(Query &query, const User &user, ICore &core) override;
 };
 
 #endif  // TableEventConsole_h

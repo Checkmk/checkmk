@@ -287,10 +287,11 @@ std::function<bool(const ECRow &)> get_authorizer(const Table &table,
 }
 }  // namespace
 
-void TableEventConsole::answerQuery(Query &query, const User &user) {
-    if (core()->mkeventdEnabled()) {
+void TableEventConsole::answerQuery(Query &query, const User &user,
+                                    ICore &core) {
+    if (core.mkeventdEnabled()) {
         try {
-            ECTableConnection{core(), *this, query, get_authorizer(*this, user)}
+            ECTableConnection{&core, *this, query, get_authorizer(*this, user)}
                 .run();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());

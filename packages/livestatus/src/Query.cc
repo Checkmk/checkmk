@@ -57,7 +57,7 @@ bool Query::process() {
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, *parsed_query_.user);
+    _table.answerQuery(*this, *parsed_query_.user, *_table.core());
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);

@@ -140,13 +140,14 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         ServiceListState{ServiceListState::Type::num_hard_unknown}));
 }
 
-void TableServiceGroups::answerQuery(Query &query, const User &user) {
+void TableServiceGroups::answerQuery(Query &query, const User &user,
+                                     ICore &core) {
     auto process = [&](const IServiceGroup &group) {
         return !user.is_authorized_for_service_group(group) ||
                query.processDataset(Row{&group});
     };
 
-    core()->all_of_service_groups(
+    core.all_of_service_groups(
         [&process](const IServiceGroup &r) { return process(r); });
 }
 

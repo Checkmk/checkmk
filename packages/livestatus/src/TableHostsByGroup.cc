@@ -39,8 +39,9 @@ std::string TableHostsByGroup::name() const { return "hostsbygroup"; }
 
 std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
-void TableHostsByGroup::answerQuery(Query &query, const User &user) {
-    core()->all_of_host_groups([&query, &user](const auto &hg) {
+void TableHostsByGroup::answerQuery(Query &query, const User &user,
+                                    ICore &core) {
+    core.all_of_host_groups([&query, &user](const auto &hg) {
         return !user.is_authorized_for_host_group(hg) ||
                hg.all([&query, &user, &hg](const IHost &h) {
                    if (!user.is_authorized_for_host(h)) {

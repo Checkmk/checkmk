@@ -36,7 +36,7 @@ void TableLabels::addColumns(Table *table, const std::string &prefix,
         [](const Attribute &r) { return r.value; }));
 }
 
-void TableLabels::answerQuery(Query &query, const User &user) {
+void TableLabels::answerQuery(Query &query, const User &user, ICore &core) {
     // NOTE: Due to the lack of data from real sites, we use a very simple and
     // straightforward algorithm below: We just iterate through all hosts,
     // services, and contacts, filtering out unauthorized entities on the way.
@@ -76,6 +76,6 @@ void TableLabels::answerQuery(Query &query, const User &user) {
         return contact.all_of_labels(processLabel);
     };
 
-    core()->all_of_hosts(processHostAndServices) &&
-        core()->all_of_contacts(processContact);
+    core.all_of_hosts(processHostAndServices) &&
+        core.all_of_contacts(processContact);
 }

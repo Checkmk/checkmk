@@ -15,7 +15,7 @@ You can find a script in `doc/treasures/migration_helpers/` that
 will do most of the migration for you.
 
 
-`check_levels` renamed to `check_fixed_levels`
+`check_levels` renamed to `check_levels_fixed`
 **********************************************
 
 This renaming allows us to provide a new `check_levels` function,

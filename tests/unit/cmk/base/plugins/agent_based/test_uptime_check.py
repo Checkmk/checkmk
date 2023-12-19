@@ -263,6 +263,55 @@ def test_uptime_check_zero() -> None:
                 Metric("uptime", 22.0),
             ],
         ),
+        (
+            [
+                [
+                    "-45",
+                ],
+                [
+                    "[uptime_solaris_start]",
+                ],
+                [
+                    "SunOS",
+                    "ssssssss",
+                    "5.55",
+                    "11.1.11.111.1",
+                    "sssss",
+                    "sssss",
+                    "sssss",
+                    "nnnnnnnnnnnnnnn",
+                ],
+                [
+                    "ssssssss",
+                ],
+                [
+                    "1:57am",
+                    "up",
+                    "1",
+                    "min(s),",
+                    "0",
+                    "users,",
+                    "load",
+                    "average:",
+                    "2.88,",
+                    "1.09,",
+                    "0.45",
+                ],
+                [
+                    "unix:0:system_misc:snaptime",
+                    "817.282012635",
+                ],
+                [
+                    "[uptime_solaris_end]",
+                ],
+            ],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Your Solaris system reported to be booted in the future.",
+                )
+            ],
+        ),
     ],
 )
 def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -> None:

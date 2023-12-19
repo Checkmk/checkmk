@@ -42,8 +42,10 @@ def get_single_oid(
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
     # SNMP contexts, all contextes will be queried until the first answer is received.
+    value = None
     console.vverbose("       Getting OID %s: " % oid)
-    for context in backend.config.snmpv3_contexts_of(section_name):
+    context_config = backend.config.snmpv3_contexts_of(section_name)
+    for context in context_config.contexts:
         try:
             value = backend.get(oid, context=context)
 

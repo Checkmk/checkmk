@@ -192,7 +192,8 @@ def get_snmpwalk(
     rowinfo: SNMPRowInfo = []
 
     skip: set[SNMPContext] = set()
-    for context in backend.config.snmpv3_contexts_of(section_name):
+    context_config = backend.config.snmpv3_contexts_of(section_name)
+    for context in context_config.contexts:
         if context in skip:
             continue
 

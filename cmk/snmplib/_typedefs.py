@@ -79,6 +79,10 @@ class SNMPContextConfig:
     contexts: Sequence[SNMPContext]
     timeout_policy: Literal["stop", "continue"]
 
+    @classmethod
+    def default(cls) -> Self:
+        return cls(section=None, contexts=[""], timeout_policy="stop")
+
 
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(NamedTuple):
@@ -104,13 +108,13 @@ class SNMPHostConfig(NamedTuple):
     def snmpv3_contexts_of(
         self,
         section_name: SectionName | None,
-    ) -> Sequence[SNMPContext]:
+    ) -> SNMPContextConfig:
         if not section_name or not self.is_snmpv3_host:
-            return [""]
+            return SNMPContextConfig.default()
         for ctx in self.snmpv3_contexts:
             if ctx.section is None or ctx.section == section_name:
-                return ctx.contexts
-        return [""]
+                return ctx
+        return SNMPContextConfig.default()
 
     def serialize(self) -> Mapping[str, object]:
         serialized = self._asdict()

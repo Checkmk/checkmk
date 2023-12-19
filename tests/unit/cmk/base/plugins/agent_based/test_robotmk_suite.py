@@ -17,6 +17,7 @@ from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
+    AttemptReport,
     AttemptsConfig,
     RebotOutcomeError,
     Section,
@@ -27,7 +28,12 @@ from cmk.plugins.lib.robotmk_suite_execution_report import (
 _SECTION = Section(
     suites={
         "suite_1": SuiteReport(
-            attempts=[AttemptOutcome.AllTestsPassed],
+            attempts=[
+                AttemptReport(
+                    index=1,
+                    outcome=AttemptOutcome.AllTestsPassed,
+                )
+            ],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=10,
@@ -46,7 +52,12 @@ _SECTION = Section(
             ),
         ),
         "suite_2": SuiteReport(
-            attempts=[AttemptOutcome.AllTestsPassed],
+            attempts=[
+                AttemptReport(
+                    index=1,
+                    outcome=AttemptOutcome.AllTestsPassed,
+                )
+            ],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=800,
@@ -65,7 +76,16 @@ _SECTION = Section(
             ),
         ),
         "suite_3": SuiteReport(
-            attempts=[AttemptOutcome.TestFailures, AttemptOutcome.TimedOut],
+            attempts=[
+                AttemptReport(
+                    index=1,
+                    outcome=AttemptOutcome.TestFailures,
+                ),
+                AttemptReport(
+                    index=2,
+                    outcome=AttemptOutcome.TimedOut,
+                ),
+            ],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=400,
@@ -84,7 +104,12 @@ _SECTION = Section(
             ),
         ),
         "suite_4": SuiteReport(
-            attempts=[AttemptOutcome.AllTestsPassed],
+            attempts=[
+                AttemptReport(
+                    index=1,
+                    outcome=AttemptOutcome.AllTestsPassed,
+                )
+            ],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=800,
@@ -94,8 +119,14 @@ _SECTION = Section(
         ),
         "suite_5": SuiteReport(
             attempts=[
-                AttemptOutcome.RobotFrameworkFailure,
-                AttemptOutcomeOtherError(OtherError="Crash\nmore info"),
+                AttemptReport(
+                    index=1,
+                    outcome=AttemptOutcome.RobotFrameworkFailure,
+                ),
+                AttemptReport(
+                    index=2,
+                    outcome=AttemptOutcomeOtherError(OtherError="Crash\nmore info"),
+                ),
             ],
             config=AttemptsConfig(
                 interval=1200,

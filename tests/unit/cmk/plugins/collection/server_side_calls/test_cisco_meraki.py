@@ -13,19 +13,20 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     SpecialAgentCommand,
 )
 
 HOST_CONFIG = HostConfig(
     name="testhost",
-    address="0.0.0.1",
+    resolved_address="0.0.0.1",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
-    ipv4address=None,
-    ipv6address=None,
-    additional_ipv4addresses=[],
-    additional_ipv6addresses=[],
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}

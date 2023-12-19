@@ -10,7 +10,9 @@ from cmk.plugins.pure_storage_fa.server_side_calls.special_agent import commands
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentCommand,
     StoredSecret,
@@ -83,9 +85,10 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name=hostname,
-                address=host_ip_address,
+                resolved_address=host_ip_address,
                 alias="host",
-                ip_family=IPAddressFamily.IPV4,
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
             {},
         )

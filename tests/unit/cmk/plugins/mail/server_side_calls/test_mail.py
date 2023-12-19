@@ -8,13 +8,23 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.mail.server_side_calls.mail import active_check_mail
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    PlainTextSecret,
+    ResolvedIPAddressFamily,
+)
 
 HOST_CONFIG = HostConfig(
     name="host",
-    address="127.0.0.1",
+    resolved_address="127.0.0.1",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+        ipv4_address="127.0.0.1",
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 

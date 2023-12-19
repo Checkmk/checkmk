@@ -8,10 +8,24 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.check_smtp import active_check_smtp
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, Secret, StoredSecret
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+    Secret,
+    StoredSecret,
+)
 
 TEST_HOST_CONFIG = HostConfig(
-    "my_host", "1.2.3.4", "my_alias", IPAddressFamily.IPV4, ipv4address="my.ipv4.address"
+    name="my_host",
+    resolved_address="1.2.3.4",
+    alias="host_alias",
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+        ipv4_address="my.ipv4.address",
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 

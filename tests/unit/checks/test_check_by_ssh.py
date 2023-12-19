@@ -9,12 +9,21 @@ from typing import Mapping
 import pytest
 
 from cmk.plugins.ssh.server_side_calls.check_by_ssh import active_check_by_ssh
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily
-
-pytestmark = pytest.mark.checks
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 
 TEST_HOST_CONFIG = HostConfig(
-    "my_host", "1.2.3.4", "my_alias", IPAddressFamily.IPV4, ipv4address="my.ipv4.address"
+    name="my_host",
+    resolved_address="1.2.3.4",
+    alias="my_alias",
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4, ipv4_address="my.ipv4.address"
+    ),
 )
 
 

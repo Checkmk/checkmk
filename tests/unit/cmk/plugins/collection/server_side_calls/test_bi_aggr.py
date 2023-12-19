@@ -8,10 +8,23 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.bi_aggr import active_check_bi_aggr
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 
 HOST_CONFIG = HostConfig(
-    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPV4
+    name="hostname",
+    resolved_address="0.0.0.1",
+    alias="host_alias",
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+        ipv4_address="0.0.0.1",
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 

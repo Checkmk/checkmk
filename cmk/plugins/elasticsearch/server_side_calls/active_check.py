@@ -54,8 +54,8 @@ def commands_function(
 
     if params.hostname is not None:
         args += ["-H", params.hostname]
-    elif host_config.address:
-        args += ["-H", host_config.address]
+    elif host_config.resolved_address:
+        args += ["-H", host_config.resolved_address]
     else:
         raise ValueError("No IP address available")
 

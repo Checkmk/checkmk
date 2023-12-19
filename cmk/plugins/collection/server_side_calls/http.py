@@ -16,8 +16,8 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    IPAddressFamily,
     parse_secret,
+    ResolvedIPAddressFamily,
     Secret,
 )
 
@@ -54,13 +54,15 @@ class HostSettings:
         if self.family is not None:
             return self.family
 
-        family = "ipv6" if host_config.ip_family == IPAddressFamily.IPV6 else "ipv4"
+        family = (
+            "ipv6" if host_config.resolved_ip_family == ResolvedIPAddressFamily.IPV6 else "ipv4"
+        )
         return Family(family)
 
     def get_fallback_address(self, host_config: HostConfig) -> str:
         if self.get_ip_address_family(host_config) is Family.enforce_ipv6:
-            return str(host_config.ipv6address)
-        return str(host_config.ipv4address)
+            return str(host_config.address_config.ipv6_address)
+        return str(host_config.address_config.ipv4_address)
 
 
 @dataclass(frozen=True)

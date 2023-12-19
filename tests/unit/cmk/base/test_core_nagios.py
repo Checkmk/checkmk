@@ -21,7 +21,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -729,6 +729,7 @@ def test_create_nagios_servicedefs_with_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -835,6 +836,7 @@ def test_create_nagios_servicedefs_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)

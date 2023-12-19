@@ -6,6 +6,7 @@
 # pylint: disable=redefined-outer-name
 import copy
 import itertools
+import json
 import shutil
 import struct
 import uuid
@@ -165,7 +166,7 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:  # type:ignor
 
 
 @pytest.mark.parametrize(
-    "crash_info, expected",
+    "crash_info, different_result",
     [
         pytest.param(
             {
@@ -178,8 +179,17 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:  # type:ignor
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
-            id="crash_info with tuple as dict key in section details",
+            {
+                "details": {
+                    "section": {
+                        '["foo", "bar"]': {
+                            "id": "1337",
+                            "name": "foobar",
+                        },
+                    },
+                },
+            },
+            id="crash_info with tuple as dict key",
         ),
         pytest.param(
             {
@@ -192,15 +202,18 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:  # type:ignor
                     },
                 },
             },
-            '{"details": {"section": {"[\\"foo\\", \\"bar\\"]": {"id": "1337", "name": "foobar"}}}}',
-            id="crash_info with list as str as dict key in section details",
+            None,
+            id="crash_info with list as str as dict key",
         ),
         pytest.param(
             {"foo": "bar"},
-            '{"foo": "bar"}',
+            None,
             id="default",
         ),
     ],
 )
-def test_crash_report_json_dump(crash_info: CrashInfo, expected: str) -> None:
-    assert CrashReportStore.dump_crash_info(crash_info) == expected
+def test_crash_report_json_dump(crash_info: CrashInfo, different_result: CrashInfo | None) -> None:
+    if different_result:
+        assert json.loads(CrashReportStore.dump_crash_info(crash_info)) == different_result
+        return
+    assert json.loads(CrashReportStore.dump_crash_info(crash_info)) == crash_info

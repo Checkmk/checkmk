@@ -9,9 +9,9 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -36,7 +36,7 @@ def commands_function(
     if params.username is not None:
         command_arguments += ["-u", params.username]
     if params.password is not None:
-        command_arguments += ["-p", get_secret_from_params(params.password[0], params.password[1])]
+        command_arguments += ["-p", parse_secret(params.password[0], params.password[1])]
     if params.port is not None:
         command_arguments += ["--port", str(params.port)]
     if params.no_cert_check:

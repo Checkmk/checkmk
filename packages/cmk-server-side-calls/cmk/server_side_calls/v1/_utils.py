@@ -185,7 +185,7 @@ class PlainTextSecret:
 Secret = StoredSecret | PlainTextSecret
 
 
-def get_secret_from_params(
+def parse_secret(
     secret_type: Literal["store", "password"], secret_value: str, display_format: str = "%s"
 ) -> Secret:
     # TODO: if we rename the valuespec in the new API, it should be changed here too
@@ -210,7 +210,7 @@ def get_secret_from_params(
         ...     SpecialAgentCommand,
         ...     HostConfig,
         ...     HTTPProxy,
-        ...     get_secret_from_params,
+        ...     parse_secret,
         ... )
 
 
@@ -219,7 +219,7 @@ def get_secret_from_params(
         ...     host_config: HostConfig,
         ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
-        ...     secret = get_secret_from_params(
+        ...     secret = parse_secret(
         ...         "store",
         ...         "stored_secret_id",
         ...         display_format="example-user:%s",

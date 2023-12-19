@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import get_secret_from_params, HostConfig, Secret
+from cmk.server_side_calls.v1 import HostConfig, parse_secret, Secret
 
 SecretType = Literal["store", "password"]
 
@@ -78,7 +78,7 @@ def get_general_mail_arguments(
         secret_type, secret_value = password
         args += [
             f"--fetch-username={username}",
-            get_secret_from_params(secret_type, secret_value, display_format="--fetch-password=%s"),
+            parse_secret(secret_type, secret_value, display_format="--fetch-password=%s"),
         ]
 
     else:
@@ -86,9 +86,7 @@ def get_general_mail_arguments(
         client_secret_type, client_secret_value = client_secret
         args += [
             f"--fetch-client-id={client_id}",
-            get_secret_from_params(
-                client_secret_type, client_secret_value, "--fetch-client-secret=%s"
-            ),
+            parse_secret(client_secret_type, client_secret_value, "--fetch-client-secret=%s"),
             f"--fetch-tenant-id={tenant_id}",
         ]
 

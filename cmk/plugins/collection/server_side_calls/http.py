@@ -14,10 +14,10 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    parse_secret,
     Secret,
 )
 
@@ -75,7 +75,7 @@ class ProxySettings:
         return cls(
             address=params["address"],
             port=params.get("port"),
-            auth=get_secret_from_params(auth[1][0], auth[1][1], display_format="%s:%%s" % auth[0])
+            auth=parse_secret(auth[1][0], auth[1][1], display_format="%s:%%s" % auth[0])
             if auth
             else None,
         )
@@ -276,7 +276,7 @@ def _url_args(  # pylint: disable=too-many-branches
         secret_type, secret_value = password
         args += [
             "-a",
-            get_secret_from_params(secret_type, secret_value, display_format="%s:%%s" % username),
+            parse_secret(secret_type, secret_value, display_format="%s:%%s" % username),
         ]
 
     if settings.onredirect is not None:

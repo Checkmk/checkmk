@@ -28,7 +28,7 @@ Special agent
     >>> from pydantic import BaseModel
     ...
     >>> from cmk.server_side_calls.v1 import (
-    ...     get_secret_from_params,
+    ...     parse_secret,
     ...     HostConfig,
     ...     HTTPProxy,
     ...     Secret,
@@ -54,7 +54,7 @@ Special agent
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         get_secret_from_params(params.password[0], params.password[1]),
+    ...         parse_secret(params.password[0], params.password[1]),
     ...     ]
     ...
     ...     yield SpecialAgentCommand(command_arguments=args)
@@ -83,7 +83,7 @@ Active check
     >>> from cmk.server_side_calls.v1 import (
     ...     ActiveCheckCommand,
     ...     ActiveCheckConfig,
-    ...     get_secret_from_params,
+    ...     parse_secret,
     ...     HostConfig,
     ...     HTTPProxy,
     ...     Secret,
@@ -107,7 +107,7 @@ Active check
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         get_secret_from_params(params.password[0], params.password[1]),
+    ...         parse_secret(params.password[0], params.password[1]),
     ...     ]
     ...
     ...     yield ActiveCheckCommand(service_description="Example", command_arguments=args)

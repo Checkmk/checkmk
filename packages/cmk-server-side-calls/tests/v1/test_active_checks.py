@@ -11,10 +11,10 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    parse_secret,
     Secret,
     StoredSecret,
 )
@@ -41,7 +41,7 @@ def generate_example_commands(
         "-u",
         params.user,
         "-s",
-        get_secret_from_params(params.password[0], params.password[1]),
+        parse_secret(params.password[0], params.password[1]),
     ]
     yield ActiveCheckCommand(service_description="Example", command_arguments=args)
 

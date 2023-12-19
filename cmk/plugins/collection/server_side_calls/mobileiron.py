@@ -9,10 +9,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -40,7 +40,7 @@ def generate_mobileiron_command(
         "-u",
         params.username,
         "-p",
-        get_secret_from_params(secret_type, secret_value),
+        parse_secret(secret_type, secret_value),
         "--partition",
         ",".join(params.partition),
         "--hostname",

@@ -11,9 +11,9 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     Secret,
 )
 
@@ -71,7 +71,7 @@ def check_bi_aggr_services(
             "-u",
             params.credentials.user,
             "-s",
-            get_secret_from_params(secret_type, secret_value),
+            parse_secret(secret_type, secret_value),
         ]
     opt_params = params.optional
     if opt_params and opt_params.auth_mode:

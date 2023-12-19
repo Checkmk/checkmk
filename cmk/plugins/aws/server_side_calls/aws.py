@@ -12,10 +12,10 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     noop_parser,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -77,7 +77,7 @@ def _proxy_args(details: Mapping[str, Any]) -> Sequence[str | Secret]:
             "--proxy-user",
             proxy_user,
             "--proxy-password",
-            get_secret_from_params(proxy_pwd[0], proxy_pwd[1]),
+            parse_secret(proxy_pwd[0], proxy_pwd[1]),
         ]
     return proxy_args
 
@@ -89,7 +89,7 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         "--access-key-id",
         params["access_key_id"],
         "--secret-access-key",
-        get_secret_from_params(params["secret_access_key"][0], params["secret_access_key"][1]),
+        parse_secret(params["secret_access_key"][0], params["secret_access_key"][1]),
         *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
 

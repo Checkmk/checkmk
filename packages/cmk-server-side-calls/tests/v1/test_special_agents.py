@@ -9,10 +9,10 @@ from typing import Literal
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    parse_secret,
     PlainTextSecret,
     Secret,
     SpecialAgentCommand,
@@ -41,7 +41,7 @@ def generate_example_commands(
         "-u",
         params.user,
         "-s",
-        get_secret_from_params(params.password[0], params.password[1]),
+        parse_secret(params.password[0], params.password[1]),
     ]
     yield SpecialAgentCommand(command_arguments=args)
 

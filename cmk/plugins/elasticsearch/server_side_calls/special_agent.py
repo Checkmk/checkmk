@@ -14,10 +14,10 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.server_side_calls.v1 import (
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
     noop_parser,
+    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -37,7 +37,7 @@ def _agent_elasticsearch_arguments(
     if "user" in params:
         args.extend(["-u", str(params["user"])])
     if "password" in params:
-        args.extend(["-s", get_secret_from_params(*params["password"])])  # type: ignore[misc]
+        args.extend(["-s", parse_secret(*params["password"])])  # type: ignore[misc]
     if "port" in params:
         args.extend(["-p", str(params["port"])])
     if params.get("no-cert-check", False):

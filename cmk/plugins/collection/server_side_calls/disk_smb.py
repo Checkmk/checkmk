@@ -11,9 +11,9 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     HTTPProxy,
+    parse_secret,
     Secret,
 )
 
@@ -61,7 +61,7 @@ def check_disk_smb_arguments(
             "-u",
             username,
             "-p",
-            get_secret_from_params(pw[0], pw[1]),
+            parse_secret(pw[0], pw[1]),
         ]
 
     if params.ip_address is not None:

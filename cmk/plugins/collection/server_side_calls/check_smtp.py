@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
-    get_secret_from_params,
     HostConfig,
     IPAddressFamily,
+    parse_secret,
     Secret,
 )
 
@@ -77,7 +77,7 @@ def check_smtp_arguments(  # pylint: disable=too-many-branches
 
     if params.auth:
         username, password = params.auth
-        args.extend(("-A", "LOGIN", "-U", username, "-P", get_secret_from_params(*password)))
+        args.extend(("-A", "LOGIN", "-U", username, "-P", parse_secret(*password)))
 
     if params.starttls:
         args.append("-S")

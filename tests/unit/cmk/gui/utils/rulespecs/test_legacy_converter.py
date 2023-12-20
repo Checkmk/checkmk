@@ -12,6 +12,7 @@ import pytest
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
 
+import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
@@ -629,6 +630,25 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 allow_empty=True,
             ),
             id="FileUpload",
+        ),
+        pytest.param(
+            api_v1.preconfigured.Metric(),
+            legacy_graphing_valuespecs.MetricName(
+                title=_("Metric"),
+                help=_("Select from a list of metrics known to Checkmk"),
+            ),
+            id="minimal Metric",
+        ),
+        pytest.param(
+            api_v1.preconfigured.Metric(
+                title=api_v1.Localizable("metric title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_graphing_valuespecs.MetricName(
+                title=_("metric title"),
+                help=_("help text"),
+            ),
+            id="Metric",
         ),
     ],
 )
@@ -1462,6 +1482,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.BooleanChoice(),
         api_v1.form_specs.FileUpload(),
         api_v1.preconfigured.Proxy(),
+        api_v1.preconfigured.Metric(),
     ]
 
 
@@ -1473,7 +1494,7 @@ def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
                 _ = form_spec.transform
             except AttributeError:
                 assert False
-        case api_v1.preconfigured.Proxy() | api_v1.form_specs.FileUpload():
+        case api_v1.preconfigured.Metric() | api_v1.preconfigured.Proxy() | api_v1.form_specs.FileUpload():
             # these don't have a transform
             assert True
         case other_form_spec:

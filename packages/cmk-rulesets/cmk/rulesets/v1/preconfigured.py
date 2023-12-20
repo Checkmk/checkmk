@@ -65,3 +65,16 @@ class MonitoredHost:
 
     title: Localizable | None = None
     help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class MonitoredService:
+    """Specifies a form selecting from a list of currently monitored services in Checkmk
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None

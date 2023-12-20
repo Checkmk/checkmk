@@ -66,60 +66,60 @@ pub fn check(der: &[u8], config: Config) -> Collection {
     };
 
     Collection::from(&mut unwrap_into!(
-        check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial),
+        check_serial(cert.raw_serial_as_string(), config.serial),
         config.subject_cn.map(|expected| {
             check_eq!(
                 "Subject CN",
-                first_of(&mut cert.tbs_certificate.subject().iter_common_name()),
+                first_of(&mut cert.subject().iter_common_name()),
                 expected
             )
         }),
         config.subject_o.map(|expected| {
             check_eq!(
                 "Subject O",
-                first_of(&mut cert.tbs_certificate.subject().iter_organization()),
+                first_of(&mut cert.subject().iter_organization()),
                 expected
             )
         }),
         config.subject_ou.map(|expected| {
             check_eq!(
                 "Subject OU",
-                first_of(&mut cert.tbs_certificate.subject().iter_organizational_unit()),
+                first_of(&mut cert.subject().iter_organizational_unit()),
                 expected
             )
         }),
         config.issuer_cn.map(|expected| {
             check_eq!(
                 "Issuer CN",
-                first_of(&mut cert.tbs_certificate.issuer().iter_common_name()),
+                first_of(&mut cert.issuer().iter_common_name()),
                 expected
             )
         }),
         config.issuer_o.map(|expected| {
             check_eq!(
                 "Issuer O",
-                first_of(&mut cert.tbs_certificate.issuer().iter_organization()),
+                first_of(&mut cert.issuer().iter_organization()),
                 expected
             )
         }),
         config.issuer_ou.map(|expected| {
             check_eq!(
                 "Issuer OU",
-                first_of(&mut cert.tbs_certificate.issuer().iter_organizational_unit()),
+                first_of(&mut cert.issuer().iter_organizational_unit()),
                 expected
             )
         }),
         config.issuer_st.map(|expected| {
             check_eq!(
                 "Issuer ST",
-                first_of(&mut cert.tbs_certificate.issuer().iter_state_or_province()),
+                first_of(&mut cert.issuer().iter_state_or_province()),
                 expected
             )
         }),
         config.issuer_c.map(|expected| {
             check_eq!(
                 "Issuer C",
-                first_of(&mut cert.tbs_certificate.issuer().iter_country()),
+                first_of(&mut cert.issuer().iter_country()),
                 expected
             )
         }),
@@ -127,9 +127,9 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
-            cert.tbs_certificate.validity().time_to_expiration(),
+            cert.validity().time_to_expiration(),
             config.not_after,
-            cert.tbs_certificate.validity().not_after,
+            cert.validity().not_after,
         )
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize))),
     ))

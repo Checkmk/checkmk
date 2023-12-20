@@ -23,7 +23,7 @@ class PassiveCheck:
     A passive check has the prefix 'check_mk-'.
 
     Args:
-        name:   The name of the passive check
+        name: The name of the passive check.
 
     Example:
 
@@ -44,7 +44,7 @@ class ActiveCheck:
     An active check has the prefix 'check_mk_active-'.
 
     Args:
-        name:   The name of the active check
+        name: The name of the active check
 
     Example:
 
@@ -86,7 +86,7 @@ class NagiosPlugin:
     A classical Nagios plugin has the prefix 'check_'.
 
     Args:
-        name:   The name of the Nagios plugin
+        name: The name of the Nagios plugin
 
     Example:
 

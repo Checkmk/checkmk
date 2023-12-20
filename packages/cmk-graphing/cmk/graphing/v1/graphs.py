@@ -20,8 +20,8 @@ __all__ = [
 class MinimalRange:
     """
     Args:
-        lower:  A lower bound
-        upper:  An upper bound
+        lower: A lower bound
+        upper: An upper bound
 
     Example:
 
@@ -44,18 +44,13 @@ class MinimalRange:
 class Graph:
     """
     Args:
-        name:   An unique name
-        title:  A title
-        minimal_range:
-                A minimal range
-        compound_lines:
-                A list of metric names or objects
-        simple_lines:
-                A list of metric names or objects
-        optional:
-                A list of metric names
-        conflicting:
-                A list of metric names
+        name: A unique name
+        title: A title
+        minimal_range: A minimal range
+        compound_lines: A list of metric names or objects
+        simple_lines: A list of metric names or objects
+        optional: A list of metric names
+        conflicting: A list of metric names
 
     Example:
 
@@ -101,10 +96,10 @@ class Graph:
 class Bidirectional:
     """
     Args:
-        name:   An unique name
-        title:  A title
-        lower:  A graph which grows to the bottom
-        upper:  A graph which grows to the top
+        name: A unique name
+        title: A title
+        lower: A graph which grows to the bottom
+        upper: A graph which grows to the top
 
     Example:
 

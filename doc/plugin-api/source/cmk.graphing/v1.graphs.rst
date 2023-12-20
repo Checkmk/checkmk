@@ -1,0 +1,6 @@
+======================
+cmk.graphing.v1.graphs
+======================
+
+.. automodule:: cmk.graphing.v1.graphs
+   :members:

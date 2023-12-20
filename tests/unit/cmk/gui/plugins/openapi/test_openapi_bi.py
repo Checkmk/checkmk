@@ -380,7 +380,7 @@ def test_get_aggregation_state_empty(
 
     with live():
         with set_config(wato_enabled=wato_enabled):
-            clients.BiAggregation.get_aggregation_state(body={})
+            clients.BiAggregation.get_aggregation_state_post(body={})
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -400,7 +400,7 @@ def test_get_aggregation_state_filter_names(
 
     with live():
         with set_config(wato_enabled=wato_enabled):
-            clients.BiAggregation.get_aggregation_state(body={"filter_names": ["Host heute"]})
+            clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
 
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
@@ -450,8 +450,50 @@ def test_get_aggregation_state_should_not_update_config_generation(
 
     with live():
         with set_config(wato_enabled=wato_enabled):
-            clients.BiAggregation.get_aggregation_state(body={"filter_names": ["Host heute"]})
+            clients.BiAggregation.get_aggregation_state_post(body={"filter_names": ["Host heute"]})
 
     generation_after_calling_endpoint = activate_changes._get_current_config_generation()
 
     assert generation_before_calling_endpoint == generation_after_calling_endpoint
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_aggregation_state_empty_with_get_method(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+    set_config: SetConfig,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        with set_config(wato_enabled=wato_enabled):
+            clients.BiAggregation.get_aggregation_state()
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_aggregation_state_filter_names_with_get_method(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+    set_config: SetConfig,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    with live():
+        with set_config(wato_enabled=wato_enabled):
+            clients.BiAggregation.get_aggregation_state(
+                query_params={"filter_names": ["Host heute"]}
+            )

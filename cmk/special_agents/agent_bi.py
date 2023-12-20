@@ -167,12 +167,12 @@ class AggregationRawdataGenerator:
     def _fetch_aggregation_data(self):
         filter_query = self._config.get("filter") or {}
 
-        response = requests.post(
+        response = requests.get(
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
             headers={"Authorization": f"Bearer {self._username} {self._secret.strip()}"},
-            json={
+            params={
                 "filter_names": filter_query.get("names") or [],
                 "filter_groups": filter_query.get("groups") or [],
             },

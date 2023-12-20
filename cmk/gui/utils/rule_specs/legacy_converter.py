@@ -535,6 +535,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.preconfigured.MonitoredHost():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.MonitoredService():
+            return _convert_to_legacy_monitored_service_description(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -1429,3 +1432,23 @@ def _convert_to_legacy_monitored_host_name(
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
+
+
+def _convert_to_legacy_monitored_service_description(
+    to_convert: ruleset_api_v1.preconfigured.MonitoredService, localizer: Callable[[str], str]
+) -> legacy_valuespecs.MonitoredServiceDescription:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "autocompleter": ContextAutocompleterConfig(
+            ident=legacy_valuespecs.MonitoredServiceDescription.ident,
+            strict=True,
+            show_independent_of_context=True,
+        )
+    }
+    if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
+        help_text = localizer("Select from a list of service descriptions known to Checkmk")
+    converted_kwargs["help"] = help_text
+    if (title := _localize_optional(to_convert.title, localizer)) is None:
+        title = localizer("Service description")
+    converted_kwargs["title"] = title
+
+    return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)

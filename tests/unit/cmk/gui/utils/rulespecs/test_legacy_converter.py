@@ -680,6 +680,35 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="MonitoredHost",
         ),
+        pytest.param(
+            api_v1.preconfigured.MonitoredService(),
+            legacy_valuespecs.MonitoredServiceDescription(
+                title=_("Service description"),
+                help=_("Select from a list of service descriptions known to Checkmk"),
+                autocompleter=ContextAutocompleterConfig(
+                    ident=legacy_valuespecs.MonitoredServiceDescription.ident,
+                    strict=True,
+                    show_independent_of_context=True,
+                ),
+            ),
+            id="minimal MonitoredService",
+        ),
+        pytest.param(
+            api_v1.preconfigured.MonitoredService(
+                title=api_v1.Localizable("service title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_valuespecs.MonitoredServiceDescription(
+                title=_("service title"),
+                help=_("help text"),
+                autocompleter=ContextAutocompleterConfig(
+                    ident=legacy_valuespecs.MonitoredServiceDescription.ident,
+                    strict=True,
+                    show_independent_of_context=True,
+                ),
+            ),
+            id="MonitoredService",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
@@ -1514,6 +1543,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.preconfigured.Proxy(),
         api_v1.preconfigured.Metric(),
         api_v1.preconfigured.MonitoredHost(),
+        api_v1.preconfigured.MonitoredService(),
     ]
 
 
@@ -1525,7 +1555,7 @@ def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
                 _ = form_spec.transform
             except AttributeError:
                 assert False
-        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.Proxy():
+        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.MonitoredService() | api_v1.preconfigured.Proxy():
             # these don't have a transform
             assert True
         case other_form_spec:

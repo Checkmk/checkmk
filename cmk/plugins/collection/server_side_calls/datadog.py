@@ -76,10 +76,9 @@ def generate_datadog_command(
     ]
 
     if params.proxy is not None:
-        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            parse_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(params.proxy, http_proxies),
         ]
 
     sections = []

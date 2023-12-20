@@ -46,12 +46,11 @@ def _usage_endpoint(
     http_proxies: Mapping[str, HTTPProxy],
 ) -> list[str]:
     proxy_params = ProxyParams.model_validate(params)
-    proxy_type, proxy_value = proxy_params.proxy
     args = [
         f"--{prefix}-endpoint",
         str(params["endpoint_v2"]),
         "--usage-proxy",
-        parse_http_proxy(proxy_type, proxy_value, http_proxies),
+        parse_http_proxy(proxy_params.proxy, http_proxies),
     ]
     if params.get("verify-cert"):
         args.append("--usage-verify-cert")
@@ -98,11 +97,10 @@ def generate_kube_command(  # pylint: disable=too-many-branches
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
     proxy_params = ProxyParams.model_validate(api_params)
-    proxy_type, proxy_value = proxy_params.proxy
     args.extend(
         [
             "--api-server-proxy",
-            parse_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(proxy_params.proxy, http_proxies),
         ]
     )
     if api_timeouts := api_params.get("timeout"):

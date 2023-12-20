@@ -47,10 +47,9 @@ def generate_mobileiron_command(
         host_config.name,
     ]
     if params.proxy:
-        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            parse_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(params.proxy, http_proxies),
         ]
 
     for expression in params.android_regex:

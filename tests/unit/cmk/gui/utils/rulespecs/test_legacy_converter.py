@@ -471,6 +471,124 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="Age",
         ),
+        pytest.param(
+            api_v1.form_specs.Proxy(),
+            legacy_valuespecs.CascadingDropdown(
+                title=_("HTTP proxy"),
+                default_value=("environment", "environment"),
+                choices=[
+                    (
+                        "environment",
+                        _("Use from environment"),
+                        legacy_valuespecs.FixedValue(
+                            value="environment",
+                            help=_(
+                                "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                                "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                                "Have a look at the python requests module documentation for further information. Note "
+                                "that these variables must be defined as a site-user in ~/etc/environment and that "
+                                "this might affect other notification methods which also use the requests module."
+                            ),
+                            totext=_(
+                                "Use proxy settings from the process environment. This is the default."
+                            ),
+                        ),
+                    ),
+                    (
+                        "no_proxy",
+                        _("Connect without proxy"),
+                        legacy_valuespecs.FixedValue(
+                            value=None,
+                            totext=_(
+                                "Connect directly to the destination instead of using a proxy."
+                            ),
+                        ),
+                    ),
+                    (
+                        "global",
+                        _("Use globally configured proxy"),
+                        legacy_valuespecs.DropdownChoice(
+                            choices=lambda: [],
+                            sorted=True,
+                        ),
+                    ),
+                    (
+                        "url",
+                        _("Use explicit proxy settings"),
+                        legacy_valuespecs.Url(
+                            title=_("Proxy URL"),
+                            default_scheme="http",
+                            allowed_schemes=frozenset(
+                                {"http", "https", "socks4", "socks4a", "socks5", "socks5h"}
+                            ),
+                        ),
+                    ),
+                ],
+                sorted=False,
+            ),
+            id="minimal HTTPProxy",
+        ),
+        pytest.param(
+            api_v1.form_specs.Proxy(
+                allowed_schemas=frozenset(
+                    {api_v1.form_specs.ProxySchema.HTTP, api_v1.form_specs.ProxySchema.HTTPS}
+                ),
+                title=api_v1.Localizable("age title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                title=_("HTTP proxy"),
+                default_value=("environment", "environment"),
+                choices=[
+                    (
+                        "environment",
+                        _("Use from environment"),
+                        legacy_valuespecs.FixedValue(
+                            value="environment",
+                            help=_(
+                                "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                                "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                                "Have a look at the python requests module documentation for further information. Note "
+                                "that these variables must be defined as a site-user in ~/etc/environment and that "
+                                "this might affect other notification methods which also use the requests module."
+                            ),
+                            totext=_(
+                                "Use proxy settings from the process environment. This is the default."
+                            ),
+                        ),
+                    ),
+                    (
+                        "no_proxy",
+                        _("Connect without proxy"),
+                        legacy_valuespecs.FixedValue(
+                            value=None,
+                            totext=_(
+                                "Connect directly to the destination instead of using a proxy."
+                            ),
+                        ),
+                    ),
+                    (
+                        "global",
+                        _("Use globally configured proxy"),
+                        legacy_valuespecs.DropdownChoice(
+                            choices=lambda: [],
+                            sorted=True,
+                        ),
+                    ),
+                    (
+                        "url",
+                        _("Use explicit proxy settings"),
+                        legacy_valuespecs.Url(
+                            title=_("Proxy URL"),
+                            default_scheme="http",
+                            allowed_schemes=frozenset({"http", "https"}),
+                        ),
+                    ),
+                ],
+                sorted=False,
+            ),
+            id="HTTPProxy",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(

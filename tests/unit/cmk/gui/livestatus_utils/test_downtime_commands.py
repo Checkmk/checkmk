@@ -236,11 +236,11 @@ def test_servicegroup_service_downtime_and_hosts(
         )
 
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;...;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         live.expect_query(
-            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom",
+            "COMMAND [...] SCHEDULE_HOST_DOWNTIME;...;0;86400;16;0;120;;Boom",
             match_type="ellipsis",
         )
         downtimes.schedule_servicegroup_service_downtime(

@@ -79,8 +79,6 @@ $color-table-border-dark: $grey-6; // dark grey
 // -----------------------------------------------------------------------------
 $dashboard-stats-bg-color: transparent;
 
-$toggle-button-search-img-filter: invert(20%);
-
 $data-container-bg-color: $ux-theme-2;
 
 $input-button-bg-color: $ux-theme-0;
@@ -143,7 +141,6 @@ $tag-hover-opacity: 0.8;
 // Node visualization
 // -----------------------------------------------------------------------------
 $node-vis-darkgrey: $ux-theme-5;
-$node-vis-togglebox-enabled: $success;
 $node-vis-menu-bg-color: $ux-theme-1;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;

@@ -32,7 +32,6 @@ from cmk.gui import (
     main,
     message,
     mobile,
-    node_visualization,
     notifications,
     painter_options,
     prediction,
@@ -56,6 +55,7 @@ from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_rule_packs
+from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.pages import page_registry
@@ -247,7 +247,7 @@ def register() -> None:
         endpoint_registry,
     )
     cron.register(page_registry)
-    node_visualization.register(page_registry, filter_registry)
+    nodevis.register(page_registry, filter_registry, icon_and_action_registry)
     notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)
     valuespec.register(page_registry)

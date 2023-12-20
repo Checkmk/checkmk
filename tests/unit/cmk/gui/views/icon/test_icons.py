@@ -30,6 +30,7 @@ def test_builtin_icons_and_actions() -> None:
         "inventory",
         "logwatch",
         "mkeventd",
+        "network_topology",
         "notes",
         "parent_child_topology",
         "perfgraph",

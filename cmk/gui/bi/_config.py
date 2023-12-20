@@ -32,7 +32,6 @@ from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.nodevis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -1790,9 +1789,6 @@ class BIModeEditAggregation(ABCBIMode):
     def get_vs_aggregation(cls, aggregation_id: str | None) -> BIAggregationForm:
         visualization_choices = []
         visualization_choices.append((None, _("Use default layout")))
-        templates = BILayoutManagement.get_all_bi_template_layouts()
-        for template_id in sorted(templates.keys()):
-            visualization_choices.append((template_id, template_id))
 
         if aggregation_id:
             id_valuespec: ValueSpec = FixedValue(

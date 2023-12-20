@@ -24,7 +24,7 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.mkeventd
 from cmk.gui.config import active_config
-from cmk.gui.nodevis_lib import topology_dir
+from cmk.gui.nodevis.utils import topology_dir
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 

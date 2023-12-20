@@ -172,7 +172,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
             JSON.stringify(this.style_config.options)
         );
         this.show_style_configuration();
-        this._world.layout_manager.dragging = true;
+        this._world.viewport.get_layout_manager().dragging = true;
     }
 
     _drag_drag(
@@ -183,15 +183,15 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.drag_start_info.delta.y += event.dy;
         drag_function(event);
         //@ts-ignore
-        this.changed_options(event, this.style_config.options);
+        this.changed_options(this.style_config.options);
     }
 
     _drag_end(): void {
-        this._world.layout_manager.dragging = false;
-        this._world.layout_manager.create_undo_step();
+        this._world.viewport.get_layout_manager().dragging = false;
+        this._world.viewport.get_layout_manager().create_undo_step();
     }
 
-    change_rotation(_event: d3.D3DragEvent<any, any, any>): void {
+    change_rotation(): void {
         let rotation =
             (this.drag_start_info.options.rotation -
                 this.drag_start_info.delta.y) %
@@ -426,7 +426,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
     }
 
     override generate_overlay(): void {
-        if (!this._world.layout_manager.edit_layout) return;
+        if (!this._world.viewport.get_layout_manager().edit_layout) return;
 
         this.selection.attr(
             "transform",
@@ -448,10 +448,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(
-                    (event: d3.D3DragEvent<any, any, any>) =>
-                        this.change_rotation(event)
-                ),
+                call: this.get_drag_callback(() => this.change_rotation()),
             },
         ];
         const coords = this._world.viewport.translate_to_zoom({
@@ -763,7 +760,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
     }
 
     override generate_overlay(): void {
-        if (!this._world.layout_manager.edit_layout) return;
+        if (!this._world.viewport.get_layout_manager().edit_layout) return;
 
         this.selection.attr(
             "transform",
@@ -828,28 +825,19 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "radius",
                 image: "themes/facelift/images/icon_resize.png",
-                call: this.get_drag_callback(
-                    (event: d3.D3DragEvent<any, any, any>) =>
-                        this.change_radius(event)
-                ),
+                call: this.get_drag_callback(() => this.change_radius()),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(
-                    (event: d3.D3DragEvent<any, any, any>) =>
-                        this.change_rotation(event)
-                ),
+                call: this.get_drag_callback(() => this.change_rotation()),
             },
             {
                 node: this.style_root_node,
                 type: "degree",
                 image: "themes/facelift/images/icon_pie_chart.png",
-                call: this.get_drag_callback(
-                    (event: d3.D3DragEvent<any, any, any>) =>
-                        this.change_degree(event)
-                ),
+                call: this.get_drag_callback(() => this.change_degree()),
             },
         ];
         const coords = this._world.viewport.translate_to_zoom({
@@ -859,9 +847,9 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.add_option_icons(coords, elements);
     }
 
-    change_radius(event: d3.D3DragEvent<any, any, any>): void {
-        this._world.layout_manager.toolbar_plugin
-            .layout_style_configuration()
+    change_radius(): void {
+        this._world.viewport
+            .get_layout_manager()
             .show_style_configuration(this);
         this.style_config.options.radius = Math.floor(
             Math.min(
@@ -873,12 +861,12 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 )
             )
         );
-        this.changed_options(event, this.style_config.options);
+        this.changed_options(this.style_config.options);
     }
 
-    change_degree(event: d3.D3DragEvent<any, any, any>): void {
-        this._world.layout_manager.toolbar_plugin
-            .layout_style_configuration()
+    change_degree(): void {
+        this._world.viewport
+            .get_layout_manager()
             .show_style_configuration(this);
         this.style_config.options.degree = Math.floor(
             Math.min(
@@ -890,7 +878,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 )
             )
         );
-        this.changed_options(event, this.style_config.options);
+        this.changed_options(this.style_config.options);
     }
 }
 

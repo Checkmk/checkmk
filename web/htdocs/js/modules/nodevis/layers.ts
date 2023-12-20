@@ -20,6 +20,7 @@ import {
     link_type_class_registry,
 } from "nodevis/link_utils";
 import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
+import * as texts from "nodevis/texts";
 import {
     ContextMenuElement,
     Coords,
@@ -28,228 +29,26 @@ import {
     NodevisLink,
     NodevisNode,
     NodevisWorld,
-    RectangleWithCoords,
 } from "nodevis/type_defs";
 import {DefaultTransition} from "nodevis/utils";
 
-export class LayeredDebugLayer extends ToggleableLayer {
-    _anchor_info?: d3SelectionG;
-
+export class ParentChildOverlay extends ToggleableLayer {
     override class_name(): string {
-        return "debug_layer";
+        return "parent_child";
     }
 
-    override id() {
-        return "debug_layer";
-    }
-
-    override z_index(): number {
-        return 20;
+    override id(): string {
+        return "parent_child";
     }
 
     override name() {
-        return "Debug Layer";
+        return "Parent/Child";
     }
 
-    override setup() {
-        this.overlay_active = false;
-    }
-
-    override update_gui() {
-        this._div_selection
-            .selectAll("td#Simulation")
-            .text(
-                "Alpha: " +
-                    this._world.force_simulation._simulation.alpha().toFixed(3)
-            );
-        if (this.overlay_active == this._world.layout_manager.edit_layout)
-            return;
-
-        if (this._world.layout_manager.edit_layout) this.enable_overlay();
-        else this.disable_overlay();
-    }
-
-    _update_chunk_boundaries() {
-        if (!this._world.layout_manager.edit_layout) {
-            this._svg_selection.selectAll("rect.boundary").remove();
-            return;
-        }
-
-        type RectangleWithId = {id: string} & RectangleWithCoords;
-        const boundary_list: RectangleWithId[] = [];
-        this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
-            const coords = this._world.viewport.translate_to_zoom(
-                node_chunk.coords
-            ) as unknown as RectangleWithId;
-            coords.id = node_chunk.id;
-            boundary_list.push(coords);
-        });
-
-        let boundaries = this._svg_selection
-            .selectAll<SVGRectElement, RectangleWithId>("rect.boundary")
-            .data(boundary_list, d => d.id);
-        boundaries.exit().remove();
-        boundaries = boundaries
-            .enter()
-            .append("rect")
-            .classed("boundary", true)
-            .attr("fill", "none")
-            .attr("stroke", "black")
-            .attr("stroke-width", 1)
-            .merge(boundaries);
-
-        boundaries
-            .attr("x", d => d.x)
-            .attr("y", d => d.y)
-            .attr("width", d => d.width)
-            .attr("height", d => d.height);
-    }
-
-    enable_overlay() {
-        this.overlay_active = true;
-        this._anchor_info = this._svg_selection
-            .append("g")
-            .attr("transform", "translate(-50,-50)");
-
-        this._div_selection
-            .append("input")
-            .style("pointer-events", "all")
-            .attr("id", "reset_pan_and_zoom")
-            .attr("type", "button")
-            .classed("button", true)
-            .attr("value", "Reset panning and zoom")
-            .on("click", () => this.reset_pan_and_zoom())
-            .style("opacity", 0)
-            .transition()
-            .duration(DefaultTransition.duration())
-            .style("opacity", 1);
-
-        this._world.viewport
-            .get_div_selection()
-            .on("mousemove.translation_info", event => this.mousemove(event));
-        const rows = this._div_selection
-            .append("table")
-            .attr("id", "translation_infobox")
-            .selectAll("tr")
-            .data(["Zoom", "Panning", "Mouse"]);
-
-        const rows_enter = rows.enter().append("tr");
-        rows_enter
-            .append("td")
-            .text(d => d)
-            .classed("noselect", true);
-        rows_enter
-            .append("td")
-            .attr("id", d => d)
-            .classed("noselect", true);
-        this.size_changed();
-        this.zoomed();
-    }
-
-    disable_overlay() {
-        this.overlay_active = false;
-        this._svg_selection
-            .selectAll("*")
-            .transition()
-            .duration(DefaultTransition.duration())
-            .attr("opacity", 0)
-            .remove();
-        this._div_selection
-            .selectAll("*")
-            .transition()
-            .duration(DefaultTransition.duration())
-            .style("opacity", 0)
-            .remove();
-        this._world.viewport
-            .get_div_selection()
-            .on("mousemove.translation_info", null);
-    }
-
-    override size_changed() {
-        if (!this.overlay_active) return;
-    }
-
-    reset_pan_and_zoom() {
-        this._world.viewport.reset_zoom();
-    }
-
-    override zoomed() {
-        if (!this.overlay_active || !this._anchor_info) return;
-        // TODO: check if toString is working
-        this._anchor_info.attr(
-            "transform",
-            this._world.viewport.get_last_zoom().toString()
-        );
-        const last_zoom = this._world.viewport.get_last_zoom();
-        this._div_selection.selectAll("td#Zoom").text(last_zoom.k.toFixed(2));
-        this._div_selection
-            .selectAll("td#Panning")
-            .text("X: " + last_zoom.x + " / Y:" + last_zoom.y);
-    }
-
-    mousemove(event: MouseEvent) {
-        const coords = d3.pointer(event);
-        this._div_selection
-            .selectAll("td#Mouse")
-            .text("X:" + coords[0] + " / Y:" + coords[1]);
-    }
-}
-
-export class LayeredIconOverlay extends ToggleableLayer {
-    override class_name(): string {
-        return "node_icon_overlay";
-    }
-
-    override id() {
-        return "node_icon_overlay";
-    }
-
-    override z_index(): number {
-        return 10;
-    }
-
-    override name() {
-        return "Node icons";
-    }
-
-    override update_gui() {
-        const nodes: NodevisNode[] = [];
-        this._world.viewport.get_all_nodes().forEach(node => {
-            if (!node.data.icon_image) return;
-            nodes.push(node);
-        });
-
-        let icons = this._div_selection
-            .selectAll<HTMLImageElement, NodevisNode>("img")
-            .data(nodes, d => d.data.id);
-        icons.exit().remove();
-        icons = icons
-            .enter()
-            .append("img")
-            .attr(
-                "src",
-                d => "themes/facelift/images/icon_" + d.data.icon_image + ".svg"
-            )
-            .classed("node_icon", true)
-            .style("position", "absolute")
-            .style("pointer-events", "none")
-            .merge(icons);
-
-        icons
-            .style("left", d => {
-                return (
-                    this._world.viewport.translate_to_zoom({x: d.x, y: 0}).x -
-                    24 +
-                    "px"
-                );
-            })
-            .style("top", d => {
-                return (
-                    this._world.viewport.translate_to_zoom({x: 0, y: d.y}).y -
-                    24 +
-                    "px"
-                );
-            });
+    override enable() {
+        if (this.enabled) return;
+        this.enabled = true;
+        this._world.update_data();
     }
 }
 
@@ -307,14 +106,8 @@ export class LayeredNodesLayer extends FixLayer {
         return "nodes";
     }
 
-    get_node_by_id(node_id: string): AbstractGUINode | null {
+    get_node_by_id(node_id: string): AbstractGUINode {
         return this.node_instances[node_id];
-    }
-
-    get_nodevis_node_by_id(node_id: string): NodevisNode | null {
-        const gui_node = this.get_node_by_id(node_id);
-        if (!gui_node) return null;
-        return gui_node.node;
     }
 
     get_links_for_node(node_id: string): AbstractLink[] {
@@ -337,66 +130,6 @@ export class LayeredNodesLayer extends FixLayer {
 
     override setup(): void {
         return;
-    }
-
-    render_line_style<GType extends d3.BaseType, Data>(
-        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
-    ): void {
-        const line_style_row = into_selection
-            .selectAll("table.line_style tr")
-            .data([null])
-            .join(enter =>
-                enter.append("table").classed("line_style", true).append("tr")
-            );
-
-        line_style_row
-            .selectAll("td.label")
-            .data([null])
-            .join("td")
-            .classed("label", true)
-            .text("Line style");
-
-        const select = line_style_row
-            .selectAll("td.select")
-            .data([null])
-            .join(enter =>
-                enter
-                    .append("td")
-                    .classed("select", true)
-                    .append("select")
-                    .style("pointer-events", "all")
-                    .style("width", "200px")
-                    .on("change", event => this._change_line_style(event))
-            );
-
-        let current_style = "round";
-        this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
-            current_style = node_chunk.layout_settings.config.line_config.style;
-        });
-
-        select
-            .selectAll<HTMLOptionElement, any>("option")
-            .data(["straight", "round", "elbow"])
-            .join("option")
-            .property("value", d => d)
-            .property("selected", d => d == current_style)
-            .text(d => d);
-    }
-
-    _change_line_style(event: Event): void {
-        const new_line_style = d3
-            .select(event.target as HTMLElement)
-            .property("value");
-        this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
-            // @ts-ignore
-            node_chunk.layout_instance.line_config.style = new_line_style;
-            // @ts-ignore
-            node_chunk.layout_settings.config.line_config.style =
-                new_line_style;
-        });
-
-        this.update_data();
-        this.update_gui(true);
     }
 
     override zoomed(): void {
@@ -474,10 +207,7 @@ export class LayeredNodesLayer extends FixLayer {
         }
 
         const vanish_coords = this._world.viewport.scale_to_zoom(
-            this._world.viewport.compute_spawn_coords(
-                old_instance.node.data.chunk,
-                old_instance.node
-            )
+            this._world.viewport.compute_spawn_coords(old_instance.node)
         );
 
         // Move vanishing nodes, back to their parent nodes
@@ -538,16 +268,19 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _create_link(link_data: NodevisLink): AbstractLink {
-        const link_class = link_type_class_registry.get_class(
+        let link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
+        // TODO: remove
+        if (!link_class)
+            link_class = link_type_class_registry.get_class("default");
 
         return new link_class(this._world, link_data);
     }
 
     override update_gui(force = false): void {
         this._update_position_of_context_menu();
-        if (!force && this._world.force_simulation._simulation.alpha() < 0.11) {
+        if (!force && this._world.viewport.get_force_alpha() < 0.11) {
             for (const idx in this.node_instances)
                 this.node_instances[
                     idx
@@ -568,57 +301,78 @@ export class LayeredNodesLayer extends FixLayer {
                 false;
     }
 
+    _add_toggle_options_to_context_menu(
+        content_ul: d3.Selection<HTMLUListElement, null, any, unknown>
+    ) {
+        const nodes_class_list = this._svg_selection.node()!.classList;
+        const hide_host_labels = nodes_class_list.contains("hide_host_labels");
+        const hide_service_labels = nodes_class_list.contains(
+            "hide_service_labels"
+        );
+        const hide_icons = nodes_class_list.contains("hide_icons");
+
+        const data: [string, boolean][] = [
+            ["host_labels", !hide_host_labels],
+            ["service_labels", !hide_service_labels],
+            ["icons", !hide_icons],
+        ];
+        const elements: ContextMenuElement[] = [];
+        data.forEach(([ident, is_active]) => {
+            elements.push({
+                text:
+                    (is_active ? texts.get("hide") : texts.get("show")) +
+                    " " +
+                    texts.get(ident).toLowerCase(),
+                on: (_event, d) => {
+                    nodes_class_list.toggle("hide_" + d.data);
+                },
+                href: "",
+                img: "themes/facelift/images/icon_aggr.svg",
+                data: ident,
+            });
+        });
+
+        this._add_elements_to_context_menu(content_ul, "visibility", elements);
+    }
     override render_context_menu(
         event: MouseEvent,
         node_id: string | null
     ): void {
-        if (!this._world.layout_manager.edit_layout && !node_id) return; // Nothing to show
-
-        //        let coords : Coords = {x: 0, y:0};
-        //        if (node_instance) {
-        //            coords = {
-        //                x: node_instance.node.x,
-        //                y: node_instance.node.y,
-        //            }
-        //        } else {
-        //            let last_zoom = this._world.viewport.last_zoom;
-        //            coords = {
-        //                x: (event.offsetX - last_zoom.x) / last_zoom.k,
-        //                y: (event.offsetY - last_zoom.y) / last_zoom.k,
-        //            };
-        //        }
-
         event.preventDefault();
         event.stopPropagation();
 
-        // TODO: remove this, apply general update pattern..
         this.popup_menu_selection.selectAll("*").remove();
         const content_ul = this.popup_menu_selection.append("ul");
+        this._add_toggle_options_to_context_menu(content_ul);
 
         let gui_node: AbstractGUINode | null = null;
-        if (node_id) gui_node = this._world.nodes_layer.get_node_by_id(node_id);
+        if (node_id)
+            gui_node = this._world.viewport
+                .get_nodes_layer()
+                .get_node_by_id(node_id);
 
         // Create li for each item
-        if (this._world.layout_manager.edit_layout) {
+        if (this._world.viewport.get_layout_manager().edit_layout) {
             // Add elements layout manager
+            content_ul.append("li").append("hr");
             this._add_elements_to_context_menu(
                 content_ul,
                 "layouting",
-                this._world.layout_manager.get_context_menu_elements(
-                    gui_node ? gui_node.node : null
-                )
+                this._world.viewport
+                    .get_layout_manager()
+                    .get_context_menu_elements(gui_node ? gui_node.node : null)
             );
-            if (gui_node) content_ul.append("li").append("hr");
         }
 
         // Add elements from node
-        if (gui_node)
+        if (gui_node) {
+            content_ul.append("li").append("hr");
             this._add_elements_to_context_menu(
                 content_ul,
                 "node",
                 gui_node.get_context_menu_elements()
             );
-        else {
+        } else {
             this.popup_menu_selection
                 .style("left", event.offsetX + "px")
                 .style("top", event.offsetY + "px");
@@ -632,7 +386,7 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _add_elements_to_context_menu(
-        content: d3.Selection<HTMLUListElement, unknown, any, unknown>,
+        content: d3.Selection<HTMLUListElement, null, any, unknown>,
         element_source: string,
         elements: ContextMenuElement[]
     ): void {
@@ -679,7 +433,7 @@ export class LayeredNodesLayer extends FixLayer {
         links.each((d, idx, nodes) => {
             if (d.on) {
                 d3.select(nodes[idx]).on("click", event => {
-                    if (d.on) d.on(event);
+                    if (d.on) d.on(event, d);
                     this.hide_context_menu();
                 });
             }
@@ -710,6 +464,5 @@ export class LayeredNodesLayer extends FixLayer {
     }
 }
 
-layer_class_registry.register(LayeredIconOverlay);
-layer_class_registry.register(LayeredDebugLayer);
+layer_class_registry.register(ParentChildOverlay);
 layer_class_registry.register(LayeredNodesLayer);

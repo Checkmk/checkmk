@@ -1143,6 +1143,15 @@ class Site:
 
         return secret
 
+    def get_site_internal_secret(self) -> bytes:
+        secret_path = "etc/site_internal.secret"
+        secret = self.read_binary_file(secret_path)
+
+        if secret == b"":
+            raise Exception("Failed to read secret from %s" % secret_path)
+
+        return secret
+
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:

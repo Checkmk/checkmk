@@ -101,6 +101,10 @@ struct Args {
     #[arg(long)]
     subject_cn: Option<String>,
 
+    /// Expected subject alternative name (DNS names only)
+    #[arg(long, num_args = 0..)]
+    subject_alt_names: Option<Vec<String>>,
+
     /// Expected subject organization (O)
     #[arg(long)]
     subject_o: Option<String>,
@@ -216,6 +220,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CertChecks::builder()
             .serial(args.serial)
             .subject_cn(args.subject_cn)
+            .subject_alt_names(args.subject_alt_names)
             .subject_o(args.subject_o)
             .subject_ou(args.subject_ou)
             .issuer_cn(args.issuer_cn)

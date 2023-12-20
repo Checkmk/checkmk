@@ -140,7 +140,7 @@ impl Config {
         }
         let c = Config::parse_main_from_yaml(root);
         match c {
-            Ok(Some(c)) if c.auth().username().is_empty() => {
+            Ok(Some(c)) if !c.auth.defined() => {
                 anyhow::bail!("Bad/absent user name");
             }
             _ => c,
@@ -156,7 +156,7 @@ impl Config {
             bail!("main key is absent");
         }
         let auth = Authentication::from_yaml(main)?;
-        let conn = Connection::from_yaml(main)?.unwrap_or_default();
+        let conn = Connection::from_yaml(main, Some(&auth))?.unwrap_or_default();
         let sections = Sections::from_yaml(main)?.unwrap_or_default();
         let custom_instances: Result<Vec<CustomInstance>> = main
             .get_yaml_vector(keys::INSTANCES)
@@ -253,7 +253,8 @@ impl Authentication {
                     .unwrap_or(defaults::AUTH_TYPE),
             )?,
             access_token: auth.get_string(keys::ACCESS_TOKEN),
-        })
+        }
+        .ensure())
     }
     pub fn username(&self) -> &str {
         &self.username
@@ -266,6 +267,19 @@ impl Authentication {
     }
     pub fn access_token(&self) -> Option<&String> {
         self.access_token.as_ref()
+    }
+
+    pub fn defined(&self) -> bool {
+        self.auth_type() == &AuthType::Integrated || !self.username().is_empty()
+    }
+
+    fn ensure(mut self) -> Self {
+        if self.auth_type() == &AuthType::Integrated {
+            self.username = String::new();
+            self.password = None;
+            self.access_token = None;
+        }
+        self
     }
 }
 
@@ -315,22 +329,25 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+    pub fn from_yaml(yaml: &Yaml, auth: Option<&Authentication>) -> Result<Option<Self>> {
         let conn = yaml.get(keys::CONNECTION);
         if conn.is_badvalue() {
             return Ok(None);
         }
-        Ok(Some(Self {
-            hostname: conn
-                .get_string(keys::HOSTNAME)
-                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
-                .to_lowercase(),
-            fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
-            port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
-            socket: conn.get_pathbuf(keys::SOCKET),
-            tls: ConnectionTls::from_yaml(conn)?,
-            timeout: conn.get_int::<u64>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
-        }))
+        Ok(Some(
+            Self {
+                hostname: conn
+                    .get_string(keys::HOSTNAME)
+                    .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
+                    .to_lowercase(),
+                fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
+                port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
+                socket: conn.get_pathbuf(keys::SOCKET),
+                tls: ConnectionTls::from_yaml(conn)?,
+                timeout: conn.get_int::<u64>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
+            }
+            .ensure(auth),
+        ))
     }
     pub fn hostname(&self) -> &str {
         &self.hostname
@@ -352,6 +369,18 @@ impl Connection {
     }
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
+    }
+
+    fn ensure(mut self, auth: Option<&Authentication>) -> Self {
+        match auth {
+            Some(auth) if auth.auth_type() == &AuthType::Integrated => {
+                self.hostname = "localhost".to_string();
+                self.fail_over_partner = None;
+                self.socket = None;
+            }
+            _ => {}
+        }
+        self
     }
 }
 
@@ -613,7 +642,8 @@ impl CustomInstance {
         sid: &str,
     ) -> Result<(Authentication, Connection)> {
         let mut auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
-        let mut conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
+        let mut conn = Connection::from_yaml(yaml, Some(&auth))?.unwrap_or(main_conn.clone());
+
         let instance_host = calc_real_host(&auth, &conn);
         let main_host = calc_real_host(main_auth, main_conn);
         if instance_host != main_host {
@@ -628,13 +658,10 @@ impl CustomInstance {
                 };
             } else if auth.auth_type() == &AuthType::Integrated {
                 log::warn!(
-                    "Instance auth is `integrated`: fall back to main auth type {:?}",
+                    "Instance auth is `integrated`, but not main auth: fall back to main auth {:?}",
                     main_auth.auth_type()
                 );
-                auth = Authentication {
-                    auth_type: main_auth.auth_type().clone(),
-                    ..auth
-                };
+                auth = main_auth.clone();
             } else {
                 log::error!(
                     "Fall back is impossible {:?} {:?}",
@@ -819,6 +846,14 @@ authentication:
   type: "sql_server"
   access_token: "baz"
 "#;
+        #[cfg(windows)]
+        pub const AUTHENTICATION_INTEGRATED: &str = r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "integrated"
+  access_token: "baz"
+"#;
         pub const AUTHENTICATION_MINI: &str = r#"
 authentication:
   username: "foo"
@@ -874,6 +909,7 @@ piggyback:
 sid: "INST1"
 authentication:
   username: "u1"
+  type: "sql_server"
 connection:
   hostname: "h1"
 alias: "a1"
@@ -952,6 +988,9 @@ authentication:
     #[test]
     fn test_authentication_from_yaml_mini() {
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
+        #[cfg(windows)]
+        assert_eq!(a.username(), "");
+        #[cfg(unix)]
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
         #[cfg(windows)]
@@ -961,9 +1000,19 @@ authentication:
         assert_eq!(a.access_token(), None);
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn test_authentication_from_yaml_integrated() {
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_INTEGRATED)).unwrap();
+        assert_eq!(a.username(), "");
+        assert_eq!(a.password(), None);
+        assert_eq!(a.auth_type(), &AuthType::Integrated);
+        assert_eq!(a.access_token(), None);
+    }
+
     #[test]
     fn test_connection_from_yaml() {
-        let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL))
+        let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), None)
             .unwrap()
             .unwrap();
         assert_eq!(c.hostname(), "alice");
@@ -979,16 +1028,36 @@ authentication:
         );
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn test_connection_from_yaml_auth_integrated() {
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_INTEGRATED)).unwrap();
+        let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), Some(&a))
+            .unwrap()
+            .unwrap();
+        assert_eq!(c.hostname(), "localhost");
+        assert_eq!(c.fail_over_partner(), None);
+        assert_eq!(c.port(), 9999);
+        assert_eq!(c.socket(), None);
+        assert_eq!(c.timeout(), Duration::from_secs(341));
+        let tls = c.tls().unwrap();
+        assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
+        assert_eq!(
+            tls.client_certificate(),
+            PathBuf::from(r"C:\path\to\file_client")
+        );
+    }
+
     #[test]
     fn test_connection_from_yaml_default() {
         assert_eq!(
-            Connection::from_yaml(&create_connection_yaml_default())
+            Connection::from_yaml(&create_connection_yaml_default(), None)
                 .unwrap()
                 .unwrap(),
             Connection::default()
         );
         assert_eq!(
-            Connection::from_yaml(&create_yaml("nothing: ")).unwrap(),
+            Connection::from_yaml(&create_yaml("nothing: "), None).unwrap(),
             None
         );
     }
@@ -1137,9 +1206,14 @@ discovery:
     }
     #[test]
     fn test_custom_instance() {
+        let a = Authentication {
+            username: "ux".to_string(),
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
         let instance = CustomInstance::from_yaml(
             &create_yaml(data::INSTANCE),
-            &Authentication::default(),
+            &a,
             &Connection::default(),
             &Sections::default(),
         )
@@ -1151,6 +1225,30 @@ discovery:
         assert_eq!(instance.alias().unwrap(), "a1");
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_custom_instance_integrated() {
+        pub const INSTANCE_INTEGRATED: &str = r#"
+sid: "INST1"
+authentication:
+  username: "u1"
+  auth_type: "integrated"
+connection:
+  hostname: "h1"
+"#;
+        let instance = CustomInstance::from_yaml(
+            &create_yaml(INSTANCE_INTEGRATED),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.sid(), "INST1");
+        assert_eq!(instance.auth().username(), "");
+        assert_eq!(instance.conn().hostname(), "localhost");
+        assert_eq!(instance.calc_real_host(), "localhost");
     }
 
     #[test]
@@ -1215,7 +1313,7 @@ mssql:
     authentication:
       username: foo
     discovery:
-      detect: true # doesnt matter for us
+      detect: true # doesn't matter for us
       include: {include:?}
       exclude: {exclude:?}
     instances:

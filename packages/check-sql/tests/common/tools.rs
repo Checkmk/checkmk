@@ -64,7 +64,7 @@ connection:
             self.host
         );
 
-        let conn = Connection::from_yaml(&YamlLoader::load_from_str(&c).unwrap()[0].clone())
+        let conn = Connection::from_yaml(&YamlLoader::load_from_str(&c).unwrap()[0].clone(), None)
             .unwrap()
             .unwrap();
 

@@ -426,28 +426,35 @@ class RegisterTotpSecret(ABCUserProfilePage):
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_cancel_link=True
+            _("Profile"),
+            breadcrumb,
+            form_name="register_totp",
+            button_name="_save",
+            add_cancel_link=True,
         )
         return menu
 
     def _action(self) -> None:
+        auth_code_vs = TextInput(allow_empty=False)
+        auth_code = auth_code_vs.from_html_vars("auth_code")
+        auth_code_vs.validate_value(auth_code, "auth_code")
+
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id, lock=True)
 
         self.secret = b32decode(request.get_ascii_input_mandatory("_otp"))
         otp = TOTP(self.secret, TotpVersion.one)
 
-        vs = self._valuespec()
-        provided_otp = vs.from_html_vars("profile")
+        alias = TextInput().from_html_vars("alias")
         now_time = otp.calculate_generation(datetime.datetime.now())
-        if otp.check_totp(provided_otp["ValidateOTP"], now_time):
+        if otp.check_totp(auth_code, now_time):
             totp_uuid = str(uuid4())
             credentials["totp_credentials"][totp_uuid] = {
                 "credential_id": totp_uuid,
                 "secret": self.secret,
                 "version": 1,
                 "registered_at": int(time.time()),
-                "alias": "",
+                "alias": alias or "",
             }
             save_two_factor_credentials(user.id, credentials)
             log_event_usermanagement(TwoFactorEventType.totp_add)
@@ -465,10 +472,12 @@ class RegisterTotpSecret(ABCUserProfilePage):
             self.secret = TOTP.generate_secret()
         base32_secret = b32encode(self.secret).decode()
 
-        with html.form_context("profile", method="POST"):
+        with html.form_context("register_totp", method="POST"):
             html.prevent_password_auto_completion()
             html.open_div(class_="wato")
 
+            forms.header("1. %s" % _("Scan QR-Code or enter secret manually"), foldable=False)
+            forms.section(legend=False)
             html.div(
                 "",
                 data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
@@ -478,33 +487,40 @@ class RegisterTotpSecret(ABCUserProfilePage):
                     parse.quote("checkmk " + omd_site(), safe=""),
                 ),
             )
-            html.p("Alternatively you can enter your secret manually: %s" % (base32_secret))
-
-            self._valuespec().render_input(
-                "profile",
-                {
-                    "Validate OTP": "",
-                },
+            html.open_div()
+            html.span("Secret: ")
+            html.a(
+                html.render_span(base32_secret) + html.render_icon("insert"),
+                href="javascript:void(0)",
+                onclick="cmk.utils.copy_to_clipboard(%s, %s);"
+                % (json.dumps(base32_secret), json.dumps(_("Successfully copied to clipboard"))),
+                title=_("Copy secret to clipboard"),
+                class_="copy_to_clipboard",
             )
+            html.close_div()
+
+            forms.header("2. %s" % _("Enter authentication code"), foldable=False, css="wide")
+            forms.section(legend=False)
+            html.span(
+                _(
+                    "Open the two-factor authenticator app on your device and enter the shown "
+                    "authentication code below."
+                )
+            )
+            forms.section(_("Authentication code (OTP / TOTP)"), is_required=True)
+            TextInput().render_input("auth_code", "")
+
+            forms.header("3. %s" % _("Enter alias (optional)"), foldable=False, css="wide")
+            forms.section("Alias")
+            TextInput().render_input("alias", "")
+            forms.section(legend=False)
+            html.span(_("Click ‘Save’ to enable the two-factor authentication."))
 
             forms.end()
             html.close_div()
             html.hidden_field("_otp", base32_secret)
             html.hidden_fields()
         html.footer()
-
-    def _valuespec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Edit credential"),
-            optional_keys=False,
-            render="form",
-            elements=[
-                (
-                    "ValidateOTP",
-                    TextInput(title=_("Validate OTP")),
-                ),
-            ],
-        )
 
 
 class EditCredentialAlias(ABCUserProfilePage):

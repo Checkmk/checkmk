@@ -86,6 +86,16 @@ div.two_factor_overview > table {
   }
 }
 
+form.register_totp a.copy_to_clipboard {
+  display: inline-block;
+  margin-top: $spacing-half;
+  text-decoration: none;
+
+  img {
+    margin-left: $spacing-half;
+  }
+}
+
 /*-------------------------------------------------------------------------.
 |                                       _                                  |
 |                       _ __ ___   __ _(_)_ __                             |
@@ -887,8 +897,6 @@ table.nform {
   }
 
   tr td.legend {
-    width: 400px;
-    min-width: 400px;
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;

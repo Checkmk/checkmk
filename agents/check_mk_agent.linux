@@ -829,6 +829,10 @@ section_diskstat() {
             echo '[vx_dsk]'
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
+        if [ -d /dev/disk/by-id ]; then
+            echo '[disk_id]'
+            ls -l /dev/disk/by-id/* | awk '{print $9 " " $11 ;}'
+        fi
     else
         echo "<<<docker_container_diskstat${CGROUP_SECTION_SUFFIX}>>>"
         echo "[time]"

@@ -81,3 +81,16 @@ class MatchRegex:  # pylint: disable=too-few-public-methods
     def __call__(self, value: str) -> None:
         if not self.regex.match(value):
             raise ValidationError(self.error_msg)
+
+
+class NetworkPort:  # pylint: disable=too-few-public-methods
+    """Validator that ensures that an integer is in the network port range"""
+
+    def __init__(self, error_msg: Localizable | None = None) -> None:
+        self.error_msg: Final = error_msg or (
+            Localizable("Your input does not match the required port range 0-65535.")
+        )
+
+    def __call__(self, value: int) -> None:
+        if value < 0 or value > 65535:
+            raise ValidationError(self.error_msg)

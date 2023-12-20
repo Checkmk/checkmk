@@ -320,12 +320,6 @@ struct Output {
     text: OutputText,
 }
 
-impl Output {
-    fn new(state: State, text: OutputText) -> Self {
-        Self { state, text }
-    }
-}
-
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         write!(
@@ -351,7 +345,7 @@ pub struct SimpleCheckResult {
 impl SimpleCheckResult {
     fn new(state: State, text: OutputText) -> Self {
         Self {
-            output: Output::new(state, text),
+            output: Output { state, text },
         }
     }
 
@@ -399,7 +393,7 @@ where
 {
     fn new(state: State, text: OutputText, metrics: Option<Metric<T>>) -> Self {
         Self {
-            output: Output::new(state, text),
+            output: Output { state, text },
             metrics,
         }
     }

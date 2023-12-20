@@ -262,9 +262,13 @@ def diskstat_extract_name_info(
                 name = f"VxVM {group}-{disk}"
                 name_info[major, minor] = name
             elif phase == "disk_id":
-                if line[0].startswith('/dev/disk/by-id/ata-') or line[0].startswith('/dev/disk/by-id/scsi-') or line[0].startswith('/dev/disk/by-id/nvme-'):
+                if (
+                    line[0].startswith('/dev/disk/by-id/ata-')
+                    or line[0].startswith('/dev/disk/by-id/scsi-')
+                    or line[0].startswith('/dev/disk/by-id/nvme-')
+                ):
                     disk = line[1][6:]
-                    name = '/'.join(line[0].split('/')[4:])
+                    name = "/".join(line[0].split("/")[4:])
                     name_info[disk] = name
     return timestamp, info_plain, name_info
 

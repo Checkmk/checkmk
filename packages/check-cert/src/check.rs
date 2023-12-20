@@ -359,8 +359,8 @@ impl SimpleCheckResult {
         Self::new(State::Ok, OutputText::Notice(text.into()))
     }
 
-    pub fn ok(summary: impl Into<String>) -> Self {
-        Self::new(State::Ok, OutputText::Summary(summary.into()))
+    pub fn ok(text: OutputText) -> Self {
+        Self::new(State::Ok, text)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
@@ -408,12 +408,8 @@ where
         Self::new(State::Ok, OutputText::Notice(text.into()), Some(metrics))
     }
 
-    pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(
-            State::Ok,
-            OutputText::Summary(summary.into()),
-            Some(metrics),
-        )
+    pub fn ok(text: OutputText, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, text, Some(metrics))
     }
 
     pub fn warn(summary: impl Into<String>, metrics: Metric<T>) -> Self {

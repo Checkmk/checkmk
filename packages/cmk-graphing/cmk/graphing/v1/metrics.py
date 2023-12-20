@@ -29,8 +29,6 @@ __all__ = [
 @dataclass(frozen=True, kw_only=True)
 class Metric:
     """
-    Defines a metric
-
     A metric can be used within :class:`WarningOf`, :class:`CriticalOf`, :class:`MinimumOf`,
     :class:`MaximumOf`, perfometers or graphs by its name.
 
@@ -64,8 +62,6 @@ class Metric:
 @dataclass(frozen=True)
 class Constant:
     """
-    Defines a constant
-
     A constant can be used within other metric operations, perfometers or graphs.
 
     Args:
@@ -91,10 +87,8 @@ value=23.5)
 @dataclass(frozen=True)
 class WarningOf:
     """
-    Defines a :class:`WarningOf`
-
-    A :class:`WarningOf` extracts the warning level of a metric by its name. It can be used within
-    metric other metric operations, perfometers or graphs.
+    Extracts the warning level of a metric by its name. It can be used within metric other metric
+    operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -117,10 +111,8 @@ class WarningOf:
 @dataclass(frozen=True)
 class CriticalOf:
     """
-    Defines a :class:`CriticalOf`
-
-    A :class:`CriticalOf` extracts the critical level of a metric by its name. It can be used within
-    other metric operations, perfometers or graphs.
+    Extracts the critical level of a metric by its name. It can be used within other metric
+    operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -143,10 +135,8 @@ class CriticalOf:
 @dataclass(frozen=True)
 class MinimumOf:
     """
-    Defines a :class:`MinimumOf`
-
-    A :class:`MinimumOf` extracts the minimum value of a metric by its name. It can be used within
-    other metric operations, perfometers or graphs.
+    Extracts the minimum value of a metric by its name. It can be used within other metric
+    operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -171,10 +161,8 @@ class MinimumOf:
 @dataclass(frozen=True)
 class MaximumOf:
     """
-    Defines a :class:`MaximumOf`
-
-    A :class:`MaximumOf` extracts the maximum value of a metric by its name. It can be used within
-    other metric operations, perfometers or graphs.
+    Extracts the maximum value of a metric by its name. It can be used within other metric
+    operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -199,9 +187,8 @@ class MaximumOf:
 @dataclass(frozen=True)
 class Sum:
     """
-    Defines a sum
-
-    A sum can be used within other metric operations, perfometers or graphs.
+    Defines the metric operation sum which can be used within other metric operations,
+    perfometers or graphs.
 
     Args:
         title:  A title
@@ -246,9 +233,8 @@ class Sum:
 @dataclass(frozen=True)
 class Product:
     """
-    Defines a product
-
-    A product can be used within other metric operations, perfometers or graphs.
+    Defines the metric operation product which can be used within other metric operations,
+    perfometers or graphs.
 
     Args:
         title:  A title
@@ -296,9 +282,8 @@ factors=['metric-name-1', 'metric-name-2'])
 @dataclass(frozen=True)
 class Difference:
     """
-    Defines a difference
-
-    A difference can be used within other metric operations, perfometers or graphs.
+    Defines the metric operation difference which can be used within other metric operations,
+    perfometers or graphs.
 
     Args:
         title:  A title
@@ -359,9 +344,8 @@ subtrahend='metric-name-2')
 @dataclass(frozen=True)
 class Fraction:
     """
-    Defines a fraction
-
-    A fraction can be used within other metric operations, perfometers or graphs.
+    Defines the metric operation fraction which can be used within other metric operations,
+    perfometers or graphs.
 
     Args:
         title:  A title

@@ -20,8 +20,6 @@ __all__ = [
 @dataclass(frozen=True)
 class PassiveCheck:
     """
-    Defines a passive check
-
     A passive check has the prefix 'check_mk-'.
 
     Args:
@@ -43,8 +41,6 @@ class PassiveCheck:
 @dataclass(frozen=True)
 class ActiveCheck:
     """
-    Defines an active check
-
     An active check has the prefix 'check_mk_active-'.
 
     Args:
@@ -66,8 +62,6 @@ class ActiveCheck:
 @dataclass(frozen=True)
 class HostCheckCommand:
     """
-    Defines a host check command
-
     A host check command has the prefix 'check-mk-'.
 
     Args:
@@ -89,8 +83,6 @@ class HostCheckCommand:
 @dataclass(frozen=True)
 class NagiosPlugin:
     """
-    Defines a classical Nagios plugin
-
     A classical Nagios plugin has the prefix 'check_'.
 
     Args:
@@ -112,8 +104,6 @@ class NagiosPlugin:
 @dataclass(frozen=True)
 class RenameTo:
     """
-    Defines a renaming
-
     Args:
         metric_name:
                 A new metric name
@@ -135,8 +125,6 @@ class RenameTo:
 @dataclass(frozen=True)
 class ScaleBy:
     """
-    Defines a scaling
-
     Args:
         factor: A number with which the old metric is scaled
 
@@ -156,8 +144,6 @@ class ScaleBy:
 @dataclass(frozen=True)
 class RenameToAndScaleBy:
     """
-    Defines a renaming and scaling
-
     Args:
         metric_name:
                 A new metric name
@@ -182,8 +168,6 @@ class RenameToAndScaleBy:
 @dataclass(frozen=True, kw_only=True)
 class Translation:
     """
-    Defines a translation
-
     A translation applies to the given check commands and renames or scales given old metrics to new
     ones.
 

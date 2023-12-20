@@ -19,8 +19,6 @@ __all__ = [
 @dataclass(frozen=True)
 class MinimalRange:
     """
-    Defines a minimal range
-
     Args:
         lower:  A lower bound
         upper:  An upper bound
@@ -45,8 +43,6 @@ class MinimalRange:
 @dataclass(frozen=True, kw_only=True)
 class Graph:
     """
-    Defines a graph
-
     Args:
         name:   An unique name
         title:  A title
@@ -104,8 +100,6 @@ class Graph:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
-    Defines a bidirectional graph
-
     Args:
         name:   An unique name
         title:  A title

@@ -169,7 +169,7 @@ where
     pub fn check(
         &self,
         value: T,
-        summary: impl Into<String>,
+        text: impl Into<String>,
         args: LevelsCheckerArgs,
     ) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
@@ -181,9 +181,9 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(summary.into()));
+        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(text.into()));
         CheckResult {
-            summary: r.summary,
+            output: r.output,
             metrics: Some(Metric::<T> {
                 label: args.label,
                 value,
@@ -315,18 +315,18 @@ impl Display for OutputText {
 
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
-struct Summary {
+struct Output {
     state: State,
     text: OutputText,
 }
 
-impl Summary {
+impl Output {
     fn new(state: State, text: OutputText) -> Self {
         Self { state, text }
     }
 }
 
-impl Display for Summary {
+impl Display for Output {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         write!(
             f,
@@ -345,13 +345,13 @@ impl Display for Summary {
 #[derive(Debug, Default)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
-    summary: Summary,
+    output: Output,
 }
 
 impl SimpleCheckResult {
     fn new(state: State, text: OutputText) -> Self {
         Self {
-            summary: Summary::new(state, text),
+            output: Output::new(state, text),
         }
     }
 
@@ -380,7 +380,7 @@ pub struct CheckResult<T>
 where
     T: Clone,
 {
-    summary: Summary,
+    output: Output,
     metrics: Option<Metric<T>>,
 }
 
@@ -399,7 +399,7 @@ where
 {
     fn new(state: State, text: OutputText, metrics: Option<Metric<T>>) -> Self {
         Self {
-            summary: Summary::new(state, text),
+            output: Output::new(state, text),
             metrics,
         }
     }
@@ -452,7 +452,7 @@ where
         U: Clone + Default,
     {
         CheckResult {
-            summary: self.summary,
+            output: self.output,
             metrics: self.metrics.map(|m| m.map(f)),
         }
     }
@@ -464,7 +464,7 @@ where
 {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
-            summary: x.summary,
+            output: x.output,
             metrics: None,
         }
     }
@@ -473,14 +473,14 @@ where
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
-    summary: Vec<Summary>,
+    output: Vec<Output>,
     metrics: Vec<Metric<Real>>,
 }
 
 impl Collection {
     pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
-        self.summary.append(&mut other.summary);
+        self.output.append(&mut other.output);
         self.metrics.append(&mut other.metrics);
     }
 }
@@ -488,15 +488,15 @@ impl Collection {
 impl Display for Collection {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         let mut out = String::from(self.state.as_str());
-        let summary = self
-            .summary
+        let output = self
+            .output
             .iter()
             .filter(|s| !s.text.is_empty())
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        if !summary.is_empty() {
-            out = format!("{} - {}", out, summary);
+        if !output.is_empty() {
+            out = format!("{} - {}", out, output);
         }
         let metrics = self
             .metrics
@@ -515,8 +515,8 @@ impl Display for Collection {
 impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
-            state: check_result.summary.state,
-            summary: vec![check_result.summary],
+            state: check_result.output.state,
+            output: vec![check_result.output],
             metrics: Vec::<Metric<Real>>::default(),
         }
     }
@@ -527,8 +527,8 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
         check_results
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
-                out.state = std::cmp::max(out.state, cr.summary.state);
-                out.summary.push(cr.summary);
+                out.state = std::cmp::max(out.state, cr.output.state);
+                out.output.push(cr.output);
                 out.metrics.extend(cr.metrics);
                 out
             })

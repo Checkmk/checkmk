@@ -124,8 +124,8 @@ class Bidirectional:
 
     Args::
         name:   An unique name
-        left:   A perfometer which grow to the left
-        right:  A perfometer which grow to the right
+        left:   A perfometer which grows to the left
+        right:  A perfometer which grows to the right
 
     Example:
 

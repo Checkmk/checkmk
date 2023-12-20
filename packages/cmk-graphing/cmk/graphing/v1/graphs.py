@@ -49,7 +49,7 @@ class Graph:
 
     Args::
         name:   An unique name
-        title:  A localizable title
+        title:  A title
         minimal_range:
                 A minimal range
         compound_lines:
@@ -108,7 +108,7 @@ class Bidirectional:
 
     Args::
         name:   An unique name
-        title:  A localizable title
+        title:  A title
         lower:  A graph which grows to the bottom
         upper:  A graph which grows to the top
 

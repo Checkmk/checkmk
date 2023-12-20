@@ -254,7 +254,7 @@ class DropdownChoice:
 
     prefill_selection: str | None = None
 
-    deprecated_elements: Sequence[str] | None = None
+    deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
     transform: Transform[str] | Migrate[str] | None = None
 
@@ -349,7 +349,7 @@ class Dictionary:
 
     no_elements_text: Localizable | None = None
 
-    deprecated_elements: Sequence[str] = field(default_factory=list)
+    deprecated_elements: tuple[str, ...] = field(default_factory=tuple)
     transform: Transform[Mapping[str, object]] | Migrate[Mapping[str, object]] | None = None
 
     custom_validate: Callable[[Mapping[str, object]], object] | None = None
@@ -679,6 +679,46 @@ class BooleanChoice:
     transform: Transform[bool] | Migrate[bool] | None = None
 
 
+@dataclass(frozen=True)
+class FileUpload:
+    """Specifies a file upload form.
+
+    Args:
+        extensions: The extensions of the files to choose from.
+        mime_types: The allowed mime types of uploaded files.
+        title: Human readable title.
+        help_text: Description to help the user with the configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+         builtin validation logic. Needs to raise a ValidationError in case
+        validation fails. The return value of the function will not be used.
+
+    Consumer model:
+        **Type**:
+            ``tuple[str, str, bytes]``
+
+            The configured value will be presented as a 3-tuple consisting of the name of
+            the uploaded file, its mime type, and the files content as bytes.
+
+        **Example**:
+          Choosing a pem file to upload would result
+          in::
+            (
+                "my_cert.pem",
+                "application/octet-stream",
+                b"-----BEGIN CERTIFICATE-----\\n....",
+            )
+
+    """
+
+    extensions: tuple[str, ...] | None = None
+    mime_types: tuple[str, ...] | None = None
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -700,4 +740,5 @@ FormSpec = (
     | Levels
     | Proxy
     | BooleanChoice
+    | FileUpload
 )

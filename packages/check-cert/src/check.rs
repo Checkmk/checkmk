@@ -197,11 +197,12 @@ where
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
+    // See also: https://docs.checkmk.com/latest/en/devel_check_plugins.html
     #[default]
     Ok,
     Warn,
-    Crit,
     Unknown,
+    Crit,
 }
 
 impl State {
@@ -784,7 +785,7 @@ mod test_writer_format {
                 "{}",
                 Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
-            "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }
 

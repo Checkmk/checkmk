@@ -5,7 +5,6 @@
  */
 
 import $ from "jquery";
-import Swal from "sweetalert2";
 import * as utils from "utils";
 
 // ----------------------------------------------------------------------------
@@ -271,48 +270,7 @@ export function randomize_secret(id: string, len: number, message: string) {
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
 
-    try {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(secret);
-        } else {
-            fallbackCopyToClipboard(secret);
-        }
-    } catch (err) {
-        Swal.fire({
-            icon: "error",
-            title: "Unable to copy to clipboard",
-            text: "You can still copy it manually: " + secret,
-        });
-        return;
-    }
-
-    Swal.fire({
-        icon: "success",
-        title: message,
-        showConfirmButton: false,
-        timer: 1500,
-        width: 350,
-    });
-}
-
-function fallbackCopyToClipboard(secret: string) {
-    const textArea = document.createElement("textarea");
-    textArea.value = secret;
-
-    // Avoid scrolling to bottom
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
-
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-        document.execCommand("copy");
-    } finally {
-        document.body.removeChild(textArea);
-    }
+    utils.copy_to_clipboard(secret, message);
 }
 
 export function toggle_container(id: string) {

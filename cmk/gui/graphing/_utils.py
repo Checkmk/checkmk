@@ -192,34 +192,34 @@ def _parse_quantity(
                 title=str(quantity.title.localize(_)),
             )
         case metrics.WarningOf():
-            metric_ = metric_info[quantity.name]
+            metric_ = metric_info[quantity.metric_name]
             return MetricDefinition(
-                expression=WarningOf(Metric(quantity.name)),
+                expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.CriticalOf():
-            metric_ = metric_info[quantity.name]
+            metric_ = metric_info[quantity.metric_name]
             return MetricDefinition(
-                expression=CriticalOf(Metric(quantity.name)),
+                expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.MinimumOf():
-            metric_ = metric_info[quantity.name]
+            metric_ = metric_info[quantity.metric_name]
             return MetricDefinition(
                 expression=MinimumOf(
-                    Metric(quantity.name),
+                    Metric(quantity.metric_name),
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.MaximumOf():
-            metric_ = metric_info[quantity.name]
+            metric_ = metric_info[quantity.metric_name]
             return MetricDefinition(
                 expression=MaximumOf(
-                    Metric(quantity.name),
+                    Metric(quantity.metric_name),
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -568,11 +568,11 @@ def _parse_translation(
 ) -> CheckMetricEntry:
     match translation:
         case translations.RenameTo():
-            return {"name": translation.rename_to}
+            return {"name": translation.metric_name}
         case translations.ScaleBy():
-            return {"scale": translation.scale_by}
+            return {"scale": translation.factor}
         case translations.RenameToAndScaleBy():
-            return {"name": translation.rename_to, "scale": translation.scale_by}
+            return {"name": translation.metric_name, "scale": translation.factor}
 
 
 def add_graphing_plugins(

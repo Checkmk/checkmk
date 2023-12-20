@@ -40,16 +40,16 @@ class _MetricNamesOrScalars:
             case str():
                 self._metric_names.append(quantity)
             case metrics.WarningOf():
-                self._metric_names.append(quantity.name)
+                self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
             case metrics.CriticalOf():
-                self._metric_names.append(quantity.name)
+                self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
             case metrics.MinimumOf():
-                self._metric_names.append(quantity.name)
+                self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
             case metrics.MaximumOf():
-                self._metric_names.append(quantity.name)
+                self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
             case metrics.Sum():
                 for s in quantity.summands:
@@ -111,9 +111,9 @@ def _is_perfometer_applicable(
         if metric_name not in translated_metrics:
             return False
     for scalar in metric_names_or_scalars.scalars:
-        if scalar.name not in translated_metrics:
+        if scalar.metric_name not in translated_metrics:
             return False
-        if _scalar_name(scalar) not in translated_metrics[scalar.name].get("scalar", {}):
+        if _scalar_name(scalar) not in translated_metrics[scalar.metric_name].get("scalar", {}):
             return False
     return True
 
@@ -178,36 +178,36 @@ def evaluate_quantity(
                 quantity.value,
             )
         case metrics.WarningOf():
-            metric_ = translated_metrics[quantity.name]
+            metric_ = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
                 _("Warning of ") + metric_["title"],
                 metric_["unit"],
                 "#ffff00",
-                translated_metrics[quantity.name]["scalar"]["warn"],
+                translated_metrics[quantity.metric_name]["scalar"]["warn"],
             )
         case metrics.CriticalOf():
-            metric_ = translated_metrics[quantity.name]
+            metric_ = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
                 _("Critical of ") + metric_["title"],
                 metric_["unit"],
                 "#ff0000",
-                translated_metrics[quantity.name]["scalar"]["crit"],
+                translated_metrics[quantity.metric_name]["scalar"]["crit"],
             )
         case metrics.MinimumOf():
-            metric_ = translated_metrics[quantity.name]
+            metric_ = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
                 _("Minimum of ") + metric_["title"],
                 metric_["unit"],
                 parse_color(quantity.color),
-                translated_metrics[quantity.name]["scalar"]["min"],
+                translated_metrics[quantity.metric_name]["scalar"]["min"],
             )
         case metrics.MaximumOf():
-            metric_ = translated_metrics[quantity.name]
+            metric_ = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
                 _("Maximum of ") + metric_["title"],
                 metric_["unit"],
                 parse_color(quantity.color),
-                translated_metrics[quantity.name]["scalar"]["max"],
+                translated_metrics[quantity.metric_name]["scalar"]["max"],
             )
         case metrics.Sum():
             evaluated_first_summand = evaluate_quantity(quantity.summands[0], translated_metrics)

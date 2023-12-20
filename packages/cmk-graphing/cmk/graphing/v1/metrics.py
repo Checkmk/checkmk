@@ -98,20 +98,21 @@ class WarningOf:
     operations (sum, product, difference, fraction), perfometers or graphs.
 
     Args:
-        name:   Name of a metric
+        metric_name:
+                Name of a metric
 
     Example:
 
         >>> WarningOf("metric-name")
-        WarningOf(name='metric-name')
+        WarningOf(metric_name='metric-name')
 
     """
 
-    name: str
+    metric_name: str
 
     def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
 
 
 @dataclass(frozen=True)
@@ -123,20 +124,21 @@ class CriticalOf:
     metric operations (sum, product, difference, fraction), perfometers or graphs.
 
     Args:
-        name:   Name of a metric
+        metric_name:
+                Name of a metric
 
     Example:
 
         >>> CriticalOf("metric-name")
-        CriticalOf(name='metric-name')
+        CriticalOf(metric_name='metric-name')
 
     """
 
-    name: str
+    metric_name: str
 
     def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
 
 
 @dataclass(frozen=True)
@@ -148,23 +150,24 @@ class MinimumOf:
     metric operations (sum, product, difference, fraction), perfometers or graphs.
 
     Args:
-        name:   Name of a metric
+        metric_name:
+                Name of a metric
         color:  A color from Color
 
     Example:
 
         >>> MinimumOf("metric-name", Color.BLUE)
-        MinimumOf(name='metric-name', color=<Color.BLUE: 14>)
+        MinimumOf(metric_name='metric-name', color=<Color.BLUE: 14>)
 
 
     """
 
-    name: str
+    metric_name: str
     color: Color
 
     def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
 
 
 @dataclass(frozen=True)
@@ -176,22 +179,23 @@ class MaximumOf:
     metric operations (sum, product, difference, fraction), perfometers or graphs.
 
     Args:
-        name:   Name of a metric
+        metric_name:
+                Name of a metric
         color:  A color from Color
 
     Example:
 
         >>> MaximumOf("metric-name", Color.BLUE)
-        MaximumOf(name='metric-name', color=<Color.BLUE: 14>)
+        MaximumOf(metric_name='metric-name', color=<Color.BLUE: 14>)
 
     """
 
-    name: str
+    metric_name: str
     color: Color
 
     def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
 
 
 @dataclass(frozen=True)

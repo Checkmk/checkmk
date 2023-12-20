@@ -175,7 +175,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="icons",
-            title=_l("Manage Custom Icons"),
+            title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),
             defaults=["admin"],
         )

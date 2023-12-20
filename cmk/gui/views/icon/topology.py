@@ -17,7 +17,7 @@ class ShowParentChildTopology(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("Network Topology")
+        return _("Network topology")
 
     def host_columns(self):
         return ["name"]

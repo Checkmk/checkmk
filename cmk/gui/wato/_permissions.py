@@ -123,7 +123,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="auditlog",
-            title=_l("Audit Log"),
+            title=_l("Audit log"),
             description=_l(
                 "Access to the historic audit log. "
                 "The currently pending changes can be seen by all users "
@@ -137,7 +137,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="clear_auditlog",
-            title=_l("Clear audit Log"),
+            title=_l("Clear audit log"),
             description=_l(
                 "Clear the entries of the audit log. To be able to clear the audit log "
                 'a user needs the generic Setup permission "Make changes, perform actions", '
@@ -233,7 +233,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="diag_host",
-            title=_l("Host Diagnostic"),
+            title=_l("Host diagnostic"),
             description=_l(
                 "Check whether or not the host is reachable, test the different methods "
                 "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
@@ -524,7 +524,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="backups",
-            title=_l("Backup & Restore"),
+            title=_l("Backup & restore"),
             description=_l(
                 "Access to the module <i>Site backup</i>. Please note: a user with "
                 "write access to this module "
@@ -538,7 +538,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="pattern_editor",
-            title=_l("Logfile Pattern Analyzer"),
+            title=_l("Logfile pattern analyzer"),
             description=_l("Access to the module for analyzing and validating logfile patterns."),
             defaults=["admin", "user"],
         )
@@ -548,7 +548,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="icons",
-            title=_l("Manage Custom Icons"),
+            title=_l("Manage custom icons"),
             description=_l("Upload or delete custom icons"),
             defaults=["admin"],
         )
@@ -581,7 +581,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="download_agent_output",
-            title=_l("Download Agent Output / SNMP Walks"),
+            title=_l("Download agent output / SNMP walks"),
             description=_l(
                 "Allows to download the current agent output or SNMP walks of the monitored hosts."
             ),

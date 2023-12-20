@@ -4855,7 +4855,7 @@ class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
                 ],
                 orientation="horizontal",
             ),
-            title=_("Service Levels"),
+            title=_("Service levels"),
             help=_(
                 "Here you can configure the list of possible service levels for hosts, services and "
                 "events. A service level can be assigned to a host or service by configuration. "

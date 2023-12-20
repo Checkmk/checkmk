@@ -188,7 +188,7 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
 
     @property
     def title(self) -> str:
-        return _("VM, Cloud, Container")
+        return _("VM, cloud, container")
 
     @property
     def help(self):

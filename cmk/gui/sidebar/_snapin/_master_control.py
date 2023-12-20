@@ -81,7 +81,7 @@ class MasterControlSnapin(SidebarSnapin):
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
             ("execute_host_checks", _("Host checks")),
-            ("enable_flap_detection", _("Flap Detection")),
+            ("enable_flap_detection", _("Flap detection")),
             ("enable_event_handlers", _("Event handlers")),
             ("process_performance_data", _("Performance data")),
             ("enable_event_handlers", _("Alert handlers")),

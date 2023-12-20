@@ -280,7 +280,7 @@ class Bookmarks(SidebarSnapin):
 
         begin_footnote_links()
         link(
-            _("Add Bookmark"),
+            _("Add bookmark"),
             "javascript:void(0)",
             onclick="cmk.sidebar.add_bookmark()",
         )

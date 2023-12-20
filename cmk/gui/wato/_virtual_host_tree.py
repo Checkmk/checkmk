@@ -54,7 +54,7 @@ class VirtualHostTree(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Virtual Host Tree")
+        return _("Virtual host tree")
 
     @classmethod
     def description(cls):
@@ -106,7 +106,7 @@ class VirtualHostTree(SidebarSnapin):
         tree = self._compute_tag_tree(tree_spec)
         html.open_div(class_="tag_tree")
         self._render_tag_tree_level(
-            tree_spec, [], self._current_tree_path, _("Virtual Host Tree"), tree
+            tree_spec, [], self._current_tree_path, _("Virtual host tree"), tree
         )
         html.close_div()
 

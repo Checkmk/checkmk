@@ -254,7 +254,7 @@ PermissionIgnoreHardLimit = Permission(
 PermissionAcknowledgeWerks = Permission(
     section=PermissionSectionGeneral,
     name="acknowledge_werks",
-    title=_l("Acknowledge Incompatible Werks"),
+    title=_l("Acknowledge incompatible Werks"),
     description=_l(
         "In the change log of the Checkmk software version the administrator can manage change log entries "
         "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
@@ -266,7 +266,7 @@ PermissionAcknowledgeWerks = Permission(
 PermissionSeeFailedNotifications24H = Permission(
     section=PermissionSectionGeneral,
     name="see_failed_notifications_24h",
-    title=_l("See failed Notifications (last 24 hours)"),
+    title=_l("See failed notifications (last 24 hours)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
         "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
@@ -279,7 +279,7 @@ PermissionSeeFailedNotifications24H = Permission(
 PermissionSeeFailedNotifications = Permission(
     section=PermissionSectionGeneral,
     name="see_failed_notifications",
-    title=_l("See failed Notifications (all)"),
+    title=_l("See failed notifications (all)"),
     description=_l(
         "If Checkmk is unable to notify users about problems, the site will warn about this situation "
         "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
@@ -314,7 +314,7 @@ PermissionSeeCrashReports = Permission(
 PermissionParentChildTopology = Permission(
     section=PermissionSectionGeneral,
     name="parent_child_topology",
-    title=_l("Network Topology"),
+    title=_l("Network topology"),
     description=_l(
         "This dashboard uses the parent relationships of your hosts to "
         "display a hierarchical map."

@@ -10,7 +10,13 @@ from typing import ContextManager
 import pytest
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.validators import DisallowEmpty, InRange, MatchRegex, ValidationError
+from cmk.rulesets.v1.validators import (
+    DisallowEmpty,
+    InRange,
+    MatchRegex,
+    NetworkPort,
+    ValidationError,
+)
 
 
 @pytest.mark.parametrize(
@@ -161,5 +167,44 @@ def test_disallow_empty(
 ) -> None:
     with expected_raises as e:
         DisallowEmpty(**input_msg)(test_value)
+
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
+
+
+@pytest.mark.parametrize(
+    ["input_msg", "test_value", "expected_raises", "expected_message"],
+    [
+        pytest.param({}, 8001, does_not_raise(), None, id="valid port"),
+        pytest.param(
+            {},
+            65536,
+            pytest.raises(ValidationError),
+            "Your input does not match the required port range 0-65535.",
+            id="invalid port without custom message",
+        ),
+        pytest.param(
+            {},
+            -2,
+            pytest.raises(ValidationError),
+            "Your input does not match the required port range 0-65535.",
+            id="invalid port without custom message",
+        ),
+        pytest.param(
+            {"error_msg": Localizable("My own message")},
+            65537,
+            pytest.raises(ValidationError),
+            "My own message",
+            id="invalid port with custom message",
+        ),
+    ],
+)
+def test_network_port(
+    input_msg: Mapping[str, Localizable],
+    test_value: int,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
+    expected_message: str | None,
+) -> None:
+    with expected_raises as e:
+        NetworkPort(**input_msg)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message

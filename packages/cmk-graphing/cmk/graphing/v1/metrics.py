@@ -28,6 +28,29 @@ __all__ = [
 
 @dataclass(frozen=True, kw_only=True)
 class Metric:
+    """
+    Defines a metric
+
+    A metric can be used within 'warning of', 'critical of', 'minimum of', 'maximum of',
+    perfometers or graphs by its name.
+
+    Args:
+        name:   An unique name
+        title:  A localizable title
+        unit:   A unit from Unit
+        color:  A color from Color
+
+    Example:
+
+        >>> metric_metric_name = Metric(
+        ...     name="metric_name",
+        ...     title=Localizable("A metric"),
+        ...     unit=Unit.PERCENTAGE,
+        ...     color=Color.BLUE,
+        ... )
+
+    """
+
     name: str
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
@@ -40,6 +63,26 @@ class Metric:
 
 @dataclass(frozen=True)
 class Constant:
+    """
+    Defines a constant
+
+    A constant can be used within metric operations (sum, product, difference, fraction),
+    perfometers or graphs.
+
+    Args:
+        title:  A localizable title
+        unit:   A unit from Unit
+        color:  A color from Color
+        value:  A integer or float value
+
+    Example:
+
+        >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
+        Constant(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+value=23.5)
+
+    """
+
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
@@ -48,6 +91,22 @@ class Constant:
 
 @dataclass(frozen=True)
 class WarningOf:
+    """
+    Defines a 'warning of'
+
+    A 'warning of' extracts the warning level of a metric by its name. It can be used within metric
+    operations (sum, product, difference, fraction), perfometers or graphs.
+
+    Args:
+        name:   Name of a metric
+
+    Example:
+
+        >>> WarningOf("metric-name")
+        WarningOf(name='metric-name')
+
+    """
+
     name: str
 
     def __post_init__(self) -> None:
@@ -57,6 +116,22 @@ class WarningOf:
 
 @dataclass(frozen=True)
 class CriticalOf:
+    """
+    Defines a 'critical of'
+
+    A 'critical of' extracts the critical level of a metric by its name. It can be used within
+    metric operations (sum, product, difference, fraction), perfometers or graphs.
+
+    Args:
+        name:   Name of a metric
+
+    Example:
+
+        >>> CriticalOf("metric-name")
+        CriticalOf(name='metric-name')
+
+    """
+
     name: str
 
     def __post_init__(self) -> None:
@@ -66,6 +141,24 @@ class CriticalOf:
 
 @dataclass(frozen=True)
 class MinimumOf:
+    """
+    Defines a 'minimum of'
+
+    A 'minimum of' extracts the minimum value of a metric by its name. It can be used within
+    metric operations (sum, product, difference, fraction), perfometers or graphs.
+
+    Args:
+        name:   Name of a metric
+        color:  A color from Color
+
+    Example:
+
+        >>> MinimumOf("metric-name", Color.BLUE)
+        MinimumOf(name='metric-name', color=<Color.BLUE: 14>)
+
+
+    """
+
     name: str
     color: Color
 
@@ -76,6 +169,23 @@ class MinimumOf:
 
 @dataclass(frozen=True)
 class MaximumOf:
+    """
+    Defines a 'maximum of'
+
+    A 'maximum of' extracts the maximum value of a metric by its name. It can be used within
+    metric operations (sum, product, difference, fraction), perfometers or graphs.
+
+    Args:
+        name:   Name of a metric
+        color:  A color from Color
+
+    Example:
+
+        >>> MaximumOf("metric-name", Color.BLUE)
+        MaximumOf(name='metric-name', color=<Color.BLUE: 14>)
+
+    """
+
     name: str
     color: Color
 
@@ -86,6 +196,30 @@ class MaximumOf:
 
 @dataclass(frozen=True)
 class Sum:
+    """
+    Defines a sum
+
+    A sum can be used within metric operations (sum, product, difference, fraction), perfometers or
+    graphs.
+
+    Args:
+        title:  A localizable title
+        color:  A color from Color
+        summands:
+                A list of metric names or objects
+
+    Example:
+
+        >>> Sum(
+        ...     Localizable("A title"),
+        ...     Color.BLUE,
+        ...     ["metric-name-1", "metric-name-2"],
+        ... )
+        Sum(title=Localizable('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
+'metric-name-2'])
+
+    """
+
     title: Localizable
     color: Color
     summands: Sequence[
@@ -110,6 +244,32 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
+    """
+    Defines a product
+
+    A product can be used within metric operations (sum, product, difference, fraction), perfometers
+    or graphs.
+
+    Args:
+        title:  A localizable title
+        unit:   A unit from Unit
+        color:  A color from Color
+        factors:
+                A list of metric names or objects
+
+    Example:
+
+        >>> Product(
+        ...     Localizable("A title"),
+        ...     Unit.COUNT,
+        ...     Color.BLUE,
+        ...     ["metric-name-1", "metric-name-2"],
+        ... )
+        Product(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+factors=['metric-name-1', 'metric-name-2'])
+
+    """
+
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
@@ -135,6 +295,33 @@ class Product:
 
 @dataclass(frozen=True)
 class Difference:
+    """
+    Defines a difference
+
+    A difference can be used within metric operations (sum, product, difference, fraction),
+    perfometers or graphs.
+
+    Args:
+        title:  A localizable title
+        color:  A color from Color
+        minuend:
+                A metric name or object
+        subtrahend:
+                A metric name or object
+
+    Example:
+
+        >>> Difference(
+        ...     Localizable("A title"),
+        ...     Color.BLUE,
+        ...     minuend="metric-name-1",
+        ...     subtrahend="metric-name-2",
+        ... )
+        Difference(title=Localizable('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
+subtrahend='metric-name-2')
+
+    """
+
     title: Localizable
     color: Color
     _: KW_ONLY
@@ -172,6 +359,35 @@ class Difference:
 
 @dataclass(frozen=True)
 class Fraction:
+    """
+    Defines a fraction
+
+    A fraction can be used within metric operations (sum, product, difference, fraction),
+    perfometers or graphs.
+
+    Args:
+        title:  A localizable title
+        unit:   A unit from Unit
+        color:  A color from Color
+        dividend:
+                A metric name or object
+        divisor:
+                A metric name or object
+
+    Example:
+
+        >>> Fraction(
+        ...     Localizable("A title"),
+        ...     Unit.COUNT,
+        ...     Color.BLUE,
+        ...     dividend="metric-name-1",
+        ...     divisor="metric-name-2",
+        ... )
+        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+dividend='metric-name-1', divisor='metric-name-2')
+
+    """
+
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color

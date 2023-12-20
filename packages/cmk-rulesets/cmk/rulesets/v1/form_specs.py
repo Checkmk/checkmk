@@ -576,6 +576,27 @@ class Proxy:
     transform: Transform[object] | Migrate[object] | None = None
 
 
+@dataclass(frozen=True)
+class BooleanChoice:
+    """Specifies a form for configuring a choice between boolean values
+
+    Args:
+        label: Text displayed as an extension to the input field
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        prefill_value: Boolean value to pre-populate the form fields with. If None, the backend
+            will decide whether to leave the field empty or to prefill it with
+            a canonical value.
+        transform: Transformation of the stored configuration
+    """
+
+    label: Localizable | None = None
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    prefill_value: bool | None = None
+    transform: Transform[bool] | Migrate[bool] | None = None
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -596,4 +617,5 @@ FormSpec = (
     | TimeSpan
     | Levels
     | Proxy
+    | BooleanChoice
 )

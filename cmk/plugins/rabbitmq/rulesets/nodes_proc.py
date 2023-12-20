@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     TextInput,
     Tuple,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
@@ -54,7 +54,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     )
 
 
-rule_spec_rabbitmq_nodes_proc = CheckParameterRuleSpecWithItem(
+rule_spec_rabbitmq_nodes_proc = CheckParameterWithItem(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
     item_form=TextInput(title=Localizable("Node name")),

@@ -44,107 +44,107 @@ def convert_to_legacy_rulespec(
     to_convert: APIV1RuleSpec, edition_only: Edition, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
     match to_convert:
-        case ruleset_api_v1.rule_specs.ActiveChecksRuleSpec():
+        case ruleset_api_v1.rule_specs.ActiveChecks():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_wato_groups.RulespecGroupIntegrateOtherServices,
                 localizer,
                 config_scope_prefix=RuleGroup.ActiveChecks,
             )
-        case ruleset_api_v1.rule_specs.AgentAccessRuleSpec():
+        case ruleset_api_v1.rule_specs.AgentAccess():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_cmk_config_groups.RulespecGroupAgent,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.AgentConfigRuleSpec():
+        case ruleset_api_v1.rule_specs.AgentConfig():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupMonitoringAgents,
                 localizer,
                 config_scope_prefix=RuleGroup.AgentConfig,
             )
-        case ruleset_api_v1.rule_specs.CheckParameterRuleSpecWithItem():
+        case ruleset_api_v1.rule_specs.CheckParameterWithItem():
             return _convert_to_legacy_check_parameter_with_item_rulespec(
                 to_convert, edition_only, localizer
             )
-        case ruleset_api_v1.rule_specs.CheckParameterRuleSpecWithoutItem():
+        case ruleset_api_v1.rule_specs.CheckParameterWithoutItem():
             return _convert_to_legacy_check_parameter_without_item_rulespec(
                 to_convert, edition_only, localizer
             )
-        case ruleset_api_v1.rule_specs.EnforcedServiceRuleSpecWithItem():
+        case ruleset_api_v1.rule_specs.EnforcedServiceWithItem():
             item_spec = partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer)
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, edition_only, localizer, item_spec
             )
-        case ruleset_api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem():
+        case ruleset_api_v1.rule_specs.EnforcedServiceWithoutItem():
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, edition_only, localizer
             )
-        case ruleset_api_v1.rule_specs.ExtraHostConfEventConsoleRuleSpec():
+        case ruleset_api_v1.rule_specs.ExtraHostConfEventConsole():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_mkeventd_groups.RulespecGroupEventConsole,
                 localizer,
                 config_scope_prefix=RuleGroup.ExtraHostConf,
             )
-        case ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoringRuleSpec():
+        case ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoring():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
                 localizer,
                 config_scope_prefix=RuleGroup.ExtraHostConf,
             )
-        case ruleset_api_v1.rule_specs.ExtraServiceConfRuleSpec():
+        case ruleset_api_v1.rule_specs.ExtraServiceConf():
             return _convert_to_legacy_service_rule_spec_rulespec(
                 to_convert,
                 localizer,
                 config_scope_prefix=RuleGroup.ExtraServiceConf,
             )
-        case ruleset_api_v1.rule_specs.HostMonitoringRuleSpec():
+        case ruleset_api_v1.rule_specs.HostMonitoring():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.InventoryParameterRuleSpec():
+        case ruleset_api_v1.rule_specs.InventoryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_inventory_groups.RulespecGroupInventory,
                 localizer,
                 config_scope_prefix=RuleGroup.InvParameters,
             )
-        case ruleset_api_v1.rule_specs.NotificationParametersRuleSpec():
+        case ruleset_api_v1.rule_specs.NotificationParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
                 localizer,
                 config_scope_prefix=RuleGroup.NotificationParameters,
             )
-        case ruleset_api_v1.rule_specs.ServiceDiscoveryRuleSpec():
+        case ruleset_api_v1.rule_specs.DiscoveryParameters():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_wato.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.ServiceMonitoringRuleSpec():
+        case ruleset_api_v1.rule_specs.ServiceMonitoring():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.ServiceRuleSpec():
+        case ruleset_api_v1.rule_specs.ServiceMonitoringWithoutService():
             return _convert_to_legacy_service_rule_spec_rulespec(
                 to_convert,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.SNMPRuleSpec():
+        case ruleset_api_v1.rule_specs.SNMP():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupAgentSNMP,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.SpecialAgentRuleSpec():
+        case ruleset_api_v1.rule_specs.SpecialAgent():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_wato.RulespecGroupDatasourcePrograms,
@@ -156,7 +156,7 @@ def convert_to_legacy_rulespec(
 
 
 def _convert_to_legacy_check_parameter_with_item_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.CheckParameterRuleSpecWithItem,
+    to_convert: ruleset_api_v1.rule_specs.CheckParameterWithItem,
     edition_only: Edition,
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem:
@@ -180,7 +180,7 @@ def _convert_to_legacy_check_parameter_with_item_rulespec(
 
 
 def _convert_to_legacy_check_parameter_without_item_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.CheckParameterRuleSpecWithoutItem,
+    to_convert: ruleset_api_v1.rule_specs.CheckParameterWithoutItem,
     edition_only: Edition,
     localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithoutItem:
@@ -200,8 +200,8 @@ def _convert_to_legacy_check_parameter_without_item_rulespec(
 
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.EnforcedServiceRuleSpecWithItem
-    | ruleset_api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem,
+    to_convert: ruleset_api_v1.rule_specs.EnforcedServiceWithItem
+    | ruleset_api_v1.rule_specs.EnforcedServiceWithoutItem,
     edition_only: Edition,
     localizer: Callable[[str], str],
     item_spec: Callable[[], legacy_valuespecs.ValueSpec] | None = None,
@@ -239,18 +239,18 @@ def _convert_to_legacy_rulespec_group(
 
 
 def _convert_to_legacy_host_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.ActiveChecksRuleSpec
-    | ruleset_api_v1.rule_specs.AgentConfigRuleSpec
-    | ruleset_api_v1.rule_specs.AgentAccessRuleSpec
-    | ruleset_api_v1.rule_specs.ExtraHostConfEventConsoleRuleSpec
-    | ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoringRuleSpec
-    | ruleset_api_v1.rule_specs.HostMonitoringRuleSpec
-    | ruleset_api_v1.rule_specs.NotificationParametersRuleSpec
-    | ruleset_api_v1.rule_specs.InventoryParameterRuleSpec
-    | ruleset_api_v1.rule_specs.ServiceDiscoveryRuleSpec
-    | ruleset_api_v1.rule_specs.ServiceMonitoringRuleSpec
-    | ruleset_api_v1.rule_specs.SNMPRuleSpec
-    | ruleset_api_v1.rule_specs.SpecialAgentRuleSpec,
+    to_convert: ruleset_api_v1.rule_specs.ActiveChecks
+    | ruleset_api_v1.rule_specs.AgentConfig
+    | ruleset_api_v1.rule_specs.AgentAccess
+    | ruleset_api_v1.rule_specs.ExtraHostConfEventConsole
+    | ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoring
+    | ruleset_api_v1.rule_specs.HostMonitoring
+    | ruleset_api_v1.rule_specs.NotificationParameters
+    | ruleset_api_v1.rule_specs.InventoryParameters
+    | ruleset_api_v1.rule_specs.DiscoveryParameters
+    | ruleset_api_v1.rule_specs.ServiceMonitoring
+    | ruleset_api_v1.rule_specs.SNMP
+    | ruleset_api_v1.rule_specs.SpecialAgent,
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
@@ -262,14 +262,14 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type="dict"
-        if to_convert.eval_type == ruleset_api_v1.rule_specs.RuleEvalType.MERGE
+        if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE
         else "all",
     )
 
 
 def _convert_to_legacy_service_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.ServiceRuleSpec
-    | ruleset_api_v1.rule_specs.ExtraServiceConfRuleSpec,
+    to_convert: ruleset_api_v1.rule_specs.ServiceMonitoringWithoutService
+    | ruleset_api_v1.rule_specs.ExtraServiceConf,
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
 ) -> legacy_rulespecs.ServiceRulespec:
@@ -283,7 +283,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type="dict"
-        if to_convert.eval_type == ruleset_api_v1.rule_specs.RuleEvalType.MERGE
+        if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE
         else "all",
     )
 

@@ -28,35 +28,46 @@ class CustomTopic:
     title: Localizable
 
 
-class RuleEvalType(Enum):
+class EvalType(Enum):
     MERGE = auto()
     ALL = auto()
 
 
 @dataclass(frozen=True)
-class HostMonitoringRuleSpec:
+class HostMonitoring:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class ServiceRuleSpec:
+class ServiceMonitoringWithoutService:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class CheckParameterRuleSpecWithItem:
+class ServiceMonitoring:
+    title: Localizable
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], FormSpec]
+    eval_type: EvalType
+    name: str
+    is_deprecated: bool = False
+    help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class CheckParameterWithItem:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
@@ -73,7 +84,7 @@ class CheckParameterRuleSpecWithItem:
 
 
 @dataclass(frozen=True)
-class CheckParameterRuleSpecWithoutItem:
+class CheckParameterWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
@@ -84,7 +95,7 @@ class CheckParameterRuleSpecWithoutItem:
 
 
 @dataclass(frozen=True)
-class EnforcedServiceRuleSpecWithItem:
+class EnforcedServiceWithItem:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec] | None
@@ -100,7 +111,7 @@ class EnforcedServiceRuleSpecWithItem:
 
 
 @dataclass(frozen=True)
-class EnforcedServiceRuleSpecWithoutItem:
+class EnforcedServiceWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec] | None
@@ -114,132 +125,121 @@ class EnforcedServiceRuleSpecWithoutItem:
 
 
 @dataclass(frozen=True)
-class ServiceMonitoringRuleSpec:
+class DiscoveryParameters:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class ServiceDiscoveryRuleSpec:
+class ActiveChecks:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class ActiveChecksRuleSpec:
+class AgentConfig:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class AgentConfigRuleSpec:
+class SpecialAgent:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class SpecialAgentRuleSpec:
+class AgentAccess:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class AgentAccessRuleSpec:
+class NotificationParameters:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class NotificationParametersRuleSpec:
+class SNMP:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class SNMPRuleSpec:
+class InventoryParameters:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class InventoryParameterRuleSpec:
+class ExtraHostConfEventConsole:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class ExtraHostConfEventConsoleRuleSpec:
+class ExtraHostConfHostMonitoring:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
 
 @dataclass(frozen=True)
-class ExtraHostConfHostMonitoringRuleSpec:
+class ExtraServiceConf:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-
-@dataclass(frozen=True)
-class ExtraServiceConfRuleSpec:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: RuleEvalType
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None

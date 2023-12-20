@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     DropdownChoiceElement,
     TextInput,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
 def _parameter_form_prism_protection_domains() -> Dictionary:
@@ -35,7 +35,7 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
     )
 
 
-rule_spec_prims_protection_domains = CheckParameterRuleSpecWithItem(
+rule_spec_prims_protection_domains = CheckParameterWithItem(
     name="prism_protection_domains",
     title=Localizable("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,

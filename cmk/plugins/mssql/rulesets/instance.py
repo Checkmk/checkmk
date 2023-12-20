@@ -5,7 +5,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, ServiceState, TextInput
-from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
 def _parameter_form_mssql_instance() -> Dictionary:
@@ -20,7 +20,7 @@ def _parameter_form_mssql_instance() -> Dictionary:
     )
 
 
-rule_spec_mssql_instance = CheckParameterRuleSpecWithItem(
+rule_spec_mssql_instance = CheckParameterWithItem(
     name="mssql_instance",
     title=Localizable("MSSQL Instance"),
     topic=Topic.APPLICATIONS,

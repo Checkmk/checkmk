@@ -10,45 +10,45 @@ from cmk.utils.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1.rule_specs import (
-    ActiveChecksRuleSpec,
-    AgentAccessRuleSpec,
-    AgentConfigRuleSpec,
-    CheckParameterRuleSpecWithItem,
-    CheckParameterRuleSpecWithoutItem,
-    EnforcedServiceRuleSpecWithItem,
-    EnforcedServiceRuleSpecWithoutItem,
-    ExtraHostConfEventConsoleRuleSpec,
-    ExtraHostConfHostMonitoringRuleSpec,
-    ExtraServiceConfRuleSpec,
-    HostMonitoringRuleSpec,
-    InventoryParameterRuleSpec,
-    NotificationParametersRuleSpec,
-    ServiceDiscoveryRuleSpec,
-    ServiceMonitoringRuleSpec,
-    ServiceRuleSpec,
-    SNMPRuleSpec,
-    SpecialAgentRuleSpec,
+    ActiveChecks,
+    AgentAccess,
+    AgentConfig,
+    CheckParameterWithItem,
+    CheckParameterWithoutItem,
+    DiscoveryParameters,
+    EnforcedServiceWithItem,
+    EnforcedServiceWithoutItem,
+    ExtraHostConfEventConsole,
+    ExtraHostConfHostMonitoring,
+    ExtraServiceConf,
+    HostMonitoring,
+    InventoryParameters,
+    NotificationParameters,
+    ServiceMonitoring,
+    ServiceMonitoringWithoutService,
+    SNMP,
+    SpecialAgent,
 )
 
 RuleSpec = (
-    ActiveChecksRuleSpec
-    | AgentConfigRuleSpec
-    | AgentAccessRuleSpec
-    | EnforcedServiceRuleSpecWithItem
-    | EnforcedServiceRuleSpecWithoutItem
-    | ExtraServiceConfRuleSpec
-    | ExtraHostConfHostMonitoringRuleSpec
-    | ExtraHostConfEventConsoleRuleSpec
-    | CheckParameterRuleSpecWithItem
-    | CheckParameterRuleSpecWithoutItem
-    | HostMonitoringRuleSpec
-    | InventoryParameterRuleSpec
-    | NotificationParametersRuleSpec
-    | ServiceDiscoveryRuleSpec
-    | ServiceMonitoringRuleSpec
-    | ServiceRuleSpec
-    | SNMPRuleSpec
-    | SpecialAgentRuleSpec
+    ActiveChecks
+    | AgentConfig
+    | AgentAccess
+    | EnforcedServiceWithItem
+    | EnforcedServiceWithoutItem
+    | ExtraServiceConf
+    | ExtraHostConfHostMonitoring
+    | ExtraHostConfEventConsole
+    | CheckParameterWithItem
+    | CheckParameterWithoutItem
+    | HostMonitoring
+    | InventoryParameters
+    | NotificationParameters
+    | DiscoveryParameters
+    | ServiceMonitoring
+    | ServiceMonitoringWithoutService
+    | SNMP
+    | SpecialAgent
 )
 
 
@@ -64,24 +64,24 @@ def load_api_v1_rule_specs(
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {
-            ActiveChecksRuleSpec: "rule_spec_",
-            AgentConfigRuleSpec: "rule_spec_",
-            AgentAccessRuleSpec: "rule_spec_",
-            EnforcedServiceRuleSpecWithItem: "rule_spec_",
-            EnforcedServiceRuleSpecWithoutItem: "rule_spec_",
-            ExtraServiceConfRuleSpec: "rule_spec_",
-            ExtraHostConfHostMonitoringRuleSpec: "rule_spec_",
-            ExtraHostConfEventConsoleRuleSpec: "rule_spec_",
-            CheckParameterRuleSpecWithItem: "rule_spec_",
-            CheckParameterRuleSpecWithoutItem: "rule_spec_",
-            HostMonitoringRuleSpec: "rule_spec_",
-            InventoryParameterRuleSpec: "rule_spec_",
-            NotificationParametersRuleSpec: "rule_spec_",
-            ServiceDiscoveryRuleSpec: "rule_spec_",
-            ServiceMonitoringRuleSpec: "rule_spec_",
-            ServiceRuleSpec: "rule_spec_",
-            SNMPRuleSpec: "rule_spec_",
-            SpecialAgentRuleSpec: "rule_spec_",
+            ActiveChecks: "rule_spec_",
+            AgentConfig: "rule_spec_",
+            AgentAccess: "rule_spec_",
+            EnforcedServiceWithItem: "rule_spec_",
+            EnforcedServiceWithoutItem: "rule_spec_",
+            ExtraServiceConf: "rule_spec_",
+            ExtraHostConfHostMonitoring: "rule_spec_",
+            ExtraHostConfEventConsole: "rule_spec_",
+            CheckParameterWithItem: "rule_spec_",
+            CheckParameterWithoutItem: "rule_spec_",
+            HostMonitoring: "rule_spec_",
+            InventoryParameters: "rule_spec_",
+            NotificationParameters: "rule_spec_",
+            DiscoveryParameters: "rule_spec_",
+            ServiceMonitoring: "rule_spec_",
+            ServiceMonitoringWithoutService: "rule_spec_",
+            SNMP: "rule_spec_",
+            SpecialAgent: "rule_spec_",
         },
         raise_errors=raise_errors,
     )
@@ -106,10 +106,10 @@ def _generate_additional_plugins(
 ) -> Sequence[LoadedRuleSpec]:
     loaded: list[LoadedRuleSpec] = []
     for location, plugin in discovered_plugins.plugins.items():
-        if isinstance(plugin, CheckParameterRuleSpecWithItem) and plugin.create_enforced_service:
+        if isinstance(plugin, CheckParameterWithItem) and plugin.create_enforced_service:
             loaded.append(
                 LoadedRuleSpec(
-                    rule_spec=EnforcedServiceRuleSpecWithItem(
+                    rule_spec=EnforcedServiceWithItem(
                         title=plugin.title,
                         topic=plugin.topic,
                         parameter_form=plugin.parameter_form,
@@ -121,12 +121,10 @@ def _generate_additional_plugins(
                     edition_only=_get_edition_only(location.module),
                 )
             )
-        elif (
-            isinstance(plugin, CheckParameterRuleSpecWithoutItem) and plugin.create_enforced_service
-        ):
+        elif isinstance(plugin, CheckParameterWithoutItem) and plugin.create_enforced_service:
             loaded.append(
                 LoadedRuleSpec(
-                    rule_spec=EnforcedServiceRuleSpecWithoutItem(
+                    rule_spec=EnforcedServiceWithoutItem(
                         title=plugin.title,
                         topic=plugin.topic,
                         parameter_form=plugin.parameter_form,

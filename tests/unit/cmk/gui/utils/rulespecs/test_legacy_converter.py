@@ -464,7 +464,7 @@ def test_convert_to_legacy_rulespec_group(
     ["new_rulespec", "expected"],
     [
         pytest.param(
-            api_v1.rule_specs.CheckParameterRuleSpecWithItem(
+            api_v1.rule_specs.CheckParameterWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -497,7 +497,7 @@ def test_convert_to_legacy_rulespec_group(
             id="CheckParameterRuleSpecWithItem",
         ),
         pytest.param(
-            api_v1.rule_specs.CheckParameterRuleSpecWithoutItem(
+            api_v1.rule_specs.CheckParameterWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -528,7 +528,7 @@ def test_convert_to_legacy_rulespec_group(
             id="CheckParameterRuleSpecWithoutItem",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceRuleSpecWithItem(
+            api_v1.rule_specs.EnforcedServiceWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -560,7 +560,7 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithItem",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceRuleSpecWithItem(
+            api_v1.rule_specs.EnforcedServiceWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -579,7 +579,7 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithItem no parameters",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem(
+            api_v1.rule_specs.EnforcedServiceWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -609,7 +609,7 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithoutItem",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceRuleSpecWithoutItem(
+            api_v1.rule_specs.EnforcedServiceWithoutItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,

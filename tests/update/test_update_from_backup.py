@@ -22,7 +22,7 @@ from tests.testlib.utils import (
     qa_test_data_path,
 )
 from tests.testlib.version import CMKVersion, version_from_env
-from tests.update.conftest import BaseVersions
+from tests.update.conftest import BaseVersions, SUPPORTED_DISTROS
 
 from cmk.utils.version import Edition
 
@@ -79,6 +79,10 @@ def _base_site_demo(site_factory_demo):
     "This will be fixed starting from base-version 2.2.0p8",
 )
 @pytest.mark.cee
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") not in SUPPORTED_DISTROS,
+    reason=f"This test currently does not support {os.environ.get('DISTRO')}",
+)
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()

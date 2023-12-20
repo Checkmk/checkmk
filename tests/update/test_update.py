@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 import random
 from pathlib import Path
 
@@ -16,12 +17,16 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_site_status, update_config, update_site
+from .conftest import get_site_status, SUPPORTED_DISTROS, update_config, update_site
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.cee
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") not in SUPPORTED_DISTROS,
+    reason=f"This test currently does not support {os.environ.get('DISTRO')}",
+)
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],
     agent_ctl: Path,

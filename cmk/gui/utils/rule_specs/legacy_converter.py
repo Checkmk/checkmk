@@ -441,6 +441,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.ServiceState():
             return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.HostState():
+            return _convert_to_legacy_host_state(to_convert, localizer)
+
         case ruleset_api_v1.form_specs.List():
             return _convert_to_legacy_list(to_convert, localizer)
 
@@ -623,6 +626,27 @@ def _convert_to_legacy_monitoring_state(
         converted_kwargs["default_value"] = to_convert.prefill_value
 
     return legacy_valuespecs.MonitoringState(**converted_kwargs)
+
+
+def _convert_to_legacy_host_state(
+    to_convert: ruleset_api_v1.form_specs.HostState, localizer: Callable[[str], str]
+) -> legacy_valuespecs.DropdownChoice:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    return legacy_valuespecs.DropdownChoice(
+        choices=[
+            (0, ruleset_api_v1.Localizable("Up").localize(localizer)),
+            (1, ruleset_api_v1.Localizable("Down").localize(localizer)),
+            (2, ruleset_api_v1.Localizable("Unreachable").localize(localizer)),
+        ],
+        sorted=False,
+        **converted_kwargs,
+    )
 
 
 def _convert_to_legacy_dropdown_choice(

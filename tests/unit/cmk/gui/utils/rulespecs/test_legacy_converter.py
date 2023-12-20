@@ -48,6 +48,38 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ["new_valuespec", "expected"],
     [
         pytest.param(
+            api_v1.form_specs.HostState(),
+            legacy_valuespecs.DropdownChoice(
+                choices=[
+                    (0, _("Up")),
+                    (1, _("Down")),
+                    (2, _("Unreachable")),
+                ],
+                sorted=False,
+                default_value=0,
+            ),
+            id="minimal HostState",
+        ),
+        pytest.param(
+            api_v1.form_specs.HostState(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help text"),
+                prefill_value=1,
+            ),
+            legacy_valuespecs.DropdownChoice(
+                choices=[
+                    (0, _("Up")),
+                    (1, _("Down")),
+                    (2, _("Unreachable")),
+                ],
+                sorted=False,
+                title=_("title"),
+                help=_("help text"),
+                default_value=1,
+            ),
+            id="MonitoringState",
+        ),
+        pytest.param(
             api_v1.form_specs.ServiceState(),
             legacy_valuespecs.MonitoringState(),
             id="minimal MonitoringState",
@@ -970,6 +1002,7 @@ def test_transform(
         api_v1.form_specs.DropdownChoice(elements=[]),
         api_v1.form_specs.CascadingDropdown(elements=[]),
         api_v1.form_specs.ServiceState(),
+        api_v1.form_specs.HostState(),
         api_v1.form_specs.List(parameter_form=api_v1.form_specs.Integer()),
     ],
 )

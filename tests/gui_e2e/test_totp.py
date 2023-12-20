@@ -21,9 +21,9 @@ def test_totp(
     logged_in_page.main_menu.locator("text=Two-factor authentication").click()
     # On the App Authenticator page
     logged_in_page.main_area.check_page_title("Two-factor authentication")
-    logged_in_page.main_area.get_suggestion("Register security token").click()
+    logged_in_page.main_area.get_suggestion("Register authenticator app").click()
     # Now extract TOTP secret from text and submit
-    logged_in_page.main_area.check_page_title("Register authenticator app")
+    logged_in_page.main_area.check_page_title("Register Authenticator App")
     text_list = logged_in_page.main_area.locator(
         "text=Alternatively you can enter your secret manually: "
     ).all_text_contents()
@@ -35,5 +35,7 @@ def test_totp(
     logged_in_page.main_area.get_input("profile_p_ValidateOTP").fill(otp_value)
     logged_in_page.main_area.get_suggestion("Save").click()
     # Removing the two factor mechanism
-    logged_in_page.main_area.locator("a[title='Delete two-factor credential']").click()
+    logged_in_page.main_area.locator(
+        "a[title='Delete authentication via authenticator app']"
+    ).click()
     logged_in_page.main_area.locator("button:has-text('Delete')").click()

@@ -246,6 +246,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
 
-    println!("HTTP {}", collection);
+    println!("{}", collection);
     std::process::exit(check::exit_code(&collection))
 }

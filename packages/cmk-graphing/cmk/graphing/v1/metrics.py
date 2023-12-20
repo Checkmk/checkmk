@@ -36,9 +36,9 @@ class Metric:
 
     Args:
         name:   An unique name
-        title:  A localizable title
-        unit:   A unit from Unit
-        color:  A color from Color
+        title:  A title
+        unit:   A unit
+        color:  A color
 
     Example:
 
@@ -66,14 +66,13 @@ class Constant:
     """
     Defines a constant
 
-    A constant can be used within metric operations (sum, product, difference, fraction),
-    perfometers or graphs.
+    A constant can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A localizable title
-        unit:   A unit from Unit
-        color:  A color from Color
-        value:  A integer or float value
+        title:  A title
+        unit:   A unit
+        color:  A color
+        value:  An integer or float value
 
     Example:
 
@@ -95,7 +94,7 @@ class WarningOf:
     Defines a 'warning of'
 
     A 'warning of' extracts the warning level of a metric by its name. It can be used within metric
-    operations (sum, product, difference, fraction), perfometers or graphs.
+    other metric operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -121,7 +120,7 @@ class CriticalOf:
     Defines a 'critical of'
 
     A 'critical of' extracts the critical level of a metric by its name. It can be used within
-    metric operations (sum, product, difference, fraction), perfometers or graphs.
+    other metric operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -147,12 +146,12 @@ class MinimumOf:
     Defines a 'minimum of'
 
     A 'minimum of' extracts the minimum value of a metric by its name. It can be used within
-    metric operations (sum, product, difference, fraction), perfometers or graphs.
+    other metric operations, perfometers or graphs.
 
     Args:
         metric_name:
                 Name of a metric
-        color:  A color from Color
+        color:  A color
 
     Example:
 
@@ -176,12 +175,12 @@ class MaximumOf:
     Defines a 'maximum of'
 
     A 'maximum of' extracts the maximum value of a metric by its name. It can be used within
-    metric operations (sum, product, difference, fraction), perfometers or graphs.
+    other metric operations, perfometers or graphs.
 
     Args:
         metric_name:
                 Name of a metric
-        color:  A color from Color
+        color:  A color
 
     Example:
 
@@ -203,12 +202,11 @@ class Sum:
     """
     Defines a sum
 
-    A sum can be used within metric operations (sum, product, difference, fraction), perfometers or
-    graphs.
+    A sum can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A localizable title
-        color:  A color from Color
+        title:  A title
+        color:  A color
         summands:
                 A list of metric names or objects
 
@@ -251,13 +249,12 @@ class Product:
     """
     Defines a product
 
-    A product can be used within metric operations (sum, product, difference, fraction), perfometers
-    or graphs.
+    A product can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A localizable title
-        unit:   A unit from Unit
-        color:  A color from Color
+        title:  A title
+        unit:   A unit
+        color:  A color
         factors:
                 A list of metric names or objects
 
@@ -302,12 +299,11 @@ class Difference:
     """
     Defines a difference
 
-    A difference can be used within metric operations (sum, product, difference, fraction),
-    perfometers or graphs.
+    A difference can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A localizable title
-        color:  A color from Color
+        title:  A title
+        color:  A color
         minuend:
                 A metric name or object
         subtrahend:
@@ -366,13 +362,12 @@ class Fraction:
     """
     Defines a fraction
 
-    A fraction can be used within metric operations (sum, product, difference, fraction),
-    perfometers or graphs.
+    A fraction can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A localizable title
-        unit:   A unit from Unit
-        color:  A color from Color
+        title:  A title
+        unit:   A unit
+        color:  A color
         dividend:
                 A metric name or object
         divisor:

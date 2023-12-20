@@ -6,18 +6,10 @@
 include defines.make
 include artifacts.make
 
-NAME               := check_mk
-PREFIX             := /usr
-BINDIR             := $(PREFIX)/bin
-CONFDIR            := /etc/$(NAME)
-LIBDIR             := $(PREFIX)/lib/$(NAME)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-# We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
-CXX_FLAGS          := -gdwarf-4 -O3 -Wall -Wextra
-export DOXYGEN     := doxygen
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
@@ -30,10 +22,6 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
 SCSS_SOURCES := $(wildcard $(foreach subdir,* */* */*/*,web/htdocs/themes/$(subdir)/*.scss))
 
 
-PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons))
-
-RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
-
 WEBPACK_MODE       ?= production
 
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
@@ -45,11 +33,11 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: announcement all build check check-binaries check-permissions \
+.PHONY: announcement all build check-setup \
         clean css dist documentation \
         format format-c test-format-c format-python format-shell \
-        format-js GTAGS help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version skel openapi \
+        format-js help install mrproper mrclean \
+        packages setup setversion version openapi \
         protobuf-files
 
 help:
@@ -68,16 +56,6 @@ deb:
 
 cma:
 	$(MAKE) -C omd cma
-
-check: check-permissions check-binaries check-version
-
-check-permissions:
-	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
-
-check-binaries:
-	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
-	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
-	fi
 
 check-setup:
 	echo "From here on we check the successful setup of some parts ..."
@@ -191,17 +169,6 @@ openapi-clean:
 openapi: $(OPENAPI_SPEC)
 
 
-optimize-images:
-	@if type pngcrush >/dev/null 2>&1; then \
-	    for F in $(PNG_FILES); do \
-	        echo "Optimizing $$F..." ; \
-	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
-	        mv $$F.opt $$F; \
-	    done ; \
-	else \
-	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
-	fi
-
 # TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
@@ -241,9 +208,6 @@ node_modules/.bin/prettier: .ran-npm
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
-js:
-	echo $(JAVASCRIPT_SOURCES)
-
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
 # list all targets separately.
 #
@@ -266,11 +230,10 @@ $(THEME_CSS_FILES): .ran-webpack
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
 	$(MAKE) -C omd clean
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       $(NAME)-*.tar.gz *~ counters autochecks \
+	rm -rf *.rpm *.deb *.exe \
+	       *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
-	       web/htdocs/themes/*/theme.css \
-	       announce*
+	       web/htdocs/themes/*/theme.css announce*
 
 css: .ran-webpack
 
@@ -303,10 +266,6 @@ mrproper:
 
 mrclean:
 	git clean -d --force -x $(EXCLUDE_CLEAN)
-
-# The target is reserved for a future use
-workspaceclean:
-	# Stub
 
 # Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
 # for cleaning up while keeping some build artifacts between version builds.
@@ -354,7 +313,6 @@ setup:
 	    musl-tools \
 	    p7zip-full \
 	    patchelf \
-	    pngcrush \
 	    python3-pip \
 	    python3-venv \
 	    shellcheck \

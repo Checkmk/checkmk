@@ -13,6 +13,7 @@ from typing import Any, assert_never, Callable, TypeVar
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
 
+import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
@@ -526,6 +527,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.preconfigured.Proxy():
             return _convert_to_legacy_http_proxy(to_convert, localizer)
+
+        case ruleset_api_v1.preconfigured.Metric():
+            return _convert_to_legacy_metric_name(to_convert, localizer)
 
         case other:
             assert_never(other)
@@ -1389,3 +1393,15 @@ def _convert_to_legacy_file_upload(
         allow_empty_content=True,
         **converted_kwargs,
     )
+
+
+def _convert_to_legacy_metric_name(
+    to_convert: ruleset_api_v1.preconfigured.Metric, localizer: Callable[[str], str]
+) -> legacy_graphing_valuespecs.MetricName:
+    converted_kwargs = {}
+    if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
+        help_text = localizer("Select from a list of metrics known to Checkmk")
+    converted_kwargs["help"] = help_text
+    if (title := _localize_optional(to_convert.title, localizer)) is not None:
+        converted_kwargs["title"] = title
+    return legacy_graphing_valuespecs.MetricName(**converted_kwargs)

@@ -53,6 +53,7 @@ pub enum SectionKind {
     Async,
 }
 
+#[derive(Debug, Clone)]
 pub struct Section {
     name: String,
     sep: Option<char>,

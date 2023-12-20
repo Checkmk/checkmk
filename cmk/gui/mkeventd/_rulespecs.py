@@ -79,7 +79,7 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         "These patterns are applied to the selected logfiles to reclassify the "
                         "matching log messages. The first pattern which matches a line will "
                         "be used for reclassifying a message. You can use the "
-                        '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+                        '<a href="wato.py?mode=pattern_editor">Logfile pattern analyzer</a> '
                         "to test the rules you defined here.</p>"
                         "<p>Note that to match a special regex character in your patterns, you need to use a "
                         "backslash to escape its special meaning. This is especially relevant for Windows file paths. "

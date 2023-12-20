@@ -141,7 +141,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_rules",
-            title=_l("Business Intelligence Rules and Aggregations"),
+            title=_l("Business Intelligence rules and aggregations"),
             description=_l(
                 "Use the Setup BI module, create, modify and delete BI rules and "
                 "aggregations in packs that you are a contact of."
@@ -154,7 +154,7 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="bi_admin",
-            title=_l("Business Intelligence Administration"),
+            title=_l("Business Intelligence administration"),
             description=_l(
                 "Edit all rules and aggregations for Business Intelligence, "
                 "create, modify and delete rule packs."

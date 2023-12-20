@@ -260,7 +260,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.components.containers:*.model": {"title": _l("Model Name")},
         ".hardware.components.containers:*.location": {"title": _l("Location")},
         ".hardware.components.psus:": {
-            "title": _l("Power Supplies"),
+            "title": _l("Power supplies"),
             "keyorder": [
                 "index",
                 "name",
@@ -1741,7 +1741,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.wlan.controller.accesspoints:*.serial": {"title": _l("Serial Number")},
         ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _l("System Location")},
         ".networking.tunnels:": {
-            "title": _l("Networking Tunnels"),
+            "title": _l("Networking tunnels"),
             "keyorder": [
                 "peername",
                 "index",

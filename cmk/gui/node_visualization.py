@@ -360,7 +360,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "hidebutton": False,
             "public": True,
             "topic": "overview",
-            "title": _("Parent / Child topology"),
+            "title": _("Parent / child topology"),
             "name": "parent_child_topology",
             "sort_index": 50,
             "is_show_more": False,
@@ -1116,7 +1116,7 @@ class ParentChildNetworkTopology(Topology):
         return "parent_child_topology"
 
     def title(self) -> str:
-        return _("Parent / Child topology")
+        return _("Parent / child topology")
 
     def get_mesh_root(self, mesh: set[str]) -> HostName:
         return self._topology_center_node_name

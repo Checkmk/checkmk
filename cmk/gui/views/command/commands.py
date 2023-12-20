@@ -1371,7 +1371,7 @@ class CommandAddComment(Command):
 PermissionActionDowntimes = Permission(
     section=PermissionSectionAction,
     name="downtimes",
-    title=_l("Set/Remove downtimes"),
+    title=_l("Set/remove downtimes"),
     description=_l("Schedule and remove downtimes on hosts and services"),
     defaults=["user", "admin"],
 )

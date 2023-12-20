@@ -397,7 +397,7 @@ class MainModuleOtherServices(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("Other Services")
+        return _("Other services")
 
     @property
     def icon(self) -> Icon:
@@ -1304,7 +1304,7 @@ class MainModuleVMCloudContainer(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("VM, Cloud, Container")
+        return _("VM, cloud, container")
 
     @property
     def icon(self) -> Icon:

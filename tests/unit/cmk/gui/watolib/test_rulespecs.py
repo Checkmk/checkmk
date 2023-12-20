@@ -1307,7 +1307,7 @@ def _expected_rulespec_group_choices():
         ("static/printers", "&nbsp;&nbsp;⌙ Printers"),
         ("static/storage", "&nbsp;&nbsp;⌙ Storage, Filesystems and Files"),
         ("static/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
-        ("vm_cloud_container", "VM, Cloud, Container"),
+        ("vm_cloud_container", "VM, cloud, container"),
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

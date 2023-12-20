@@ -2000,7 +2000,7 @@ EC_HISTORY_OF_EVENT = mkeventd_view(
             SorterSpec(sorter="history_time", negate=True),
             SorterSpec(sorter="history_line", negate=True),
         ],
-        "title": _l("History of Event"),
+        "title": _l("History of event"),
         "description": _l("History entries of one specific event"),
         "datasource": "mkeventd_history",
         "layout": "table",

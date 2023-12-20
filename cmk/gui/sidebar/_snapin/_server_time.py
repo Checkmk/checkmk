@@ -18,7 +18,7 @@ class CurrentTime(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Server Time")
+        return _("Server time")
 
     @classmethod
     def description(cls):

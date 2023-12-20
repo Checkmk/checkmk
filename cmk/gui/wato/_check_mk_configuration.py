@@ -645,7 +645,7 @@ class ConfigVariableSelectionLivetime(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Integer(
-            title=_("Checkbox Selection Livetime"),
+            title=_("Checkbox selection livetime"),
             help=_(
                 "This option defines the maximum age of unmodified checkbox selections stored for users. "
                 "If a user modifies the selection in a view, these selections are persisted for the currently "
@@ -930,7 +930,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Default BI Visualization Settings"),
+            title=_("Default BI visualization settings"),
             elements=[
                 (
                     "node_style",
@@ -1096,7 +1096,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                 optional_keys=[],
             ),
             add_label=_("Create new virtual host tree configuration"),
-            title=_("Virtual Host Trees"),
+            title=_("Virtual host trees"),
             help=_(
                 "Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
                 "These trees organize your hosts based on their values in certain host tag groups. "
@@ -2090,7 +2090,7 @@ class ConfigVariableAgentControllerCertificates(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Dictionary(
-            title=_("Agent Certificates"),
+            title=_("Agent certificates"),
             help=_("Settings for certificates issued to registered agents."),
             elements=[
                 (
@@ -2996,7 +2996,7 @@ class ConfigVariableAgentSimulator(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("SNMP Agent Simulator"),
+            title=_("SNMP agent simulator"),
             label=_("Process stored SNMP walks with agent simulator"),
             help=_(
                 "When using stored SNMP walks you can place inline code generating "
@@ -3159,7 +3159,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return Transform(
             valuespec=DropdownChoice(
                 title=cmk_version.mark_edition_only(
-                    _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                    _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
                 ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3207,7 +3207,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Checkmk"
             )
             % cmk_version.mark_edition_only(
-                _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                _("Choose SNMP backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
             ),
         )
 
@@ -5471,10 +5471,10 @@ def transform_snmp_backend_hosts_to_valuespec(backend):
 def _valuespec_snmp_backend():
     return Transform(
         valuespec=DropdownChoice(
-            title=_("Choose SNMP Backend"),
+            title=_("Choose SNMP backend"),
             choices=[
-                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
-                (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
+                (SNMPBackendEnum.INLINE, _("Use Inline SNMP backend")),
+                (SNMPBackendEnum.CLASSIC, _("Use Classic backend")),
             ],
         ),
         to_valuespec=transform_snmp_backend_hosts_to_valuespec,

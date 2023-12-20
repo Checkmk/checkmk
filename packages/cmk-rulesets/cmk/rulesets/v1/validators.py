@@ -2,10 +2,11 @@
 #  Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 #  This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 #  conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import re
 from collections.abc import Sequence
 from typing import Final, Sized
+from urllib.parse import urlparse
 
 from cmk.rulesets.v1._localize import Localizable
 
@@ -93,4 +94,52 @@ class NetworkPort:  # pylint: disable=too-few-public-methods
 
     def __call__(self, value: int) -> None:
         if value < 0 or value > 65535:
+            raise ValidationError(self.error_msg)
+
+
+class UrlProtocol(enum.StrEnum):
+    FILE = "file"
+    FTP = "ftp"
+    GOPHER = "gopher"
+    HDL = "hdl"
+    HTTP = "http"
+    HTTPS = "https"
+    IMAP = "imap"
+    MAILTO = "mailto"
+    MMS = "mms"
+    NEWS = "news"
+    NNTP = "nntp"
+    PROSPERO = "prospero"
+    RSYNC = "rsync"
+    RTSP = "rtsp"
+    RTSPS = "rtsps"
+    RTSPU = "rtspu"
+    SFTP = "sftp"
+    SHTTP = "shttp"
+    SIP = "sip"
+    SIPS = "sips"
+    SNEWS = "snews"
+    SNV = "svn"
+    SVNSSH = "svn+ssh"
+    TELNET = "telnet"
+    WAIS = "wais"
+    WS = "ws"
+    WSS = "wss"
+
+
+class Url:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated value is a URL with the specified scheme."""
+
+    def __init__(
+        self, protocols: Sequence[UrlProtocol], error_msg: Localizable | None = None
+    ) -> None:
+        self.protocols: Final = protocols
+        self.error_msg: Final = error_msg or (
+            Localizable("Your input is not a valid URL conforming to any allowed protocols ('%s').")
+            % str(", ".join(self.protocols))
+        )
+
+    def __call__(self, value: str) -> None:
+        parts = urlparse(value)
+        if not parts.scheme or not parts.netloc or parts.scheme not in self.protocols:
             raise ValidationError(self.error_msg)

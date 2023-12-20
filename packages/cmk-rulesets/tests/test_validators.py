@@ -15,6 +15,8 @@ from cmk.rulesets.v1.validators import (
     InRange,
     MatchRegex,
     NetworkPort,
+    Url,
+    UrlProtocol,
     ValidationError,
 )
 
@@ -206,5 +208,58 @@ def test_network_port(
 ) -> None:
     with expected_raises as e:
         NetworkPort(**input_msg)(test_value)
+
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
+
+
+@pytest.mark.parametrize(
+    ["protocols", "input_msg", "test_value", "expected_raises", "expected_message"],
+    [
+        pytest.param(
+            [UrlProtocol.FILE], {}, "file://valid/url", does_not_raise(), None, id="valid string"
+        ),
+        pytest.param(
+            [UrlProtocol.HTTP, UrlProtocol.HTTPS],
+            {},
+            "htp://invalid/url",
+            pytest.raises(ValidationError),
+            r"Your input is not a valid URL conforming to any allowed protocols ('http, https').",
+            id="invalid string with default message",
+        ),
+        pytest.param(
+            [UrlProtocol.SVNSSH],
+            {},
+            "svnssh://invalid/url",
+            pytest.raises(ValidationError),
+            r"Your input is not a valid URL conforming to any allowed protocols ('svn+ssh').",
+            id="url with invalid scheme",
+        ),
+        pytest.param(
+            [UrlProtocol.MAILTO],
+            {},
+            "mailto://",
+            pytest.raises(ValidationError),
+            r"Your input is not a valid URL conforming to any allowed protocols ('mailto').",
+            id="url with invalid netloc",
+        ),
+        pytest.param(
+            [UrlProtocol.RSYNC],
+            {"error_msg": Localizable("My own message")},
+            "invalid/url",
+            pytest.raises(ValidationError),
+            "My own message",
+            id="url without scheme with custom message",
+        ),
+    ],
+)
+def test_url(
+    protocols: Sequence[UrlProtocol],
+    input_msg: Mapping[str, Localizable],
+    test_value: str,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
+    expected_message: str | None,
+) -> None:
+    with expected_raises as e:
+        Url(protocols, **input_msg)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message

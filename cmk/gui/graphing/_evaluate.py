@@ -163,11 +163,11 @@ def evaluate_quantity(
 ) -> EvaluatedQuantity:
     match quantity:
         case str():
-            metric_ = translated_metrics[quantity]
+            metric = translated_metrics[quantity]
             return EvaluatedQuantity(
-                metric_["title"],
-                metric_["unit"],
-                metric_["color"],
+                metric["title"],
+                metric["unit"],
+                metric["color"],
                 translated_metrics[quantity]["value"],
             )
         case metrics.Constant():
@@ -178,34 +178,34 @@ def evaluate_quantity(
                 quantity.value,
             )
         case metrics.WarningOf():
-            metric_ = translated_metrics[quantity.metric_name]
+            metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Warning of ") + metric_["title"],
-                metric_["unit"],
+                _("Warning of ") + metric["title"],
+                metric["unit"],
                 "#ffff00",
                 translated_metrics[quantity.metric_name]["scalar"]["warn"],
             )
         case metrics.CriticalOf():
-            metric_ = translated_metrics[quantity.metric_name]
+            metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Critical of ") + metric_["title"],
-                metric_["unit"],
+                _("Critical of ") + metric["title"],
+                metric["unit"],
                 "#ff0000",
                 translated_metrics[quantity.metric_name]["scalar"]["crit"],
             )
         case metrics.MinimumOf():
-            metric_ = translated_metrics[quantity.metric_name]
+            metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Minimum of ") + metric_["title"],
-                metric_["unit"],
+                _("Minimum of ") + metric["title"],
+                metric["unit"],
                 parse_color(quantity.color),
                 translated_metrics[quantity.metric_name]["scalar"]["min"],
             )
         case metrics.MaximumOf():
-            metric_ = translated_metrics[quantity.metric_name]
+            metric = translated_metrics[quantity.metric_name]
             return EvaluatedQuantity(
-                _("Maximum of ") + metric_["title"],
-                metric_["unit"],
+                _("Maximum of ") + metric["title"],
+                metric["unit"],
                 parse_color(quantity.color),
                 translated_metrics[quantity.metric_name]["scalar"]["max"],
             )

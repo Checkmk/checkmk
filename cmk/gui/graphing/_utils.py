@@ -175,11 +175,10 @@ def _parse_quantity(
 ) -> MetricDefinition:
     match quantity:
         case str():
-            metric_ = metric_info[quantity]
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=str(metric_info[quantity]["title"]),
             )
         case metrics.Constant():
             return MetricDefinition(

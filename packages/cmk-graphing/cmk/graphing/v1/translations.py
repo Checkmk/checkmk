@@ -115,21 +115,21 @@ class RenameTo:
     Defines a 'rename to'
 
     Args:
-        rename_to:
+        metric_name:
                 A new metric name
 
     Example:
 
         >>> RenameTo("new-metric-name")
-        RenameTo(rename_to='new-metric-name')
+        RenameTo(metric_name='new-metric-name')
 
     """
 
-    rename_to: str
+    metric_name: str
 
     def __post_init__(self) -> None:
-        if not self.rename_to:
-            raise ValueError(self.rename_to)
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
 
 
 @dataclass(frozen=True)
@@ -138,20 +138,19 @@ class ScaleBy:
     Defines a 'scale by'
 
     Args:
-        scale_by:
-                A number with which the old metric is scaled
+        factor: A number with which the old metric is scaled
 
     Example:
 
         >>> ScaleBy(1.5)
-        ScaleBy(scale_by=1.5)
+        ScaleBy(factor=1.5)
 
     """
 
-    scale_by: int | float
+    factor: int | float
 
     def __post_init__(self) -> None:
-        assert self.scale_by
+        assert self.factor
 
 
 @dataclass(frozen=True)
@@ -160,25 +159,24 @@ class RenameToAndScaleBy:
     Defines a 'rename to' and 'scale by'
 
     Args:
-        rename_to:
+        metric_name:
                 A new metric name
-        scale_by:
-                A number with which the old metric is scaled
+        factor: A number with which the old metric is scaled
 
     Example:
 
         >>> RenameToAndScaleBy("new-metric-name", 1.5)
-        RenameToAndScaleBy(rename_to='new-metric-name', scale_by=1.5)
+        RenameToAndScaleBy(metric_name='new-metric-name', factor=1.5)
 
     """
 
-    rename_to: str
-    scale_by: int | float
+    metric_name: str
+    factor: int | float
 
     def __post_init__(self) -> None:
-        if not self.rename_to:
-            raise ValueError(self.rename_to)
-        assert self.scale_by
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
+        assert self.factor
 
 
 @dataclass(frozen=True, kw_only=True)

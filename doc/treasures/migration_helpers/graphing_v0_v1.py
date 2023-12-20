@@ -217,7 +217,7 @@ def _parse_legacy_metric_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("metric", name))
+            unparseables.append(Unparseable("metrics", name))
 
 
 def _parse_legacy_check_metrics(
@@ -229,7 +229,7 @@ def _parse_legacy_check_metrics(
         tuple[
             tuple[
                 str,
-                translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
+                translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
             ],
             ...,
         ],
@@ -262,7 +262,7 @@ def _parse_legacy_check_metrics(
         translations_: list[
             tuple[
                 str,
-                translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
+                translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
             ]
         ] = []
         for legacy_name, attrs in info.items():
@@ -271,13 +271,13 @@ def _parse_legacy_check_metrics(
                     translations_.append(
                         (
                             legacy_name,
-                            translations.RenamingAndScaling(attrs["name"], attrs["scale"]),
+                            translations.RenameToAndScaleBy(attrs["name"], attrs["scale"]),
                         )
                     )
                 case True, False:
-                    translations_.append((legacy_name, translations.Renaming(attrs["name"])))
+                    translations_.append((legacy_name, translations.RenameTo(attrs["name"])))
                 case False, True:
-                    translations_.append((legacy_name, translations.Scaling(attrs["scale"])))
+                    translations_.append((legacy_name, translations.ScaleBy(attrs["scale"])))
                 case _:
                     continue
 
@@ -597,7 +597,7 @@ def _raw_metric_names(
         case str():
             yield quantity
         case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
-            yield quantity.name
+            yield quantity.metric_name
         case metrics.Sum():
             for s in quantity.summands:
                 yield from _raw_metric_names(s)
@@ -1014,20 +1014,20 @@ def _quantity_repr(
             ]
         case metrics.WarningOf():
             args = [
-                _name_repr(quantity.name),
+                _name_repr(quantity.metric_name),
             ]
         case metrics.CriticalOf():
             args = [
-                _name_repr(quantity.name),
+                _name_repr(quantity.metric_name),
             ]
         case metrics.MinimumOf():
             args = [
-                _name_repr(quantity.name),
+                _name_repr(quantity.metric_name),
                 _color_repr(quantity.color),
             ]
         case metrics.MaximumOf():
             args = [
-                _name_repr(quantity.name),
+                _name_repr(quantity.metric_name),
                 _color_repr(quantity.color),
             ]
         case metrics.Sum():
@@ -1077,17 +1077,17 @@ def _check_command_repr(
 
 
 def _translation_ty_repr(
-    translation_ty: translations.Renaming | translations.Scaling | translations.RenamingAndScaling,
+    translation_ty: translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy,
 ) -> str:
     match translation_ty:
-        case translations.Renaming():
-            args = [_name_repr(translation_ty.rename_to)]
-        case translations.Scaling():
-            args = [str(translation_ty.scale_by)]
-        case translations.RenamingAndScaling():
+        case translations.RenameTo():
+            args = [_name_repr(translation_ty.metric_name)]
+        case translations.ScaleBy():
+            args = [str(translation_ty.factor)]
+        case translations.RenameToAndScaleBy():
             args = [
-                _name_repr(translation_ty.rename_to),
-                str(translation_ty.scale_by),
+                _name_repr(translation_ty.metric_name),
+                str(translation_ty.factor),
             ]
     return _inst_repr("translations", translation_ty, args)
 

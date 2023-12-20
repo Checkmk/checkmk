@@ -20,10 +20,10 @@ from cmk.rulesets.v1.form_specs import (
     TextInput,
 )
 from cmk.rulesets.v1.rule_specs import (
-    CheckParameterRuleSpecWithItem,
-    CheckParameterRuleSpecWithoutItem,
-    RuleEvalType,
-    ServiceDiscoveryRuleSpec,
+    CheckParameterWithItem,
+    CheckParameterWithoutItem,
+    DiscoveryParameters,
+    EvalType,
     Topic,
 )
 
@@ -111,9 +111,9 @@ def _discovery_parameters_form_alertmanager():
     )
 
 
-rule_spec_discovery_alertmanager = ServiceDiscoveryRuleSpec(
+rule_spec_discovery_alertmanager = DiscoveryParameters(
     topic=Topic.GENERAL,
-    eval_type=RuleEvalType.MERGE,
+    eval_type=EvalType.MERGE,
     name="discovery_alertmanager",
     parameter_form=_discovery_parameters_form_alertmanager,
     title=Localizable("Alertmanager discovery"),
@@ -201,7 +201,7 @@ def _check_parameters_form_alertmanager():
     )
 
 
-rule_spec_alertmanager_rule_state = CheckParameterRuleSpecWithItem(
+rule_spec_alertmanager_rule_state = CheckParameterWithItem(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
     item_form=TextInput(
@@ -212,7 +212,7 @@ rule_spec_alertmanager_rule_state = CheckParameterRuleSpecWithItem(
     title=Localizable("Alertmanager rule states"),
 )
 
-rule_spec_alertmanager_rule_state_summary = CheckParameterRuleSpecWithoutItem(
+rule_spec_alertmanager_rule_state_summary = CheckParameterWithoutItem(
     name="alertmanager_rule_state_summary",
     topic=Topic.APPLICATIONS,
     parameter_form=_check_parameters_form_alertmanager,

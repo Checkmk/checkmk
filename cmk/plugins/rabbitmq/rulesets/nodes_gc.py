@@ -16,7 +16,7 @@ from cmk.rulesets.v1.form_specs import (
     Migrate,
     TextInput,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
 def _migrate_lower_upper(
@@ -110,7 +110,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
     )
 
 
-rule_spec_rabbitmq_nodes_gc = CheckParameterRuleSpecWithItem(
+rule_spec_rabbitmq_nodes_gc = CheckParameterWithItem(
     name="rabbitmq_nodes_gc",
     topic=Topic.APPLICATIONS,
     item_form=TextInput(title=Localizable("Node name")),

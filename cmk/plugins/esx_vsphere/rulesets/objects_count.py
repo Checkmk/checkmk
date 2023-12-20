@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import (
     ServiceState,
     TextInput,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterRuleSpecWithoutItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameterWithoutItem, Topic
 
 
 def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
@@ -58,7 +58,7 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
     )
 
 
-rule_spec_esx_vsphere_objects_count = CheckParameterRuleSpecWithoutItem(
+rule_spec_esx_vsphere_objects_count = CheckParameterWithoutItem(
     name="esx_vsphere_objects_count",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_esx_vsphere_objects_count,

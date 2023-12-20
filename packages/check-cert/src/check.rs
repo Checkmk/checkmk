@@ -181,7 +181,7 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), summary);
+        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(summary.into()));
         CheckResult {
             summary: r.summary,
             metrics: Some(Metric::<T> {
@@ -282,19 +282,47 @@ where
     }
 }
 
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
+pub enum OutputText {
+    Summary(String),
+    Notice(String),
+}
+
+impl Default for OutputText {
+    fn default() -> Self {
+        Self::Notice(String::default())
+    }
+}
+
+impl OutputText {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Summary(s) => s.is_empty(),
+            Self::Notice(s) => s.is_empty(),
+        }
+    }
+}
+
+impl Display for OutputText {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        match self {
+            Self::Summary(s) => s.fmt(f),
+            Self::Notice(s) => s.fmt(f),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 struct Summary {
     state: State,
-    text: String,
+    text: OutputText,
 }
 
 impl Summary {
-    fn new(state: State, text: impl Into<String>) -> Self {
-        Self {
-            state,
-            text: text.into(),
-        }
+    fn new(state: State, text: OutputText) -> Self {
+        Self { state, text }
     }
 }
 
@@ -321,26 +349,30 @@ pub struct SimpleCheckResult {
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, text: impl Into<String>) -> Self {
+    fn new(state: State, text: OutputText) -> Self {
         Self {
             summary: Summary::new(state, text),
         }
     }
 
+    pub fn notice(text: impl Into<String>) -> Self {
+        Self::new(State::Ok, OutputText::Notice(text.into()))
+    }
+
     pub fn ok(summary: impl Into<String>) -> Self {
-        Self::new(State::Ok, summary)
+        Self::new(State::Ok, OutputText::Summary(summary.into()))
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, summary)
+        Self::new(State::Warn, OutputText::Summary(summary.into()))
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, summary)
+        Self::new(State::Crit, OutputText::Summary(summary.into()))
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, summary)
+        Self::new(State::Unknown, OutputText::Summary(summary.into()))
     }
 }
 
@@ -365,27 +397,47 @@ impl<T> CheckResult<T>
 where
     T: Clone,
 {
-    fn new(state: State, text: impl Into<String>, metrics: Option<Metric<T>>) -> Self {
+    fn new(state: State, text: OutputText, metrics: Option<Metric<T>>) -> Self {
         Self {
             summary: Summary::new(state, text),
             metrics,
         }
     }
 
+    pub fn notice(text: impl Into<String>, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, OutputText::Notice(text.into()), Some(metrics))
+    }
+
     pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, summary, Some(metrics))
+        Self::new(
+            State::Ok,
+            OutputText::Summary(summary.into()),
+            Some(metrics),
+        )
     }
 
     pub fn warn(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Warn, summary, Some(metrics))
+        Self::new(
+            State::Warn,
+            OutputText::Summary(summary.into()),
+            Some(metrics),
+        )
     }
 
     pub fn crit(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Crit, summary, Some(metrics))
+        Self::new(
+            State::Crit,
+            OutputText::Summary(summary.into()),
+            Some(metrics),
+        )
     }
 
     pub fn unknown(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Unknown, summary, Some(metrics))
+        Self::new(
+            State::Unknown,
+            OutputText::Summary(summary.into()),
+            Some(metrics),
+        )
     }
 }
 

@@ -524,6 +524,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.BooleanChoice():
             return _convert_to_legacy_checkbox(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.FileUpload():
+            return _convert_to_legacy_file_upload(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -531,17 +534,20 @@ def _convert_to_inner_legacy_valuespec(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-    if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Migrate):
-        return legacy_valuespecs.Migrate(
-            valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-            migrate=to_convert.transform.model_to_form,
-        )
-    if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Transform):
-        return legacy_valuespecs.Transform(
-            valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-            to_valuespec=to_convert.transform.model_to_form,
-            from_valuespec=to_convert.transform.form_to_model,
-        )
+    transform = getattr(to_convert, "transform", None)
+    match transform:
+        case ruleset_api_v1.form_specs.Migrate():
+            return legacy_valuespecs.Migrate(
+                valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
+                migrate=transform.model_to_form,
+            )
+        case ruleset_api_v1.form_specs.Transform():
+            return legacy_valuespecs.Transform(
+                valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
+                to_valuespec=transform.model_to_form,
+                from_valuespec=transform.form_to_model,
+            )
+
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 
@@ -1363,4 +1369,25 @@ def _convert_to_legacy_checkbox(
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
         default_value=checkbox_default,
+    )
+
+
+def _convert_to_legacy_file_upload(
+    to_convert: ruleset_api_v1.form_specs.FileUpload, localizer: Callable[[str], str]
+) -> legacy_valuespecs.FileUpload:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.FileUpload(
+        allow_empty=True,  # this makes it a "required" field
+        allowed_extensions=to_convert.extensions,
+        mime_types=to_convert.mime_types,
+        allow_empty_content=True,
+        **converted_kwargs,
     )

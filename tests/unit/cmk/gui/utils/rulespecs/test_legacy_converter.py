@@ -121,7 +121,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 },
                 title=api_v1.Localizable("Configuration title"),
                 help_text=api_v1.Localizable("Helpful description"),
-                deprecated_elements=["old_key", "another_old_key"],
+                deprecated_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Localizable("No elements specified"),
             ),
             legacy_valuespecs.Dictionary(
@@ -299,7 +299,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 no_elements_text=api_v1.Localizable("No elements"),
-                deprecated_elements=[],
+                deprecated_elements=(),
                 frozen=True,
                 title=api_v1.Localizable("title"),
                 label=api_v1.Localizable("label"),
@@ -608,6 +608,27 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 default_value=True,
             ),
             id="BooleanChoice",
+        ),
+        pytest.param(
+            api_v1.form_specs.FileUpload(),
+            legacy_valuespecs.FileUpload(allow_empty=True),
+            id="minimal FileUpload",
+        ),
+        pytest.param(
+            api_v1.form_specs.FileUpload(
+                title=api_v1.Localizable("my title"),
+                help_text=api_v1.Localizable("help text"),
+                extensions=("txt", "rst"),
+                mime_types=("text/plain",),
+            ),
+            legacy_valuespecs.FileUpload(
+                title=_("my title"),
+                help=_("help text"),
+                allowed_extensions=("txt", "rst"),
+                mime_types=("text/plain",),
+                allow_empty=True,
+            ),
+            id="FileUpload",
         ),
     ],
 )
@@ -1436,14 +1457,21 @@ def test_transform(
         api_v1.form_specs.ServiceState(),
         api_v1.form_specs.HostState(),
         api_v1.form_specs.List(parameter_form=api_v1.form_specs.Integer()),
+        api_v1.form_specs.FileUpload(),
     ],
 )
 def test_form_spec_attributes(form_spec: api_v1.form_specs.FormSpec) -> None:
-    try:
-        _ = form_spec.title
-        _ = form_spec.transform
-    except AttributeError:
-        assert False
+    match form_spec:
+        case api_v1.form_specs.FileUpload():
+            # these don't have a transform
+            _ = form_spec.title
+
+        case other_form_spec:
+            try:
+                _ = other_form_spec.title
+                _ = other_form_spec.transform
+            except AttributeError as exc:
+                raise AssertionError from exc
 
 
 def _get_legacy_no_levels_choice() -> tuple[str, str, legacy_valuespecs.FixedValue]:

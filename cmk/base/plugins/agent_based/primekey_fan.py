@@ -82,7 +82,7 @@ def check(
 
 register.check_plugin(
     name="primekey_fan",
-    service_name="Fan PrimeKey %s",
+    service_name="PrimeKey Fan %s",
     discovery_function=discover,
     check_function=check,
     check_default_parameters={"lower": (1000, 0), "output_metrics": True},

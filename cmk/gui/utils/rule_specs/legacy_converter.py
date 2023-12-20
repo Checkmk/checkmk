@@ -521,6 +521,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Proxy():
             return _convert_to_legacy_http_proxy(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.BooleanChoice():
+            return _convert_to_legacy_checkbox(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -1344,4 +1347,20 @@ def _convert_to_legacy_http_proxy(
             ),
         ],
         sorted=False,
+    )
+
+
+def _convert_to_legacy_checkbox(
+    to_convert: ruleset_api_v1.form_specs.BooleanChoice, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Checkbox:
+    checkbox_default: bool | legacy_valuespecs.Sentinel = (
+        to_convert.prefill_value
+        if to_convert.prefill_value is not None
+        else legacy_valuespecs.DEF_VALUE
+    )
+    return legacy_valuespecs.Checkbox(
+        label=_localize_optional(to_convert.label, localizer),
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        default_value=checkbox_default,
     )

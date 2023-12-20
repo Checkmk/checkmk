@@ -589,6 +589,26 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="HTTPProxy",
         ),
+        pytest.param(
+            api_v1.form_specs.BooleanChoice(),
+            legacy_valuespecs.Checkbox(),
+            id="minimal BooleanChoice",
+        ),
+        pytest.param(
+            api_v1.form_specs.BooleanChoice(
+                title=api_v1.Localizable("boolean choice title"),
+                label=api_v1.Localizable("boolean choice label"),
+                help_text=api_v1.Localizable("help text"),
+                prefill_value=True,
+            ),
+            legacy_valuespecs.Checkbox(
+                title=_("boolean choice title"),
+                label=_("boolean choice label"),
+                help=_("help text"),
+                default_value=True,
+            ),
+            id="BooleanChoice",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(

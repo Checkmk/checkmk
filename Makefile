@@ -111,7 +111,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -156,15 +156,6 @@ announcement:
 packages:
 	$(MAKE) -C agents packages
 
-
-# NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
-# so we do things in a slightly complicated way.
-$(LIVESTATUS_INTERMEDIATE_ARCHIVE):
-	rm -rf mk-livestatus-$(VERSION)
-	mkdir -p mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat packages/neb third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
-	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
-	rm -rf mk-livestatus-$(VERSION)
 
 version:
 	[ "$$(head -c 6 /etc/issue)" = "Ubuntu" \
@@ -276,7 +267,6 @@ $(THEME_CSS_FILES): .ran-webpack
 clean:
 	$(MAKE) -C omd clean
 	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       web/htdocs/themes/*/theme.css \

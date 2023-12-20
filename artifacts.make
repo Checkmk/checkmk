@@ -17,9 +17,6 @@ THEME_JSON_FILES   := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /t
 THEME_IMAGE_DIRS   := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
 THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
-LIVESTATUS_INTERMEDIATE_ARCHIVE := \
-	$(REPO_PATH)/omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
-
 # These artifacts are created independent of the distro the Checkmk package is
 # built on either by an "upstream job" or while creating the source package
 SOURCE_BUILT_LINUX_AGENTS := \

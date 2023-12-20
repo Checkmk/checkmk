@@ -364,6 +364,28 @@ class ServiceState:
 
 
 @dataclass(frozen=True)
+class HostState:
+    """Specifies the configuration of a host state.
+
+    >>> state_form_spec = HostState(
+    ...     title=Localizable("Host state"),
+    ...     prefill_value=HostState.UP,
+    ... )
+    """
+
+    UP: ClassVar[Literal[0]] = 0
+    DOWN: ClassVar[Literal[1]] = 1
+    UNREACH: ClassVar[Literal[2]] = 2
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    prefill_value: Literal[0, 1, 2] = 0
+
+    transform: Transform[Literal[0, 1, 2]] | Migrate[Literal[0, 1, 2]] | None = None
+
+
+@dataclass(frozen=True)
 class List:
     """
     Specifies a list of configuration elements of the same type.
@@ -532,6 +554,7 @@ FormSpec = (
     | CascadingDropdown
     | Dictionary
     | ServiceState
+    | HostState
     | List
     | FixedValue
     | TimeSpan

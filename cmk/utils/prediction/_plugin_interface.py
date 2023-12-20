@@ -7,8 +7,7 @@
 import logging
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import assert_never, Literal
+from typing import assert_never, Final, Literal
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
@@ -60,12 +59,21 @@ def _get_prediction(
     return store.get_data(timegroup)
 
 
-@dataclass(frozen=True)
 class PredictionUpdater:
-    host_name: HostName
-    service_description: ServiceName
-    params: PredictionParameters
-    partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord]
+    def __init__(
+        self,
+        host_name: HostName,
+        service_description: ServiceName,
+        params: PredictionParameters,
+        partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord],
+    ) -> None:
+        self.host_name: Final = host_name
+        self.service_description: Final = service_description
+        self.params: Final = params
+        self.partial_get_recorded_data: Final = partial_get_recorded_data
+
+    def __repr__(self) -> str:
+        return repr(f"{self.__class__.__name__}Sentinel")
 
     def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord:
         return self.partial_get_recorded_data(
@@ -118,7 +126,7 @@ class PredictionUpdater:
     # levels_factor: this multiplies all absolute levels. Usage for example
     # in the cpu.loads check the multiplies the levels by the number of CPU
     # cores.
-    def get_predictive_levels(
+    def __call__(
         self,
         metric_name: str,
         levels_factor: float = 1.0,

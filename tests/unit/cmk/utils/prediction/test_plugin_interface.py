@@ -3,11 +3,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import _plugin_interface
+
+
+def test_prediction_updater_serializable() -> None:
+    """Make sure the PredictionUpdater is (de)serializable (for automation calls)
+
+    We do not care what it is deserialized to.
+    """
+
+    def unserializable_callback(*args: object) -> Any:
+        return None
+
+    # this is expected to fail:
+    with pytest.raises(SyntaxError):
+        _ = ast.literal_eval(repr(unserializable_callback))
+
+    # yet this must work
+    _ = ast.literal_eval(
+        repr(
+            _plugin_interface.PredictionUpdater(
+                HostName("myhost"),
+                "My service description",
+                None,  # type: ignore[arg-type]  # keep the test simple.
+                unserializable_callback,
+            )
+        )
+    )
 
 
 @pytest.mark.parametrize(

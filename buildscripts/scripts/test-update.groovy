@@ -20,16 +20,21 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def branch_version = versioning.get_branch_version(checkout_dir);
 
+    check_job_parameters([
+        "OVERRIDE_DISTROS",
+    ]);
+
     check_environment_variables([
         "DOCKER_TAG",
         "EDITION"
     ]);
 
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
     def make_target = build_make_target(EDITION);
 
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
-        DISTRO_LIST: ["ubuntu-20.04", "ubuntu-22.04", "debian-11", "centos-8", "almalinux-9", "sles-15sp4"],
+        DISTRO_LIST: distros,
         EDITION: EDITION,
         VERSION: "daily",
         DOCKER_TAG: "master-latest",

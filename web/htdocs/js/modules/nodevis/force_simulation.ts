@@ -8,7 +8,9 @@ import * as d3 from "d3";
 import {Simulation} from "d3";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {StyleOptionSpecRange, StyleOptionValues} from "nodevis/layout_utils";
-import {NodevisLink, NodevisNode, NodevisWorld} from "nodevis/type_defs";
+import {compute_link_id} from "nodevis/link_utils";
+import {NodevisLink, NodevisNode} from "nodevis/type_defs";
+import {Viewport} from "nodevis/viewport";
 
 export type SimulationForce =
     | "charge"
@@ -18,15 +20,15 @@ export type SimulationForce =
     | "link_strength";
 
 export class ForceSimulation {
-    _world: NodevisWorld;
     _simulation: Simulation<NodevisNode, NodevisLink>;
     _last_gui_update_duration = 0;
     _all_nodes: NodevisNode[] = [];
     _all_links: NodevisLink[] = [];
     _force_config: ForceConfig;
+    _viewport: Viewport;
 
-    constructor(world: NodevisWorld, force_config_class: typeof ForceConfig) {
-        this._world = world;
+    constructor(viewport: Viewport, force_config_class: typeof ForceConfig) {
+        this._viewport = viewport;
         this._simulation = d3.forceSimulation<NodevisNode>();
         this._simulation.stop();
         this._simulation.alpha(0);
@@ -34,7 +36,10 @@ export class ForceSimulation {
         this._simulation.on("tick", () => this.tick_called());
         this._simulation.on("end", () => this._simulation_end());
         this._force_config = new force_config_class(this);
-        this.setup_forces();
+    }
+
+    get_force_config(): ForceConfig {
+        return this._force_config;
     }
 
     set_force_options(force_options: ForceOptions): void {
@@ -46,22 +51,19 @@ export class ForceSimulation {
     }
 
     show_force_config() {
-        this._world.layout_manager.toolbar_plugin
-            .layout_style_configuration()
-            .show_configuration(
-                "force",
-                this._force_config.get_style_options(),
-                this._force_config.options,
-                (event: d3.D3DragEvent<any, any, any>, options) =>
-                    this._force_config.changed_options(event, options),
-                event => {
-                    this._force_config.changed_options(
-                        event,
-                        this._force_config.get_default_options()
-                    );
-                    this.show_force_config();
-                }
-            );
+        this._viewport.get_layout_manager().show_configuration(
+            "force",
+            this._force_config.get_style_options(),
+            this._force_config.options,
+            (options: StyleOptionValues) =>
+                this._force_config.changed_options(options),
+            () => {
+                this._force_config.changed_options(
+                    this._force_config.get_default_options()
+                );
+                this.show_force_config();
+            }
+        );
     }
 
     set_force_config_class(force_config_class: typeof ForceConfig) {
@@ -69,8 +71,6 @@ export class ForceSimulation {
     }
 
     tick_called(): void {
-        if (!this._world.viewport) return;
-
         // GUI updates with hundreds of nodes might cause rendering stress
         // The laggy_rendering_limit (ms) throttles the visual update to a reasonable amount
         // When the simulation is finished, a final visual update is started anyway.
@@ -83,33 +83,30 @@ export class ForceSimulation {
     }
 
     _simulation_end(): void {
-        //console.log("simulation end");
-        if (!this._world.viewport) return;
         this._update_gui();
-        this._world.layout_manager.simulation_end_actions();
+        this._viewport.get_layout_manager().simulation_end_actions();
     }
 
     _update_gui(): number {
         const update_start = window.performance.now();
         this._enforce_free_float_styles_retranslation();
         compute_node_positions_from_list_of_nodes(this._get_force_nodes());
-        this._world.viewport.update_gui_of_layers();
+        this._viewport.update_gui_of_layers();
         return window.performance.now() - update_start;
     }
 
     _get_force_nodes(): NodevisNode[] {
         const force_nodes: NodevisNode[] = [];
-        this._world.viewport.get_hierarchy_list().forEach(chunk => {
-            chunk.nodes.forEach(node => {
-                if (node.data.current_positioning.free) force_nodes.push(node);
-            });
+        this._viewport.get_all_nodes().forEach(node => {
+            if (node.data.current_positioning.free) force_nodes.push(node);
         });
         return force_nodes;
     }
 
     _enforce_free_float_styles_retranslation(): void {
-        for (const idx in this._world.layout_manager._active_styles) {
-            const style = this._world.layout_manager._active_styles[idx];
+        const layout_manager = this._viewport.get_layout_manager();
+        for (const idx in layout_manager._active_styles) {
+            const style = layout_manager._active_styles[idx];
             if (!style.has_fixed_position() && style.type() != "force") {
                 style.force_style_translation();
                 style.translate_coords();
@@ -146,9 +143,23 @@ export class ForceSimulation {
     }
 
     _compute_force(node: NodevisNode, force_name: SimulationForce): number {
-        const gui_node = this._world.nodes_layer.get_node_by_id(node.data.id);
+        const gui_node = this._viewport
+            .get_nodes_layer()
+            .get_node_by_id(node.data.id);
         if (gui_node == null) return 0;
         return gui_node.get_force(force_name, this._force_config.options);
+    }
+
+    _compute_link_force(
+        link: NodevisLink,
+        force_name: SimulationForce
+    ): number {
+        const link_instance =
+            this._viewport.get_nodes_layer().link_instances[
+                compute_link_id(link)
+            ];
+        if (link_instance == null) return 0;
+        return link_instance.get_force(force_name, this._force_config.options);
     }
 
     _update_charge_force(): void {
@@ -169,19 +180,21 @@ export class ForceSimulation {
     }
 
     _update_center_force(): void {
+        const size = this._viewport.get_size();
+        const half_width = size.width / 2;
+        const half_height = size.height / 2;
         const forceX = d3
-            .forceX<NodevisNode>(d => {
+            .forceX<NodevisNode>(_d => {
                 // X Position is currently fixed
-                return d.data.chunk.coords.x + d.data.chunk.coords.width / 2;
+                return half_width;
             })
             .strength(d => {
                 return this._compute_force(d, "center");
             });
 
         const forceY = d3
-            .forceY<NodevisNode>(d => {
-                // Y Position is currently fixed
-                return d.data.chunk.coords.y + d.data.chunk.coords.height / 2;
+            .forceY<NodevisNode>(_d => {
+                return half_height;
             })
             .strength(d => {
                 return this._compute_force(d, "center");
@@ -197,10 +210,10 @@ export class ForceSimulation {
                 return d.data.id;
             })
             .distance(d => {
-                return this._compute_force(d.source, "link_distance");
+                return this._compute_link_force(d, "link_distance");
             })
             .strength(d => {
-                return this._compute_force(d.source, "link_strength");
+                return this._compute_link_force(d, "link_strength");
             });
         this._simulation.force("links", link_force);
     }
@@ -247,10 +260,7 @@ export class ForceConfig {
         return default_options;
     }
 
-    changed_options(
-        _event: d3.D3DragEvent<any, any, any>,
-        new_options: StyleOptionValues
-    ) {
+    changed_options(new_options: StyleOptionValues) {
         this.options = new_options as ForceOptions;
         this._force_simulation.setup_forces();
         this._force_simulation.restart_with_alpha(0.5);
@@ -287,63 +297,6 @@ export class ForceConfig {
                 values: {default: 15, min: 0, max: 150, step: 1},
                 option_type: "range",
                 text: "Collision box",
-            },
-        ];
-    }
-}
-
-export class BIForceConfig extends ForceConfig {
-    override description = "BI Force configuration";
-
-    override get_style_options(): StyleOptionSpecRange[] {
-        return [
-            {
-                id: "center",
-                values: {default: 0.05, min: -0.08, max: 1, step: 0.01},
-                option_type: "range",
-                text: "Center force strength",
-            },
-            {
-                id: "charge",
-                values: {default: -300, min: -1000, max: 50, step: 1},
-                option_type: "range",
-                text: "Repulsion force leaf",
-            },
-            {
-                id: "charge_aggregator",
-                values: {default: -300, min: -1000, max: 50, step: 1},
-                option_type: "range",
-                text: "Repulsion force branch",
-            },
-            {
-                id: "link_distance",
-                values: {default: 30, min: -10, max: 300, step: 1},
-                option_type: "range",
-                text: "Link distance leaf",
-            },
-            {
-                id: "link_distance_aggregator",
-                values: {default: 30, min: -10, max: 300, step: 1},
-                option_type: "range",
-                text: "Link distance branch",
-            },
-            {
-                id: "link_strength",
-                values: {default: 0.3, min: 0, max: 2, step: 0.01},
-                option_type: "range",
-                text: "Link strength",
-            },
-            {
-                id: "collide",
-                values: {default: 15, min: 0, max: 150, step: 1},
-                option_type: "range",
-                text: "Collision box leaf",
-            },
-            {
-                id: "collision_force_aggregator",
-                values: {default: 15, min: 0, max: 150, step: 1},
-                option_type: "range",
-                text: "Collision box branch",
             },
         ];
     }

@@ -10,8 +10,10 @@ import {StyleMatcherConditions} from "nodevis/layout_utils";
 import {
     BoundingRect,
     Coords,
+    d3Selection,
     d3SelectionDiv,
-    NodeChunk,
+    InputRangeOptions,
+    NodeConfig,
     NodevisNode,
 } from "nodevis/type_defs";
 
@@ -54,14 +56,15 @@ export class AbstractClassRegistry<Type extends TypeWithName> {
 }
 
 export class NodeMatcher {
-    _chunk_list: NodeChunk[];
+    _node_config: NodeConfig;
 
-    constructor(chunk_list: NodeChunk[]) {
-        this._chunk_list = chunk_list;
+    constructor(node_config: NodeConfig) {
+        this._node_config = node_config;
     }
 
     find_node(matcher: StyleMatcherConditions): NodevisNode | null {
-        const nodes_to_check: NodevisNode[] = this._get_all_nodes();
+        const nodes_to_check: NodevisNode[] =
+            this._node_config.hierarchy.descendants();
 
         if (this._is_bi_rule_matcher(matcher)) {
             for (const idx in nodes_to_check) {
@@ -81,16 +84,8 @@ export class NodeMatcher {
 
     _is_bi_rule_matcher(matcher: StyleMatcherConditions): boolean {
         if (matcher.rule_name) return true;
-        return !!matcher.rule_id;
-    }
-
-    // Duplicate to viewport.ts:get_all_nodes
-    _get_all_nodes(): NodevisNode[] {
-        let all_nodes: NodevisNode[] = [];
-        this._chunk_list.forEach(chunk => {
-            all_nodes = all_nodes.concat(chunk.nodes);
-        });
-        return all_nodes;
+        if (matcher.rule_id) return true;
+        return false;
     }
 
     _match_by_bi_rule(
@@ -129,11 +124,23 @@ export class NodeMatcher {
         matcher: StyleMatcherConditions,
         node: NodevisNode
     ): boolean {
-        const match_types = ["hostname", "service", "id"] as const;
+        const match_type = "id";
+        if (matcher[match_type] && !matcher[match_type]!.disabled) {
+            if (node.data[match_type] != matcher[match_type]!.value)
+                return false;
+        }
+
+        const match_types = ["hostname", "service"] as const;
         for (const idx in match_types) {
             const match_type = match_types[idx];
             if (matcher[match_type] && !matcher[match_type]!.disabled) {
-                if (node.data[match_type] != matcher[match_type]!.value)
+                const type_specific = node.data.type_specific;
+                if (!type_specific) return false;
+                const core_info = node.data.type_specific.core;
+                if (
+                    !core_info ||
+                    core_info[match_type] != matcher[match_type]!.value
+                )
                     return false;
             }
         }
@@ -279,7 +286,7 @@ export class SearchFilters {
 
 export class LiveSearch {
     _root_node: d3SelectionDiv;
-    _search_button: d3.Selection<HTMLInputElement, unknown, any, unknown>;
+    _search_button: d3.Selection<HTMLInputElement, null, any, unknown>;
     _update_handler: () => void;
     _last_body = "";
     _sent_last_body = "";
@@ -289,11 +296,14 @@ export class LiveSearch {
     _update_active = false;
     _enabled = false;
     _interval_id = 0;
+    _original_submit_handler: string;
     constructor(root_node_selector: string, update_handler: () => void) {
+        // root_node_selector should point to a <form> tag
         this._root_node = d3.select(root_node_selector);
         this._search_button =
             this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
+        this._original_submit_handler = this._root_node.attr("onsubmit");
     }
 
     enable(): void {
@@ -307,6 +317,7 @@ export class LiveSearch {
             () => this._check_update(),
             this._check_interval
         );
+        this._root_node.attr("onsubmit", "return false");
     }
 
     disable(): void {
@@ -314,6 +325,7 @@ export class LiveSearch {
         clearInterval(this._interval_id);
         this._search_button.property("value", "Apply");
         this._search_button.style("pointer-events", "all");
+        this._root_node.attr("onsubmit", this._original_submit_handler);
     }
 
     _update_pending(_eta: number): void {
@@ -372,6 +384,7 @@ export class LiveSearch {
         const params: Record<string, string> = {live_search: "1"};
         inputs.each((_d, idx, nodes) => {
             const input = nodes[idx];
+            if (input.classList.contains("ignored_in_livesearch")) return;
             if (input.type == "checkbox")
                 params[input.name] = input.checked ? "1" : "";
             else params[input.name] = input.value;
@@ -386,4 +399,202 @@ export class LiveSearch {
         }
         return str.join("&");
     }
+}
+
+export function render_input_range(
+    parent: d3Selection,
+    range_options: InputRangeOptions,
+    value: number,
+    option_changed_callback: (option_id: string, new_value: number) => void
+) {
+    parent
+        .selectAll("td.text." + range_options.id)
+        .data([null])
+        .enter()
+        .append("td")
+        .classed("range_input text " + range_options.id, true)
+        .append("nobr")
+        .text(range_options.title);
+
+    function clamp_value(new_value: any): number {
+        new_value = isNaN(parseFloat(new_value))
+            ? range_options.default_value
+            : parseFloat(new_value);
+        new_value = Math.min(
+            Math.max(new_value, range_options.min),
+            range_options.max
+        );
+        return new_value;
+    }
+
+    parent
+        .selectAll("td input.range_input.slider." + range_options.id)
+        .data([null])
+        .join(enter =>
+            enter
+                .append("td")
+                .classed("range_input slider " + range_options.id, true)
+                .append("input")
+                .attr("id", range_options.id)
+                .classed("range_input slider " + range_options.id, true)
+                .attr("name", range_options.id)
+                .attr("type", "range")
+                .attr("step", range_options.step)
+                .attr("min", range_options.min)
+                .attr("max", range_options.max)
+                .on("input", event => {
+                    option_changed_callback(
+                        range_options.id,
+                        parseFloat(event.target.value)
+                    );
+                    render_input_range(
+                        parent,
+                        range_options,
+                        event.target.value,
+                        option_changed_callback
+                    );
+                })
+                .on("wheel", event => {
+                    let new_value = parseFloat(event.target.value);
+                    if (event.wheelDelta > 0) new_value += range_options.step;
+                    else new_value -= range_options.step;
+                    new_value = clamp_value(new_value);
+
+                    option_changed_callback(range_options.id, new_value);
+                    render_input_range(
+                        parent,
+                        range_options,
+                        new_value,
+                        option_changed_callback
+                    );
+                })
+        )
+        .property("value", value);
+
+    parent
+        .selectAll("td input.manual_input." + range_options.id)
+        .data([null])
+        .join(enter =>
+            enter
+                .append("td")
+                .append("input")
+                .classed(
+                    "range_input manual_input ignored_in_livesearch " +
+                        range_options.id,
+                    true
+                )
+                .on("change", event => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    const new_value = clamp_value(event.target.value);
+                    option_changed_callback(range_options.id, new_value);
+                    render_input_range(
+                        parent,
+                        range_options,
+                        new_value,
+                        option_changed_callback
+                    );
+                })
+        )
+        .property("value", value);
+}
+
+export class RadioGroupOption {
+    ident = "";
+    name = "";
+    constructor(ident: string, name: string) {
+        this.ident = ident;
+        this.name = name;
+    }
+}
+
+export function render_radio_group(
+    selection: d3SelectionDiv,
+    group_title: string,
+    group_ident: string,
+    options: RadioGroupOption[],
+    active_option: string,
+    option_changed_callback: (new_option: string) => void
+): void {
+    const div = selection
+        .selectAll("div.radio_group")
+        .data([null])
+        .join("div")
+        .classed("radio_group", true);
+
+    div.selectAll("label.title")
+        .data([group_title])
+        .enter()
+        .append("label")
+        .classed("title", true)
+        .text(d => d);
+
+    const row = div
+        .selectAll<HTMLTableElement, string>("table.radio_group tr")
+        .data([group_ident], d => d)
+        .join(enter =>
+            enter.append("table").classed("radio_group", true).append("tr")
+        );
+
+    const option_cells = row
+        .selectAll<HTMLTableCellElement, RadioGroupOption>("td.option")
+        .data(options)
+        .join("td")
+        .classed("option", true);
+
+    option_cells
+        .selectAll<HTMLInputElement, RadioGroupOption>("input")
+        .data(d => [d])
+        .join("input")
+        .attr("name", group_ident)
+        .attr("id", option => option.ident)
+        .attr("type", "radio")
+        .attr("value", option => option.ident)
+        .attr("checked", option => {
+            return option.ident == active_option ? true : null;
+        })
+        .on("change", (_event, option) =>
+            option_changed_callback(option.ident)
+        );
+
+    option_cells
+        .selectAll("label")
+        .data(d => [d])
+        .join("label")
+        .classed("noselect", true)
+        .text(option => option.name)
+        .attr("for", option => option.ident);
+}
+
+export function render_save_delete(
+    selection: d3SelectionDiv,
+    buttons: [string, string, string, () => void][]
+) {
+    const div_save_delete = selection
+        .selectAll<HTMLDivElement, null>("div#save_delete")
+        .data([null])
+        .join(enter => enter.append("div").attr("id", "save_delete"));
+    div_save_delete
+        .selectAll<HTMLInputElement, [string, string, () => void]>(
+            "input.save_delete"
+        )
+        .data(buttons)
+        .enter()
+        .append("input")
+        .attr("type", "button")
+        .attr("title", d => (d[2] ? d[2] : null))
+        .attr("class", d => d[1])
+        .attr("value", d => d[0])
+        .on("click", (_event, d) => {
+            d[3]();
+        });
+}
+
+export function bound_monitoring_host(node: NodevisNode): string | null {
+    const type_specific = node.data.type_specific;
+    if (!type_specific) return null;
+    const core_info = type_specific.core;
+    if (!core_info) return null;
+    if (core_info.hostname && !core_info.service) return core_info.hostname;
+    return null;
 }

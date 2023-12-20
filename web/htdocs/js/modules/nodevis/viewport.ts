@@ -7,50 +7,37 @@
 import "nodevis/layout";
 
 import * as d3 from "d3";
-import {HierarchyRectangularNode, ZoomTransform} from "d3";
+import {ForceConfig, ForceSimulation} from "nodevis/force_simulation";
 import {
     AbstractLayer,
+    AbstractNodeVisConstructor,
+    DynamicToggleableLayer,
     FixLayer,
     layer_class_registry,
     LayerSelections,
-    OverlayConfig,
     ToggleableLayer,
 } from "nodevis/layer_utils";
 import {LayeredNodesLayer} from "nodevis/layers";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
-    BackendChunkResponse,
+    BackendResponse,
     Coords,
     d3SelectionDiv,
     d3SelectionG,
     d3SelectionSvg,
-    NodeChunk,
-    NodeData,
+    NodeConfig,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
+    OverlayConfig,
+    OverlaysConfig,
+    Rectangle,
     RectangleWithCoords,
-    SerializedNodeChunk,
 } from "nodevis/type_defs";
-import {DefaultTransition} from "nodevis/utils";
+import {DefaultTransition, get_bounding_rect} from "nodevis/utils";
 
-//#.
-//#   .-Layered Viewport---------------------------------------------------.
-//#   |                _                                  _                |
-//#   |               | |    __ _ _   _  ___ _ __ ___  __| |               |
-//#   |               | |   / _` | | | |/ _ \ '__/ _ \/ _` |               |
-//#   |               | |__| (_| | |_| |  __/ | |  __/ (_| |               |
-//#   |               |_____\__,_|\__, |\___|_|  \___|\__,_|               |
-//#   |                           |___/                                    |
-//#   |           __     ___                                _              |
-//#   |           \ \   / (_) _____      ___ __   ___  _ __| |_            |
-//#   |            \ \ / /| |/ _ \ \ /\ / / '_ \ / _ \| '__| __|           |
-//#   |             \ V / | |  __/\ V  V /| |_) | (_) | |  | |_            |
-//#   |              \_/  |_|\___| \_/\_/ | .__/ \___/|_|   \__|           |
-//#   |                                   |_|                              |
-//#   +--------------------------------------------------------------------+
-
-export class LayeredViewport {
-    _world: NodevisWorld;
+export class Viewport {
+    _world_for_layers: NodevisWorld | null = null;
     _div_selection: d3SelectionDiv;
     _div_content_selection: d3SelectionDiv;
     _svg_content_selection: d3SelectionSvg;
@@ -59,14 +46,14 @@ export class LayeredViewport {
     scale_x: d3.ScaleLinear<number, number>;
     scale_y: d3.ScaleLinear<number, number>;
     always_update_layout = false;
-    _node_chunk_list: NodeChunk[] = []; // Node data
-    _chunks_changed = false;
+    _node_config: NodeConfig;
     _margin = {top: 10, right: 10, bottom: 10, left: 10};
-    _overlay_configs: {[name: string]: OverlayConfig} = {};
+    _overlays_configs: OverlaysConfig;
     // Infos usable by layers
     _div_layers_selection: d3SelectionDiv;
-    _status_table: d3.Selection<HTMLTableElement, unknown, any, unknown>;
-    _show_debug_messages = false;
+    _status_table: d3.Selection<HTMLTableElement, null, any, unknown>;
+    _feeding_data = false;
+    _show_debug_messages = true;
 
     //////////////////////////////////
     _svg_layers_selection: d3SelectionG;
@@ -78,16 +65,26 @@ export class LayeredViewport {
     //////////////////////////////
     feed_data_timestamp = 0;
 
-    //////////////////////////////
-    data_to_show: BackendChunkResponse = {chunks: []};
+    _datasource: string;
+    _force_simulation: ForceSimulation;
+    _update_browser_url: () => void;
 
-    constructor(world: NodevisWorld, into_selection: d3SelectionDiv) {
-        this._world = world;
+    constructor(
+        into_selection: d3SelectionDiv,
+        datasource: string,
+        force_config: typeof ForceConfig,
+        update_browser_url: () => void
+    ) {
+        this._update_browser_url = update_browser_url;
+        this._force_simulation = new ForceSimulation(this, force_config);
+
+        this._datasource = datasource;
         into_selection.style("height", "100%");
         this._div_selection = into_selection
             .append("div")
             .attr("id", "main_window_layered");
 
+        this._overlays_configs = new OverlaysConfig();
         // Each layer gets a svg and a div domain to render its content
         // Layer structure
 
@@ -107,6 +104,7 @@ export class LayeredViewport {
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "svg_content")
+            .style("cursor", "move")
             .on("contextmenu", event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -152,13 +150,7 @@ export class LayeredViewport {
 
         this._status_table = this._div_selection
             .append("div")
-            .style("position", "absolute")
-            .style("width", "40%")
-            .style("height", "150px")
-            .style("top", "60px")
-            .style("left", "30%")
-            .style("pointer-events", "none")
-            .style("overflow", "hidden")
+            .attr("id", "log_messages")
             .append("table")
             .style("background", "#1c2228")
             .style("table-layout", "fixed");
@@ -166,39 +158,79 @@ export class LayeredViewport {
         // Initialize viewport size and scales before loading the layers
         this.scale_x = d3.scaleLinear();
         this.scale_y = d3.scaleLinear();
+
+        this._node_config = NodeConfig.prototype.create_empty_config();
     }
 
-    static id(): string {
-        return "layered_viewport";
-    }
-
-    setup_world_components() {
+    create_layers(world: NodevisWorld) {
         // TODO: check two times size changed
+        this._world_for_layers = world;
         this.size_changed();
-        this._load_layers();
+        this._load_layers([]);
         this.size_changed();
     }
 
-    _load_layers(): void {
-        for (const [layer_id, layer_class] of Object.entries(
-            layer_class_registry.get_classes()
-        )) {
-            this._selections_for_layers[layer_id] = {
-                svg: this._svg_layers_selection
-                    .append("g")
-                    .attr("id", layer_id),
-                div: this._div_layers_selection
-                    .append("div")
-                    .attr("id", layer_id),
-            };
-            const layer_instance = new layer_class(
-                this._world,
-                this._selections_for_layers[layer_id]
+    get_layers() {
+        return this._layers;
+    }
+    get_layer_classes(): Record<
+        string,
+        AbstractNodeVisConstructor<AbstractLayer>
+    > {
+        const all_layers = Object.values(layer_class_registry.get_classes());
+        const classes_by_id: Record<
+            string,
+            AbstractNodeVisConstructor<AbstractLayer>
+        > = {};
+        all_layers.forEach(layer_class => {
+            const layer_prototype = layer_class.prototype;
+            if (layer_prototype.supports_datasource(this._datasource))
+                classes_by_id[layer_prototype.class_name()] = layer_class;
+        });
+        return classes_by_id;
+    }
+
+    restart_force_simulation(alpha: number) {
+        this._force_simulation.restart_with_alpha(alpha);
+    }
+
+    _create_selections(layer_id: string): LayerSelections {
+        this._selections_for_layers[layer_id] = {
+            svg: this._svg_layers_selection.append("g").attr("id", layer_id),
+            div: this._div_layers_selection.append("div").attr("id", layer_id),
+        };
+        return this._selections_for_layers[layer_id];
+    }
+
+    _load_layers(available_dynamic_layers: string[]): void {
+        const layers_by_id = this.get_layer_classes();
+        // Dynamic layers, created on demand
+        available_dynamic_layers.forEach(layer_id => {
+            if (this._layers[layer_id] || layer_id.indexOf("@") == -1) return;
+            const [base_layer_id, dynamic_id] = layer_id.split("@", 2);
+            const base_layer_class = layers_by_id[base_layer_id + "@"];
+            if (base_layer_class.prototype instanceof DynamicToggleableLayer) {
+                this._layers[layer_id] = new base_layer_class(
+                    this._world_for_layers!,
+                    this._create_selections(layer_id),
+                    dynamic_id,
+                    dynamic_id
+                );
+            }
+        });
+
+        // Hardcoded layers
+        for (const [layer_id, layer_class] of Object.entries(layers_by_id)) {
+            const layer_prototype = layer_class.prototype;
+            if (layer_prototype.is_dynamic_instance_template()) continue;
+            if (this._layers[layer_id]) return;
+            this._layers[layer_id] = new layer_class(
+                this._world_for_layers!,
+                this._create_selections(layer_id)
             );
-            this._layers[layer_id] = layer_instance;
         }
 
-        // Enable enabled FixLayer
+        // Enable FixLayer
         for (const idx in this._layers) {
             if (this._layers[idx] instanceof FixLayer)
                 this._layers[idx].enable();
@@ -211,12 +243,19 @@ export class LayeredViewport {
         // TODO: sort layer order
     }
 
-    get_overlay_configs(): Record<string, OverlayConfig> {
-        return this._overlay_configs;
+    get_overlays_config(): OverlaysConfig {
+        return this._overlays_configs;
     }
 
-    set_overlay_config(overlay_id: string, new_config: OverlayConfig): void {
-        this._overlay_configs[overlay_id] = new_config;
+    get_overlay_layers_config(): Record<string, OverlayConfig> {
+        return this._overlays_configs.overlays;
+    }
+
+    set_overlay_layer_config(
+        overlay_id: string,
+        new_config: OverlayConfig
+    ): void {
+        this._overlays_configs.overlays[overlay_id] = new_config;
         this.update_active_overlays();
     }
 
@@ -227,7 +266,7 @@ export class LayeredViewport {
             if (!(layer instanceof ToggleableLayer)) continue;
 
             const layer_id = layer.id();
-            const layer_config = this.get_overlay_configs()[layer_id];
+            const layer_config = this.get_overlay_layers_config()[layer_id];
             if (!layer_config) continue;
 
             if (layer_config.active && !layer.is_enabled())
@@ -235,8 +274,15 @@ export class LayeredViewport {
             else if (!layer_config.active && layer.is_enabled())
                 this.disable_layer(layer_id);
         }
-        this.update_overlay_toggleboxes();
-        this._world.update_browser_url();
+        this._update_browser_url();
+    }
+
+    try_fetch_data() {
+        if (this._feeding_data) {
+            // Currently integrating data, switching layers, etc.  -> do nothing
+            return;
+        }
+        this._world_for_layers!.update_data();
     }
 
     enable_layer(layer_id: string): void {
@@ -247,146 +293,44 @@ export class LayeredViewport {
         this._layers[layer_id].disable();
     }
 
-    get_layers(): Record<string, AbstractLayer> {
-        return this._layers;
-    }
-
     get_layer(layer_id: string): AbstractLayer {
         return this._layers[layer_id];
     }
 
-    update_overlay_toggleboxes(): void {
-        if (!this._world.layout_manager.layout_applier.current_layout_group)
-            return;
-        type OverlayType = {layer: AbstractLayer; config: OverlayConfig};
-        const configurable_overlays: OverlayType[] = [];
-        for (const idx in this._layers) {
-            const layer = this._layers[idx];
-            const layer_id = layer.id();
-            if (layer instanceof ToggleableLayer) {
-                if (!this._overlay_configs[layer_id]) continue;
-                if (this._overlay_configs[layer_id].configurable != true)
-                    continue;
-                configurable_overlays.push({
-                    layer: layer,
-                    config: this._overlay_configs[layer_id],
-                });
-            }
-        }
-
-        // Update toggleboxes
-        const toggleboxes = d3
-            .select("div#togglebuttons")
-            .selectAll<HTMLDivElement, OverlayType>("div.togglebox")
-            .data<OverlayType>(configurable_overlays, d => d.layer.id())
-            .join(enter =>
-                enter
-                    .append("div")
-                    .classed("togglebox_wrap", true)
-                    .append("div")
-                    .text(d => d.layer.name())
-                    .attr("layer_id", d => d.layer.id())
-                    .classed("noselect", true)
-                    .classed("togglebox", true)
-                    .style("pointer-events", "all")
-                    .on("click", event => this.toggle_overlay_click(event))
-            );
-        toggleboxes.classed("enabled", d => d.config.active);
+    set_overlays_config(overlays_config: OverlaysConfig) {
+        this._overlays_configs = overlays_config;
     }
 
-    toggle_overlay_click(event: MouseEvent): void {
-        event.stopPropagation();
-        const target = d3.select(event.target as HTMLElement);
-        const layer_id = target.attr("layer_id");
-        target.classed("enabled", !this._layers[layer_id].is_enabled());
-        const overlay_config = this.get_overlay_configs()[layer_id] || {};
-        overlay_config.active = !overlay_config.active;
-        this.set_overlay_config(layer_id, overlay_config);
-        this.update_active_overlays();
-    }
-
-    feed_data(data_to_show: BackendChunkResponse): void {
+    feed_data(data_to_show: BackendResponse): void {
+        this._feeding_data = true;
         this.feed_data_timestamp = Math.floor(new Date().getTime() / 1000);
-        this.data_to_show = data_to_show;
 
-        // TODO: fix marked obsolete handling
-        this._node_chunk_list.forEach(
-            node_chunk => (node_chunk.marked_obsolete = true)
-        );
-
+        const new_config = build_node_config(data_to_show, this._node_config);
         // This is an indicator whether its necessary to reapply all layouts
         // Applying layouts needlessly
         // - cost performance
         // - may cause the gui to flicker/move with certain layouts
-        this._chunks_changed = this._node_chunk_list.length == 0;
-
-        this.data_to_show.chunks.forEach(serialized_node_chunk => {
-            this._consume_chunk_rawdata(serialized_node_chunk);
+        const nodes_changed =
+            Object.keys(new_config.nodes_by_id) !=
+            Object.keys(this._node_config.nodes_by_id);
+        compute_missing_spawn_coords(new_config, {
+            x: this.width / 2,
+            y: this.height / 2,
         });
-
-        this._remove_obsolete_chunks();
-        this._arrange_multiple_node_chunks();
+        this._node_config = new_config;
+        this._load_layers(this._overlays_configs.available_layers);
+        this.get_layout_manager().update_layout(data_to_show.layout);
+        this.update_active_overlays();
 
         this.update_data_of_layers();
-        this._world.layout_manager.layout_applier.apply_multiple_layouts(
-            this.get_hierarchy_list(),
-            this._chunks_changed || this.always_update_layout
+        this.get_layout_manager().apply_current_layout(
+            nodes_changed || this.always_update_layout
         );
-        this._world.layout_manager.compute_node_positions();
+        this.get_layout_manager().compute_node_positions();
         this.update_gui_of_layers(true);
+        this._feeding_data = false;
 
-        this.update_active_overlays();
-    }
-
-    _consume_chunk_rawdata(serialized_node_chunk: SerializedNodeChunk): void {
-        // Generates a chunk object which includes the following data
-        // {
-        //   id:                 ID to identify this chunk
-        //   type:               bi / topology
-        //   tree:               hierarchy tree
-        //   nodes:              visible nodes as list
-        //   nodes_by_id:        all nodes by id
-        //   links:              links between nodes
-        //                       These are either provided in the rawdata or
-        //                       automatically computed out of the hierarchy layout
-        //   layout_settings:    layout configuration
-        // }
-
-        const hierarchy = d3.hierarchy<NodeData>(
-            serialized_node_chunk.hierarchy
-        );
-
-        // Initialize default info of each node
-        hierarchy.descendants().forEach(node => {
-            node._children = node.children;
-            node.data.node_positioning = {};
-            node.data.transition_info = {};
-            // User interactions, e.g. collapsing node, root cause analysis
-            node.data.user_interactions = {};
-        });
-
-        const new_chunk = new NodeChunk(
-            serialized_node_chunk.type,
-            hierarchy,
-            serialized_node_chunk.links,
-            //@ts-ignore
-            serialized_node_chunk.layout
-        );
-
-        // TODO: remove some bi hack
-        if (serialized_node_chunk["aggr_type"])
-            new_chunk["aggr_type"] = serialized_node_chunk["aggr_type"];
-
-        this.update_node_chunk_list(new_chunk);
-    }
-
-    _remove_obsolete_chunks(): void {
-        const new_chunk_list: NodeChunk[] = [];
-        this._node_chunk_list.forEach(node_chunk => {
-            if (!node_chunk.marked_obsolete) new_chunk_list.push(node_chunk);
-            else this._chunks_changed = true;
-        });
-        this._node_chunk_list = new_chunk_list;
+        // this.zoom_fit();
     }
 
     _filter_root_cause(node: NodevisNode): void {
@@ -403,172 +347,38 @@ export class LayeredViewport {
         node.children = critical_children;
     }
 
-    _arrange_multiple_node_chunks(): void {
-        if (this._node_chunk_list.length == 0) return;
-
-        type hierarchy_overview_type = {
-            name: "root";
-            count: number;
-            children: {name: string; count: number}[];
-        };
-        const partition_hierarchy: hierarchy_overview_type = {
-            name: "root",
-            children: [],
-            count: 0,
-        };
-        this._node_chunk_list.forEach(chunk => {
-            partition_hierarchy.children.push({
-                name: chunk.id,
-                count: chunk.nodes.length,
-            });
+    compute_spawn_coords(node: NodevisNode): {x: number; y: number} {
+        return compute_spawn_coords(node, this._node_config, {
+            x: this.width / 2,
+            y: this.height / 2,
         });
-
-        const treemap_root = d3.hierarchy(partition_hierarchy);
-        treemap_root.sum(d => d.count);
-
-        // @ts-ignore treemap_root is of type HierarchyNode<hierarchy_overview_type>...
-        // Could be that we define our own HierarchyNode in type_defs?
-        d3.treemap().size([this.width, this.height])(treemap_root);
-        for (const idx in treemap_root.children) {
-            const index = +idx;
-            const child = treemap_root.children[
-                index
-            ] as HierarchyRectangularNode<hierarchy_overview_type>;
-            const node_chunk: NodeChunk = this._node_chunk_list[index];
-            node_chunk.coords = {
-                x: child.x0,
-                y: child.y0,
-                width: child.x1 - child.x0,
-                height: child.y1 - child.y0,
-            };
-
-            let rad = 0;
-            const rad_delta = Math.PI / 8;
-
-            node_chunk.nodes.forEach(node => {
-                if (node["x"])
-                    // This node already has some coordinates
-                    return;
-
-                const spawn_coords = this.compute_spawn_coords(
-                    node_chunk,
-                    node
-                );
-                node.x = spawn_coords.x + Math.cos(rad) * (30 + rad * 4);
-                node.y = spawn_coords.y + Math.sin(rad) * (30 + rad * 4);
-                rad += rad_delta;
-            });
-        }
     }
 
-    compute_spawn_coords(
-        node_chunk: NodeChunk,
-        node: NodevisNode
-    ): {x: number; y: number} {
-        const linked_nodes: NodevisNode[] = this._find_linked_nodes(
-            node_chunk,
-            node
-        );
-        // Try to use the coordinates of active linked nodes
-        for (const idx in linked_nodes) {
-            const linked_node = linked_nodes[idx];
-            if (linked_node.x) return {x: linked_node.x, y: linked_node.y};
-        }
-
-        // Try to use the coordinates of the parent node
-        if (node.parent && node.parent.x) {
-            return {x: node.parent.x, y: node.parent.y};
-        }
-
-        // Fallback. Spawn at center
-        return {
-            x: node_chunk.coords.width / 2,
-            y: node_chunk.coords.height / 2,
-        };
+    get_nodes_layer(): LayeredNodesLayer {
+        return this.get_layer("nodes") as LayeredNodesLayer;
     }
-
-    _find_linked_nodes(
-        node_chunk: NodeChunk,
-        node: NodevisNode
-    ): NodevisNode[] {
-        const linked_nodes: NodevisNode[] = [];
-        node_chunk.links.forEach(link => {
-            if (node == link.source) linked_nodes.push(link.target);
-            else if (node == link.target) linked_nodes.push(link.source);
-        });
-        return linked_nodes;
+    get_layout_manager(): LayoutManagerLayer {
+        return this.get_layer("layout_manager") as LayoutManagerLayer;
     }
 
     get_all_links(): NodevisLink[] {
-        let all_links: NodevisLink[] = [];
-        this._node_chunk_list.forEach(chunk => {
-            all_links = all_links.concat(chunk.links);
-        });
-        return all_links;
+        return this._node_config.link_info;
     }
 
     get_all_nodes(): NodevisNode[] {
-        let all_nodes: NodevisNode[] = [];
-        this._node_chunk_list.forEach(hierarchy => {
-            all_nodes = all_nodes.concat(hierarchy.nodes);
-        });
-        return all_nodes;
+        return this._node_config.hierarchy.descendants();
     }
 
-    get_hierarchy_list(): NodeChunk[] {
-        return this._node_chunk_list;
+    get_node_by_id(node_id: string) {
+        return this._node_config.nodes_by_id[node_id];
     }
 
-    get_chunk_of_node(node_in_chunk: NodevisNode): NodeChunk | null {
-        const root_node = this._get_chunk_root(node_in_chunk);
-        for (const idx in this._node_chunk_list) {
-            if (this._node_chunk_list[idx].tree == root_node)
-                return this._node_chunk_list[idx];
-        }
-        return null;
+    get_size(): Rectangle {
+        return {width: this.width, height: this.height};
     }
 
-    _get_chunk_root(node: NodevisNode): NodevisNode {
-        if (!node.parent) return node;
-        return this._get_chunk_root(node.parent);
-    }
-
-    update_node_chunk_list(new_chunk: NodeChunk) {
-        const chunk_id = new_chunk.tree.data.id;
-        for (const idx in this._node_chunk_list) {
-            const existing_chunk = this._node_chunk_list[idx];
-            if (existing_chunk.tree.data.id == chunk_id) {
-                new_chunk.layout_instance = existing_chunk.layout_instance;
-                new_chunk.coords = existing_chunk.coords;
-                new_chunk.nodes.forEach(node => {
-                    const existing_node =
-                        existing_chunk.nodes_by_id[node.data.id];
-                    if (existing_node !== undefined)
-                        this._migrate_node_content(existing_node, node);
-                    else this._chunks_changed = true;
-                });
-                this._node_chunk_list[idx] = new_chunk;
-                this._apply_user_interactions_to_chunk(new_chunk);
-                if (existing_chunk.nodes.length != new_chunk.nodes.length)
-                    this._chunks_changed = true;
-                return;
-            }
-        }
-
-        this._node_chunk_list.push(new_chunk);
-    }
-
-    _migrate_node_content(old_node: NodevisNode, new_node: NodevisNode) {
-        // Reuse computed coordinates from previous chunk data
-        new_node.x = old_node.x;
-        new_node.y = old_node.y;
-
-        // Migrate user interactions
-        new_node.data.user_interactions = old_node.data.user_interactions;
-    }
-
-    _apply_user_interactions_to_chunk(chunk: NodeChunk) {
-        chunk.nodes.forEach(node => {
+    _apply_user_interactions() {
+        this.get_all_nodes().forEach(node => {
             const bi_setting = node.data.user_interactions.bi;
             if (bi_setting === undefined) return;
 
@@ -582,16 +392,15 @@ export class LayeredViewport {
                     break;
             }
         });
-        this.update_node_chunk_descendants_and_links(chunk);
+        this.update_node_chunk_descendants_and_links();
     }
 
-    update_node_chunk_descendants_and_links(node_chunk: NodeChunk) {
+    update_node_chunk_descendants_and_links() {
         // This feature is only supported/useful for bi visualization
-        if (node_chunk.type != "bi") return;
+        if (this._datasource != "bi_aggregations") return;
 
-        node_chunk.nodes = node_chunk.tree.descendants();
         const chunk_links: NodevisLink[] = [];
-        node_chunk.nodes.forEach(node => {
+        this.get_all_nodes().forEach(node => {
             if (!node.parent || node.data.invisible) return;
             chunk_links.push({
                 source: node,
@@ -599,19 +408,16 @@ export class LayeredViewport {
                 config: {type: "default"},
             });
         });
-        node_chunk.links = chunk_links;
+        this._node_config.link_info = chunk_links;
     }
 
-    recompute_node_chunk_descendants_and_links(node_chunk: NodeChunk) {
-        this.update_node_chunk_descendants_and_links(node_chunk);
+    recompute_node_and_links() {
+        this.update_node_chunk_descendants_and_links();
         const all_nodes = this.get_all_nodes();
         const all_links = this.get_all_links();
         this.update_layers();
-        this._world.force_simulation.update_nodes_and_links(
-            all_nodes,
-            all_links
-        );
-        this._world.force_simulation.restart_with_alpha(0.5);
+        this._force_simulation.update_nodes_and_links(all_nodes, all_links);
+        this._force_simulation.restart_with_alpha(0.5);
     }
 
     update_layers(force_gui_update = false) {
@@ -619,10 +425,24 @@ export class LayeredViewport {
         this.update_gui_of_layers(force_gui_update);
     }
 
+    update_layer(layer_id: string) {
+        this.update_data_of_layer(layer_id);
+        this.update_gui_of_layer(layer_id);
+    }
+
+    update_data_of_layer(layer_id: string) {
+        if (!this._layers[layer_id].is_enabled()) return;
+        this._layers[layer_id].update_data();
+    }
+
+    update_gui_of_layer(layer_id: string) {
+        if (!this._layers[layer_id].is_enabled()) return;
+        this._layers[layer_id].update_gui();
+    }
+
     update_data_of_layers() {
         for (const layer_id in this._layers) {
-            if (!this._layers[layer_id].is_enabled()) continue;
-            this._layers[layer_id].update_data();
+            this.update_data_of_layer(layer_id);
         }
     }
 
@@ -634,8 +454,6 @@ export class LayeredViewport {
     }
 
     zoomed(event: d3.D3ZoomEvent<any, any>) {
-        if (!this.data_to_show) return;
-
         this.last_zoom = event.transform;
         this.scale_x.range([0, this.width * event.transform.k]);
         this.scale_y.range([0, this.height * event.transform.k]);
@@ -727,15 +545,73 @@ export class LayeredViewport {
             .translate(x, y);
     }
 
-    get_last_zoom(): ZoomTransform {
-        return this.last_zoom;
-    }
-
-    reset_zoom() {
+    zoom_reset() {
         this._svg_content_selection
             .transition()
             .duration(DefaultTransition.duration())
             .call(this._zoom_behaviour.transform, d3.zoomIdentity);
+    }
+
+    zoom_fit() {
+        const coords: Coords[] = [];
+        this.get_all_nodes().forEach(node => {
+            if (node.x != undefined) coords.push({x: node.x, y: node.y});
+        });
+        const rect = get_bounding_rect(coords);
+        const size = this.get_size();
+        let new_scale = Math.min(
+            size.width / rect.width,
+            size.height / rect.height
+        );
+        console.log("new scale", new_scale);
+        new_scale *= 0.8;
+
+        const rect_middle = rect.width / 2;
+        const size_middle = size.width / 2;
+        const left_start = size_middle - rect_middle;
+        const delta_x = left_start - rect.x_min;
+
+        const rect_vmiddle = rect.height / 2;
+        const size_vmiddle = size.height / 2;
+        const left_vstart = size_vmiddle - rect_vmiddle;
+        const delta_y = left_vstart - rect.y_min;
+
+        this._zoom_behaviour.scaleTo(
+            this._svg_content_selection
+                .transition()
+                .duration(DefaultTransition.duration()),
+            new_scale,
+            [size.width / 2 + delta_x, delta_y]
+        );
+    }
+
+    set_zoom(to_percent: number) {
+        const new_scale = to_percent / 100;
+        const new_zoom = d3.zoomIdentity
+            .translate(
+                (-this.width / 2) * new_scale + this.width / 2,
+                (-this.height / 2) * new_scale + this.height / 2
+            )
+            .scale(new_scale);
+        DefaultTransition.add_transition(this._svg_content_selection).call(
+            this._zoom_behaviour.transform,
+            () => new_zoom
+        );
+    }
+
+    change_zoom(by_percent: number) {
+        const new_scale =
+            Math.floor((this.last_zoom.k * 100 + by_percent) / 10) / 10;
+        const new_zoom = d3.zoomIdentity
+            .translate(
+                (-this.width / 2) * new_scale + this.width / 2,
+                (-this.height / 2) * new_scale + this.height / 2
+            )
+            .scale(new_scale);
+        this._svg_content_selection
+            .transition()
+            .duration(DefaultTransition.duration() / 3)
+            .call(this._zoom_behaviour.transform, () => new_zoom);
     }
 
     add_status_message(message_id: string, message: string): void {
@@ -787,4 +663,98 @@ export class LayeredViewport {
             Math.floor(now.getMilliseconds() / 10)
         );
     }
+
+    update_nodes_and_links(all_nodes: NodevisNode[], all_links: NodevisLink[]) {
+        this._force_simulation.update_nodes_and_links(all_nodes, all_links);
+    }
+
+    get_default_force_config() {
+        return this._force_simulation.get_force_config().get_default_options();
+    }
+
+    get_force_alpha(): number {
+        return this._force_simulation._simulation.alpha();
+    }
+
+    show_force_config() {
+        return this._force_simulation.show_force_config();
+    }
+
+    get_viewport_percentage_of_node(node: NodevisNode): Coords {
+        const coords = this.get_size();
+        return {
+            x: (100.0 * node.x) / coords.width,
+            y: (100.0 * node.y) / coords.height,
+        };
+    }
+}
+function build_node_config(
+    data: BackendResponse,
+    old_node_config: NodeConfig
+): NodeConfig {
+    const new_node_config = new NodeConfig(data.node_config);
+
+    new_node_config.hierarchy.descendants().forEach(node => {
+        const old_node_data = old_node_config.nodes_by_id[node.data.id];
+        if (!old_node_data) return;
+        _migrate_node_content(old_node_data, node);
+    });
+    return new_node_config;
+}
+
+function _migrate_node_content(old_node: NodevisNode, new_node: NodevisNode) {
+    // Reuse computed coordinates from previous chunk data
+    new_node.x = old_node.x;
+    new_node.y = old_node.y;
+
+    // Migrate user interactions
+    new_node.data.user_interactions = old_node.data.user_interactions;
+}
+
+function linked_nodes_with_coords(
+    node: NodevisNode,
+    node_config: NodeConfig
+): NodevisNode[] {
+    const linked_nodes: NodevisNode[] = [];
+    node_config.link_info.forEach(link => {
+        if (node == link.source && link.target.x)
+            linked_nodes.push(link.target);
+        else if (node == link.target && link.source.x)
+            linked_nodes.push(link.source);
+    });
+    return linked_nodes;
+}
+
+function compute_spawn_coords(
+    node: NodevisNode,
+    node_config: NodeConfig,
+    fallback_coords: Coords
+) {
+    const linked_nodes = linked_nodes_with_coords(node, node_config);
+    if (linked_nodes.length > 0)
+        return {x: linked_nodes[0].x, y: linked_nodes[0].y};
+    return fallback_coords;
+}
+
+function compute_missing_spawn_coords(
+    node_config: NodeConfig,
+    fallback_coords: Coords
+) {
+    let rad = 0;
+    const rad_delta = Math.PI / 8;
+    node_config.hierarchy.descendants().forEach(node => {
+        if (node.x)
+            // This node already has coordinates
+            return;
+        const spawn_coords = compute_spawn_coords(
+            node,
+            node_config,
+            fallback_coords
+        );
+        // Do not spawn all nodes at the same location.
+        // This will create a singularity which causes the force simulation to explode
+        node.x = spawn_coords.x + Math.cos(rad) * (30 + rad * 4);
+        node.y = spawn_coords.y + Math.sin(rad) * (30 + rad * 4);
+        rad += rad_delta;
+    });
 }

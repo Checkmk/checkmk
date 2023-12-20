@@ -5,13 +5,14 @@
  */
 
 import * as d3 from "d3";
-import {ForceOptions} from "nodevis/force_simulation";
-import {OverlayElement} from "nodevis/layer_utils";
-import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
+import {ForceConfig, ForceOptions} from "nodevis/force_simulation";
+import {AbstractNodeVisConstructor, OverlayElement} from "nodevis/layer_utils";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
+import * as texts from "nodevis/texts";
 import {
     Coords,
     d3SelectionDiv,
+    InputRangeOptions,
     NodevisNode,
     NodevisWorld,
     Rectangle,
@@ -22,35 +23,42 @@ import {
     DefaultTransition,
     get_bounding_rect,
     log,
+    render_input_range,
     TypeWithName,
 } from "nodevis/utils";
 
-import {LayeredViewport} from "./viewport";
-
+export type LineStyle = "straight" | "elbow" | "round";
 export class LineConfig {
-    style: "straight" | "elbow" | "round" = "round";
+    style: LineStyle = "round";
     dashed = false;
 }
 
 export interface SerializedNodevisLayout {
     reference_size: Rectangle;
-    style_configs: StyleConfig[];
     line_config: LineConfig;
-    force_options: ForceOptions;
+    force_config: ForceOptions;
+    style_configs: StyleConfig[];
+    delayed_style_configs?: StyleConfig[];
+    origin_info?: string;
+    origin_type?: string;
 }
 
 // TODO: fix styles
 export class NodeVisualizationLayout {
-    id: string;
     reference_size: Rectangle;
     style_configs: StyleConfig[];
     line_config: LineConfig;
+    force_config: ForceOptions;
+    origin_info: string;
+    origin_type: string;
 
-    constructor(_viewport: LayeredViewport, id: string) {
-        this.id = id;
+    constructor() {
         this.reference_size = {height: 0, width: 0};
         this.style_configs = [];
         this.line_config = new LineConfig();
+        this.force_config = ForceConfig.prototype.get_default_options();
+        this.origin_info = "";
+        this.origin_type = "";
     }
 
     save_style(style_config: StyleConfig): void {
@@ -66,19 +74,28 @@ export class NodeVisualizationLayout {
         this.style_configs.splice(idx, 1);
     }
 
-    serialize(world: NodevisWorld): SerializedNodevisLayout {
+    serialize(): SerializedNodevisLayout {
         return {
             reference_size: this.reference_size,
             style_configs: this.style_configs,
             line_config: this.line_config,
-            force_options: world.force_simulation.get_force_options(),
+            force_config: this.force_config,
+            origin_info: this.origin_info,
+            origin_type: this.origin_type,
         };
     }
 
-    deserialize(data: SerializedNodevisLayout): void {
-        this.reference_size = data.reference_size;
-        this.style_configs = data.style_configs;
-        this.line_config = data.line_config;
+    deserialize(
+        data: SerializedNodevisLayout,
+        default_size: Rectangle,
+        default_force: ForceOptions
+    ): void {
+        this.reference_size = data.reference_size || default_size;
+        this.style_configs = data.style_configs || [];
+        this.line_config = data.line_config || new LineConfig();
+        this.force_config = data.force_config || default_force;
+        this.origin_info = data.origin_info || "";
+        this.origin_type = data.origin_type || "";
     }
 }
 
@@ -122,13 +139,12 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         // Root node for this style
         this.style_root_node = node;
         if (this.style_root_node) {
-            // Chunk this root node resides in
             if (style_config.position) {
-                const coords = this.style_root_node.data.chunk.coords;
+                const coords = this._world.viewport.get_size();
                 this.style_root_node.x =
-                    (style_config.position.x / 100) * coords.width + coords.x;
+                    (style_config.position.x / 100) * coords.width;
                 this.style_root_node.y =
-                    (style_config.position.y / 100) * coords.height + coords.y;
+                    (style_config.position.y / 100) * coords.height;
             }
         }
 
@@ -170,7 +186,7 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             // position
             if (!this.style_config.position) {
                 this.style_config.position =
-                    this._world.layout_manager.get_viewport_percentage_of_node(
+                    this._world.viewport.get_viewport_percentage_of_node(
                         this.style_root_node
                     );
             }
@@ -185,8 +201,8 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
     }
 
     show_style_configuration() {
-        this._world.layout_manager.toolbar_plugin
-            .layout_style_configuration()
+        this._world.viewport
+            .get_layout_manager()
             .show_style_configuration(this);
     }
 
@@ -206,15 +222,13 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
         return default_options;
     }
 
-    reset_default_options(event: d3.D3DragEvent<any, any, any>): void {
-        this.changed_options(event, this.get_default_options());
+    reset_default_options(): void {
+        this.changed_options(this.get_default_options());
     }
 
-    changed_options(
-        _event: d3.D3DragEvent<any, any, any>,
-        new_options: StyleOptionValues
-    ) {
-        this._world.layout_manager.skip_optional_transitions = true;
+    changed_options(new_options: StyleOptionValues) {
+        this._world.viewport.get_layout_manager().skip_optional_transitions =
+            true;
         this.style_config.options = new_options;
         this.force_style_translation();
 
@@ -223,9 +237,10 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
                 this.style_root_node.descendants()
             );
 
-        this._world.force_simulation.restart_with_alpha(0.5);
+        this._world.viewport.restart_force_simulation(0.5);
         this._world.viewport.update_layers();
-        this._world.layout_manager.skip_optional_transitions = false;
+        this._world.viewport.get_layout_manager().skip_optional_transitions =
+            false;
         this.show_style_configuration();
     }
 
@@ -309,8 +324,8 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             }
         } else {
             // Generic node
-            matcher_conditions.hostname = {
-                value: this.style_root_node.data.hostname,
+            matcher_conditions.id = {
+                value: this.style_root_node.data.id,
             };
         }
 
@@ -324,10 +339,15 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
     }
 
     update_style_indicator(indicator_shown = true): void {
-        const style_indicator = this.style_root_node.data.selection.selectAll<
-            SVGCircleElement,
-            AbstractLayoutStyle
-        >("circle.style_indicator");
+        const gui_node = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(this.style_root_node.data.id);
+        if (gui_node == null || gui_node._selection == null) return;
+        const style_indicator = gui_node
+            .selection()
+            .selectAll<SVGCircleElement, AbstractLayoutStyle>(
+                "circle.style_indicator"
+            );
 
         if (!indicator_shown) {
             style_indicator.remove();
@@ -393,9 +413,9 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
     }
 
     get_default_node_force(node: NodevisNode): NodeForce {
-        return (this._world.layout_manager.get_node_positioning(node)[
-            this.id()
-        ] = {
+        return (this._world.viewport
+            .get_layout_manager()
+            .get_node_positioning(node)[this.id()] = {
             weight: this.positioning_weight(),
             type: this.type(),
         });
@@ -455,24 +475,21 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
     }
 
     get_div_selection() {
-        const div_selection = this._world.layout_manager
+        const div_selection = this._world.viewport
+            .get_layout_manager()
             .get_div_selection()
-            .selectAll<HTMLDivElement, string>("div.hierarchy")
-            .data([this.id()]);
+            .selectAll<HTMLDivElement, string>("div.style_overlay")
+            .data([this.id()], d => d);
+
         return div_selection
             .enter()
             .append("div")
-            .classed("hierarchy", true)
+            .classed("style_overlay", true)
             .merge(div_selection);
     }
 
     add_enclosing_hull(
-        into_selection: d3.Selection<
-            HTMLDivElement,
-            unknown,
-            HTMLElement,
-            unknown
-        >,
+        into_selection: d3SelectionDiv,
         vertices: [number, number][]
     ) {
         if (vertices.length < 2) {
@@ -515,11 +532,11 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
             unknown
         >
     ) {
-        if (this._world.layout_manager.skip_optional_transitions)
+        if (this._world.viewport.get_layout_manager().skip_optional_transitions)
             return selection_with_node_data;
 
         // TODO: deprecate this option
-        if (this._world.layout_manager.dragging)
+        if (this._world.viewport.get_layout_manager().dragging)
             return selection_with_node_data;
 
         return selection_with_node_data
@@ -535,7 +552,6 @@ export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
 // TODO: finalize
 export class LayoutStyleFactory {
     _world: NodevisWorld;
-
     constructor(world: NodevisWorld) {
         this._world = world;
     }
@@ -543,8 +559,6 @@ export class LayoutStyleFactory {
     get_styles(): {
         [name: string]: AbstractNodeVisConstructor<AbstractLayoutStyle>;
     } {
-        if (this._world.current_datasource == "topology")
-            return {fixed: layout_style_class_registry.get_class("fixed")};
         return layout_style_class_registry.get_classes();
     }
 
@@ -641,12 +655,6 @@ export interface NodeForce {
 
 export type NodePositioning = Record<string, NodeForce>;
 
-export interface LayoutHistoryStep {
-    origin_info: string;
-    origin_type: string;
-    config: SerializedNodevisLayout;
-}
-
 class LayoutStyleClassRegistry extends AbstractClassRegistry<AbstractLayoutStyle> {}
 
 export const layout_style_class_registry = new LayoutStyleClassRegistry();
@@ -656,39 +664,36 @@ export function render_style_options(
     into_selection: d3SelectionDiv,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    options_changed_callback: (
-        event: d3.D3DragEvent<any, any, any>,
-        styleOptionValues: StyleOptionValues
-    ) => void,
+    options_changed_callback: (styleOptionValues: StyleOptionValues) => void,
     reset_default_options_callback: (
         event: d3.D3DragEvent<any, any, any>
     ) => void = _event => {
         return;
     }
 ) {
-    into_selection
-        .selectAll("#styleoptions_headline")
-        .data([null])
-        .join("b")
-        .attr("id", "styleoptions_headline")
-        .text("Options");
-
     const table = into_selection
         .selectAll<HTMLTableElement, string>("table")
         .data([style_id], d => d)
-        .join("table");
+        .join(enter =>
+            enter.append("table").classed("style_configuration", true)
+        );
+
+    function option_changed(option_id: string, new_value: any) {
+        style_option_values[option_id] = new_value;
+        options_changed_callback(style_option_values);
+    }
 
     _render_range_options(
         table,
         style_option_specs,
         style_option_values,
-        options_changed_callback
+        option_changed
     );
     _render_checkbox_options(
         table,
         style_option_specs,
         style_option_values,
-        options_changed_callback
+        option_changed
     );
 
     into_selection
@@ -700,119 +705,48 @@ export function render_style_options(
                 .attr("type", "button")
                 .classed("button", true)
                 .classed("reset_options", true)
-                .attr("value", "Reset default values")
-                .on("click", event => {
-                    reset_default_options_callback(event);
-                })
+                .attr("value", texts.get("reset"))
+                .on("click", reset_default_options_callback)
         );
-}
-
-function _get_style_option_values(
-    from_selection: d3.Selection<HTMLTableElement, string, any, unknown>,
-    style_option_specs: StyleOptionSpec[]
-): StyleOptionValues {
-    const option_values: StyleOptionValues = {};
-    style_option_specs.forEach(option_spec => {
-        switch (option_spec.option_type) {
-            case "range":
-                option_values[option_spec.id] = parseFloat(
-                    from_selection
-                        .select("input#" + option_spec.id)
-                        .property("value")
-                );
-                break;
-            case "checkbox":
-                option_values[option_spec.id] = from_selection
-                    .select("input#" + option_spec.id)
-                    .property("checked");
-                break;
-        }
-    });
-    return option_values;
 }
 
 function _render_range_options(
     table: d3.Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    option_changed_callback: (
-        event: d3.D3DragEvent<any, any, any>,
-        styleOptionValues: StyleOptionValues
-    ) => void
+    option_changed_callback: (option_id: string, new_value: number) => void
 ): void {
     const rows = table
-        .selectAll<HTMLTableRowElement, StyleOptionSpecRange>("tr.range_option")
+        .selectAll<HTMLTableRowElement, StyleOptionSpecRange>("tr.range_input")
         .data(style_option_specs.filter(d => d.option_type == "range"))
         .join<HTMLTableRowElement>(enter =>
-            enter.append("tr").classed("range_option", true)
+            enter.append("tr").classed("range_input", true)
         );
 
-    rows.selectAll("td.text")
-        .data(d => [d])
-        .join(enter => enter.append("td").classed("text", true))
-        .text(d => d.text);
-
-    rows.selectAll("td input")
-        .data(d => [d])
-        .join("td")
-        .selectAll("input")
-        .data(d => [d])
-        .join(enter =>
-            enter
-                .append("input")
-                .classed("range", true)
-                .attr("id", d => d.id)
-                .attr("name", d => "type_value_" + d.id)
-                .attr("type", "range")
-                .attr("step", d => d.values.step || 1)
-                .attr("min", d => d.values.min)
-                .attr("max", d => d.values.max)
-                .on("input", event => {
-                    const new_options = _get_style_option_values(
-                        table,
-                        style_option_specs
-                    );
-                    option_changed_callback(event, new_options);
-                    _render_range_options(
-                        table,
-                        style_option_specs,
-                        new_options,
-                        option_changed_callback
-                    );
-                })
-                .on("change", event => {
-                    const new_options = _get_style_option_values(
-                        table,
-                        style_option_specs
-                    );
-                    option_changed_callback(event, new_options);
-                    _render_range_options(
-                        table,
-                        style_option_specs,
-                        new_options,
-                        option_changed_callback
-                    );
-                })
+    rows.each((style_option, idx, nodes) => {
+        const current_value =
+            style_option_values[style_option.id] || style_option.values.default;
+        render_input_range(
+            d3.select(nodes[idx]),
+            new InputRangeOptions(
+                style_option.id,
+                style_option.text,
+                style_option.values.step,
+                style_option.values.min,
+                style_option.values.max,
+                style_option.values.default
+            ),
+            current_value,
+            option_changed_callback
         );
-
-    rows.selectAll("td.value")
-        .data(d => [d])
-        .join(enter => enter.append("td").classed("value", true))
-        .text(d => style_option_values[d.id]);
-
-    rows.selectAll("input")
-        .data(d => [d])
-        .property("value", d => style_option_values[d.id]);
+    });
 }
 
 function _render_checkbox_options(
     table: d3.Selection<HTMLTableElement, string, any, unknown>,
     style_option_specs: StyleOptionSpec[],
     style_option_values: StyleOptionValues,
-    options_changed_callback: (
-        event: d3.D3DragEvent<any, any, any>,
-        styleOptionValues: StyleOptionValues
-    ) => void
+    option_changed_callback: (option_id: string, new_value: boolean) => void
 ): void {
     const rows = table
         .selectAll<HTMLTableRowElement, StyleOptionSpecCheckbox>(
@@ -821,34 +755,40 @@ function _render_checkbox_options(
         .data(style_option_specs.filter(d => d.option_type == "checkbox"))
         .join(enter => enter.append("tr").classed("checkbox_option", true));
 
-    rows.selectAll("td.text")
-        .data(d => [d])
-        .join(enter => enter.append("td").classed("text", true))
+    rows.selectAll<HTMLTableCellElement, StyleOptionSpecCheckbox>(
+        "td nobr.checkbox_text"
+    )
+        .data(
+            d => [d],
+            d => d.id
+        )
+        .enter()
+        .append("td")
+        .append("nobr")
+        .classed("checkbox_text", true)
         .text(d => d.text);
 
-    rows.selectAll("td input")
-        .data(d => [d])
+    rows.selectAll<HTMLDivElement, StyleOptionSpec>(
+        "div.toggle_switch_container"
+    )
+        .data(
+            d => [d],
+            d => d.id
+        )
         .join(enter =>
             enter
-                .append("td")
-                .append("input")
-                .classed("checkbox", true)
-                .attr("id", d => d.id)
-                .attr("name", d => "type_checkbox_" + d.id)
-                .attr("type", "checkbox")
-                .property("checked", d => style_option_values[d.id])
-                .on("input", event => {
-                    const new_options = _get_style_option_values(
-                        table,
-                        style_option_specs
-                    );
-                    options_changed_callback(event, new_options);
-                    _render_checkbox_options(
-                        table,
-                        style_option_specs,
-                        new_options,
-                        options_changed_callback
-                    );
+                .append("div")
+                .classed("nodevis toggle_switch_container", true)
+                .on("click", (event, d) => {
+                    const node = d3.select(event.target);
+                    const new_value = node.classed("on") == true ? "off" : "on";
+                    node.classed("on off", false);
+                    node.classed(new_value, true);
+                    option_changed_callback(d.id, new_value == "on");
                 })
-        );
+        )
+        .each((d, idx, nodes) => {
+            const state = style_option_values[d.id] ? "on" : "off";
+            nodes[idx].classList.add(state);
+        });
 }

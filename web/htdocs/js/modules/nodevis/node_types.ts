@@ -10,13 +10,18 @@ import {
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
+import * as texts from "nodevis/texts";
 import {
     ContextMenuElement,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import {SearchFilters, TypeWithName} from "nodevis/utils";
+import {
+    bound_monitoring_host,
+    SearchFilters,
+    TypeWithName,
+} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
     constructor(world: NodevisWorld, node: NodevisNode) {
@@ -29,26 +34,20 @@ export class TopologyNode extends AbstractGUINode {
         return "topology";
     }
 
-    static id() {
-        return "topology";
-    }
-
     override render_object() {
         AbstractGUINode.prototype.render_object.call(this);
 
-        if (this.node.data.has_no_parents)
-            this.selection().select("circle").classed("has_no_parents", true);
+        const growth_settings = this.node.data.growth_settings;
 
         if (
-            this.node.data.growth_possible ||
-            this.node.data.growth_forbidden ||
-            this.node.data.growth_continue
+            growth_settings.indicator_growth_possible ||
+            growth_settings.growth_forbidden ||
+            growth_settings.growth_continue
         )
             this.selection().on("dblclick", () => {
-                const nodevis_node =
-                    this._world.nodes_layer.get_nodevis_node_by_id(
-                        this.node.data.id
-                    );
+                const nodevis_node = this._world.viewport.get_node_by_id(
+                    this.node.data.id
+                );
                 if (!nodevis_node) return;
                 _toggle_growth_continue(nodevis_node);
                 this._world.update_data();
@@ -63,26 +62,33 @@ export class TopologyNode extends AbstractGUINode {
     }
 
     update_growth_indicators() {
+        const growth_settings = this.node.data.growth_settings;
         // Growth root
         this.selection()
-            .selectAll("circle.growth_root")
-            .data(this.node.data.growth_root ? [this.node.data.id] : [])
+            .selectAll("circle.indicator_growth_root")
+            .data(
+                growth_settings.indicator_growth_root ? [this.node.data.id] : []
+            )
             .join(enter =>
                 enter
                     .append("circle")
-                    .classed("growth_root", true)
+                    .classed("indicator_growth_root", true)
                     .attr("r", this.radius + 4)
                     .attr("fill", "none")
             );
 
         // Growth possible
         this.selection()
-            .selectAll("image.growth_possible")
-            .data(this.node.data.growth_possible ? [this.node.data.id] : [])
+            .selectAll("image.indicator_growth_possible")
+            .data(
+                growth_settings.indicator_growth_possible
+                    ? [this.node.data.id]
+                    : []
+            )
             .join(enter =>
                 enter
                     .append("svg:image")
-                    .classed("growth_possible", true)
+                    .classed("indicator_growth_possible", true)
                     .attr(
                         "xlink:href",
                         "themes/facelift/images/icon_hierarchy.svg"
@@ -96,7 +102,7 @@ export class TopologyNode extends AbstractGUINode {
         // Growth forbidden
         this.selection()
             .selectAll("image.growth_forbidden")
-            .data(this.node.data.growth_forbidden ? [this.node.data.id] : [])
+            .data(growth_settings.growth_forbidden ? [this.node.data.id] : [])
             .join(enter =>
                 enter
                     .append("svg:image")
@@ -114,7 +120,7 @@ export class TopologyNode extends AbstractGUINode {
         // Growth continue
         this.selection()
             .selectAll("image.growth_continue")
-            .data(this.node.data.growth_continue ? [this.node.data.id] : [])
+            .data(growth_settings.growth_continue ? [this.node.data.id] : [])
             .join(enter =>
                 enter
                     .append("svg:image")
@@ -131,10 +137,11 @@ export class TopologyNode extends AbstractGUINode {
     }
 
     override _fetch_external_quickinfo() {
+        if (!this.node.data.type_specific.core) return;
         this._quickinfo_fetch_in_progress = true;
         const view_url =
             "view.py?view_name=topology_hover_host&display_options=I&host=" +
-            encodeURIComponent(this.node.data.hostname);
+            encodeURIComponent(this.node.data.type_specific.core.hostname);
         d3.html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
         );
@@ -150,47 +157,49 @@ export class TopologyNode extends AbstractGUINode {
     _get_topology_menu_elements() {
         // Toggle root node
         const elements: ContextMenuElement[] = [];
-        let root_node_text = "Add root node";
         const node_id = this.node.data.id;
-        if (this.node.data.growth_root) root_node_text = "Remove root node";
-        elements.push({
-            text: root_node_text,
-            on: () => {
-                const nodevis_node =
-                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
-                if (!nodevis_node) return;
-                if (!_toggle_root_node(nodevis_node))
-                    new SearchFilters().remove_hosts_from_host_regex(
-                        new Set([nodevis_node.data.name])
-                    );
-                this._world.update_data();
-            },
-        });
 
         // Use this node as exclusive root node
+        const bound_host = bound_monitoring_host(this.node);
+        if (bound_host) {
+            // This node can be used within the Hostname filter
+            elements.push({
+                text: texts.get("set_root_node"),
+                on: () => {
+                    const nodevis_node =
+                        this._world.viewport.get_node_by_id(node_id);
+                    if (!nodevis_node) return;
+                    _clear_root_nodes(this._world);
+                    new SearchFilters().set_host_regex_filter(bound_host + "$");
+                    // _set_root_node(nodevis_node, this._world);
+                    this._world.update_data();
+                },
+            });
+        }
+
+        const growth_settings = this.node.data.growth_settings;
         elements.push({
-            text: "Set root node",
+            text: growth_settings.growth_root
+                ? texts.get("remove_root_node")
+                : texts.get("add_root_node"),
             on: () => {
                 const nodevis_node =
-                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+                    this._world.viewport.get_node_by_id(node_id);
                 if (!nodevis_node) return;
-                _set_root_node(nodevis_node, this._world);
-                new SearchFilters().set_host_regex_filter(
-                    nodevis_node.data.name
-                );
+                _toggle_root_node(nodevis_node);
                 this._world.update_data();
             },
         });
 
         // Forbid further growth
         let growth_forbidden_text = "Forbid further hops";
-        if (this.node.data.growth_forbidden)
+        if (growth_settings.growth_forbidden)
             growth_forbidden_text = "Allow further hops";
         elements.push({
             text: growth_forbidden_text,
             on: () => {
                 const nodevis_node =
-                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+                    this._world.viewport.get_node_by_id(node_id);
                 if (!nodevis_node) return;
                 _toggle_stop_growth(nodevis_node);
                 this._world.update_data();
@@ -200,30 +209,56 @@ export class TopologyNode extends AbstractGUINode {
     }
 }
 
+export class TopologyMeshRoot extends TopologyNode {
+    constructor(world: NodevisWorld, node: NodevisNode) {
+        super(world, node);
+        this._has_quickinfo = false;
+    }
+
+    override class_name(): string {
+        return "mesh_root";
+    }
+
+    override render_text(): void {
+        return;
+    }
+
+    override render_object() {
+        return;
+    }
+}
+
 function _toggle_root_node(nodevis_node: NodevisNode): boolean {
-    nodevis_node.data.growth_root = !nodevis_node.data.growth_root;
-    return nodevis_node.data.growth_root;
+    nodevis_node.data.growth_settings.growth_root =
+        !nodevis_node.data.growth_settings.growth_root;
+    return nodevis_node.data.growth_settings.growth_root;
+}
+
+function _clear_root_nodes(world: NodevisWorld) {
+    world.viewport.get_all_nodes().forEach(node => {
+        node.data.growth_settings.growth_root = false;
+    });
 }
 
 function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld): void {
-    world.viewport.get_all_nodes().forEach(node => {
-        node.data.growth_root = false;
-    });
-    nodevis_node.data.growth_root = true;
+    _clear_root_nodes(world);
+    nodevis_node.data.growth_settings.growth_root = true;
 }
 
 function _toggle_growth_continue(nodevis_node: NodevisNode): boolean {
-    nodevis_node.data.growth_continue = !nodevis_node.data.growth_continue;
-    if (nodevis_node.data.growth_continue)
-        nodevis_node.data.growth_forbidden = false;
-    return nodevis_node.data.growth_continue;
+    const growth_settings = nodevis_node.data.growth_settings;
+    growth_settings.growth_continue = !growth_settings.growth_continue;
+    if (growth_settings.growth_continue)
+        growth_settings.growth_forbidden = false;
+    return growth_settings.growth_continue;
 }
 
 function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
-    nodevis_node.data.growth_forbidden = !nodevis_node.data.growth_forbidden;
-    if (nodevis_node.data.growth_forbidden)
-        nodevis_node.data.growth_continue = false;
-    return nodevis_node.data.growth_forbidden;
+    const growth_settings = nodevis_node.data.growth_settings;
+    growth_settings.growth_forbidden = !growth_settings.growth_forbidden;
+    if (growth_settings.growth_forbidden)
+        growth_settings.growth_continue = false;
+    return growth_settings.growth_forbidden;
 }
 
 export class TopologyCentralNode extends TopologyNode {
@@ -234,10 +269,6 @@ export class TopologyCentralNode extends TopologyNode {
     }
 
     override class_name(): string {
-        return "topology_center";
-    }
-
-    static override id() {
         return "topology_center";
     }
 
@@ -278,10 +309,6 @@ export class TopologySiteNode extends TopologyNode {
         return "topology_site";
     }
 
-    static override id() {
-        return "topology_site";
-    }
-
     override render_object() {
         this.selection()
             .selectAll("circle")
@@ -315,13 +342,12 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         return "bi_leaf";
     }
 
-    static id() {
-        return "bi_leaf";
-    }
-
     override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
-        quickinfo.push({name: "Host name", value: this.node.data.hostname});
+        quickinfo.push({
+            name: "Host name",
+            value: this.node.data.type_specific.core.hostname,
+        });
         if (this.node.data.service)
             quickinfo.push({
                 name: "Service description",
@@ -337,13 +363,13 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
             // TODO: add site to url
             view_url =
                 "view.py?view_name=bi_map_hover_service&display_options=I&host=" +
-                encodeURIComponent(this.node.data.hostname) +
+                encodeURIComponent(this.node.data.type_specific.core.hostname) +
                 "&service=" +
                 encodeURIComponent(this.node.data.service);
         else
             view_url =
                 "view.py?view_name=bi_map_hover_host&display_options=I&host=" +
-                encodeURIComponent(this.node.data.hostname);
+                encodeURIComponent(this.node.data.type_specific.core.hostname);
 
         d3.html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
@@ -355,14 +381,14 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
             return (
                 "view.py?view_name=service" +
                 "&host=" +
-                encodeURIComponent(this.node.data.hostname) +
+                encodeURIComponent(this.node.data.type_specific.core.hostname) +
                 "&service=" +
-                encodeURIComponent(this.node.data.service)
+                encodeURIComponent(this.node.data.type_specific.core.service)
             );
         } else {
             return (
                 "view.py?view_name=host&host=" +
-                encodeURIComponent(this.node.data.hostname)
+                encodeURIComponent(this.node.data.type_specific.core.hostname)
             );
         }
     }
@@ -378,10 +404,6 @@ export class BIAggregatorNode extends AbstractGUINode {
     }
 
     override class_name(): string {
-        return "bi_aggregator";
-    }
-
-    static id() {
         return "bi_aggregator";
     }
 
@@ -429,9 +451,7 @@ export class BIAggregatorNode extends AbstractGUINode {
                 on: event => {
                     event!.stopPropagation();
                     this.expand_node_including_children(this.node);
-                    this._world.viewport.recompute_node_chunk_descendants_and_links(
-                        this.node.data.chunk
-                    );
+                    this._world.viewport.recompute_node_and_links();
                 },
                 href: "",
                 img: "themes/facelift/images/icon_expand.png",
@@ -451,10 +471,10 @@ export class BIAggregatorNode extends AbstractGUINode {
             text: "Expand all nodes",
             on: event => {
                 event!.stopPropagation();
-                this.expand_node_including_children(this.node.data.chunk.tree);
-                this._world.viewport.recompute_node_chunk_descendants_and_links(
-                    this.node.data.chunk
+                this.expand_node_including_children(
+                    this._world.viewport.get_all_nodes()[0]
                 );
+                this._world.viewport.recompute_node_and_links();
             },
             href: "",
             img: "themes/facelift/images/icon_expand.png",
@@ -465,9 +485,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             on: event => {
                 event!.stopPropagation();
                 this._filter_root_cause(this.node);
-                this._world.viewport.recompute_node_chunk_descendants_and_links(
-                    this.node.data.chunk
-                );
+                this._world.viewport.recompute_node_and_links();
             },
             img: "themes/facelift/images/icon_error.png",
         });
@@ -476,6 +494,7 @@ export class BIAggregatorNode extends AbstractGUINode {
 }
 
 node_type_class_registry.register(TopologyNode);
+node_type_class_registry.register(TopologyMeshRoot);
 node_type_class_registry.register(TopologySiteNode);
 node_type_class_registry.register(TopologyCentralNode);
 node_type_class_registry.register(BILeafNode);

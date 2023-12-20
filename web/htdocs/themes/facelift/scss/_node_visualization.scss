@@ -3,6 +3,132 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+div#viewport_information {
+  position: absolute;
+  top: 0px;
+  right: 14px;
+  height: 28px;
+  margin-top: 10px;
+  background-color: $bg-color-secondary;
+
+  table {
+    height: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  select {
+    cursor: pointer;
+    background-color: $navbar-color;
+    height: 100%;
+    width: 80px;
+  }
+
+  select option {
+    text-align: right;
+  }
+
+  td#panning_info {
+    width: 80px;
+    div {
+      font-size: 10px;
+      text-align: center;
+      &:first-child {
+        font-weight: 700;
+      }
+    }
+  }
+  td#zoom_options {
+    border-top: solid $ux-theme-6;
+    border-bottom: solid $ux-theme-6;
+    select {
+      font-size: 12px;
+      font-weight: 500;
+    }
+    border-width: thin;
+  }
+
+  td#zoom_plus {
+    border-top-right-radius: $theme-border-radius;
+    border-bottom-right-radius: $theme-border-radius;
+  }
+
+  td#zoom_minus {
+    border-top-left-radius: $theme-border-radius;
+    border-bottom-left-radius: $theme-border-radius;
+  }
+
+  td#zoom_plus,
+  td#zoom_minus {
+    background-color: $navbar-color;
+    border: solid $ux-theme-6;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 500;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    border-width: thin;
+  }
+}
+
+div.topology_layout_designer,
+div.topology_compare_history {
+  img {
+    content: url("images/icon_toggle_off.svg") !important;
+  }
+  img.on {
+    content: url("images/icon_toggle_on.svg") !important;
+  }
+}
+
+// Toggle switch
+div.nodevis.toggle_switch_container {
+  width: $toggle-switch-width-large;
+  height: $toggle-switch-height;
+  background-repeat: no-repeat;
+  pointer-events: all;
+
+  background-image: url("images/icon_toggle_off.svg");
+
+  &.on {
+    background-image: url("images/icon_toggle_on.svg");
+  }
+
+  img.iconbutton {
+    height: $toggle-switch-height;
+  }
+}
+
+// Search box
+div#top_heading table.menubar td.inpage_search.node_vis {
+  input[type="text"] {
+    background-color: $ux-theme-5;
+  }
+
+  input[type="button"] {
+    position: relative;
+    left: -24px;
+    top: -2px;
+  }
+}
+
+// Range slider text+input+manual_input
+tr.range_input {
+  td.range_input.slider {
+    width: 100%;
+    input {
+      width: 85%;
+      accent-color: $success;
+    }
+  }
+
+  input.range_input.manual_input {
+    width: 43px;
+    text-align: right;
+  }
+}
+
 #svg_content {
   min-height: 630px;
   background-color: $bg-color-secondary;
@@ -28,6 +154,103 @@
 }
 
 div.node_vis {
+  g#svg_layers .node_element circle.mesh_root {
+    display: none;
+  }
+  g#svg_layers g#nodes.edit .node_element circle.mesh_root {
+    display: unset;
+  }
+
+  div#layout_toggle_panel {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    background-color: $bg-color-secondary;
+
+    div {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  g#nodes.hide_host_labels text.host_text {
+    display: none;
+  }
+
+  g#nodes.hide_service_labels text.service_text {
+    display: none;
+  }
+
+  g#nodes.hide_icons image.main_icon {
+    display: none;
+  }
+
+  table#overlay_configuration {
+    margin-top: 12px;
+  }
+
+  g#nodes img.unknown {
+    height: 50px;
+    width: 50px;
+    content: url("images/icon_maxisnapin.svg");
+  }
+  // Radio group
+  div.radio_group {
+    display: flex;
+    align-items: center;
+  }
+
+  table.radio_group {
+    border-collapse: separate;
+    border-spacing: 0;
+    input[type="radio"] {
+      display: none !important;
+    }
+
+    label.title {
+      margin-right: 28px;
+    }
+
+    td {
+      input[type="radio"]:checked + label {
+        background-color: $ux-theme-6;
+        font-weight: 700;
+      }
+
+      border-top: solid $ux-theme-6;
+      border-bottom: solid $ux-theme-6;
+      background-color: $ux-theme-0;
+      &:hover {
+        cursor: pointer;
+        background-color: $ux-theme-6;
+      }
+
+      &:first-child {
+        border-left: solid $ux-theme-6;
+        border-radius: $theme-border-radius 0px 0px $theme-border-radius;
+      }
+      &:last-child {
+        border-right: solid $ux-theme-6;
+        border-radius: 0px $theme-border-radius $theme-border-radius 0px;
+      }
+      label {
+        display: flex;
+        padding: 4px;
+        pointer-events: all;
+      }
+    }
+  }
+
+  div#log_messages {
+    position: absolute;
+    pointer-events: none;
+    overflow: hidden;
+    width: 300px;
+    height: 150px;
+    top: 12px;
+    left: 280px;
+  }
+
   #viewport {
     position: absolute;
     width: 100%;
@@ -38,40 +261,7 @@ div.node_vis {
     top: 25px;
   }
 
-  #toolbar #toolbar_controls {
-    position: absolute;
-    top: 16px;
-    left: 280px;
-    display: flex;
-
-    #custom {
-      display: flex;
-      flex-direction: column;
-    }
-  }
-
-  .togglebutton {
-    width: 29px;
-    height: 29px;
-    padding: 5px;
-    background-color: $input-background-color;
-    border-radius: $theme-border-radius;
-
-    img {
-      width: 28px;
-      height: 28px;
-    }
-
-    img[title="Search"] {
-      filter: $toggle-button-search-img-filter;
-    }
-
-    &.down {
-      background: $node-vis-togglebox-enabled;
-    }
-  }
-
-  .node_element .growth_root {
+  .node_element .indicator_growth_root {
     stroke: $font-color-dimmed;
     stroke-width: 1;
   }
@@ -82,40 +272,17 @@ div.node_vis {
     border-radius: 4px;
   }
 
-  img.layouting_icon,
-  img.node_icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  img.layouting_icon {
-    background-color: $node-vis-history-bg-color;
-    border-color: $node-vis-history-border-color;
-    filter: $node-vis-history-filter;
-  }
-
-  /* toolbar plugin positioning */
-  /* search */
-  div.toolbar_search {
-    position: absolute;
-    top: 19px;
-    left: 12px;
-    width: 250px;
-    overflow: hidden;
-    background-color: $input-background-color;
-  }
-
-  input.search_node {
-    width: 236px;
-  }
-
   /* infobox */
   #infobox {
     position: absolute;
-    top: 60px;
-    left: 12px;
+    top: 44px;
+    left: 130px;
     width: 250px;
     overflow: hidden;
+
+    label {
+      font-weight: 700;
+    }
 
     table {
       width: 100%;
@@ -136,25 +303,63 @@ div.node_vis {
     width: 80px;
   }
 
-  /* datasources */
-  div.toolbar_datasources {
-    position: absolute;
-    top: 300px;
-    left: 300px;
-    width: 500px;
-    height: 500px;
+  /* layouting*/
+  img.layouting_icon,
+  img.node_icon {
+    width: 24px;
+    height: 24px;
   }
 
-  /* layouting*/
-  #available_layouts {
-    width: 180px;
+  img.layouting_icon {
+    background-color: $node-vis-history-bg-color;
+    border-color: $node-vis-history-border-color;
+    filter: $node-vis-history-filter;
   }
 
   div#layouting_toolbar {
+    table#layout_settings {
+      margin-top: 6px;
+      margin-bottom: -12px;
+      table-layout: fixed;
+      tr {
+        height: 21px;
+
+        td:first-child {
+          width: 125px;
+        }
+      }
+    }
+
+    div.radio_group {
+      margin-top: 12px;
+      label.title {
+        width: 68px;
+      }
+    }
+
+    div#save_delete {
+      margin-top: 10px;
+    }
+
     position: absolute;
-    top: 12px;
+    top: 48px;
     right: 12px;
     width: 340px;
+    pointer-events: all;
+
+    padding: 8px;
+    padding-top: 0;
+    margin: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+
+    input.save_delete {
+      width: 100%;
+      margin: 3px;
+      &.save {
+        border: 1px solid $success;
+      }
+    }
   }
 
   div#layout_management {
@@ -163,36 +368,34 @@ div.node_vis {
     margin: 3px;
   }
 
-  div#configuration_management {
-    padding: 8px;
-    padding-top: 0;
-    margin: 3px;
-    margin-top: 8px;
-    overflow: hidden;
-  }
-
   div#configuration_div table select {
     margin-left: 34px;
   }
 
   div#style_management {
-    padding: 8px;
-    padding-top: 0;
-    margin: 3px;
-    margin-top: 8px;
+    margin-top: 10px;
+    margin-left: 4px;
+    margin-right: -3px;
     overflow: hidden;
     background-color: $node-vis-menu-bg-color;
+    border: solid $ux-theme-6;
+    border-width: thin;
+    table.style_configuration {
+      margin-top: 10px;
+    }
+    div#style_div {
+      position: relative;
+    }
   }
 
   div#history_icons {
     position: absolute;
-    top: 12px;
-    right: 339px;
-    width: 60px;
-
+    right: 4px;
+    top: 6px;
     img {
-      width: 24px;
-      height: 24px;
+      width: 16px;
+      height: 20px;
+      border-radius: 4px;
       margin-right: 2px;
       background-color: $node-vis-history-bg-color;
       border-color: $node-vis-history-border-color;
@@ -250,64 +453,55 @@ div.node_vis {
     stroke-width: 15;
   }
 
+  .node_element circle.has_crit_services {
+    stroke: $danger;
+    stroke-width: 1;
+    fill: none;
+    pointer-events: none;
+  }
+
+  .node_element circle.has_warn_services {
+    stroke: $warning;
+    stroke-width: 1;
+    fill: none;
+    pointer-events: none;
+  }
+
   .node_element.focus circle {
     stroke: $blue !important;
     stroke-width: 3;
   }
-
   .node_element.white_focus circle {
-    stroke: $white !important;
+    stroke: $grey-1 !important;
     stroke-width: 4;
   }
-
-  .link_element.crit {
+  .link_element .critical {
     stroke: $danger !important;
     stroke-width: 4;
   }
-
-  .link_element.white_focus {
-    stroke: $white !important;
+  .link_element .white_focus {
+    stroke: $grey-1 !important;
+    stroke-width: 4;
+  }
+  .link_element .only_in_reference {
+    stroke: $tag-added-color-light !important;
+    stroke-width: 4;
+  }
+  .link_element .only_in_reference.white_focus {
+    stroke: $tag-added-color-light !important;
+    stroke-width: 4;
+  }
+  .link_element .missing_in_reference {
+    stroke: $tag-removed-color-light !important;
+    stroke-width: 4;
+  }
+  .link_element .missing_in_reference.white_focus {
+    stroke: $tag-removed-color-light !important;
     stroke-width: 4;
   }
 
-  .link_element.only_in_reference {
-    stroke: $bi-new-element-bright !important;
-    stroke-width: 4;
-  }
-
-  .link_element.only_in_reference.white_focus {
-    stroke: $bi-new-element-bright !important;
-    stroke-width: 4;
-  }
-
-  .link_element.missing_in_reference {
-    stroke: $bi-missing-element-bright !important;
-    stroke-width: 4;
-  }
-
-  .link_element.missing_in_reference.white_focus {
-    stroke: $bi-missing-element-bright !important;
-    stroke-width: 4;
-  }
-
-  div.togglebox_wrap {
-    margin: 5px;
-  }
-
-  .togglebox {
-    display: table-cell;
-    vertical-align: middle;
-    width: 150px;
-    height: 27px;
-    text-align: center;
-    cursor: pointer;
-    background: $input-background-color;
-    border-radius: $theme-border-radius;
-
-    &.enabled {
-      color: $font-color-black;
-      background: $node-vis-togglebox-enabled;
-    }
+  div#popup_menu {
+    background-color: $bg-color;
   }
 
   /* Context popup Popup */
@@ -332,17 +526,8 @@ div.node_vis {
     stroke-width: 3;
   }
 
-  .block_style_overlay.root_children_connection {
-    stroke-width: 6px;
-    stroke-linejoin: round;
-  }
-
   .style_infotext {
     width: 159px;
-  }
-
-  input.range {
-    width: 79px;
   }
 
   div.quickinfo {
@@ -350,34 +535,9 @@ div.node_vis {
   }
 
   input.reset_options {
-    float: right;
-  }
-
-  #reset_pan_and_zoom {
     position: absolute;
-    top: 17px;
-    right: 408px;
-  }
-
-  #translation_infobox {
-    position: absolute;
-    top: 54px;
-    right: 369px;
-    width: 200px;
-  }
-
-  g.generic_stop_growth text.stop_growth_text {
-    display: unset;
-  }
-
-  g.generic_stop_growth circle {
-    stroke-width: 1;
-    stroke: $black;
-  }
-
-  g.generic_growth_possible circle {
-    stroke-width: 2;
-    stroke: orange;
+    top: -3px;
+    right: -8px;
   }
 
   img.layouting_icon {
@@ -385,78 +545,51 @@ div.node_vis {
     height: 30px;
   }
 
-  image.growth_possible {
+  image.indicator_growth_possible {
     filter: $dark-image-invert;
   }
 
   div#togglebuttons {
     display: flex;
   }
-}
 
-@media only screen and (max-width: 1350px) {
-  div.node_vis {
-    #reset_pan_and_zoom {
-      top: 88px;
-    }
+  .style_overlay {
+    pointer-events: none;
+    fill: none;
+    stroke: $line-color;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+  }
 
-    #translation_infobox {
-      top: 124px;
-    }
+  line.dashed,
+  path.dashed,
+  .style_indicator {
+    animation-duration: 60s;
+    animation-iteration-count: infinite;
+    animation-name: dash;
+    animation-timing-function: linear;
+    animation-direction: reverse;
+    stroke-dasharray: 20 1;
+    stroke-dashoffset: 0;
+  }
+
+  svg text {
+    fill: $font-color;
+  }
+
+  div#main_window_layered {
+    width: 100%;
+    height: 100%;
+  }
+
+  .zoom {
+    pointer-events: all;
+    cursor: move2;
+    fill: none;
   }
 }
-
-@media only screen and (max-width: 1150px) {
-  div.node_vis div#layouting_toolbar {
-    top: 84px;
-  }
-}
-
-div.node_vis line.dashed,
-div.node_vis path.dashed,
-.style_indicator {
-  animation-duration: 60s;
-  animation-iteration-count: infinite;
-  animation-name: dash;
-  animation-timing-function: linear;
-  animation-direction: reverse;
-  stroke-dasharray: 20 1;
-  stroke-dashoffset: 0;
-}
-
-@keyframes dash {
-  to {
-    stroke-dashoffset: 500;
-  }
-}
-
-.zoom {
-  pointer-events: all;
-  cursor: move2;
-  fill: none;
-}
-
-.noselect {
-  user-select: none; /* Non-prefixed version, currently
-                        supported by Chrome and Opera */
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  -khtml-user-select: none; /* Konqueror HTML */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
-}
-
-#togglebox_choices {
-  position: absolute;
-  top: 15px;
-  left: 590px;
-}
-
-.style_overlay {
-  pointer-events: none;
-  fill: none;
-  stroke: $line-color;
-  stroke-width: 2px;
+.block_style_overlay.root_children_connection {
+  stroke-width: 6px;
   stroke-linejoin: round;
 }
 
@@ -468,11 +601,25 @@ div.node_vis path.dashed,
   stroke-linejoin: round;
 }
 
-svg text {
-  fill: $font-color;
+@media only screen and (max-width: 1150px) {
+  div.node_vis div#layouting_toolbar {
+    top: 84px;
+  }
 }
 
-div#main_window_layered {
-  width: 100%;
-  height: 100%;
+@keyframes dash {
+  to {
+    stroke-dashoffset: 500;
+  }
+}
+
+.noselect {
+  user-select: none;
+  /* Non-prefixed version, currently
+                             supported by Chrome and Opera */
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
 }

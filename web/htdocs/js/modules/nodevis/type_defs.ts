@@ -7,28 +7,18 @@
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
 import {DatasourceManager} from "nodevis/datasources";
-import {ForceOptions, ForceSimulation} from "nodevis/force_simulation";
-import {InfoBox} from "nodevis/infobox";
-import {LayeredNodesLayer} from "nodevis/layers";
-import {LayoutManagerLayer} from "nodevis/layout";
+import {ForceOptions} from "nodevis/force_simulation";
 import {
     AbstractLayoutStyle,
-    LineConfig,
-    NodeVisualizationLayout,
-    StyleConfig,
+    SerializedNodevisLayout,
 } from "nodevis/layout_utils";
-import {NodeVisualization} from "nodevis/main";
-import {Toolbar} from "nodevis/toolbar";
-import {LayeredViewport} from "nodevis/viewport";
+import {Viewport} from "nodevis/viewport";
 
-export type d3SelectionDiv = d3.Selection<
-    HTMLDivElement,
-    unknown,
-    any,
-    unknown
->;
-export type d3SelectionSvg = d3.Selection<SVGSVGElement, unknown, any, any>;
-export type d3SelectionG = d3.Selection<SVGGElement, unknown, any, any>;
+export type d3Selection = d3.Selection<any, unknown, any, unknown>;
+
+export type d3SelectionDiv = d3.Selection<HTMLDivElement, null, any, unknown>;
+export type d3SelectionSvg = d3.Selection<SVGSVGElement, null, any, any>;
+export type d3SelectionG = d3.Selection<SVGGElement, null, any, any>;
 export type d3SelectionSvgText = d3.Selection<
     SVGTextElement,
     unknown,
@@ -42,17 +32,12 @@ export type d3NodeSelection = d3.Selection<
     any
 >;
 
+export type DatasourceType = "bi_aggregations" | "topology";
 export class NodevisWorld {
     root_div: d3SelectionDiv;
+    viewport: Viewport;
     datasource_manager: DatasourceManager;
-    toolbar: Toolbar;
-    viewport: LayeredViewport;
-    infobox: InfoBox;
-    layout_manager: LayoutManagerLayer;
-    force_simulation: ForceSimulation;
-    current_datasource: "bi_aggregations" | "topology" = "bi_aggregations";
-    nodes_layer: LayeredNodesLayer;
-    main_instance: NodeVisualization;
+    datasource: DatasourceType = "bi_aggregations";
 
     update_data: () => void;
     update_browser_url: () => void;
@@ -61,33 +46,22 @@ export class NodevisWorld {
 
     constructor(
         root_div: d3SelectionDiv,
+        viewport: Viewport,
+        datasource: DatasourceType,
         datasource_manager: DatasourceManager,
-        toolbar: Toolbar,
-        viewport: LayeredViewport,
-        infobox: InfoBox,
-        force_simulation: ForceSimulation,
         callback_update_data: () => void,
         callback_update_browser_url: () => void,
         callback_save_layout: () => void,
-        callback_delete_layout: () => void,
-        main_instance: NodeVisualization
+        callback_delete_layout: () => void
     ) {
-        // TODO: This code is never called :) o.O
         this.root_div = root_div;
-        this.datasource_manager = datasource_manager;
         this.viewport = viewport;
-        this.infobox = infobox;
-        this.toolbar = toolbar;
-        this.force_simulation = force_simulation;
-        this.layout_manager = this.viewport._world.layout_manager;
-        this.nodes_layer = this.viewport.get_layer(
-            "nodes"
-        ) as LayeredNodesLayer;
-        this.main_instance = main_instance;
+        this.datasource_manager = datasource_manager;
         this.update_data = callback_update_data;
         this.update_browser_url = callback_update_browser_url;
         this.save_layout = callback_save_layout;
         this.delete_layout = callback_delete_layout;
+        this.datasource = datasource;
     }
 }
 
@@ -99,6 +73,30 @@ export interface Rectangle {
 export interface Coords {
     x: number;
     y: number;
+}
+
+export class InputRangeOptions {
+    id: string;
+    title: string;
+    step: number;
+    min: number;
+    max: number;
+    default_value: number;
+    constructor(
+        id: string,
+        title: string,
+        step: number,
+        min: number,
+        max: number,
+        default_value: number
+    ) {
+        this.id = id;
+        this.title = title;
+        this.step = step;
+        this.min = min;
+        this.max = max;
+        this.default_value = default_value;
+    }
 }
 
 export type XYCoords = [number, number];
@@ -119,7 +117,6 @@ export class SearchResultEntry {
 }
 
 export class SearchResults {
-    datasource = "";
     type = "node";
     entries: SearchResultEntry[] = [];
 }
@@ -128,22 +125,93 @@ export interface DatasourceCallback {
     (data: any): void;
 }
 
-export interface BackendChunkResponse {
-    chunks: SerializedNodeChunk[];
-    use_layout?: Record<string, any>;
+export class OverlayConfig {
+    active: boolean;
+    constructor(active: boolean) {
+        this.active = active;
+    }
 }
 
-export interface SerializedNodeChunk {
-    type: string;
-    layout: {
-        config: {
-            line_config: LineConfig;
-        };
+export class ComputationOptions {
+    merge_nodes = true;
+    show_services: "all" | "none" | "only_problems" = "all";
+    constructor(
+        merge_nodes = false,
+        show_servives: "all" | "none" | "only_problems" = "all"
+    ) {
+        this.merge_nodes = merge_nodes;
+        this.show_services = show_servives;
+    }
+}
+
+export class OverlaysConfig {
+    available_layers: string[];
+    overlays: Record<string, OverlayConfig>;
+    computation_options: ComputationOptions;
+    constructor(
+        available_layers: string[] = [],
+        overlays: Record<string, OverlayConfig> = {},
+        computation_options: ComputationOptions = new ComputationOptions()
+    ) {
+        this.available_layers = available_layers;
+        this.overlays = overlays;
+        this.computation_options = computation_options;
+    }
+
+    static create_from_json(config_as_json: Record<string, any>) {
+        const fake_object = config_as_json as OverlaysConfig;
+        const overlays: Record<string, OverlayConfig> = {};
+        Object.entries(fake_object.overlays).forEach(([key, value]) => {
+            overlays[key] = new OverlayConfig(value.active);
+        });
+        const options = fake_object.computation_options;
+        const computation_options = new ComputationOptions(
+            options.merge_nodes,
+            options.show_services
+        );
+        return new OverlaysConfig(
+            fake_object.available_layers,
+            overlays,
+            computation_options
+        );
+    }
+}
+
+export interface TopologyFrontendConfig {
+    overlays_config: OverlaysConfig;
+    growth_root_nodes: string[];
+    growth_forbidden_nodes: string[];
+    growth_continue_nodes: string[];
+    custom_node_settings: {[name: string]: any};
+    datasource_configuration: {
+        available_datasources: string[];
+        reference: string;
+        compare_to: string;
     };
-    marked_obsolete: boolean;
+}
+
+export interface SerializedNodeConfig {
     hierarchy: NodeData;
     links: SerializedNodevisLink[];
-    aggr_type?: "single" | "multi";
+}
+export interface BackendResponse {
+    headline: string;
+    errors: string;
+    node_config: SerializedNodeConfig;
+    layout: SerializedNodevisLayout;
+}
+
+export interface TopologyBackendResponse extends BackendResponse {
+    frontend_configuration: TopologyFrontendConfig;
+}
+
+export interface GrowthSettings {
+    // Growth stuff for topology
+    growth_root: boolean;
+    growth_forbidden: boolean;
+    growth_continue: boolean;
+    indicator_growth_possible: boolean;
+    indicator_growth_root: boolean;
 }
 
 export interface NodeData {
@@ -152,7 +220,6 @@ export interface NodeData {
     node_type: string;
     name: string;
     node_positioning: Record<string, any>;
-    chunk: NodeChunk;
     user_interactions: Record<string, any>;
     invisible?: boolean;
     icon_image: string;
@@ -161,21 +228,14 @@ export interface NodeData {
     show_text: boolean;
     state: 0 | 1 | 2 | 3;
     target_coords: Coords;
-    has_no_parents: boolean;
     box_leaf_nodes?: boolean;
     custom_node_settings?: Record<string, any>;
 
     use_style: AbstractLayoutStyle | null;
 
-    // TODO: most important, remove this selection. this reference is too volatile
-    selection: d3SelectionG;
-
+    type_specific: Record<string, any>;
     // TODO: move topo stuff
-    // Growth stuff for topology
-    growth_root: boolean;
-    growth_forbidden: boolean;
-    growth_possible: boolean;
-    growth_continue: boolean;
+    growth_settings: GrowthSettings;
 
     // Positioning
     current_positioning: {
@@ -196,7 +256,7 @@ export interface NodeData {
     hostname: string;
     service: string;
 
-    //    // TODO: remove BI specific
+    // TODO: remove BI specific
     aggr_path_id: [string, number][];
     aggr_path_name: [string, number][];
     rule_id: {
@@ -231,7 +291,8 @@ export interface ContextMenuElement {
     text: string;
     href?: string;
     img?: string;
-    on?: (event?: Event) => void;
+    on?: (event: Event, data: any) => void;
+    data?: any;
 }
 
 declare module "d3" {
@@ -249,65 +310,63 @@ declare module "d3" {
 }
 
 // TODO: add class
-interface LayoutSettings {
+export interface LayoutSettings {
     origin_info: string;
     origin_type: "explicit" | "default_template";
     default_id: string;
-    config: {
-        line_config: LineConfig;
-        style_configs: StyleConfig[];
-        delayed_style_configs?: StyleConfig[];
-        force_options?: ForceOptions;
-        ignore_rule_styles?: boolean;
-    };
+    config: SerializedNodevisLayout;
 }
 
-// TODO: Change to interface, create instance elsewhere
-export class NodeChunk {
-    id: string;
-    type: string;
-    coords: {x: number; y: number; width: number; height: number};
-    marked_obsolete = false;
-    tree: NodevisNode;
-    links: NodevisLink[];
-
-    nodes: NodevisNode[];
-    nodes_by_id: Record<string, NodevisNode>;
-
-    // TODO: remove someday
-    layout_instance: NodeVisualizationLayout | null;
-    layout_settings: LayoutSettings;
-    aggr_type: "single" | "multi" = "multi";
-    template_id: string | null = null;
-
-    constructor(
-        type: string,
-        hierarchy: NodevisNode,
-        link_info: SerializedNodevisLink[],
-        layout_settings: LayoutSettings
-    ) {
-        this.type = type;
-        this.tree = hierarchy;
-        this.coords = {x: 0, y: 0, width: 0, height: 0};
-        this.nodes = this.tree.descendants();
-        this.nodes_by_id = {};
-        this.nodes.forEach(node => {
-            this.nodes_by_id[node.data.id] = node;
-            node.data.chunk = this;
-        });
-
-        this.id = this.nodes[0].data.id;
-        this.layout_settings = layout_settings;
-        this.layout_instance = null;
-
-        this.links = this._resolve_link_references(link_info);
+export class NodeConfig {
+    hierarchy: d3.HierarchyNode<NodeData>;
+    link_info: NodevisLink[];
+    nodes_by_id: Record<string, d3.HierarchyNode<NodeData>>;
+    constructor(serialized_node_config: SerializedNodeConfig) {
+        this.hierarchy = this._create_hierarchy(serialized_node_config);
+        this.nodes_by_id = this._create_nodes_by_id_lookup(this.hierarchy);
+        this.link_info = this._create_link_references(
+            serialized_node_config.links
+        );
     }
 
-    _resolve_link_references(
-        link_info: SerializedNodevisLink[]
+    create_empty_config() {
+        const empty_chunk = {
+            hierarchy: {invisible: true},
+            links: [],
+        } as unknown as SerializedNodeConfig;
+        return new NodeConfig(empty_chunk);
+    }
+
+    _create_hierarchy(
+        serialized_node_config: SerializedNodeConfig
+    ): d3.HierarchyNode<NodeData> {
+        const hierarchy = d3.hierarchy<NodeData>(
+            serialized_node_config.hierarchy
+        );
+        // Initialize default info of each node
+        hierarchy.descendants().forEach(node => {
+            node._children = node.children;
+            node.data.node_positioning = {};
+            node.data.transition_info = {};
+            // User interactions, e.g. collapsing node, root cause analysis
+            node.data.user_interactions = {};
+        });
+        return hierarchy;
+    }
+
+    _create_nodes_by_id_lookup(hierarchy: d3.HierarchyNode<NodeData>) {
+        const nodes_by_id: Record<string, d3.HierarchyNode<NodeData>> = {};
+        hierarchy.descendants().forEach(node => {
+            nodes_by_id[node.data.id] = node;
+        });
+        return nodes_by_id;
+    }
+
+    _create_link_references(
+        link_info: SerializedNodevisLink[] | null
     ): NodevisLink[] {
         const links: NodevisLink[] = [];
-        if (link_info) {
+        if (link_info != null) {
             // The chunk specified its own links
             link_info.forEach(link => {
                 // Reference by id:string
@@ -322,7 +381,7 @@ export class NodeChunk {
 
         // Create links out of the hierarchy layout
         // A simple tree with one root node, branches and leafs
-        this.nodes.forEach(node => {
+        this.hierarchy.descendants().forEach(node => {
             if (!node.parent || node.data.invisible) return;
             links.push({
                 source: node,

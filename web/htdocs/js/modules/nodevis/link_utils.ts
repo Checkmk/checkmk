@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
 import {BaseType, Transition} from "d3";
+import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
 import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
@@ -33,8 +33,9 @@ export class AbstractLink implements TypeWithName {
         this._world = world;
         this._link_data = link_data;
         this._selection = null;
-        this._line_config =
-            this._link_data.source.data.chunk.layout_settings.config.line_config;
+        this._line_config = this._world.viewport
+            .get_layout_manager()
+            .get_layout().line_config;
     }
 
     class_name() {
@@ -51,9 +52,7 @@ export class AbstractLink implements TypeWithName {
         return compute_link_id(this._link_data);
     }
 
-    render_into<GType extends d3.BaseType, Data>(
-        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
-    ): void {
+    render_into(selection: d3SelectionG): void {
         // Straigth line style
         const line_selection = selection
             .selectAll("line")
@@ -80,7 +79,7 @@ export class AbstractLink implements TypeWithName {
             this._line_config.style == "straight"
                 ? line_selection
                 : path_selection;
-        if (this._line_config.dashed) this.selection().classed("dashed", true);
+        // if (this._line_config.dashed) this.selection().classed("dashed", true);
     }
 
     _color(): string {
@@ -152,12 +151,16 @@ export class AbstractLink implements TypeWithName {
         source: NodevisNode,
         target: NodevisNode
     ): void {
-        const source_selection = source.data.selection;
-        const target_selection = target.data.selection;
+        const source_selection = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(source.data.id);
+        const target_selection = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(target.data.id);
         if (!source_selection || !target_selection) return;
 
-        const source_node = source_selection.node();
-        const target_node = target_selection.node();
+        const source_node = source_selection.selection().node();
+        const target_node = target_selection.selection().node();
         if (!source_node || !target_node) return;
 
         const source_baseVal = source_node.transform.baseVal;
@@ -215,7 +218,7 @@ export class AbstractLink implements TypeWithName {
         if (
             (!source.data.transition_info.use_transition &&
                 !target.data.transition_info.use_transition) ||
-            this._world.layout_manager.dragging
+            this._world.viewport.get_layout_manager().dragging
         )
             return selection;
 
@@ -228,6 +231,20 @@ export class AbstractLink implements TypeWithName {
                 this.selection().attr("in_transit", 0);
             })
             .attr("in_transit", 0);
+    }
+
+    get_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return this._get_link_type_specific_force(force_name, force_options);
+    }
+
+    _get_link_type_specific_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return force_options[force_name];
     }
 }
 

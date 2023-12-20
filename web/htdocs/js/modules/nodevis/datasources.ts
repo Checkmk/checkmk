@@ -21,15 +21,19 @@
 //#   +--------------------------------------------------------------------+
 
 import * as d3 from "d3";
-import {TopologyFrontendConfig} from "nodevis/main";
-import {DatasourceCallback, SerializedNodeChunk} from "nodevis/type_defs";
+import {SerializedNodevisLayout} from "nodevis/layout_utils";
+import {
+    DatasourceCallback,
+    SerializedNodeConfig,
+    TopologyFrontendConfig,
+} from "nodevis/type_defs";
 import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";
 
 interface AjaxFetchTopologyData {
-    topology_meshes: Record<any, any>;
-    topology_chunks: Record<string, SerializedNodeChunk>;
+    node_config: SerializedNodeConfig;
+    layout?: SerializedNodevisLayout;
     headline: string;
     errors: string[];
     frontend_configuration: TopologyFrontendConfig;
@@ -46,7 +50,7 @@ export class DatasourceManager {
         // Datasources lookup {id: instance}
         this.datasources = {};
         this._initialize_datasources();
-        setInterval(() => this.schedule(true), 30000);
+        // setInterval(() => this.schedule(true), 30000);
     }
 
     _initialize_datasources(): void {

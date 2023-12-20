@@ -25,12 +25,6 @@ export interface OverlayElement {
     onclick?: () => void;
 }
 
-type OverlayConfigMandatory = Record<string, number | string | boolean>;
-
-export interface OverlayConfig extends OverlayConfigMandatory {
-    active: boolean;
-}
-
 export class AbstractLayer extends Object implements TypeWithName {
     enabled = false;
     _world: NodevisWorld;
@@ -45,6 +39,10 @@ export class AbstractLayer extends Object implements TypeWithName {
 
         // TODO: sort index for div and svg layers
         // d3js can rearrange dom with sorting
+    }
+
+    is_dynamic_instance_template() {
+        return false;
     }
 
     class_name() {
@@ -63,23 +61,23 @@ export class AbstractLayer extends Object implements TypeWithName {
         return "base_layer_name";
     }
 
+    supports_datasource(_datasource_name: string) {
+        return true;
+    }
+
     enable(): void {
         this.enabled = true;
-
         // Setup components
         this.setup();
         // Scale to size
         this.size_changed();
-
-        // Without data simply return
-        if (this._world.viewport.get_all_nodes().length == 0) return;
-
         // Adjust zoom
         this.zoomed();
         // Update data references
         this.update_data();
         // Update gui
         this.update_gui();
+        this.enable_hook();
     }
 
     disable(): void {
@@ -90,6 +88,9 @@ export class AbstractLayer extends Object implements TypeWithName {
         this._div_selection.selectAll("*").remove();
     }
 
+    enable_hook(): void {
+        return;
+    }
     disable_hook(): void {
         return;
     }
@@ -143,9 +144,9 @@ export class AbstractLayer extends Object implements TypeWithName {
 }
 
 // base class for layered viewport overlays
-export class ToggleableLayer extends AbstractLayer {
-    overlay_active = false;
-}
+export class ToggleableLayer extends AbstractLayer {}
+
+export class DynamicToggleableLayer extends ToggleableLayer {}
 
 export class FixLayer extends AbstractLayer {}
 class LayerClassRegistry extends AbstractClassRegistry<AbstractLayer> {}

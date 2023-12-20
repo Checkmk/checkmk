@@ -21,7 +21,7 @@ class MinimalRange:
     """
     Defines a minimal range
 
-    Args::
+    Args:
         lower:  A lower bound
         upper:  An upper bound
 
@@ -47,7 +47,7 @@ class Graph:
     """
     Defines a graph
 
-    Args::
+    Args:
         name:   An unique name
         title:  A title
         minimal_range:
@@ -106,7 +106,7 @@ class Bidirectional:
     """
     Defines a bidirectional graph
 
-    Args::
+    Args:
         name:   An unique name
         title:  A title
         lower:  A graph which grows to the bottom

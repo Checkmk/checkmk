@@ -31,8 +31,8 @@ class Metric:
     """
     Defines a metric
 
-    A metric can be used within 'warning of', 'critical of', 'minimum of', 'maximum of',
-    perfometers or graphs by its name.
+    A metric can be used within :class:`WarningOf`, :class:`CriticalOf`, :class:`MinimumOf`,
+    :class:`MaximumOf`, perfometers or graphs by its name.
 
     Args:
         name:   An unique name
@@ -91,10 +91,10 @@ value=23.5)
 @dataclass(frozen=True)
 class WarningOf:
     """
-    Defines a 'warning of'
+    Defines a :class:`WarningOf`
 
-    A 'warning of' extracts the warning level of a metric by its name. It can be used within metric
-    other metric operations, perfometers or graphs.
+    A :class:`WarningOf` extracts the warning level of a metric by its name. It can be used within
+    metric other metric operations, perfometers or graphs.
 
     Args:
         metric_name:
@@ -117,9 +117,9 @@ class WarningOf:
 @dataclass(frozen=True)
 class CriticalOf:
     """
-    Defines a 'critical of'
+    Defines a :class:`CriticalOf`
 
-    A 'critical of' extracts the critical level of a metric by its name. It can be used within
+    A :class:`CriticalOf` extracts the critical level of a metric by its name. It can be used within
     other metric operations, perfometers or graphs.
 
     Args:
@@ -143,9 +143,9 @@ class CriticalOf:
 @dataclass(frozen=True)
 class MinimumOf:
     """
-    Defines a 'minimum of'
+    Defines a :class:`MinimumOf`
 
-    A 'minimum of' extracts the minimum value of a metric by its name. It can be used within
+    A :class:`MinimumOf` extracts the minimum value of a metric by its name. It can be used within
     other metric operations, perfometers or graphs.
 
     Args:
@@ -157,7 +157,6 @@ class MinimumOf:
 
         >>> MinimumOf("metric-name", Color.BLUE)
         MinimumOf(metric_name='metric-name', color=<Color.BLUE: 14>)
-
 
     """
 
@@ -172,9 +171,9 @@ class MinimumOf:
 @dataclass(frozen=True)
 class MaximumOf:
     """
-    Defines a 'maximum of'
+    Defines a :class:`MaximumOf`
 
-    A 'maximum of' extracts the maximum value of a metric by its name. It can be used within
+    A :class:`MaximumOf` extracts the maximum value of a metric by its name. It can be used within
     other metric operations, perfometers or graphs.
 
     Args:

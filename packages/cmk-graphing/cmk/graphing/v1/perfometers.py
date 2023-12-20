@@ -23,7 +23,7 @@ class Closed:
     """
     Defines a closed bound
 
-    Args::
+    Args:
         value:  A bound value
 
     Example:
@@ -45,7 +45,7 @@ class Open:
     """
     Defines an open bound
 
-    Args::
+    Args:
         value:  A bound value
 
     Example:
@@ -67,7 +67,7 @@ class FocusRange:
     """
     Defines a focus range
 
-    Args::
+    Args:
         lower:  A lower bound
         upper:  An upper bound
 
@@ -87,7 +87,7 @@ class Perfometer:
     """
     Defines a perfometer
 
-    Args::
+    Args:
         name:   An unique name
         focus_range:
                 A focus range
@@ -122,7 +122,7 @@ class Bidirectional:
     """
     Defines a bidirectional perfometer
 
-    Args::
+    Args:
         name:   An unique name
         left:   A perfometer which grows to the left
         right:  A perfometer which grows to the right
@@ -159,7 +159,7 @@ class Stacked:
     """
     Defines a stacked perfometer
 
-    Args::
+    Args:
         name:   An unique name
         lower:  A perfometer on the bottom
         upper:  A perfometer on the top

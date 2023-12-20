@@ -18,6 +18,20 @@ __all__ = [
 
 @dataclass(frozen=True)
 class MinimalRange:
+    """
+    Defines a minimal range
+
+    Args::
+        lower:  A lower bound
+        upper:  An upper bound
+
+    Example:
+
+        >>> MinimalRange(0, 100)
+        MinimalRange(lower=0, upper=100)
+
+    """
+
     lower: Bound
     upper: Bound
 
@@ -30,6 +44,37 @@ class MinimalRange:
 
 @dataclass(frozen=True, kw_only=True)
 class Graph:
+    """
+    Defines a graph
+
+    Args::
+        name:   An unique name
+        title:  A localizable title
+        minimal_range:
+                A minimal range
+        compound_lines:
+                A list of metric names or objects
+        simple_lines:
+                A list of metric names or objects
+        optional:
+                A list of metric names
+        conflicting:
+                A list of metric names
+
+    Example:
+
+        >>> graph_name = Graph(
+        ...     name="name",
+        ...     title=Localizable("A title"),
+        ...     minimal_range=MinimalRange(0, 100),
+        ...     compound_lines=["metric-name-1"],
+        ...     simple_lines=["metric-name-2"],
+        ...     optional=["metric-name-1"],
+        ...     conflicting=["metric-name-3"],
+        ... )
+
+    """
+
     name: str
     title: Localizable
     minimal_range: MinimalRange | None = None
@@ -58,6 +103,34 @@ class Graph:
 
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
+    """
+    Defines a bidirectional graph
+
+    Args::
+        name:   An unique name
+        title:  A localizable title
+        lower:  A graph which grows to the bottom
+        upper:  A graph which grows to the top
+
+    Example:
+
+        >>> graph_name = Bidirectional(
+        ...     name="name",
+        ...     title=Localizable("A title"),
+        ...     lower=Graph(
+        ...         name="lower",
+        ...         title=Localizable("A title"),
+        ...         compound_lines=["metric-name-1"],
+        ...     ),
+        ...     upper=Graph(
+        ...         name="upper",
+        ...         title=Localizable("A title"),
+        ...         compound_lines=["metric-name-2"],
+        ...     ),
+        ... )
+
+    """
+
     name: str
     title: Localizable
     lower: Graph

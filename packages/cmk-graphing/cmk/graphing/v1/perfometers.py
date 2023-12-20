@@ -20,6 +20,19 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Closed:
+    """
+    Defines a closed bound
+
+    Args::
+        value:  A bound value
+
+    Example:
+
+        >>> Closed(23.5)
+        Closed(value=23.5)
+
+    """
+
     value: Bound
 
     def __post_init__(self) -> None:
@@ -29,6 +42,19 @@ class Closed:
 
 @dataclass(frozen=True)
 class Open:
+    """
+    Defines an open bound
+
+    Args::
+        value:  A bound value
+
+    Example:
+
+        >>> Open(23.5)
+        Open(value=23.5)
+
+    """
+
     value: Bound
 
     def __post_init__(self) -> None:
@@ -38,12 +64,46 @@ class Open:
 
 @dataclass(frozen=True)
 class FocusRange:
+    """
+    Defines a focus range
+
+    Args::
+        lower:  A lower bound
+        upper:  An upper bound
+
+    Example:
+
+        >>> FocusRange(Closed(0), Closed(100))
+        FocusRange(lower=Closed(value=0), upper=Closed(value=100))
+
+    """
+
     lower: Closed | Open
     upper: Closed | Open
 
 
 @dataclass(frozen=True, kw_only=True)
 class Perfometer:
+    """
+    Defines a perfometer
+
+    Args::
+        name:   An unique name
+        focus_range:
+                A focus range
+        segments:
+                A list of metric names or objects
+
+    Example:
+
+        >>> perfometer_name = Perfometer(
+        ...     name="name",
+        ...     focus_range=FocusRange(Closed(0), Closed(100)),
+        ...     segments=["metric-name-1", "metric-name-2"],
+        ... )
+
+    """
+
     name: str
     focus_range: FocusRange
     segments: Sequence[Quantity]
@@ -59,6 +119,32 @@ class Perfometer:
 
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
+    """
+    Defines a bidirectional perfometer
+
+    Args::
+        name:   An unique name
+        left:   A perfometer which grow to the left
+        right:  A perfometer which grow to the right
+
+    Example:
+
+        >>> perfometer_name = Bidirectional(
+        ...     name="name",
+        ...     left=Perfometer(
+        ...         name="left",
+        ...         focus_range=FocusRange(Closed(0), Closed(100)),
+        ...         segments=["metric-name-1", "metric-name-2"],
+        ...     ),
+        ...     right=Perfometer(
+        ...         name="right",
+        ...         focus_range=FocusRange(Closed(0), Closed(50)),
+        ...         segments=["metric-name-3"],
+        ...     ),
+        ... )
+
+    """
+
     name: str
     left: Perfometer
     right: Perfometer
@@ -70,6 +156,32 @@ class Bidirectional:
 
 @dataclass(frozen=True, kw_only=True)
 class Stacked:
+    """
+    Defines a stacked perfometer
+
+    Args::
+        name:   An unique name
+        lower:  A perfometer on the bottom
+        upper:  A perfometer on the top
+
+    Example:
+
+        >>> perfometer_name = Stacked(
+        ...     name="name",
+        ...     lower=Perfometer(
+        ...         name="lower",
+        ...         focus_range=FocusRange(Closed(0), Closed(100)),
+        ...         segments=["metric-name-1", "metric-name-2"],
+        ...     ),
+        ...     upper=Perfometer(
+        ...         name="upper",
+        ...         focus_range=FocusRange(Closed(0), Closed(50)),
+        ...         segments=["metric-name-3"],
+        ...     ),
+        ... )
+
+    """
+
     name: str
     lower: Perfometer
     upper: Perfometer

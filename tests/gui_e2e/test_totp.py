@@ -21,9 +21,9 @@ def test_totp(
     logged_in_page.main_menu.locator("text=Two-factor authentication").click()
     # On the App Authenticator page
     logged_in_page.main_area.check_page_title("Two-factor authentication")
-    logged_in_page.main_area.get_suggestion("Add Authenticator App").click()
+    logged_in_page.main_area.get_suggestion("Register security token").click()
     # Now extract TOTP secret from text and submit
-    logged_in_page.main_area.check_page_title("Register Authenticator App")
+    logged_in_page.main_area.check_page_title("Register authenticator app")
     text_list = logged_in_page.main_area.locator(
         "text=Alternatively you can enter your secret manually: "
     ).all_text_contents()

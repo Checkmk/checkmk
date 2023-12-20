@@ -1,0 +1,23 @@
+---
+mssql:
+  main: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: "user" # mandatory
+      password: user123
+      type: sql_server
+    connection:
+      hostname: agentbuild3.lan.tribe29.com
+    sections:
+      always: 
+        - "instance"
+      cached:
+        - "backup"
+      disabled: 
+      - "counters"
+    discovery:
+      detect: yes
+      include: [ "SQLEXPRESS_NAME"]
+    instances:
+      - sid: "SQLEXPRESS_NAME"
+        piggyback: # optional
+          hostname: "the_host" # mandatory

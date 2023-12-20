@@ -9,6 +9,7 @@ use crate::config::{
     ms_sql::{AuthType, CustomInstance, Endpoint},
     CheckConfig,
 };
+use crate::emit;
 use crate::ms_sql::queries;
 use crate::setup::Env;
 use crate::utils;
@@ -51,6 +52,7 @@ pub struct SqlInstanceBuilder {
     computer_name: Option<String>,
     environment: Option<Env>,
     hash: Option<String>,
+    piggyback: Option<String>,
 }
 
 impl SqlInstanceBuilder {
@@ -110,6 +112,10 @@ impl SqlInstanceBuilder {
         self.hash = Some(hash.into());
         self
     }
+    pub fn piggyback<S: Into<String>>(mut self, piggyback: Option<S>) -> Self {
+        self.piggyback = piggyback.map(|s| s.into());
+        self
+    }
 
     pub fn row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
@@ -135,6 +141,10 @@ impl SqlInstanceBuilder {
         self.endpoint.as_ref()
     }
 
+    pub fn get_port(&self) -> u16 {
+        self.port.unwrap_or_else(|| self.dynamic_port.unwrap_or(0))
+    }
+
     pub fn build(self) -> SqlInstance {
         SqlInstance {
             alias: self.alias,
@@ -150,6 +160,7 @@ impl SqlInstanceBuilder {
             computer_name: self.computer_name,
             environment: self.environment.unwrap_or_default(),
             hash: self.hash.unwrap_or_default(),
+            piggyback: self.piggyback,
         }
     }
 }
@@ -169,6 +180,7 @@ pub struct SqlInstance {
     computer_name: Option<String>,
     environment: Env,
     hash: String,
+    piggyback: Option<String>,
 }
 
 impl SqlInstance {
@@ -196,6 +208,10 @@ impl SqlInstance {
 
     pub fn temp_dir(&self) -> Option<&Path> {
         self.environment.temp_dir()
+    }
+
+    pub fn piggyback(&self) -> &Option<String> {
+        &self.piggyback
     }
 
     pub fn hostname(&self) -> String {
@@ -231,7 +247,12 @@ impl SqlInstance {
         ms_sql: &config::ms_sql::Config,
         sections: &[Section],
     ) -> String {
-        let mut result = String::new();
+        let mut result = self
+            .piggyback
+            .as_ref()
+            .map(|h| emit::piggyback_header(h))
+            .unwrap_or_default()
+            .to_owned();
         let endpoint = &ms_sql.endpoint();
         match self.create_client(endpoint, None).await {
             Ok(mut client) => {
@@ -246,6 +267,9 @@ impl SqlInstance {
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
             }
         };
+        if self.piggyback.is_some() {
+            result += &emit::piggyback_footer();
+        }
         result
     }
 
@@ -1281,12 +1305,15 @@ async fn find_usable_instance_builders(
 pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let already_detected = if ms_sql.discovery().detect() {
+    let detected = if ms_sql.discovery().detect() {
         find_detectable_instance_builders(ms_sql).await
     } else {
         Vec::new()
     };
-    add_custom_instance_builders(ms_sql, &already_detected).await
+    let customizations: HashMap<&String, &CustomInstance> =
+        ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
+    let builders = apply_customizations(detected, &customizations);
+    add_custom_instance_builders(builders, &customizations).await
 }
 
 /// find instances described in the config but not detected by the discovery
@@ -1303,24 +1330,34 @@ async fn find_detectable_instance_builders(
 
 /// find instances described in the config but not detected by the discovery
 async fn add_custom_instance_builders(
-    ms_sql: &config::ms_sql::Config,
-    detected: &[SqlInstanceBuilder],
+    builders: Vec<SqlInstanceBuilder>,
+    customizations: &HashMap<&String, &CustomInstance>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let (mut sql_instances, name_to_custom_instance_map) = process_detected(ms_sql, detected);
+    let reconnects = determine_reconnect(builders, customizations);
 
-    for (name, instance) in name_to_custom_instance_map.into_iter() {
-        match create_from_config(&instance.endpoint()).await {
-            Ok(mut client) => {
-                if let Some(properties) = ensure_required_instance(&mut client, name).await {
-                    sql_instances.push(make_instance_builder(instance, &properties));
+    let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
+    for (builder, endpoint) in reconnects.into_iter() {
+        if let Some(endpoint) = endpoint {
+            match create_from_config(&endpoint).await {
+                Ok(mut client) => {
+                    if let Some(properties) =
+                        ensure_required_instance(&mut client, &builder.get_name()).await
+                    {
+                        builders.push(make_instance_builder(&endpoint, &properties));
+                    }
+                }
+                Err(e) => {
+                    log::error!(
+                        "Error creating client for instance `{}`: {e}",
+                        builder.get_name()
+                    );
                 }
             }
-            Err(e) => {
-                log::error!("Error creating client for instance `{name}`: {e}");
-            }
+        } else {
+            builders.push(builder);
         }
     }
-    Ok(sql_instances)
+    Ok(builders)
 }
 
 async fn ensure_required_instance(
@@ -1345,65 +1382,95 @@ async fn ensure_required_instance(
     None
 }
 
+/// converts detected instance and custom instance to SqlInstanceBuilder
 fn make_instance_builder(
-    instance: &CustomInstance,
+    endpoint: &Endpoint,
     properties: &SqlInstanceProperties,
 ) -> SqlInstanceBuilder {
     SqlInstanceBuilder::new()
         .name(properties.name.to_uppercase())
+        .computer_name(&Some(properties.machine_name.clone()))
+        .version(&properties.version)
+        .edition(&properties.edition)
+        .port(Some(endpoint.conn().port()))
+}
+/// returns
+/// - SQL instances with custom endpoint if any
+fn determine_reconnect(
+    builders: Vec<SqlInstanceBuilder>,
+    customizations: &HashMap<&String, &CustomInstance>,
+) -> Vec<(SqlInstanceBuilder, Option<Endpoint>)> {
+    let mut found: HashSet<String> = HashSet::new();
+    let mut b = builders
+        .into_iter()
+        .map(|instance_builder| {
+            found.insert(instance_builder.get_name());
+            match customizations.get(&instance_builder.get_name()) {
+                Some(customization)
+                    if Some(&customization.endpoint()) != instance_builder.get_endpoint() =>
+                {
+                    log::info!(
+                        "Instance {} to be reconnected `{:?}` `{:?}`",
+                        instance_builder.get_name(),
+                        customization.endpoint(),
+                        instance_builder.get_endpoint()
+                    );
+                    (instance_builder, Some(customization.endpoint()))
+                }
+                _ => {
+                    log::info!(
+                        "Add detected instance {} reconnect not required ",
+                        &instance_builder.get_name()
+                    );
+                    (instance_builder, None)
+                }
+            }
+        })
+        .collect::<Vec<(SqlInstanceBuilder, Option<Endpoint>)>>();
+
+    customizations
+        .iter()
+        .filter(|(&k, _)| !found.contains(k))
+        .map(|(name, customization)| {
+            log::info!("Add custom instance {} ", name);
+            let builder = SqlInstanceBuilder::new().name(name.to_uppercase());
+            (
+                apply_customization(builder, customization),
+                Some(customization.endpoint()),
+            )
+        })
+        .for_each(|a| b.push(a));
+
+    b
+}
+
+fn apply_customizations(
+    detected: Vec<SqlInstanceBuilder>,
+    customizations: &HashMap<&String, &CustomInstance>,
+) -> Vec<SqlInstanceBuilder> {
+    detected
+        .into_iter()
+        .map(
+            |instance_builder| match customizations.get(&instance_builder.get_name()) {
+                None => instance_builder.clone(),
+                Some(customization) => apply_customization(instance_builder, customization),
+            },
+        )
+        .collect::<Vec<SqlInstanceBuilder>>()
+}
+
+fn apply_customization(
+    builder: SqlInstanceBuilder,
+    customization: &CustomInstance,
+) -> SqlInstanceBuilder {
+    builder
+        .piggyback(customization.piggyback().map(|p| p.hostname()))
         .alias(
-            instance
+            customization
                 .alias()
                 .map(|i| str::to_string(i))
                 .unwrap_or_default(),
         )
-        .port(Some(instance.conn().port()))
-        .computer_name(&Some(properties.machine_name.clone()))
-        .version(&properties.version)
-        .edition(&properties.edition)
-}
-/// returns
-/// - SQL instances which are not touched by customizing
-/// - map of instances to be found
-fn process_detected<'a>(
-    ms_sql: &'a config::ms_sql::Config,
-    detected: &[SqlInstanceBuilder],
-) -> (
-    Vec<SqlInstanceBuilder>,
-    HashMap<&'a String, &'a CustomInstance>,
-) {
-    let mut name_to_custom_instance_map: HashMap<&String, &CustomInstance> =
-        ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
-    let sql_instances = detected
-        .iter()
-        .filter_map(|instance_builder| {
-            match name_to_custom_instance_map.get(&instance_builder.get_name()) {
-                None => {
-                    log::info!(
-                        "Add detected instance {} as absent",
-                        &instance_builder.get_name()
-                    );
-                    Some(instance_builder.clone())
-                }
-                Some(instance) if Some(&instance.endpoint()) == instance_builder.get_endpoint() => {
-                    log::info!(
-                        "Add detected instance {}: as same",
-                        &instance_builder.get_name()
-                    );
-                    name_to_custom_instance_map.remove(&instance_builder.get_name());
-                    Some(instance_builder.clone())
-                }
-                _ => {
-                    log::info!(
-                        "Skip detected instance {} as customized",
-                        instance_builder.get_name()
-                    );
-                    None
-                }
-            }
-        })
-        .collect::<Vec<SqlInstanceBuilder>>();
-    (sql_instances, name_to_custom_instance_map)
 }
 
 /// Intelligent async processing of the data

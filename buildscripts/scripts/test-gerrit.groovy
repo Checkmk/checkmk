@@ -119,7 +119,6 @@ def main() {
                 show_duration("archiveArtifacts") {
                     archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
                 }
-                sh("scripts/run-in-docker.sh make workspaceclean");
             }
         }
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);

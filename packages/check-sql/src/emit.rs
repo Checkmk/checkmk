@@ -14,6 +14,14 @@ pub fn header(name: &str, separator: Option<char>) -> String {
     }
 }
 
+pub fn piggyback_header(name: &str) -> String {
+    format!("<<<<{name}>>>>\n")
+}
+
+pub fn piggyback_footer() -> String {
+    piggyback_header("")
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -23,5 +31,11 @@ mod test {
         assert_eq!(header("name", Some('\t')), "<<<mssql_name:sep(09)>>>\n");
         assert_eq!(header("name", Some('|')), "<<<mssql_name:sep(124)>>>\n");
         assert_eq!(header("name", None), "<<<mssql_name>>>\n");
+    }
+
+    #[test]
+    fn test_piggyback() {
+        assert_eq!(piggyback_header("name"), "<<<<name>>>>\n");
+        assert_eq!(piggyback_footer(), "<<<<>>>>\n");
     }
 }

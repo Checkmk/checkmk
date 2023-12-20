@@ -80,11 +80,9 @@ class FocusRange:
 class Perfometer:
     """
     Args:
-        name:   An unique name
-        focus_range:
-                A focus range
-        segments:
-                A list of metric names or objects
+        name: An unique name
+        focus_range: A focus range
+        segments: A list of metric names or objects
 
     Example:
 

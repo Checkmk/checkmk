@@ -30,11 +30,10 @@ This is the main reason for the introduction of this new API version.
 Plugins are no longer registered during import, but only created and
 picked up later by the backend.
 To realize this, we introduced four new classes:
-    * :class:`AgentSection` replacing :func:`register.agent_section`
-    * :class:`SimpleSNMPSection` and :class:`SNMPSection`
-      replacing :func:`register.snmp_section`
-    * :class:`Checkplugin` replacing :func:`register.check_plugin`
-    * :class:`InventoryPlugin` replacing :func:`register.inventory_plugin`
+* :class:`AgentSection` replacing :func:`register.agent_section`
+* :class:`SimpleSNMPSection` and :class:`SNMPSection` replacing :func:`register.snmp_section`
+* :class:`Checkplugin` replacing :func:`register.check_plugin`
+* :class:`InventoryPlugin` replacing :func:`register.inventory_plugin`
 
 The arguments of these have barely changed (see next paragraph), resulting
 in easy to automate changes (see

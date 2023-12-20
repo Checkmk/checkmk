@@ -1,0 +1,6 @@
+===========================
+cmk.graphing.v1.perfometers
+===========================
+
+.. automodule:: cmk.graphing.v1.perfometers
+   :members:

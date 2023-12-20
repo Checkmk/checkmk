@@ -71,6 +71,7 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.store import save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -172,13 +173,33 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
-            flash(
-                _(
-                    "The following backup codes have been generated: <ul>%s</ul> These codes are "
-                    "displayed only now. Save them securely."
-                )
-                % "".join(f"<li><tt>{password.raw}</tt></li>" for password, _pwhashed in codes)
+            flash(self.flash_new_backup_codes(codes))
+
+    def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
+        backup_codes = "\n".join(pw.raw for pw, _hash in codes)
+        success_message = _("Codes copied")
+        header_msg = html.render_h3(html.render_b("Successfully generated 10 backup codes"))
+        message1 = html.render_p(
+            _(
+                "Each code may be used only once. Download and store these backup codes in a safe place. "
+                "If you lose access to your authentication device and backup codes, you'll have to contact your Checkmk admin to recover your account."
             )
+        )
+        codesdiv = html.render_div(
+            HTML("").join(
+                [html.render_div(code.raw, class_="codelistelement") for code, _v in codes]
+            ),
+            class_="codelist",
+        )
+        message2 = html.render_p(_("These codes are only displayed now."))
+        copy_button = html.render_input(
+            "copy codes",
+            type_="button",
+            onclick=f"cmk.utils.copy_to_clipboard({json.dumps(backup_codes)}, {json.dumps(success_message)})",
+            value=_("Copy codes"),
+            class_=["button buttonlink"],
+        )
+        return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
 
     def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
         assert user.id is not None
@@ -195,6 +216,20 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         enable_backup_codes = any(credentials.values()) and (
             [request.get_ascii_input("_delete_credential")] != registered_credentials
         )
+
+        if backup_codes_given:
+            backup_codes_item = make_simple_link(
+                make_confirm_delete_link(
+                    url=makeactionuri(request, transactions, [("_backup_codes", "SET")]),
+                    title=_("Regenerate backup codes"),
+                    confirm_button=_("Regenerate codes"),
+                    message="Generating backup codes automatically invalidates existing codes",
+                ),
+            )
+        else:
+            backup_codes_item = make_simple_link(
+                makeactionuri(request, transactions, [("_backup_codes", "SET")]),
+            )
 
         page_menu: PageMenu = PageMenu(
             dropdowns=[
@@ -232,11 +267,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     if backup_codes_given
                                     else _("Generate backup codes"),
                                     icon_name="2fa_backup_codes",
-                                    item=make_simple_link(
-                                        makeactionuri(
-                                            request, transactions, [("_backup_codes", "SET")]
-                                        )
-                                    ),
+                                    item=backup_codes_item,
                                     is_enabled=enable_backup_codes,
                                     is_shortcut=True,
                                     is_suggested=True,

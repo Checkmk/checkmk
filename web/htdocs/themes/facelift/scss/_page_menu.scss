@@ -9,6 +9,24 @@ body.main {
     }
   }
 }
+div.success {
+  .codelist {
+    height: 150px;
+    display: inline-flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+  }
+  .codelistelement {
+    padding: $spacing-half;
+    background-color: $ux-theme-6;
+    margin: 0 $spacing-double $spacing-half 0;
+    font-family: monospace;
+  }
+  input.button {
+    margin-left: 0;
+  }
+}
+
 div#top_heading {
   width: 100%;
   padding: 0;

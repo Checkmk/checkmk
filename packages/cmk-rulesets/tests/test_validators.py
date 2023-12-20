@@ -12,6 +12,7 @@ import pytest
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.validators import (
     DisallowEmpty,
+    EmailAddress,
     InRange,
     MatchRegex,
     NetworkPort,
@@ -261,5 +262,50 @@ def test_url(
 ) -> None:
     with expected_raises as e:
         Url(protocols, **input_msg)(test_value)
+
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
+
+
+@pytest.mark.parametrize(
+    ["input_msg", "test_value", "expected_raises", "expected_message"],
+    [
+        pytest.param({}, "simple@example.com", does_not_raise(), None, id="valid address"),
+        pytest.param(
+            {}, "name.surname@example.com", does_not_raise(), None, id="full name address"
+        ),
+        pytest.param(
+            {}, "name.surname@localhost.com", does_not_raise(), None, id="localhost domain"
+        ),
+        pytest.param(
+            {},
+            "@example.com",
+            pytest.raises(ValidationError),
+            "Your input is not a valid email address.",
+            id="invalid address without custom message",
+        ),
+        pytest.param(
+            {},
+            "name.surname.example.com",
+            pytest.raises(ValidationError),
+            "Your input is not a valid email address.",
+            id="invalid address without @",
+        ),
+        pytest.param(
+            {"error_msg": Localizable("My own message")},
+            "name.surname@example",
+            pytest.raises(ValidationError),
+            "My own message",
+            id="invalid address with custom message",
+        ),
+    ],
+)
+def test_email_address(
+    input_msg: Mapping[str, Localizable],
+    test_value: str,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
+    expected_message: str | None,
+) -> None:
+    with expected_raises as e:
+        EmailAddress(**input_msg)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message

@@ -143,3 +143,47 @@ class Url:  # pylint: disable=too-few-public-methods
         parts = urlparse(value)
         if not parts.scheme or not parts.netloc or parts.scheme not in self.protocols:
             raise ValidationError(self.error_msg)
+
+
+class EmailAddress:  # pylint: disable=too-few-public-methods
+    """Validator that ensures the validated value is an email address"""
+
+    def __init__(self, error_msg: Localizable | None = None) -> None:
+        self.error_msg: Final = error_msg or (
+            Localizable("Your input is not a valid email address.")
+        )
+
+    def __call__(self, value: str) -> None:
+        # According to RFC5322 an email address is defined as:
+        #     address = name-addr / addr-spec / group
+        # We only allow the dot-atom of addr-spec here:
+        #     addr-spec = (dot-atom / quoted-string / obs-local-part) "@" domain
+        #     dot-atom = [CFWS] 1*atext *("." 1*atext) [CFWS]
+        #     atext = ALPHA / DIGIT / "!" / "#" /  ; Printable US-ASCII
+        #             "$" / "%" / "&" / "'"        ;  characters not including
+        #             "&" / "'" / "*" / "+"        ;  specials. Used for atoms.
+        #             "-" / "/" / "=" / "?"
+        #             "^" / "_" / "`" / "{"
+        #             "|" / "}" / "~"
+        # with the additional extension of atext to the addr-spec as specified
+        # by RFC6531:
+        #     atext   =/  UTF8-non-ascii
+        # Furthermore we do not allow comments inside CFWS and any leading or
+        # trailing whitespace in the address is removed.
+        #
+        # The domain part of addr-spec is defined as:
+        #     domain = dot-atom / domain-literal / obs-domain
+        # We only allow dot-atom with a restricted character of [A-Z0-9.-] and a
+        # length of 2-24 for the top level domain here. Although top level domains
+        # may be longer the longest top level domain currently in use is 24
+        # characters wide. Check this out with:
+        #     wget -qO - http://data.iana.org/TLD/tlds-alpha-by-domain.txt | tail -n+2 | wc -L
+        #
+        # Note that the current regex allows multiple subsequent "." which are
+        # not allowed by RFC5322.
+
+        email_regex = re.compile(
+            r"^[\w.!#$%&'*+-=?^`{|}~]+@(localhost|[\w.-]+\.[\w]{2,24})$", re.I | re.UNICODE
+        )
+        if not email_regex.match(value):
+            raise ValidationError(self.error_msg)

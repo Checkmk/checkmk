@@ -5,9 +5,13 @@
 use crate::check::{
     self, CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult,
 };
+use std::collections::HashSet;
+use std::convert::AsRef;
 use time::Duration;
 use typed_builder::TypedBuilder;
-use x509_parser::certificate::{Validity, X509Certificate};
+use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
+use x509_parser::error::X509Error;
+use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
 use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
@@ -49,6 +53,7 @@ pub struct Config {
     serial: Option<String>,
     signature_algorithm: Option<String>,
     subject_cn: Option<String>,
+    subject_alt_names: Option<Vec<String>>,
     subject_o: Option<String>,
     subject_ou: Option<String>,
     issuer_cn: Option<String>,
@@ -75,6 +80,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 expected
             )
         }),
+        check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
             check_eq!(
                 "Subject O",
@@ -139,6 +145,43 @@ pub fn check(der: &[u8], config: Config) -> Collection {
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| check_eq!("Serial", serial.to_lowercase(), expected.to_lowercase()))
+}
+
+fn check_subject_alt_names(
+    alt_names: Result<Option<BasicExtension<&SubjectAlternativeName<'_>>>, X509Error>,
+    expected: Option<Vec<String>>,
+) -> Option<SimpleCheckResult> {
+    expected.map(|expected| match alt_names {
+        Err(err) => SimpleCheckResult::crit(format!("Subject alt names: {}", err)),
+        Ok(None) => {
+            if expected.is_empty() {
+                SimpleCheckResult::ok("No subject alt names")
+            } else {
+                SimpleCheckResult::warn("No subject alt names")
+            }
+        }
+        Ok(Some(ext)) => {
+            let found = HashSet::<&str>::from_iter(ext.value.general_names.iter().flat_map(
+                |name| match name {
+                    GeneralName::DNSName(v) => Some(*v),
+                    _ => None,
+                },
+            ));
+            let expected = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
+            if found.is_superset(&expected) {
+                SimpleCheckResult::ok("Subject alt names present")
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "Subject alt names: missing {}",
+                    expected
+                        .difference(&found)
+                        .map(|s| format!(r#""{s}""#))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ))
+            }
+        }
+    })
 }
 
 fn check_signature_algorithm(

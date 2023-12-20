@@ -24,6 +24,19 @@ from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
 
+# not all used base-versions are available for all distros used in the test-job.
+# we temporarily define the distros where all base-versions are available.
+# TODO: improve the test parameterization to select only the base versions available for a given
+#  distro
+SUPPORTED_DISTROS = [
+    "ubuntu-20.04",
+    "ubuntu-22.04",
+    "debian-11",
+    "centos-8",
+    "almalinux-9",
+    "sles-15sp4",
+]
+
 logger = logging.getLogger(__name__)
 
 

@@ -93,6 +93,6 @@ rulespec_registry.register(
         item_spec=_item_spec,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
-        title=lambda: _("Robotmk"),
+        title=lambda: _("Robotmk Tests"),
     )
 )

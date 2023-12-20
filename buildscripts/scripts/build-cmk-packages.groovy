@@ -364,7 +364,7 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
             passwordVariable: 'NEXUS_PASSWORD',
             usernameVariable: 'NEXUS_USERNAME')
     ]) {
-        dir("${checkout_dir}/enterprise/agents/plugins") {
+        dir("${checkout_dir}/non-free/cmk-update-agent") {
             def cmd = "BRANCH_VERSION=${branch_version} DOCKER_REGISTRY_NO_HTTP=${registry} ./make-agent-updater${suffix}";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
@@ -372,7 +372,7 @@ def build_linux_agent_updater(agent, edition, branch_version, registry) {
         }
     }
     dir("${WORKSPACE}/agents") {
-        def cmd = "cp ${checkout_dir}/enterprise/agents/plugins/cmk-update-agent${suffix} .";
+        def cmd = "cp ${checkout_dir}/non-free/cmk-update-agent/cmk-update-agent${suffix} .";
         on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
             sh(cmd);
         }
@@ -468,8 +468,8 @@ def create_source_package(workspace, source_dir, cmk_version) {
         }
         dir("${checkout_dir}") {
             if(EDITION != 'raw') {
-                sh "cp ${agents_dir}/cmk-update-agent enterprise/agents/plugins/"
-                sh "cp ${agents_dir}/cmk-update-agent-32 enterprise/agents/plugins/"
+                sh "cp ${agents_dir}/cmk-update-agent non-free/cmk-update-agent/"
+                sh "cp ${agents_dir}/cmk-update-agent-32 non-free/cmk-update-agent/"
             }
             sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
             sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"

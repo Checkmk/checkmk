@@ -93,7 +93,7 @@ def main() {
                             VERSION: VERSION,
                         ],
                         // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                        dependency_paths: ["agents", "enterprise/agents/plugins"],
+                        dependency_paths: ["agents", "non-free/cmk-update-agent"],
                         dest: "artifacts/build-linux-agent-updater",
                     );
                     dir("${checkout_dir}/artifacts/build-linux-agent-updater") {
@@ -102,7 +102,7 @@ def main() {
                         sh("mkdir -p ${checkout_dir}/agents/linux");
                         sh("cp cmk-agent-ctl* check-sql ${checkout_dir}/agents/linux/");
                         if (edition != "raw") {
-                            sh("cp cmk-update-agent* ${checkout_dir}/enterprise/agents/plugins/");
+                            sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
                         }
                     }
 

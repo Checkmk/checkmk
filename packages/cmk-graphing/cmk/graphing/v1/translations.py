@@ -112,7 +112,7 @@ class NagiosPlugin:
 @dataclass(frozen=True)
 class RenameTo:
     """
-    Defines a 'rename to'
+    Defines a renaming
 
     Args:
         metric_name:
@@ -135,7 +135,7 @@ class RenameTo:
 @dataclass(frozen=True)
 class ScaleBy:
     """
-    Defines a 'scale by'
+    Defines a scaling
 
     Args:
         factor: A number with which the old metric is scaled
@@ -156,7 +156,7 @@ class ScaleBy:
 @dataclass(frozen=True)
 class RenameToAndScaleBy:
     """
-    Defines a 'rename to' and 'scale by'
+    Defines a renaming and scaling
 
     Args:
         metric_name:

@@ -2857,15 +2857,9 @@ class ModeExportRule(ABCEditRuleMode):
     def page(self) -> None:
         pretty_rule_config = pprint.pformat(self._rule.ruleset.valuespec().mask(self._rule.value))
         content_id = "rule_representation"
-        success_msg_id = "copy_success"
+        success_msg = _("Successfully copied to clipboard.")
 
         with html.form_context("rule_representation", only_close=True):
-            html.div(
-                _("Successfully copied rule value representation to the clipboard."),
-                id_=success_msg_id,
-                class_=["success", "hidden"],
-            )
-
             html.p(
                 _(
                     "To set the value of a rule using the REST API, you need to set the "
@@ -2885,7 +2879,7 @@ class ModeExportRule(ABCEditRuleMode):
                 url=None,
                 title=_("Copy rule value representation to clipboard"),
                 icon="clone",
-                onclick=f"cmk.utils.copy_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg_id)})",
+                onclick=f"cmk.utils.copy_dom_element_content_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg)})",
             )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

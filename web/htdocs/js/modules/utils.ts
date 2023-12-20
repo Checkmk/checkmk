@@ -7,6 +7,7 @@
 import * as ajax from "ajax";
 import * as selection from "selection";
 import SimpleBar from "simplebar";
+import Swal from "sweetalert2";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;
@@ -883,7 +884,59 @@ export function get_computed_style(
         : null;
 }
 
-export function copy_to_clipboard(node_id: string, success_msg_id = "") {
+function fallbackCopyToClipboard(secret: string) {
+    const textArea = document.createElement("textarea");
+    textArea.value = secret;
+
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        document.execCommand("copy");
+    } finally {
+        document.body.removeChild(textArea);
+    }
+}
+
+export function copy_to_clipboard(
+    text: string,
+    success_msg: string | null = null
+) {
+    try {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+        } else {
+            fallbackCopyToClipboard(text);
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: "error",
+            title: "Unable to copy to clipboard",
+            text: "You can still copy it manually: " + text,
+        });
+        return;
+    }
+
+    if (success_msg == null) success_msg = "Copied to clipboard";
+    Swal.fire({
+        icon: "success",
+        title: success_msg,
+        showConfirmButton: false,
+        timer: 1500,
+        width: 350,
+    });
+}
+
+export function copy_dom_element_content_to_clipboard(
+    node_id: string,
+    success_msg = ""
+) {
     const node = document.getElementById(node_id);
     if (!node) {
         console.warn("Copy to clipboard failed as no DOM element was given.");
@@ -898,11 +951,7 @@ export function copy_to_clipboard(node_id: string, success_msg_id = "") {
         return;
     }
 
-    navigator.clipboard.writeText(node.innerHTML);
-    if (success_msg_id) {
-        const success_msg_node = document.getElementById(success_msg_id);
-        remove_class(success_msg_node, "hidden");
-    }
+    copy_to_clipboard(node.innerHTML, success_msg);
 }
 
 export function querySelectorID<T extends HTMLElement>(id: string): T | null {

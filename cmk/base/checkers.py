@@ -781,7 +781,7 @@ def _inject_prediction_callback_recursively(
                     service_name,
                     PredictionParameters.model_validate(params),
                     partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
-                ).get_predictive_levels
+                )
                 return params
             return dict(
                 zip(

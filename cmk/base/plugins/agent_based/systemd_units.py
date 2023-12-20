@@ -186,8 +186,10 @@ class UnitEntry:
         name, unit_type = name_unit
         temp = name[: name.find("@") + 1] if "@" in name else name
         enabled = enabled_status.get(f"{temp}{unit_type.suffix}", "unknown")
-        remains = " ".join(row[1:])
-        loaded_status, active_status, current_state, descr = remains.split(" ", 3)
+        remains = (" ".join(row[1:])).split(" ", 3)
+        if len(remains) == 3:
+            remains.append("")
+        loaded_status, active_status, current_state, descr = remains
         time_since_change = (
             status_details[name].time_since_change if name in status_details else None
         )

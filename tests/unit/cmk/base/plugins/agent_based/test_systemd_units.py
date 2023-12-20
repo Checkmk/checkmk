@@ -491,9 +491,6 @@ def test_services_split(
                 services={},
             ),
             id="missing description",
-            marks=pytest.mark.skip(
-                reason="Parse will crash - description can be missing with old agents"
-            ),
         ),
     ],
 )

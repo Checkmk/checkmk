@@ -32,7 +32,7 @@ macro_rules! unwrap_into {
 macro_rules! check_eq {
     ($name:tt, $left:expr, $right:expr $(,)?) => {
         if &$left == &$right {
-            SimpleCheckResult::ok(format!("{}: {}", $name, $left))
+            SimpleCheckResult::notice(format!("{}: {}", $name, $left))
         } else {
             SimpleCheckResult::warn(format!("{} is {} but expected {}", $name, $left, $right))
         }
@@ -155,7 +155,7 @@ fn check_subject_alt_names(
         Err(err) => SimpleCheckResult::crit(format!("Subject alt names: {}", err)),
         Ok(None) => {
             if expected.is_empty() {
-                SimpleCheckResult::ok("No subject alt names")
+                SimpleCheckResult::notice("No subject alt names")
             } else {
                 SimpleCheckResult::warn("No subject alt names")
             }
@@ -169,7 +169,7 @@ fn check_subject_alt_names(
             ));
             let expected = HashSet::from_iter(expected.iter().map(AsRef::as_ref));
             if found.is_superset(&expected) {
-                SimpleCheckResult::ok("Subject alt names present")
+                SimpleCheckResult::notice("Subject alt names present")
             } else {
                 SimpleCheckResult::warn(format!(
                     "Subject alt names: missing {}",
@@ -274,7 +274,7 @@ fn check_max_validity(
     max_validity.map(|max_validity| {
         if let Some(total_validity) = validity.not_after - validity.not_before {
             match total_validity <= max_validity {
-                true => SimpleCheckResult::ok(format!(
+                true => SimpleCheckResult::notice(format!(
                     "Max validity {} days",
                     total_validity.whole_days()
                 )),
@@ -300,7 +300,7 @@ mod test_check_serial {
 
     #[test]
     fn test_case_insensitive() {
-        let result = Some(SimpleCheckResult::ok("Serial: aa:11:bb:22:cc"));
+        let result = Some(SimpleCheckResult::notice("Serial: aa:11:bb:22:cc"));
 
         assert_eq!(
             check_serial(s("aa:11:bb:22:cc"), Some(s("aa:11:bb:22:cc"))),

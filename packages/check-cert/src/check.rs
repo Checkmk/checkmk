@@ -733,7 +733,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_ok() {
         assert_eq!(
-            format!("{}", Collection::from(SimpleCheckResult::ok("summary"))),
+            format!("{}", Collection::from(SimpleCheckResult::notice("summary"))),
             "OK - summary"
         );
     }
@@ -786,9 +786,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_ok() {
-        let cr1 = SimpleCheckResult::ok("summary 1");
-        let cr2 = SimpleCheckResult::ok("summary 2");
-        let cr3 = SimpleCheckResult::ok("summary 3");
+        let cr1 = SimpleCheckResult::notice("summary 1");
+        let cr2 = SimpleCheckResult::notice("summary 2");
+        let cr3 = SimpleCheckResult::notice("summary 3");
         assert_eq!(
             format!(
                 "{}",
@@ -800,9 +800,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_warn() {
-        let cr1 = SimpleCheckResult::ok("summary 1");
+        let cr1 = SimpleCheckResult::notice("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
-        let cr3 = SimpleCheckResult::ok("summary 3");
+        let cr3 = SimpleCheckResult::notice("summary 3");
         assert_eq!(
             format!(
                 "{}",
@@ -814,7 +814,7 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_crit() {
-        let cr1 = SimpleCheckResult::ok("summary 1");
+        let cr1 = SimpleCheckResult::notice("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         assert_eq!(
@@ -828,7 +828,7 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_unknown() {
-        let cr1 = SimpleCheckResult::ok("summary 1");
+        let cr1 = SimpleCheckResult::notice("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         let cr4 = SimpleCheckResult::unknown("summary 4");
@@ -850,7 +850,7 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_with_metrics() {
-        let cr1 = CheckResult::ok("summary 1", m("m1", 13));
+        let cr1 = CheckResult::notice("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
@@ -865,7 +865,7 @@ mod test_writer_format {
     #[test]
     fn test_join_writers_with_metrics() {
         let mut c = Collection::default();
-        c.join(&mut Collection::from(&mut vec![CheckResult::ok(
+        c.join(&mut Collection::from(&mut vec![CheckResult::notice(
             "summary 1",
             m("m1", 13),
         )]));

@@ -69,8 +69,7 @@ def generate_azure_command(  # pylint: disable=too-many-branches
         args.append("--sequential")
 
     if params.proxy:
-        proxy_type, proxy_value = params.proxy
-        args += ["--proxy", parse_http_proxy(proxy_type, proxy_value, http_proxies)]
+        args += ["--proxy", parse_http_proxy(params.proxy, http_proxies)]
 
     if params.services:
         args += ["--services", *params.services]

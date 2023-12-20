@@ -118,8 +118,7 @@ class HTTPProxy:
         ... )
 
         >>> class ExampleParams(BaseModel):
-        ...     proxy_type: Literal["global", "environment", "url", "no_proxy"]
-        ...     proxy_value: str | None
+        ...     proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None]
 
         >>> def generate_example_commands(
         ...     params: ExampleParams,
@@ -128,7 +127,7 @@ class HTTPProxy:
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = [
         ...         "--proxy",
-        ...         parse_http_proxy(params.proxy_type, params.proxy_value, http_proxies)
+        ...         parse_http_proxy(params.proxy, http_proxies)
         ...     ]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
@@ -237,18 +236,16 @@ def parse_secret(
 
 
 def parse_http_proxy(
-    proxy_type: Literal["global", "environment", "url", "no_proxy"],
-    proxy_value: str | None,
+    proxy: object,
     http_proxies: Mapping[str, HTTPProxy],
 ) -> str:
-    # TODO: if we provide some kind of an utility function to create HTTP proxy valuespecs
-    # in the new API, it should be mentioned here too
     """
-    Returns a proxy from parameters created by the HTTP proxy CascadingDropdown valuespec
+    Returns a proxy string from parameters created by the :class:`HTTPProxy` form spec
+
+    The function will check if proxy argument has the expected type.
 
     Args:
-        proxy_type: Type of the proxy
-        proxy_value: Value of the proxy
+        proxy: An object created by the HTTPProxy form spec
         http_proxies: Mapping of globally defined HTTP proxies
 
     Returns:
@@ -271,10 +268,28 @@ def parse_http_proxy(
         ...     host_config: HostConfig,
         ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
-        ...     proxy = parse_http_proxy("global", "example_proxy", http_proxies)
+        ...     proxy = parse_http_proxy(("global", "example_proxy"), http_proxies)
         ...     args = ["--proxy", proxy]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
+    if not isinstance(proxy, tuple):
+        raise ValueError("proxy object has to be a tuple")
+
+    proxy_type, proxy_value = proxy
+
+    if not isinstance(proxy_type, str) or proxy_type not in (
+        "global",
+        "environment",
+        "url",
+        "no_proxy",
+    ):
+        raise ValueError(
+            "proxy type has to be one of: 'global', 'environment', 'url' or 'no_proxy'"
+        )
+
+    if not isinstance(proxy_value, str) and proxy_value is not None:
+        raise ValueError("proxy value has to be a string or None")
+
     if proxy_type == "url":
         return str(proxy_value)
 

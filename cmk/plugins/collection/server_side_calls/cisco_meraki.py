@@ -40,10 +40,9 @@ def agent_cisco_meraki_arguments(
     ]
 
     if params.proxy is not None:
-        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            parse_http_proxy(proxy_type, proxy_value, http_proxies),
+            parse_http_proxy(params.proxy, http_proxies),
         ]
 
     if params.sections is not None:

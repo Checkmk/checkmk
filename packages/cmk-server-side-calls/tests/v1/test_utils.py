@@ -50,54 +50,72 @@ def test_get_secret_from_params_invalid_type() -> None:
 
 
 @pytest.mark.parametrize(
-    "proxy_type, proxy_value, expected_result",
+    "proxy, expected_result",
     [
         pytest.param(
-            "global",
-            "test_proxy",
+            ("global", "test_proxy"),
             "test.com",
             id="global proxy",
         ),
         pytest.param(
-            "global",
-            "missing_proxy",
+            ("global", "missing_proxy"),
             "FROM_ENVIRONMENT",
             id="missing global proxy",
         ),
         pytest.param(
-            "url",
-            "proxy.com",
+            ("url", "proxy.com"),
             "proxy.com",
             id="url proxy",
         ),
         pytest.param(
-            "environment",
-            "environment",
+            ("environment", "environment"),
             "FROM_ENVIRONMENT",
             id="environment proxy",
         ),
         pytest.param(
-            "no_proxy",
-            None,
+            ("no_proxy", None),
             "NO_PROXY",
             id="no proxy",
-        ),
-        pytest.param(
-            "invalid",
-            None,
-            "FROM_ENVIRONMENT",
-            id="invalid proxy type",
         ),
     ],
 )
 def test_get_http_proxy(
-    proxy_type: Literal["global", "environment", "url", "no_proxy"],
-    proxy_value: str | None,
+    proxy: object,
     expected_result: str,
 ) -> None:
     http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
 
-    assert parse_http_proxy(proxy_type, proxy_value, http_proxies) == expected_result
+    assert parse_http_proxy(proxy, http_proxies) == expected_result
+
+
+@pytest.mark.parametrize(
+    "proxy, expected_error",
+    [
+        pytest.param(
+            ("invalid", None),
+            "proxy type has to be one of: 'global', 'environment', 'url' or 'no_proxy'",
+            id="invalid proxy type",
+        ),
+        pytest.param(
+            {"proxy": "test_proxy"},
+            "proxy object has to be a tuple",
+            id="invalid proxy",
+        ),
+        pytest.param(
+            ("global", 123),
+            "proxy value has to be a string or None",
+            id="invalid proxy value",
+        ),
+    ],
+)
+def test_get_http_proxy_value_error(
+    proxy: object,
+    expected_error: str,
+) -> None:
+    http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
+
+    with pytest.raises(ValueError, match=expected_error):
+        parse_http_proxy(proxy, http_proxies)
 
 
 def test_noop_parser() -> None:

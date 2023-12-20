@@ -21,8 +21,6 @@ __all__ = [
 @dataclass(frozen=True)
 class Closed:
     """
-    Defines a closed bound
-
     Args:
         value:  A bound value
 
@@ -43,8 +41,6 @@ class Closed:
 @dataclass(frozen=True)
 class Open:
     """
-    Defines an open bound
-
     Args:
         value:  A bound value
 
@@ -65,8 +61,6 @@ class Open:
 @dataclass(frozen=True)
 class FocusRange:
     """
-    Defines a focus range
-
     Args:
         lower:  A lower bound
         upper:  An upper bound
@@ -85,8 +79,6 @@ class FocusRange:
 @dataclass(frozen=True, kw_only=True)
 class Perfometer:
     """
-    Defines a perfometer
-
     Args:
         name:   An unique name
         focus_range:
@@ -120,8 +112,6 @@ class Perfometer:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
-    Defines a bidirectional perfometer
-
     Args:
         name:   An unique name
         left:   A perfometer which grows to the left
@@ -157,8 +147,6 @@ class Bidirectional:
 @dataclass(frozen=True, kw_only=True)
 class Stacked:
     """
-    Defines a stacked perfometer
-
     Args:
         name:   An unique name
         lower:  A perfometer on the bottom

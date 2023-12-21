@@ -50,7 +50,7 @@ SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_WINDOWS)
 
 ifeq ($(ENTERPRISE),yes)
-PROTO_PYTHON_OUT := $(REPO_PATH)/enterprise/cmc_proto
+PROTO_PYTHON_OUT := $(REPO_PATH)/non-free/cmc-protocols/cmc_proto
 CMC_PROTO_MODULES := \
     $(PROTO_PYTHON_OUT)/config/v1/types_pb2.py \
     $(PROTO_PYTHON_OUT)/cycletime/v1/types_pb2.py \

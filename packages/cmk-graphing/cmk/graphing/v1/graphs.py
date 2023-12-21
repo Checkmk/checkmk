@@ -19,6 +19,11 @@ __all__ = [
 @dataclass(frozen=True)
 class MinimalRange:
     """
+    The minimal range describes what will at least be covered by the graphs vertical axis,
+    regardless of the metrics values.
+    The vertical axis will be extended if the metrics exceed the minimal range, but it will never be
+    smaller.
+
     Args:
         lower: A lower bound
         upper: An upper bound
@@ -46,10 +51,15 @@ class Graph:
         name: A unique name
         title: A title
         minimal_range: A minimal range
-        compound_lines: A list of metric names or objects
-        simple_lines: A list of metric names or objects
-        optional: A list of metric names
-        conflicting: A list of metric names
+        compound_lines: A list of metric names or objects.
+            These will constitute compound lines: Colored areas, stacked on top of each other.
+        simple_lines: A list of metric names or objects.
+            These will be rendered as simple lines, without colored areas.
+        optional: A list of metric names.
+            This graph template will be used, even if the metrics specified here are missing.
+        conflicting: A list of metric names.
+            This graph template will never be used if any of these metrics are created by the
+            plugin.
 
     Example:
 

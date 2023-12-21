@@ -63,10 +63,17 @@ class FocusRange:
         lower: A lower bound
         upper: An upper bound
 
-    Example:
+    For metric that only can produce values between 0 and 100, but never smaller or larger ones, use
+    :class:`Closed` borders:
 
-        >>> FocusRange(Closed(0), Closed(100))
-        FocusRange(lower=Closed(value=0), upper=Closed(value=100))
+    >>> FocusRange(Closed(0), Closed(100))
+    FocusRange(lower=Closed(value=0), upper=Closed(value=100))
+
+    For metrics that can create arbitrarily small or large numbers, but you expect them to be
+    between -10 and +10 most of the time, use :class:`Open` borders.
+
+    >>> FocusRange(Open(-10), Open(+10))
+    FocusRange(lower=Open(value=-10), upper=Open(value=10))
     """
 
     lower: Closed | Open

@@ -23,7 +23,7 @@ from cmk.server_side_calls.v1 import (
         pytest.param(
             {
                 "timeout": 1,
-                "ssl": True,
+                "ssl": ("hostname", None),
                 "api_token": ("store", "stored_secret"),
             },
             "1.2.3.4",
@@ -41,7 +41,7 @@ from cmk.server_side_calls.v1 import (
         ),
         pytest.param(
             {
-                "ssl": False,
+                "ssl": ("deactivated", None),
                 "api_token": ("password", "api_token"),
             },
             "",
@@ -56,7 +56,7 @@ from cmk.server_side_calls.v1 import (
         ),
         pytest.param(
             {
-                "ssl": "something_else",
+                "ssl": ("custom_hostname", "something_else"),
                 "api_token": ("password", "api_token"),
             },
             "1.2.3.4",

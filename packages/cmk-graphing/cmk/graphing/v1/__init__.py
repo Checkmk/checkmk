@@ -9,14 +9,13 @@ from ._localize import Localizable
 from ._unit import PhysicalUnit, ScientificUnit, Unit
 
 __all__ = [
-    # Do not change this order, it's important for Sphinx doc
+    "graphs",
     "metrics",
+    "perfometers",
+    "translations",
+    "Color",
     "Localizable",
-    "Unit",
     "PhysicalUnit",
     "ScientificUnit",
-    "Color",
-    "perfometers",
-    "graphs",
-    "translations",
+    "Unit",
 ]

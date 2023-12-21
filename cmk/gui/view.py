@@ -235,7 +235,7 @@ class View:
             ):
                 options.add("refresh")
 
-            if user.may("general.view_option_columns"):
+            if user.may("general.view_option_columns") and not self.layout.hide_entries_per_row:
                 options.add("num_columns")
 
         return sorted(options)

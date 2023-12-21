@@ -433,6 +433,10 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
     def _css_class(self) -> str | None:
         return None
 
+    @property
+    def hide_entries_per_row(self) -> bool:
+        return True
+
 
 class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""

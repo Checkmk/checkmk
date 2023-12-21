@@ -52,6 +52,11 @@ class Layout(abc.ABC):
         """Whether this layout has an individual CSV export implementation"""
         return False
 
+    @property
+    def hide_entries_per_row(self) -> bool:
+        """Whether this layout has displays the entries per row option"""
+        return False
+
     def csv_export(
         self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
     ) -> None:

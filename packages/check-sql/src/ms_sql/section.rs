@@ -4,7 +4,7 @@
 
 use crate::config::{self};
 use crate::emit::header;
-use crate::ms_sql::queries;
+use crate::ms_sql::sqls;
 use crate::utils;
 use anyhow::Result;
 
@@ -130,9 +130,9 @@ impl Section {
             custom_query
         } else {
             match self.name.as_ref() {
-                JOBS_SECTION_NAME => Some(queries::QUERY_JOBS),
-                MIRRORING_SECTION_NAME => Some(queries::QUERY_MIRRORING),
-                AVAILABILITY_GROUPS_SECTION_NAME => Some(queries::QUERY_AVAILABILITY_GROUP),
+                JOBS_SECTION_NAME => Some(sqls::QUERY_JOBS),
+                MIRRORING_SECTION_NAME => Some(sqls::QUERY_MIRRORING),
+                AVAILABILITY_GROUPS_SECTION_NAME => Some(sqls::QUERY_AVAILABILITY_GROUP),
                 _ => None,
             }
         }

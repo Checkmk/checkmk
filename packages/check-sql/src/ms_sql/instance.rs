@@ -10,7 +10,8 @@ use crate::config::{
     CheckConfig,
 };
 use crate::emit;
-use crate::ms_sql::queries;
+use crate::ms_sql::query::{get_computer_name, run_query, Answer, Column};
+use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::utils;
 
@@ -18,25 +19,13 @@ use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::time::Instant;
 
-use tiberius::{ColumnData, Query, Row};
+use tiberius::Row;
 
 use super::defaults;
-type Answer = Vec<Row>;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
-
-pub trait Column<'a> {
-    fn get_bigint_by_idx(&self, idx: usize) -> i64;
-    fn get_bigint_by_name(&self, idx: &str) -> i64;
-    fn get_value_by_idx(&self, idx: usize) -> String;
-    fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
-    fn get_value_by_name(&self, idx: &str) -> String;
-    fn get_optional_value_by_name(&self, idx: &str) -> Option<String>;
-    fn get_all(self, sep: char) -> String;
-}
 
 #[derive(Clone, Debug, Default)]
 pub struct SqlInstanceBuilder {
@@ -361,7 +350,7 @@ impl SqlInstance {
             section::BLOCKED_SESSIONS_SECTION_NAME => {
                 self.generate_blocking_sessions_section(
                     client,
-                    &queries::get_blocking_sessions_query(),
+                    &sqls::get_blocking_sessions_query(),
                     sep,
                 )
                 .await
@@ -383,7 +372,7 @@ impl SqlInstance {
                     .await
             }
             section::DATABASES_SECTION_NAME => {
-                self.generate_databases_section(client, queries::QUERY_DATABASES, sep)
+                self.generate_databases_section(client, sqls::QUERY_DATABASES, sep)
                     .await
             }
             section::CLUSTERS_SECTION_NAME => {
@@ -392,7 +381,7 @@ impl SqlInstance {
                     .await
             }
             section::CONNECTIONS_SECTION_NAME => {
-                self.generate_connections_section(client, queries::QUERY_CONNECTIONS, sep)
+                self.generate_connections_section(client, sqls::QUERY_CONNECTIONS, sep)
                     .await
             }
             section::MIRRORING_SECTION_NAME
@@ -443,7 +432,7 @@ impl SqlInstance {
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_query(client, queries::QUERY_COUNTERS)
+        let x = run_query(client, sqls::QUERY_COUNTERS)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_counters_rows(&rows, sep));
@@ -502,7 +491,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, queries::QUERY_SPACE_USED)
+                    result += &run_query(&mut c, sqls::QUERY_SPACE_USED)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
                         .unwrap_or_else(|e| format_error(d, &e));
@@ -518,7 +507,7 @@ impl SqlInstance {
     pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
         let databases = self.generate_databases(client).await;
 
-        let result = run_query(client, queries::QUERY_BACKUP)
+        let result = run_query(client, sqls::QUERY_BACKUP)
             .await
             .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
@@ -551,7 +540,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, queries::QUERY_TRANSACTION_LOGS)
+                    result += &run_query(&mut c, sqls::QUERY_TRANSACTION_LOGS)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -584,7 +573,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, queries::QUERY_DATAFILES)
+                    result += &run_query(&mut c, sqls::QUERY_DATAFILES)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -628,7 +617,7 @@ impl SqlInstance {
 
     /// doesn't return error - the same behavior as plugin
     pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
-        let result = run_query(client, queries::QUERY_DATABASE_NAMES)
+        let result = run_query(client, sqls::QUERY_DATABASE_NAMES)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));
@@ -693,14 +682,14 @@ impl SqlInstance {
     }
 
     async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
-        let rows = &run_query(client, queries::QUERY_IS_CLUSTERED)
+        let rows = &run_query(client, sqls::QUERY_IS_CLUSTERED)
             .await
             .and_then(validate_rows)?;
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
     async fn get_database_cluster_nodes(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_query(client, queries::QUERY_CLUSTER_NODES).await?;
+        let rows = &run_query(client, sqls::QUERY_CLUSTER_NODES).await?;
         if !rows.is_empty() && !rows[0].is_empty() {
             return Ok(rows[0]
                 .iter()
@@ -712,7 +701,7 @@ impl SqlInstance {
     }
 
     async fn get_database_cluster_active_node(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_query(client, queries::QUERY_CLUSTER_ACTIVE_NODES).await?;
+        let rows = &run_query(client, sqls::QUERY_CLUSTER_ACTIVE_NODES).await?;
         if !rows.is_empty() && !rows[0].is_empty() {
             return Ok(rows[0]
                 .last() // as in legacy plugin
@@ -809,7 +798,7 @@ impl SqlInstance {
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let result = run_query(client, queries::QUERY_UTC)
+        let result = run_query(client, sqls::QUERY_UTC)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_utc_rows(&rows, sep));
@@ -824,7 +813,7 @@ impl SqlInstance {
 
     fn process_utc_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
         let row = &rows[0];
-        let utc = row[0].get_value_by_name(queries::QUERY_UTC_TIME_PARAM);
+        let utc = row[0].get_value_by_name(sqls::QUERY_UTC_TIME_PARAM);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
@@ -936,11 +925,11 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
 
 impl SqlInstanceProperties {
     pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
-        let r = run_query(client, queries::QUERY_INSTANCE_PROPERTIES).await?;
+        let r = run_query(client, sqls::QUERY_INSTANCE_PROPERTIES).await?;
         if r.is_empty() {
             anyhow::bail!(
                 "Empty answer from server on query {}",
-                queries::QUERY_INSTANCE_PROPERTIES
+                sqls::QUERY_INSTANCE_PROPERTIES
             );
         }
         Ok(Self::from(&r[0]))
@@ -1127,23 +1116,47 @@ fn to_backup_entry(
     }
 }
 
-fn to_counter_entry(row: &Row, sep: char) -> String {
-    let counter = row
-        .get_value_by_idx(0)
-        .trim()
-        .replace(' ', "_")
-        .to_lowercase();
-    let object = row.get_value_by_idx(1).trim().replace([' ', '$'], "_");
-    let instance = row.get_value_by_idx(2).trim().replace(' ', "_");
-    let value = row.get_bigint_by_idx(3).to_string();
-    format!(
-        "{object}{sep}{counter}{sep}{}{sep}{value}\n",
-        if instance.is_empty() {
-            "None"
-        } else {
-            &instance
+struct Counter {
+    name: String,
+    object: String,
+    instance: String,
+    value: String,
+}
+
+impl From<&Row> for Counter {
+    fn from(row: &Row) -> Self {
+        Self {
+            name: row.get_value_by_idx(0).trim().replace(' ', "_").to_string(),
+            object: row
+                .get_value_by_idx(1)
+                .trim()
+                .replace([' ', '$'], "_")
+                .to_string(),
+            instance: row.get_value_by_idx(2).trim().replace(' ', "_").to_string(),
+            value: row.get_bigint_by_idx(3).to_string(),
         }
-    )
+    }
+}
+
+impl Counter {
+    pub fn into_string(self, sep: char) -> String {
+        format!(
+            "{}{sep}{}{sep}{}{sep}{}\n",
+            self.object,
+            self.name,
+            if self.instance.is_empty() {
+                "None"
+            } else {
+                &self.instance
+            },
+            self.value
+        )
+    }
+}
+
+fn to_counter_entry(row: &Row, sep: char) -> String {
+    let counter = Counter::from(row);
+    counter.into_string(sep)
 }
 
 fn to_blocked_session_entry(instance_name: &str, row: &Row, sep: char) -> String {
@@ -1152,68 +1165,6 @@ fn to_blocked_session_entry(instance_name: &str, row: &Row, sep: char) -> String
     let wait_type = row.get_value_by_idx(2).trim().to_string();
     let blocking_session_id = row.get_value_by_idx(3).trim().to_string();
     format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
-}
-
-impl<'a> Column<'a> for Row {
-    fn get_bigint_by_idx(&self, idx: usize) -> i64 {
-        self.try_get::<i64, usize>(idx)
-            .unwrap_or_default()
-            .unwrap_or_default()
-    }
-
-    fn get_bigint_by_name(&self, idx: &str) -> i64 {
-        self.try_get::<i64, &str>(idx)
-            .unwrap_or_default()
-            .unwrap_or_default()
-    }
-
-    fn get_value_by_idx(&self, idx: usize) -> String {
-        self.try_get::<&str, usize>(idx)
-            .unwrap_or_default()
-            .unwrap_or_default()
-            .to_string()
-    }
-
-    fn get_optional_value_by_idx(&self, idx: usize) -> Option<String> {
-        self.try_get::<&str, usize>(idx)
-            .unwrap_or_default()
-            .map(str::to_string)
-    }
-
-    fn get_value_by_name(&self, idx: &str) -> String {
-        self.try_get::<&str, &str>(idx)
-            .unwrap_or_default()
-            .unwrap_or_default()
-            .to_string()
-    }
-
-    fn get_optional_value_by_name(&self, idx: &str) -> Option<String> {
-        self.try_get::<&str, &str>(idx)
-            .unwrap_or_default()
-            .map(str::to_string)
-    }
-
-    /// more or less correct method to extract all data from the tiberius.Row
-    /// unfortunately tiberius::Row implements only into_iter -> we are using `self``, not `&self``
-    fn get_all(self, sep: char) -> String {
-        self.into_iter()
-            .map(|c| match c {
-                ColumnData::Guid(v) => v
-                    .map(|v| format!("{{{}}}", v.to_string().to_uppercase()))
-                    .unwrap_or_default(),
-                ColumnData::I16(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::I32(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::F32(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::F64(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::Bit(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::U8(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::String(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                ColumnData::Numeric(v) => v.map(|v| v.to_string()).unwrap_or_default(),
-                _ => format!("Unsupported '{:?}'", c),
-            })
-            .collect::<Vec<String>>()
-            .join(&sep.to_string())
-    }
 }
 
 impl CheckConfig {
@@ -1496,38 +1447,6 @@ async fn generate_result(
     Ok(results.join(""))
 }
 
-/// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
-pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
-    if query.is_empty() {
-        log::error!("Empty query");
-        anyhow::bail!("Empty query");
-    }
-    let start = Instant::now();
-    let result = _run_query(client, query).await;
-    log_query(start, &result, query);
-    result
-}
-
-fn log_query(start: Instant, result: &Result<Vec<Answer>>, query: &str) {
-    let total = (Instant::now() - start).as_millis();
-    let q = short_query(query);
-    match result {
-        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{q}`"),
-        Err(err) => log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{q}`",),
-    }
-}
-
-async fn _run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
-    log::debug!("Query to run: `{}`", short_query(query));
-    let stream = Query::new(query).query(client).await?;
-    let rows: Vec<Answer> = stream.into_results().await?;
-    Ok(rows)
-}
-
-fn short_query(query: &str) -> String {
-    query.to_owned()[0..std::cmp::max(16, query.len() - 1)].to_string()
-}
-
 /// return all MS SQL instances installed
 async fn get_instance_builders(endpoint: &Endpoint) -> Result<Vec<SqlInstanceBuilder>> {
     let all = obtain_instance_builders_from_registry(endpoint).await?;
@@ -1543,13 +1462,13 @@ pub async fn obtain_instance_builders_from_registry(
             exec_win_registry_sql_instances_query(
                 &mut client,
                 endpoint,
-                &queries::get_win_registry_instances_query(),
+                &sqls::get_win_registry_instances_query(),
             )
             .await?,
             exec_win_registry_sql_instances_query(
                 &mut client,
                 endpoint,
-                &queries::get_wow64_32_registry_instances_query(),
+                &sqls::get_wow64_32_registry_instances_query(),
             )
             .await?,
         )),
@@ -1568,7 +1487,7 @@ async fn exec_win_registry_sql_instances_query(
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_query(client, query).await?;
     if let Some(rows) = answers.get(0) {
-        let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
+        let computer_name = get_computer_name(client, sqls::QUERY_COMPUTER_NAME)
             .await
             .unwrap_or_default();
         let instances = to_sql_instance(rows, endpoint, computer_name);
@@ -1594,20 +1513,6 @@ fn to_sql_instance(
         })
         .collect::<Vec<SqlInstanceBuilder>>()
         .to_vec()
-}
-
-pub async fn get_computer_name(client: &mut Client, query: &str) -> Result<Option<String>> {
-    let rows = run_query(client, query).await?;
-    if rows.is_empty() || rows[0].is_empty() {
-        log::warn!("Computer name not found with query {query}");
-        return Ok(None);
-    }
-    let row = &rows[0];
-    Ok(row[0]
-        .try_get::<&str, usize>(0)
-        .ok()
-        .flatten()
-        .map(str::to_string))
 }
 
 #[cfg(test)]

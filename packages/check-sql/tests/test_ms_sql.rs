@@ -6,10 +6,11 @@ mod common;
 use std::collections::HashSet;
 
 use check_sql::ms_sql::{
-    api::{self, SqlInstance, SqlInstanceBuilder},
     client::{self, Client},
-    queries,
+    instance::{self, SqlInstance, SqlInstanceBuilder},
+    query,
     section::{self, Section},
+    sqls,
 };
 
 use check_sql::setup::Env;
@@ -36,7 +37,7 @@ async fn test_local_connection() {
     let mut client = client::create_local(None, check_sql::ms_sql::defaults::STANDARD_PORT)
         .await
         .unwrap();
-    let properties = api::SqlInstanceProperties::obtain_by_query(&mut client)
+    let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
         .await
         .unwrap();
     assert_eq!(properties.name, "MSSQLSERVER");
@@ -54,7 +55,7 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local() {
-    let builders = api::obtain_instance_builders_from_registry(&Endpoint::default())
+    let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
     let all: Vec<SqlInstance> = to_instances([&builders.0[..], &builders.1[..]].concat());
@@ -68,7 +69,7 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
-    let builders = api::obtain_instance_builders_from_registry(&Endpoint::default())
+    let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
     let names: Vec<String> = [&builders.0[..], &builders.1[..]]
@@ -82,7 +83,7 @@ async fn test_validate_all_instances_local() {
         match c {
             Ok(mut c) => {
                 assert!(tools::run_get_version(&mut c).await.is_some());
-                let properties = api::SqlInstanceProperties::obtain_by_query(&mut c)
+                let properties = instance::SqlInstanceProperties::obtain_by_query(&mut c)
                     .await
                     .unwrap();
                 assert!(
@@ -91,10 +92,10 @@ async fn test_validate_all_instances_local() {
                     properties
                 );
             }
-            Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
+            Err(e) if e.to_string().starts_with(instance::SQL_LOGIN_ERROR_TAG) => {
                 // we may not have valid credentials to connect - it's normal
             }
-            Err(e) if e.to_string().starts_with(api::SQL_TCP_ERROR_TAG) => {
+            Err(e) if e.to_string().starts_with(instance::SQL_TCP_ERROR_TAG) => {
                 panic!("Unexpected CONNECTION error: `{:?}`", e);
             }
             Err(e) => {
@@ -110,7 +111,7 @@ async fn test_remote_connection() {
         let mut client = client::create_from_config(&endpoint.make_ep())
             .await
             .unwrap();
-        let properties = api::SqlInstanceProperties::obtain_by_query(&mut client)
+        let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
             .await
             .unwrap();
         assert_eq!(properties.name, "MSSQLSERVER");
@@ -132,7 +133,7 @@ fn to_instances(builders: Vec<SqlInstanceBuilder>) -> Vec<SqlInstance> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let builders = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let all = to_instances([&builders.0[..], &builders.1[..]].concat());
@@ -157,7 +158,7 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let instances = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let is = to_instances([&instances.0[..], &instances.1[..]].concat());
@@ -185,7 +186,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
-            && api::get_computer_name(c, queries::QUERY_COMPUTER_NAME)
+            && query::get_computer_name(c, sqls::QUERY_COMPUTER_NAME)
                 .await
                 .unwrap()
                 .unwrap()
@@ -196,7 +197,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_blocked_sessions(i, c).await;
     validate_all_sessions_to_check_format(i, c).await;
     assert!(i
-        .generate_blocking_sessions_section(c, queries::BAD_QUERY, '|',)
+        .generate_blocking_sessions_section(c, sqls::BAD_QUERY, '|',)
         .await
         .contains(" error: "),);
     validate_table_spaces(i, c, e).await;
@@ -240,7 +241,7 @@ async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
     let blocked_sessions = &instance
-        .generate_blocking_sessions_section(client, &queries::get_blocking_sessions_query(), '|')
+        .generate_blocking_sessions_section(client, &sqls::get_blocking_sessions_query(), '|')
         .await;
     assert_eq!(
         blocked_sessions,
@@ -250,7 +251,7 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) 
 
 async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
     let all_sessions = &instance
-        .generate_blocking_sessions_section(client, queries::QUERY_WAITING_TASKS, '|')
+        .generate_blocking_sessions_section(client, sqls::QUERY_WAITING_TASKS, '|')
         .await;
 
     let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
@@ -382,7 +383,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, queries::QUERY_DATABASES, '|')
+        .generate_databases_section(client, sqls::QUERY_DATABASES, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -414,7 +415,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, queries::BAD_QUERY, '|')
+        .generate_databases_section(client, sqls::BAD_QUERY, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -438,7 +439,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_connections_section(client, queries::QUERY_CONNECTIONS, ' ')
+        .generate_connections_section(client, sqls::QUERY_CONNECTIONS, ' ')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -460,7 +461,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
     let result = instance
-        .generate_connections_section(client, queries::BAD_QUERY, ' ')
+        .generate_connections_section(client, sqls::BAD_QUERY, ' ')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -504,7 +505,7 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
 
 async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, section: &Section) {
     let result = instance
-        .generate_query_section(endpoint, section, Some(queries::BAD_QUERY))
+        .generate_query_section(endpoint, section, Some(sqls::BAD_QUERY))
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -546,7 +547,7 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let instances = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let is = to_instances([&instances.0[..], &instances.1[..]].clone().concat());
@@ -570,7 +571,7 @@ mssql:
             match c {
                 Ok(mut c) => assert!(
                     tools::run_get_version(&mut c).await.is_some()
-                        && api::get_computer_name(&mut c, queries::QUERY_COMPUTER_NAME)
+                        && query::get_computer_name(&mut c, sqls::QUERY_COMPUTER_NAME)
                             .await
                             .unwrap()
                             .unwrap()
@@ -593,7 +594,7 @@ async fn test_get_computer_name() {
         let mut client = client::create_from_config(&endpoint.make_ep())
             .await
             .unwrap();
-        let name = api::get_computer_name(&mut client, queries::QUERY_COMPUTER_NAME)
+        let name = query::get_computer_name(&mut client, sqls::QUERY_COMPUTER_NAME)
             .await
             .unwrap();
         assert!(name
@@ -709,7 +710,7 @@ async fn test_find_no_detect_local() {
         check_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
             .unwrap()
             .unwrap();
-    let instances = api::find_all_instance_builders(&mssql).await.unwrap();
+    let instances = instance::find_all_instance_builders(&mssql).await.unwrap();
     assert_eq!(instances.len(), 0);
 }
 
@@ -723,7 +724,7 @@ async fn test_find_no_detect_two_custom_instances_local() {
     ))
     .unwrap()
     .unwrap();
-    let instances = to_instances(api::find_all_instance_builders(&mssql).await.unwrap());
+    let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
     assert_eq!(instances.len(), 1);
     assert_eq!(instances[0].name, "MSSQLSERVER");
     assert!(instances[0].edition.contains(" Edition"));
@@ -746,7 +747,7 @@ async fn test_find_no_detect_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = api::find_all_instance_builders(&mssql).await.unwrap();
+        let instances = instance::find_all_instance_builders(&mssql).await.unwrap();
         assert_eq!(instances.len(), 0);
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
@@ -767,7 +768,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = to_instances(api::find_all_instance_builders(&mssql).await.unwrap());
+        let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
         assert_eq!(instances.len(), 1);
         assert_eq!(instances[0].name, "MSSQLSERVER");
         assert!(instances[0].edition.contains(" Edition"));

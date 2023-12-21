@@ -1,0 +1,14 @@
+Title: Licensing: Allow UI to be used in trial and free state when CMC is not running
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1704716713
+Edition: cce
+Level: 1
+Version: 2.2.0p18
+
+When using a CCE in the trial phase or in the free license state, the UI was mostly unusable when the CMC was not running (with the pages showing the error "Cannot connect to 'unix:/omd/sites/monitoring_eval/tmp/run/live'....")
+
+Since the CMC is prohibited from starting if too many services are being monitored in the free license state, this meant that in order to get out of the free state, the license could only be applied via REST-API.
+
+This has now been fixed.

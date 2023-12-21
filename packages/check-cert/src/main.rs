@@ -215,6 +215,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .response_time(Some(response_time))
             .build(),
     );
+    collection.join(&mut verification::check(
+        &chain,
+        VerifChecks::builder()
+            .trust_store(&trust_store)
+            .allow_self_signed(args.allow_self_signed)
+            .build(),
+    ));
     collection.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
@@ -236,13 +243,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))
             .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
-            .build(),
-    ));
-    collection.join(&mut verification::check(
-        &chain,
-        VerifChecks::builder()
-            .trust_store(&trust_store)
-            .allow_self_signed(args.allow_self_signed)
             .build(),
     ));
 

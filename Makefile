@@ -353,7 +353,7 @@ linesofcode:
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise protobuf-files
+	$(MAKE) -C non-free/cmc-protocols protobuf-files
 endif
 
 format: format-python format-c format-shell format-js format-css format-bazel

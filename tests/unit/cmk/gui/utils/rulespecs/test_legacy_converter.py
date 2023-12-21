@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 from functools import partial
-from typing import TypeVar
+from typing import assert_never, TypeVar
 
 import pytest
 
@@ -472,7 +472,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Age",
         ),
         pytest.param(
-            api_v1.form_specs.Proxy(),
+            api_v1.preconfigured.Proxy(),
             legacy_valuespecs.CascadingDropdown(
                 title=_("HTTP proxy"),
                 default_value=("environment", "environment"),
@@ -529,9 +529,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="minimal HTTPProxy",
         ),
         pytest.param(
-            api_v1.form_specs.Proxy(
+            api_v1.preconfigured.Proxy(
                 allowed_schemas=frozenset(
-                    {api_v1.form_specs.ProxySchema.HTTP, api_v1.form_specs.ProxySchema.HTTPS}
+                    {api_v1.preconfigured.ProxySchema.HTTP, api_v1.preconfigured.ProxySchema.HTTPS}
                 ),
                 title=api_v1.Localizable("age title"),
                 help_text=api_v1.Localizable("help text"),
@@ -1442,9 +1442,8 @@ def test_transform(
     assert expected_transformed_value == actual_transformed_value
 
 
-@pytest.mark.parametrize(
-    "form_spec",
-    [
+def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
+    return [
         api_v1.form_specs.Integer(),
         api_v1.form_specs.Float(),
         api_v1.form_specs.DataSize(),
@@ -1457,21 +1456,36 @@ def test_transform(
         api_v1.form_specs.ServiceState(),
         api_v1.form_specs.HostState(),
         api_v1.form_specs.List(parameter_form=api_v1.form_specs.Integer()),
+        api_v1.form_specs.FixedValue(value=None),
+        api_v1.form_specs.TimeSpan(),
+        api_v1.form_specs.Levels(lower=None, upper=None, form_spec=api_v1.form_specs.Integer),
+        api_v1.form_specs.BooleanChoice(),
         api_v1.form_specs.FileUpload(),
-    ],
-)
-def test_form_spec_attributes(form_spec: api_v1.form_specs.FormSpec) -> None:
-    match form_spec:
-        case api_v1.form_specs.FileUpload():
-            # these don't have a transform
-            _ = form_spec.title
+        api_v1.preconfigured.Proxy(),
+    ]
 
-        case other_form_spec:
+
+@pytest.mark.parametrize("form_spec", _exposed_form_specs())
+def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
+    match form_spec:
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice():
             try:
-                _ = other_form_spec.title
-                _ = other_form_spec.transform
-            except AttributeError as exc:
-                raise AssertionError from exc
+                _ = form_spec.transform
+            except AttributeError:
+                assert False
+        case api_v1.preconfigured.Proxy() | api_v1.form_specs.FileUpload():
+            # these don't have a transform
+            assert True
+        case other_form_spec:
+            assert_never(other_form_spec)
+
+
+@pytest.mark.parametrize("form_spec", _exposed_form_specs())
+def test_form_spec_title(form_spec: api_v1.form_specs.FormSpec) -> None:
+    try:
+        _ = form_spec.title
+    except AttributeError:
+        assert False
 
 
 def _get_legacy_no_levels_choice() -> tuple[str, str, legacy_valuespecs.FixedValue]:

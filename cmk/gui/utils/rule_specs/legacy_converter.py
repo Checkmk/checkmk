@@ -518,14 +518,14 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Levels():
             return _convert_to_legacy_levels(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Proxy():
-            return _convert_to_legacy_http_proxy(to_convert, localizer)
-
         case ruleset_api_v1.form_specs.BooleanChoice():
             return _convert_to_legacy_checkbox(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.FileUpload():
             return _convert_to_legacy_file_upload(to_convert, localizer)
+
+        case ruleset_api_v1.preconfigured.Proxy():
+            return _convert_to_legacy_http_proxy(to_convert, localizer)
 
         case other:
             assert_never(other)
@@ -534,20 +534,18 @@ def _convert_to_inner_legacy_valuespec(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-    transform = getattr(to_convert, "transform", None)
-    match transform:
-        case ruleset_api_v1.form_specs.Migrate():
+    if hasattr(to_convert, "transform"):
+        if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Migrate):
             return legacy_valuespecs.Migrate(
                 valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-                migrate=transform.model_to_form,
+                migrate=to_convert.transform.model_to_form,
             )
-        case ruleset_api_v1.form_specs.Transform():
+        if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Transform):
             return legacy_valuespecs.Transform(
                 valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-                to_valuespec=transform.model_to_form,
-                from_valuespec=transform.form_to_model,
+                to_valuespec=to_convert.transform.model_to_form,
+                from_valuespec=to_convert.transform.form_to_model,
             )
-
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 
@@ -1291,7 +1289,7 @@ def _convert_to_legacy_levels(
 
 
 def _convert_to_legacy_http_proxy(
-    to_convert: ruleset_api_v1.form_specs.Proxy, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.preconfigured.Proxy, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     allowed_schemas = {s.value for s in to_convert.allowed_schemas}
 

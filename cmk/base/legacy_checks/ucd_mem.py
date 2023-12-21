@@ -26,15 +26,13 @@ from cmk.base.config import check_info
 # .1.3.6.1.4.1.2021.4.100.0 0       --> UCD-SNMP-MIB::memSwapError.0
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
-# suggested by customer
-
 
 def inventory_ucd_mem(parsed):
     if parsed:
-        yield "", {}
+        yield None, {}
 
 
-def check_ucd_mem(item, params, parsed):
+def check_ucd_mem(_no_item, params, parsed):
     if not parsed:
         return
 
@@ -61,7 +59,7 @@ check_info["ucd_mem"] = LegacyCheckDefinition(
     service_name="Memory",
     discovery_function=inventory_ucd_mem,
     check_function=check_ucd_mem,
-    check_ruleset_name="memory_simple",
+    check_ruleset_name="memory_simple_single",
     check_default_parameters={
         "levels": ("perc_used", (80.0, 90.0)),
         "swap_errors": 0,

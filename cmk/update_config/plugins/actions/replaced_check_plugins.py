@@ -9,4 +9,5 @@ REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
     CheckPluginName("arbor_peakflow_sp"): CheckPluginName("arbor_memory"),
     CheckPluginName("arbor_peakflow_tms"): CheckPluginName("arbor_memory"),
     CheckPluginName("arbor_peakflow_pravail"): CheckPluginName("arbor_memory"),
+    CheckPluginName("f5_bigip_mem_tmm"): CheckPluginName("f5_bigip_mem"),
 }

@@ -14,6 +14,3 @@ description:
 
 discovery:
  One service is created for each gateway.
-
-item:
- Empty string

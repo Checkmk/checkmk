@@ -286,33 +286,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "checkpoint_memory",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
             "cisco_cpu_memory",
             RuleGroup.CheckgroupParameters("cisco_cpu_memory"),
-        ),
-        (
-            "check",
-            "datapower_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "f5_bigip_mem_tmm",
-            RuleGroup.CheckgroupParameters("memory_simple"),
-        ),
-        (
-            "check",
-            "hp_procurve_mem",
-            RuleGroup.CheckgroupParameters("memory_simple"),
         ),
         (
             "check",
@@ -334,7 +309,6 @@ class ErrorReporter:
             "systemd_units_services_summary",
             RuleGroup.CheckgroupParameters("systemd_services_summary"),
         ),
-        ("check", "ucd_mem", RuleGroup.CheckgroupParameters("memory_simple")),
     }
     KNOWN_WATO_MISSING = {
         # type # instance # wato

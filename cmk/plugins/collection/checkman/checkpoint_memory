@@ -8,8 +8,5 @@ description:
  This check monitors the current memory usage on a Check Point Firewall.
  Warning and critical levels may be configured via WATO.
 
-item:
- The fixed statement {{System}}
-
 discovery:
  One service is created.

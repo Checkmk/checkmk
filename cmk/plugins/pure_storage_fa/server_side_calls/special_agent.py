@@ -19,7 +19,7 @@ from cmk.server_side_calls.v1 import (
 
 class Params(BaseModel, frozen=True):
     timeout: int | None = None
-    ssl: bool | str = True
+    ssl: tuple[str, str | None] = ("hostname", None)
     api_token: tuple[Literal["password", "store"], str]
 
 
@@ -32,12 +32,13 @@ def commands_function(
         ["--timeout", str(params.timeout)] if params.timeout else []
     )
 
-    if params.ssl is False:
+    ssl_config_ident, ssl_config_value = params.ssl
+    if ssl_config_ident == "deactivated":
         command_arguments.append("--no-cert-check")
-    elif params.ssl is True:
+    elif ssl_config_ident == "hostname":
         command_arguments += ["--cert-server-name", host_config.name]
     else:
-        command_arguments += ["--cert-server-name", str(params.ssl)]
+        command_arguments += ["--cert-server-name", str(ssl_config_value)]
 
     command_arguments += ["--api-token", parse_secret(params.api_token)]
 

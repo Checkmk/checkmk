@@ -19,6 +19,7 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
     _convert_to_legacy_levels,
@@ -649,6 +650,35 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("help text"),
             ),
             id="Metric",
+        ),
+        pytest.param(
+            api_v1.preconfigured.MonitoredHost(),
+            legacy_valuespecs.MonitoredHostname(
+                title=_("Host name"),
+                help=_("Select from a list of host names known to Checkmk"),
+                autocompleter=ContextAutocompleterConfig(
+                    ident=legacy_valuespecs.MonitoredHostname.ident,
+                    strict=True,
+                    show_independent_of_context=True,
+                ),
+            ),
+            id="minimal MonitoredHost",
+        ),
+        pytest.param(
+            api_v1.preconfigured.MonitoredHost(
+                title=api_v1.Localizable("host title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_valuespecs.MonitoredHostname(
+                title=_("host title"),
+                help=_("help text"),
+                autocompleter=ContextAutocompleterConfig(
+                    ident=legacy_valuespecs.MonitoredHostname.ident,
+                    strict=True,
+                    show_independent_of_context=True,
+                ),
+            ),
+            id="MonitoredHost",
         ),
     ],
 )
@@ -1483,6 +1513,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.FileUpload(),
         api_v1.preconfigured.Proxy(),
         api_v1.preconfigured.Metric(),
+        api_v1.preconfigured.MonitoredHost(),
     ]
 
 
@@ -1494,7 +1525,7 @@ def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
                 _ = form_spec.transform
             except AttributeError:
                 assert False
-        case api_v1.preconfigured.Metric() | api_v1.preconfigured.Proxy() | api_v1.form_specs.FileUpload():
+        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.Proxy():
             # these don't have a transform
             assert True
         case other_form_spec:

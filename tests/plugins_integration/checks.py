@@ -36,6 +36,13 @@ class SkippedChecks:
         "agent-2.2.0p12-redis-6.10.16:Redis 127.0.0.1:6379 Persistence",  # TODO: dynamic data need to be regexed
         "agent-2.2.0-ontapi-9.10:Systemtime netapp1-01",  # TODO: dynamic data need to be regexed
         "agent-2.2.0-ontapi-9.10:Systemtime netapp1-02",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret azure-cli-2022-11-14-10-09-49 - rbac",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret azure-cli-2023-01-17-07-23-40 - rbac",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret azure-cli-2022-12-19-12-23-12 - rbac",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret azure-cli-2022-12-19-12-35-16 - rbac",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret my-check-mk-app - my-check-mk-key",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret my-checkmk-app - my-checkmk-key",  # TODO: dynamic data need to be regexed
+        "agent-2.2.0p14-special-azure:Azure/App Registration Secret checkmk - checkmk",  # TODO: dynamic data need to be regexed
     ]
 
 

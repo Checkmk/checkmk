@@ -73,13 +73,19 @@ pub fn check(der: &[u8], config: Config) -> Collection {
     };
 
     Collection::from(&mut unwrap_into!(
-        check_serial(cert.raw_serial_as_string(), config.serial),
         config.subject_cn.map(|expected| {
-            check_eq!(
-                "Subject CN",
-                first_of(&mut cert.subject().iter_common_name()),
-                expected
-            )
+            let subject_cn = first_of(&mut cert.subject().iter_common_name());
+            if subject_cn == expected {
+                SimpleCheckResult::ok_with_details(
+                    format!("CN={}", subject_cn),
+                    format!("Subject CN: {}", subject_cn),
+                )
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "Subject CN is {} but expected {}",
+                    subject_cn, expected
+                ))
+            }
         }),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
         config.subject_o.map(|expected| {
@@ -96,6 +102,7 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 expected
             )
         }),
+        check_serial(cert.raw_serial_as_string(), config.serial),
         config.issuer_cn.map(|expected| {
             check_eq!(
                 "Issuer CN",

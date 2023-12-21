@@ -933,7 +933,7 @@ mod test_writer_format {
     }
 
     #[test]
-    fn test_merge_check_results_with_metrics() {
+    fn test_collection_with_metrics() {
         let cr1 = CheckResult::notice("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
@@ -949,7 +949,7 @@ mod test_writer_format {
     }
 
     #[test]
-    fn test_join_writers_with_metrics() {
+    fn test_joined_collection_with_metrics() {
         let mut c = Collection::default();
         c.join(&mut Collection::from(&mut vec![CheckResult::notice(
             "summary 1",
@@ -969,6 +969,57 @@ mod test_writer_format {
             m1=13;;;;\n\
             m2=37;;;;\n\
             m3=42;;;;"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_details() {
+        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_warn = SimpleCheckResult::warn_with_details("summary warn", "details warn");
+        let cr_crit = SimpleCheckResult::crit_with_details("summary crit", "details crit");
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![cr_ok.into(), cr_warn.into(), cr_crit.into()])
+            ),
+            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            details warn\n\
+            details crit"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_metrics_and_details() {
+        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_warn =
+            CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
+        let cr_crit =
+            CheckResult::crit_with_details("summary crit", "details crit", m("mcrit", 37));
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![cr_ok.into(), cr_warn, cr_crit])
+            ),
+            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            details warn | mwarn=13;;;;\n\
+            details crit | mcrit=37;;;;"
+        );
+    }
+
+    #[test]
+    fn test_collection_with_heterogeneous_details() {
+        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_warn =
+            CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
+        let cr_crit = CheckResult::crit("summary crit", m("mcrit", 37));
+        assert_eq!(
+            format!(
+                "{}",
+                Collection::from(&mut vec![cr_ok.into(), cr_warn, cr_crit])
+            ),
+            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            details warn | mwarn=13;;;;\n\
+            mcrit=37;;;;"
         );
     }
 }

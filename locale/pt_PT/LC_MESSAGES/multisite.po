@@ -592,10 +592,6 @@ msgstr "%s não é um elemento existente nesta seleção."
 msgid "%s is parent of %s."
 msgstr "%s é parente de %s."
 
-#, fuzzy, python-format
-msgid "%s is too %s. The %s allowed value is %s."
-msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
-
 #, python-format
 msgid "%s latency"
 msgstr "%s latência"
@@ -3484,9 +3480,6 @@ msgstr "Adicionar & remover anfitriões"
 msgid "Add Aggregation"
 msgstr "Adicionar Agregação"
 
-msgid "Add Authenticator App"
-msgstr "Adicionar a aplicação Authenticator"
-
 msgid "Add BI Pack"
 msgstr "Adicionar BI Pack"
 
@@ -3551,9 +3544,6 @@ msgstr "Adicionar ID da regra"
 
 msgid "Add SLA"
 msgstr "Adicionar SLA"
-
-msgid "Add Security Token"
-msgstr "Adicionar Token de Segurança"
 
 msgid "Add Suffix"
 msgstr "Adicionar Sufixo"
@@ -5609,6 +5599,10 @@ msgstr "Permitido ver partes da árvore"
 msgid "Allowed to see the whole tree"
 msgstr "Permitido ver a árvore inteira"
 
+#, fuzzy, python-format
+msgid "Allowed values range from %s to %s."
+msgstr "Renomeado nó de cluster de %s para %s."
+
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "Permite a um utilizador criar ou modificar entradas no programador de "
@@ -6820,8 +6814,13 @@ msgstr "Tipos de autenticação"
 msgid "Authentication with TLS"
 msgstr "Autenticação com TLS"
 
-msgid "Authenticaton Applications"
-msgstr "Aplicações de autenticação"
+#, fuzzy
+msgid "Authenticator app"
+msgstr "Adicionar a aplicação Authenticator"
+
+#, fuzzy
+msgid "Authenticator apps"
+msgstr "Adicionar a aplicação Authenticator"
 
 msgid "Authmethod"
 msgstr "Método Authmethod"
@@ -7632,6 +7631,10 @@ msgid "Backup code"
 msgstr "Código de segurança"
 
 msgid "Backup codes"
+msgstr "Códigos de segurança"
+
+#, fuzzy
+msgid "Backup codes left:"
 msgstr "Códigos de segurança"
 
 msgid "Backup configured"
@@ -11281,6 +11284,10 @@ msgstr ""
 
 msgid "Click here to see the activation status per site."
 msgstr "Clique aqui para ver o status de ativação por site."
+
+#, fuzzy, python-format
+msgid "Click on 'Register %s' to enable two-factor authentication via %s."
+msgstr "Remover a autenticação de dois factores de %s"
 
 msgid "Click to toggle this setting"
 msgstr "Clique para activar esta definição"
@@ -15584,6 +15591,10 @@ msgstr ""
 msgid "Delete annotation #%d"
 msgstr "Eliminar anotação #%d"
 
+#, fuzzy
+msgid "Delete authentication via "
+msgstr "Testar a autenticação"
+
 msgid "Delete auxiliary tag"
 msgstr "Eliminar etiqueta auxiliar"
 
@@ -15846,9 +15857,6 @@ msgstr "Eliminar período de tempo"
 
 msgid "Delete time range"
 msgstr "Eliminar intervalo de tempo"
-
-msgid "Delete two-factor credential"
-msgstr "Eliminar a credencial de dois factores"
 
 msgid "Delete unpackaged file"
 msgstr "Eliminar o ficheiro não embalado"
@@ -19726,6 +19734,9 @@ msgstr ""
 "Digite apenas o nome simples da ação, por exemplo, <tt>iso</tt>, <b>não</b> "
 "a UNC completa como <tt>\\\\servername\\iso</tt>"
 
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
 "description)."
@@ -22849,6 +22860,10 @@ msgstr "Propriedades Gerais"
 msgid "Generate"
 msgstr "Gerar"
 
+#, fuzzy
+msgid "Generate backup codes"
+msgstr "Regenerar códigos de backup"
+
 msgid "Generate core config parallelized"
 msgstr "Gerar configuração de núcleo paralela"
 
@@ -25272,9 +25287,6 @@ msgstr "O anfitrião precisa de uma actualização do agente"
 msgid "Host network"
 msgstr "Rede anfitriã"
 
-msgid "Host notes URL expanded"
-msgstr "Notas de anfitrião URL expandido"
-
 msgid "Host notification number"
 msgstr "Número de notificação do anfitrião"
 
@@ -27497,6 +27509,17 @@ msgstr ""
 "estes arquivos são usados então."
 
 msgid ""
+"If you lose access to your authentication app / security token, you can use "
+"any of these codes to login. Generating backup codes automatically "
+"invalidates existing codes."
+msgstr ""
+
+msgid ""
+"If you lose access to your authentication device, you can use any of the "
+"generated backup codes to login."
+msgstr ""
+
+msgid ""
 "If you multiply the number of data points with the number of steps "
 "aggregated then you get the time range that is stored in this archive. Each "
 "data point needs 8 bytes for each aggregation (MIN, MAX, AVERAGE) that you "
@@ -27537,13 +27560,6 @@ msgstr ""
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr "Se adquiriu a sua licença através de %s, contacte-os."
-
-msgid ""
-"If you regenerate backup codes, you automatically invalidate the existing "
-"codes."
-msgstr ""
-"Se regenerar códigos de backup, invalida automaticamente os códigos "
-"existentes."
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -29654,6 +29670,10 @@ msgstr "Faixa vertical inválida: de deve ser inferior a"
 
 msgid "Invalid visual type"
 msgstr "Tipo visual inválido"
+
+#, fuzzy
+msgid "Invalidate all"
+msgstr "Invalidar todos os códigos"
 
 msgid "Invalidate all backup codes"
 msgstr "Invalidar todos os códigos de salvaguarda"
@@ -36776,7 +36796,8 @@ msgstr "Sem ID de pedido adequado"
 msgid "No authentication, no privacy"
 msgstr "Sem autenticação, sem privacidade"
 
-msgid "No backup codes created yet."
+#, fuzzy
+msgid "No backup codes generated yet."
 msgstr "Ainda não foram criados códigos de salvaguarda."
 
 msgid "No baked agent for this host available"
@@ -37477,9 +37498,6 @@ msgstr "Não é permitido alterar a senha. A alteração não pode ser aplicada.
 msgid "Not ready duration"
 msgstr "Duração não pronta"
 
-msgid "Not registered"
-msgstr "Não registado"
-
 msgid "Not responding devices"
 msgstr "Dispositivos que não respondem"
 
@@ -37586,8 +37604,9 @@ msgstr ""
 msgid "Notes"
 msgstr "Notas"
 
-msgid "Notes URL expanded"
-msgstr "Notas URL expandido"
+#, fuzzy
+msgid "Notes URL"
+msgstr "Notas"
 
 msgid "Notes URL for Hosts"
 msgstr "URL de Notas para os Anfitriões"
@@ -38739,9 +38758,6 @@ msgstr "Níveis de época e média de OSDs"
 
 msgid "OSN Laser attenuation"
 msgstr "Atenuação a laser OSN"
-
-msgid "OTP code"
-msgstr "Código OTP"
 
 #, fuzzy
 msgid "OVS bonding interface status"
@@ -41581,6 +41597,9 @@ msgstr "Por favor, introduza a data no formato AAAA-MM-DD."
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "Por favor, crie primeiro alguns <a href='%s'>grupos de contacto</a>"
 
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
 msgid "Please leave either both from and until empty or enter two times."
 msgstr "Por favor, saia tanto de e até estar vazio ou entre duas vezes."
 
@@ -43871,11 +43890,18 @@ msgstr ""
 "estes agentes podem conter informações confidenciais, tais como palavras-"
 "passe."
 
+msgid "Register an authentication device before generating backup codes."
+msgstr ""
+
 msgid "Register any existing host"
 msgstr "Registar qualquer anfitrião existente"
 
 msgid "Register any new host"
 msgstr "Registar qualquer novo anfitrião"
+
+#, fuzzy
+msgid "Register authenticator app"
+msgstr "Registar a aplicação Authenticator"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -43894,6 +43920,10 @@ msgstr "Registar o anfitrião existente gerido"
 msgid "Register new hosts in managed folders"
 msgstr "Registar novos anfitriões em pastas geridas"
 
+#, fuzzy
+msgid "Register security token"
+msgstr "Tokens de segurança"
+
 msgid "Registered"
 msgstr "Registado em"
 
@@ -43901,6 +43931,10 @@ msgid "Registered agents"
 msgstr "Agentes registados"
 
 msgid "Registered at"
+msgstr "Registado em"
+
+#, fuzzy
+msgid "Registered at "
 msgstr "Registado em"
 
 msgid "Registered desktops"
@@ -46757,14 +46791,19 @@ msgstr "Segurança"
 msgid "Security Level"
 msgstr "Nível de Segurança"
 
-msgid "Security Tokens"
-msgstr "Tokens de segurança"
-
 msgid "Security fix"
 msgstr "Correcção de segurança"
 
 msgid "Security name"
 msgstr "Nome de segurança"
+
+#, fuzzy
+msgid "Security token"
+msgstr "Tokens de segurança"
+
+#, fuzzy
+msgid "Security tokens"
+msgstr "Tokens de segurança"
 
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
@@ -47624,9 +47663,6 @@ msgstr "Intervalo de verificação normal de serviço"
 
 msgid "Service normal/retry check interval"
 msgstr "Serviço normal/intervalo de verificação de repetição"
-
-msgid "Service notes URL expanded"
-msgstr "URL das notas de serviço alargado"
 
 msgid "Service notification number"
 msgstr "Número de nota de serviço"
@@ -55690,6 +55726,10 @@ msgstr ""
 "A percentagem máxima permitida de perda de pacotes para o destino antes "
 "deste serviço entrar em alerta/crítico."
 
+#, fuzzy, python-format
+msgid "The maximum allowed value is %s."
+msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
+
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
 "warning/critical. This alarm only applies to the target host, not the hops "
@@ -55793,6 +55833,10 @@ msgstr ""
 "A etiqueta métrica é exibida ao lado do valor consultado no detalhe de "
 "status do serviço resultante. O nome da métrica será tomado como etiqueta se "
 "nada tiver sido especificado."
+
+#, fuzzy, python-format
+msgid "The minimum allowed value is %s."
+msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 
 #, python-format
 msgid ""
@@ -59043,6 +59087,10 @@ msgstr ""
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
 msgstr "Esta mensagem foi criada em %s e é válida até %s."
+
+#, fuzzy
+msgid "This message is not supposed to be used. Ever."
+msgstr "Este URL não pode ser usado como bookmark"
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -65569,6 +65617,10 @@ msgstr "Autenticação de dois factores"
 msgid "Two-factor authentication not enabled"
 msgstr "Autenticação de dois factores não activada"
 
+#, fuzzy
+msgid "Two-factor code"
+msgstr "Autenticação de dois factores"
+
 msgid "Tx"
 msgstr "Tx"
 
@@ -67283,9 +67335,6 @@ msgstr ""
 "Use <tt>\\1</tt>, <tt>\\2</tt> etc. para substituir subgrupos combinados, "
 "<tt>\\0</tt> para inserir o nome original do anfitrião"
 
-msgid "Use Authenticator App"
-msgstr "Utilizar a aplicação Authenticator"
-
 msgid "Use CN from LDAP distinguished name (DN) string"
 msgstr "Utilizar CN da cadeia de nomes distintos (DN) LDAP"
 
@@ -67455,8 +67504,9 @@ msgstr "Utilizar qualquer endereço de rede"
 msgid "Use attribute value"
 msgstr "Utilizar valor de atributo"
 
-msgid "Use authenticator code"
-msgstr "Utilizar o código de autenticação"
+#, fuzzy
+msgid "Use authenticator app"
+msgstr "Utilizar a aplicação Authenticator"
 
 msgid "Use backup code"
 msgstr "Utilizar o código de salvaguarda"
@@ -67606,6 +67656,9 @@ msgstr "Usar o estado normal, ignorar o reconhecimento"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Use o estado normal, ignore o tempo de inatividade"
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Use aqui apenas letras minúsculas, dígitos e sublinhados."
@@ -72781,14 +72834,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Você tem regras %d para implantar o plugin de atualização"
 
 #, python-format
-msgid ""
-"You have %d unused backup codes left. You can use them as one-time password "
-"if your key is not available."
-msgstr ""
-"Ainda tem %d códigos de segurança não utilizados. Pode utilizá-los como "
-"palavra-passe de utilização única se a sua chave não estiver disponível."
-
-#, python-format
 msgid "You have %d users configured"
 msgstr "Você tem %d usuários configurados"
 
@@ -72841,6 +72886,11 @@ msgstr ""
 "Você ativou as notificações de falha, mas perdeu a configuração de um "
 "endereço de e-mail. Você precisa configurar seu endereço de e-mail para "
 "poder receber as notificações de fallback."
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -73318,11 +73368,24 @@ msgstr ""
 "outro nome para o seu ícone."
 
 #, fuzzy, python-format
-msgid "Your input '%s' does not match the required format '%s'."
+msgid "Your input does not match the required format '%s'."
 msgstr "A sua contribuição não corresponde ao formato exigido."
 
 msgid "Your input does not match the required format."
 msgstr "A sua contribuição não corresponde ao formato exigido."
+
+#, fuzzy
+msgid "Your input does not match the required port range 0-65535."
+msgstr "A sua contribuição não corresponde ao formato exigido."
+
+#, python-format
+msgid ""
+"Your input is not a valid URL conforming to any allowed protocols ('%s')."
+msgstr ""
+
+#, fuzzy
+msgid "Your input is not a valid email address."
+msgstr "todos os usuários com e endereço de e-mail"
 
 #, python-format
 msgid ""
@@ -73689,6 +73752,10 @@ msgstr "autenticação e encriptação"
 
 msgid "authentication but no privacy"
 msgstr "autenticação mas sem privacidade"
+
+#, fuzzy
+msgid "authenticator app"
+msgstr "Adicionar a aplicação Authenticator"
 
 msgid "auto"
 msgstr "auto"
@@ -75188,6 +75255,10 @@ msgstr "segundos por segundo"
 msgid "secs"
 msgstr "segs"
 
+#, fuzzy
+msgid "security token"
+msgstr "Tokens de segurança"
+
 msgid "send notifications of contactgroup:"
 msgstr "enviar notificações de grupo de contato:"
 
@@ -75587,6 +75658,54 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Add Authenticator App"
+#~ msgstr "Adicionar a aplicação Authenticator"
+
+#~ msgid "Add Security Token"
+#~ msgstr "Adicionar Token de Segurança"
+
+#~ msgid "Authenticaton Applications"
+#~ msgstr "Aplicações de autenticação"
+
+#~ msgid "Delete two-factor credential"
+#~ msgstr "Eliminar a credencial de dois factores"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate the existing "
+#~ "codes."
+#~ msgstr ""
+#~ "Se regenerar códigos de backup, invalida automaticamente os códigos "
+#~ "existentes."
+
+#~ msgid "Not registered"
+#~ msgstr "Não registado"
+
+#~ msgid "Security Tokens"
+#~ msgstr "Tokens de segurança"
+
+#, python-format
+#~ msgid ""
+#~ "You have %d unused backup codes left. You can use them as one-time "
+#~ "password if your key is not available."
+#~ msgstr ""
+#~ "Ainda tem %d códigos de segurança não utilizados. Pode utilizá-los como "
+#~ "palavra-passe de utilização única se a sua chave não estiver disponível."
+
+#~ msgid "Host notes URL expanded"
+#~ msgstr "Notas de anfitrião URL expandido"
+
+#~ msgid "Notes URL expanded"
+#~ msgstr "Notas URL expandido"
+
+#~ msgid "OTP code"
+#~ msgstr "Código OTP"
+
+#~ msgid "Service notes URL expanded"
+#~ msgstr "URL das notas de serviço alargado"
+
+#~ msgid "Use authenticator code"
+#~ msgstr "Utilizar o código de autenticação"
 
 #~ msgid "Set"
 #~ msgstr "Conjunto"

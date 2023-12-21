@@ -595,10 +595,6 @@ msgstr "%s by este element existent în aceasta selecție."
 msgid "%s is parent of %s."
 msgstr "%s este părintele lui %s."
 
-#, fuzzy, python-format
-msgid "%s is too %s. The %s allowed value is %s."
-msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
-
 #, python-format
 msgid "%s latency"
 msgstr "%s latență"
@@ -3503,9 +3499,6 @@ msgstr "Adăugați & eliminați gazde"
 msgid "Add Aggregation"
 msgstr "Adăugați agregarea"
 
-msgid "Add Authenticator App"
-msgstr "Adăugați aplicația Authenticator"
-
 msgid "Add BI Pack"
 msgstr "Adăugați BI Pack"
 
@@ -3570,9 +3563,6 @@ msgstr "Adăugați ID-ul regulii"
 
 msgid "Add SLA"
 msgstr "Adăugați SLA"
-
-msgid "Add Security Token"
-msgstr "Adăugați Token de securitate"
 
 msgid "Add Suffix"
 msgstr "Adăugați sufixul"
@@ -5634,6 +5624,10 @@ msgstr "Permisiune de a vedea părți din copac"
 msgid "Allowed to see the whole tree"
 msgstr "Permiteți să vedeți întregul copac"
 
+#, fuzzy, python-format
+msgid "Allowed values range from %s to %s."
+msgstr "A fost redenumit nodul de cluster din %s în %s."
+
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "Permite unui utilizator să creeze sau să modifice intrări în programatorul "
@@ -6860,8 +6854,13 @@ msgstr "Tipuri de autentificare"
 msgid "Authentication with TLS"
 msgstr "Autentificare cu TLS"
 
-msgid "Authenticaton Applications"
-msgstr "Aplicații de autentificare"
+#, fuzzy
+msgid "Authenticator app"
+msgstr "Adăugați aplicația Authenticator"
+
+#, fuzzy
+msgid "Authenticator apps"
+msgstr "Adăugați aplicația Authenticator"
 
 msgid "Authmethod"
 msgstr "Authmethod"
@@ -7674,6 +7673,10 @@ msgid "Backup code"
 msgstr "Cod de rezervă"
 
 msgid "Backup codes"
+msgstr "Coduri de rezervă"
+
+#, fuzzy
+msgid "Backup codes left:"
 msgstr "Coduri de rezervă"
 
 msgid "Backup configured"
@@ -11357,6 +11360,10 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr ""
 "Faceți clic aici pentru a vedea starea de activare pentru fiecare site."
+
+#, fuzzy, python-format
+msgid "Click on 'Register %s' to enable two-factor authentication via %s."
+msgstr "Eliminați autentificarea cu doi factori a %s"
 
 msgid "Click to toggle this setting"
 msgstr "Faceți clic pentru a comuta această setare"
@@ -15695,6 +15702,10 @@ msgstr "Șterge toate mesajele procesate care aparțin acestui control"
 msgid "Delete annotation #%d"
 msgstr "Ștergeți adnotarea #%d"
 
+#, fuzzy
+msgid "Delete authentication via "
+msgstr "Test de autentificare"
+
 msgid "Delete auxiliary tag"
 msgstr "Ștergerea etichetei auxiliare"
 
@@ -15957,9 +15968,6 @@ msgstr "Ștergeți perioada de timp"
 
 msgid "Delete time range"
 msgstr "Ștergeți intervalul de timp"
-
-msgid "Delete two-factor credential"
-msgstr "Ștergeți credențialele cu doi factori"
 
 msgid "Delete unpackaged file"
 msgstr "Ștergeți fișierul neambalat"
@@ -19862,6 +19870,9 @@ msgstr ""
 "Introduceți doar numele simplu al acțiunii, de exemplu <tt>iso</tt>, <b>nu</"
 "b> UNC-ul complet, cum ar fi <tt>\\\\servername\\iso</tt>."
 
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
 "description)."
@@ -23002,6 +23013,10 @@ msgstr "Proprietăți generale"
 msgid "Generate"
 msgstr "Generați"
 
+#, fuzzy
+msgid "Generate backup codes"
+msgstr "Regenerarea codurilor de rezervă"
+
 msgid "Generate core config parallelized"
 msgstr "Generați configurația nucleului paralelizat"
 
@@ -25441,9 +25456,6 @@ msgstr "Gazda are nevoie de o actualizare a agentului"
 msgid "Host network"
 msgstr "Rețea gazdă"
 
-msgid "Host notes URL expanded"
-msgstr "Notele gazdei URL extins"
-
 msgid "Host notification number"
 msgstr "Numărul de notificare a gazdei"
 
@@ -27688,6 +27700,17 @@ msgstr ""
 "utilizatorului și aceste fișiere sunt utilizate apoi."
 
 msgid ""
+"If you lose access to your authentication app / security token, you can use "
+"any of these codes to login. Generating backup codes automatically "
+"invalidates existing codes."
+msgstr ""
+
+msgid ""
+"If you lose access to your authentication device, you can use any of the "
+"generated backup codes to login."
+msgstr ""
+
+msgid ""
 "If you multiply the number of data points with the number of steps "
 "aggregated then you get the time range that is stored in this archive. Each "
 "data point needs 8 bytes for each aggregation (MIN, MAX, AVERAGE) that you "
@@ -27729,12 +27752,6 @@ msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 "Dacă v-ați achiziționat licența prin intermediul unui %s, vă rugăm să îl "
 "contactați."
-
-msgid ""
-"If you regenerate backup codes, you automatically invalidate the existing "
-"codes."
-msgstr ""
-"Dacă regenerați codurile de rezervă, invalidați automat codurile existente."
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -29874,6 +29891,10 @@ msgstr "Interval vertical nevalabil: de la trebuie să fie mai mic decât la"
 
 msgid "Invalid visual type"
 msgstr "Tip vizual nevalabil"
+
+#, fuzzy
+msgid "Invalidate all"
+msgstr "Invalidarea tuturor codurilor"
 
 msgid "Invalidate all backup codes"
 msgstr "Invalidarea tuturor codurilor de rezervă"
@@ -37032,7 +37053,8 @@ msgstr "Nu există un ID de cerere corespunzător"
 msgid "No authentication, no privacy"
 msgstr "Fără autentificare, fără confidențialitate"
 
-msgid "No backup codes created yet."
+#, fuzzy
+msgid "No backup codes generated yet."
 msgstr "Nu s-au creat încă coduri de rezervă."
 
 msgid "No baked agent for this host available"
@@ -37738,9 +37760,6 @@ msgstr "Nu este permisă schimbarea parolei. Schimbarea nu poate fi impusă."
 msgid "Not ready duration"
 msgstr "Durată nepregătită"
 
-msgid "Not registered"
-msgstr "Neînregistrat"
-
 msgid "Not responding devices"
 msgstr "Dispozitive care nu răspund"
 
@@ -37849,8 +37868,9 @@ msgstr ""
 msgid "Notes"
 msgstr "Note"
 
-msgid "Notes URL expanded"
-msgstr "Note URL extins"
+#, fuzzy
+msgid "Notes URL"
+msgstr "Note"
 
 msgid "Notes URL for Hosts"
 msgstr "Note URL pentru gazde"
@@ -39012,9 +39032,6 @@ msgstr "Nivelurile OSD-urilor epocii și media"
 
 msgid "OSN Laser attenuation"
 msgstr "OSN Atenuarea laserului"
-
-msgid "OTP code"
-msgstr "Cod OTP"
 
 #, fuzzy
 msgid "OVS bonding interface status"
@@ -41875,6 +41892,9 @@ msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr ""
 "Vă rugăm să creați mai întâi niște <a href='%s'>grupuri de contact</a>."
 
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
 msgid "Please leave either both from and until empty or enter two times."
 msgstr ""
 "Vă rugăm să lăsați fie de la și până la gol, fie să introduceți de două ori."
@@ -44174,11 +44194,18 @@ msgstr ""
 "sunteți o persoană de contact pentru gazda în cauză. Rețineți că acești "
 "agenți pot conține informații confidențiale, cum ar fi parolele."
 
+msgid "Register an authentication device before generating backup codes."
+msgstr ""
+
 msgid "Register any existing host"
 msgstr "Înregistrați orice gazdă existentă"
 
 msgid "Register any new host"
 msgstr "Înregistrați orice gazdă nouă"
+
+#, fuzzy
+msgid "Register authenticator app"
+msgstr "Înregistrați aplicația Authenticator App"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -44197,6 +44224,10 @@ msgstr "Înregistrare gestionată gazdă existentă"
 msgid "Register new hosts in managed folders"
 msgstr "Înregistrarea de noi gazde în folderele gestionate"
 
+#, fuzzy
+msgid "Register security token"
+msgstr "Jetoane de securitate"
+
 msgid "Registered"
 msgstr "Înregistrat"
 
@@ -44204,6 +44235,10 @@ msgid "Registered agents"
 msgstr "Agenți înregistrați"
 
 msgid "Registered at"
+msgstr "Înregistrat la"
+
+#, fuzzy
+msgid "Registered at "
 msgstr "Înregistrat la"
 
 msgid "Registered desktops"
@@ -47072,14 +47107,19 @@ msgstr "Securitate"
 msgid "Security Level"
 msgstr "Nivelul de securitate"
 
-msgid "Security Tokens"
-msgstr "Jetoane de securitate"
-
 msgid "Security fix"
 msgstr "Fix de securitate"
 
 msgid "Security name"
 msgstr "Denumire de securitate"
+
+#, fuzzy
+msgid "Security token"
+msgstr "Jetoane de securitate"
+
+#, fuzzy
+msgid "Security tokens"
+msgstr "Jetoane de securitate"
 
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
@@ -47960,9 +48000,6 @@ msgstr "Intervalul de verificare normală a serviciului"
 
 msgid "Service normal/retry check interval"
 msgstr "Intervalul de verificare normală de service/retry check"
-
-msgid "Service notes URL expanded"
-msgstr "Note de serviciu URL extins"
 
 msgid "Service notification number"
 msgstr "Numărul de notificare a serviciului"
@@ -56109,6 +56146,10 @@ msgstr ""
 "Procentul maxim admis de pierdere de pachete către destinație înainte ca "
 "acest serviciu să intre în stare de avertizare/critică."
 
+#, fuzzy, python-format
+msgid "The maximum allowed value is %s."
+msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
+
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
 "warning/critical. This alarm only applies to the target host, not the hops "
@@ -56212,6 +56253,10 @@ msgstr ""
 "Eticheta metrică este afișată alături de valoarea interogată în detaliile de "
 "stare ale serviciului rezultat. Numele metricii va fi luat ca etichetă dacă "
 "nu s-a specificat nimic."
+
+#, fuzzy, python-format
+msgid "The minimum allowed value is %s."
+msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 
 #, python-format
 msgid ""
@@ -59506,6 +59551,10 @@ msgstr ""
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
 msgstr "Acest mesaj a fost creat la %s și este valabil până la %s."
+
+#, fuzzy
+msgid "This message is not supposed to be used. Ever."
+msgstr "Acest URL nu poate fi folosit ca marcaj."
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -66110,6 +66159,10 @@ msgstr "Autentificare cu doi factori"
 msgid "Two-factor authentication not enabled"
 msgstr "Autentificarea cu doi factori nu este activată"
 
+#, fuzzy
+msgid "Two-factor code"
+msgstr "Autentificare cu doi factori"
+
 msgid "Tx"
 msgstr "Tx"
 
@@ -67833,9 +67886,6 @@ msgstr ""
 "Utilizați <tt>\\1</tt>, <tt>\\2</tt> etc. pentru a înlocui subgrupurile "
 "potrivite, <tt>\\0</tt> pentru a insera la numele original al gazdei"
 
-msgid "Use Authenticator App"
-msgstr "Utilizați aplicația Authenticator"
-
 msgid "Use CN from LDAP distinguished name (DN) string"
 msgstr "Utilizarea CN din șirul de nume distincte (DN) LDAP"
 
@@ -68006,8 +68056,9 @@ msgstr "Utilizați orice adresă de rețea"
 msgid "Use attribute value"
 msgstr "Utilizați valoarea atributului"
 
-msgid "Use authenticator code"
-msgstr "Utilizați codul de autentificare"
+#, fuzzy
+msgid "Use authenticator app"
+msgstr "Utilizați aplicația Authenticator"
 
 msgid "Use backup code"
 msgstr "Utilizați codul de rezervă"
@@ -68163,6 +68214,9 @@ msgstr "Utilizați starea normală, ignorați confirmarea"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Utilizați starea normală, ignorați timpul de nefuncționare"
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Folosiți aici numai litere mici, cifre și caractere de subliniere."
@@ -73402,14 +73456,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Aveți %d reguli pentru implementarea plugin-ului de actualizare"
 
 #, python-format
-msgid ""
-"You have %d unused backup codes left. You can use them as one-time password "
-"if your key is not available."
-msgstr ""
-"Mai aveți %d coduri de rezervă neutilizate. Le puteți utiliza ca parolă "
-"unică în cazul în care cheia dvs. nu este disponibilă."
-
-#, python-format
 msgid "You have %d users configured"
 msgstr "Aveți configurați utilizatori %d."
 
@@ -73464,6 +73510,11 @@ msgstr ""
 "Ați activat notificările de rezervă, dar nu ați configurat o adresă de e-"
 "mail. Trebuie să vă configurați adresa de e-mail pentru a putea primi "
 "notificări de rezervă."
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -73949,11 +74000,24 @@ msgstr ""
 "rugăm să alegeți un alt nume pentru pictograma dumneavoastră."
 
 #, fuzzy, python-format
-msgid "Your input '%s' does not match the required format '%s'."
+msgid "Your input does not match the required format '%s'."
 msgstr "Datele introduse nu corespund formatului cerut."
 
 msgid "Your input does not match the required format."
 msgstr "Datele introduse nu corespund formatului cerut."
+
+#, fuzzy
+msgid "Your input does not match the required port range 0-65535."
+msgstr "Datele introduse nu corespund formatului cerut."
+
+#, python-format
+msgid ""
+"Your input is not a valid URL conforming to any allowed protocols ('%s')."
+msgstr ""
+
+#, fuzzy
+msgid "Your input is not a valid email address."
+msgstr "'%s' nu este o adresă de email validă."
 
 #, python-format
 msgid ""
@@ -74325,6 +74389,10 @@ msgstr "autentificare și criptare"
 
 msgid "authentication but no privacy"
 msgstr "autentificare, dar nu și confidențialitate"
+
+#, fuzzy
+msgid "authenticator app"
+msgstr "Adăugați aplicația Authenticator"
 
 msgid "auto"
 msgstr "auto"
@@ -75834,6 +75902,10 @@ msgstr "secunde pe secundă"
 msgid "secs"
 msgstr "secs"
 
+#, fuzzy
+msgid "security token"
+msgstr "Jetoane de securitate"
+
 msgid "send notifications of contactgroup:"
 msgstr "trimiteți notificări ale grupului de contact:"
 
@@ -76235,6 +76307,54 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Add Authenticator App"
+#~ msgstr "Adăugați aplicația Authenticator"
+
+#~ msgid "Add Security Token"
+#~ msgstr "Adăugați Token de securitate"
+
+#~ msgid "Authenticaton Applications"
+#~ msgstr "Aplicații de autentificare"
+
+#~ msgid "Delete two-factor credential"
+#~ msgstr "Ștergeți credențialele cu doi factori"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate the existing "
+#~ "codes."
+#~ msgstr ""
+#~ "Dacă regenerați codurile de rezervă, invalidați automat codurile "
+#~ "existente."
+
+#~ msgid "Not registered"
+#~ msgstr "Neînregistrat"
+
+#~ msgid "Security Tokens"
+#~ msgstr "Jetoane de securitate"
+
+#, python-format
+#~ msgid ""
+#~ "You have %d unused backup codes left. You can use them as one-time "
+#~ "password if your key is not available."
+#~ msgstr ""
+#~ "Mai aveți %d coduri de rezervă neutilizate. Le puteți utiliza ca parolă "
+#~ "unică în cazul în care cheia dvs. nu este disponibilă."
+
+#~ msgid "Host notes URL expanded"
+#~ msgstr "Notele gazdei URL extins"
+
+#~ msgid "Notes URL expanded"
+#~ msgstr "Note URL extins"
+
+#~ msgid "OTP code"
+#~ msgstr "Cod OTP"
+
+#~ msgid "Service notes URL expanded"
+#~ msgstr "Note de serviciu URL extins"
+
+#~ msgid "Use authenticator code"
+#~ msgstr "Utilizați codul de autentificare"
 
 #~ msgid "Set"
 #~ msgstr "Set"
@@ -79591,9 +79711,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "%s this site"
 #~ msgstr "%s acest site"
-
-#~ msgid "'%s' is not a valid email address."
-#~ msgstr "'%s' nu este o adresă de email validă."
 
 #~ msgid "(obsolete) Link to PNP4Nagios"
 #~ msgstr "(învechit) Link câtre PNP4Nagios"

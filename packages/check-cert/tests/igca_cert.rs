@@ -34,18 +34,18 @@ fn test_cert_ok() {
     assert_eq!(
         out.to_string(),
         format!(
-            "OK - \
-            Serial: {SERIAL}, \
-            Subject CN: IGC/A, \
-            Subject O: PM/SGDN, \
-            Subject OU: DCSSI, \
-            Issuer CN: IGC/A, \
-            Issuer O: PM/SGDN, \
-            Issuer OU: DCSSI, \
-            Issuer ST: France, \
-            Issuer C: FR, \
-            Signature algorithm: {SIG_ALG}, \
-            Public key algorithm: {PUBKEY_ALG}, \
+            "OK\n\
+            Serial: {SERIAL}\n\
+            Subject CN: IGC/A\n\
+            Subject O: PM/SGDN\n\
+            Subject OU: DCSSI\n\
+            Issuer CN: IGC/A\n\
+            Issuer O: PM/SGDN\n\
+            Issuer OU: DCSSI\n\
+            Issuer ST: France\n\
+            Issuer C: FR\n\
+            Signature algorithm: {SIG_ALG}\n\
+            Public key algorithm: {PUBKEY_ALG}\n\
             Public key size: {PUBKEY_SZ}"
         )
     );
@@ -72,14 +72,14 @@ fn test_cert_wrong_serial() {
         out.to_string(),
         format!(
             "WARNING - \
-            Serial is {SERIAL} but expected {serial} (!), \
-            Subject CN: IGC/A, \
-            Subject O: PM/SGDN, \
-            Subject OU: DCSSI, \
-            Issuer CN: IGC/A, \
-            Issuer O: PM/SGDN, \
-            Issuer OU: DCSSI, \
-            Issuer ST: France, \
+            Serial is {SERIAL} but expected {serial} (!)\n\
+            Subject CN: IGC/A\n\
+            Subject O: PM/SGDN\n\
+            Subject OU: DCSSI\n\
+            Issuer CN: IGC/A\n\
+            Issuer O: PM/SGDN\n\
+            Issuer OU: DCSSI\n\
+            Issuer ST: France\n\
             Issuer C: FR"
         )
     );

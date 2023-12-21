@@ -329,8 +329,7 @@ impl SimpleCheckResult {
     }
 
     pub fn notice(details: impl Into<String>) -> Self {
-        // TODO: That lands in the wrong field.
-        Self::new(State::Ok, as_option(details), None)
+        Self::new(State::Ok, None, as_option(details))
     }
 
     pub fn ok(summary: impl Into<String>) -> Self {
@@ -400,8 +399,7 @@ where
     }
 
     pub fn notice(details: impl Into<String>, metrics: Metric<T>) -> Self {
-        // TODO: That lands in the wrong field.
-        Self::new(State::Ok, as_option(details), None, Some(metrics))
+        Self::new(State::Ok, None, as_option(details), Some(metrics))
     }
 
     pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
@@ -810,7 +808,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_ok() {
         assert_eq!(
-            format!("{}", Collection::from(SimpleCheckResult::notice("summary"))),
+            format!("{}", Collection::from(SimpleCheckResult::ok("summary"))),
             "OK - summary"
         );
     }
@@ -863,9 +861,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_ok() {
-        let cr1 = SimpleCheckResult::notice("summary 1");
-        let cr2 = SimpleCheckResult::notice("summary 2");
-        let cr3 = SimpleCheckResult::notice("summary 3");
+        let cr1 = SimpleCheckResult::ok("summary 1");
+        let cr2 = SimpleCheckResult::ok("summary 2");
+        let cr3 = SimpleCheckResult::ok("summary 3");
         assert_eq!(
             format!(
                 "{}",
@@ -877,9 +875,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_warn() {
-        let cr1 = SimpleCheckResult::notice("summary 1");
+        let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
-        let cr3 = SimpleCheckResult::notice("summary 3");
+        let cr3 = SimpleCheckResult::ok("summary 3");
         assert_eq!(
             format!(
                 "{}",
@@ -891,7 +889,7 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_crit() {
-        let cr1 = SimpleCheckResult::notice("summary 1");
+        let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         assert_eq!(
@@ -905,7 +903,7 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_unknown() {
-        let cr1 = SimpleCheckResult::notice("summary 1");
+        let cr1 = SimpleCheckResult::ok("summary 1");
         let cr2 = SimpleCheckResult::warn("summary 2");
         let cr3 = SimpleCheckResult::crit("summary 3");
         let cr4 = SimpleCheckResult::unknown("summary 4");
@@ -927,7 +925,7 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_with_metrics() {
-        let cr1 = CheckResult::notice("summary 1", m("m1", 13));
+        let cr1 = CheckResult::ok("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
@@ -944,7 +942,7 @@ mod test_writer_format {
     #[test]
     fn test_joined_collection_with_metrics() {
         let mut c = Collection::default();
-        c.join(&mut Collection::from(&mut vec![CheckResult::notice(
+        c.join(&mut Collection::from(&mut vec![CheckResult::ok(
             "summary 1",
             m("m1", 13),
         )]));
@@ -967,15 +965,23 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_with_details() {
-        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_ok = SimpleCheckResult::ok_with_details("summary ok", "details ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn = SimpleCheckResult::warn_with_details("summary warn", "details warn");
         let cr_crit = SimpleCheckResult::crit_with_details("summary crit", "details crit");
         assert_eq!(
             format!(
                 "{}",
-                Collection::from(&mut vec![cr_ok.into(), cr_warn.into(), cr_crit.into()])
+                Collection::from(&mut vec![
+                    cr_ok.into(),
+                    cr_notice.into(),
+                    cr_warn.into(),
+                    cr_crit.into()
+                ])
             ),
-            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            details ok\n\
+            notice\n\
             details warn\n\
             details crit"
         );
@@ -983,7 +989,8 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_with_metrics_and_details() {
-        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_ok = SimpleCheckResult::ok("summary ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn =
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit =
@@ -991,9 +998,10 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Collection::from(&mut vec![cr_ok.into(), cr_warn, cr_crit])
+                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
             ),
-            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            notice\n\
             details warn | mwarn=13;;;;\n\
             details crit | mcrit=37;;;;"
         );
@@ -1001,16 +1009,18 @@ mod test_writer_format {
 
     #[test]
     fn test_collection_with_heterogeneous_details() {
-        let cr_ok = SimpleCheckResult::notice("notice 1");
+        let cr_ok = SimpleCheckResult::ok("summary ok");
+        let cr_notice = SimpleCheckResult::notice("notice");
         let cr_warn =
             CheckResult::warn_with_details("summary warn", "details warn", m("mwarn", 13));
         let cr_crit = CheckResult::crit("summary crit", m("mcrit", 37));
         assert_eq!(
             format!(
                 "{}",
-                Collection::from(&mut vec![cr_ok.into(), cr_warn, cr_crit])
+                Collection::from(&mut vec![cr_ok.into(), cr_notice.into(), cr_warn, cr_crit])
             ),
-            "CRITICAL - notice 1, summary warn (!), summary crit (!!)\n\
+            "CRITICAL - summary ok, summary warn (!), summary crit (!!)\n\
+            notice\n\
             details warn | mwarn=13;;;;\n\
             mcrit=37;;;;"
         );

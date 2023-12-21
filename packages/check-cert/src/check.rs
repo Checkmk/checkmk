@@ -538,18 +538,25 @@ where
     }
 }
 
+#[derive(Debug)]
+enum Details {
+    Text(String),
+    Metric(Metric<Real>),
+    TextMetric(String, Metric<Real>),
+}
+
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
     summary: Vec<Output>,
-    metrics: Vec<Metric<Real>>,
+    details: Vec<Details>,
 }
 
 impl Collection {
     pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
-        self.metrics.append(&mut other.metrics);
+        self.details.append(&mut other.details);
     }
 }
 
@@ -566,14 +573,18 @@ impl Display for Collection {
         if !summary.is_empty() {
             out = format!("{} - {}", out, summary);
         }
-        let metrics = self
-            .metrics
+        let details = self
+            .details
             .iter()
-            .map(ToString::to_string)
+            .map(|details| match details {
+                Details::Text(text) => text.to_owned(),
+                Details::Metric(metric) => metric.to_string(),
+                Details::TextMetric(text, metric) => format!("{} | {}", text, metric),
+            })
             .collect::<Vec<_>>()
             .join(", ");
-        if !metrics.is_empty() {
-            out = format!("{} | {}", out, metrics);
+        if !details.is_empty() {
+            out = format!("{} | {}", out, details);
         }
         write!(f, "{}", out)?;
         Ok(())
@@ -585,7 +596,7 @@ impl From<SimpleCheckResult> for Collection {
         Self {
             state: check_result.output.state,
             summary: vec![check_result.output],
-            metrics: Vec::<Metric<Real>>::default(),
+            details: vec![],
         }
     }
 }
@@ -597,7 +608,12 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.output.state);
                 out.summary.push(cr.output);
-                out.metrics.extend(cr.metrics);
+                out.details.extend(match (cr.details, cr.metrics) {
+                    (None, None) => vec![],
+                    (Some(text), None) => vec![Details::Text(text)],
+                    (None, Some(metric)) => vec![Details::Metric(metric)],
+                    (Some(text), Some(metric)) => vec![Details::TextMetric(text, metric)],
+                });
                 out
             })
     }

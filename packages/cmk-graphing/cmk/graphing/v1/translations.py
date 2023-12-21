@@ -20,7 +20,7 @@ __all__ = [
 @dataclass(frozen=True)
 class PassiveCheck:
     """
-    A passive check has the prefix 'check_mk-'.
+    A passive check has the prefix ``check_mk-``.
 
     Args:
         name: The name of the passive check.
@@ -41,7 +41,7 @@ class PassiveCheck:
 @dataclass(frozen=True)
 class ActiveCheck:
     """
-    An active check has the prefix 'check_mk_active-'.
+    An active check has the prefix ``check_mk_active-``.
 
     Args:
         name: The name of the active check
@@ -62,7 +62,7 @@ class ActiveCheck:
 @dataclass(frozen=True)
 class HostCheckCommand:
     """
-    A host check command has the prefix 'check-mk-'.
+    A host check command has the prefix ``check-mk-``.
 
     Args:
         name:   The name of the host check command
@@ -83,7 +83,7 @@ class HostCheckCommand:
 @dataclass(frozen=True)
 class NagiosPlugin:
     """
-    A classical Nagios plugin has the prefix 'check_'.
+    A classical Nagios plugin has the prefix ``check_``.
 
     Args:
         name: The name of the Nagios plugin

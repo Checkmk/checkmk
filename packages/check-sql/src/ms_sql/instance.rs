@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::{self, create_on_endpoint, Client};
+use super::client::{self, Client};
 use super::section::{self, Section, SectionKind};
 use crate::config::{
     self,
@@ -1283,6 +1283,7 @@ async fn find_detectable_instance_builders(
 }
 
 /// find instances described in the config but not detected by the discovery
+/// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
     builders: Vec<SqlInstanceBuilder>,
     customizations: &HashMap<&String, &CustomInstance>,
@@ -1292,20 +1293,8 @@ async fn add_custom_instance_builders(
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
         if let Some(endpoint) = endpoint {
-            match create_on_endpoint(&endpoint).await {
-                Ok(mut client) => {
-                    if let Some(properties) =
-                        ensure_required_instance(&mut client, &builder.get_name()).await
-                    {
-                        builders.push(make_instance_builder(&endpoint, &properties));
-                    }
-                }
-                Err(e) => {
-                    log::error!(
-                        "Error creating client for instance `{}`: {e}",
-                        builder.get_name()
-                    );
-                }
+            if let Some(b) = get_custom_instance_builder(&builder, &endpoint).await {
+                builders.push(b);
             }
         } else {
             builders.push(builder);
@@ -1314,10 +1303,84 @@ async fn add_custom_instance_builders(
     Ok(builders)
 }
 
-async fn ensure_required_instance(
-    client: &mut Client,
-    name: &str,
-) -> Option<SqlInstanceProperties> {
+async fn get_custom_instance_builder(
+    builder: &SqlInstanceBuilder,
+    endpoint: &Endpoint,
+) -> Option<SqlInstanceBuilder> {
+    let port = get_reasonable_port(builder, endpoint);
+    let instance_name = &builder.get_name();
+    match client::create_on_endpoint_port(endpoint, port).await {
+        Ok(mut client) => {
+            let b = obtain_properties(&mut client, instance_name)
+                .await
+                .map(|p| to_instance_builder(endpoint, &p));
+            if b.is_none() {
+                log::info!("Instance `{instance_name}` not found. Try to find it");
+                find_custom_instance(endpoint, instance_name).await
+            } else {
+                b
+            }
+        }
+        Err(e) => {
+            log::error!("Error creating client for `{instance_name}`: {e}");
+            None
+        }
+    }
+}
+
+async fn find_custom_instance(
+    endpoint: &Endpoint,
+    instance_name: &str,
+) -> Option<SqlInstanceBuilder> {
+    let builders = get_instance_builders(endpoint).await.unwrap_or_else(|e| {
+        log::error!("Error creating client for instance `{instance_name}`: {e}",);
+        Vec::<SqlInstanceBuilder>::new()
+    });
+    match detect_instance_port(instance_name, &builders) {
+        Some(port) => {
+            if let Ok(mut client) = client::create_on_endpoint_port(endpoint, port).await {
+                obtain_properties(&mut client, instance_name)
+                    .await
+                    .map(|p| to_instance_builder(endpoint, &p))
+            } else {
+                None
+            }
+        }
+        _ => {
+            log::error!(
+                "Impossible to detect port for `{instance_name}` known: `{}`",
+                builders
+                    .iter()
+                    .map(|i| i.get_name())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            );
+            None
+        }
+    }
+}
+
+fn detect_instance_port(name: &str, builders: &[SqlInstanceBuilder]) -> Option<u16> {
+    builders
+        .iter()
+        .find(|b| b.get_name() == name)
+        .map(|b| b.get_port())
+}
+
+fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> u16 {
+    if builder.get_port() == 0 {
+        log::info!("Connecting using port from endpoint {}", endpoint.port());
+        endpoint.port()
+    } else {
+        log::info!(
+            "Connecting using port from detection {}",
+            builder.get_port()
+        );
+        builder.get_port()
+    }
+}
+
+async fn obtain_properties(client: &mut Client, name: &str) -> Option<SqlInstanceProperties> {
     match SqlInstanceProperties::obtain_by_query(client).await {
         Ok(properties) => {
             if properties.name == *name {
@@ -1337,7 +1400,7 @@ async fn ensure_required_instance(
 }
 
 /// converts detected instance and custom instance to SqlInstanceBuilder
-fn make_instance_builder(
+fn to_instance_builder(
     endpoint: &Endpoint,
     properties: &SqlInstanceProperties,
 ) -> SqlInstanceBuilder {
@@ -1406,8 +1469,8 @@ fn apply_customizations(
         .into_iter()
         .map(
             |instance_builder| match customizations.get(&instance_builder.get_name()) {
-                None => instance_builder.clone(),
                 Some(customization) => apply_customization(instance_builder, customization),
+                None => instance_builder.clone(),
             },
         )
         .collect::<Vec<SqlInstanceBuilder>>()
@@ -1453,6 +1516,7 @@ async fn get_instance_builders(endpoint: &Endpoint) -> Result<Vec<SqlInstanceBui
     Ok([&all.0[..], &all.1[..]].concat().to_vec())
 }
 
+// TODO(sk):probably SQL is better as registry
 /// [low level helper] return all MS SQL instances installed
 pub async fn obtain_instance_builders_from_registry(
     endpoint: &Endpoint,

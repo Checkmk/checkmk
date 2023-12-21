@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar, Generic, Literal, TypeVar
 
 from ._localize import Localizable
-from .preconfigured import Metric, Proxy
+from .preconfigured import Metric, MonitoredHost, Proxy
 
 _T = TypeVar("_T")
 
@@ -707,4 +707,5 @@ FormSpec = (
     | BooleanChoice
     | FileUpload
     | Metric
+    | MonitoredHost
 )

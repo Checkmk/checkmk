@@ -19,6 +19,7 @@ from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
+from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -530,6 +531,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.preconfigured.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
+
+        case ruleset_api_v1.preconfigured.MonitoredHost():
+            return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
         case other:
             assert_never(other)
@@ -1405,3 +1409,23 @@ def _convert_to_legacy_metric_name(
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
     return legacy_graphing_valuespecs.MetricName(**converted_kwargs)
+
+
+def _convert_to_legacy_monitored_host_name(
+    to_convert: ruleset_api_v1.preconfigured.MonitoredHost, localizer: Callable[[str], str]
+) -> legacy_valuespecs.MonitoredHostname:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "autocompleter": ContextAutocompleterConfig(
+            ident=legacy_valuespecs.MonitoredHostname.ident,
+            strict=True,
+            show_independent_of_context=True,
+        )
+    }
+    if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
+        help_text = localizer("Select from a list of host names known to Checkmk")
+    converted_kwargs["help"] = help_text
+    if (title := _localize_optional(to_convert.title, localizer)) is None:
+        title = localizer("Host name")
+    converted_kwargs["title"] = title
+
+    return legacy_valuespecs.MonitoredHostname(**converted_kwargs)

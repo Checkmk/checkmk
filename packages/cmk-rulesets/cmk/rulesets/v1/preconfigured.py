@@ -52,3 +52,16 @@ class Metric:
 
     title: Localizable | None = None
     help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class MonitoredHost:
+    """Specifies a form selecting from a list of hosts configured in Checkmk
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None

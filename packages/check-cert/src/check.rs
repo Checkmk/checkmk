@@ -181,9 +181,10 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(text.into()));
+        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(text.into()), None);
         CheckResult {
             output: r.output,
+            details: None,
             metrics: Some(Metric::<T> {
                 label: args.label,
                 value,
@@ -340,17 +341,19 @@ impl Display for Output {
 #[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
     output: Output,
+    details: Option<String>,
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, text: OutputText) -> Self {
+    fn new(state: State, text: OutputText, details: Option<String>) -> Self {
         Self {
             output: Output { state, text },
+            details,
         }
     }
 
     pub fn ok(text: OutputText) -> Self {
-        Self::new(State::Ok, text)
+        Self::new(State::Ok, text, None)
     }
 
     pub fn notice(text: impl Into<String>) -> Self {
@@ -358,15 +361,39 @@ impl SimpleCheckResult {
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, OutputText::Summary(summary.into()))
+        Self::new(State::Warn, OutputText::Summary(summary.into()), None)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, OutputText::Summary(summary.into()))
+        Self::new(State::Crit, OutputText::Summary(summary.into()), None)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, OutputText::Summary(summary.into()))
+        Self::new(State::Unknown, OutputText::Summary(summary.into()), None)
+    }
+
+    pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(
+            State::Ok,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
+        )
+    }
+
+    pub fn warn_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(
+            State::Warn,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
+        )
+    }
+
+    pub fn crit_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
+        Self::new(
+            State::Crit,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
+        )
     }
 }
 
@@ -375,6 +402,7 @@ where
     T: Clone,
 {
     output: Output,
+    details: Option<String>,
     metrics: Option<Metric<T>>,
 }
 
@@ -391,15 +419,21 @@ impl<T> CheckResult<T>
 where
     T: Clone,
 {
-    fn new(state: State, text: OutputText, metrics: Option<Metric<T>>) -> Self {
+    fn new(
+        state: State,
+        text: OutputText,
+        details: Option<String>,
+        metrics: Option<Metric<T>>,
+    ) -> Self {
         Self {
             output: Output { state, text },
+            details,
             metrics,
         }
     }
 
     pub fn ok(text: OutputText, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, text, Some(metrics))
+        Self::new(State::Ok, text, None, Some(metrics))
     }
 
     pub fn notice(text: impl Into<String>, metrics: Metric<T>) -> Self {
@@ -410,6 +444,7 @@ where
         Self::new(
             State::Warn,
             OutputText::Summary(summary.into()),
+            None,
             Some(metrics),
         )
     }
@@ -418,6 +453,7 @@ where
         Self::new(
             State::Crit,
             OutputText::Summary(summary.into()),
+            None,
             Some(metrics),
         )
     }
@@ -426,6 +462,46 @@ where
         Self::new(
             State::Unknown,
             OutputText::Summary(summary.into()),
+            None,
+            Some(metrics),
+        )
+    }
+
+    pub fn ok_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Ok,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
+            Some(metrics),
+        )
+    }
+
+    pub fn warn_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Warn,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
+            Some(metrics),
+        )
+    }
+
+    pub fn crit_with_details(
+        summary: impl Into<String>,
+        details: impl Into<String>,
+        metrics: Metric<T>,
+    ) -> Self {
+        Self::new(
+            State::Crit,
+            OutputText::Summary(summary.into()),
+            Some(details.into()),
             Some(metrics),
         )
     }
@@ -443,6 +519,7 @@ where
     {
         CheckResult {
             output: self.output,
+            details: self.details,
             metrics: self.metrics.map(|m| m.map(f)),
         }
     }
@@ -455,6 +532,7 @@ where
     fn from(x: SimpleCheckResult) -> Self {
         Self {
             output: x.output,
+            details: x.details,
             metrics: None,
         }
     }

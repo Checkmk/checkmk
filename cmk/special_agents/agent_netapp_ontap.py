@@ -260,6 +260,21 @@ def fetch_aggr(connection: HostConnection) -> Iterable[models.AggregateModel]:
     )
 
 
+def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
+    field_query = {
+        "name",
+        "state",
+        "subtype",
+    }
+
+    yield from (
+        models.SvmModel.model_validate(element.to_dict())
+        for element in NetAppResource.Svm.get_collection(
+            connection=connection, fields=",".join(field_query)
+        )
+    )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -267,6 +282,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("disk", fetch_disks(connection), logger)
     write_section("luns", fetch_luns(connection), logger)
     write_section("aggr", fetch_aggr(connection), logger)
+    write_section("vs_status", fetch_vs_status(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

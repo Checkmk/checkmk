@@ -68,9 +68,12 @@ fn check_verify_chain(
 ) -> SimpleCheckResult {
     let (ok, reason) = verify::verify(chain, cacerts);
     if ok {
-        SimpleCheckResult::notice("Certificate chain verification OK")
+        SimpleCheckResult::ok_with_details("Verification: OK", "Certificate chain verification OK")
     } else if reason.as_raw() == 18 && allow_self_signed {
-        SimpleCheckResult::notice(format!("Certificate chain verification OK: {reason}"))
+        SimpleCheckResult::ok_with_details(
+            "Verification: OK",
+            format!("Certificate chain verification OK: {reason}"),
+        )
     } else {
         SimpleCheckResult::warn(format!("Certificate chain verification failed: {reason}",))
     }

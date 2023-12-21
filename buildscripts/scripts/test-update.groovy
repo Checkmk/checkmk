@@ -25,7 +25,7 @@ def main() {
         "EDITION"
     ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, false);
+    def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_tests");
     def make_target = build_make_target(EDITION);
 
     testing_helper.run_make_targets(

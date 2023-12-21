@@ -426,6 +426,7 @@ check_metrics["check_mk-df"] = df_translation
 check_metrics["check_mk-db2_logsizes"] = df_translation
 check_metrics["check_mk-esx_vsphere_datastores"] = df_translation
 check_metrics["check_mk-netapp_api_aggr"] = df_translation
+check_metrics["check_mk-netapp_ontap_aggr"] = df_translation
 check_metrics["check_mk-vms_df"] = df_translation
 check_metrics["check_mk-vms_diskstat_df"] = df_translation
 check_metrics["check_disk"] = df_translation

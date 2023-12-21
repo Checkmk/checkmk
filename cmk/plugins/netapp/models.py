@@ -15,7 +15,7 @@ Docs:
 """
 from pydantic import BaseModel
 
-MEGA = 1024 * 1024
+MEGA = 1024.0 * 1024.0
 
 
 class VolumeModel(BaseModel):
@@ -183,3 +183,44 @@ class LunModel(BaseModel):
 
     def item_name(self) -> str:
         return self.name.rsplit("/", 1)[-1]
+
+
+class AggregateSpace(BaseModel):
+    class BlockStorage(BaseModel):
+        # default None taken from old netapp api logic
+        available: int | None = None
+        size: int | None = None
+
+    block_storage: BlockStorage
+
+
+class AggregateModel(BaseModel):
+    """
+    api: /api/storage/aggregates
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//aggr.html#aggr-get-iter
+
+    ============
+    OLD -> NEW:
+    ============
+    "aggregate-name" -> name
+    "aggr-space-attributes.size-available": "size-available" -> space.block_storage.available
+    "aggr-space-attributes.size-total": "size-total" -> space.block_storage.size
+    ============
+    """
+
+    name: str
+    space: AggregateSpace
+
+    def size_total(self) -> float | None:
+        return (
+            self.space.block_storage.size / MEGA
+            if self.space.block_storage.size is not None
+            else None
+        )
+
+    def size_avail(self) -> float | None:
+        return (
+            self.space.block_storage.available / MEGA
+            if self.space.block_storage.available is not None
+            else None
+        )

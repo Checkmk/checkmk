@@ -46,18 +46,6 @@ def foldable_container(
     html.open_div(class_=["foldable", "open" if isopen else "closed"])
     html.open_div(class_="foldable_header", onclick=None if title_url else onclick)
 
-    if isinstance(title, HTML):  # custom HTML code
-        html.write_text(title)
-
-    else:
-        html.open_b(class_=["treeangle", "title"])
-
-        if title_url:
-            html.a(title, href=title_url, target=title_target)
-        else:
-            html.write_text(title)
-        html.close_b()
-
     if icon:
         html.img(
             id_=img_id,
@@ -77,6 +65,18 @@ def foldable_container(
             src=theme.url("images/tree_closed.svg"),
             onclick=onclick if title_url else None,
         )
+
+    if isinstance(title, HTML):  # custom HTML code
+        html.write_text(title)
+
+    else:
+        html.open_b(class_=["treeangle", "title"])
+
+        if title_url:
+            html.a(title, href=title_url, target=title_target)
+        else:
+            html.write_text(title)
+        html.close_b()
 
     html.close_div()
 

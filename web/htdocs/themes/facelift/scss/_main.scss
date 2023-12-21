@@ -387,7 +387,7 @@ ul.treeangle {
   padding-left: 20px;
   margin: 8px 0;
 
-  li {
+  li:not(.show_more_mode):not(.basic) {
     display: block;
     padding-left: 20px;
     margin: 0;

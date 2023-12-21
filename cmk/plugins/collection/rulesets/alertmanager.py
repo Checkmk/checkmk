@@ -97,7 +97,7 @@ def _discovery_parameters_form_alertmanager():
                             parameter_form=FixedValue(value=None),
                         ),
                     ],
-                    transform=Migrate(raw_to_form=migrate_dropdown_ident),
+                    transform=Migrate(model_to_form=migrate_dropdown_ident),
                 ),
                 required=True,
             ),

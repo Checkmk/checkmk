@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Plugin API
-##########
+Plugin APIs
+###########
 
 This is the plugin API reference from Checkmk. This can help you to get exact
 information about the API. If you want to know how to use the API, please have
@@ -56,17 +56,12 @@ Each plugin type expects a different prefix in the variable name:
    - graphs the `graph_` prefix
 
 .. toctree::
-   :caption: Base
 
    cmk.agent_based/index
    cmk.base.plugins.bakery.bakery_api/index
    cmk.server_side_calls/index
    cmk.graphing/index
    cmk.rulesets/index
-
-.. toctree::
-   :caption: Dynamic configuration
-
    cmk.cee.dcd.plugins.connectors.connectors_api/index
 
 Indices and tables

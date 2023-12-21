@@ -1,6 +1,6 @@
-============
-Graphing API
-============
+========
+Graphing
+========
 
 .. automodule:: cmk.graphing
    :members:

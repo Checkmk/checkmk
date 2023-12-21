@@ -181,7 +181,7 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), summary.into(), None);
+        let r = SimpleCheckResult::new(evaluate(&value), Some(summary.into()), None);
         CheckResult {
             state: r.state,
             summary: r.summary,
@@ -297,15 +297,6 @@ impl Default for OutputText {
     }
 }
 
-impl OutputText {
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Summary(s) => s.is_empty(),
-            Self::Notice(s) => s.is_empty(),
-        }
-    }
-}
-
 impl Display for OutputText {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         match self {
@@ -319,12 +310,17 @@ impl Display for OutputText {
 #[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
     state: State,
-    summary: String,
+    summary: Option<String>,
     details: Option<String>,
 }
 
+fn as_option(s: impl Into<String>) -> Option<String> {
+    let s = s.into();
+    (!s.is_empty()).then_some(s)
+}
+
 impl SimpleCheckResult {
-    fn new(state: State, summary: String, details: Option<String>) -> Self {
+    fn new(state: State, summary: Option<String>, details: Option<String>) -> Self {
         Self {
             state,
             summary,
@@ -334,35 +330,35 @@ impl SimpleCheckResult {
 
     pub fn notice(details: impl Into<String>) -> Self {
         // TODO: That lands in the wrong field.
-        Self::new(State::Ok, details.into(), None)
+        Self::new(State::Ok, as_option(details), None)
     }
 
     pub fn ok(summary: impl Into<String>) -> Self {
-        Self::new(State::Ok, summary.into(), None)
+        Self::new(State::Ok, as_option(summary), None)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, summary.into(), None)
+        Self::new(State::Warn, as_option(summary), None)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, summary.into(), None)
+        Self::new(State::Crit, as_option(summary), None)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, summary.into(), None)
+        Self::new(State::Unknown, as_option(summary), None)
     }
 
     pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Ok, summary.into(), Some(details.into()))
+        Self::new(State::Ok, as_option(summary), as_option(details.into()))
     }
 
     pub fn warn_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Warn, summary.into(), Some(details.into()))
+        Self::new(State::Warn, as_option(summary), as_option(details.into()))
     }
 
     pub fn crit_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Crit, summary.into(), Some(details.into()))
+        Self::new(State::Crit, as_option(summary), as_option(details.into()))
     }
 }
 
@@ -371,7 +367,7 @@ where
     T: Clone,
 {
     state: State,
-    summary: String,
+    summary: Option<String>,
     details: Option<String>,
     metrics: Option<Metric<T>>,
 }
@@ -391,7 +387,7 @@ where
 {
     fn new(
         state: State,
-        summary: String,
+        summary: Option<String>,
         details: Option<String>,
         metrics: Option<Metric<T>>,
     ) -> Self {
@@ -405,23 +401,23 @@ where
 
     pub fn notice(details: impl Into<String>, metrics: Metric<T>) -> Self {
         // TODO: That lands in the wrong field.
-        Self::new(State::Ok, details.into(), None, Some(metrics))
+        Self::new(State::Ok, as_option(details), None, Some(metrics))
     }
 
     pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, summary.into(), None, Some(metrics))
+        Self::new(State::Ok, as_option(summary), None, Some(metrics))
     }
 
     pub fn warn(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Warn, summary.into(), None, Some(metrics))
+        Self::new(State::Warn, as_option(summary), None, Some(metrics))
     }
 
     pub fn crit(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Crit, summary.into(), None, Some(metrics))
+        Self::new(State::Crit, as_option(summary), None, Some(metrics))
     }
 
     pub fn unknown(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(State::Unknown, summary.into(), None, Some(metrics))
+        Self::new(State::Unknown, as_option(summary), None, Some(metrics))
     }
 
     pub fn ok_with_details(
@@ -431,7 +427,7 @@ where
     ) -> Self {
         Self::new(
             State::Ok,
-            summary.into(),
+            Some(summary.into()),
             Some(details.into()),
             Some(metrics),
         )
@@ -444,7 +440,7 @@ where
     ) -> Self {
         Self::new(
             State::Warn,
-            summary.into(),
+            Some(summary.into()),
             Some(details.into()),
             Some(metrics),
         )
@@ -457,7 +453,7 @@ where
     ) -> Self {
         Self::new(
             State::Crit,
-            summary.into(),
+            Some(summary.into()),
             Some(details.into()),
             Some(metrics),
         )
@@ -507,7 +503,7 @@ enum Details {
 #[derive(Debug)]
 struct Summary {
     state: State,
-    text: String,
+    text: Option<String>,
 }
 
 #[derive(Debug, Default)]
@@ -531,12 +527,13 @@ impl Display for Collection {
         let summary = self
             .summary
             .iter()
-            .filter(|s| !s.text.is_empty())
-            .map(|s| match s.state {
-                State::Ok => s.text.to_string(),
-                State::Warn => format!("{} (!)", s.text),
-                State::Crit => format!("{} (!!)", s.text),
-                State::Unknown => format!("{} (?)", s.text),
+            .flat_map(|s| {
+                s.text.as_ref().map(|text| match s.state {
+                    State::Ok => text.to_string(),
+                    State::Warn => format!("{} (!)", text),
+                    State::Crit => format!("{} (!!)", text),
+                    State::Unknown => format!("{} (?)", text),
+                })
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -792,7 +789,23 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult};
+    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult, State};
+
+    #[test]
+    fn test_with_empty_str() {
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::ok("")
+        );
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::notice("")
+        );
+        assert_eq!(
+            SimpleCheckResult::ok_with_details("", ""),
+            SimpleCheckResult::new(State::Ok, None, None)
+        );
+    }
 
     #[test]
     fn test_single_check_result_ok() {

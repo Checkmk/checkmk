@@ -200,6 +200,10 @@ check_metrics["check_mk-netapp_api_disk_summary"] = {
     "total_disk_capacity": {"name": "disk_capacity"},
     "total_disks": {"name": "disks"},
 }
+check_metrics["check_mk-netapp_ontap_disk_summary"] = {
+    "total_disk_capacity": {"name": "disk_capacity"},
+    "total_disks": {"name": "disks"},
+}
 check_metrics["check_mk-emc_isilon_iops"] = {
     "iops": {"name": "disk_ios"},
 }

@@ -1,0 +1,13 @@
+title: NetApp Filer: Disk Summary
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ This check counts the number of disks.
+
+ Additionally the check monitors the number of broken and spare disks.
+ You can define {WARN}/{CRIT} levels for the ratio of {broken / (broken + spare)} disks.
+
+discovery:
+ One service is created.

@@ -13,10 +13,6 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
-from collections.abc import Iterator
-
-from netapp_ontap import resources as NetAppResource
-from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
 
 MEGA = 1024 * 1024
@@ -138,15 +134,10 @@ class DiskModel(BaseModel):
     "disk-inventory-info.vendor": "vendor-id" -> vendor
 
     "disk-raid-info.container-type": "raid-state" -> container_type
-    "disk-raid-info.position": "raid-type"  -> NA # ! HELP
+    "disk-raid-info.position": "raid-type"  -> NA # ! not present in new api
     "disk-raid-info.used-blocks": "used-space" -> usable_size
-    "disk-raid-info.physical-blocks": "physical-space"  -> NA # ! HELP
+    "disk-raid-info.physical-blocks": "physical-space"  -> NA # ! not present in new api
     ============
-
-    TODO:
-    - The old code uses config scales (see: cmk/special_agents/agent_netapp.py:945)
-        Implement it here!
-    - Can I ignore the NA fields? See the plugin
 
     """
 
@@ -155,21 +146,4 @@ class DiskModel(BaseModel):
     model: str
     vendor: str
     container_type: str
-    usable_size: int | None = None
-
-
-def get_disks(connection: HostConnection) -> Iterator[DiskModel]:
-    field_query = {
-        "uid",
-        "serial_number",
-        "model",
-        "vendor",
-        "container_type",
-        "usable_size",
-    }
-    yield from (
-        DiskModel.model_validate(element.to_dict())
-        for element in NetAppResource.Disk.get_collection(
-            connection=connection, fields=",".join(field_query)
-        )
-    )
+    bay: int | None = None

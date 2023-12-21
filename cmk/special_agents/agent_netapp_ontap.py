@@ -156,7 +156,7 @@ def fetch_volumes_counters(
             id=volume_id,
             connection=connection,
             fields="counters",
-            max_records=None,  # type: ignore
+            max_records=None,  # type: ignore # pylint disable=arg-type not working
             **{"counters.name": "|".join(volumes_counters_field_query)},
         ):
             element_serialized = element.to_dict()
@@ -202,14 +202,28 @@ def fetch_volumes_counters(
 
 
 def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
-    yield from models.get_disks(connection)
+    field_query = {
+        "uid",
+        "serial_number",
+        "model",
+        "vendor",
+        "container_type",
+        "usable_size",
+        "bay",
+    }
+    yield from (
+        models.DiskModel.model_validate(element.to_dict())
+        for element in NetAppResource.Disk.get_collection(
+            connection=connection, fields=",".join(field_query)
+        )
+    )
 
 
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
     write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
-    # write_section("disks_rest", fetch_disks(connection), logger)
+    write_section("disk", fetch_disks(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

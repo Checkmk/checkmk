@@ -169,7 +169,7 @@ where
     pub fn check(
         &self,
         value: T,
-        text: impl Into<String>,
+        summary: impl Into<String>,
         args: LevelsCheckerArgs,
     ) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
@@ -181,9 +181,10 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), OutputText::Notice(text.into()), None);
+        let r = SimpleCheckResult::new(evaluate(&value), summary.into(), None);
         CheckResult {
-            output: r.output,
+            state: r.state,
+            summary: r.summary,
             details: None,
             metrics: Some(Metric::<T> {
                 label: args.label,
@@ -314,70 +315,54 @@ impl Display for OutputText {
     }
 }
 
-#[derive(Debug, Default, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-struct Output {
-    state: State,
-    text: OutputText,
-}
-
 #[derive(Debug, Default)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
-    output: Output,
+    state: State,
+    summary: String,
     details: Option<String>,
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, text: OutputText, details: Option<String>) -> Self {
+    fn new(state: State, summary: String, details: Option<String>) -> Self {
         Self {
-            output: Output { state, text },
+            state,
+            summary,
             details,
         }
     }
 
-    pub fn ok(text: OutputText) -> Self {
-        Self::new(State::Ok, text, None)
+    pub fn notice(details: impl Into<String>) -> Self {
+        // TODO: That lands in the wrong field.
+        Self::new(State::Ok, details.into(), None)
     }
 
-    pub fn notice(text: impl Into<String>) -> Self {
-        Self::ok(OutputText::Notice(text.into()))
+    pub fn ok(summary: impl Into<String>) -> Self {
+        Self::new(State::Ok, summary.into(), None)
     }
 
     pub fn warn(summary: impl Into<String>) -> Self {
-        Self::new(State::Warn, OutputText::Summary(summary.into()), None)
+        Self::new(State::Warn, summary.into(), None)
     }
 
     pub fn crit(summary: impl Into<String>) -> Self {
-        Self::new(State::Crit, OutputText::Summary(summary.into()), None)
+        Self::new(State::Crit, summary.into(), None)
     }
 
     pub fn unknown(summary: impl Into<String>) -> Self {
-        Self::new(State::Unknown, OutputText::Summary(summary.into()), None)
+        Self::new(State::Unknown, summary.into(), None)
     }
 
     pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(
-            State::Ok,
-            OutputText::Summary(summary.into()),
-            Some(details.into()),
-        )
+        Self::new(State::Ok, summary.into(), Some(details.into()))
     }
 
     pub fn warn_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(
-            State::Warn,
-            OutputText::Summary(summary.into()),
-            Some(details.into()),
-        )
+        Self::new(State::Warn, summary.into(), Some(details.into()))
     }
 
     pub fn crit_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(
-            State::Crit,
-            OutputText::Summary(summary.into()),
-            Some(details.into()),
-        )
+        Self::new(State::Crit, summary.into(), Some(details.into()))
     }
 }
 
@@ -385,7 +370,8 @@ pub struct CheckResult<T>
 where
     T: Clone,
 {
-    output: Output,
+    state: State,
+    summary: String,
     details: Option<String>,
     metrics: Option<Metric<T>>,
 }
@@ -405,50 +391,37 @@ where
 {
     fn new(
         state: State,
-        text: OutputText,
+        summary: String,
         details: Option<String>,
         metrics: Option<Metric<T>>,
     ) -> Self {
         Self {
-            output: Output { state, text },
+            state,
+            summary,
             details,
             metrics,
         }
     }
 
-    pub fn ok(text: OutputText, metrics: Metric<T>) -> Self {
-        Self::new(State::Ok, text, None, Some(metrics))
+    pub fn notice(details: impl Into<String>, metrics: Metric<T>) -> Self {
+        // TODO: That lands in the wrong field.
+        Self::new(State::Ok, details.into(), None, Some(metrics))
     }
 
-    pub fn notice(text: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::ok(OutputText::Notice(text.into()), metrics)
+    pub fn ok(summary: impl Into<String>, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, summary.into(), None, Some(metrics))
     }
 
     pub fn warn(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(
-            State::Warn,
-            OutputText::Summary(summary.into()),
-            None,
-            Some(metrics),
-        )
+        Self::new(State::Warn, summary.into(), None, Some(metrics))
     }
 
     pub fn crit(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(
-            State::Crit,
-            OutputText::Summary(summary.into()),
-            None,
-            Some(metrics),
-        )
+        Self::new(State::Crit, summary.into(), None, Some(metrics))
     }
 
     pub fn unknown(summary: impl Into<String>, metrics: Metric<T>) -> Self {
-        Self::new(
-            State::Unknown,
-            OutputText::Summary(summary.into()),
-            None,
-            Some(metrics),
-        )
+        Self::new(State::Unknown, summary.into(), None, Some(metrics))
     }
 
     pub fn ok_with_details(
@@ -458,7 +431,7 @@ where
     ) -> Self {
         Self::new(
             State::Ok,
-            OutputText::Summary(summary.into()),
+            summary.into(),
             Some(details.into()),
             Some(metrics),
         )
@@ -471,7 +444,7 @@ where
     ) -> Self {
         Self::new(
             State::Warn,
-            OutputText::Summary(summary.into()),
+            summary.into(),
             Some(details.into()),
             Some(metrics),
         )
@@ -484,7 +457,7 @@ where
     ) -> Self {
         Self::new(
             State::Crit,
-            OutputText::Summary(summary.into()),
+            summary.into(),
             Some(details.into()),
             Some(metrics),
         )
@@ -502,7 +475,8 @@ where
         U: Clone + Default,
     {
         CheckResult {
-            output: self.output,
+            state: self.state,
+            summary: self.summary,
             details: self.details,
             metrics: self.metrics.map(|m| m.map(f)),
         }
@@ -515,7 +489,8 @@ where
 {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
-            output: x.output,
+            state: x.state,
+            summary: x.summary,
             details: x.details,
             metrics: None,
         }
@@ -529,10 +504,16 @@ enum Details {
     TextMetric(String, Metric<Real>),
 }
 
+#[derive(Debug)]
+struct Summary {
+    state: State,
+    text: String,
+}
+
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
-    summary: Vec<Output>,
+    summary: Vec<Summary>,
     details: Vec<Details>,
 }
 
@@ -583,8 +564,11 @@ impl Display for Collection {
 impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
-            state: check_result.output.state,
-            summary: vec![check_result.output],
+            state: check_result.state,
+            summary: vec![Summary {
+                state: check_result.state,
+                text: check_result.summary,
+            }],
             details: vec![],
         }
     }
@@ -595,8 +579,11 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
         check_results
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
-                out.state = std::cmp::max(out.state, cr.output.state);
-                out.summary.push(cr.output);
+                out.state = std::cmp::max(out.state, cr.state);
+                out.summary.push(Summary {
+                    state: cr.state,
+                    text: cr.summary,
+                });
                 out.details.extend(match (cr.details, cr.metrics) {
                     (None, None) => vec![],
                     (Some(text), None) => vec![Details::Text(text)],

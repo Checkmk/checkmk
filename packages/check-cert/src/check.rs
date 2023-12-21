@@ -569,7 +569,11 @@ impl From<SimpleCheckResult> for Collection {
                 state: check_result.state,
                 text: check_result.summary,
             }],
-            details: vec![],
+            details: {
+                let mut v = vec![];
+                v.extend(check_result.details.map(Details::Text));
+                v
+            },
         }
     }
 }

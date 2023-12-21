@@ -183,6 +183,12 @@ pub struct SqlInstance {
     piggyback: Option<String>,
 }
 
+impl AsRef<SqlInstance> for SqlInstance {
+    fn as_ref(&self) -> &SqlInstance {
+        self
+    }
+}
+
 impl SqlInstance {
     pub fn generate_leading_entry(&self, sep: char) -> String {
         format!(
@@ -250,7 +256,7 @@ impl SqlInstance {
         let mut result = self
             .piggyback
             .as_ref()
-            .map(|h| emit::piggyback_header(h))
+            .map(|h| emit::piggyback_header(h) + &generate_instance_entries(&[self]))
             .unwrap_or_default()
             .to_owned();
         let endpoint = &ms_sql.endpoint();
@@ -1282,12 +1288,12 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
         + &generate_result(&instances, &sections, ms_sql).await?)
 }
 
-fn generate_instance_entries(instances: &[SqlInstance]) -> String {
+fn generate_instance_entries<P: AsRef<SqlInstance>>(instances: &[P]) -> String {
     let section = Section::new(section::INSTANCE_SECTION_NAME, None);
     section.to_plain_header() // as in old plugin
      + &instances
         .iter()
-        .flat_map(|i| [section.to_plain_header(), i.generate_leading_entry(section.sep())])
+        .flat_map(|i| [section.to_plain_header(), i.as_ref().generate_leading_entry(section.sep())])
         .collect::<Vec<String>>()
         .join("")
 }

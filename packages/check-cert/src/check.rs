@@ -541,14 +541,14 @@ where
 #[derive(Debug, Default)]
 pub struct Collection {
     state: State,
-    output: Vec<Output>,
+    summary: Vec<Output>,
     metrics: Vec<Metric<Real>>,
 }
 
 impl Collection {
     pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
-        self.output.append(&mut other.output);
+        self.summary.append(&mut other.summary);
         self.metrics.append(&mut other.metrics);
     }
 }
@@ -556,15 +556,15 @@ impl Collection {
 impl Display for Collection {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         let mut out = String::from(self.state.as_str());
-        let output = self
-            .output
+        let summary = self
+            .summary
             .iter()
             .filter(|s| !s.text.is_empty())
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", ");
-        if !output.is_empty() {
-            out = format!("{} - {}", out, output);
+        if !summary.is_empty() {
+            out = format!("{} - {}", out, summary);
         }
         let metrics = self
             .metrics
@@ -584,7 +584,7 @@ impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
             state: check_result.output.state,
-            output: vec![check_result.output],
+            summary: vec![check_result.output],
             metrics: Vec::<Metric<Real>>::default(),
         }
     }
@@ -596,7 +596,7 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
             .drain(..)
             .fold(Collection::default(), |mut out, cr| {
                 out.state = std::cmp::max(out.state, cr.output.state);
-                out.output.push(cr.output);
+                out.summary.push(cr.output);
                 out.metrics.extend(cr.metrics);
                 out
             })

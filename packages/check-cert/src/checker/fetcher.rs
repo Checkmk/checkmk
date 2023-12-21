@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, Real};
+use crate::check::{CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, OutputType, Real};
 use time::Duration;
 use typed_builder::TypedBuilder;
 
@@ -28,10 +28,10 @@ fn check_response_time(
     levels.map(|levels| {
         levels.check(
             response_time,
-            format!(
+            OutputType::Summary(format!(
                 "Certificate obtained in {} ms",
                 response_time.whole_milliseconds()
-            ),
+            )),
             LevelsCheckerArgs::builder()
                 .label("response_time")
                 .uom("ms".parse().unwrap())

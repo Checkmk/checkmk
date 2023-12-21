@@ -166,12 +166,7 @@ where
             .ok_or(Box::from("bad values"))
     }
 
-    pub fn check(
-        &self,
-        value: T,
-        summary: impl Into<String>,
-        args: LevelsCheckerArgs,
-    ) -> CheckResult<T> {
+    pub fn check(&self, value: T, output: OutputType, args: LevelsCheckerArgs) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
             if self.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
@@ -181,11 +176,16 @@ where
                 State::Ok
             }
         };
-        let r = SimpleCheckResult::new(evaluate(&value), Some(summary.into()), None);
+        let state = evaluate(&value);
+        let (summary, details) = match (output, state) {
+            (OutputType::Notice(text), State::Ok) => (None, Some(text)),
+            (OutputType::Notice(text), _) => (Some(text), None),
+            (OutputType::Summary(text), _) => (Some(text), None),
+        };
         CheckResult {
-            state: r.state,
-            summary: r.summary,
-            details: None,
+            state,
+            summary,
+            details,
             metrics: Some(Metric::<T> {
                 label: args.label,
                 value,
@@ -195,6 +195,12 @@ where
             }),
         }
     }
+}
+
+#[derive(Debug)]
+pub enum OutputType {
+    Summary(String),
+    Notice(String),
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -281,28 +287,6 @@ where
                 .as_ref()
                 .map_or(Default::default(), |v| v.max.to_string()),
         )
-    }
-}
-
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum OutputText {
-    Summary(String),
-    Notice(String),
-}
-
-impl Default for OutputText {
-    fn default() -> Self {
-        Self::Notice(String::default())
-    }
-}
-
-impl Display for OutputText {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        match self {
-            Self::Summary(s) => s.fmt(f),
-            Self::Notice(s) => s.fmt(f),
-        }
     }
 }
 

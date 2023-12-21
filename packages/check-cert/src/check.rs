@@ -321,22 +321,6 @@ struct Output {
     text: OutputText,
 }
 
-impl Display for Output {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-        write!(
-            f,
-            "{}{}",
-            self.text,
-            match self.state {
-                State::Ok => "",
-                State::Warn => " (!)",
-                State::Crit => " (!!)",
-                State::Unknown => " (?)",
-            }
-        )
-    }
-}
-
 #[derive(Debug, Default)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct SimpleCheckResult {
@@ -567,7 +551,12 @@ impl Display for Collection {
             .summary
             .iter()
             .filter(|s| !s.text.is_empty())
-            .map(ToString::to_string)
+            .map(|s| match s.state {
+                State::Ok => s.text.to_string(),
+                State::Warn => format!("{} (!)", s.text),
+                State::Crit => format!("{} (!!)", s.text),
+                State::Unknown => format!("{} (?)", s.text),
+            })
             .collect::<Vec<_>>()
             .join(", ");
         if !summary.is_empty() {

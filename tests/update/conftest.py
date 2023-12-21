@@ -24,19 +24,6 @@ from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
 
-# not all used base-versions are available for all distros used in the test-job.
-# we temporarily define the distros where all base-versions are available.
-# TODO: improve the test parameterization to select only the base versions available for a given
-#  distro
-SUPPORTED_DISTROS = [
-    "ubuntu-20.04",
-    "ubuntu-22.04",
-    "debian-11",
-    "centos-8",
-    "almalinux-9",
-    "sles-15sp4",
-]
-
 logger = logging.getLogger(__name__)
 
 
@@ -211,17 +198,30 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                 min_version=min_version,
             )
         else:  # interactive site creation
-            site = sf.interactive_create(site.id, logfile_path)
-
+            try:
+                site = sf.interactive_create(site.id, logfile_path)
+                restart_httpd()
+            except Exception as e:
+                if f"Version {version.version} could not be installed" in str(e):
+                    pytest.skip(
+                        f"Base-version {version.version} not available in "
+                        f'{os.environ.get("DISTRO")}'
+                    )
     else:
         if update:
             # non-interactive update as site-user
             sf.update_as_site_user(site, target_version=version, min_version=min_version)
 
-        else:
-            # use SiteFactory for non-interactive site creation
-            site = sf.get_site("central")
-            restart_httpd()
+        else:  # use SiteFactory for non-interactive site creation
+            try:
+                site = sf.get_site("central")
+                restart_httpd()
+            except Exception as e:
+                if f"Version {version.version} could not be installed" in str(e):
+                    pytest.skip(
+                        f"Base-version {version.version} not available in "
+                        f'{os.environ.get("DISTRO")}'
+                    )
 
     return site
 

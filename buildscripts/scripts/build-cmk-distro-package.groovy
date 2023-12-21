@@ -174,6 +174,7 @@ def main() {
 
     stage("Prepare environment") {
         shout("Prepare environment");
+        lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker.image("${distro}:${docker_tag}").inside(
                     "--name ${container_name}" +
@@ -219,6 +220,7 @@ def main() {
                 }
             }
         }
+        }
     }
 
     stage("Archive stuff") {
@@ -235,4 +237,5 @@ def main() {
         }
     }
 }
+
 return this;

@@ -246,12 +246,27 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         )
 
 
+def fetch_aggr(connection: HostConnection) -> Iterable[models.AggregateModel]:
+    field_query = {
+        "name",
+        "space.block_storage.available",
+        "space.block_storage.size",
+    }
+    yield from (
+        models.AggregateModel.model_validate(element.to_dict())
+        for element in NetAppResource.Aggregate.get_collection(
+            connection=connection, fields=",".join(field_query)
+        )
+    )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
     write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
     write_section("disk", fetch_disks(connection), logger)
     write_section("luns", fetch_luns(connection), logger)
+    write_section("aggr", fetch_aggr(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

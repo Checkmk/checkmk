@@ -147,3 +147,39 @@ class DiskModel(BaseModel):
     vendor: str
     container_type: str
     bay: int | None = None
+
+
+class LunModel(BaseModel):
+    """
+    api: /api/storage/luns
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//lun.html#lun-copy-get-iter
+
+    ============
+    OLD -> NEW:
+    ============
+    "path" -> name
+    "size" -> space.size
+    "size-used" -> space.used
+    "online" -> enabled
+    "read-only" -> status.read_only
+    "vserver" -> svm.name
+    "volume" -> location.volume.name
+    ============
+    """
+
+    name: str
+    space_size: int
+    space_used: int
+    enabled: bool
+    read_only: bool
+    svm_name: str
+    volume_name: str
+
+    def size(self) -> float:
+        return self.space_size / MEGA
+
+    def free_space(self) -> float:
+        return (self.space_size - self.space_used) / MEGA
+
+    def item_name(self) -> str:
+        return self.name.rsplit("/", 1)[-1]

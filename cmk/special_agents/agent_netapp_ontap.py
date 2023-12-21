@@ -219,11 +219,39 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
     )
 
 
+def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
+    field_query = {
+        "name",
+        "space.size",
+        "space.used",
+        "enabled",
+        "status.read_only",
+        "svm.name",
+        "location.volume.name",
+    }
+
+    for element in NetAppResource.Lun.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.LunModel(
+            name=element_data["name"],
+            space_size=element_data["space"]["size"],
+            space_used=element_data["space"]["used"],
+            enabled=element_data["enabled"],
+            read_only=element_data["status"]["read_only"],
+            svm_name=element_data["svm"]["name"],
+            volume_name=element_data["location"]["volume"]["name"],
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
     write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
     write_section("disk", fetch_disks(connection), logger)
+    write_section("luns", fetch_luns(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

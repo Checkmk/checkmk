@@ -9,13 +9,12 @@ from typing import Any
 
 from cmk.plugins.lib import netapp_api
 from cmk.plugins.lib.df import (
-    df_check_filesystem_single,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
     TREND_DEFAULT_PARAMS,
 )
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
+from .agent_based_api.v1 import get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _MEBI = 1048576
@@ -63,40 +62,22 @@ def _check_netapp_api_luns(
     if (lun := section.get(item)) is None:
         return
 
-    yield Result(state=State.OK, summary=f"Volume: {lun['volume']}")
-    yield Result(state=State.OK, summary=f"Vserver: {lun['vserver']}")
-
-    if lun.get("online") != "true":
-        yield Result(state=State.CRIT, summary="LUN is offline")
-
-    read_only = lun.get("read-only") == "true"
-    if read_only != params.get("read_only"):
-        expected = str(params.get("read_only")).lower()
-        yield Result(
-            state=State.WARN,
-            summary="read-only is {} (expected: {})".format(lun.get("read-only"), expected),
-        )
-
     size_total_bytes = int(lun["size"])
+    size_avail_bytes = size_total_bytes - int(lun["size-used"])
 
-    if params.get("ignore_levels"):
-        yield Result(state=State.OK, summary=f"Total size: {render.bytes(size_total_bytes)}")
-        yield Result(state=State.OK, summary="Used space is ignored")
-    else:
-        size_avail_bytes = size_total_bytes - int(lun["size-used"])
-        yield from df_check_filesystem_single(
-            value_store,
-            item,
-            # df_check_filesystem_single expects input in Megabytes
-            # (mo: but we're passing mebibytes, apparently.)
-            size_total_bytes / _MEBI,
-            size_avail_bytes / _MEBI,
-            0,
-            None,
-            None,
-            params,
-            this_time=now,
-        )
+    yield from netapp_api.check_netapp_luns(
+        item=item,
+        volume_name=lun["volume"],
+        server_name=lun["vserver"],
+        online=lun.get("online") == "true",
+        read_only=lun.get("read-only") == "true",
+        size_total_bytes=size_total_bytes,
+        size_total=size_total_bytes / _MEBI,
+        size_available=size_avail_bytes / _MEBI,
+        now=now,
+        value_store=value_store,
+        params=params,
+    )
 
 
 register.check_plugin(

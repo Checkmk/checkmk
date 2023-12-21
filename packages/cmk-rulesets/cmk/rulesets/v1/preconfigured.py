@@ -78,3 +78,16 @@ class MonitoredService:
 
     title: Localizable | None = None
     help_text: Localizable | None = None
+
+
+@dataclass(frozen=True)
+class Password:
+    """Specifies a form for configuring passwords (explicit or from password store)
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None

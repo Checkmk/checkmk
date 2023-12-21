@@ -31,6 +31,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
+from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 
@@ -709,6 +710,23 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="MonitoredService",
         ),
+        pytest.param(
+            api_v1.preconfigured.Password(),
+            legacy_page_groups.IndividualOrStoredPassword(allow_empty=False),
+            id="minimal Password",
+        ),
+        pytest.param(
+            api_v1.preconfigured.Password(
+                title=api_v1.Localizable("password title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_page_groups.IndividualOrStoredPassword(
+                title=_("password title"),
+                help=_("help text"),
+                allow_empty=False,
+            ),
+            id="Password",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
@@ -1229,6 +1247,10 @@ def _compare_specs(actual: object, expected: object) -> None:
             _compare_specs(actual_value, expected_value)
             continue
 
+        # cached access to the password store
+        if "functools._lru_cache_wrapper" in str(actual_value):
+            continue
+
         try:
             _compare_specs(actual_value(), expected_value())
         except TypeError:  # deal with valuespec constructors
@@ -1544,6 +1566,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.preconfigured.Metric(),
         api_v1.preconfigured.MonitoredHost(),
         api_v1.preconfigured.MonitoredService(),
+        api_v1.preconfigured.Password(),
     ]
 
 
@@ -1555,7 +1578,7 @@ def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
                 _ = form_spec.transform
             except AttributeError:
                 assert False
-        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.MonitoredService() | api_v1.preconfigured.Proxy():
+        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.MonitoredService() | api_v1.preconfigured.Password() | api_v1.preconfigured.Proxy():
             # these don't have a transform
             assert True
         case other_form_spec:

@@ -584,10 +584,6 @@ msgstr "%s は、この選択の既存の要素ではありません。"
 msgid "%s is parent of %s."
 msgstr "%s は %s の親です。"
 
-#, fuzzy, python-format
-msgid "%s is too %s. The %s allowed value is %s."
-msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
-
 #, python-format
 msgid "%s latency"
 msgstr "%sレイテンシ"
@@ -3400,9 +3396,6 @@ msgstr "ホストの追加と削除"
 msgid "Add Aggregation"
 msgstr "集計を追加"
 
-msgid "Add Authenticator App"
-msgstr "認証Appの追加"
-
 msgid "Add BI Pack"
 msgstr "BIパックを追加する"
 
@@ -3466,9 +3459,6 @@ msgstr "ルールIDを追加"
 
 msgid "Add SLA"
 msgstr "SLAの追加"
-
-msgid "Add Security Token"
-msgstr "セキュリティトークンの追加"
 
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
@@ -5459,6 +5449,10 @@ msgstr "ツリーの一部の表示を許可"
 msgid "Allowed to see the whole tree"
 msgstr "ツリー全体を表示できます"
 
+#, fuzzy, python-format
+msgid "Allowed values range from %s to %s."
+msgstr "クラスタノードの名前を %s から %sに変更しました。"
+
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "ユーザーがレポートスケジューラのエントリを作成、変更することを許可する。"
@@ -6631,8 +6625,13 @@ msgstr "認証タイプ"
 msgid "Authentication with TLS"
 msgstr "TLS認証"
 
-msgid "Authenticaton Applications"
-msgstr "認証アプリケーション"
+#, fuzzy
+msgid "Authenticator app"
+msgstr "認証Appの追加"
+
+#, fuzzy
+msgid "Authenticator apps"
+msgstr "認証Appの追加"
 
 msgid "Authmethod"
 msgstr "認証方法"
@@ -7433,6 +7432,10 @@ msgid "Backup code"
 msgstr "バックアップコード"
 
 msgid "Backup codes"
+msgstr "バックアップコード"
+
+#, fuzzy
+msgid "Backup codes left:"
 msgstr "バックアップコード"
 
 msgid "Backup configured"
@@ -10983,6 +10986,10 @@ msgid "Click here to see the activation status per site."
 msgstr ""
 "サイトごとのアクティベーションステータスを確認するには、ここをクリックしてく"
 "ださい。"
+
+#, fuzzy, python-format
+msgid "Click on 'Register %s' to enable two-factor authentication via %s."
+msgstr "%sの2 要素認証を削除"
 
 msgid "Click to toggle this setting"
 msgstr "クリックで設定を切り替える"
@@ -15204,6 +15211,10 @@ msgstr "このチェックに属する処理済みメッセージをすべて削
 msgid "Delete annotation #%d"
 msgstr "注釈 #%dを削除"
 
+#, fuzzy
+msgid "Delete authentication via "
+msgstr "テスト認証"
+
 msgid "Delete auxiliary tag"
 msgstr "補助タグを削除"
 
@@ -15465,9 +15476,6 @@ msgstr "期間を削除"
 
 msgid "Delete time range"
 msgstr "時間範囲を削除"
-
-msgid "Delete two-factor credential"
-msgstr "この二要素認証情報を削除する"
 
 msgid "Delete unpackaged file"
 msgstr "パッケージ化されていないファイルを削除"
@@ -19289,6 +19297,9 @@ msgstr ""
 "共有のプレーン名のみを入力します。<tt>\\\\servername\\iso</tt>のような完全な"
 "UNC<b>ではなく</b> <tt>iso</tt>のみ"
 
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
 "description)."
@@ -22367,6 +22378,10 @@ msgstr "一般的なプロパティ"
 msgid "Generate"
 msgstr "生成する"
 
+#, fuzzy
+msgid "Generate backup codes"
+msgstr "バックアップコードを再作成する"
+
 msgid "Generate core config parallelized"
 msgstr "並列化されたコア構成を生成する"
 
@@ -24744,9 +24759,6 @@ msgstr "ホストはエージェントの更新が必要です"
 msgid "Host network"
 msgstr "ホストネットワーク"
 
-msgid "Host notes URL expanded"
-msgstr "ホストノートのURLを拡大"
-
 msgid "Host notification number"
 msgstr "ホスト通知番号"
 
@@ -26892,6 +26904,17 @@ msgstr ""
 "成され、その後これらのファイルが使用されます。"
 
 msgid ""
+"If you lose access to your authentication app / security token, you can use "
+"any of these codes to login. Generating backup codes automatically "
+"invalidates existing codes."
+msgstr ""
+
+msgid ""
+"If you lose access to your authentication device, you can use any of the "
+"generated backup codes to login."
+msgstr ""
+
+msgid ""
 "If you multiply the number of data points with the number of steps "
 "aggregated then you get the time range that is stored in this archive. Each "
 "data point needs 8 bytes for each aggregation (MIN, MAX, AVERAGE) that you "
@@ -26929,12 +26952,6 @@ msgstr ""
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr "ライセンスを%sで購入した場合は、そちらに連絡してください。"
-
-msgid ""
-"If you regenerate backup codes, you automatically invalidate the existing "
-"codes."
-msgstr ""
-"バックアップコードを再生成すると、自動的に既存のコードが無効になります。"
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -28985,6 +29002,10 @@ msgstr "無効な垂直範囲: from は to よりも低くする必要があり�
 
 msgid "Invalid visual type"
 msgstr "無効なビジュアルタイプ"
+
+#, fuzzy
+msgid "Invalidate all"
+msgstr "すべてのコードを無効とする"
 
 msgid "Invalidate all backup codes"
 msgstr "全てのバックアップコードを無効にする"
@@ -35991,7 +36012,8 @@ msgstr "適切なリクエストIDがない"
 msgid "No authentication, no privacy"
 msgstr "認証なし、プライバシーなし"
 
-msgid "No backup codes created yet."
+#, fuzzy
+msgid "No backup codes generated yet."
 msgstr "バックアップコードはまだ作成されていません。"
 
 msgid "No baked agent for this host available"
@@ -36678,9 +36700,6 @@ msgstr "パスワードの変更は許可されていません。変更を強制
 msgid "Not ready duration"
 msgstr "準備期間"
 
-msgid "Not registered"
-msgstr "未登録"
-
 msgid "Not responding devices"
 msgstr "デバイスが応答しない"
 
@@ -36785,8 +36804,9 @@ msgstr ""
 msgid "Notes"
 msgstr "ノート"
 
-msgid "Notes URL expanded"
-msgstr "ノートURL拡張"
+#, fuzzy
+msgid "Notes URL"
+msgstr "ノート"
 
 msgid "Notes URL for Hosts"
 msgstr "ホストのメモURL"
@@ -37920,9 +37940,6 @@ msgstr "OSDのエポックレベルと平均"
 
 msgid "OSN Laser attenuation"
 msgstr "OSNレーザー減衰"
-
-msgid "OTP code"
-msgstr "OTPコード"
 
 #, fuzzy
 msgid "OVS bonding interface status"
@@ -40705,6 +40722,9 @@ msgstr "YYYY-MM-DDの形式で日付を入力してください。"
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "最初にいくつかの<a href='%s'>連絡先グループ</a>を作成してください"
 
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
 msgid "Please leave either both from and until empty or enter two times."
 msgstr "fromとuntilの両方を空けるか、2回入力してください。"
 
@@ -42955,11 +42975,18 @@ msgstr ""
 "トには、パスワードのような機密情報が含まれている可能性があることに注意してく"
 "ださい。"
 
+msgid "Register an authentication device before generating backup codes."
+msgstr ""
+
 msgid "Register any existing host"
 msgstr "既存ホストの登録"
 
 msgid "Register any new host"
 msgstr "新規ホストの登録"
+
+#, fuzzy
+msgid "Register authenticator app"
+msgstr "認証アプリの登録"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -42977,6 +43004,10 @@ msgstr "管理された既存ホストの登録"
 msgid "Register new hosts in managed folders"
 msgstr "新規ホストを管理フォルダに登録する"
 
+#, fuzzy
+msgid "Register security token"
+msgstr "セキュリティトークン"
+
 msgid "Registered"
 msgstr "登録済み"
 
@@ -42984,6 +43015,10 @@ msgid "Registered agents"
 msgstr "登録エージェント"
 
 msgid "Registered at"
+msgstr "登録済み"
+
+#, fuzzy
+msgid "Registered at "
 msgstr "登録済み"
 
 msgid "Registered desktops"
@@ -45799,14 +45834,19 @@ msgstr "セキュリティ"
 msgid "Security Level"
 msgstr "セキュリティレベル"
 
-msgid "Security Tokens"
-msgstr "セキュリティトークン"
-
 msgid "Security fix"
 msgstr "セキュリティ修正"
 
 msgid "Security name"
 msgstr "セキュリティ名"
+
+#, fuzzy
+msgid "Security token"
+msgstr "セキュリティトークン"
+
+#, fuzzy
+msgid "Security tokens"
+msgstr "セキュリティトークン"
 
 msgid ""
 "See 'Queue status attributes' in IBM manual(https://www.ibm.com/support/"
@@ -46646,9 +46686,6 @@ msgstr "サービスの通常のチェック間隔"
 
 msgid "Service normal/retry check interval"
 msgstr "サービス正常/再試行チェック間隔"
-
-msgid "Service notes URL expanded"
-msgstr "サービスノートURL拡大"
 
 msgid "Service notification number"
 msgstr "サービス通知番号"
@@ -54412,6 +54449,10 @@ msgstr ""
 "このサービスが警告/クリティカルになる前の宛先へのパケット損失の最大許容パーセ"
 "ンテージ。"
 
+#, fuzzy, python-format
+msgid "The maximum allowed value is %s."
+msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
+
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
 "warning/critical. This alarm only applies to the target host, not the hops "
@@ -54508,6 +54549,10 @@ msgid ""
 msgstr ""
 "メトリックラベルは、結果のサービスのステータス詳細のクエリ値と一緒に表示され"
 "ます。何も指定されていない場合、メトリック名がラベルとして使用されます。"
+
+#, fuzzy, python-format
+msgid "The minimum allowed value is %s."
+msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 
 #, python-format
 msgid ""
@@ -57620,6 +57665,10 @@ msgstr ""
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
 msgstr "このメッセージは %s で作成され、%s まで有効です。"
+
+#, fuzzy
+msgid "This message is not supposed to be used. Ever."
+msgstr "このURLをブックマークとして使用することはできません"
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -63986,6 +64035,10 @@ msgstr "2要素認証"
 msgid "Two-factor authentication not enabled"
 msgstr "2要素認証が無効"
 
+#, fuzzy
+msgid "Two-factor code"
+msgstr "2要素認証"
+
 msgid "Tx"
 msgstr "Tx"
 
@@ -65666,9 +65719,6 @@ msgstr ""
 "<tt>\\1</tt>, <tt>\\2</tt>などを使用して一致するサブグループを置き換え、<tt>"
 "\\0</tt>を使用して元のホスト名に挿入します"
 
-msgid "Use Authenticator App"
-msgstr "認証アプリを使用する"
-
 msgid "Use CN from LDAP distinguished name (DN) string"
 msgstr "LDAP識別名(DN)文字列からCNを使う"
 
@@ -65837,8 +65887,9 @@ msgstr "ネットワークアドレスを使用"
 msgid "Use attribute value"
 msgstr "属性値を使用"
 
-msgid "Use authenticator code"
-msgstr "認証コードを使用"
+#, fuzzy
+msgid "Use authenticator app"
+msgstr "認証アプリを使用する"
 
 msgid "Use backup code"
 msgstr "バックアップコードを使用"
@@ -65990,6 +66041,9 @@ msgstr "通常の状態を使用し、確認応答を無視します"
 
 msgid "Use normal state, ignore downtime"
 msgstr "通常の状態を使用し、ダウンタイムを無視します"
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "ここでは、小文字、数字、およびアンダースコアのみを使用してください。"
@@ -70956,14 +71010,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "更新プラグインをデプロイするための %d ルールがあります"
 
 #, python-format
-msgid ""
-"You have %d unused backup codes left. You can use them as one-time password "
-"if your key is not available."
-msgstr ""
-"未使用のバックアップコードが%d個残っています。キーが使用できない場合、ワンタ"
-"イムパスワードとして使用することができます。"
-
-#, python-format
 msgid "You have %d users configured"
 msgstr "設定されているユーザー数は%dです"
 
@@ -71015,6 +71061,11 @@ msgstr ""
 "フォールバック通知を有効にしましたが、電子メールアドレスを構成できませんでし"
 "た。フォールバック通知を受信できるようにするには、メールアドレスを構成する必"
 "要があります。"
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -71474,11 +71525,24 @@ msgstr ""
 "てください。"
 
 #, fuzzy, python-format
-msgid "Your input '%s' does not match the required format '%s'."
+msgid "Your input does not match the required format '%s'."
 msgstr "入力が必要な形式と一致しません。"
 
 msgid "Your input does not match the required format."
 msgstr "入力が必要な形式と一致しません。"
+
+#, fuzzy
+msgid "Your input does not match the required port range 0-65535."
+msgstr "入力が必要な形式と一致しません。"
+
+#, python-format
+msgid ""
+"Your input is not a valid URL conforming to any allowed protocols ('%s')."
+msgstr ""
+
+#, fuzzy
+msgid "Your input is not a valid email address."
+msgstr "電子メールアドレスを持つすべてのユーザー"
 
 #, python-format
 msgid ""
@@ -71838,6 +71902,10 @@ msgstr "認証と暗号化"
 
 msgid "authentication but no privacy"
 msgstr "認証はあるがプライバシーはない"
+
+#, fuzzy
+msgid "authenticator app"
+msgstr "認証Appの追加"
 
 msgid "auto"
 msgstr "オート"
@@ -73329,6 +73397,10 @@ msgstr "秒単位"
 msgid "secs"
 msgstr "秒"
 
+#, fuzzy
+msgid "security token"
+msgstr "セキュリティトークン"
+
 msgid "send notifications of contactgroup:"
 msgstr "コンタクトグループの通知を送信します。"
 
@@ -73725,6 +73797,53 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Add Authenticator App"
+#~ msgstr "認証Appの追加"
+
+#~ msgid "Add Security Token"
+#~ msgstr "セキュリティトークンの追加"
+
+#~ msgid "Authenticaton Applications"
+#~ msgstr "認証アプリケーション"
+
+#~ msgid "Delete two-factor credential"
+#~ msgstr "この二要素認証情報を削除する"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate the existing "
+#~ "codes."
+#~ msgstr ""
+#~ "バックアップコードを再生成すると、自動的に既存のコードが無効になります。"
+
+#~ msgid "Not registered"
+#~ msgstr "未登録"
+
+#~ msgid "Security Tokens"
+#~ msgstr "セキュリティトークン"
+
+#, python-format
+#~ msgid ""
+#~ "You have %d unused backup codes left. You can use them as one-time "
+#~ "password if your key is not available."
+#~ msgstr ""
+#~ "未使用のバックアップコードが%d個残っています。キーが使用できない場合、ワン"
+#~ "タイムパスワードとして使用することができます。"
+
+#~ msgid "Host notes URL expanded"
+#~ msgstr "ホストノートのURLを拡大"
+
+#~ msgid "Notes URL expanded"
+#~ msgstr "ノートURL拡張"
+
+#~ msgid "OTP code"
+#~ msgstr "OTPコード"
+
+#~ msgid "Service notes URL expanded"
+#~ msgstr "サービスノートURL拡大"
+
+#~ msgid "Use authenticator code"
+#~ msgstr "認証コードを使用"
 
 #~ msgid "Set"
 #~ msgstr "セット"

@@ -591,10 +591,6 @@ msgstr "%s is geen bestaand element in deze selectie."
 msgid "%s is parent of %s."
 msgstr "%s is de ouder van %s."
 
-#, fuzzy, python-format
-msgid "%s is too %s. The %s allowed value is %s."
-msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
-
 #, python-format
 msgid "%s latency"
 msgstr "%s latentie"
@@ -3482,10 +3478,6 @@ msgstr "Toevoegen & hosts verwijderen"
 msgid "Add Aggregation"
 msgstr "Aggregatie toevoegen"
 
-#, fuzzy
-msgid "Add Authenticator App"
-msgstr "Authenticatie"
-
 msgid "Add BI Pack"
 msgstr "BI-pakket toevoegen"
 
@@ -3549,10 +3541,6 @@ msgstr "Regel ID toevoegen"
 
 msgid "Add SLA"
 msgstr "SLA toevoegen"
-
-#, fuzzy
-msgid "Add Security Token"
-msgstr "Veiligheidsnaam"
 
 msgid "Add Suffix"
 msgstr "Suffix toevoegen"
@@ -5597,6 +5585,10 @@ msgstr "Toegestaan om delen van de boom te zien"
 msgid "Allowed to see the whole tree"
 msgstr "Toegelaten om de hele boom te zien"
 
+#, fuzzy, python-format
+msgid "Allowed values range from %s to %s."
+msgstr "Hernoemde clusterknooppunt van %s in %s."
+
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "Hiermee kan een gebruiker items aanmaken of wijzigen in de rapportplanner."
@@ -6807,8 +6799,12 @@ msgid "Authentication with TLS"
 msgstr "Authenticatie met TLS"
 
 #, fuzzy
-msgid "Authenticaton Applications"
-msgstr "Authenticatie Verval"
+msgid "Authenticator app"
+msgstr "Authenticatie"
+
+#, fuzzy
+msgid "Authenticator apps"
+msgstr "Authenticatie"
 
 msgid "Authmethod"
 msgstr "Authmethod"
@@ -7621,6 +7617,10 @@ msgid "Backup code"
 msgstr "Back-up code"
 
 msgid "Backup codes"
+msgstr "Back-up codes"
+
+#, fuzzy
+msgid "Backup codes left:"
 msgstr "Back-up codes"
 
 msgid "Backup configured"
@@ -11279,6 +11279,10 @@ msgstr ""
 
 msgid "Click here to see the activation status per site."
 msgstr "Klik hier om de activeringsstatus per site te zien."
+
+#, fuzzy, python-format
+msgid "Click on 'Register %s' to enable two-factor authentication via %s."
+msgstr "Twee-factor authenticatie verwijderen van %s"
 
 msgid "Click to toggle this setting"
 msgstr "Klik om deze instelling aan te zetten"
@@ -15592,6 +15596,10 @@ msgstr "Verwijder alle verwerkte berichten die bij deze controle horen"
 msgid "Delete annotation #%d"
 msgstr "Annotatie verwijderen #%d"
 
+#, fuzzy
+msgid "Delete authentication via "
+msgstr "Token authenticatie"
+
 msgid "Delete auxiliary tag"
 msgstr "Hulp-tag verwijderen"
 
@@ -15855,10 +15863,6 @@ msgstr "Tijdsperiode verwijderen"
 
 msgid "Delete time range"
 msgstr "Tijdsbereik wissen"
-
-#, fuzzy
-msgid "Delete two-factor credential"
-msgstr "Verwijder deze referentie"
 
 msgid "Delete unpackaged file"
 msgstr "Uitgepakt bestand verwijderen"
@@ -19742,6 +19746,9 @@ msgstr ""
 "Voer alleen de gewone naam van de share in, bijvoorbeeld <tt>iso</tt>, "
 "<b>niet</b> de volledige UNC zoals <tt>servername</tt>"
 
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
+
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
 "description)."
@@ -22870,6 +22877,10 @@ msgstr "Algemene eigenschappen"
 msgid "Generate"
 msgstr "Genereer"
 
+#, fuzzy
+msgid "Generate backup codes"
+msgstr "Back-upcodes opnieuw genereren"
+
 msgid "Generate core config parallelized"
 msgstr "Genereer kernconfiguratie parallel"
 
@@ -25292,10 +25303,6 @@ msgstr "Host heeft agent update nodig"
 msgid "Host network"
 msgstr "Hostnetwerk"
 
-#, fuzzy
-msgid "Host notes URL expanded"
-msgstr "Commando gastheercontrole uitgebreid"
-
 msgid "Host notification number"
 msgstr "Kennisgevingsnummer van de gastheer"
 
@@ -27530,6 +27537,17 @@ msgstr ""
 "dan gebruikt."
 
 msgid ""
+"If you lose access to your authentication app / security token, you can use "
+"any of these codes to login. Generating backup codes automatically "
+"invalidates existing codes."
+msgstr ""
+
+msgid ""
+"If you lose access to your authentication device, you can use any of the "
+"generated backup codes to login."
+msgstr ""
+
+msgid ""
 "If you multiply the number of data points with the number of steps "
 "aggregated then you get the time range that is stored in this archive. Each "
 "data point needs 8 bytes for each aggregation (MIN, MAX, AVERAGE) that you "
@@ -27570,13 +27588,6 @@ msgstr ""
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 "Als u uw licentie hebt gekocht via een %s, neem dan contact met hen op."
-
-msgid ""
-"If you regenerate backup codes, you automatically invalidate the existing "
-"codes."
-msgstr ""
-"Als u back-upcodes regenereert, maakt u de bestaande codes automatisch "
-"ongeldig."
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -29686,6 +29697,10 @@ msgstr "Ongeldig verticaal bereik: van moet lager zijn dan tot"
 
 msgid "Invalid visual type"
 msgstr "Ongeldig visueel type"
+
+#, fuzzy
+msgid "Invalidate all"
+msgstr "Alle knooppunten opnemen"
 
 #, fuzzy
 msgid "Invalidate all backup codes"
@@ -36821,7 +36836,8 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "Geen authenticatie, geen privacy"
 
-msgid "No backup codes created yet."
+#, fuzzy
+msgid "No backup codes generated yet."
 msgstr "Er zijn nog geen back-up codes aangemaakt."
 
 msgid "No baked agent for this host available"
@@ -37529,10 +37545,6 @@ msgstr ""
 msgid "Not ready duration"
 msgstr "Niet klaar duur"
 
-#, fuzzy
-msgid "Not registered"
-msgstr "Niet-geregistreerd"
-
 msgid "Not responding devices"
 msgstr "Niet reagerende apparaten"
 
@@ -37640,8 +37652,8 @@ msgid "Notes"
 msgstr "Opmerkingen"
 
 #, fuzzy
-msgid "Notes URL expanded"
-msgstr "Opmerkingen URL voor diensten"
+msgid "Notes URL"
+msgstr "Opmerkingen"
 
 msgid "Notes URL for Hosts"
 msgstr "Opmerkingen URL voor hosts"
@@ -38809,10 +38821,6 @@ msgstr "OSD's epoch niveaus en gemiddelde"
 
 msgid "OSN Laser attenuation"
 msgstr "OSN Laserdemping"
-
-#, fuzzy
-msgid "OTP code"
-msgstr "TCP verbinding"
 
 #, fuzzy
 msgid "OVS bonding interface status"
@@ -41654,6 +41662,9 @@ msgstr "Geef de datum op in het formaat JJJJ-MM-DD."
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "Maak eerst een aantal <a href='%s'>contactgroepen</a>"
 
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
 msgid "Please leave either both from and until empty or enter two times."
 msgstr "Laat alstublieft beide van en tot leeg of voer twee keer in."
 
@@ -43942,11 +43953,18 @@ msgstr ""
 "bent voor de host in kwestie. Houd er rekening mee dat deze agents "
 "vertrouwelijke informatie zoals wachtwoorden kunnen bevatten."
 
+msgid "Register an authentication device before generating backup codes."
+msgstr ""
+
 msgid "Register any existing host"
 msgstr "Registreer een bestaande host"
 
 msgid "Register any new host"
 msgstr "Registreer elke nieuwe host"
+
+#, fuzzy
+msgid "Register authenticator app"
+msgstr "Systeemauthenticatie"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -43965,6 +43983,10 @@ msgstr "Registreer beheerde bestaande host"
 msgid "Register new hosts in managed folders"
 msgstr "Nieuwe hosts registreren in beheerde mappen"
 
+#, fuzzy
+msgid "Register security token"
+msgstr "Veiligheidsnaam"
+
 msgid "Registered"
 msgstr "Geregistreerd"
 
@@ -43972,6 +43994,10 @@ msgid "Registered agents"
 msgstr "Geregistreerde agenten"
 
 msgid "Registered at"
+msgstr "Geregistreerd op"
+
+#, fuzzy
+msgid "Registered at "
 msgstr "Geregistreerd op"
 
 msgid "Registered desktops"
@@ -46808,14 +46834,18 @@ msgstr "Beveiliging"
 msgid "Security Level"
 msgstr "Beveiligingsniveau"
 
-#, fuzzy
-msgid "Security Tokens"
-msgstr "Veiligheidsnaam"
-
 msgid "Security fix"
 msgstr "Veiligheidsprobleem"
 
 msgid "Security name"
+msgstr "Veiligheidsnaam"
+
+#, fuzzy
+msgid "Security token"
+msgstr "Veiligheidsnaam"
+
+#, fuzzy
+msgid "Security tokens"
 msgstr "Veiligheidsnaam"
 
 msgid ""
@@ -47681,10 +47711,6 @@ msgstr "Service normaal controle-interval"
 
 msgid "Service normal/retry check interval"
 msgstr "Service normaal/herhaling controle-interval"
-
-#, fuzzy
-msgid "Service notes URL expanded"
-msgstr "Service check commando uitgebreid"
 
 msgid "Service notification number"
 msgstr "Nummer dienstmededeling"
@@ -55767,6 +55793,10 @@ msgstr ""
 "Het maximaal toegestane percentage pakketverlies naar de bestemming voordat "
 "deze dienst in waarschuwing/kritiek gaat."
 
+#, fuzzy, python-format
+msgid "The maximum allowed value is %s."
+msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
+
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
 "warning/critical. This alarm only applies to the target host, not the hops "
@@ -55870,6 +55900,10 @@ msgstr ""
 "Het metric label wordt getoond naast de opgevraagde waarde in het "
 "statusdetail van de resulterende dienst. De naam van de metriek wordt als "
 "label gebruikt als er niets is gespecificeerd."
+
+#, fuzzy, python-format
+msgid "The minimum allowed value is %s."
+msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 
 #, python-format
 msgid ""
@@ -59145,6 +59179,10 @@ msgstr ""
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
 msgstr "Dit bericht is aangemaakt op %s en is geldig tot %s."
+
+#, fuzzy
+msgid "This message is not supposed to be used. Ever."
+msgstr "Deze URL mag niet als bladwijzer gebruikt worden"
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -65682,6 +65720,10 @@ msgstr "Twee-factor authenticatie"
 msgid "Two-factor authentication not enabled"
 msgstr "Twee-factor authenticatie niet ingeschakeld"
 
+#, fuzzy
+msgid "Two-factor code"
+msgstr "Twee-factor authenticatie"
+
 msgid "Tx"
 msgstr "Tx"
 
@@ -67401,10 +67443,6 @@ msgstr ""
 "Gebruik <tt>1</tt>, <tt>2</tt> enz. om overeenkomende subgroepen te "
 "vervangen, <tt>0</tt> om de oorspronkelijke hostnaam in te voegen"
 
-#, fuzzy
-msgid "Use Authenticator App"
-msgstr "Systeemauthenticatie"
-
 msgid "Use CN from LDAP distinguished name (DN) string"
 msgstr ""
 
@@ -67578,8 +67616,8 @@ msgid "Use attribute value"
 msgstr "Kenmerk gebruikers-ID"
 
 #, fuzzy
-msgid "Use authenticator code"
-msgstr "Authenticatie modus"
+msgid "Use authenticator app"
+msgstr "Systeemauthenticatie"
 
 msgid "Use backup code"
 msgstr "Gebruik back-up code"
@@ -67734,6 +67772,9 @@ msgstr "Gebruik normale toestand, negeer bevestiging"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Gebruik normale toestand, negeer downtime"
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
@@ -72960,14 +73001,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Je hebt %d regels voor het implementeren van de update plugin"
 
 #, python-format
-msgid ""
-"You have %d unused backup codes left. You can use them as one-time password "
-"if your key is not available."
-msgstr ""
-"U heeft %d ongebruikte backup codes over. U kunt ze gebruiken als eenmalig "
-"wachtwoord als uw sleutel niet beschikbaar is."
-
-#, python-format
 msgid "You have %d users configured"
 msgstr "U hebt %d gebruikers geconfigureerd"
 
@@ -73021,6 +73054,11 @@ msgstr ""
 "U hebt de terugvalmeldingen ingeschakeld, maar u hebt vergeten een e-"
 "mailadres te configureren. U moet uw e-mailadres configureren om "
 "terugvalmeldingen te kunnen ontvangen."
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -73499,11 +73537,24 @@ msgstr ""
 "voor uw pictogram."
 
 #, fuzzy, python-format
-msgid "Your input '%s' does not match the required format '%s'."
+msgid "Your input does not match the required format '%s'."
 msgstr "Uw invoer komt niet overeen met het vereiste formaat."
 
 msgid "Your input does not match the required format."
 msgstr "Uw invoer komt niet overeen met het vereiste formaat."
+
+#, fuzzy
+msgid "Your input does not match the required port range 0-65535."
+msgstr "Uw invoer komt niet overeen met het vereiste formaat."
+
+#, python-format
+msgid ""
+"Your input is not a valid URL conforming to any allowed protocols ('%s')."
+msgstr ""
+
+#, fuzzy
+msgid "Your input is not a valid email address."
+msgstr "alle gebruikers met en emailadres"
 
 #, python-format
 msgid ""
@@ -73858,6 +73909,10 @@ msgstr "authenticatie en encryptie"
 
 msgid "authentication but no privacy"
 msgstr "authenticatie maar geen privacy"
+
+#, fuzzy
+msgid "authenticator app"
+msgstr "Authenticatie"
 
 msgid "auto"
 msgstr "auto"
@@ -75371,6 +75426,10 @@ msgstr "seconden per seconde"
 msgid "secs"
 msgstr "secs"
 
+#, fuzzy
+msgid "security token"
+msgstr "Veiligheidsnaam"
+
 msgid "send notifications of contactgroup:"
 msgstr "meldingen van contactgroep verzenden:"
 
@@ -75769,6 +75828,76 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Authentication"
+#~ msgid "Add Authenticator App"
+#~ msgstr "Authenticatie"
+
+#, fuzzy
+#~| msgid "Security name"
+#~ msgid "Add Security Token"
+#~ msgstr "Veiligheidsnaam"
+
+#, fuzzy
+#~| msgid "Authentication Expiration"
+#~ msgid "Authenticaton Applications"
+#~ msgstr "Authenticatie Verval"
+
+#, fuzzy
+#~| msgid "Delete this credential"
+#~ msgid "Delete two-factor credential"
+#~ msgstr "Verwijder deze referentie"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate the existing "
+#~ "codes."
+#~ msgstr ""
+#~ "Als u back-upcodes regenereert, maakt u de bestaande codes automatisch "
+#~ "ongeldig."
+
+#, fuzzy
+#~| msgid "Unregistered"
+#~ msgid "Not registered"
+#~ msgstr "Niet-geregistreerd"
+
+#, fuzzy
+#~| msgid "Security name"
+#~ msgid "Security Tokens"
+#~ msgstr "Veiligheidsnaam"
+
+#, python-format
+#~ msgid ""
+#~ "You have %d unused backup codes left. You can use them as one-time "
+#~ "password if your key is not available."
+#~ msgstr ""
+#~ "U heeft %d ongebruikte backup codes over. U kunt ze gebruiken als "
+#~ "eenmalig wachtwoord als uw sleutel niet beschikbaar is."
+
+#, fuzzy
+#~| msgid "Host check command expanded"
+#~ msgid "Host notes URL expanded"
+#~ msgstr "Commando gastheercontrole uitgebreid"
+
+#, fuzzy
+#~| msgid "Notes URL for Services"
+#~ msgid "Notes URL expanded"
+#~ msgstr "Opmerkingen URL voor diensten"
+
+#, fuzzy
+#~| msgid "TCP connect"
+#~ msgid "OTP code"
+#~ msgstr "TCP verbinding"
+
+#, fuzzy
+#~| msgid "Service check command expanded"
+#~ msgid "Service notes URL expanded"
+#~ msgstr "Service check commando uitgebreid"
+
+#, fuzzy
+#~| msgid "Authentication Mode"
+#~ msgid "Use authenticator code"
+#~ msgstr "Authenticatie modus"
 
 #, fuzzy
 #~| msgid "Sent"

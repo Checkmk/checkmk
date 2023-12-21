@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-30 07:00+0000\n"
+"PO-Revision-Date: 2023-12-21 15:28+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
@@ -537,7 +537,7 @@ msgstr "%s Locks"
 
 #, python-format
 msgid "%s Pkts / %s%s"
-msgstr "%s Pkts / %s%s"
+msgstr "%s paquets / %s%s"
 
 #, python-format
 msgid "%s Preview of report finished"
@@ -593,10 +593,6 @@ msgstr "%s n'est pas un élément existant dans cette sélection."
 #, python-format
 msgid "%s is parent of %s."
 msgstr "%s est le parent de %s."
-
-#, python-format
-msgid "%s is too %s. The %s allowed value is %s."
-msgstr "%s est trop %s. La valeur %s autorisée est %s."
 
 #, python-format
 msgid "%s latency"
@@ -773,7 +769,7 @@ msgid ""
 msgstr ""
 "L'option 'Activer les modifications' est bloquée. La surveillance distribuée "
 "n'est pas disponible après l'expiration de la période d'essai, y compris "
-"pour les hôtes ajoutés via CMCDump."
+"pour les hôtes ajoutés via CMCDump"
 
 msgid "'Cleared' state"
 msgstr "État \"effacé\""
@@ -795,7 +791,7 @@ msgid ""
 "until Checkmk version'!"
 msgstr ""
 "'La version minimale requise de Checkmk' ne doit pas être supérieure à "
-"'Valide jusqu'à la version Checkmk'!"
+"'Valide jusqu'à la version Checkmk' !"
 
 msgid "'Minor' state"
 msgstr "État \"mineur\""
@@ -1199,23 +1195,23 @@ msgstr ""
 
 #, python-format
 msgid "<b>%%s of %s length</b>?"
-msgstr "<b>%%s de %s longueur</b>?"
+msgstr "<b>%%s de %s longueur</b> ?"
 
 #, python-format
 msgid "<b>%s until 24:00:00</b>?"
-msgstr "<b>%s jusqu'à 24:00:00</b>?"
+msgstr "<b>%s jusqu'à 24 :00 :00</b> ?"
 
 #, python-format
 msgid "<b>%s until end of month</b>?"
-msgstr "<b>%s jusqu'à la fin du mois</b>?"
+msgstr "<b>%s jusqu'à la fin du mois</b> ?"
 
 #, python-format
 msgid "<b>%s until end of year</b>?"
-msgstr "<b>%s jusqu'à la fin de l'année</b>?"
+msgstr "<b>%s jusqu'à la fin de l'année</b> ?"
 
 #, python-format
 msgid "<b>%s until sunday night</b>?"
-msgstr "<b>%s jusqu'à dimanche soir</b>?"
+msgstr "<b>%s jusqu'à dimanche soir</b> ?"
 
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
@@ -1280,13 +1276,11 @@ msgstr ""
 "globales:</b><br>Utilisez cette option pour spécifier des noms explicites. "
 "Les balises globales seront ignorées pour ces services."
 
-#, fuzzy
 msgid "<b>Keyword</b> monitoring"
-msgstr "Surveillance du réseau"
+msgstr "Surveillance des <b>mots-clés</b>"
 
-#, fuzzy
 msgid "<b>Keyword</b> thresholds"
-msgstr "Seuil du capteur"
+msgstr "<b>Mots-clé</b> seuil"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1432,7 +1426,7 @@ msgstr ""
 
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
-msgstr "<i>%d more contact groups</i><br>"
+msgstr "<i>%d plus des groupes de contacts</i><br>"
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -3103,7 +3097,7 @@ msgid "Acknowledge problems timepicker"
 msgstr "Reconnaître les problèmes"
 
 msgid "Acknowledge problems?"
-msgstr "Reconnaître les problèmes?"
+msgstr "Reconnaître les problèmes ?"
 
 #, python-format
 msgid "Acknowledge this test result for site %s"
@@ -3141,13 +3135,11 @@ msgstr "Reconnaissance du problème"
 msgid "Acknowledging problems"
 msgstr "Reconnaître les problèmes"
 
-#, fuzzy
 msgid "Acknowledgment expires:"
-msgstr "Reconnaître les problèmes"
+msgstr "Accusé de réception expire :"
 
-#, fuzzy
 msgid "Acknowledgments: "
-msgstr "Remerciements"
+msgstr "Remerciements : "
 
 msgid "Act."
 msgstr "Agir."
@@ -3521,9 +3513,6 @@ msgstr "Ajouter & ; supprimer des hôtes"
 msgid "Add Aggregation"
 msgstr "Ajouter l'agrégation"
 
-msgid "Add Authenticator App"
-msgstr "Ajouter Application d'Authentification"
-
 msgid "Add BI Pack"
 msgstr "Ajouter le pack BI"
 
@@ -3589,9 +3578,6 @@ msgstr "Ajouter une règle ID"
 
 msgid "Add SLA"
 msgstr "Ajouter un ANS"
-
-msgid "Add Security Token"
-msgstr "Ajouter Jeton de Sécurité"
 
 msgid "Add Suffix"
 msgstr "Ajouter un suffixe"
@@ -3659,7 +3645,7 @@ msgid "Add comment"
 msgstr "Ajouter un commentaire"
 
 msgid "Add comment?"
-msgstr "Ajouter un commentaire?"
+msgstr "Ajouter un commentaire ?"
 
 msgid "Add comments"
 msgstr "Ajouter des commentaires"
@@ -4378,7 +4364,7 @@ msgstr "Aerohive HiveManager NG"
 
 #, python-format
 msgid "Affected %s: %s"
-msgstr "Affecte %s: %s"
+msgstr "Affecte %s : %s"
 
 msgid "Affected by service"
 msgstr "Affecté par le service"
@@ -5653,6 +5639,10 @@ msgstr "Autorisé à voir certaines parties de l'arbre"
 msgid "Allowed to see the whole tree"
 msgstr "Possibilité de voir l'arbre entier"
 
+#, fuzzy, python-format
+msgid "Allowed values range from %s to %s."
+msgstr "Renommé le nœud de cluster de %s en %s."
+
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
 "Permet à un utilisateur de créer ou de modifier des entrées dans le "
@@ -5817,7 +5807,7 @@ msgstr ""
 "les règles existantes ont cette option désactivée par défaut."
 
 msgid "Altered"
-msgstr "Altered"
+msgstr "Modifié"
 
 msgid "Alternative Hostname"
 msgstr "Nom d'hôte alternatif"
@@ -6098,7 +6088,7 @@ msgid "Analyze ruleset with this notification"
 msgstr "Analyser le jeu de règles avec cette notification"
 
 msgid "Analyze the utilization of your IT infrastructure data center."
-msgstr "Analyser l'utilisation de l'infrastructure TI du centre de données"
+msgstr "Analyser l'utilisation de l'infrastructure TI du centre de données."
 
 msgid "Analyze this line"
 msgstr "Analysez cette ligne"
@@ -6444,7 +6434,7 @@ msgid "Archive Event"
 msgstr "Événement d'archive"
 
 msgid "Archive all events of this host?"
-msgstr "Archiver tous les événements de cet hôte?"
+msgstr "Archiver tous les événements de cet hôte ?"
 
 msgid "Archive all open events of all hosts shown in host views"
 msgstr ""
@@ -6477,9 +6467,8 @@ msgstr "Archiver les messages qui ne correspondent à aucune règle"
 msgid "Archive this event"
 msgstr "Archiver cet événement"
 
-#, fuzzy
 msgid "Archived audit log"
-msgstr "Effacement du journal d'audit."
+msgstr "Journal d'audit archivé"
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Sauvegardes Arcserve (allemand) (Windows)"
@@ -6524,10 +6513,10 @@ msgid ""
 "filtering for sites."
 msgstr ""
 "Dès que vous ajoutez votre serveur Checkmk à la surveillance, un graphique "
-"montrant l'historique des problèmes de votre hôte apparaîtra ici. Soyez "
-"aussi informés que vous pourriez voir ce message apparaitre comme résultat "
-"d'un filtre de tableau de bord. Ce widget de tableau de bord supporte "
-"uniquement le filtrage pour les sites."
+"montrant l'historique des problèmes de votre hôte apparaîtra ici.\n"
+"Soyez aussi informés que vous pourriez voir ce message apparaitre comme "
+"résultat d'un filtre de tableau de bord. Ce widget de tableau de bord "
+"supporte uniquement le filtrage pour les sites."
 
 #, python-format
 msgid ""
@@ -6541,7 +6530,6 @@ msgstr ""
 "Dès que vous ajoutez votre ou vos serveurs Checkmk à la surveillance, un "
 "graphique montrant l'historique des problèmes de votre hôte apparaîtra ici. "
 "Actuellement, les sites Checkmk suivants ne sont pas surveillés : %s.\n"
-"\n"
 "Soyez aussi informés que vous pourriez voir ce message apparaitre comme "
 "résultat d'un filtre de tableau de bord. Ce widget de tableau de bord "
 "supporte uniquement le filtrage pour les sites."
@@ -6876,8 +6864,13 @@ msgstr "Types d'authentification"
 msgid "Authentication with TLS"
 msgstr "Authentification avec TLS"
 
-msgid "Authenticaton Applications"
-msgstr "Applications d'Authentifications"
+#, fuzzy
+msgid "Authenticator app"
+msgstr "Ajouter Application d'Authentification"
+
+#, fuzzy
+msgid "Authenticator apps"
+msgstr "Ajouter Application d'Authentification"
 
 msgid "Authmethod"
 msgstr "Authmethod"
@@ -6890,7 +6883,7 @@ msgstr "Commentaire de l'auteur (regex)"
 
 #, python-format
 msgid "Author: %s"
-msgstr "Auteur: %s"
+msgstr "Auteur : %s"
 
 msgid "Authority"
 msgstr "Authorité"
@@ -7693,6 +7686,10 @@ msgstr "Code de sauvegarde"
 msgid "Backup codes"
 msgstr "Modes de sauvegarde"
 
+#, fuzzy
+msgid "Backup codes left:"
+msgstr "Modes de sauvegarde"
+
 msgid "Backup configured"
 msgstr "Sauvegarde configurée"
 
@@ -8221,13 +8218,13 @@ msgid "Built-in time periods can not be modified"
 msgstr "Les périodes de temps intégrées ne peuvent pas être modifiées"
 
 msgid "Built-in: Force"
-msgstr "Intégré: Force"
+msgstr "Intégré : Force"
 
 msgid "Built-in: Hierarchy"
-msgstr "Intégré: Hiérarchie"
+msgstr "Intégré : Hiérarchie"
 
 msgid "Built-in: Radial"
-msgstr "Intégré: Radial"
+msgstr "Intégré : Radial"
 
 msgid "Bulk"
 msgstr "En vrac"
@@ -10020,7 +10017,7 @@ msgid "Change event state"
 msgstr "Modifier l'état de l'événement"
 
 msgid "Change event state?"
-msgstr "Modifier l'état de l'événement?"
+msgstr "Modifier l'état de l'événement ?"
 
 #, python-format
 msgid "Change graph timerange to: %s"
@@ -10841,7 +10838,7 @@ msgstr "Checkmk avec les données de performance de temps"
 
 #, python-format
 msgid "Checkmk: %d days left in your Checkmk trial period"
-msgstr "Checkmk: %d jours restants à votre version d'essai Checkmk"
+msgstr "Checkmk : %d jours restants à votre version d'essai Checkmk"
 
 msgid "Checkmk: BI"
 msgstr "Checkmk : BI"
@@ -11384,6 +11381,10 @@ msgstr ""
 
 msgid "Click here to see the activation status per site."
 msgstr "Cliquez ici pour voir le statut d'activation par site."
+
+#, fuzzy, python-format
+msgid "Click on 'Register %s' to enable two-factor authentication via %s."
+msgstr "Supprimer l'authentification à deux facteurs de %s"
 
 msgid "Click to toggle this setting"
 msgstr "Cliquez pour basculer ce paramètre"
@@ -13324,9 +13325,8 @@ msgstr ""
 msgid "Could not create package: %s"
 msgstr "Impossible de créer le paquet : %s"
 
-#, fuzzy
 msgid "Could not decode key file"
-msgstr "Vous devez fournir un fichier clé."
+msgstr "Impossible de décoder le fichier clé"
 
 #, python-format
 msgid "Could not detect type of manpage: %s. Maybe the check is missing "
@@ -14981,9 +14981,10 @@ msgstr "Unités de données écrites"
 msgid "Data usage"
 msgstr "Utilisation des données"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Data was provided at %s and is considered valid until %s"
-msgstr "Ce message a été créé à %s et est valable jusqu'à %s."
+msgstr ""
+"Les données ont été fournies à %s et sont considérées valides jusqu'à %s"
 
 msgid "Data width"
 msgstr "Largeur des données"
@@ -15742,6 +15743,10 @@ msgstr "Supprimer tous les messages traités appartenant à ce contrôle"
 msgid "Delete annotation #%d"
 msgstr "Supprimer l'annotation #%d"
 
+#, fuzzy
+msgid "Delete authentication via "
+msgstr "Authentification par jeton"
+
 msgid "Delete auxiliary tag"
 msgstr "Supprimer la balise auxiliaire"
 
@@ -15773,7 +15778,7 @@ msgid "Delete crash reports created by Checkmk"
 msgstr "Supprimer les rapports de crash créés par Checkmk"
 
 msgid "Delete crash reports?"
-msgstr "Supprimer les rapports d'accident?"
+msgstr "Supprimer les rapports d'accident ?"
 
 #, python-format
 msgid "Delete custom attribute #%d"
@@ -16005,10 +16010,6 @@ msgstr "Supprimer une période"
 
 msgid "Delete time range"
 msgstr "Supprimer la plage horaire"
-
-#, fuzzy
-msgid "Delete two-factor credential"
-msgstr "Supprimer cette accréditation"
 
 msgid "Delete unpackaged file"
 msgstr "Supprimer le fichier non emballé"
@@ -16884,7 +16885,7 @@ msgid "Disable notifications"
 msgstr "Désactiver les notifications"
 
 msgid "Disable notifications?"
-msgstr "Désactiver les notifications?"
+msgstr "Désactiver les notifications ?"
 
 #, fuzzy
 msgid "Disable or enable forwarding"
@@ -17093,9 +17094,8 @@ msgstr "Découverte des services individuels"
 msgid "Discovery rules"
 msgstr "Règles de découverte"
 
-#, fuzzy
 msgid "Discovery running. Please standby."
-msgstr "Fonctionnement en mode veille"
+msgstr "Découverte en cours. Restez au calme, s'il vous plaît."
 
 msgid "Discovery settings"
 msgstr "Paramètres de découverte"
@@ -17585,9 +17585,10 @@ msgstr ""
 msgid "Do not activate changes"
 msgstr "Ne pas activer les changements"
 
-#, fuzzy
 msgid "Do not add a link to this page in sidebar and in monitor menu."
-msgstr "Ne pas ajouter un lien vers cette page dans la barre latérale"
+msgstr ""
+"N'ajoutez pas de lien vers cette page dans la barre latérale et dans le menu "
+"contextuel."
 
 msgid "Do not add column headers"
 msgstr "Ne pas ajouter d'en-têtes de colonne"
@@ -18791,7 +18792,7 @@ msgid "Edit Downtimes"
 msgstr "Modifier les temps d'arrêt"
 
 msgid "Edit Downtimes?"
-msgstr "Modifier les temps d'arrêt?"
+msgstr "Modifier les temps d'arrêt ?"
 
 msgid "Edit GUI design for this customer"
 msgstr "Modifier la conception de l'interface graphique pour ce client"
@@ -19481,7 +19482,7 @@ msgid "Enable notification logging"
 msgstr "Activer l'enregistrement des notifications"
 
 msgid "Enable notifications?"
-msgstr "Activer les notifications?"
+msgstr "Activer les notifications ?"
 
 #, fuzzy
 msgid "Enable passive checks"
@@ -19934,6 +19935,9 @@ msgid ""
 msgstr ""
 "Saisissez uniquement le nom simple du partage, par exemple <tt>iso</tt>, "
 "<b>non</b> l'UNC complet comme <tt>\\servername\\iso</tt>"
+
+msgid "Enter the six-digit code from your authenticator app to log in."
+msgstr ""
 
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
@@ -20644,7 +20648,7 @@ msgstr "Activer les modifications d'autres utilisateurs"
 
 #, python-format
 msgid "Execute custom action '%s'?"
-msgstr "Exécuter l'action '%s'?"
+msgstr "Exécuter l'action '%s' ?"
 
 msgid "Execute legacy monitoring plugins"
 msgstr "Exécuter les plugins de surveillance existants"
@@ -22711,7 +22715,7 @@ msgid "Freeze"
 msgstr "Gratuit"
 
 msgid "Freeze aggregation?"
-msgstr "Geler les agrégations?"
+msgstr "Geler les agrégations ?"
 
 msgid "Freeze aggregations"
 msgstr "Geler les agrégations"
@@ -23088,6 +23092,10 @@ msgstr "Propriétés générales"
 
 msgid "Generate"
 msgstr "Générer"
+
+#, fuzzy
+msgid "Generate backup codes"
+msgstr "Régénérer les codes de sauvegarde"
 
 msgid "Generate core config parallelized"
 msgstr "Générer la configuration du noyau en parallèle"
@@ -25553,10 +25561,6 @@ msgstr "L'hôte a besoin d'une mise à jour de son agent"
 msgid "Host network"
 msgstr "Réseau hôte"
 
-#, fuzzy
-msgid "Host notes URL expanded"
-msgstr "Commande de contrôle de l'hôte étendue"
-
 msgid "Host notification number"
 msgstr "Numéro de notification de l'hôte"
 
@@ -27810,6 +27814,17 @@ msgstr ""
 "l'utilisateur et ces fichiers sont ensuite utilisés."
 
 msgid ""
+"If you lose access to your authentication app / security token, you can use "
+"any of these codes to login. Generating backup codes automatically "
+"invalidates existing codes."
+msgstr ""
+
+msgid ""
+"If you lose access to your authentication device, you can use any of the "
+"generated backup codes to login."
+msgstr ""
+
+msgid ""
 "If you multiply the number of data points with the number of steps "
 "aggregated then you get the time range that is stored in this archive. Each "
 "data point needs 8 bytes for each aggregation (MIN, MAX, AVERAGE) that you "
@@ -27851,13 +27866,6 @@ msgstr ""
 #, python-format
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
-
-msgid ""
-"If you regenerate backup codes, you automatically invalidate the existing "
-"codes."
-msgstr ""
-"Si vous régénérez des codes de sauvegarde, vous invalidez automatiquement "
-"les codes existants."
 
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
@@ -29185,11 +29193,10 @@ msgid "Info"
 msgstr "Info"
 
 msgid "Info:"
-msgstr "Info:"
+msgstr "Info :"
 
-#, fuzzy
 msgid "Info: Downtime does not apply to host."
-msgstr "Temps d'arrêt de l'hôte"
+msgstr "Info : Le temps d'arrêt ne s'applique pas à l'hôte."
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29773,9 +29780,8 @@ msgstr "Nom de fichier non valide pour tarfile_name donné."
 msgid "Invalid file type expected %s received '%s'"
 msgstr ""
 
-#, fuzzy
 msgid "Invalid file type."
-msgstr "Type de visuel non valide"
+msgstr "Type de fichier non valide."
 
 msgid "Invalid filename"
 msgstr "Nom de fichier non valide"
@@ -30002,6 +30008,10 @@ msgstr "Plage verticale non valide : de doit être inférieur à à à"
 
 msgid "Invalid visual type"
 msgstr "Type de visuel non valide"
+
+#, fuzzy
+msgid "Invalidate all"
+msgstr "Inclure tous les nœuds"
 
 #, fuzzy
 msgid "Invalidate all backup codes"
@@ -37196,7 +37206,8 @@ msgstr ""
 msgid "No authentication, no privacy"
 msgstr "Pas d'authentification, pas de vie privée"
 
-msgid "No backup codes created yet."
+#, fuzzy
+msgid "No backup codes generated yet."
 msgstr "Aucun code de sauvegarde n'a encore été créé."
 
 msgid "No baked agent for this host available"
@@ -37913,10 +37924,6 @@ msgstr ""
 msgid "Not ready duration"
 msgstr "Durée de non préparation"
 
-#, fuzzy
-msgid "Not registered"
-msgstr "Non enregistré"
-
 msgid "Not responding devices"
 msgstr "Dispositifs ne répondant pas"
 
@@ -38024,8 +38031,8 @@ msgid "Notes"
 msgstr "Notes"
 
 #, fuzzy
-msgid "Notes URL expanded"
-msgstr "Notes URL pour les services"
+msgid "Notes URL"
+msgstr "Notes"
 
 msgid "Notes URL for Hosts"
 msgstr "Notes URL pour les hôtes"
@@ -39205,10 +39212,6 @@ msgid "OSN Laser attenuation"
 msgstr "OSN Atténuation du laser"
 
 #, fuzzy
-msgid "OTP code"
-msgstr "Connexion TCP"
-
-#, fuzzy
 msgid "OVS bonding interface status"
 msgstr "Interfaces de liaison"
 
@@ -39321,9 +39324,9 @@ msgstr "Omettre les lignes où toutes les colonnes sont identiques"
 msgid "On"
 msgstr "O"
 
-#, fuzzy, python-format
+#, python-format
 msgid "On %s (server time)."
-msgstr "Heure du serveur"
+msgstr "A %s (heure du serveur)."
 
 msgid "On Hold"
 msgstr "En attente"
@@ -42093,6 +42096,9 @@ msgstr "Veuillez saisir la date au format AAAA-MM-JJ."
 msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "Veuillez d'abord créer quelques <a href='%s'>groupes de contacts</a>"
 
+msgid "Please follow your browser's instructions for authentication."
+msgstr ""
+
 msgid "Please leave either both from and until empty or enter two times."
 msgstr ""
 "Veuillez laisser les deux champs \"de\" et \"jusqu'à\" vides ou entrer deux "
@@ -44415,11 +44421,18 @@ msgstr ""
 "peuvent contenir des informations confidentielles telles que des mots de "
 "passe."
 
+msgid "Register an authentication device before generating backup codes."
+msgstr ""
+
 msgid "Register any existing host"
 msgstr "Enregistrer un hôte existant"
 
 msgid "Register any new host"
 msgstr "Enregistrer un nouvel hôte"
+
+#, fuzzy
+msgid "Register authenticator app"
+msgstr "Authentification du système"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -44438,6 +44451,10 @@ msgstr "Enregistrer un hôte existant géré"
 msgid "Register new hosts in managed folders"
 msgstr "Enregistrer de nouveaux hôtes dans les dossiers gérés"
 
+#, fuzzy
+msgid "Register security token"
+msgstr "Nom de sécurité"
+
 msgid "Registered"
 msgstr "Enregistré"
 
@@ -44445,6 +44462,10 @@ msgid "Registered agents"
 msgstr "Agents enregistrés"
 
 msgid "Registered at"
+msgstr "Enregistré à"
+
+#, fuzzy
+msgid "Registered at "
 msgstr "Enregistré à"
 
 msgid "Registered desktops"
@@ -44766,9 +44787,8 @@ msgstr "Supprimer l'accusé de réception"
 msgid "Remove all"
 msgstr "Supprimer tout"
 
-#, fuzzy
 msgid "Remove all acknowledgments?"
-msgstr "Supprimer l'accusé de réception?"
+msgstr "Supprimer l'accusé de réception ?"
 
 msgid "Remove all and find new"
 msgstr "Supprimer tout et trouver un nouveau"
@@ -44783,7 +44803,7 @@ msgid "Remove downtimes"
 msgstr "Supprimer les temps d'arrêt"
 
 msgid "Remove downtimes?"
-msgstr "Supprimer les temps d'arrêt?"
+msgstr "Supprimer les temps d'arrêt ?"
 
 msgid "Remove explicit attribute settings"
 msgstr "Supprimer les paramètres explicites des attributs"
@@ -44804,7 +44824,7 @@ msgid "Remove package"
 msgstr "Retirer l'emballage"
 
 msgid "Remove scheduled downtimes?"
-msgstr "Supprimer les temps d'arrêt programmés?"
+msgstr "Supprimer les temps d'arrêt programmés ?"
 
 msgid "Remove service"
 msgstr "Supprimer le service"
@@ -45438,7 +45458,7 @@ msgid "Reschedule active checks"
 msgstr "Reprogrammer les contrôles actifs"
 
 msgid "Reschedule active checks immediately?"
-msgstr "Reprogrammer les contrôles actifs immédiatement?"
+msgstr "Reprogrammer les contrôles actifs immédiatement ?"
 
 msgid "Reschedule check"
 msgstr "Rééchelonner le chèque"
@@ -46911,7 +46931,7 @@ msgid "Schedule"
 msgstr "Programme"
 
 msgid "Schedule a downtime?"
-msgstr "Planifier un temps d'arrêt?"
+msgstr "Planifier un temps d'arrêt ?"
 
 #, fuzzy, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -46936,7 +46956,7 @@ msgid "Schedule downtime on service"
 msgstr "Planifier les temps d'arrêt sur l'hôte"
 
 msgid "Schedule downtime?"
-msgstr "Planifier un temps d'arrêt?"
+msgstr "Planifier un temps d'arrêt ?"
 
 msgid "Schedule downtimes"
 msgstr "Planifier les temps d'arrêt"
@@ -47338,14 +47358,18 @@ msgstr "Sécurité"
 msgid "Security Level"
 msgstr "Niveau de sécurité"
 
-#, fuzzy
-msgid "Security Tokens"
-msgstr "Nom de sécurité"
-
 msgid "Security fix"
 msgstr "Correction de sécurité"
 
 msgid "Security name"
+msgstr "Nom de sécurité"
+
+#, fuzzy
+msgid "Security token"
+msgstr "Nom de sécurité"
+
+#, fuzzy
+msgid "Security tokens"
 msgstr "Nom de sécurité"
 
 msgid ""
@@ -48221,10 +48245,6 @@ msgstr "Intervalle de contrôle normal de l'entretien"
 msgid "Service normal/retry check interval"
 msgstr "Intervalle de contrôle normal/de relance du service"
 
-#, fuzzy
-msgid "Service notes URL expanded"
-msgstr "Commande de contrôle de service étendue"
-
 msgid "Service notification number"
 msgstr "Numéro de notification du service"
 
@@ -48552,9 +48572,9 @@ msgstr "Définir le mode d'exécution des plugins et des contrôles locaux"
 msgid "Set expected router mode"
 msgstr "Définir le mode routeur attendu"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Set fake check result to ‘%s’?"
-msgstr "Fixer manuellement les résultats de la vérification à %s?"
+msgstr "Définir les faux résultats de contrôle à '%s' ?"
 
 msgid "Set field delimiter"
 msgstr "Définir le délimiteur de champ"
@@ -48818,9 +48838,9 @@ msgstr "Définir les délais pour les plugins et les vérifications locales"
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "Réglez sur \"0\" pour désactiver le rechargement automatique."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Set to '%s'"
-msgstr "Passez de '%s' à '%s'"
+msgstr "Définir à '%s'"
 
 msgid "Set upper Levels"
 msgstr "Définir les niveaux supérieurs"
@@ -56403,6 +56423,10 @@ msgstr ""
 "Le pourcentage maximum autorisé de perte de paquets vers la destination "
 "avant que ce service ne passe en mode avertissement/critique."
 
+#, fuzzy, python-format
+msgid "The maximum allowed value is %s."
+msgstr "%s est trop %s. La valeur %s autorisée est %s."
+
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
 "warning/critical. This alarm only applies to the target host, not the hops "
@@ -56508,6 +56532,10 @@ msgstr ""
 "L'étiquette de la métrique est affichée à côté de la valeur demandée dans le "
 "détail de l'état du service résultant. Le nom de la métrique sera pris comme "
 "étiquette si rien n'a été spécifié."
+
+#, fuzzy, python-format
+msgid "The minimum allowed value is %s."
+msgstr "%s est trop %s. La valeur %s autorisée est %s."
 
 #, python-format
 msgid ""
@@ -59206,7 +59234,6 @@ msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Cette vérification renvoie CRIT si la connexion au site distant a échoué."
 
-#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
 "address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
@@ -59222,17 +59249,17 @@ msgid ""
 msgstr ""
 "Ce contrôle renvoie CRIT si le paramètre <b>Etat en cas de non-concordance "
 "des adresses restreintes</b> dans le jeu de règles <b>Audit de "
-"l'installation de l'agent Checkmk</b> est configuré et diffère de l'état par "
-"défaut <b>WARN</b>. Le paramètre ci-dessus vous permet d'écraser l'état par "
-"défaut du service. Cela vous aidera à réduire les avertissements "
-"susmentionnés au cours du processus de mise à jour de vos sites et agents "
-"Checkmk. Nous vous recommandons de définir cette option uniquement pour les "
-"hôtes concernés tant que vous surveillez des agents antérieurs à Checkmk "
-"2.0. Après les avoir mis à jour, vous devez remettre ce paramètre à sa "
-"valeur d'origine. Contexte : Avec les listes d'accès IP, vous pouvez "
-"contrôler quels serveurs sont autorisés à communiquer avec ces agents. Il "
-"s'agit donc d'un problème de sécurité qui ne doit pas être désactivé ou "
-"réglé sur <b>OK</b> en permanence."
+"l'installation de l'agent Checkmk</b> est configuré et diffère de les états "
+"<b>WARN</b> (par defaut) ou <b>CRIT</b>. Le paramètre ci-dessus vous permet "
+"d'écraser l'état par défaut du service. Cela vous aidera à réduire les "
+"avertissements susmentionnés au cours du processus de mise à jour de vos "
+"sites et agents Checkmk. Nous vous recommandons de définir cette option "
+"uniquement pour les hôtes concernés tant que vous surveillez des agents "
+"antérieurs à Checkmk 2.0. Après les avoir mis à jour, vous devez remettre ce "
+"paramètre à sa valeur d'origine. Contexte : Avec les listes d'accès IP, vous "
+"pouvez contrôler quels serveurs sont autorisés à communiquer avec ces "
+"agents. Il s'agit donc d'un problème de sécurité qui ne doit pas être "
+"désactivé ou réglé sur <b>OK</b> en permanence."
 
 msgid ""
 "This check tests the connection to a TCP port. It uses <tt>check_tcp</tt> "
@@ -59828,6 +59855,10 @@ msgstr ""
 #, python-format
 msgid "This message has been created at %s and is valid till %s."
 msgstr "Ce message a été créé à %s et est valable jusqu'à %s."
+
+#, fuzzy
+msgid "This message is not supposed to be used. Ever."
+msgstr "Cette URL n'est pas autorisée à être utilisée comme signet"
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -66425,6 +66456,10 @@ msgstr "Authentification à deux facteurs"
 msgid "Two-factor authentication not enabled"
 msgstr "L'authentification à deux facteurs n'est pas activée"
 
+#, fuzzy
+msgid "Two-factor code"
+msgstr "Authentification à deux facteurs"
+
 msgid "Tx"
 msgstr "Tx"
 
@@ -67286,7 +67321,7 @@ msgid "Update & acknowledge"
 msgstr "Mise à jour et accusé de réception"
 
 msgid "Update & acknowledge event?"
-msgstr "Mise à jour et accusé de réception?"
+msgstr "Mise à jour et accusé de réception ?"
 
 msgid "Update DNS cache"
 msgstr "Mise à jour du cache DNS"
@@ -67316,7 +67351,7 @@ msgid "Update duration"
 msgstr "Durée de la mise à jour"
 
 msgid "Update event?"
-msgstr "Mise à jour de l'événement?"
+msgstr "Mise à jour de l'événement ?"
 
 msgid "Update host labels"
 msgstr "Mise à jour des étiquettes des hôtes"
@@ -68173,10 +68208,6 @@ msgstr ""
 "Utilisez <tt>\\1</tt>, <tt>\\2</tt> etc. pour remplacer les sous-groupes "
 "correspondants, <tt>\\0</tt> pour insérer le nom d'hôte d'origine"
 
-#, fuzzy
-msgid "Use Authenticator App"
-msgstr "Authentification du système"
-
 msgid "Use CN from LDAP distinguished name (DN) string"
 msgstr ""
 
@@ -68258,9 +68289,9 @@ msgstr "Utiliser le ferroutage"
 msgid "Use RCC for isolated execution"
 msgstr "Utiliser SSL pour la connexion."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Use RCC for isolated execution (%s in Robotmk Core)"
-msgstr "Utiliser SSL pour la connexion."
+msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 msgid "Use Reporting"
 msgstr "Rapport d'utilisation"
@@ -68350,8 +68381,8 @@ msgid "Use attribute value"
 msgstr "Attribut User-ID"
 
 #, fuzzy
-msgid "Use authenticator code"
-msgstr "Mode d'authentification"
+msgid "Use authenticator app"
+msgstr "Authentification du système"
 
 msgid "Use backup code"
 msgstr "Utiliser le code de sauvegarde"
@@ -68508,6 +68539,9 @@ msgstr "Utiliser l'état normal, ignorer l'accusé de réception"
 
 msgid "Use normal state, ignore downtime"
 msgstr "Utiliser l'état normal, ignorer les temps d'arrêt"
+
+msgid "Use one of your backup codes to sign in."
+msgstr ""
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr ""
@@ -73763,11 +73797,10 @@ msgstr ""
 "Vous ne pouvez pas définir un temps d'arrêt qui se termine dans le passé. "
 "Cet incident sera signalé."
 
-#, fuzzy
 msgid "You cannot set an expiration date and time that is in the past:"
 msgstr ""
-"Vous ne pouvez pas utiliser les termes \"compter\" et \"attendre\" en même "
-"temps dans la même règle."
+"Vous ne pouvez pas définir une date et une heure d'expiration qui se situent "
+"dans le passé :"
 
 msgid ""
 "You cannot use counting and expecting at the same time in the same rule."
@@ -73837,14 +73870,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Vous avez %d règles pour déployer le plugin de mise à jour"
 
 #, python-format
-msgid ""
-"You have %d unused backup codes left. You can use them as one-time password "
-"if your key is not available."
-msgstr ""
-"Il vous reste %d codes de sauvegarde non utilisés. Vous pouvez les utiliser "
-"comme mot de passe à usage unique si votre clé n'est pas disponible."
-
-#, python-format
 msgid "You have %d users configured"
 msgstr "Vous avez %d utilisateurs configurés"
 
@@ -73899,6 +73924,11 @@ msgstr ""
 "Vous avez activé les notifications de repli mais vous avez omis de "
 "configurer une adresse e-mail. Vous devez configurer votre adresse e-mail "
 "afin de pouvoir recevoir les notifications de repli."
+
+msgid ""
+"You have multiple methods enabled. Please select the security method you "
+"want to use to log in."
+msgstr ""
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -74391,12 +74421,25 @@ msgstr ""
 "Votre icône est en conflit avec une icône intégrée de Checkmk. Veuillez "
 "choisir un autre nom pour votre icône."
 
-#, python-format
-msgid "Your input '%s' does not match the required format '%s'."
+#, fuzzy, python-format
+msgid "Your input does not match the required format '%s'."
 msgstr "Votre entrée '%s' ne correspond pas au format requis '%s'."
 
 msgid "Your input does not match the required format."
 msgstr "Votre entrée ne correspond pas au format requis."
+
+#, fuzzy
+msgid "Your input does not match the required port range 0-65535."
+msgstr "Votre entrée ne correspond pas au format requis."
+
+#, python-format
+msgid ""
+"Your input is not a valid URL conforming to any allowed protocols ('%s')."
+msgstr ""
+
+#, fuzzy
+msgid "Your input is not a valid email address."
+msgstr "'%s' n'est pas une adresse e-mail valide."
 
 #, python-format
 msgid ""
@@ -74753,6 +74796,10 @@ msgstr "l'authentification et le cryptage"
 
 msgid "authentication but no privacy"
 msgstr "l'authentification mais pas la confidentialité"
+
+#, fuzzy
+msgid "authenticator app"
+msgstr "Ajouter Application d'Authentification"
 
 msgid "auto"
 msgstr "auto"
@@ -76265,6 +76312,10 @@ msgstr "secondes par seconde"
 msgid "secs"
 msgstr "secs"
 
+#, fuzzy
+msgid "security token"
+msgstr "Nom de sécurité"
+
 msgid "send notifications of contactgroup:"
 msgstr "envoyer les notifications du groupe de contact :"
 
@@ -76663,6 +76714,71 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Add Authenticator App"
+#~ msgstr "Ajouter Application d'Authentification"
+
+#~ msgid "Add Security Token"
+#~ msgstr "Ajouter Jeton de Sécurité"
+
+#~ msgid "Authenticaton Applications"
+#~ msgstr "Applications d'Authentifications"
+
+#, fuzzy
+#~| msgid "Delete this credential"
+#~ msgid "Delete two-factor credential"
+#~ msgstr "Supprimer cette accréditation"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate the existing "
+#~ "codes."
+#~ msgstr ""
+#~ "Si vous régénérez des codes de sauvegarde, vous invalidez automatiquement "
+#~ "les codes existants."
+
+#, fuzzy
+#~| msgid "Unregistered"
+#~ msgid "Not registered"
+#~ msgstr "Non enregistré"
+
+#, fuzzy
+#~| msgid "Security name"
+#~ msgid "Security Tokens"
+#~ msgstr "Nom de sécurité"
+
+#, python-format
+#~ msgid ""
+#~ "You have %d unused backup codes left. You can use them as one-time "
+#~ "password if your key is not available."
+#~ msgstr ""
+#~ "Il vous reste %d codes de sauvegarde non utilisés. Vous pouvez les "
+#~ "utiliser comme mot de passe à usage unique si votre clé n'est pas "
+#~ "disponible."
+
+#, fuzzy
+#~| msgid "Host check command expanded"
+#~ msgid "Host notes URL expanded"
+#~ msgstr "Commande de contrôle de l'hôte étendue"
+
+#, fuzzy
+#~| msgid "Notes URL for Services"
+#~ msgid "Notes URL expanded"
+#~ msgstr "Notes URL pour les services"
+
+#, fuzzy
+#~| msgid "TCP connect"
+#~ msgid "OTP code"
+#~ msgstr "Connexion TCP"
+
+#, fuzzy
+#~| msgid "Service check command expanded"
+#~ msgid "Service notes URL expanded"
+#~ msgstr "Commande de contrôle de service étendue"
+
+#, fuzzy
+#~| msgid "Authentication Mode"
+#~ msgid "Use authenticator code"
+#~ msgstr "Mode d'authentification"
 
 #, fuzzy
 #~| msgid "Sent"
@@ -82223,9 +82339,6 @@ msgstr ""
 
 #~ msgid "&ne;"
 #~ msgstr "&ne;"
-
-#~ msgid "'%s' is not a valid email address."
-#~ msgstr "'%s' n'est pas une adresse e-mail valide."
 
 #~ msgid "(local)"
 #~ msgstr "(local)"

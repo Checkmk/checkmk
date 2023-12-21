@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::{self, create_from_config, Client};
+use super::client::{self, create_on_endpoint, Client};
 use super::section::{self, Section, SectionKind};
 use crate::config::{
     self,
@@ -1292,7 +1292,7 @@ async fn add_custom_instance_builders(
     let mut builders: Vec<SqlInstanceBuilder> = Vec::new();
     for (builder, endpoint) in reconnects.into_iter() {
         if let Some(endpoint) = endpoint {
-            match create_from_config(&endpoint).await {
+            match create_on_endpoint(&endpoint).await {
                 Ok(mut client) => {
                     if let Some(properties) =
                         ensure_required_instance(&mut client, &builder.get_name()).await
@@ -1457,7 +1457,7 @@ async fn get_instance_builders(endpoint: &Endpoint) -> Result<Vec<SqlInstanceBui
 pub async fn obtain_instance_builders_from_registry(
     endpoint: &Endpoint,
 ) -> Result<(Vec<SqlInstanceBuilder>, Vec<SqlInstanceBuilder>)> {
-    match client::create_from_config(endpoint).await {
+    match client::create_on_endpoint(endpoint).await {
         Ok(mut client) => Ok((
             exec_win_registry_sql_instances_query(
                 &mut client,

@@ -445,6 +445,10 @@ impl Endpoint {
         &self.conn
     }
 
+    pub fn port(&self) -> u16 {
+        self.conn.port()
+    }
+
     pub fn split(&self) -> (&Authentication, &Connection) {
         (self.auth(), self.conn())
     }

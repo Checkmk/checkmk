@@ -23,7 +23,11 @@ pub enum Credentials<'a> {
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
-pub async fn create_from_config(endpoint: &Endpoint) -> Result<Client> {
+pub async fn create_on_endpoint(endpoint: &Endpoint) -> Result<Client> {
+    create_on_endpoint_port(endpoint, endpoint.port()).await
+}
+
+pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: u16) -> Result<Client> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -36,7 +40,7 @@ pub async fn create_from_config(endpoint: &Endpoint) -> Result<Client> {
             if let Some(credentials) = obtain_config_credentials(auth) {
                 tokio::time::timeout(
                     conn.timeout(),
-                    create_remote(conn.hostname(), conn.port(), credentials, None),
+                    create_remote(conn.hostname(), port, credentials, None),
                 )
                 .await
                 .map_err(map_elapsed_to_anyhow)?
@@ -46,11 +50,9 @@ pub async fn create_from_config(endpoint: &Endpoint) -> Result<Client> {
         }
 
         #[cfg(windows)]
-        AuthType::Integrated => {
-            tokio::time::timeout(conn.timeout(), create_local(None, conn.port()))
-                .await
-                .map_err(map_elapsed_to_anyhow)?
-        }
+        AuthType::Integrated => tokio::time::timeout(conn.timeout(), create_local(None, port))
+            .await
+            .map_err(map_elapsed_to_anyhow)?,
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
@@ -267,7 +269,7 @@ mssql:
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_for_error() {
         let config = make_config_with_auth_type("token");
-        assert!(create_from_config(&config.endpoint())
+        assert!(create_on_endpoint(&config.endpoint())
             .await
             .unwrap_err()
             .to_string()
@@ -277,7 +279,7 @@ mssql:
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_timeout() {
         let config = make_config_with_auth_type("sql_server");
-        let s = create_from_config(&config.endpoint())
+        let s = create_on_endpoint(&config.endpoint())
             .await
             .unwrap_err()
             .to_string();

@@ -108,7 +108,7 @@ async fn test_validate_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = client::create_from_config(&endpoint.make_ep())
+        let mut client = client::create_on_endpoint(&endpoint.make_ep())
             .await
             .unwrap();
         let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
@@ -591,7 +591,7 @@ mssql:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_computer_name() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = client::create_from_config(&endpoint.make_ep())
+        let mut client = client::create_on_endpoint(&endpoint.make_ep())
             .await
             .unwrap();
         let name = query::get_computer_name(&mut client, sqls::QUERY_COMPUTER_NAME)

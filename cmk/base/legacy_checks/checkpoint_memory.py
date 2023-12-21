@@ -12,12 +12,6 @@ from cmk.agent_based.v2 import SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.checkpoint import DETECT
 
-# FIXME
-# The WATO group 'memory_simple' needs an item and the service_description should
-# have a '%s'.  At the moment the current item 'System' and 'Memory' without '%s'
-# works but is not consistent.  This will be fixed in the future.
-# If we change this we loose history and parameter sets have to be adapted.
-
 # comNET GmbH, Fabian Binder
 
 # .1.3.6.1.4.1.2620.1.6.7.4.3.0 8101654528 --> CHECKPOINT-MIB::memTotalReal
@@ -26,8 +20,7 @@ from cmk.plugins.lib.checkpoint import DETECT
 
 def inventory_checkpoint_memory(info):
     if info and len(info[0]) > 1:
-        return [("System", {})]
-    return []
+        yield None, {}
 
 
 def check_checkpoint_memory(item, params, info):
@@ -55,9 +48,9 @@ check_info["checkpoint_memory"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.2620.1.6.7.4",
         oids=["3", "4"],
     ),
-    service_name="Memory",
+    service_name="Memory System",
     discovery_function=inventory_checkpoint_memory,
     check_function=check_checkpoint_memory,
-    check_ruleset_name="memory_simple",
+    check_ruleset_name="memory_simple_single",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

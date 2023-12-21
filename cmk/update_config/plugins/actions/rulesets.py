@@ -5,7 +5,7 @@
 
 from collections.abc import Container, Mapping, Sequence
 from logging import Logger
-from re import Pattern
+from re import match, Pattern
 from typing import Any
 
 import cmk.utils.store as store
@@ -19,7 +19,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, RuleConditions, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -45,6 +45,10 @@ class UpdateRulesets(UpdateAction):
             logger,
             all_rulesets,
             DEPRECATED_RULESET_PATTERNS,
+        )
+        _transform_wato_ruleset_memory_simple(
+            logger,
+            all_rulesets,
         )
         _transform_replaced_wato_rulesets(
             logger,
@@ -134,6 +138,44 @@ def _delete_deprecated_wato_rulesets(
             logger.log(VERBOSE, f"Removing ruleset {ruleset_name}")
             all_rulesets.delete(ruleset_name)
             continue
+
+
+def _transform_wato_ruleset_memory_simple(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+) -> None:
+    """Update the rulesets according to Werk #16277.
+
+    Relevant for 2.2 -> 2.3.
+    """
+    if (old_ruleset := all_rulesets.get("checkgroup_parameters:memory_simple")).is_empty():
+        return
+
+    if not (
+        new_ruleset := all_rulesets.get("checkgroup_parameters:memory_simple_single")
+    ).is_empty():
+        return
+
+    for folder, _folder_index, rule in old_ruleset.get_rules():
+        if _memory_simple_matches_single(rule.conditions):
+            new_ruleset.append_rule(folder, rule)
+
+
+def _memory_simple_matches_single(conditions: RuleConditions) -> bool:
+    """Decide if the rule used to match the items `""` and `"System"`.
+
+    We consider the case of an empty string as conditions here -- even
+    though as far as I can see it can't be configured.
+    """
+    match conditions.service_description:
+        case None:
+            return True
+        case list() as conds:
+            regexes = [r for cond in conds if (r := cond.get("$regex")) is not None]
+            return any(r == "" or match(r, "System") for r in regexes)
+        case dict() as conds:
+            regexes = [r for cond in conds["$nor"] if (r := cond.get("$regex")) is not None]
+            return not any(r == "" or match(r, "System") for r in regexes)
 
 
 def _transform_replaced_wato_rulesets(

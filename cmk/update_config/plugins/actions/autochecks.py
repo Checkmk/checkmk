@@ -29,7 +29,12 @@ from cmk.update_config.update_state import UpdateActionState
 
 _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
     CheckPluginName, Callable[[str | None], str | None]
-] = {}
+] = {
+    CheckPluginName("checkpoint_memory"): (lambda _x: None),
+    CheckPluginName("hp_procurve_mem"): (lambda _x: None),
+    CheckPluginName("datapower_mem"): (lambda _x: None),
+    CheckPluginName("ucd_mem"): (lambda _x: None),
+}
 
 # some autocheck parameters need transformation even though there is no ruleset.
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[

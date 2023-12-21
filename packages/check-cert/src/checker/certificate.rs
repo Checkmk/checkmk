@@ -3,7 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult,
+    self, CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, OutputType, Real,
+    SimpleCheckResult,
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
@@ -257,11 +258,11 @@ fn check_validity_not_after(
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
-            format!(
+            OutputType::Notice(format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after
-            ),
+            )),
             LevelsCheckerArgs::builder().label("validity").build(),
         ),
     })

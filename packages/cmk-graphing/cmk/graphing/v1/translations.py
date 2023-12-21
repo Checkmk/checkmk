@@ -29,7 +29,6 @@ class PassiveCheck:
 
         >>> PassiveCheck("check_plugin")
         PassiveCheck(name='check_plugin')
-
     """
 
     name: str
@@ -50,7 +49,6 @@ class ActiveCheck:
 
         >>> ActiveCheck("http")
         ActiveCheck(name='http')
-
     """
 
     name: str
@@ -65,13 +63,12 @@ class HostCheckCommand:
     A host check command has the prefix ``check-mk-``.
 
     Args:
-        name:   The name of the host check command
+        name: The name of the host check command
 
     Example:
 
         >>> HostCheckCommand("host-ping")
         HostCheckCommand(name='host-ping')
-
     """
 
     name: str
@@ -92,7 +89,6 @@ class NagiosPlugin:
 
         >>> NagiosPlugin("check_plugin")
         NagiosPlugin(name='check_plugin')
-
     """
 
     name: str
@@ -105,14 +101,12 @@ class NagiosPlugin:
 class RenameTo:
     """
     Args:
-        metric_name:
-                A new metric name
+        metric_name: A new metric name
 
     Example:
 
         >>> RenameTo("new-metric-name")
         RenameTo(metric_name='new-metric-name')
-
     """
 
     metric_name: str
@@ -132,7 +126,6 @@ class ScaleBy:
 
         >>> ScaleBy(1.5)
         ScaleBy(factor=1.5)
-
     """
 
     factor: int | float
@@ -145,15 +138,13 @@ class ScaleBy:
 class RenameToAndScaleBy:
     """
     Args:
-        metric_name:
-                A new metric name
+        metric_name: A new metric name
         factor: A number with which the old metric is scaled
 
     Example:
 
         >>> RenameToAndScaleBy("new-metric-name", 1.5)
         RenameToAndScaleBy(metric_name='new-metric-name', factor=1.5)
-
     """
 
     metric_name: str
@@ -172,11 +163,9 @@ class Translation:
     ones.
 
     Args:
-        name:   An unique name
-        check_commands:
-                A list of check commands to which the translations apply
-        translations:
-                A map which defines how old metrics are renamed or scaled
+        name: An unique name
+        check_commands: A list of check commands to which the translations apply
+        translations: A map which defines how old metrics are renamed or scaled
 
     Example:
 
@@ -189,7 +178,6 @@ class Translation:
         ...         "old-metric-name-3": RenameToAndScaleBy("new-metric-name-3", 1.5),
         ...     },
         ... )
-
     """
 
     name: str

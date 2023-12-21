@@ -33,10 +33,10 @@ class Metric:
     :class:`MaximumOf`, perfometers or graphs by its name.
 
     Args:
-        name:   An unique name
-        title:  A title
-        unit:   A unit
-        color:  A color
+        name: An unique name
+        title: A title
+        unit: A unit
+        color: A color
 
     Example:
 
@@ -46,7 +46,6 @@ class Metric:
         ...     unit=Unit.PERCENTAGE,
         ...     color=Color.BLUE,
         ... )
-
     """
 
     name: str
@@ -65,17 +64,16 @@ class Constant:
     A constant can be used within other metric operations, perfometers or graphs.
 
     Args:
-        title:  A title
-        unit:   A unit
-        color:  A color
-        value:  An integer or float value
+        title: A title
+        unit: A unit
+        color: A color
+        value: An integer or float value
 
     Example:
 
         >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
         Constant(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
 value=23.5)
-
     """
 
     title: Localizable
@@ -91,14 +89,12 @@ class WarningOf:
     operations, perfometers or graphs.
 
     Args:
-        metric_name:
-                Name of a metric
+        metric_name: Name of a metric
 
     Example:
 
         >>> WarningOf("metric-name")
         WarningOf(metric_name='metric-name')
-
     """
 
     metric_name: str
@@ -115,14 +111,12 @@ class CriticalOf:
     operations, perfometers or graphs.
 
     Args:
-        metric_name:
-                Name of a metric
+        metric_name: Name of a metric
 
     Example:
 
         >>> CriticalOf("metric-name")
         CriticalOf(metric_name='metric-name')
-
     """
 
     metric_name: str
@@ -139,15 +133,13 @@ class MinimumOf:
     operations, perfometers or graphs.
 
     Args:
-        metric_name:
-                Name of a metric
-        color:  A color
+        metric_name: Name of a metric
+        color: A color
 
     Example:
 
         >>> MinimumOf("metric-name", Color.BLUE)
         MinimumOf(metric_name='metric-name', color=<Color.BLUE: 14>)
-
     """
 
     metric_name: str
@@ -165,15 +157,13 @@ class MaximumOf:
     operations, perfometers or graphs.
 
     Args:
-        metric_name:
-                Name of a metric
-        color:  A color
+        metric_name: Name of a metric
+        color: A color
 
     Example:
 
         >>> MaximumOf("metric-name", Color.BLUE)
         MaximumOf(metric_name='metric-name', color=<Color.BLUE: 14>)
-
     """
 
     metric_name: str
@@ -191,10 +181,9 @@ class Sum:
     perfometers or graphs.
 
     Args:
-        title:  A title
-        color:  A color
-        summands:
-                A list of metric names or objects
+        title: A title
+        color: A color
+        summands: A list of metric names or objects
 
     Example:
 
@@ -205,7 +194,6 @@ class Sum:
         ... )
         Sum(title=Localizable('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
 'metric-name-2'])
-
     """
 
     title: Localizable
@@ -237,11 +225,10 @@ class Product:
     perfometers or graphs.
 
     Args:
-        title:  A title
-        unit:   A unit
-        color:  A color
-        factors:
-                A list of metric names or objects
+        title: A title
+        unit: A unit
+        color: A color
+        factors: A list of metric names or objects
 
     Example:
 
@@ -253,7 +240,6 @@ class Product:
         ... )
         Product(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
 factors=['metric-name-1', 'metric-name-2'])
-
     """
 
     title: Localizable
@@ -286,12 +272,10 @@ class Difference:
     perfometers or graphs.
 
     Args:
-        title:  A title
-        color:  A color
-        minuend:
-                A metric name or object
-        subtrahend:
-                A metric name or object
+        title: A title
+        color: A color
+        minuend: A metric name or object
+        subtrahend: A metric name or object
 
     Example:
 
@@ -303,7 +287,6 @@ class Difference:
         ... )
         Difference(title=Localizable('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
 subtrahend='metric-name-2')
-
     """
 
     title: Localizable
@@ -348,13 +331,11 @@ class Fraction:
     perfometers or graphs.
 
     Args:
-        title:  A title
-        unit:   A unit
-        color:  A color
-        dividend:
-                A metric name or object
-        divisor:
-                A metric name or object
+        title: A title
+        unit: A unit
+        color: A color
+        dividend: A metric name or object
+        divisor: A metric name or object
 
     Example:
 
@@ -367,7 +348,6 @@ class Fraction:
         ... )
         Fraction(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
 dividend='metric-name-1', divisor='metric-name-2')
-
     """
 
     title: Localizable

@@ -22,13 +22,12 @@ __all__ = [
 class Closed:
     """
     Args:
-        value:  A bound value
+        value: A bound value
 
     Example:
 
         >>> Closed(23.5)
         Closed(value=23.5)
-
     """
 
     value: Bound
@@ -42,13 +41,12 @@ class Closed:
 class Open:
     """
     Args:
-        value:  A bound value
+        value: A bound value
 
     Example:
 
         >>> Open(23.5)
         Open(value=23.5)
-
     """
 
     value: Bound
@@ -62,14 +60,13 @@ class Open:
 class FocusRange:
     """
     Args:
-        lower:  A lower bound
-        upper:  An upper bound
+        lower: A lower bound
+        upper: An upper bound
 
     Example:
 
         >>> FocusRange(Closed(0), Closed(100))
         FocusRange(lower=Closed(value=0), upper=Closed(value=100))
-
     """
 
     lower: Closed | Open
@@ -91,7 +88,6 @@ class Perfometer:
         ...     focus_range=FocusRange(Closed(0), Closed(100)),
         ...     segments=["metric-name-1", "metric-name-2"],
         ... )
-
     """
 
     name: str
@@ -111,9 +107,9 @@ class Perfometer:
 class Bidirectional:
     """
     Args:
-        name:   An unique name
-        left:   A perfometer which grows to the left
-        right:  A perfometer which grows to the right
+        name: An unique name
+        left: A perfometer which grows to the left
+        right: A perfometer which grows to the right
 
     Example:
 
@@ -130,7 +126,6 @@ class Bidirectional:
         ...         segments=["metric-name-3"],
         ...     ),
         ... )
-
     """
 
     name: str
@@ -146,9 +141,9 @@ class Bidirectional:
 class Stacked:
     """
     Args:
-        name:   An unique name
-        lower:  A perfometer on the bottom
-        upper:  A perfometer on the top
+        name: An unique name
+        lower: A perfometer at the bottom
+        upper: A perfometer on the top
 
     Example:
 
@@ -165,7 +160,6 @@ class Stacked:
         ...         segments=["metric-name-3"],
         ...     ),
         ... )
-
     """
 
     name: str

@@ -81,8 +81,6 @@ class Unit(Enum):
 @dataclass(frozen=True)
 class PhysicalUnit:
     """
-    Defines a physical unit.
-
     A physical unit is rendered with decimals.
     """
 
@@ -97,8 +95,6 @@ class PhysicalUnit:
 @dataclass(frozen=True)
 class ScientificUnit:
     """
-    Defines a scientifc unit.
-
     A scientific unit is using scientific notation while rendering.
     """
 

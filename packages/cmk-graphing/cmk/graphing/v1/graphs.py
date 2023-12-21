@@ -27,7 +27,6 @@ class MinimalRange:
 
         >>> MinimalRange(0, 100)
         MinimalRange(lower=0, upper=100)
-
     """
 
     lower: Bound
@@ -63,7 +62,6 @@ class Graph:
         ...     optional=["metric-name-1"],
         ...     conflicting=["metric-name-3"],
         ... )
-
     """
 
     name: str
@@ -98,8 +96,8 @@ class Bidirectional:
     Args:
         name: A unique name
         title: A title
-        lower: A graph which grows to the bottom
-        upper: A graph which grows to the top
+        lower: A graph which grows downwards
+        upper: A graph which grows upwards
 
     Example:
 
@@ -117,7 +115,6 @@ class Bidirectional:
         ...         compound_lines=["metric-name-2"],
         ...     ),
         ... )
-
     """
 
     name: str

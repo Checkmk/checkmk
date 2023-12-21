@@ -27,6 +27,10 @@ from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CH
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
+_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
+    CheckPluginName, Callable[[str | None], str | None]
+] = {}
+
 # some autocheck parameters need transformation even though there is no ruleset.
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName,
@@ -160,13 +164,16 @@ def _fix_entry(
     """Change names of removed plugins to the new ones and transform parameters"""
     new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name, entry.check_plugin_name)
 
+    explicit_item_transform = _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS.get(
+        new_plugin_name, lambda x: x
+    )
     explicit_parameters_transform = _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(
         new_plugin_name, lambda x: x
     )
 
     return AutocheckEntry(
         check_plugin_name=new_plugin_name,
-        item=entry.item,
+        item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
             logger,
             new_plugin_name or entry.check_plugin_name,

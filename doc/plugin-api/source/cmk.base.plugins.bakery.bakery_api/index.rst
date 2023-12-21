@@ -1,6 +1,6 @@
-==========
-Bakery API
-==========
+======
+Bakery
+======
 
 .. automodule:: cmk.base.plugins.bakery.bakery_api
    :members:

@@ -25,7 +25,7 @@ def _parameter_form_discover_rmon() -> form_specs.Dictionary:
             )
         },
         transform=form_specs.Migrate(
-            raw_to_form=lambda p: p if isinstance(p, dict) else {"discover": p}
+            model_to_form=lambda p: p if isinstance(p, dict) else {"discover": p}
         ),
     )
 

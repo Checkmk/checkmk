@@ -1242,7 +1242,9 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     [
         pytest.param(
             api_v1.form_specs.Integer(
-                transform=api_v1.form_specs.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
+                transform=api_v1.form_specs.Migrate(
+                    model_to_form=lambda x: _narrow_type(x, int) * 2
+                )
             ),
             2,
             4,
@@ -1253,12 +1255,12 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                 elements=[
                     api_v1.form_specs.Integer(
                         transform=api_v1.form_specs.Migrate(
-                            raw_to_form=lambda x: _narrow_type(x, int) * 2
+                            model_to_form=lambda x: _narrow_type(x, int) * 2
                         )
                     ),
                     api_v1.form_specs.Percentage(
                         transform=api_v1.form_specs.Migrate(
-                            raw_to_form=lambda x: _narrow_type(x, float) * 2
+                            model_to_form=lambda x: _narrow_type(x, float) * 2
                         )
                     ),
                 ]
@@ -1275,7 +1277,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                     )
                 },
                 transform=api_v1.form_specs.Migrate(
-                    raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]}
+                    model_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]}
                 ),
             ),
             {"key": 2},
@@ -1289,12 +1291,12 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.TextInput(
-                            transform=api_v1.form_specs.Migrate(raw_to_form=lambda x: f"{x}_new")
+                            transform=api_v1.form_specs.Migrate(model_to_form=lambda x: f"{x}_new")
                         ),
                     )
                 ],
                 transform=api_v1.form_specs.Migrate(
-                    raw_to_form=lambda x: (
+                    model_to_form=lambda x: (
                         f"{_narrow_type(x, tuple)[0]}_new",
                         _narrow_type(x, tuple)[1],
                     )
@@ -1322,8 +1324,8 @@ def test_migrate(
         pytest.param(
             api_v1.form_specs.Integer(
                 transform=api_v1.form_specs.Transform(
-                    raw_to_form=lambda x: _narrow_type(x, int) * 2,
-                    form_to_raw=lambda x: x // 2,
+                    model_to_form=lambda x: _narrow_type(x, int) * 2,
+                    form_to_model=lambda x: x // 2,
                 )
             ),
             2,
@@ -1333,8 +1335,8 @@ def test_migrate(
         pytest.param(
             api_v1.form_specs.Integer(
                 transform=api_v1.form_specs.Transform(
-                    raw_to_form=lambda x: _narrow_type(x, int) * 2,
-                    form_to_raw=lambda x: x // 4,
+                    model_to_form=lambda x: _narrow_type(x, int) * 2,
+                    form_to_model=lambda x: x // 4,
                 )
             ),
             2,
@@ -1346,14 +1348,14 @@ def test_migrate(
                 elements=[
                     api_v1.form_specs.Integer(
                         transform=api_v1.form_specs.Transform(
-                            raw_to_form=lambda x: _narrow_type(x, int) * 2,
-                            form_to_raw=lambda x: x // 2,
+                            model_to_form=lambda x: _narrow_type(x, int) * 2,
+                            form_to_model=lambda x: x // 2,
                         )
                     ),
                     api_v1.form_specs.Percentage(
                         transform=api_v1.form_specs.Transform(
-                            raw_to_form=lambda x: _narrow_type(x, float) * 2,
-                            form_to_raw=lambda x: x / 2,
+                            model_to_form=lambda x: _narrow_type(x, float) * 2,
+                            form_to_model=lambda x: x / 2,
                         )
                     ),
                 ]
@@ -1370,8 +1372,8 @@ def test_migrate(
                     )
                 },
                 transform=api_v1.form_specs.Transform(
-                    raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]},
-                    form_to_raw=lambda x: {"key": x["key2"]},
+                    model_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]},
+                    form_to_model=lambda x: {"key": x["key2"]},
                 ),
             ),
             {"key": 2},
@@ -1386,18 +1388,18 @@ def test_migrate(
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.TextInput(
                             transform=api_v1.form_specs.Transform(
-                                raw_to_form=lambda x: f"{x}_new",
-                                form_to_raw=lambda x: f"{x.removesuffix('_new')}",
+                                model_to_form=lambda x: f"{x}_new",
+                                form_to_model=lambda x: f"{x.removesuffix('_new')}",
                             )
                         ),
                     )
                 ],
                 transform=api_v1.form_specs.Transform(
-                    raw_to_form=lambda x: (
+                    model_to_form=lambda x: (
                         f"{ _narrow_type(x, tuple)[0]}_new",
                         _narrow_type(x, tuple)[1],
                     ),
-                    form_to_raw=lambda x: (
+                    form_to_model=lambda x: (
                         f"{_narrow_type(x, tuple)[0].removesuffix('_new')}",
                         _narrow_type(x, tuple)[1],
                     ),

@@ -16,31 +16,35 @@ _T = TypeVar("_T")
 
 @dataclass(frozen=True)
 class Migrate(Generic[_T]):
-    """Marks transformations that change the value as a one-off event, to update the value from an
-     old version to be compatible with the current definition.
+    """Creates a transformation that changes the value as a one-off event.
+
+    You can add a ``Migrate`` instance to a form spec to update the value from an
+    old version to be compatible with the current definition.
 
     Args:
-        raw_to_form: Transforms the raw, persisted value to a value compatible with current form
-                     specification
+        model_to_form: Transforms the present parameter value ("consumer model")
+                       to a value compatible with the current form specification.
     """
 
-    raw_to_form: Callable[[object], _T]
+    model_to_form: Callable[[object], _T]
 
 
 @dataclass(frozen=True)
 class Transform(Generic[_T]):
-    """Marks transformations that are performed every time the value is loaded/stored. E.g. could
-     be used to allow a different unit to be shown/entered than that is used by the rest of Checkmk.
+    """Creates a transformation that is performed every time the value is loaded/stored.
+
+    E.g. could be used to allow a different unit to be shown/entered than that is used by
+    the consumers of the stored value.
 
     Args:
-        raw_to_form: Transforms the raw, persisted value to a value compatible with current form
-                     specification
-        form_to_raw: Transforms the value as defined in the form to the raw, persisted value as
-                     used by other consumers, e.g. the check plugin
+        model_to_form: Transforms the value presented to the consumers ("consumer model")
+                       to a value compatible with the current form specification.
+        form_to_model: Transforms the value created by the form specification to the
+                        value presented to the consumers (e.g. check plugins).
     """
 
-    raw_to_form: Callable[[object], _T]
-    form_to_raw: Callable[[_T], object]
+    model_to_form: Callable[[object], _T]
+    form_to_model: Callable[[_T], object]
 
 
 @dataclass(frozen=True)
@@ -57,6 +61,11 @@ class Integer:
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
+
+    Consumer model:
+        **Type**: ``int``
+
+        The configured value will be presented as an integer to consumers.
     """
 
     title: Localizable | None = None
@@ -269,6 +278,16 @@ class CascadingDropdown:
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
         prefill_selection: Pre-selected choice. If not set, the user is required to make a selection
+        transform: Tranformations to appy.
+
+    Consumer model:
+        **Type**: ``tuple[str, object]``
+
+        The configured value will be presented as a 2-tuple consisting of the name of the choice and
+        the consumer model of the selected form specification.
+
+        **Example**: A CascadingDropdown with a selcted :class:`Dictionary` form specification would
+        result in ``("my_value", {...})``
     """
 
     elements: Sequence[CascadingDropdownElement]
@@ -527,6 +546,69 @@ class Levels:
         help_text: Description to help the user with the configuration
         unit: Unit of the value to apply levels on (only for display)
         transform: Transformation of the stored configuration
+
+    Consumer model:
+        **Type**:
+          This is the type definition of
+          the consumer model::
+            class LevelsConsumerModel(TypedDict):
+                levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels
+                levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels
+
+          where the tree possible types are defined
+          as follows::
+            _NoLevels = tuple[Literal["no_levels"], None]
+
+            _FixedLevels = tuple[Literal["fixed"], tuple[int | int] | tuple[float, float]]
+
+            _PredictiveLevels = tuple[Literal["predictive"], _PredictiveModel]
+
+            class _PredictiveModel(TypedDict):
+                period: Literal["wday", "day", "hour", "minute"]
+                horizon: int
+                levels: tuple[
+                    Literal["absolute", "relative", "stddev"],
+                    tuple[int, int] | tuple[float, float],
+                ]
+                bound: tuple[int, int] | tuple[float, float]
+                __get_predictive_levels__: Callable | None
+
+
+          The configured value will be presented to consumers as a nested dictionary
+          with the two keys "levels_lower" and "levers_upper" always present.
+
+        **Example**:
+            Levels used to configure no levels will look
+            like this::
+                {
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": ("no_levels", None),
+                }
+
+            Levels used to configure fixed lower levels might look
+            like this::
+                {
+                    "levels_lower": ("fixed", (5.0, 1.0)),
+                    "levels_upper": ("no_levels", None),
+                }
+
+            Levels used to configure upper predictive levels might look
+            like this::
+                {
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": (
+                        "predictive",
+                        {
+                            "period": "hour",
+                            "horizon": 90,
+                            "levels": ("stddev", (2.0, 4.0)),
+                            "bound": (23.0, 42.0),
+                            __get_predictive_levels__: None,
+                        },
+                    ),
+                }
+
+
     """
 
     form_spec: type[Integer | Float | DataSize | Percentage]  # TODO: any numeric FormSpec

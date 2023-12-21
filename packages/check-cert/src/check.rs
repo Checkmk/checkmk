@@ -582,9 +582,9 @@ impl Display for Collection {
                 Details::TextMetric(text, metric) => format!("{} | {}", text, metric),
             })
             .collect::<Vec<_>>()
-            .join(", ");
+            .join("\n");
         if !details.is_empty() {
-            out = format!("{} | {}", out, details);
+            out = format!("{}\n{}", out, details);
         }
         write!(f, "{}", out)?;
         Ok(())
@@ -940,8 +940,10 @@ mod test_writer_format {
         let mut vec = vec![cr1, cr2, cr3];
         assert_eq!(
             format!("{}", Collection::from(&mut vec)),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
-            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            m1=13;;;;\n\
+            m2=37;;;;\n\
+            m3=42;;;;"
         );
         assert!(vec.is_empty());
     }
@@ -963,8 +965,10 @@ mod test_writer_format {
         )]));
         assert_eq!(
             format!("{}", c),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
-            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)\n\
+            m1=13;;;;\n\
+            m2=37;;;;\n\
+            m3=42;;;;"
         );
     }
 }

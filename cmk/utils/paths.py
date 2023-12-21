@@ -75,7 +75,6 @@ inventory_archive_dir = _omd_path_str("var/check_mk/inventory_archive")
 inventory_delta_cache_dir = _omd_path_str("var/check_mk/inventory_delta_cache")
 autoinventory_dir = _omd_path_str("var/check_mk/autoinventory")
 status_data_dir = _omd_path_str("tmp/check_mk/status_data")
-robotmk_html_log_dir = _omd_path_str("var/robotmk")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
 autodiscovery_dir = _omd_path_str("var/check_mk/autodiscovery")

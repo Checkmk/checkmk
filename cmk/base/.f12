@@ -8,9 +8,7 @@ else cd ..; fi; done)}"
 SITE="${SITE:-$(omd sites --bare | head -n 1)}"
 ROOT="/omd/sites/${SITE}"
 
-echo "Updating compiled protobuf files..."
-make -C ../.. protobuf-files
-sudo rsync -rlpgoD --delete-after ../../enterprise/cmc_proto "$ROOT/lib/python3/"
+(cd ../../non-free/cmc-protocols &&  bash .f12)
 
 (
     cd ..

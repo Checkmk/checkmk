@@ -96,11 +96,8 @@ impl SqlInstanceBuilder {
         self.endpoint = Some(endpoint.clone());
         self
     }
-    pub fn computer_name<'a, S>(mut self, computer_name: &'a Option<S>) -> Self
-    where
-        std::string::String: From<&'a S>,
-    {
-        self.computer_name = computer_name.as_ref().map(|s| s.into());
+    pub fn computer_name<S: ToString>(mut self, computer_name: &Option<S>) -> Self {
+        self.computer_name = computer_name.as_ref().map(|s| s.to_string());
         self
     }
 
@@ -1616,6 +1613,9 @@ pub async fn get_computer_name(client: &mut Client, query: &str) -> Result<Optio
 #[cfg(test)]
 mod tests {
     use super::SqlInstanceBuilder;
+    use crate::args::Args;
+    use crate::setup::Env;
+    use std::path::Path;
 
     #[test]
     fn test_generate_state_entry() {
@@ -1628,6 +1628,56 @@ mod tests {
         assert_eq!(
             i.generate_state_entry(true, '.'),
             format!("MSSQL_TEST_NAME.state.1\n")
+        );
+    }
+    #[test]
+    fn test_sql_builder() {
+        let args = Args {
+            temp_dir: Some(".".into()),
+            ..Default::default()
+        };
+        let standard = SqlInstanceBuilder::new()
+            .name("name")
+            .alias("alias")
+            .dynamic_port(Some(1u16))
+            .port(Some(2u16))
+            .computer_name(&Some("computer_name".to_owned()))
+            .hash("hash")
+            .version("version")
+            .edition("edition")
+            .environment(&Env::new(&args))
+            .id("id")
+            .piggyback(Some("piggyback"));
+        let cluster = standard.clone().cluster(Some("cluster"));
+        assert_eq!(standard.get_port(), 2u16);
+
+        let s = standard.build();
+        assert_eq!(s.id, "id");
+        assert_eq!(s.name, "NAME");
+        assert_eq!(s.alias.as_deref(), Some("alias"));
+        assert!(s.cluster.is_none());
+        assert_eq!(s.version, "version");
+        assert_eq!(s.edition, "edition");
+        assert_eq!(s.hash, "hash");
+        assert_eq!(s.port, Some(2u16));
+        assert_eq!(s.dynamic_port, Some(1u16));
+
+        assert_eq!(s.piggyback().as_deref(), Some("piggyback"));
+        assert_eq!(s.computer_name().as_deref(), Some("computer_name"));
+        assert_eq!(s.temp_dir(), Some(Path::new(".")));
+        assert_eq!(s.full_name(), "localhost/NAME");
+        assert_eq!(s.mssql_name(), "MSSQL_NAME");
+        assert_eq!(s.legacy_name(), "computer_name/NAME");
+        assert_eq!(
+            s.generate_leading_entry('.'),
+            "MSSQL_NAME.config.version.edition.\n"
+        );
+        let c = cluster.build();
+        assert_eq!(c.cluster.as_deref(), Some("cluster"));
+        assert_eq!(c.legacy_name(), "cluster/NAME");
+        assert_eq!(
+            c.generate_leading_entry('.'),
+            "MSSQL_NAME.config.version.edition.cluster\n"
         );
     }
 }

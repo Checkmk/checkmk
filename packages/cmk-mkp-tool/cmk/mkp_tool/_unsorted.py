@@ -742,13 +742,21 @@ def disable_outdated(
 
 def make_post_package_change_actions(
     *callbacks: tuple[tuple[PackagePart, ...], Callable[[], object]],
+    on_any_change: tuple[Callable[[], object], ...],
 ) -> Callable[[Sequence[Manifest]], None]:
     def _execute_post_package_change_actions(
         packages: Sequence[Manifest],
     ) -> None:
+        if not any(package.files for package in packages):
+            # nothing changed at all
+            return
+
         for triggers, callback in callbacks:
             if any(package.files.get(t) for t in triggers for package in packages):
                 callback()
+
+        for callback in on_any_change:
+            callback()
 
     return _execute_post_package_change_actions
 

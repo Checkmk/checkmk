@@ -64,12 +64,7 @@ _SITE_CONTEXT: Final = cli.SiteContext(
         ),
     },
     post_package_change_actions=make_post_package_change_actions(
-        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-        ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
-        (
-            (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
-            request_index_rebuild,
-        ),
+        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
     ),
     version=__version__,
     parse_version=parse_check_mk_version,

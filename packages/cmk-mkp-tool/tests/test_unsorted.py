@@ -74,7 +74,9 @@ def test_reload_gui_without_gui_files() -> None:
         version_packaged="3.14.0p15",
     )
 
-    make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called))([package])
+    make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called), on_any_change=())(
+        [package]
+    )
 
 
 def test_reload_gui_with_gui_part() -> None:
@@ -85,7 +87,20 @@ def test_reload_gui_with_gui_part() -> None:
     )
 
     with pytest.raises(AssertionError):
-        make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called))([package])
+        make_post_package_change_actions(
+            ((PackagePart.GUI,), _assert_not_called), on_any_change=()
+        )([package])
+
+
+def test_reload_gui_on_unrelated_change() -> None:
+    package = mkp.manifest_template(
+        name=PackageName("ding"),
+        version_packaged="3.14.0p15",
+        files={PackagePart.MIBS: [Path("a")]},  # arbitrary non-gui file.
+    )
+
+    with pytest.raises(AssertionError):
+        make_post_package_change_actions(on_any_change=(_assert_not_called,))([package])
 
 
 def _create_simple_test_package(

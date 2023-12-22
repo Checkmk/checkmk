@@ -28,7 +28,6 @@ from cmk.mkp_tool import (
     release,
 )
 from cmk.mkp_tool._unsorted import (
-    _get_permissions,
     _install,
     _raise_for_too_new_cmk_version,
     _raise_for_too_old_cmk_version,
@@ -37,13 +36,6 @@ from cmk.mkp_tool._unsorted import (
     make_post_package_change_actions,
     StoredManifests,
 )
-
-
-def test_get_permissions() -> None:
-    assert _get_permissions(PackagePart.AGENT_BASED, Path("some_check.py")) == 0o644
-    assert _get_permissions(PackagePart.BIN, Path("some_binary")) == 0o755
-    assert _get_permissions(PackagePart.LIB, Path("nagios/plugins/check_foobar")) == 0o755
-    assert _get_permissions(PackagePart.LIB, Path("something/else/check_foobar")) == 0o644
 
 
 def test_raise_for_too_old_cmk_version_raises() -> None:

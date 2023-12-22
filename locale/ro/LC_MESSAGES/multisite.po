@@ -1856,12 +1856,13 @@ msgstr ""
 "<p>De obicei, Checkmk va folosi adresa IP principală a gazdei la care este "
 "atașat. Cu această opțiune puteți suprascrie acest parametru.</p>."
 
+#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
-"mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
+"mode=pattern_editor\">Logfile pattern analyzer</a> to test the rules you "
 "defined here.</p><p>Note that to match a special regex character in your "
 "patterns, you need to use a backslash to escape its special meaning. This is "
 "especially relevant for Windows file paths. For example, to match the "
@@ -3049,9 +3050,6 @@ msgstr "Ack"
 msgid "Acknowledge"
 msgstr "Confirmă"
 
-msgid "Acknowledge Incompatible Werks"
-msgstr "Recunoașteți lucrările incompatibile"
-
 msgid "Acknowledge all"
 msgstr "Recunoașteți toate"
 
@@ -3065,6 +3063,10 @@ msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr ""
 "Recunoașterea problemelor gazdei și ale serviciului și eliminarea "
 "confirmărilor"
+
+#, fuzzy
+msgid "Acknowledge incompatible Werks"
+msgstr "Werks incompatibile recunoscute"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -3515,9 +3517,6 @@ msgstr "Adăugați regula BI"
 msgid "Add BI rule %s"
 msgstr "Adăugați regula BI %s"
 
-msgid "Add Bookmark"
-msgstr "Adaugă bookmark"
-
 msgid "Add CA or self-signed certificate"
 msgstr "Adăugați un certificat CA sau un certificat auto-semnat"
 
@@ -3610,6 +3609,10 @@ msgstr "Adăugați o sarcină de backup"
 
 msgid "Add backup target"
 msgstr "Adăugați o țintă de backup"
+
+#, fuzzy
+msgid "Add bookmark"
+msgstr "Adaugă bookmark"
 
 msgid "Add child node generator"
 msgstr "Adăugați generatorul de noduri copil"
@@ -3757,7 +3760,8 @@ msgstr "Adăugați mesaje"
 msgid "Add metric level"
 msgstr "Adăugați nivelul metric"
 
-msgid "Add micro seconds to timestamps in Logfiles"
+#, fuzzy
+msgid "Add micro seconds to timestamps in logfiles"
 msgstr "Adaugă microsecunde la amprenta de timp în LogFiles"
 
 msgid "Add missing, remove vanished"
@@ -4624,9 +4628,6 @@ msgstr "Agentul %s rulează în prezent în <a href=\"%s\">lucru de fundal</a>."
 msgid "Agent %s successful"
 msgstr "Agent %s a reușit"
 
-msgid "Agent Certificates"
-msgstr "Certificate de agent"
-
 msgid "Agent Controller"
 msgstr "Controlor agent"
 
@@ -4693,6 +4694,10 @@ msgstr "Agentul de coacere a terminat."
 #, fuzzy
 msgid "Agent based plugins (deprecated)"
 msgstr "Plugin-uri bazate pe agenți (Verificări, Inventar)"
+
+#, fuzzy
+msgid "Agent certificates"
+msgstr "Certificate de agent"
 
 msgid "Agent controller"
 msgstr "Controlor agent"
@@ -4904,10 +4909,12 @@ msgstr "Agregare: aspect simplist cu casete"
 msgid "Aggregations"
 msgstr "Agregări"
 
-msgid "Aggregations Affected by Host"
+#, fuzzy
+msgid "Aggregations affected by host"
 msgstr "Agregate afectate de gazdă"
 
-msgid "Aggregations Affected by Service"
+#, fuzzy
+msgid "Aggregations affected by service"
 msgstr "Agregatele afectate de serviciu"
 
 msgid "Aggregations are equal"
@@ -6773,9 +6780,6 @@ msgstr "Atribute"
 msgid "Attributes to remove from hosts"
 msgstr "Atributele care trebuie eliminate din gazde"
 
-msgid "Audit Log"
-msgstr "Jurnal de audit"
-
 msgid "Audit log"
 msgstr "Jurnal de audit"
 
@@ -7515,18 +7519,12 @@ msgstr "Grupuri de agregare BI"
 msgid "BI Aggregations"
 msgstr "Agregări BI"
 
-msgid "BI Aggregations Summary State"
-msgstr "Starea de sinteză a agregărilor BI"
-
 msgid "BI Aggregations affected by one host"
 msgstr "Agregări BI afectate de o singură gazdă"
 
 #, python-format
 msgid "BI Aggregations containing this %s"
 msgstr "Agregări BI care conțin acest %s."
-
-msgid "BI Availability"
-msgstr "Disponibilitatea BI"
 
 msgid "BI Configuration Packs"
 msgstr "Pachete de configurare BI"
@@ -7548,6 +7546,14 @@ msgstr "Arborele grupurilor de agregare BI"
 
 msgid "BI aggregations for hosts by host groups"
 msgstr "Agregări BI pentru gazde prin grupuri de gazde"
+
+#, fuzzy
+msgid "BI aggregations summary state"
+msgstr "Starea de sinteză a agregărilor BI"
+
+#, fuzzy
+msgid "BI availability"
+msgstr "Disponibilitatea BI"
 
 msgid "BI compilation"
 msgstr "Compilare BI"
@@ -7660,7 +7666,8 @@ msgstr "Plăci de bază"
 msgid "Backup"
 msgstr "Backup"
 
-msgid "Backup & Restore"
+#, fuzzy
+msgid "Backup & restore"
 msgstr "Backup & Restaurare"
 
 msgid "Backup Age"
@@ -8294,10 +8301,12 @@ msgstr "Viteza autobuzului"
 msgid "Business Intelligence"
 msgstr "Informații de afaceri"
 
-msgid "Business Intelligence Administration"
+#, fuzzy
+msgid "Business Intelligence administration"
 msgstr "Administrare Business Intelligence"
 
-msgid "Business Intelligence Rules and Aggregations"
+#, fuzzy
+msgid "Business Intelligence rules and aggregations"
 msgstr "Reguli și agregări Business Intelligence"
 
 msgid "Business reporting"
@@ -10550,7 +10559,8 @@ msgstr ""
 "modificați intervalul de verificare numai pentru serviciul \"Check_MK\", "
 "specificați <tt><b>Check_MK$</b></tt> în lista de servicii."
 
-msgid "Checkbox Selection Livetime"
+#, fuzzy
+msgid "Checkbox selection livetime"
 msgstr "Selecție caseta de selectare Selecție Livetime"
 
 msgid "Checked"
@@ -10944,7 +10954,8 @@ msgstr "Timpul copilului în spațiul utilizatorului"
 msgid "China"
 msgstr "China"
 
-msgid "Choose SNMP Backend"
+#, fuzzy
+msgid "Choose SNMP backend"
 msgstr "Alegeți SNMP Backend"
 
 msgid ""
@@ -11320,7 +11331,7 @@ msgstr "Curățare atunci când spațiul pe disc este sub"
 msgid "Clear & Delete"
 msgstr "Ștergeți & Ștergeți"
 
-msgid "Clear audit Log"
+msgid "Clear audit log"
 msgstr "Ștergeți jurnalul de audit"
 
 msgid "Clear failed notifications"
@@ -15285,11 +15296,9 @@ msgstr "Șablonul implicit %s"
 msgid "Default (%s)"
 msgstr "Implicit (%s)"
 
-msgid "Default BI Visualization Settings"
+#, fuzzy
+msgid "Default BI visualization settings"
 msgstr "Setări implicite de vizualizare BI"
-
-msgid "Default Graph layout"
-msgstr "Dispunerea implicită a graficului"
 
 msgid "Default Increment"
 msgstr "Creștere implicită"
@@ -15315,6 +15324,10 @@ msgstr "Acreditări implicite"
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Interval de timp de raportare implicit"
+
+#, fuzzy
+msgid "Default graph layout"
+msgstr "Dispunerea implicită a graficului"
 
 msgid "Default is 22."
 msgstr "Valoarea implicită este 22."
@@ -18167,9 +18180,6 @@ msgstr "Descarca"
 msgid "Download %s package of agent for %s"
 msgstr "Descărcați pachetul %s de agent pentru %s."
 
-msgid "Download Agent Output / SNMP Walks"
-msgstr "Descărcați ieșirea agentului / plimbări SNMP"
-
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "Descărcați Checkmk Agent pentru gazda %s"
@@ -18182,6 +18192,10 @@ msgstr "Descărcați SNMP walk"
 
 msgid "Download agent output"
 msgstr "Descărcați ieșirea agentului"
+
+#, fuzzy
+msgid "Download agent output / SNMP walks"
+msgstr "Descărcați ieșirea agentului / plimbări SNMP"
 
 msgid "Download agent signature key"
 msgstr "Descărcați cheia de semnătură a agentului"
@@ -19387,7 +19401,8 @@ msgstr ""
 "Activați compresia gzip a fișierelor copiate. Arhivele tar create de copia "
 "de rezervă sunt comprimate în timpul copierii de rezervă."
 
-msgid "Enable handling of Real-Time Checks"
+#, fuzzy
+msgid "Enable handling of Real-Time checks"
 msgstr "Activarea gestionării verificărilor în timp real"
 
 msgid "Enable host notifications"
@@ -19904,10 +19919,6 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatura"
 
 msgid "Enterprise feature"
-msgstr "Caracteristica Enterprise"
-
-#, fuzzy
-msgid "Enterprise features"
 msgstr "Caracteristica Enterprise"
 
 msgid "Entersekt Certificate Expiration"
@@ -21947,7 +21958,8 @@ msgstr "Șir fixat pentru a aștepta în conținut"
 msgid "Flap"
 msgstr "Clapetă"
 
-msgid "Flap Detection"
+#, fuzzy
+msgid "Flap detection"
 msgstr "Detectarea clapetei"
 
 msgid "Flap detection settings for hosts"
@@ -23910,7 +23922,7 @@ msgid "Hash"
 msgstr "Hash"
 
 #, fuzzy
-msgid "Headed execution"
+msgid "Headed execution as specific user"
 msgstr "Programarea execuției"
 
 msgid "Headers at the left (single dataset)"
@@ -24977,7 +24989,8 @@ msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr ""
 "Rotația jurnalului istoric: Rotire în funcție de mărime (Limita de mărime)"
 
-msgid "History of Event"
+#, fuzzy
+msgid "History of event"
 msgstr "Istoria evenimentului"
 
 msgid "History of hardware/software inventory"
@@ -25082,9 +25095,6 @@ msgstr "Grupul de contact gazdă"
 
 msgid "Host Details"
 msgstr "Detalii gazdă"
-
-msgid "Host Diagnostic"
-msgstr "Diagnostic gazdă"
 
 msgid "Host Down"
 msgstr "Gazda Down"
@@ -25265,6 +25275,10 @@ msgstr "ID-ul câmpului personalizat al gazdei"
 
 msgid "Host customer"
 msgstr "Client gazdă"
+
+#, fuzzy
+msgid "Host diagnostic"
+msgstr "Diagnostic gazdă"
 
 #, python-format
 msgid "Host does not have tag <b>%s</b>"
@@ -29040,18 +29054,16 @@ msgstr "Infecții"
 msgid "Infinite use of Checkmk up to version"
 msgstr "Utilizarea infinită a Checkmk până la versiunea"
 
-msgid "InfluxDB Connection"
-msgstr "Conexiune InfluxDB"
-
-msgid "InfluxDB Connections"
-msgstr "Conexiuni InfluxDB"
-
 # georgem ##############
 msgid "InfluxDB Overflows Rate"
 msgstr "InfluxDB Overflows Rata de depășire"
 
 msgid "InfluxDB Queue Usage"
 msgstr "InfluxDB Queue Utilizare"
+
+#, fuzzy
+msgid "InfluxDB connection"
+msgstr "Conexiuni InfluxDB"
 
 msgid "InfluxDB connections"
 msgstr "Conexiuni InfluxDB"
@@ -29136,11 +29148,12 @@ msgstr "Durata de init"
 msgid "Init duration with absolute limits"
 msgstr "Durata de init cu limite absolute"
 
-msgid "Initial Scheduling"
-msgstr "Programarea inițială"
-
 msgid "Initial expansion of aggregations"
 msgstr "Extinderea inițială a agregatelor"
+
+#, fuzzy
+msgid "Initial scheduling"
+msgstr "Programarea inițială"
 
 msgid "Initialized GIT for Checkmk"
 msgstr "GIT inițializat pentru Checkmk"
@@ -32191,7 +32204,8 @@ msgstr "Listarea separată a interfețelor grupate"
 msgid "List of %s"
 msgstr "Lista de %s"
 
-msgid "List of all Aggregations for simple API calls"
+#, fuzzy
+msgid "List of all aggregations for simple API calls"
 msgstr "Lista tuturor agregărilor pentru apelurile API simple"
 
 msgid ""
@@ -32801,9 +32815,6 @@ msgstr "Fișier jurnal"
 
 msgid "Logfile Grouping"
 msgstr "Gruparea fișierelor jurnal"
-
-msgid "Logfile Pattern Analyzer"
-msgstr "Analizator de modele de fișiere jurnal"
 
 msgid "Logfile information of logwatch plugin"
 msgstr "Informații despre fișierul jurnal al plugin-ului logwatch"
@@ -33691,23 +33702,11 @@ msgstr "Gestionați"
 msgid "Manage All Scheduled Reports"
 msgstr "Gestionați toate rapoartele programate"
 
-msgid "Manage Custom Icons"
-msgstr "Gestionați pictogramele personalizate"
-
-msgid "Manage Dynamic configuration"
-msgstr "Gestionați configurația dinamică"
-
-msgid "Manage Extension Packages (MKPs)"
-msgstr "Gestionarea pachetelor de extensie (MKP)"
-
 msgid "Manage Hard- and software inventory related rulesets"
 msgstr "Gestionați seturile de reguli legate de inventarul hard și software"
 
 msgid "Manage InfluxDB connections"
 msgstr "Gestionați conexiunile InfluxDB"
-
-msgid "Manage Monitoring Agents"
-msgstr "Gestionarea agenților de monitorizare"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gestionați propriile rapoarte programate"
@@ -33730,6 +33729,10 @@ msgstr "Gestionați atributele personalizate"
 msgid "Manage custom host- and user attributes"
 msgstr "Gestionați atributele personalizate ale gazdei și ale utilizatorului"
 
+#, fuzzy
+msgid "Manage custom icons"
+msgstr "Gestionați pictogramele personalizate"
+
 msgid "Manage customers"
 msgstr "Gestionați clienții"
 
@@ -33740,10 +33743,18 @@ msgstr ""
 "Gestionați agenți de monitorizare personalizați pentru Linux, Windows și "
 "alte sisteme de operare"
 
+#, fuzzy
+msgid "Manage dynamic configuration"
+msgstr "Gestionați configurația dinamică"
+
 msgid "Manage event classification and correlation rules for the Event Console"
 msgstr ""
 "Gestionați regulile de clasificare și corelare a evenimentelor pentru "
 "Consola de evenimente"
+
+#, fuzzy
+msgid "Manage extension packages (MKPs)"
+msgstr "Gestionarea pachetelor de extensie (MKP)"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Gestionați sarcinile care rulează mai mult timp în Checkmk GUI"
@@ -33751,6 +33762,10 @@ msgstr "Gestionați sarcinile care rulează mai mult timp în Checkmk GUI"
 msgid "Manage monitored hosts and services and the hosts' folder structure."
 msgstr ""
 "Gestionați gazdele și serviciile monitorizate și structura de dosare hosts'."
+
+#, fuzzy
+msgid "Manage monitoring agents"
+msgstr "Gestionarea agenților de monitorizare"
 
 msgid "Manage services"
 msgstr "Gestionați serviciile"
@@ -36778,9 +36793,6 @@ msgstr "Balansatoare de sarcină în rețea"
 msgid "Network Scan"
 msgstr "Scanarea rețelei"
 
-msgid "Network Topology"
-msgstr "Topologia rețelei"
-
 msgid "Network address"
 msgstr "Adresa de rețea"
 
@@ -36834,14 +36846,19 @@ msgstr "Statistici de rețea"
 msgid "Network statistics and flows of %s"
 msgstr "Statistici de rețea și fluxuri de %s"
 
+#, fuzzy
+msgid "Network topology"
+msgstr "Adresă"
+
 msgid "Networking"
 msgstr "Rețea"
 
-msgid "Networking Tunnels"
-msgstr "Tuneluri de rețea"
-
 msgid "Networking checks without agent"
 msgstr "Verificări în rețea fără agent"
+
+#, fuzzy
+msgid "Networking tunnels"
+msgstr "Tuneluri de rețea"
 
 msgid "Networks"
 msgstr "Rețele"
@@ -37920,11 +37937,12 @@ msgstr "Script de notificare"
 msgid "Notification Spooler"
 msgstr "Spooler de notificare"
 
-msgid "Notification Spooler Configuration"
-msgstr "Configurarea Spooler-ului de notificare"
-
 msgid "Notification Spooler Connection"
 msgstr "Conexiune Spooler de notificare"
+
+#, fuzzy
+msgid "Notification Spooler configuration"
+msgstr "Configurarea Spooler-ului de notificare"
 
 msgid "Notification Spooling"
 msgstr "Spooling de notificare"
@@ -39340,12 +39358,6 @@ msgstr ""
 "Aveți grijă doar de gazdele care primesc date piggyback de la gazde al căror "
 "nume se potrivește cu una dintre aceste expresii regulate."
 
-#, python-format
-msgid ""
-"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
-"the Core MKP is installed."
-msgstr ""
-
 msgid "Only discover monitors in the following states"
 msgstr "Descoperiți numai monitoarele din următoarele state"
 
@@ -39894,9 +39906,6 @@ msgstr ""
 
 msgid "Other"
 msgstr "Altele"
-
-msgid "Other Services"
-msgstr "Alte servicii"
 
 msgid "Other components"
 msgstr "Alte componente"
@@ -40680,7 +40689,8 @@ msgstr "Parametrii dimensiunii totale a găleții"
 msgid "Parameters:"
 msgstr "Parametrii:"
 
-msgid "Parent / Child topology"
+#, fuzzy
+msgid "Parent / child topology"
 msgstr "Topologie părinte / copil"
 
 msgid "Parent definition"
@@ -42525,9 +42535,6 @@ msgstr "Putere"
 msgid "Power Presence Sensors"
 msgstr "Senzori de prezență de putere"
 
-msgid "Power Supplies"
-msgstr "Surse de alimentare"
-
 msgid "Power Supply Unit"
 msgstr "Unitatea de alimentare"
 
@@ -42545,6 +42552,10 @@ msgstr "Consumul de energie electrică"
 
 msgid "Power state unknown"
 msgstr "Stare de alimentare necunoscută"
+
+#, fuzzy
+msgid "Power supplies"
+msgstr "Surse de alimentare"
 
 msgid "Powered OFF"
 msgstr "Alimentat OFF"
@@ -44176,10 +44187,6 @@ msgstr "Regiuni de monitorizat"
 msgid "Register Authenticator App"
 msgstr "Înregistrați aplicația Authenticator App"
 
-msgid "Register Host & download monitoring agents of your hosts"
-msgstr ""
-"Înregistrați gazda & descărcați agenții de monitorizare a gazdelor dvs."
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr "Înregistrați toate gazdele & descărcați toți agenții de monitorizare"
 
@@ -44206,6 +44213,11 @@ msgstr "Înregistrați orice gazdă nouă"
 #, fuzzy
 msgid "Register authenticator app"
 msgstr "Înregistrați aplicația Authenticator App"
+
+#, fuzzy
+msgid "Register host & download monitoring agents of your hosts"
+msgstr ""
+"Înregistrați gazda & descărcați agenții de monitorizare a gazdelor dvs."
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -44999,10 +45011,12 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "Generarea raportului a început în jobul de fundal <a href=\"%s\">%s</a>"
 
-msgid "Report of Host"
+#, fuzzy
+msgid "Report of host"
 msgstr "Raport al gazdei"
 
-msgid "Report of Host Performance Graphs"
+#, fuzzy
+msgid "Report of host performance graphs"
 msgstr "Raport de grafice de performanță a gazdei"
 
 msgid "Report options"
@@ -45724,20 +45738,22 @@ msgstr "Cadrul robotului: Ultimul jurnal"
 msgid "RobotMK logs"
 msgstr "Jurnalele RobotMK"
 
-msgid "Robotmk"
-msgstr "Robotmk"
-
-msgid "Robotmk (Windows)"
-msgstr "Robotmk (Windows)"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
 
 #, fuzzy
+msgid "Robotmk Scheduler (Windows)"
+msgstr "Robotmk (Windows)"
+
+#, fuzzy
 msgid "Robotmk Suite Status"
 msgstr "Starea sitului"
+
+#, fuzzy
+msgid "Robotmk Tests"
+msgstr "Robotmk"
 
 msgid "Role"
 msgstr "Rol"
@@ -46400,9 +46416,6 @@ msgstr "Utilizarea SNAT niveluri superioare"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Agent Simulator"
-msgstr "Simulator de agent SNMP"
-
 msgid "SNMP Community"
 msgstr "Comunitatea SNMP"
 
@@ -46423,6 +46436,10 @@ msgstr "MIB-uri SNMP pentru traducerea capcanelor"
 
 msgid "SNMP Management Board"
 msgstr "Placa de management SNMP"
+
+#, fuzzy
+msgid "SNMP agent simulator"
+msgstr "Simulator de agent SNMP"
 
 msgid "SNMP check for EMC Isilon quotas"
 msgstr "Verificarea SNMP pentru cotele EMC Isilon"
@@ -47176,10 +47193,12 @@ msgstr ""
 msgid "See events not related to a known host"
 msgstr "Vedeți evenimentele care nu au legătură cu o gazdă cunoscută"
 
-msgid "See failed Notifications (all)"
+#, fuzzy
+msgid "See failed notifications (all)"
 msgstr "Vezi notificările eșuate (toate)"
 
-msgid "See failed Notifications (last 24 hours)"
+#, fuzzy
+msgid "See failed notifications (last 24 hours)"
 msgstr "Vezi notificările eșuate (ultimele 24 de ore)"
 
 msgid "See foreign background jobs"
@@ -47628,9 +47647,6 @@ msgstr "Numele serverului"
 msgid "Server OS"
 msgstr "Sistemul de operare al serverului"
 
-msgid "Server Time"
-msgstr "Ora serverului"
-
 msgid "Server connections"
 msgstr "Conexiuni de server"
 
@@ -47669,9 +47685,6 @@ msgstr "Serviciu (potrivire exactă)"
 
 msgid "Service (regex)"
 msgstr "Serviciu (regex)"
-
-msgid "Service Availability"
-msgstr "Disponibilitatea serviciului"
 
 msgid "Service Checks"
 msgstr "Verificări de serviciu"
@@ -47719,9 +47732,6 @@ msgstr "Nivelul de serviciu al gazdelor"
 msgid "Service Level of services"
 msgstr "Nivelul serviciilor Nivelul serviciilor"
 
-msgid "Service Levels"
-msgstr "Niveluri de servicii"
-
 # georgem ##############
 msgid "Service Metrics"
 msgstr "Metrici de servicii"
@@ -47768,6 +47778,10 @@ msgstr "Denumirea alternativă de afișare a serviciului"
 
 msgid "Service alternative display name (regex)"
 msgstr "Numele de afișare alternativ al serviciului (regex)"
+
+#, fuzzy
+msgid "Service availability"
+msgstr "Disponibilitatea serviciului"
 
 msgid "Service check command"
 msgstr "Comandă de verificare a serviciului"
@@ -47984,6 +47998,10 @@ msgid "Service level of forwarded logs shown in Event Console."
 msgstr ""
 "Nivelul de serviciu al jurnalelor redirecționate afișate în Consola de "
 "evenimente."
+
+#, fuzzy
+msgid "Service levels"
+msgstr "Nivelul serviciilor"
 
 msgid "Service limits"
 msgstr "Limitele serviciului"
@@ -48621,7 +48639,8 @@ msgstr ""
 msgid "Set width"
 msgstr "Setați lățimea"
 
-msgid "Set/Remove downtimes"
+#, fuzzy
+msgid "Set/remove downtimes"
 msgstr "Setați/eliminați timpii de oprire"
 
 msgid ""
@@ -49582,17 +49601,6 @@ msgstr ""
 msgid "Single"
 msgstr "Single"
 
-msgid "Single Aggregation"
-msgstr "Agregare unică"
-
-msgid "Single Aggregation for simple API calls"
-msgstr "Agregare unică pentru apeluri API simple"
-
-msgid ""
-"Single Aggregation for simple API calls. Contains the state and state output."
-msgstr ""
-"Agregare unică pentru apeluri API simple. Conține starea și ieșirea de stare."
-
 msgid "Single Bit (BOOL)"
 msgstr "Un singur bit (BOOL)"
 
@@ -49601,6 +49609,20 @@ msgstr "O singură gazdă Linux"
 
 msgid "Single Windows host"
 msgstr "O singură gazdă Windows"
+
+#, fuzzy
+msgid "Single aggregation"
+msgstr "Agregare unică"
+
+#, fuzzy
+msgid "Single aggregation for simple API calls"
+msgstr "Agregare unică pentru apeluri API simple"
+
+#, fuzzy
+msgid ""
+"Single aggregation for simple API calls. Contains the state and state output."
+msgstr ""
+"Agregare unică pentru apeluri API simple. Conține starea și ieșirea de stare."
 
 msgid "Single dataset"
 msgstr "Set de date unic"
@@ -67904,11 +67926,12 @@ msgstr ""
 msgid "Use Checkmk sidebar"
 msgstr "Utilizați bara laterală Checkmk"
 
-msgid "Use Classic Backend"
-msgstr "Utilizați Backend-ul clasic"
-
 msgid "Use Classic SNMP Backend"
 msgstr "Utilizați backend-ul SNMP clasic"
+
+#, fuzzy
+msgid "Use Classic backend"
+msgstr "Utilizați Backend-ul clasic"
 
 msgid "Use DNS lookup cache"
 msgstr "Utilizați memoria cache de căutare DNS"
@@ -67943,6 +67966,10 @@ msgstr "Utilizați SNMP în linie (depreciat)"
 msgid "Use Inline SNMP Backend"
 msgstr "Utilizarea backend-ului SNMP în linie"
 
+#, fuzzy
+msgid "Use Inline SNMP backend"
+msgstr "Utilizarea backend-ului SNMP în linie"
+
 msgid ""
 "Use Jira Query Language (JQL) to get statistics out of your Jira instance."
 msgstr ""
@@ -67968,7 +67995,8 @@ msgid "Use RCC for isolated execution"
 msgstr "Utilizați SSL pentru conexiune."
 
 #, fuzzy, python-format
-msgid "Use RCC for isolated execution (%s in Robotmk Core)"
+msgid ""
+"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
 msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Use Reporting"
@@ -69208,6 +69236,10 @@ msgstr "Rezumat instantaneu VM"
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"
 
+#, fuzzy
+msgid "VM, cloud, container"
+msgstr "VM, Cloud, Container"
+
 msgid "VMTools activation state"
 msgstr "Starea de activare VMTools"
 
@@ -69626,9 +69658,6 @@ msgstr "Tutoriale video"
 msgid "View"
 msgstr "Vezi"
 
-msgid "View Extension Package Manager"
-msgstr "Vizualizați Managerul de pachete de extensii"
-
 msgid "View Properties"
 msgstr "Vezi proprietăți"
 
@@ -69643,6 +69672,10 @@ msgstr "Vizualizați și editați parametrii pentru acest serviciu"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
+
+#, fuzzy
+msgid "View extension package manager"
+msgstr "Vizualizați Managerul de pachete de extensii"
 
 msgid "View layout"
 msgstr "Vizualizați aspectul"
@@ -69677,12 +69710,6 @@ msgstr "Virtual"
 msgid "Virtual Drive"
 msgstr "Unitate virtuală"
 
-msgid "Virtual Host Tree"
-msgstr "Arborele de gazde virtuale"
-
-msgid "Virtual Host Trees"
-msgstr "Arbori de gazde virtuale"
-
 msgid "Virtual Machine"
 msgstr "Mașină virtuală"
 
@@ -69712,6 +69739,14 @@ msgstr "Indexul domeniului virtual"
 
 msgid "Virtual host"
 msgstr "Gazdă virtuală"
+
+#, fuzzy
+msgid "Virtual host tree"
+msgstr "Arborele de gazde virtuale"
+
+#, fuzzy
+msgid "Virtual host trees"
+msgstr "Arbori de gazde virtuale"
 
 msgid "Virtual machine (for example ESX) guest tools status"
 msgstr "Starea instrumentelor invitate ale mașinii virtuale (de exemplu, ESX)"
@@ -75523,11 +75558,12 @@ msgstr "notificări în ultimele"
 msgid "ntopng Admin User"
 msgstr "ntopng Admin Utilizator"
 
-msgid "ntopng Connection Parameters (chargeable add-on)"
-msgstr "Parametrii de conectare ntopng (add-on taxabil)"
-
 msgid "ntopng Username"
 msgstr "ntopng Nume utilizator"
+
+#, fuzzy
+msgid "ntopng connection parameters (chargeable add-on)"
+msgstr "Parametrii de conectare ntopng (add-on taxabil)"
 
 #, python-format
 msgid ""
@@ -76308,6 +76344,41 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Acknowledge Incompatible Werks"
+#~ msgstr "Recunoașteți lucrările incompatibile"
+
+#~ msgid "Audit Log"
+#~ msgstr "Jurnal de audit"
+
+#~ msgid "Clear audit Log"
+#~ msgstr "Ștergeți jurnalul de audit"
+
+#, fuzzy
+#~| msgid "Enterprise feature"
+#~ msgid "Enterprise features"
+#~ msgstr "Caracteristica Enterprise"
+
+#~ msgid "InfluxDB Connection"
+#~ msgstr "Conexiune InfluxDB"
+
+#~ msgid "InfluxDB Connections"
+#~ msgstr "Conexiuni InfluxDB"
+
+#~ msgid "Logfile Pattern Analyzer"
+#~ msgstr "Analizator de modele de fișiere jurnal"
+
+#~ msgid "Network Topology"
+#~ msgstr "Topologia rețelei"
+
+#~ msgid "Other Services"
+#~ msgstr "Alte servicii"
+
+#~ msgid "Server Time"
+#~ msgstr "Ora serverului"
+
+#~ msgid "Service Levels"
+#~ msgstr "Niveluri de servicii"
+
 #~ msgid "Add Authenticator App"
 #~ msgstr "Adăugați aplicația Authenticator"
 
@@ -76635,9 +76706,6 @@ msgstr ""
 
 #~ msgid "Clear"
 #~ msgstr "Clar"
-
-#~ msgid "Clear audit log"
-#~ msgstr "Ștergeți jurnalul de audit"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr ""
@@ -77551,10 +77619,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Sitename"
 #~ msgstr "Nume nou"
-
-#, fuzzy
-#~ msgid "Network topology"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "A description or title of this rule"

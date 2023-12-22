@@ -1845,12 +1845,13 @@ msgstr ""
 "<p>Normalmente, o Checkmk usará o endereço IP primário do host ao qual está "
 "conectado. Com esta opção, é possível substituir este parâmetro.</p>"
 
+#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
-"mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
+"mode=pattern_editor\">Logfile pattern analyzer</a> to test the rules you "
 "defined here.</p><p>Note that to match a special regex character in your "
 "patterns, you need to use a backslash to escape its special meaning. This is "
 "especially relevant for Windows file paths. For example, to match the "
@@ -3032,9 +3033,6 @@ msgstr "Ack"
 msgid "Acknowledge"
 msgstr "Agradeça"
 
-msgid "Acknowledge Incompatible Werks"
-msgstr "Reconhecer trabalhos incompatíveis"
-
 msgid "Acknowledge all"
 msgstr "Agradeça a todos"
 
@@ -3047,6 +3045,10 @@ msgstr "Reconhecer todos os trabalhos incompatíveis"
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr ""
 "Reconhecer problemas do anfitrião e do serviço e remover reconhecimentos"
+
+#, fuzzy
+msgid "Acknowledge incompatible Werks"
+msgstr "Reconhecidos os idiotas incompatíveis"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -3496,9 +3498,6 @@ msgstr "Adicionar regra de BI"
 msgid "Add BI rule %s"
 msgstr "Adicionar regra de BI %s"
 
-msgid "Add Bookmark"
-msgstr "Adicionar aos Favoritos"
-
 msgid "Add CA or self-signed certificate"
 msgstr "Adicionar CA ou certificado autoassinado"
 
@@ -3591,6 +3590,10 @@ msgstr "Adicionar tarefa de backup"
 
 msgid "Add backup target"
 msgstr "Adicionar destino de backup"
+
+#, fuzzy
+msgid "Add bookmark"
+msgstr "Adicionar aos Favoritos"
 
 msgid "Add child node generator"
 msgstr "Adicionar gerador de nódulo filho"
@@ -3738,7 +3741,8 @@ msgstr "Adicionar mensagens"
 msgid "Add metric level"
 msgstr "Adicionar nível métrico"
 
-msgid "Add micro seconds to timestamps in Logfiles"
+#, fuzzy
+msgid "Add micro seconds to timestamps in logfiles"
 msgstr ""
 "Adicionar micro segundos aos carimbos temporais nos ficheiros de registo"
 
@@ -4597,9 +4601,6 @@ msgstr "Agente %s correndo atualmente em <a href=\"%s\">background job</a>."
 msgid "Agent %s successful"
 msgstr "Agente %s bem sucedido"
 
-msgid "Agent Certificates"
-msgstr "Certificados de agente"
-
 msgid "Agent Controller"
 msgstr "Agente Controlador"
 
@@ -4664,6 +4665,10 @@ msgstr "Agente a cozer acabou."
 #, fuzzy
 msgid "Agent based plugins (deprecated)"
 msgstr "Plugins baseados em agentes (verificações, inventário)"
+
+#, fuzzy
+msgid "Agent certificates"
+msgstr "Certificados de agente"
 
 msgid "Agent controller"
 msgstr "Controlador de agentes"
@@ -4875,10 +4880,12 @@ msgstr "Agregação: esquema de caixas simplista"
 msgid "Aggregations"
 msgstr "Agregações"
 
-msgid "Aggregations Affected by Host"
+#, fuzzy
+msgid "Aggregations affected by host"
 msgstr "Agregações Afetadas pelo Anfitrião"
 
-msgid "Aggregations Affected by Service"
+#, fuzzy
+msgid "Aggregations affected by service"
 msgstr "Agregações Afetadas pelo Serviço"
 
 msgid "Aggregations are equal"
@@ -6733,9 +6740,6 @@ msgstr "Atributos"
 msgid "Attributes to remove from hosts"
 msgstr "Atributos a remover dos anfitriões"
 
-msgid "Audit Log"
-msgstr "Registo de auditoria"
-
 msgid "Audit log"
 msgstr "Diário de auditoria"
 
@@ -7473,18 +7477,12 @@ msgstr "Grupos de Agregação BI"
 msgid "BI Aggregations"
 msgstr "Agregações de BI"
 
-msgid "BI Aggregations Summary State"
-msgstr "Estado de resumo das agregações de BI"
-
 msgid "BI Aggregations affected by one host"
 msgstr "BI Agregações afetadas por um anfitrião"
 
 #, python-format
 msgid "BI Aggregations containing this %s"
 msgstr "BI Agregações contendo esta %s"
-
-msgid "BI Availability"
-msgstr "Disponibilidade do BI"
 
 msgid "BI Configuration Packs"
 msgstr "Pacotes de Configuração BI"
@@ -7506,6 +7504,14 @@ msgstr "Árvore de grupos de agregação BI"
 
 msgid "BI aggregations for hosts by host groups"
 msgstr "Agregações de BI para anfitriões por grupos de anfitriões"
+
+#, fuzzy
+msgid "BI aggregations summary state"
+msgstr "Estado de resumo das agregações de BI"
+
+#, fuzzy
+msgid "BI availability"
+msgstr "Disponibilidade do BI"
 
 msgid "BI compilation"
 msgstr "compilação do BI"
@@ -7618,7 +7624,8 @@ msgstr "Aviões traseiros"
 msgid "Backup"
 msgstr "Cópia de segurança"
 
-msgid "Backup & Restore"
+#, fuzzy
+msgid "Backup & restore"
 msgstr "Cópia de segurança e restauro"
 
 msgid "Backup Age"
@@ -8244,10 +8251,12 @@ msgstr "Velocidade do ônibus"
 msgid "Business Intelligence"
 msgstr "Business Intelligence"
 
-msgid "Business Intelligence Administration"
+#, fuzzy
+msgid "Business Intelligence administration"
 msgstr "Administração de Business Intelligence"
 
-msgid "Business Intelligence Rules and Aggregations"
+#, fuzzy
+msgid "Business Intelligence rules and aggregations"
 msgstr "Regras e agregações de Business Intelligence"
 
 msgid "Business reporting"
@@ -10479,7 +10488,8 @@ msgstr ""
 "alterar o intervalo de verificação apenas do serviço \"Check_MK\", "
 "especifique <tt><b>Check_MK$</b></tt> na lista de serviços."
 
-msgid "Checkbox Selection Livetime"
+#, fuzzy
+msgid "Checkbox selection livetime"
 msgstr "Caixa de seleção em tempo real"
 
 msgid "Checked"
@@ -10873,7 +10883,8 @@ msgstr "Tempo da criança no espaço do utilizador"
 msgid "China"
 msgstr "China"
 
-msgid "Choose SNMP Backend"
+#, fuzzy
+msgid "Choose SNMP backend"
 msgstr "Escolha o SNMP Backend"
 
 msgid ""
@@ -11246,7 +11257,7 @@ msgstr "Limpeza quando o espaço em disco está abaixo"
 msgid "Clear & Delete"
 msgstr "Limpar & Apagar"
 
-msgid "Clear audit Log"
+msgid "Clear audit log"
 msgstr "Limpar o registo de auditoria"
 
 msgid "Clear failed notifications"
@@ -15186,11 +15197,9 @@ msgstr "Modelo %s predefinido"
 msgid "Default (%s)"
 msgstr "Default (%s)"
 
-msgid "Default BI Visualization Settings"
+#, fuzzy
+msgid "Default BI visualization settings"
 msgstr "Configurações padrão de visualização do BI"
-
-msgid "Default Graph layout"
-msgstr "Layout gráfico predefinido"
 
 msgid "Default Increment"
 msgstr "Incremento por defeito"
@@ -15216,6 +15225,10 @@ msgstr "Credenciais por defeito"
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Intervalo de temporização padrão para relatórios"
+
+#, fuzzy
+msgid "Default graph layout"
+msgstr "Layout gráfico predefinido"
 
 msgid "Default is 22."
 msgstr "O padrão é 22."
@@ -18038,9 +18051,6 @@ msgstr "Descarregar"
 msgid "Download %s package of agent for %s"
 msgstr "Download do pacote %s de agente para %s"
 
-msgid "Download Agent Output / SNMP Walks"
-msgstr "Descarregar a saída do agente / percursos SNMP"
-
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "Download Checkmk Agent para o anfitrião %s"
@@ -18053,6 +18063,10 @@ msgstr "Descarregar o SNMP walk"
 
 msgid "Download agent output"
 msgstr "Download da saída do agente"
+
+#, fuzzy
+msgid "Download agent output / SNMP walks"
+msgstr "Descarregar a saída do agente / percursos SNMP"
 
 msgid "Download agent signature key"
 msgstr "Download da chave de assinatura do agente"
@@ -19253,7 +19267,8 @@ msgstr ""
 "Habilite a compressão gzip dos arquivos de backup. Os arquivos tar criados "
 "pelo backup são gzipados durante o backup."
 
-msgid "Enable handling of Real-Time Checks"
+#, fuzzy
+msgid "Enable handling of Real-Time checks"
 msgstr "Habilitar o manuseio de Verificações em Tempo Real"
 
 msgid "Enable host notifications"
@@ -19768,10 +19783,6 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatura"
 
 msgid "Enterprise feature"
-msgstr "Característica da empresa"
-
-#, fuzzy
-msgid "Enterprise features"
 msgstr "Característica da empresa"
 
 msgid "Entersekt Certificate Expiration"
@@ -21797,7 +21808,8 @@ msgstr "Cadeia fixa a esperar no conteúdo"
 msgid "Flap"
 msgstr "Flap"
 
-msgid "Flap Detection"
+#, fuzzy
+msgid "Flap detection"
 msgstr "Detecção de Aba"
 
 msgid "Flap detection settings for hosts"
@@ -23755,7 +23767,7 @@ msgid "Hash"
 msgstr "Hash"
 
 #, fuzzy
-msgid "Headed execution"
+msgid "Headed execution as specific user"
 msgstr "Programação da execução"
 
 msgid "Headers at the left (single dataset)"
@@ -24810,7 +24822,8 @@ msgstr "Rotação do registo histórico: Intervalo regular de rotações"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "Rotação do registo histórico: Rotação por tamanho (Limite do tamanho)"
 
-msgid "History of Event"
+#, fuzzy
+msgid "History of event"
 msgstr "História do Evento"
 
 msgid "History of hardware/software inventory"
@@ -24913,9 +24926,6 @@ msgstr "Grupo de contactos do anfitrião"
 
 msgid "Host Details"
 msgstr "Detalhes do Anfitrião"
-
-msgid "Host Diagnostic"
-msgstr "Diagnóstico do anfitrião"
 
 msgid "Host Down"
 msgstr "Anfitrião Down"
@@ -25096,6 +25106,10 @@ msgstr "ID de campo personalizado do host"
 
 msgid "Host customer"
 msgstr "Cliente anfitrião"
+
+#, fuzzy
+msgid "Host diagnostic"
+msgstr "Diagnóstico do anfitrião"
 
 #, python-format
 msgid "Host does not have tag <b>%s</b>"
@@ -28827,17 +28841,15 @@ msgstr "Infecções"
 msgid "Infinite use of Checkmk up to version"
 msgstr "Utilização infinita do Checkmk até à versão"
 
-msgid "InfluxDB Connection"
-msgstr "Ligação InfluxDB"
-
-msgid "InfluxDB Connections"
-msgstr "Ligações InfluxDB"
-
 msgid "InfluxDB Overflows Rate"
 msgstr "Taxa de estouro do InfluxDB"
 
 msgid "InfluxDB Queue Usage"
 msgstr "Uso da fila do InfluxDB"
+
+#, fuzzy
+msgid "InfluxDB connection"
+msgstr "Ligações InfluxDB"
 
 msgid "InfluxDB connections"
 msgstr "Ligações InfluxDB"
@@ -28917,11 +28929,12 @@ msgstr "Duração da inicialização"
 msgid "Init duration with absolute limits"
 msgstr "Duração inicial com limites absolutos"
 
-msgid "Initial Scheduling"
-msgstr "Programação inicial"
-
 msgid "Initial expansion of aggregations"
 msgstr "Expansão inicial das agregações"
+
+#, fuzzy
+msgid "Initial scheduling"
+msgstr "Programação inicial"
 
 msgid "Initialized GIT for Checkmk"
 msgstr "GIT Inicializado para Checkmk"
@@ -31961,7 +31974,8 @@ msgstr "Listar as interfaces agrupadas separadamente"
 msgid "List of %s"
 msgstr "Lista de %s"
 
-msgid "List of all Aggregations for simple API calls"
+#, fuzzy
+msgid "List of all aggregations for simple API calls"
 msgstr "Lista de todas as Agregações para chamadas simples à API"
 
 msgid ""
@@ -32572,9 +32586,6 @@ msgstr "Arquivo de log"
 
 msgid "Logfile Grouping"
 msgstr "Agrupamento de arquivos de log"
-
-msgid "Logfile Pattern Analyzer"
-msgstr "Analisador de padrões Logfile"
 
 msgid "Logfile information of logwatch plugin"
 msgstr "Informações do logfile do logwatch plugin"
@@ -33453,15 +33464,6 @@ msgstr "Gerenciar"
 msgid "Manage All Scheduled Reports"
 msgstr "Gerir todos os relatórios agendados"
 
-msgid "Manage Custom Icons"
-msgstr "Gerir ícones personalizados"
-
-msgid "Manage Dynamic configuration"
-msgstr "Gerir a configuração dinâmica"
-
-msgid "Manage Extension Packages (MKPs)"
-msgstr "Gerir pacotes de extensão (MKPs)"
-
 msgid "Manage Hard- and software inventory related rulesets"
 msgstr ""
 "Gerir conjuntos de regras relacionadas com o inventário de hardware e "
@@ -33469,9 +33471,6 @@ msgstr ""
 
 msgid "Manage InfluxDB connections"
 msgstr "Gerir ligações InfluxDB"
-
-msgid "Manage Monitoring Agents"
-msgstr "Gerir agentes de monitorização"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Gerir os próprios relatórios programados"
@@ -33494,6 +33493,10 @@ msgstr "Gerir atributos personalizados"
 msgid "Manage custom host- and user attributes"
 msgstr "Gerir atributos personalizados do anfitrião e do utilizador"
 
+#, fuzzy
+msgid "Manage custom icons"
+msgstr "Gerir ícones personalizados"
+
 msgid "Manage customers"
 msgstr "Gerir clientes"
 
@@ -33504,10 +33507,18 @@ msgstr ""
 "Gerir agentes de monitorização em pacotes personalizados para Linux, Windows "
 "e outros sistemas operativos"
 
+#, fuzzy
+msgid "Manage dynamic configuration"
+msgstr "Gerir a configuração dinâmica"
+
 msgid "Manage event classification and correlation rules for the Event Console"
 msgstr ""
 "Gerenciar a classificação de eventos e regras de correlação para o Console "
 "de Eventos"
+
+#, fuzzy
+msgid "Manage extension packages (MKPs)"
+msgstr "Gerir pacotes de extensão (MKPs)"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Gerenciar tarefas mais longas na GUI Checkmk"
@@ -33516,6 +33527,10 @@ msgid "Manage monitored hosts and services and the hosts' folder structure."
 msgstr ""
 "Gerenciar hospedeiros e serviços monitorados e a estrutura de pastas dos "
 "hospedeiros."
+
+#, fuzzy
+msgid "Manage monitoring agents"
+msgstr "Gerir agentes de monitorização"
 
 msgid "Manage services"
 msgstr "Gerir serviços"
@@ -36524,9 +36539,6 @@ msgstr "Equilibradores de carga de rede"
 msgid "Network Scan"
 msgstr "Varredura de rede"
 
-msgid "Network Topology"
-msgstr "Topologia de rede"
-
 msgid "Network address"
 msgstr "Endereço da rede"
 
@@ -36580,14 +36592,18 @@ msgstr "Estatísticas da rede"
 msgid "Network statistics and flows of %s"
 msgstr "Estatísticas de rede e fluxos de %s"
 
+msgid "Network topology"
+msgstr "Topologia de rede"
+
 msgid "Networking"
 msgstr "Trabalho em rede"
 
-msgid "Networking Tunnels"
-msgstr "Túneis em rede"
-
 msgid "Networking checks without agent"
 msgstr "Verificação da rede sem agente"
+
+#, fuzzy
+msgid "Networking tunnels"
+msgstr "Túneis em rede"
 
 msgid "Networks"
 msgstr "Redes"
@@ -37656,11 +37672,12 @@ msgstr "Roteiro de Notificação"
 msgid "Notification Spooler"
 msgstr "Notificação Spooler"
 
-msgid "Notification Spooler Configuration"
-msgstr "Configuração do Spooler de Notificação"
-
 msgid "Notification Spooler Connection"
 msgstr "Conexão do Spooler de Notificação"
+
+#, fuzzy
+msgid "Notification Spooler configuration"
+msgstr "Configuração do Spooler de Notificação"
 
 msgid "Notification Spooling"
 msgstr "Notificação Spooling"
@@ -39062,12 +39079,6 @@ msgstr ""
 "Só se preocupam com os anfitriões que recebem dados piggyback de anfitriões "
 "cujo nome corresponde a uma destas expressões regulares."
 
-#, python-format
-msgid ""
-"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
-"the Core MKP is installed."
-msgstr ""
-
 msgid "Only discover monitors in the following states"
 msgstr "Só descobrir monitores nos seguintes estados"
 
@@ -39615,9 +39626,6 @@ msgstr ""
 
 msgid "Other"
 msgstr "Outros"
-
-msgid "Other Services"
-msgstr "Outros Serviços"
 
 msgid "Other components"
 msgstr "Outros componentes"
@@ -40397,7 +40405,8 @@ msgstr "Parâmetros do tamanho total do balde"
 msgid "Parameters:"
 msgstr "Parâmetros:"
 
-msgid "Parent / Child topology"
+#, fuzzy
+msgid "Parent / child topology"
 msgstr "Topologia dos pais/filhos"
 
 msgid "Parent definition"
@@ -42221,9 +42230,6 @@ msgstr "Energia"
 msgid "Power Presence Sensors"
 msgstr "Sensores de presença de energia"
 
-msgid "Power Supplies"
-msgstr "Fontes de Alimentação"
-
 msgid "Power Supply Unit"
 msgstr "Unidade de fornecimento de energia"
 
@@ -42241,6 +42247,9 @@ msgstr "Consumo de energia"
 
 msgid "Power state unknown"
 msgstr "Estado de energia desconhecido"
+
+msgid "Power supplies"
+msgstr "Fontes de alimentação"
 
 msgid "Powered OFF"
 msgstr "Desligado"
@@ -43870,10 +43879,6 @@ msgstr "Regiões a monitorizar"
 msgid "Register Authenticator App"
 msgstr "Registar a aplicação Authenticator"
 
-msgid "Register Host & download monitoring agents of your hosts"
-msgstr ""
-"Registar anfitrião & descarregar agentes de monitorização dos seus anfitriões"
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr ""
 "Registar todos os anfitriões & descarregar todos os agentes de monitorização"
@@ -43902,6 +43907,11 @@ msgstr "Registar qualquer novo anfitrião"
 #, fuzzy
 msgid "Register authenticator app"
 msgstr "Registar a aplicação Authenticator"
+
+#, fuzzy
+msgid "Register host & download monitoring agents of your hosts"
+msgstr ""
+"Registar anfitrião & descarregar agentes de monitorização dos seus anfitriões"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -44690,10 +44700,12 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "A geração de relatórios começou no trabalho de fundo <a href=\"%s\">%s</a>"
 
-msgid "Report of Host"
+#, fuzzy
+msgid "Report of host"
 msgstr "Relatório do Anfitrião"
 
-msgid "Report of Host Performance Graphs"
+#, fuzzy
+msgid "Report of host performance graphs"
 msgstr "Relatório de gráficos de desempenho do host"
 
 msgid "Report options"
@@ -45413,20 +45425,22 @@ msgstr "Estrutura do robô: Último registo"
 msgid "RobotMK logs"
 msgstr "Registos do RobotMK"
 
-msgid "Robotmk"
-msgstr "Robotmk"
-
-msgid "Robotmk (Windows)"
-msgstr "Robotmk (Windows)"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
 
 #, fuzzy
+msgid "Robotmk Scheduler (Windows)"
+msgstr "Robotmk (Windows)"
+
+#, fuzzy
 msgid "Robotmk Suite Status"
 msgstr "Estado do sítio"
+
+#, fuzzy
+msgid "Robotmk Tests"
+msgstr "Robotmk"
 
 msgid "Role"
 msgstr "Papel"
@@ -46088,9 +46102,6 @@ msgstr "Níveis superiores de utilização do SNAT"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Agent Simulator"
-msgstr "Simulador de Agente SNMP"
-
 msgid "SNMP Community"
 msgstr "Comunidade SNMP"
 
@@ -46111,6 +46122,10 @@ msgstr "SNMP MIBs para tradução de armadilhas"
 
 msgid "SNMP Management Board"
 msgstr "Conselho de Administração do SNMP"
+
+#, fuzzy
+msgid "SNMP agent simulator"
+msgstr "Simulador de Agente SNMP"
 
 msgid "SNMP check for EMC Isilon quotas"
 msgstr "Verificação SNMP para quotas EMC Isilon"
@@ -46858,10 +46873,12 @@ msgstr "Ver eventos no elemento da barra lateral 'Visão Geral'"
 msgid "See events not related to a known host"
 msgstr "Ver eventos não relacionados com um anfitrião conhecido"
 
-msgid "See failed Notifications (all)"
+#, fuzzy
+msgid "See failed notifications (all)"
 msgstr "Ver notificações falhadas (todas)"
 
-msgid "See failed Notifications (last 24 hours)"
+#, fuzzy
+msgid "See failed notifications (last 24 hours)"
 msgstr "Ver notificações falhadas (últimas 24 horas)"
 
 msgid "See foreign background jobs"
@@ -47306,9 +47323,6 @@ msgstr "Nome do servidor"
 msgid "Server OS"
 msgstr "SO do servidor"
 
-msgid "Server Time"
-msgstr "Tempo do servidor"
-
 msgid "Server connections"
 msgstr "Ligações do servidor"
 
@@ -47347,9 +47361,6 @@ msgstr "Serviço (correspondência exacta)"
 
 msgid "Service (regex)"
 msgstr "Serviço (regex)"
-
-msgid "Service Availability"
-msgstr "Disponibilidade do Serviço"
 
 msgid "Service Checks"
 msgstr "Verificações de serviço"
@@ -47396,9 +47407,6 @@ msgstr "Nível de serviço dos anfitriões"
 msgid "Service Level of services"
 msgstr "Nível de serviço dos serviços"
 
-msgid "Service Levels"
-msgstr "Níveis de serviço"
-
 msgid "Service Metrics"
 msgstr "Métricas de Serviço"
 
@@ -47443,6 +47451,10 @@ msgstr "Serviço nome de exibição alternativa"
 
 msgid "Service alternative display name (regex)"
 msgstr "Nome de apresentação alternativo do serviço (regex)"
+
+#, fuzzy
+msgid "Service availability"
+msgstr "Disponibilidade do Serviço"
 
 msgid "Service check command"
 msgstr "Comando de verificação de serviço"
@@ -47648,6 +47660,10 @@ msgid "Service level of forwarded logs shown in Event Console."
 msgstr ""
 "Nível de serviço dos registos reencaminhados apresentados na Consola de "
 "Eventos."
+
+#, fuzzy
+msgid "Service levels"
+msgstr "Nível de serviço"
 
 msgid "Service limits"
 msgstr "Limites de serviço"
@@ -48270,7 +48286,8 @@ msgstr ""
 msgid "Set width"
 msgstr "Largura do conjunto"
 
-msgid "Set/Remove downtimes"
+#, fuzzy
+msgid "Set/remove downtimes"
 msgstr "Definir/Remover tempos de inactividade"
 
 msgid ""
@@ -49221,18 +49238,6 @@ msgstr ""
 msgid "Single"
 msgstr "Individual"
 
-msgid "Single Aggregation"
-msgstr "Agregação única"
-
-msgid "Single Aggregation for simple API calls"
-msgstr "Agregação única para chamadas API simples"
-
-msgid ""
-"Single Aggregation for simple API calls. Contains the state and state output."
-msgstr ""
-"Agregação única para chamadas API simples. Contém o estado e a saída do "
-"estado."
-
 msgid "Single Bit (BOOL)"
 msgstr "Bit único (BOOL)"
 
@@ -49241,6 +49246,21 @@ msgstr "Anfitrião Linux único"
 
 msgid "Single Windows host"
 msgstr "Anfitrião único do Windows"
+
+#, fuzzy
+msgid "Single aggregation"
+msgstr "Agregação única"
+
+#, fuzzy
+msgid "Single aggregation for simple API calls"
+msgstr "Agregação única para chamadas API simples"
+
+#, fuzzy
+msgid ""
+"Single aggregation for simple API calls. Contains the state and state output."
+msgstr ""
+"Agregação única para chamadas API simples. Contém o estado e a saída do "
+"estado."
 
 msgid "Single dataset"
 msgstr "Conjunto de dados único"
@@ -67353,11 +67373,12 @@ msgstr ""
 msgid "Use Checkmk sidebar"
 msgstr "Utilizar a barra lateral Checkmk"
 
-msgid "Use Classic Backend"
-msgstr "Use o Backend Clássico"
-
 msgid "Use Classic SNMP Backend"
 msgstr "Use o Backend SNMP clássico"
+
+#, fuzzy
+msgid "Use Classic backend"
+msgstr "Use o Backend Clássico"
 
 msgid "Use DNS lookup cache"
 msgstr "Use o cache de busca DNS"
@@ -67392,6 +67413,10 @@ msgstr "Usar SNMP Inline (depreciado)"
 msgid "Use Inline SNMP Backend"
 msgstr "Use o backend SNMP Inline"
 
+#, fuzzy
+msgid "Use Inline SNMP backend"
+msgstr "Use o backend SNMP Inline"
+
 msgid ""
 "Use Jira Query Language (JQL) to get statistics out of your Jira instance."
 msgstr ""
@@ -67416,7 +67441,8 @@ msgid "Use RCC for isolated execution"
 msgstr "Use SSL para a conexão."
 
 #, fuzzy, python-format
-msgid "Use RCC for isolated execution (%s in Robotmk Core)"
+msgid ""
+"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
 msgstr "Use SSL para a conexão."
 
 msgid "Use Reporting"
@@ -68627,6 +68653,10 @@ msgstr "Resumo do VM snapshot"
 msgid "VM, Cloud, Container"
 msgstr "VM, Nuvem, Container"
 
+#, fuzzy
+msgid "VM, cloud, container"
+msgstr "VM, Nuvem, Container"
+
 msgid "VMTools activation state"
 msgstr "Estado de ativação do VMTools"
 
@@ -69040,9 +69070,6 @@ msgstr "Tutoriais em vídeo"
 msgid "View"
 msgstr "Ver"
 
-msgid "View Extension Package Manager"
-msgstr "Ver Gestor de Pacotes de Extensão"
-
 msgid "View Properties"
 msgstr "Ver Propriedades"
 
@@ -69057,6 +69084,10 @@ msgstr "Ver e editar os parâmetros para este serviço"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Veja e edite as regras e agregações neste pacote de BI"
+
+#, fuzzy
+msgid "View extension package manager"
+msgstr "Ver Gestor de Pacotes de Extensão"
 
 msgid "View layout"
 msgstr "Ver layout"
@@ -69091,12 +69122,6 @@ msgstr "Virtual"
 msgid "Virtual Drive"
 msgstr "Unidade virtual"
 
-msgid "Virtual Host Tree"
-msgstr "Anfitrião Virtual"
-
-msgid "Virtual Host Trees"
-msgstr "Árvores Anfitriãs Virtuais"
-
 msgid "Virtual Machine"
 msgstr "Máquina Virtual"
 
@@ -69126,6 +69151,14 @@ msgstr "Índice de domínio virtual"
 
 msgid "Virtual host"
 msgstr "Anfitrião virtual"
+
+#, fuzzy
+msgid "Virtual host tree"
+msgstr "Anfitrião Virtual"
+
+#, fuzzy
+msgid "Virtual host trees"
+msgstr "Árvores Anfitriãs Virtuais"
 
 msgid "Virtual machine (for example ESX) guest tools status"
 msgstr "Máquina virtual (por exemplo ESX) estado das ferramentas do convidado"
@@ -74880,11 +74913,12 @@ msgstr "notificações em último"
 msgid "ntopng Admin User"
 msgstr "ntopng Usuário Admin"
 
-msgid "ntopng Connection Parameters (chargeable add-on)"
-msgstr "Parâmetros de ligação ntopng (suplemento a pagar)"
-
 msgid "ntopng Username"
 msgstr "ntopng Nome de usuário"
+
+#, fuzzy
+msgid "ntopng connection parameters (chargeable add-on)"
+msgstr "Parâmetros de ligação ntopng (suplemento a pagar)"
 
 #, python-format
 msgid ""
@@ -75659,6 +75693,44 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Acknowledge Incompatible Werks"
+#~ msgstr "Reconhecer trabalhos incompatíveis"
+
+#~ msgid "Audit Log"
+#~ msgstr "Registo de auditoria"
+
+#~ msgid "Clear audit Log"
+#~ msgstr "Limpar o registo de auditoria"
+
+#, fuzzy
+#~| msgid "Enterprise feature"
+#~ msgid "Enterprise features"
+#~ msgstr "Característica da empresa"
+
+#~ msgid "InfluxDB Connection"
+#~ msgstr "Ligação InfluxDB"
+
+#~ msgid "InfluxDB Connections"
+#~ msgstr "Ligações InfluxDB"
+
+#~ msgid "Logfile Pattern Analyzer"
+#~ msgstr "Analisador de padrões Logfile"
+
+#~ msgid "Network Topology"
+#~ msgstr "Topologia de rede"
+
+#~ msgid "Other Services"
+#~ msgstr "Outros Serviços"
+
+#~ msgid "Power Supplies"
+#~ msgstr "Fontes de Alimentação"
+
+#~ msgid "Server Time"
+#~ msgstr "Tempo do servidor"
+
+#~ msgid "Service Levels"
+#~ msgstr "Níveis de serviço"
+
 #~ msgid "Add Authenticator App"
 #~ msgstr "Adicionar a aplicação Authenticator"
 
@@ -75988,9 +76060,6 @@ msgstr ""
 
 #~ msgid "Clear"
 #~ msgstr "Limpo"
-
-#~ msgid "Clear audit log"
-#~ msgstr "Limpar o registo de auditoria"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr "Implantar ambiente legado (Python 3.4 + conjunto padrão de módulos)"
@@ -77176,9 +77245,6 @@ msgstr ""
 
 #~ msgid "Sitename"
 #~ msgstr "Nome do Sitename"
-
-#~ msgid "Network topology"
-#~ msgstr "Topologia de rede"
 
 #~ msgid "A description or title of this rule"
 #~ msgstr "Uma descrição ou título desta regra"
@@ -79234,9 +79300,6 @@ msgstr ""
 
 #~ msgid "Other entity"
 #~ msgstr "Outra entidade"
-
-#~ msgid "Power supplies"
-#~ msgstr "Fontes de alimentação"
 
 #~ msgid "Power supply"
 #~ msgstr "Fonte de alimentação"

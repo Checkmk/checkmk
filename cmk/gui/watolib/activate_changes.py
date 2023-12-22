@@ -2619,19 +2619,11 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                 parse_version=version.parse_check_mk_version,
             )
             mkp_tool.make_post_package_change_actions(
-                ((mkp_tool.PackagePart.GUI, mkp_tool.PackagePart.WEB), mkp_tool.reload_apache),
-                (
-                    (mkp_tool.PackagePart.GUI, mkp_tool.PackagePart.WEB),
+                on_any_change=(
+                    mkp_tool.reload_apache,
                     invalidate_visuals_cache,
-                ),
-                (
-                    (
-                        mkp_tool.PackagePart.GUI,
-                        mkp_tool.PackagePart.WEB,
-                        mkp_tool.PackagePart.EC_RULE_PACKS,
-                    ),
                     setup_search_index.request_index_rebuild,
-                ),
+                )
             )([*uninstalled, *installed])
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")

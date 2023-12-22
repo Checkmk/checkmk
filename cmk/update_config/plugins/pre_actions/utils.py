@@ -134,19 +134,7 @@ def _request_user_input_on_incompatible_file(
 
 def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
-        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-        (
-            (PackagePart.GUI, PackagePart.WEB),
-            invalidate_visuals_cache,
-        ),
-        (
-            (
-                PackagePart.GUI,
-                PackagePart.WEB,
-                PackagePart.EC_RULE_PACKS,
-            ),
-            request_index_rebuild,
-        ),
+        on_any_change=(reload_apache, invalidate_visuals_cache, request_index_rebuild)
     )
 
 

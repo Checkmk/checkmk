@@ -55,24 +55,27 @@ mssql:
         client_certificate: 'C:\path\to\file' # mandatory
       timeout: 5 # optional, default: 5. Important: you may have longer timeout if your DNS can't resolve hostname.
     sections: # optional
-      always: # optional, default
-        - "instance"  # special section
-        - "databases"
-        - "counters"
-        - "blocked_sessions"
-        - "transactionlogs"
-        - "clusters"
-        - "mirroring"
-        - "availability_groups"
-        - "connections"
-      cached: # optional(default)
-        - "tablespaces"
-        - "datafiles"
-        - "backup"
-        - "jobs"
-      disabled: # optional, no default
-        - "someOtherSQL"
-      cache_age: 600 # optional, default: 600
+    - instance:  # special section
+    - databases:
+    - counters:
+    - blocked_sessions:
+    - transactionlogs:
+    - clusters:
+    - mirroring:
+    - availability_groups:
+    - connections:
+    - tablespaces:
+        is_async: yes
+    - datafiles:
+        is_async: yes
+    - backup:
+        is_async: yes
+    - jobs:
+        is_async: yes
+    - someOtherSQL:
+        is_async: yes
+        disabled: yes
+    cache_age: 600 # optional, default: 600
     discovery: # optional, defines which instances are to be monitored
       detect: yes # optional, default, if no then valid only instances in `instances` subsection
       include: ["foo", "bar", "inst1"] # optional, no default /prio 2; use only those instance, ignore exclude

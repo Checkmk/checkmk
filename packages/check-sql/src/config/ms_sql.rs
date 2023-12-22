@@ -2,7 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::yaml::{Get, Yaml};
+use super::defines::{defaults, keys, values};
+use super::section::{Section, SectionKind, Sections};
+use super::yaml::{Get, Yaml};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -10,99 +12,11 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use yaml_rust::YamlLoader;
 
-mod keys {
-    pub const MSSQL: &str = "mssql";
-    pub const MAIN: &str = "main";
-
-    pub const AUTHENTICATION: &str = "authentication";
-    pub const USERNAME: &str = "username";
-    pub const PASSWORD: &str = "password";
-    pub const TYPE: &str = "type";
-    pub const ACCESS_TOKEN: &str = "access_token";
-
-    pub const CONNECTION: &str = "connection";
-    pub const HOSTNAME: &str = "hostname";
-    pub const FAIL_OVER_PARTNER: &str = "failoverpartner";
-    pub const TLS: &str = "tls";
-    pub const PORT: &str = "port";
-    pub const SOCKET: &str = "socket";
-    pub const TIMEOUT: &str = "timeout";
-    pub const CA: &str = "ca";
-    pub const CLIENT_CERTIFICATE: &str = "client_certificate";
-
-    pub const SECTIONS: &str = "sections";
-    pub const ALWAYS: &str = "always";
-    pub const CACHED: &str = "cached";
-    pub const CACHE_AGE: &str = "cache_age";
-    pub const DISABLED: &str = "disabled";
-
-    pub const DISCOVERY: &str = "discovery";
-    pub const DETECT: &str = "detect";
-    pub const INCLUDE: &str = "include";
-    pub const EXCLUDE: &str = "exclude";
-
-    pub const MODE: &str = "mode";
-
-    pub const INSTANCES: &str = "instances";
-
-    pub const SID: &str = "sid";
-    pub const ALIAS: &str = "alias";
-    pub const PIGGYBACK: &str = "piggyback";
-
-    pub const CONFIGS: &str = "configs";
-}
-
-mod values {
-    /// AuthType::System
-    pub const SQL_SERVER: &str = "sql_server";
-    /// AuthType::Windows
-    #[cfg(windows)]
-    pub const WINDOWS: &str = "windows";
-    /// AuthType::Integrated
-    #[cfg(windows)]
-    pub const INTEGRATED: &str = "integrated";
-    /// AuthType::Token
-    pub const TOKEN: &str = "token";
-    /// Mode::Port
-    pub const PORT: &str = "port";
-    /// Mode::Socket
-    pub const SOCKET: &str = "socket";
-    /// AuthType::Special
-    pub const SPECIAL: &str = "special";
-}
-
-mod defaults {
-    use crate::config::ms_sql::values;
-    #[cfg(windows)]
-    pub const AUTH_TYPE: &str = values::INTEGRATED;
-    #[cfg(unix)]
-    pub const AUTH_TYPE: &str = values::SQL_SERVER;
-    pub const MODE: &str = values::PORT;
-    pub const CONNECTION_HOST_NAME: &str = "localhost";
-    pub const CONNECTION_PORT: u16 = 1433;
-    pub const CONNECTION_TIMEOUT: u64 = 5;
-    pub const SECTIONS_CACHE_AGE: u32 = 600;
-    pub const SECTIONS_ALWAYS: &[&str] = &[
-        "instance",
-        "databases",
-        "counters",
-        "blocked_sessions",
-        "transactionlogs",
-        "clusters",
-        "mirroring",
-        "availability_groups",
-        "connections",
-    ];
-    pub const SECTIONS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
-
-    pub const DISCOVERY_DETECT: bool = true;
-}
-
 #[derive(PartialEq, Debug)]
 pub struct Config {
     auth: Authentication,
     conn: Connection,
-    sections: Sections,
+    section_info: Sections,
     discovery: Discovery,
     mode: Mode,
     custom_instances: Vec<CustomInstance>,
@@ -115,7 +29,7 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
-            sections: Sections::default(),
+            section_info: Sections::default(),
             discovery: Discovery::default(),
             mode: Mode::Port,
             custom_instances: vec![],
@@ -157,7 +71,7 @@ impl Config {
         }
         let auth = Authentication::from_yaml(main)?;
         let conn = Connection::from_yaml(main, Some(&auth))?.unwrap_or_default();
-        let sections = Sections::from_yaml(main)?.unwrap_or_default();
+        let sections = Sections::from_yaml(main, Sections::default())?;
         let custom_instances: Result<Vec<CustomInstance>> = main
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
@@ -173,7 +87,7 @@ impl Config {
         Ok(Some(Self {
             auth,
             conn,
-            sections,
+            section_info: sections,
             discovery: Discovery::from_yaml(main)?,
             mode: Mode::from_yaml(main)?,
             custom_instances: custom_instances?,
@@ -190,9 +104,17 @@ impl Config {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
-    pub fn sections(&self) -> &Sections {
-        &self.sections
+    pub fn all_sections(&self) -> &Vec<Section> {
+        self.section_info.sections()
     }
+    pub fn valid_sections(&self) -> Vec<&Section> {
+        self.section_info
+            .select(&[SectionKind::Sync, SectionKind::Async])
+    }
+    pub fn cache_age(&self) -> u32 {
+        self.section_info.cache_age()
+    }
+
     pub fn discovery(&self) -> &Discovery {
         &self.discovery
     }
@@ -463,79 +385,6 @@ impl Endpoint {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
-pub struct Sections {
-    always: Vec<String>,
-    cached: Vec<String>,
-    disabled: Vec<String>,
-    cache_age: u32,
-}
-
-impl Default for Sections {
-    fn default() -> Self {
-        Self {
-            always: defaults::SECTIONS_ALWAYS
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
-            cached: defaults::SECTIONS_CACHED
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
-            disabled: vec![],
-            cache_age: defaults::SECTIONS_CACHE_AGE,
-        }
-    }
-}
-
-impl Sections {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let sections = yaml.get(keys::SECTIONS);
-        if sections.is_badvalue() {
-            return Ok(None);
-        }
-        Ok(Some(Self {
-            always: sections.get_string_vector(keys::ALWAYS, defaults::SECTIONS_ALWAYS),
-            cached: sections.get_string_vector(keys::CACHED, defaults::SECTIONS_CACHED),
-            disabled: sections.get_string_vector(keys::DISABLED, &[]),
-            cache_age: sections.get_int(keys::CACHE_AGE, defaults::SECTIONS_CACHE_AGE),
-        }))
-    }
-    pub fn always(&self) -> &Vec<String> {
-        &self.always
-    }
-    pub fn cached(&self) -> &Vec<String> {
-        &self.cached
-    }
-    pub fn disabled(&self) -> &Vec<String> {
-        &self.disabled
-    }
-    pub fn cache_age(&self) -> u32 {
-        self.cache_age
-    }
-
-    pub fn get_filtered_always(&self) -> Vec<String> {
-        self.get_filtered(self.always())
-    }
-
-    pub fn get_filtered_cached(&self) -> Vec<String> {
-        self.get_filtered(self.cached())
-    }
-
-    fn get_filtered(&self, sections: &[String]) -> Vec<String> {
-        sections
-            .iter()
-            .filter_map(|sql| {
-                if self.disabled().iter().any(|s| s == sql) {
-                    None
-                } else {
-                    Some(sql.to_owned())
-                }
-            })
-            .collect()
-    }
-}
-
 #[derive(PartialEq, Debug)]
 pub struct Discovery {
     detect: bool,
@@ -730,7 +579,7 @@ impl Piggyback {
             hostname: piggyback
                 .get_string(keys::HOSTNAME)
                 .context("Bad/Missing hostname in piggyback")?,
-            sections: Sections::from_yaml(piggyback)?.unwrap_or(sections.clone()),
+            sections: Sections::from_yaml(piggyback, sections.clone())?,
         }))
     }
 
@@ -743,31 +592,12 @@ impl Piggyback {
     }
 }
 
-pub mod trace_tools {
-    use std::io::{self, Write};
-    use yaml_rust::{Yaml, YamlEmitter};
-    #[allow(dead_code)]
-    pub fn dump_yaml(yaml: &Yaml) -> String {
-        let mut writer = String::new();
-
-        let mut emitter = YamlEmitter::new(&mut writer);
-        emitter.dump(yaml).unwrap();
-        writer
-    }
-
-    #[allow(dead_code)]
-    pub fn write_stdout(s: &impl ToString) {
-        #[allow(clippy::explicit_write)]
-        write!(io::stdout(), "{}", s.to_string()).unwrap();
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use self::data::TEST_CONFIG;
 
     use super::*;
-    use yaml_rust::YamlLoader;
+    use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
     mod data {
         /// copied from tests/files/test-config.yaml
         pub const TEST_CONFIG: &str = r#"
@@ -789,24 +619,27 @@ mssql:
         client_certificate: 'C:\path\to\file' # mandatory
       timeout: 5 # optional(default: 5)
     sections: # optional
-      always: # optional(default)
-        - "instance"
-        - "databases"
-        - "counters"
-        - "blocked_sessions"
-        - "transactionlogs"
-        - "clusters"
-        - "mirroring"
-        - "availability_groups"
-        - "connections"
-      cached: # optional(default)
-        - "tablespaces"
-        - "datafiles"
-        - "backup"
-        - "jobs"
-      disabled: # optional
-        - "someOtherSQL"
-      cache_age: 600 # optional(default:600)
+    - instance:  # special section
+    - databases:
+    - counters:
+    - blocked_sessions:
+    - transactionlogs:
+    - clusters:
+    - mirroring:
+    - availability_groups:
+    - connections:
+    - tablespaces:
+        is_async : yes
+    - datafiles:
+        is_async: yes
+    - backup:
+        is_async: yes
+    - jobs:
+        is_async: yes
+    - someOtherSQL:
+        is_async: yes
+        disabled: yes
+    cache_age: 600 # optional(default:600)
     discovery: # optional
       detect: true # optional(default:yes)
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
@@ -877,18 +710,6 @@ connection:
     client_certificate: 'C:\path\to\file_client'
   timeout: 341
 "#;
-        pub const SECTIONS_FULL: &str = r#"
-sections:
-  always:
-    - "aaa"
-    - "bbb"
-  cached:
-    - "ccc"
-    - "ddd"
-  disabled:
-    - "eee"
-  cache_age: 900
-"#;
         pub const DISCOVERY_FULL: &str = r#"
 discovery:
   detect: false
@@ -899,15 +720,15 @@ discovery:
 piggyback:
   hostname: "piggy_host"
   sections:
-    always:
-      - "alw1"
-      - "alw2"
-    cached:
-      - "cache1"
-      - "cache2"
-    disabled:
-      - "disabled"
-    cache_age: 111
+    - alw1:
+    - alw2:
+    - cached1:
+        is_async: yes
+    - cached2:
+        is_async: yes
+    - disabled:
+        disabled: yes
+  cache_age: 111
 "#;
         pub const INSTANCE: &str = r#"
 sid: "INST1"
@@ -920,7 +741,7 @@ alias: "a1"
 piggyback:
   hostname: "piggy"
   sections:
-    cache_age: 123
+  cache_age: 123
 "#;
         pub const PIGGYBACK_NO_HOSTNAME: &str = r#"
 piggyback:
@@ -936,10 +757,6 @@ piggyback:
 "#;
     }
 
-    fn create_yaml(source: &str) -> Yaml {
-        YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
-    }
-
     #[test]
     fn test_config_default() {
         assert_eq!(
@@ -947,7 +764,7 @@ piggyback:
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
-                sections: Sections::default(),
+                section_info: Sections::default(),
                 discovery: Discovery::default(),
                 mode: Mode::Port,
                 custom_instances: vec![],
@@ -1073,50 +890,6 @@ connection:
 "#;
         create_yaml(SOURCE)
     }
-    #[test]
-    fn test_sections_from_yaml_full() {
-        let s = Sections::from_yaml(&create_yaml(data::SECTIONS_FULL))
-            .unwrap()
-            .unwrap();
-        assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
-        assert_eq!(s.cached(), &vec!["ccc".to_string(), "ddd".to_string()]);
-        assert_eq!(s.disabled(), &vec!["eee".to_string()]);
-        assert_eq!(s.cache_age(), 900);
-    }
-
-    #[test]
-    fn test_sections_filtered() {
-        let s = Sections {
-            always: vec!["eee".to_string(), "aaa".to_string()],
-            cached: vec!["ccc".to_string(), "eee".to_string()],
-            disabled: vec!["eee".to_string()],
-            cache_age: 900,
-        };
-        assert_eq!(s.get_filtered_always(), vec!["aaa".to_string()]);
-        assert_eq!(s.get_filtered_cached(), vec!["ccc".to_string()]);
-    }
-
-    #[test]
-    fn test_sections_from_yaml_default() {
-        let s = Sections::from_yaml(&create_sections_yaml_default())
-            .unwrap()
-            .unwrap();
-        assert_eq!(s.always(), defaults::SECTIONS_ALWAYS);
-        assert_eq!(s.cached(), defaults::SECTIONS_CACHED);
-        assert!(s.disabled().is_empty());
-        assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
-        assert!(Sections::from_yaml(&create_yaml("_sections:\n"))
-            .unwrap()
-            .is_none());
-    }
-
-    fn create_sections_yaml_default() -> Yaml {
-        const SOURCE: &str = r#"
-sections:
-  _nothing: "nothing"
-"#;
-        create_yaml(SOURCE)
-    }
 
     #[test]
     fn test_discovery_from_yaml_full() {
@@ -1159,6 +932,10 @@ discovery:
         );
     }
 
+    fn as_names(sections: Vec<&Section>) -> Vec<&str> {
+        sections.iter().map(|s| s.name()).collect()
+    }
+
     #[test]
     fn test_piggyback() {
         let piggyback =
@@ -1166,20 +943,13 @@ discovery:
                 .unwrap()
                 .unwrap();
         assert_eq!(piggyback.hostname(), "piggy_host");
-        let sections = piggyback.sections();
+        let all = piggyback.sections();
+        assert_eq!(as_names(all.select(&[SectionKind::Sync])), ["alw1", "alw2"],);
         assert_eq!(
-            sections.always(),
-            &["alw1", "alw2"].map(str::to_string).to_vec()
+            as_names(all.select(&[SectionKind::Async])),
+            ["cached1", "cached2"]
         );
-        assert_eq!(
-            sections.cached(),
-            &["cache1", "cache2"].map(str::to_string).to_vec()
-        );
-        assert_eq!(
-            sections.disabled(),
-            &["disabled"].map(str::to_string).to_vec()
-        );
-        assert_eq!(sections.cache_age(), 111);
+        assert_eq!(as_names(all.select(&[SectionKind::Disabled])), ["disabled"]);
     }
 
     #[test]
@@ -1293,10 +1063,26 @@ connection:
             c.conn().timeout(),
             std::time::Duration::from_secs(defaults::CONNECTION_TIMEOUT)
         );
-        assert_eq!(c.sections().always(), defaults::SECTIONS_ALWAYS);
-        assert_eq!(c.sections().cached(), defaults::SECTIONS_CACHED);
-        assert_eq!(c.sections().disabled(), &vec!["someOtherSQL".to_string()]);
-        assert_eq!(c.sections().cache_age(), defaults::SECTIONS_CACHE_AGE);
+        let as_names = |sections: &[Section], kind: SectionKind| {
+            sections
+                .iter()
+                .filter(|s| s.kind() == kind)
+                .map(|s| s.name().to_string())
+                .collect::<Vec<String>>()
+        };
+        assert_eq!(
+            as_names(c.all_sections(), SectionKind::Sync),
+            defaults::SECTIONS_ALWAYS
+        );
+        assert_eq!(
+            as_names(c.all_sections(), SectionKind::Async),
+            defaults::SECTIONS_CACHED
+        );
+        assert_eq!(
+            as_names(c.all_sections(), SectionKind::Disabled),
+            ["someOtherSQL".to_string()]
+        );
+        assert_eq!(c.cache_age(), defaults::SECTIONS_CACHE_AGE);
     }
 
     #[test]
@@ -1367,5 +1153,46 @@ mssql:
 
         assert_eq!(calc_real_host(&auth_integrated, &conn_to_bar), "localhost");
         assert_eq!(calc_real_host(&auth_sql_server, &conn_to_bar), "bar");
+    }
+
+    #[test]
+    fn test_sections_enabled() {
+        const CONFIG: &str = r#"
+---
+mssql:
+  main: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: "f" # mandatory
+    sections:
+      - instance:
+      - jobs:
+          is_async: yes
+      - backup:
+          disabled: yes
+"#;
+        let config = Config::from_string(CONFIG).unwrap().unwrap();
+        assert_eq!(
+            config
+                .all_sections()
+                .iter()
+                .map(|s| (s.name(), s.kind()))
+                .collect::<Vec<(&str, SectionKind)>>(),
+            [
+                ("instance", SectionKind::Sync),
+                ("jobs", SectionKind::Async),
+                ("backup", SectionKind::Disabled),
+            ]
+        );
+        assert_eq!(
+            config
+                .valid_sections()
+                .iter()
+                .map(|s| (s.name(), s.kind()))
+                .collect::<Vec<(&str, SectionKind)>>(),
+            [
+                ("instance", SectionKind::Sync),
+                ("jobs", SectionKind::Async),
+            ]
+        );
     }
 }

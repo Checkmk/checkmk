@@ -2,7 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+pub mod defines;
 pub mod ms_sql;
+pub mod section;
 pub mod system;
 pub mod yaml;
 use anyhow::{bail, Result};

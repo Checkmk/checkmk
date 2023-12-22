@@ -9,6 +9,30 @@ use std::path::{Path, PathBuf};
 use yaml_rust::YamlLoader;
 pub type Yaml = yaml_rust::yaml::Yaml;
 
+pub mod trace_tools {
+    use std::io::{self, Write};
+    use yaml_rust::{Yaml, YamlEmitter};
+    #[allow(dead_code)]
+    pub fn dump_yaml(yaml: &Yaml) -> String {
+        let mut writer = String::new();
+
+        let mut emitter = YamlEmitter::new(&mut writer);
+        emitter.dump(yaml).unwrap();
+        writer
+    }
+
+    #[allow(dead_code)]
+    pub fn write_stdout(s: &impl ToString) {
+        #[allow(clippy::explicit_write)]
+        write!(io::stdout(), "{}", s.to_string()).unwrap();
+    }
+    #[allow(dead_code)]
+    pub fn write_stderr(s: &impl ToString) {
+        #[allow(clippy::explicit_write)]
+        write!(io::stderr(), "{}", s.to_string()).unwrap();
+    }
+}
+
 pub trait Get {
     fn get(&self, key: &str) -> &Self
     where
@@ -142,6 +166,13 @@ fn to_bool(value: &str) -> Result<bool> {
 }
 
 #[cfg(test)]
+pub mod test_tools {
+    use yaml_rust::{Yaml, YamlLoader};
+    pub fn create_yaml(source: &str) -> Yaml {
+        YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
+    }
+}
+#[cfg(test)]
 mod tests {
     use super::*;
     use lazy_static::lazy_static;
@@ -152,7 +183,6 @@ mod tests {
             .join("files")
             .join("test-config.yml");
     }
-
     const YAML_VECTOR: &str = r#"
 vector:
   - yaml1:

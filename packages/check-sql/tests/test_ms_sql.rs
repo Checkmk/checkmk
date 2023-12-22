@@ -9,7 +9,7 @@ use check_sql::ms_sql::{
     client::{self, Client},
     instance::{self, SqlInstance, SqlInstanceBuilder},
     query,
-    section::{self, Section},
+    section::Section,
     sqls,
 };
 
@@ -17,6 +17,8 @@ use check_sql::setup::Env;
 
 use check_sql::config::{
     ms_sql::{Config, Endpoint},
+    section::names,
+    section::SectionBuilder,
     CheckConfig,
 };
 use common::tools::{self, SqlDbEndpoint};
@@ -182,6 +184,11 @@ async fn test_validate_all_instances_remote() {
     }
 }
 
+fn make_section<S: Into<String>>(name: S) -> Section {
+    let config_section = SectionBuilder::new(name).build();
+    Section::new(&config_section, 100)
+}
+
 async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
@@ -210,12 +217,8 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_connections(i, c).await;
     validate_connections_error(i, c).await;
     validate_jobs(i, e).await;
-    for name in [
-        section::JOBS_SECTION_NAME,
-        section::MIRRORING_SECTION_NAME,
-        section::AVAILABILITY_GROUPS_SECTION_NAME,
-    ] {
-        validate_query_error(i, e, &Section::new(name, None)).await;
+    for name in [names::JOBS, names::MIRRORING, names::AVAILABILITY_GROUPS] {
+        validate_query_error(i, e, &make_section(name)).await;
     }
     validate_mirroring_section(i, e).await;
     validate_availability_groups_section(i, e).await;
@@ -477,11 +480,7 @@ async fn validate_clusters(_instance: &SqlInstance, _client: &mut Client, _endpo
 
 async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
     let result = instance
-        .generate_query_section(
-            endpoint,
-            &Section::new(section::JOBS_SECTION_NAME, None),
-            None,
-        )
+        .generate_query_section(endpoint, &make_section(names::JOBS), None)
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
@@ -516,9 +515,9 @@ async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, secti
 }
 
 async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint) {
-    let section = &Section::new(section::MIRRORING_SECTION_NAME, None);
+    let section = make_section(names::MIRRORING);
     let lines: Vec<String> = instance
-        .generate_query_section(endpoint, section, None)
+        .generate_query_section(endpoint, &section, None)
         .await
         .split('\n')
         .map(|l| l.to_string())
@@ -529,9 +528,9 @@ async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint)
 }
 
 async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: &Endpoint) {
-    let section = &Section::new(section::AVAILABILITY_GROUPS_SECTION_NAME, None);
+    let section = make_section(names::AVAILABILITY_GROUPS);
     let lines: Vec<String> = instance
-        .generate_query_section(endpoint, section, None)
+        .generate_query_section(endpoint, &section, None)
         .await
         .split('\n')
         .map(|l| l.to_string())
@@ -910,7 +909,12 @@ fn test_run_as_plugin_with_config() {
             .unwrap();
         let (stdout, code) = tools::get_good_results(&exec).unwrap();
         assert_eq!(code, 0, "For label: {}", &label);
-        assert!(stdout.starts_with(EXPECTED_START), "For label: {}", &label);
+        assert!(
+            stdout.starts_with(EXPECTED_START),
+            "For label: {} \n{}\n",
+            &label,
+            &stdout[..EXPECTED_START.len()]
+        );
         validate_stdout(&stdout, &label);
     }
 

@@ -838,6 +838,18 @@ def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     ).assert_status_code(400)
 
 
+def test_openapi_host_non_existent_site(clients: ClientRegistry) -> None:
+    non_existing_site_name = "i_am_not_existing"
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"site": non_existing_site_name},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert "site" in resp.json["fields"]["attributes"]
+
+
 def test_openapi_host_with_labels(clients: ClientRegistry) -> None:
     resp = clients.HostConfig.create(
         folder="/",

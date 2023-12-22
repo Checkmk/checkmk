@@ -210,6 +210,23 @@ def test_openapi_folders(clients: ClientRegistry) -> None:
         clients.Folder.delete(folder_name=folder_obj["id"])
 
 
+def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
+    folder_name = "my_folder"
+    non_existing_site_name = "i_am_not_existing"
+    clients.Folder.create(
+        folder_name=folder_name,
+        title="My super folder",
+        parent="/",
+    ).assert_status_code(200)
+    resp = clients.Folder.edit(
+        folder_name=f"~{folder_name}",
+        update_attributes={"site": non_existing_site_name},
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert "site" in resp.json["fields"]["update_attributes"]
+
+
 def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",

@@ -1036,7 +1036,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return gui_fields.SiteField(
-            description="The site that should monitor this host.", presence="might_not_exist"
+            description="The site that should monitor this host.",
+            presence="might_not_exist_on_view",
         )
 
     def get_tag_groups(self, value):

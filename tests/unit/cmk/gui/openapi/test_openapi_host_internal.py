@@ -209,20 +209,12 @@ def test_openapi_host_register_cluster(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         urljoin(_API_BASE, "domain-types/host_config/collections/all"),
         params='{"host_name": "my-host", "folder": "/", "attributes": {"site": "some-site"}}',
-        status=200,
+        status=400,
         headers={"Accept": "application/json"},
         content_type='application/json; charset="utf-8"',
     )
-    resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "my-host/actions/register/invoke"),
-        params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-        status=405,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
-    assert "Wrong site" in resp.text
+    assert "site" in resp.json["fields"]["attributes"]

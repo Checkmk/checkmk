@@ -1004,7 +1004,7 @@ class SiteField(base.String):
     def __init__(
         self,
         presence: Literal[
-            "should_exist", "should_not_exist", "might_not_exist", "ignore"
+            "should_exist", "should_not_exist", "might_not_exist_on_view", "ignore"
         ] = "should_exist",
         allow_all_value: bool = False,
         **kwargs: Any,
@@ -1017,10 +1017,10 @@ class SiteField(base.String):
         if self.allow_all_value and value == "all":
             return
 
-        if self.presence == "might_not_exist":
+        if self.presence == "might_not_exist_on_view" and self.context["object_context"] == "view":
             return
 
-        if self.presence == "should_exist":
+        if self.presence in ["should_exist", "might_not_exist_on_view"]:
             if value not in configured_sites().keys():
                 raise self.make_error("should_exist", site=value)
 
@@ -1029,7 +1029,7 @@ class SiteField(base.String):
                 raise self.make_error("should_not_exist", site=value)
 
     def _serialize(self, value, attr, obj, **kwargs):
-        if self.presence == "might_not_exist" and value not in configured_sites().keys():
+        if self.presence == "might_not_exist_on_view" and value not in configured_sites().keys():
             return "Unknown Site: " + value
         return super()._serialize(value, attr, obj, **kwargs)
 

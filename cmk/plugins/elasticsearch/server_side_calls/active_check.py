@@ -41,7 +41,7 @@ def commands_function(
     if params.user is not None:
         args += ["-u", params.user]
     if params.password is not None:
-        args += ["-s", parse_secret(params.password[0], params.password[1])]
+        args += ["-s", parse_secret(params.password)]
     if params.port is not None:
         args += ["-p", str(params.port)]
     if params.index:

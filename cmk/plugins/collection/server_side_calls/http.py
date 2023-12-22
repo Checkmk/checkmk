@@ -75,9 +75,7 @@ class ProxySettings:
         return cls(
             address=params["address"],
             port=params.get("port"),
-            auth=parse_secret(auth[1][0], auth[1][1], display_format="%s:%%s" % auth[0])
-            if auth
-            else None,
+            auth=parse_secret(auth[1], display_format="%s:%%s" % auth[0]) if auth else None,
         )
 
 
@@ -273,10 +271,9 @@ def _url_args(  # pylint: disable=too-many-branches
 
     if settings.auth is not None:
         username, password = settings.auth
-        secret_type, secret_value = password
         args += [
             "-a",
-            parse_secret(secret_type, secret_value, display_format="%s:%%s" % username),
+            parse_secret(password, display_format="%s:%%s" % username),
         ]
 
     if settings.onredirect is not None:

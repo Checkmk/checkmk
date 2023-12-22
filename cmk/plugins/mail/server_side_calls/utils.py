@@ -75,18 +75,16 @@ def get_general_mail_arguments(
 
     if auth_type == "basic":
         username, password = BasicAuth.model_validate({"auth": auth_data}).auth
-        secret_type, secret_value = password
         args += [
             f"--fetch-username={username}",
-            parse_secret(secret_type, secret_value, display_format="--fetch-password=%s"),
+            parse_secret(password, display_format="--fetch-password=%s"),
         ]
 
     else:
         client_id, client_secret, tenant_id = OAuth.model_validate({"auth": auth_data}).auth
-        client_secret_type, client_secret_value = client_secret
         args += [
             f"--fetch-client-id={client_id}",
-            parse_secret(client_secret_type, client_secret_value, "--fetch-client-secret=%s"),
+            parse_secret(client_secret, "--fetch-client-secret=%s"),
             f"--fetch-tenant-id={tenant_id}",
         ]
 

@@ -60,7 +60,7 @@ def commands_function(
         "-u",
         params.user,
         "-s",
-        parse_secret(*params.secret),
+        parse_secret(params.secret),
         "-i",
         ",".join(params.infos),
         "--spaces",

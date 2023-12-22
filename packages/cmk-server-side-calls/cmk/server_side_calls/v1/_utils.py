@@ -6,7 +6,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Literal
 
 
 class IPAddressFamily(StrEnum):
@@ -184,13 +183,10 @@ class PlainTextSecret:
 Secret = StoredSecret | PlainTextSecret
 
 
-def parse_secret(
-    secret_type: Literal["store", "password"], secret_value: str, display_format: str = "%s"
-) -> Secret:
-    # TODO: if we rename the valuespec in the new API, it should be changed here too
+def parse_secret(secret: object, display_format: str = "%s") -> Secret:
     """
-    Parses values configured via the :class:`IndividualOrStoredPassword` into an instance
-    of one of the two appropriate classes.
+    Parses values configured via the :class:`Password` into an instance of one of
+    the two appropriate classes.
 
     Args:
         secret_type: Type of the secret
@@ -219,20 +215,27 @@ def parse_secret(
         ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     secret = parse_secret(
-        ...         "store",
-        ...         "stored_secret_id",
+        ...         ("store", "stored_secret_id"),
         ...         display_format="example-user:%s",
         ...     )
         ...     args = ["--auth", secret]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
+    if not isinstance(secret, tuple):
+        raise ValueError("secret object has to be a tuple")
+
+    secret_type, secret_value = secret
+
+    if not isinstance(secret_value, str):
+        raise ValueError("secret value has to be a string")
+
     match secret_type:
         case "store":
             return StoredSecret(secret_value, format=display_format)
         case "password":
             return PlainTextSecret(secret_value, format=display_format)
         case _:
-            raise ValueError(f"{secret_type} is not a valid secret type")
+            raise ValueError("secret type has as to be either 'store' or 'password'")
 
 
 def parse_http_proxy(

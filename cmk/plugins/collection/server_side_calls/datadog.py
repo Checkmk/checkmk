@@ -66,12 +66,10 @@ def _to_text_args(pairs: Sequence[tuple[str, str]]) -> list[str]:
 def generate_datadog_command(
     params: DatadogParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    api_key_type, api_key_value = params.instance.api_key
-    app_key_type, app_key_value = params.instance.app_key
     args: list[str | Secret] = [
         host_config.name,
-        parse_secret(api_key_type, api_key_value),
-        parse_secret(app_key_type, app_key_value),
+        parse_secret(params.instance.api_key),
+        parse_secret(params.instance.app_key),
         params.instance.api_host,
     ]
 

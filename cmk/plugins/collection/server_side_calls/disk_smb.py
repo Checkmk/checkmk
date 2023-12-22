@@ -61,7 +61,7 @@ def check_disk_smb_arguments(
             "-u",
             username,
             "-p",
-            parse_secret(pw[0], pw[1]),
+            parse_secret(pw),
         ]
 
     if params.ip_address is not None:

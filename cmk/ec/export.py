@@ -30,6 +30,7 @@ from .rule_matcher import MatchFailure as MatchFailure
 from .rule_matcher import MatchResult as MatchResult
 from .rule_matcher import MatchSuccess as MatchSuccess
 from .rule_matcher import RuleMatcher as RuleMatcher
+from .rule_packs import active_config_dir as active_config_dir
 from .rule_packs import export_rule_pack as export_rule_pack
 from .rule_packs import install_packaged_rule_packs as install_packaged_rule_packs
 from .rule_packs import load_config as load_config

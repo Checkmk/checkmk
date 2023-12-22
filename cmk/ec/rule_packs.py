@@ -92,6 +92,11 @@ def mkp_rule_pack_dir() -> Path:
     return _default_settings().paths.mkp_rule_pack_dir.value
 
 
+def active_config_dir() -> Path:
+    """Returns the directory where active rule packs of the Event Console are located."""
+    return _default_settings().paths.active_config_dir.value
+
+
 def remove_exported_rule_pack(id_: str) -> None:
     """
     Removes the .mk file representing the exported rule pack.
@@ -117,15 +122,15 @@ def _bind_to_rule_pack_proxies(
                 )
 
 
-def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-many-branches
+def _load_config(  # pylint: disable=too-many-branches
+    settings: Settings, rule_packs_dir: Path
+) -> ConfigFromWATO:
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
     global_context = dict(default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
     global_context["mkp_rule_packs"] = {}
-    for path in [settings.paths.main_config_file.value] + sorted(
-        settings.paths.config_dir.value.glob("**/*.mk")
-    ):
+    for path in [settings.paths.main_config_file.value] + sorted(rule_packs_dir.glob("**/*.mk")):
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
@@ -187,6 +192,18 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
         config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
 
     return config
+
+
+def load_config(settings: Settings) -> ConfigFromWATO:
+    """WATO needs all configured rule packs and other stuff - especially the central site in
+    distributed setups."""
+    return _load_config(settings, settings.paths.config_dir.value)
+
+
+def load_active_config(settings: Settings) -> ConfigFromWATO:
+    """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
+    are filtered rule packs, especially in distributed managed setups."""
+    return _load_config(settings, settings.paths.active_config_dir.value)
 
 
 def load_rule_packs() -> Sequence[ECRulePack]:

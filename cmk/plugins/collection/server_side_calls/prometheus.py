@@ -69,7 +69,7 @@ class PromQLMetricComponent(BaseModel):
 
 class PromQLCheck(BaseModel):
     service_description: str
-    host_name: str
+    host_name: str | None = None
     metric_components: list
 
 

@@ -77,7 +77,7 @@ def check_smtp_arguments(  # pylint: disable=too-many-branches
 
     if params.auth:
         username, password = params.auth
-        args.extend(("-A", "LOGIN", "-U", username, "-P", parse_secret(*password)))
+        args.extend(("-A", "LOGIN", "-U", username, "-P", parse_secret(password)))
 
     if params.starttls:
         args.append("-S")

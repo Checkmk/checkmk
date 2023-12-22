@@ -64,8 +64,7 @@ def generate_kube_command(  # pylint: disable=too-many-branches
 ) -> Iterator[SpecialAgentCommand]:
     args = ["--cluster", params["cluster-name"]]
     args.extend(["--kubernetes-cluster-hostname", host_config.name])
-    secret_type, secret_value = params["token"]
-    args.extend(["--token", parse_secret(secret_type, secret_value)])
+    args.extend(["--token", parse_secret(params["token"])])
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])

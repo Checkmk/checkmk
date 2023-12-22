@@ -39,7 +39,7 @@ def commands_function(
     else:
         command_arguments += ["--cert-server-name", str(params.ssl)]
 
-    command_arguments += ["--api-token", parse_secret(*params.api_token)]
+    command_arguments += ["--api-token", parse_secret(params.api_token)]
 
     yield SpecialAgentCommand(
         command_arguments=[*command_arguments, host_config.address or host_config.name]

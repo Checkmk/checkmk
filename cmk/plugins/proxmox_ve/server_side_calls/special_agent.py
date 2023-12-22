@@ -36,7 +36,7 @@ def commands_function(
     if params.username is not None:
         command_arguments += ["-u", params.username]
     if params.password is not None:
-        command_arguments += ["-p", parse_secret(params.password[0], params.password[1])]
+        command_arguments += ["-p", parse_secret(params.password)]
     if params.port is not None:
         command_arguments += ["--port", str(params.port)]
     if params.no_cert_check:

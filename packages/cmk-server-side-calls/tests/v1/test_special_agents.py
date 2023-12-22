@@ -41,7 +41,7 @@ def generate_example_commands(
         "-u",
         params.user,
         "-s",
-        parse_secret(params.password[0], params.password[1]),
+        parse_secret(params.password),
     ]
     yield SpecialAgentCommand(command_arguments=args)
 

@@ -33,10 +33,9 @@ def agent_cisco_meraki_arguments(
     host_config: HostConfig,
     http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
-    secret_type, secret_value = params.api_key
     args: list[str | Secret] = [
         host_config.name,
-        parse_secret(secret_type, secret_value),
+        parse_secret(params.api_key),
     ]
 
     if params.proxy is not None:

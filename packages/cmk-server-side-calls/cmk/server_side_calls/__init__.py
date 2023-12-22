@@ -54,7 +54,7 @@ Special agent
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         parse_secret(params.password[0], params.password[1]),
+    ...         parse_secret(params.password),
     ...     ]
     ...
     ...     yield SpecialAgentCommand(command_arguments=args)
@@ -107,7 +107,7 @@ Active check
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         parse_secret(params.password[0], params.password[1]),
+    ...         parse_secret(params.password),
     ...     ]
     ...
     ...     yield ActiveCheckCommand(service_description="Example", command_arguments=args)

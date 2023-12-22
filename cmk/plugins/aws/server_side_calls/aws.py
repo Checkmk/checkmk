@@ -77,7 +77,7 @@ def _proxy_args(details: Mapping[str, Any]) -> Sequence[str | Secret]:
             "--proxy-user",
             proxy_user,
             "--proxy-password",
-            parse_secret(proxy_pwd[0], proxy_pwd[1]),
+            parse_secret(proxy_pwd),
         ]
     return proxy_args
 
@@ -89,7 +89,7 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         "--access-key-id",
         params["access_key_id"],
         "--secret-access-key",
-        parse_secret(params["secret_access_key"][0], params["secret_access_key"][1]),
+        parse_secret(params["secret_access_key"]),
         *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
 

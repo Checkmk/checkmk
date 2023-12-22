@@ -65,10 +65,7 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
         if send_params.auth is not None:
             username, password = BasicAuth.model_validate({"auth": send_params.auth}).auth
             args.append(f"--send-username={username}")
-            secret_type, secret_value = password
-            args.append(
-                parse_secret(secret_type, secret_value, display_format="--send-password=%s")
-            )
+            args.append(parse_secret(password, display_format="--send-password=%s"))
     elif send_protocol == "EWS":
         if not connection_params.disable_tls:
             args.append("--send-tls")
@@ -82,21 +79,16 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
         auth_type, auth_data = send_params.auth
         if auth_type == "basic":
             username, password = BasicAuth.model_validate({"auth": auth_data}).auth
-            basic_secret_type, basic_secret_value = password
             args += [
                 f"--send-username={username}",
-                parse_secret(
-                    basic_secret_type, basic_secret_value, display_format="--send-password=%s"
-                ),
+                parse_secret(password, display_format="--send-password=%s"),
             ]
         else:
             client_id, client_secret, tenant_id = OAuth.model_validate({"auth": auth_data}).auth
-            client_secret_type, client_secret_value = client_secret
             args += [
                 f"--send-client-id={client_id}",
                 parse_secret(
-                    client_secret_type,
-                    client_secret_value,
+                    client_secret,
                     display_format="--send-client-secret=%s",
                 ),
                 f"--send-tenant-id={tenant_id}",

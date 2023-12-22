@@ -46,7 +46,7 @@ def agent_gcp_arguments(
         "--project",
         params.project,
         "--credentials",
-        parse_secret(params.credentials[0], params.credentials[1]),
+        parse_secret(params.credentials),
         "--date",
         today.isoformat(),
     ]

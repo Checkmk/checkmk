@@ -35,12 +35,11 @@ class MobileIronParams(BaseModel):
 def generate_mobileiron_command(
     params: MobileIronParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    secret_type, secret_value = params.password
     args: list[str | Secret] = [
         "-u",
         params.username,
         "-p",
-        parse_secret(secret_type, secret_value),
+        parse_secret(params.password),
         "--partition",
         ",".join(params.partition),
         "--hostname",

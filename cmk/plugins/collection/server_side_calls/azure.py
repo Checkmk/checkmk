@@ -47,14 +47,13 @@ class AzureParams(BaseModel):
 def generate_azure_command(  # pylint: disable=too-many-branches
     params: AzureParams, _host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    secret_type, secret_value = params.secret
     args: list[str | Secret] = [
         "--tenant",
         params.tenant,
         "--client",
         params.client,
         "--secret",
-        parse_secret(secret_type, secret_value),
+        parse_secret(params.secret),
     ]
 
     args += ["--authority", params.authority]

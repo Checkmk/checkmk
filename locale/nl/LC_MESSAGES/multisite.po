@@ -1846,12 +1846,13 @@ msgstr ""
 "<p>Over het algemeen zal Checkmk het primaire IP adres gebruiken van de host "
 "waaraan het gekoppeld is. Met deze optie kunt u deze parameter opheffen.</p>"
 
+#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
-"mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
+"mode=pattern_editor\">Logfile pattern analyzer</a> to test the rules you "
 "defined here.</p><p>Note that to match a special regex character in your "
 "patterns, you need to use a backslash to escape its special meaning. This is "
 "especially relevant for Windows file paths. For example, to match the "
@@ -3027,9 +3028,6 @@ msgstr "Ack"
 msgid "Acknowledge"
 msgstr "Acknowledge"
 
-msgid "Acknowledge Incompatible Werks"
-msgstr "Erkende onverenigbare Werks"
-
 msgid "Acknowledge all"
 msgstr "Erken alle"
 
@@ -3041,6 +3039,10 @@ msgstr "Alle onverenigbare werken erkennen"
 
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "Host- en serviceproblemen erkennen en bevestigingen verwijderen"
+
+#, fuzzy
+msgid "Acknowledge incompatible Werks"
+msgstr "Erkende onverenigbare Werks"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -3494,9 +3496,6 @@ msgstr "BI regel toevoegen"
 msgid "Add BI rule %s"
 msgstr "BI regel toevoegen %s"
 
-msgid "Add Bookmark"
-msgstr "Bladwijzer toevoegen"
-
 msgid "Add CA or self-signed certificate"
 msgstr "CA of zelfondertekend certificaat toevoegen"
 
@@ -3587,6 +3586,10 @@ msgstr "Back-up taak toevoegen"
 
 msgid "Add backup target"
 msgstr "Back-up doel toevoegen"
+
+#, fuzzy
+msgid "Add bookmark"
+msgstr "Bladwijzer toevoegen"
 
 msgid "Add child node generator"
 msgstr "Voeg kind node generator toe"
@@ -3735,7 +3738,8 @@ msgstr "Berichten toevoegen"
 msgid "Add metric level"
 msgstr "Metriek niveau toevoegen"
 
-msgid "Add micro seconds to timestamps in Logfiles"
+#, fuzzy
+msgid "Add micro seconds to timestamps in logfiles"
 msgstr "Voeg microseconden toe aan tijdstempels in Logfiles"
 
 msgid "Add missing, remove vanished"
@@ -4598,9 +4602,6 @@ msgstr "Agent %s draait momenteel in <a href=\"%s\">background job</a>."
 msgid "Agent %s successful"
 msgstr "Agent %s succesvol"
 
-msgid "Agent Certificates"
-msgstr "Agent Certificaten"
-
 #, fuzzy
 msgid "Agent Controller"
 msgstr "Agent controller"
@@ -4666,6 +4667,10 @@ msgstr "Agent bakte af."
 #, fuzzy
 msgid "Agent based plugins (deprecated)"
 msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
+
+#, fuzzy
+msgid "Agent certificates"
+msgstr "Agent Certificaten"
 
 msgid "Agent controller"
 msgstr "Agent controller"
@@ -4877,10 +4882,12 @@ msgstr "Aggregatie: simplistische box-indeling"
 msgid "Aggregations"
 msgstr "Aggregaties"
 
-msgid "Aggregations Affected by Host"
+#, fuzzy
+msgid "Aggregations affected by host"
 msgstr "Aggregaties beïnvloed door gastheer"
 
-msgid "Aggregations Affected by Service"
+#, fuzzy
+msgid "Aggregations affected by service"
 msgstr "Aggregaties waarop de dienst betrekking heeft"
 
 msgid "Aggregations are equal"
@@ -6717,9 +6724,6 @@ msgstr "Attributen"
 msgid "Attributes to remove from hosts"
 msgstr "Attributen te verwijderen uit hosts"
 
-msgid "Audit Log"
-msgstr "Controlelogboek"
-
 msgid "Audit log"
 msgstr "Auditlogboek"
 
@@ -7459,18 +7463,12 @@ msgstr "BI Aggregatie Groepen"
 msgid "BI Aggregations"
 msgstr "BI Aggregaties"
 
-msgid "BI Aggregations Summary State"
-msgstr "BI Aggregations Summary State"
-
 msgid "BI Aggregations affected by one host"
 msgstr "BI Aggregaties beïnvloed door één host"
 
 #, python-format
 msgid "BI Aggregations containing this %s"
 msgstr "BI Aggregaties die deze %s bevatten"
-
-msgid "BI Availability"
-msgstr "BI-beschikbaarheid"
 
 msgid "BI Configuration Packs"
 msgstr "BI Configuratie Pakketten"
@@ -7492,6 +7490,14 @@ msgstr "BI aggregatiegroepen boom"
 
 msgid "BI aggregations for hosts by host groups"
 msgstr "BI-aggregaties voor hosts per hostgroep"
+
+#, fuzzy
+msgid "BI aggregations summary state"
+msgstr "BI Aggregations Summary State"
+
+#, fuzzy
+msgid "BI availability"
+msgstr "BI-beschikbaarheid"
 
 msgid "BI compilation"
 msgstr "BI compilatie"
@@ -7604,7 +7610,8 @@ msgstr "Backplanes"
 msgid "Backup"
 msgstr "Back-up"
 
-msgid "Backup & Restore"
+#, fuzzy
+msgid "Backup & restore"
 msgstr "Back-up en herstel"
 
 msgid "Backup Age"
@@ -8235,10 +8242,12 @@ msgstr "Bussnelheid"
 msgid "Business Intelligence"
 msgstr "Business Intelligence"
 
-msgid "Business Intelligence Administration"
+#, fuzzy
+msgid "Business Intelligence administration"
 msgstr "Business Intelligence Administratie"
 
-msgid "Business Intelligence Rules and Aggregations"
+#, fuzzy
+msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regels en Aggregaties"
 
 msgid "Business reporting"
@@ -10478,7 +10487,8 @@ msgstr ""
 "'Check_MK' service wilt wijzigen, geef dan <tt><b>Check_MK$</b></tt> op in "
 "de lijst van services."
 
-msgid "Checkbox Selection Livetime"
+#, fuzzy
+msgid "Checkbox selection livetime"
 msgstr "Selectievakje Livetime"
 
 msgid "Checked"
@@ -10872,7 +10882,8 @@ msgstr "Kindertijd in gebruikersruimte"
 msgid "China"
 msgstr ""
 
-msgid "Choose SNMP Backend"
+#, fuzzy
+msgid "Choose SNMP backend"
 msgstr "SNMP backend kiezen"
 
 msgid ""
@@ -11242,8 +11253,8 @@ msgstr "Opschonen wanneer schijfruimte minder is"
 msgid "Clear & Delete"
 msgstr "Wis & Wis"
 
-msgid "Clear audit Log"
-msgstr "Duidelijk controlelogboek"
+msgid "Clear audit log"
+msgstr "Auditlogboek wissen"
 
 msgid "Clear failed notifications"
 msgstr "Verwijder mislukte meldingen"
@@ -15191,11 +15202,9 @@ msgstr "Standaard %s sjabloon"
 msgid "Default (%s)"
 msgstr "Standaard (%s)"
 
-msgid "Default BI Visualization Settings"
+#, fuzzy
+msgid "Default BI visualization settings"
 msgstr "Standaard BI-visualisatie-instellingen"
-
-msgid "Default Graph layout"
-msgstr "Standaard grafiek lay-out"
 
 msgid "Default Increment"
 msgstr "Standaard toename"
@@ -15221,6 +15230,10 @@ msgstr "Standaard inloggegevens"
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "Standaard timerbereik voor rapportage"
+
+#, fuzzy
+msgid "Default graph layout"
+msgstr "Standaard grafiek lay-out"
 
 msgid "Default is 22."
 msgstr "De standaardwaarde is 22."
@@ -18049,9 +18062,6 @@ msgstr "Download"
 msgid "Download %s package of agent for %s"
 msgstr "Download %s pakket van agent voor %s"
 
-msgid "Download Agent Output / SNMP Walks"
-msgstr "Download Agent Output / SNMP Walks"
-
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "Download Checkmk Agent voor host %s"
@@ -18064,6 +18074,10 @@ msgstr "SNMP wandeling downloaden"
 
 msgid "Download agent output"
 msgstr "Agent uitvoer downloaden"
+
+#, fuzzy
+msgid "Download agent output / SNMP walks"
+msgstr "Download Agent Output / SNMP Walks"
 
 msgid "Download agent signature key"
 msgstr "De handtekeningsleutel van de agent downloaden"
@@ -19269,7 +19283,8 @@ msgstr ""
 "Schakel gzip-compressie van de geback-upte bestanden in. De tar archieven "
 "die door de back-up worden aangemaakt, worden tijdens de back-up gzipt."
 
-msgid "Enable handling of Real-Time Checks"
+#, fuzzy
+msgid "Enable handling of Real-Time checks"
 msgstr "Afhandeling van Real-Time Checks mogelijk maken"
 
 msgid "Enable host notifications"
@@ -19780,10 +19795,6 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasys Switch: Temperatuur"
 
 msgid "Enterprise feature"
-msgstr "Ondernemingsfunctie"
-
-#, fuzzy
-msgid "Enterprise features"
 msgstr "Ondernemingsfunctie"
 
 msgid "Entersekt Certificate Expiration"
@@ -21813,7 +21824,8 @@ msgstr "Vaste tekenreeks te verwachten in de inhoud"
 msgid "Flap"
 msgstr "Flap"
 
-msgid "Flap Detection"
+#, fuzzy
+msgid "Flap detection"
 msgstr "Flapdetectie"
 
 msgid "Flap detection settings for hosts"
@@ -23769,7 +23781,7 @@ msgid "Hash"
 msgstr "Hash"
 
 #, fuzzy
-msgid "Headed execution"
+msgid "Headed execution as specific user"
 msgstr "Plan uitvoering"
 
 msgid "Headers at the left (single dataset)"
@@ -24821,7 +24833,8 @@ msgstr "Geschiedenis log rotatie: Regelmatig interval van rotaties"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "Geschiedenis log rotatie: Roteren op grootte (Limiet van de grootte)"
 
-msgid "History of Event"
+#, fuzzy
+msgid "History of event"
 msgstr "Geschiedenis van het evenement"
 
 msgid "History of hardware/software inventory"
@@ -24925,9 +24938,6 @@ msgstr "Host Contact Groep"
 
 msgid "Host Details"
 msgstr "Gastheer Details"
-
-msgid "Host Diagnostic"
-msgstr "Diagnostische gastheer"
 
 msgid "Host Down"
 msgstr "Gastheer neer"
@@ -25110,6 +25120,10 @@ msgstr "Host aangepast veld ID"
 
 msgid "Host customer"
 msgstr "Gastheer klant"
+
+#, fuzzy
+msgid "Host diagnostic"
+msgstr "Diagnostische gastheer"
 
 #, python-format
 msgid "Host does not have tag <b>%s</b>"
@@ -28854,17 +28868,15 @@ msgstr "Infecties"
 msgid "Infinite use of Checkmk up to version"
 msgstr "Oneindig gebruik van Checkmk tot versie %s"
 
-msgid "InfluxDB Connection"
-msgstr "InfluxDB-verbinding"
-
-msgid "InfluxDB Connections"
-msgstr "InfluxDB Verbindingen"
-
 msgid "InfluxDB Overflows Rate"
 msgstr "InfluxDB Overflowsnelheid"
 
 msgid "InfluxDB Queue Usage"
 msgstr "InfluxDB wachtrijgebruik"
+
+#, fuzzy
+msgid "InfluxDB connection"
+msgstr "InfluxDB verbindingen"
 
 msgid "InfluxDB connections"
 msgstr "InfluxDB verbindingen"
@@ -28946,11 +28958,12 @@ msgstr "Init duur"
 msgid "Init duration with absolute limits"
 msgstr "Init duur met absolute grenzen"
 
-msgid "Initial Scheduling"
-msgstr "Initiële planning"
-
 msgid "Initial expansion of aggregations"
 msgstr "Aanvankelijke uitbreiding van aggregaties"
+
+#, fuzzy
+msgid "Initial scheduling"
+msgstr "Initiële planning"
 
 msgid "Initialized GIT for Checkmk"
 msgstr "Geïnitialiseerde GIT voor Checkmk"
@@ -32006,7 +32019,8 @@ msgstr "Lijst gegroepeerde interfaces afzonderlijk"
 msgid "List of %s"
 msgstr "Lijst van %s"
 
-msgid "List of all Aggregations for simple API calls"
+#, fuzzy
+msgid "List of all aggregations for simple API calls"
 msgstr "Lijst van alle aggregaties voor eenvoudige API-oproepen"
 
 msgid ""
@@ -32618,9 +32632,6 @@ msgstr "Logfile"
 
 msgid "Logfile Grouping"
 msgstr "Logbestand groepering"
-
-msgid "Logfile Pattern Analyzer"
-msgstr "Logfile patroon analyser"
 
 msgid "Logfile information of logwatch plugin"
 msgstr "Logbestand informatie van logwatch plugin"
@@ -33492,23 +33503,11 @@ msgstr "Beheer"
 msgid "Manage All Scheduled Reports"
 msgstr "Alle geplande rapporten beheren"
 
-msgid "Manage Custom Icons"
-msgstr "Aangepaste pictogrammen beheren"
-
-msgid "Manage Dynamic configuration"
-msgstr "Dynamische configuratie beheren"
-
-msgid "Manage Extension Packages (MKPs)"
-msgstr "Uitbreidingspakketten beheren (MKP's)"
-
 msgid "Manage Hard- and software inventory related rulesets"
 msgstr "Beheer van hard- en software inventaris gerelateerde regelsets"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDB verbindingen beheren"
-
-msgid "Manage Monitoring Agents"
-msgstr "Beheer van toezichthoudende agenten"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "Eigen geplande rapporten beheren"
@@ -33531,6 +33530,10 @@ msgstr "Aangepaste kenmerken beheren"
 msgid "Manage custom host- and user attributes"
 msgstr "Beheer aangepaste host- en gebruikersattributen"
 
+#, fuzzy
+msgid "Manage custom icons"
+msgstr "Aangepaste pictogrammen beheren"
+
 msgid "Manage customers"
 msgstr "Klanten beheren"
 
@@ -33541,10 +33544,18 @@ msgstr ""
 "Beheer van op maat gemaakte bewakingsagenten voor Linux, Windows en andere "
 "besturingssystemen"
 
+#, fuzzy
+msgid "Manage dynamic configuration"
+msgstr "Dynamische configuratie beheren"
+
 msgid "Manage event classification and correlation rules for the Event Console"
 msgstr ""
 "Gebeurtenisclassificatie en correlatieregels voor de gebeurtenissenconsole "
 "beheren"
+
+#, fuzzy
+msgid "Manage extension packages (MKPs)"
+msgstr "Uitbreidingspakketten beheren (MKP's)"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Beheer langer lopende taken in de Checkmk GUI"
@@ -33552,6 +33563,10 @@ msgstr "Beheer langer lopende taken in de Checkmk GUI"
 msgid "Manage monitored hosts and services and the hosts' folder structure."
 msgstr ""
 "Beheer van gemonitorde hosts en services en de mappenstructuur van de hosts."
+
+#, fuzzy
+msgid "Manage monitoring agents"
+msgstr "Beheer van toezichthoudende agenten"
 
 msgid "Manage services"
 msgstr "Diensten beheren"
@@ -36564,9 +36579,6 @@ msgstr "Netwerk Load Balancers"
 msgid "Network Scan"
 msgstr "Netwerk scan"
 
-msgid "Network Topology"
-msgstr "Netwerk Topologie"
-
 msgid "Network address"
 msgstr "Netwerkadres"
 
@@ -36619,14 +36631,18 @@ msgstr "Netwerkstatistieken"
 msgid "Network statistics and flows of %s"
 msgstr "Netwerkstatistieken en -stromen van %s"
 
+msgid "Network topology"
+msgstr "Netwerktopologie"
+
 msgid "Networking"
 msgstr "Netwerken"
 
-msgid "Networking Tunnels"
-msgstr "Netwerken tunnels"
-
 msgid "Networking checks without agent"
 msgstr "Netwerkcontroles zonder agent"
+
+#, fuzzy
+msgid "Networking tunnels"
+msgstr "Netwerken tunnels"
 
 msgid "Networks"
 msgstr "Netwerken"
@@ -37703,11 +37719,12 @@ msgstr "Notificatie Script"
 msgid "Notification Spooler"
 msgstr "Kennisgeving Spooler"
 
-msgid "Notification Spooler Configuration"
-msgstr "Kennisgeving Spooler Configuratie"
-
 msgid "Notification Spooler Connection"
 msgstr "Kennisgeving Spooler Verbinding"
+
+#, fuzzy
+msgid "Notification Spooler configuration"
+msgstr "Kennisgeving Spooler Configuratie"
 
 msgid "Notification Spooling"
 msgstr "Kennisgeving Spooling"
@@ -39125,12 +39142,6 @@ msgstr ""
 "Let alleen op hosts die piggyback data ontvangen van hosts waarvan de naam "
 "overeenkomt met een van deze reguliere expressies."
 
-#, python-format
-msgid ""
-"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
-"the Core MKP is installed."
-msgstr ""
-
 msgid "Only discover monitors in the following states"
 msgstr "Ontdek alleen monitors in de volgende staten"
 
@@ -39684,9 +39695,6 @@ msgstr ""
 
 msgid "Other"
 msgstr "Andere"
-
-msgid "Other Services"
-msgstr "Andere Diensten"
 
 msgid "Other components"
 msgstr "Andere componenten"
@@ -40463,7 +40471,8 @@ msgstr "Parameters van totale emmergrootte"
 msgid "Parameters:"
 msgstr "Parameters:"
 
-msgid "Parent / Child topology"
+#, fuzzy
+msgid "Parent / child topology"
 msgstr "Ouder/kind topologie"
 
 msgid "Parent definition"
@@ -42282,9 +42291,6 @@ msgstr "Vermogen"
 msgid "Power Presence Sensors"
 msgstr "Stroom Aanwezigheid Sensoren"
 
-msgid "Power Supplies"
-msgstr "Voedingen"
-
 msgid "Power Supply Unit"
 msgstr "Voedingseenheid"
 
@@ -42302,6 +42308,9 @@ msgstr "Stroomverbruik"
 
 msgid "Power state unknown"
 msgstr "Vermogenstoestand onbekend"
+
+msgid "Power supplies"
+msgstr "Stroomvoorziening"
 
 msgid "Powered OFF"
 msgstr "Uitgeschakeld"
@@ -43936,9 +43945,6 @@ msgstr "Te controleren regio's"
 msgid "Register Authenticator App"
 msgstr "Systeemauthenticatie"
 
-msgid "Register Host & download monitoring agents of your hosts"
-msgstr "Registreer Host & download monitoring agents van uw hosts"
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr "Registreer alle hosts & download alle monitoring agents"
 
@@ -43965,6 +43971,10 @@ msgstr "Registreer elke nieuwe host"
 #, fuzzy
 msgid "Register authenticator app"
 msgstr "Systeemauthenticatie"
+
+#, fuzzy
+msgid "Register host & download monitoring agents of your hosts"
+msgstr "Registreer Host & download monitoring agents van uw hosts"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -44747,10 +44757,12 @@ msgstr "Rapportgeneratie van %s / %s"
 msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr "Rapportgeneratie gestart in achtergrondtaak <a href=\"%s\">%s</a>"
 
-msgid "Report of Host"
+#, fuzzy
+msgid "Report of host"
 msgstr "Verslag van de gastheer"
 
-msgid "Report of Host Performance Graphs"
+#, fuzzy
+msgid "Report of host performance graphs"
 msgstr "Rapport van Host Performance Grafieken"
 
 msgid "Report options"
@@ -45458,22 +45470,22 @@ msgstr "Robot Framework: Laatste logboek"
 msgid "RobotMK logs"
 msgstr "RobotMK logboeken"
 
-#, fuzzy
-msgid "Robotmk"
-msgstr "Verslag indienen"
-
-#, fuzzy
-msgid "Robotmk (Windows)"
-msgstr "RobotMK logboeken"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
 
 #, fuzzy
+msgid "Robotmk Scheduler (Windows)"
+msgstr "RobotMK logboeken"
+
+#, fuzzy
 msgid "Robotmk Suite Status"
 msgstr "Status van de site"
+
+#, fuzzy
+msgid "Robotmk Tests"
+msgstr "Verslag indienen"
 
 msgid "Role"
 msgstr "Rol"
@@ -46133,9 +46145,6 @@ msgstr "SNAT-gebruik bovenste niveaus"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Agent Simulator"
-msgstr "SNMP Agent Simulator"
-
 msgid "SNMP Community"
 msgstr "SNMP gemeenschap"
 
@@ -46156,6 +46165,10 @@ msgstr "SNMP MIBs voor trap vertaling"
 
 msgid "SNMP Management Board"
 msgstr "SNMP Beheerskaart"
+
+#, fuzzy
+msgid "SNMP agent simulator"
+msgstr "SNMP Agent Simulator"
 
 msgid "SNMP check for EMC Isilon quotas"
 msgstr "SNMP controle voor EMC Isilon quota"
@@ -46902,10 +46915,12 @@ msgstr "Zie gebeurtenissen in het zijbalk element 'Overzicht"
 msgid "See events not related to a known host"
 msgstr "Zie gebeurtenissen die geen verband houden met een bekende host"
 
-msgid "See failed Notifications (all)"
+#, fuzzy
+msgid "See failed notifications (all)"
 msgstr "Zie mislukte meldingen (alle)"
 
-msgid "See failed Notifications (last 24 hours)"
+#, fuzzy
+msgid "See failed notifications (last 24 hours)"
 msgstr "Zie mislukte meldingen (laatste 24 uur)"
 
 msgid "See foreign background jobs"
@@ -47353,9 +47368,6 @@ msgstr "Naam server"
 msgid "Server OS"
 msgstr "Server OS"
 
-msgid "Server Time"
-msgstr "Server tijd"
-
 msgid "Server connections"
 msgstr "Serververbindingen"
 
@@ -47395,9 +47407,6 @@ msgstr "Dienst (exacte match)"
 #, fuzzy
 msgid "Service (regex)"
 msgstr "Dienst Regex"
-
-msgid "Service Availability"
-msgstr "Beschikbaarheid van de dienst"
 
 msgid "Service Checks"
 msgstr "Service Controles"
@@ -47444,9 +47453,6 @@ msgstr "Service Level van gastheren"
 msgid "Service Level of services"
 msgstr "Service Niveau van de diensten"
 
-msgid "Service Levels"
-msgstr "Service Niveaus"
-
 msgid "Service Metrics"
 msgstr "Dienst Metriek"
 
@@ -47492,6 +47498,10 @@ msgstr "Dienst alternatieve weergave naam"
 #, fuzzy
 msgid "Service alternative display name (regex)"
 msgstr "Dienst alternatieve weergave naam"
+
+#, fuzzy
+msgid "Service availability"
+msgstr "Beschikbaarheid van de dienst"
 
 msgid "Service check command"
 msgstr "Commando dienstcontrole"
@@ -47696,6 +47706,10 @@ msgstr "Serviceniveau van doorgestuurde events getoond in Event Console."
 
 msgid "Service level of forwarded logs shown in Event Console."
 msgstr "Serviceniveau van doorgestuurde events getoond in Event Console."
+
+#, fuzzy
+msgid "Service levels"
+msgstr "Dienstverleningsniveau"
 
 msgid "Service limits"
 msgstr "Dienstbeperkingen"
@@ -48323,7 +48337,8 @@ msgstr ""
 msgid "Set width"
 msgstr "Breedte instellen"
 
-msgid "Set/Remove downtimes"
+#, fuzzy
+msgid "Set/remove downtimes"
 msgstr "Stilstandtijden instellen/verwijderen"
 
 msgid ""
@@ -49272,18 +49287,6 @@ msgstr ""
 msgid "Single"
 msgstr "Single"
 
-msgid "Single Aggregation"
-msgstr "Enkelvoudige aggregatie"
-
-msgid "Single Aggregation for simple API calls"
-msgstr "Enkelvoudige aggregatie voor eenvoudige API-oproepen"
-
-msgid ""
-"Single Aggregation for simple API calls. Contains the state and state output."
-msgstr ""
-"Enkelvoudige aggregatie voor eenvoudige API-oproepen. Bevat de toestand en "
-"toestand uitvoer."
-
 msgid "Single Bit (BOOL)"
 msgstr "Enkel Bit (BOOL)"
 
@@ -49292,6 +49295,21 @@ msgstr "Enkele Linux host"
 
 msgid "Single Windows host"
 msgstr "Eén Windows host"
+
+#, fuzzy
+msgid "Single aggregation"
+msgstr "Enkelvoudige aggregatie"
+
+#, fuzzy
+msgid "Single aggregation for simple API calls"
+msgstr "Enkelvoudige aggregatie voor eenvoudige API-oproepen"
+
+#, fuzzy
+msgid ""
+"Single aggregation for simple API calls. Contains the state and state output."
+msgstr ""
+"Enkelvoudige aggregatie voor eenvoudige API-oproepen. Bevat de toestand en "
+"toestand uitvoer."
 
 msgid "Single dataset"
 msgstr "Enkelvoudige dataset"
@@ -67461,11 +67479,12 @@ msgstr ""
 msgid "Use Checkmk sidebar"
 msgstr "Gebruik Checkmk zijbalk"
 
-msgid "Use Classic Backend"
-msgstr "Klassieke backend gebruiken"
-
 msgid "Use Classic SNMP Backend"
 msgstr "Klassiek SNMP-backend gebruiken"
+
+#, fuzzy
+msgid "Use Classic backend"
+msgstr "Klassieke backend gebruiken"
 
 msgid "Use DNS lookup cache"
 msgstr "Gebruik DNS lookup cache"
@@ -67500,6 +67519,10 @@ msgstr "Inline SNMP gebruiken (verouderd)"
 msgid "Use Inline SNMP Backend"
 msgstr "Gebruik Inline SNMP Backend"
 
+#, fuzzy
+msgid "Use Inline SNMP backend"
+msgstr "Gebruik Inline SNMP Backend"
+
 msgid ""
 "Use Jira Query Language (JQL) to get statistics out of your Jira instance."
 msgstr ""
@@ -67525,7 +67548,8 @@ msgid "Use RCC for isolated execution"
 msgstr "Gebruik SSL voor de verbinding."
 
 #, fuzzy, python-format
-msgid "Use RCC for isolated execution (%s in Robotmk Core)"
+msgid ""
+"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
 msgstr "Gebruik SSL voor de verbinding."
 
 msgid "Use Reporting"
@@ -68745,6 +68769,10 @@ msgid "VM, Cloud, Container"
 msgstr "VM, cloud, container"
 
 #, fuzzy
+msgid "VM, cloud, container"
+msgstr "VM, cloud, container"
+
+#, fuzzy
 msgid "VMTools activation state"
 msgstr "Activeringsstatus"
 
@@ -69159,9 +69187,6 @@ msgstr "Video uitleg"
 msgid "View"
 msgstr "Bekijk"
 
-msgid "View Extension Package Manager"
-msgstr "Bekijk uitbreiding pakketbeheer"
-
 msgid "View Properties"
 msgstr "Eigenschappen bekijken"
 
@@ -69176,6 +69201,10 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
+
+#, fuzzy
+msgid "View extension package manager"
+msgstr "Bekijk uitbreiding pakketbeheer"
 
 msgid "View layout"
 msgstr "Bekijk lay-out"
@@ -69211,12 +69240,6 @@ msgstr "Virtuele host"
 msgid "Virtual Drive"
 msgstr "Virtuele aandrijving"
 
-msgid "Virtual Host Tree"
-msgstr "Virtuele gastheer boom"
-
-msgid "Virtual Host Trees"
-msgstr "Virtuele gastheerbomen"
-
 msgid "Virtual Machine"
 msgstr "Virtuele Machine"
 
@@ -69246,6 +69269,14 @@ msgstr "Index virtueel domein"
 
 msgid "Virtual host"
 msgstr "Virtuele host"
+
+#, fuzzy
+msgid "Virtual host tree"
+msgstr "Virtuele gastheer boom"
+
+#, fuzzy
+msgid "Virtual host trees"
+msgstr "Virtuele gastheerbomen"
 
 msgid "Virtual machine (for example ESX) guest tools status"
 msgstr "Status van gastprogramma's voor virtuele machines (bijvoorbeeld ESX)"
@@ -75046,12 +75077,12 @@ msgstr "kennisgevingen binnen de laatste"
 msgid "ntopng Admin User"
 msgstr "ntopng Admin gebruiker"
 
-#, fuzzy
-msgid "ntopng Connection Parameters (chargeable add-on)"
-msgstr "Ntopng Verbindingsparameters (betalend add-on)"
-
 msgid "ntopng Username"
 msgstr "ntopng Gebruikersnaam"
+
+#, fuzzy
+msgid "ntopng connection parameters (chargeable add-on)"
+msgstr "Ntopng Verbindingsparameters (betalend add-on)"
 
 #, python-format
 msgid ""
@@ -75829,6 +75860,44 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Acknowledge Incompatible Werks"
+#~ msgstr "Erkende onverenigbare Werks"
+
+#~ msgid "Audit Log"
+#~ msgstr "Controlelogboek"
+
+#~ msgid "Clear audit Log"
+#~ msgstr "Duidelijk controlelogboek"
+
+#, fuzzy
+#~| msgid "Enterprise feature"
+#~ msgid "Enterprise features"
+#~ msgstr "Ondernemingsfunctie"
+
+#~ msgid "InfluxDB Connection"
+#~ msgstr "InfluxDB-verbinding"
+
+#~ msgid "InfluxDB Connections"
+#~ msgstr "InfluxDB Verbindingen"
+
+#~ msgid "Logfile Pattern Analyzer"
+#~ msgstr "Logfile patroon analyser"
+
+#~ msgid "Network Topology"
+#~ msgstr "Netwerk Topologie"
+
+#~ msgid "Other Services"
+#~ msgstr "Andere Diensten"
+
+#~ msgid "Power Supplies"
+#~ msgstr "Voedingen"
+
+#~ msgid "Server Time"
+#~ msgstr "Server tijd"
+
+#~ msgid "Service Levels"
+#~ msgstr "Service Niveaus"
+
 #, fuzzy
 #~| msgid "Authentication"
 #~ msgid "Add Authenticator App"
@@ -76171,9 +76240,6 @@ msgstr ""
 
 #~ msgid "Clear"
 #~ msgstr "Duidelijk"
-
-#~ msgid "Clear audit log"
-#~ msgstr "Auditlogboek wissen"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr ""
@@ -77344,9 +77410,6 @@ msgstr ""
 
 #~ msgid "Sitename"
 #~ msgstr "Sitenaam"
-
-#~ msgid "Network topology"
-#~ msgstr "Netwerktopologie"
 
 #~ msgid "A description or title of this rule"
 #~ msgstr "Een beschrijving of titel van deze regel"
@@ -79393,9 +79456,6 @@ msgstr ""
 
 #~ msgid "Other entity"
 #~ msgstr "Andere entiteit"
-
-#~ msgid "Power supplies"
-#~ msgstr "Stroomvoorziening"
 
 #~ msgid "Power supply"
 #~ msgstr "Stroomvoorziening"

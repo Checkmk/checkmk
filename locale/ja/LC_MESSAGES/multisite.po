@@ -1802,12 +1802,13 @@ msgstr ""
 "<p>通常、Checkmk は接続されているホストのプライマリ IP アドレスを使用します。"
 "このオプションを使用すると、このパラメータを上書きすることができます。</p>"
 
+#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
-"mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
+"mode=pattern_editor\">Logfile pattern analyzer</a> to test the rules you "
 "defined here.</p><p>Note that to match a special regex character in your "
 "patterns, you need to use a backslash to escape its special meaning. This is "
 "especially relevant for Windows file paths. For example, to match the "
@@ -2954,9 +2955,6 @@ msgstr "確認"
 msgid "Acknowledge"
 msgstr "認める"
 
-msgid "Acknowledge Incompatible Werks"
-msgstr "互換性のないWerksの認識"
-
 msgid "Acknowledge all"
 msgstr "全てを承認する"
 
@@ -2968,6 +2966,10 @@ msgstr "全ての互換性のないWerksを承認する"
 
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "ホストとサービスの問題を承認、承認を削除"
+
+#, fuzzy
+msgid "Acknowledge incompatible Werks"
+msgstr "認められた互換性のないWerks"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -3412,9 +3414,6 @@ msgstr "BIルールを追加する"
 msgid "Add BI rule %s"
 msgstr "BIルール %s を追加します"
 
-msgid "Add Bookmark"
-msgstr "ブックマークを追加"
-
 msgid "Add CA or self-signed certificate"
 msgstr "CAまたは自己署名証明書を追加します"
 
@@ -3504,6 +3503,10 @@ msgstr "バックアップジョブの追加"
 
 msgid "Add backup target"
 msgstr "バックアップターゲットの追加"
+
+#, fuzzy
+msgid "Add bookmark"
+msgstr "ブックマークを追加"
 
 msgid "Add child node generator"
 msgstr "子ノードジェネレータを追加します"
@@ -3651,7 +3654,8 @@ msgstr "メッセージを追加する"
 msgid "Add metric level"
 msgstr "要素レベルを追加"
 
-msgid "Add micro seconds to timestamps in Logfiles"
+#, fuzzy
+msgid "Add micro seconds to timestamps in logfiles"
 msgstr "ログファイルのタイムスタンプにマイクロ秒を追加する"
 
 msgid "Add missing, remove vanished"
@@ -4483,9 +4487,6 @@ msgstr ""
 msgid "Agent %s successful"
 msgstr "エージェント%sが成功しました"
 
-msgid "Agent Certificates"
-msgstr "エージェント証明書"
-
 msgid "Agent Controller"
 msgstr "エージェントコントローラー"
 
@@ -4550,6 +4551,10 @@ msgstr "エージェントのベーキングが終了しました。"
 #, fuzzy
 msgid "Agent based plugins (deprecated)"
 msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
+
+#, fuzzy
+msgid "Agent certificates"
+msgstr "エージェント証明書"
 
 msgid "Agent controller"
 msgstr "エージェントコントローラー"
@@ -4760,10 +4765,12 @@ msgstr "集約:単純なボックスレイアウト"
 msgid "Aggregations"
 msgstr "集計"
 
-msgid "Aggregations Affected by Host"
+#, fuzzy
+msgid "Aggregations affected by host"
 msgstr "ホストの影響を受ける集計"
 
-msgid "Aggregations Affected by Service"
+#, fuzzy
+msgid "Aggregations affected by service"
 msgstr "サービスの影響を受ける集約"
 
 msgid "Aggregations are equal"
@@ -6544,9 +6551,6 @@ msgstr "属性"
 msgid "Attributes to remove from hosts"
 msgstr "ホストから削除する属性"
 
-msgid "Audit Log"
-msgstr "監査ログ"
-
 msgid "Audit log"
 msgstr "監査ログ"
 
@@ -7274,18 +7278,12 @@ msgstr "BIアグリゲーショングループ"
 msgid "BI Aggregations"
 msgstr "BI集計"
 
-msgid "BI Aggregations Summary State"
-msgstr "BI集計サマリーの状態"
-
 msgid "BI Aggregations affected by one host"
 msgstr "1つのホストの影響を受けるBIアグリゲーション"
 
 #, python-format
 msgid "BI Aggregations containing this %s"
 msgstr "この %s を含むBIアグリゲーション"
-
-msgid "BI Availability"
-msgstr "BI の可用性"
 
 msgid "BI Configuration Packs"
 msgstr "BI Configurationパック"
@@ -7307,6 +7305,14 @@ msgstr "BI集約グループツリー"
 
 msgid "BI aggregations for hosts by host groups"
 msgstr "ホストグループによるホストのBI集計"
+
+#, fuzzy
+msgid "BI aggregations summary state"
+msgstr "BI集計サマリーの状態"
+
+#, fuzzy
+msgid "BI availability"
+msgstr "BI の可用性"
 
 msgid "BI compilation"
 msgstr "BIコンパイル"
@@ -7419,7 +7425,8 @@ msgstr "バックプレーン"
 msgid "Backup"
 msgstr "バックアップ"
 
-msgid "Backup & Restore"
+#, fuzzy
+msgid "Backup & restore"
 msgstr "バックアップとリストア"
 
 msgid "Backup Age"
@@ -8040,10 +8047,12 @@ msgstr "バスの速度"
 msgid "Business Intelligence"
 msgstr "ビジネス・インテリジェンス"
 
-msgid "Business Intelligence Administration"
+#, fuzzy
+msgid "Business Intelligence administration"
 msgstr "ビジネス・インテリジェンス管理"
 
-msgid "Business Intelligence Rules and Aggregations"
+#, fuzzy
+msgid "Business Intelligence rules and aggregations"
 msgstr "ビジネス・インテリジェンスルールと集計"
 
 msgid "Business reporting"
@@ -10211,7 +10220,8 @@ msgstr ""
 "ください。Check_MKサービスのチェック間隔のみを変更する場合は、サービスのリス"
 "トで<tt><b>Check_MK$</b></tt>を指定します。"
 
-msgid "Checkbox Selection Livetime"
+#, fuzzy
+msgid "Checkbox selection livetime"
 msgstr "チェックボックス選択ライブタイム"
 
 msgid "Checked"
@@ -10593,7 +10603,8 @@ msgstr "ユーザースペースでの子の時間"
 msgid "China"
 msgstr "中国"
 
-msgid "Choose SNMP Backend"
+#, fuzzy
+msgid "Choose SNMP backend"
 msgstr "SNMPバックエンドを選択します"
 
 msgid ""
@@ -10948,7 +10959,7 @@ msgstr "ディスク容量が次の値を下回るとクリーンアップ"
 msgid "Clear & Delete"
 msgstr "クリアと削除"
 
-msgid "Clear audit Log"
+msgid "Clear audit log"
 msgstr "監査ログをクリア"
 
 msgid "Clear failed notifications"
@@ -14818,11 +14829,9 @@ msgstr "デフォルトの %s テンプレート"
 msgid "Default (%s)"
 msgstr "デフォルト(%s)"
 
-msgid "Default BI Visualization Settings"
+#, fuzzy
+msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
-
-msgid "Default Graph layout"
-msgstr "デフォルトのグラフレイアウト"
 
 msgid "Default Increment"
 msgstr "デフォルトのインクリメント"
@@ -14848,6 +14857,10 @@ msgstr "デフォルトの資格情報"
 #, fuzzy
 msgid "Default expiration time (relative)"
 msgstr "デフォルトのレポート時間範囲"
+
+#, fuzzy
+msgid "Default graph layout"
+msgstr "デフォルトのグラフレイアウト"
 
 msgid "Default is 22."
 msgstr "デフォルトは22です。"
@@ -17632,9 +17645,6 @@ msgstr "ダウンロード"
 msgid "Download %s package of agent for %s"
 msgstr "%sのエージェントの%sパッケージをダウンロードします"
 
-msgid "Download Agent Output / SNMP Walks"
-msgstr "エージェント出力/SNMPウォークのダウンロード"
-
 #, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
@@ -17647,6 +17657,10 @@ msgstr "SNMP walkをダウンロード"
 
 msgid "Download agent output"
 msgstr "エージェント出力のダウンロード"
+
+#, fuzzy
+msgid "Download agent output / SNMP walks"
+msgstr "エージェント出力/SNMPウォークのダウンロード"
 
 msgid "Download agent signature key"
 msgstr "エージェントの署名キーをダウンロードする"
@@ -18833,7 +18847,8 @@ msgstr ""
 "バックアップされたファイルのgzip圧縮を有効にします。バックアップによって作成"
 "されたtarアーカイブは、バックアップ中にgzip圧縮されます。"
 
-msgid "Enable handling of Real-Time Checks"
+#, fuzzy
+msgid "Enable handling of Real-Time checks"
 msgstr "リアルタイムチェックの処理を有効にする"
 
 msgid "Enable host notifications"
@@ -19328,10 +19343,6 @@ msgid "Enterasys Switch: Temperature"
 msgstr "Enterasysスイッチ:温度"
 
 msgid "Enterprise feature"
-msgstr "エンタープライズ機能"
-
-#, fuzzy
-msgid "Enterprise features"
 msgstr "エンタープライズ機能"
 
 msgid "Entersekt Certificate Expiration"
@@ -21342,7 +21353,8 @@ msgstr "コンテンツで期待される文字列を修正しました"
 msgid "Flap"
 msgstr "フラップ"
 
-msgid "Flap Detection"
+#, fuzzy
+msgid "Flap detection"
 msgstr "フラップ検出"
 
 msgid "Flap detection settings for hosts"
@@ -23265,7 +23277,7 @@ msgid "Hash"
 msgstr "ハッシュ"
 
 #, fuzzy
-msgid "Headed execution"
+msgid "Headed execution as specific user"
 msgstr "実行スケジュール"
 
 msgid "Headers at the left (single dataset)"
@@ -24282,7 +24294,8 @@ msgstr "履歴ログローテーション:定期的なローテーション間�
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "履歴ログローテーション:サイズで回転(サイズの制限)"
 
-msgid "History of Event"
+#, fuzzy
+msgid "History of event"
 msgstr "イベントの履歴"
 
 msgid "History of hardware/software inventory"
@@ -24385,9 +24398,6 @@ msgstr "ホストの連絡先グループ"
 
 msgid "Host Details"
 msgstr "ホストの詳細"
-
-msgid "Host Diagnostic"
-msgstr "ホスト診断"
 
 msgid "Host Down"
 msgstr "ホストダウン"
@@ -24568,6 +24578,10 @@ msgstr "ホストカスタムフィールドID"
 
 msgid "Host customer"
 msgstr "ホスト顧客"
+
+#, fuzzy
+msgid "Host diagnostic"
+msgstr "ホスト診断"
 
 #, python-format
 msgid "Host does not have tag <b>%s</b>"
@@ -28175,17 +28189,15 @@ msgstr "感染"
 msgid "Infinite use of Checkmk up to version"
 msgstr "バージョンアップしたCheckmkを無制限に使用可能"
 
-msgid "InfluxDB Connection"
-msgstr "InfluxDBコネクション"
-
-msgid "InfluxDB Connections"
-msgstr "InfluxDBコネクション"
-
 msgid "InfluxDB Overflows Rate"
 msgstr "InfluxDBのオーバーフロー率"
 
 msgid "InfluxDB Queue Usage"
 msgstr "InfluxDBキューの使用状況"
+
+#, fuzzy
+msgid "InfluxDB connection"
+msgstr "InfluxDBコネクション"
 
 msgid "InfluxDB connections"
 msgstr "InfluxDBコネクション"
@@ -28265,11 +28277,12 @@ msgstr "初期所要時間"
 msgid "Init duration with absolute limits"
 msgstr "絶対制限のある初期持続時間"
 
-msgid "Initial Scheduling"
-msgstr "初期スケジューリング"
-
 msgid "Initial expansion of aggregations"
 msgstr "アグリゲーションの初期拡大"
+
+#, fuzzy
+msgid "Initial scheduling"
+msgstr "初期スケジューリング"
 
 msgid "Initialized GIT for Checkmk"
 msgstr "Checkmkの初期化されたGIT"
@@ -31259,7 +31272,8 @@ msgstr "グループ化されたインターフェイスを個別に一覧表示
 msgid "List of %s"
 msgstr "%s のリスト"
 
-msgid "List of all Aggregations for simple API calls"
+#, fuzzy
+msgid "List of all aggregations for simple API calls"
 msgstr "単純なAPIコールの全集約のリスト"
 
 msgid ""
@@ -31853,9 +31867,6 @@ msgstr "ログファイル"
 
 msgid "Logfile Grouping"
 msgstr "ログファイルのグループ化"
-
-msgid "Logfile Pattern Analyzer"
-msgstr "ログファイルパターンアナライザー"
 
 msgid "Logfile information of logwatch plugin"
 msgstr "logwatchプラグインのログファイル情報"
@@ -32720,23 +32731,11 @@ msgstr "管理する"
 msgid "Manage All Scheduled Reports"
 msgstr "すべてのスケジュールされたレポートを管理する"
 
-msgid "Manage Custom Icons"
-msgstr "カスタムアイコンの管理"
-
-msgid "Manage Dynamic configuration"
-msgstr "動的構成の管理"
-
-msgid "Manage Extension Packages (MKPs)"
-msgstr "拡張パッケージの管理(MKP)"
-
 msgid "Manage Hard- and software inventory related rulesets"
 msgstr "ハードおよびソフトウェアインベントリ関連のルールセットを管理する"
 
 msgid "Manage InfluxDB connections"
 msgstr "InfluxDBコネクションの管理"
-
-msgid "Manage Monitoring Agents"
-msgstr "監視の管理"
 
 msgid "Manage Own Scheduled Reports"
 msgstr "スケジュールされたレポートの管理"
@@ -32759,6 +32758,10 @@ msgstr "カスタム属性の管理"
 msgid "Manage custom host- and user attributes"
 msgstr "カスタムホストとユーザーアトリビュートが管理されている"
 
+#, fuzzy
+msgid "Manage custom icons"
+msgstr "カスタムアイコンの管理"
+
 msgid "Manage customers"
 msgstr "顧客の管理"
 
@@ -32769,14 +32772,26 @@ msgstr ""
 "Linux, Windows, その他のオペレーティングシステム用にカスタマイズされたパッ"
 "ケージ監視エージェントの管理"
 
+#, fuzzy
+msgid "Manage dynamic configuration"
+msgstr "動的構成の管理"
+
 msgid "Manage event classification and correlation rules for the Event Console"
 msgstr "イベントコンソールのイベント分類と相関ルールを管理する"
+
+#, fuzzy
+msgid "Manage extension packages (MKPs)"
+msgstr "拡張パッケージの管理(MKP)"
 
 msgid "Manage longer running tasks in the Checkmk GUI"
 msgstr "Checkmk GUIで長時間実行されるタスクを管理する"
 
 msgid "Manage monitored hosts and services and the hosts' folder structure."
 msgstr "監視対象のホストとサービス、およびホストのフォルダー構造を管理します。"
+
+#, fuzzy
+msgid "Manage monitoring agents"
+msgstr "監視の管理"
 
 msgid "Manage services"
 msgstr "サービス管理"
@@ -35742,9 +35757,6 @@ msgstr "ネットワークロードバランサー"
 msgid "Network Scan"
 msgstr "ネットワークスキャン"
 
-msgid "Network Topology"
-msgstr "ネットワークトポロジー"
-
 msgid "Network address"
 msgstr "ネットワークアドレス"
 
@@ -35797,14 +35809,18 @@ msgstr "ネットワーク統計"
 msgid "Network statistics and flows of %s"
 msgstr "ネットワーク統計と %s のフロー"
 
+msgid "Network topology"
+msgstr "ネットワークトポロジー"
+
 msgid "Networking"
 msgstr "ネットワーキング"
 
-msgid "Networking Tunnels"
-msgstr "ネットワークトンネル"
-
 msgid "Networking checks without agent"
 msgstr "エージェントなしのネットワークチェック"
+
+#, fuzzy
+msgid "Networking tunnels"
+msgstr "ネットワークトンネル"
 
 msgid "Networks"
 msgstr "ネットワーク"
@@ -36856,11 +36872,12 @@ msgstr "通知スクリプト"
 msgid "Notification Spooler"
 msgstr "通知スプーラー"
 
-msgid "Notification Spooler Configuration"
-msgstr "通知スプーラーの構成"
-
 msgid "Notification Spooler Connection"
 msgstr "通知スプーラ接続"
+
+#, fuzzy
+msgid "Notification Spooler configuration"
+msgstr "通知スプーラーの構成"
 
 msgid "Notification Spooling"
 msgstr "通知スプーリング"
@@ -38237,12 +38254,6 @@ msgstr ""
 "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
 "ストのみを対象とします。"
 
-#, python-format
-msgid ""
-"Only core functionality of Robotmk is shown. <b>%s</b> are hidden because "
-"the Core MKP is installed."
-msgstr ""
-
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
 
@@ -38780,9 +38791,6 @@ msgstr "ホスト名が書き換えられた場合は元のホスト名、それ
 
 msgid "Other"
 msgstr "その他"
-
-msgid "Other Services"
-msgstr "他のサービス"
 
 msgid "Other components"
 msgstr "その他のコンポーネント"
@@ -39540,7 +39548,8 @@ msgstr "最大バケットサイズのパラメータ"
 msgid "Parameters:"
 msgstr "パラメーター:"
 
-msgid "Parent / Child topology"
+#, fuzzy
+msgid "Parent / child topology"
 msgstr "親/子トポロジ"
 
 msgid "Parent definition"
@@ -41322,9 +41331,6 @@ msgstr "Power"
 msgid "Power Presence Sensors"
 msgstr "パワープレゼンスセンサー"
 
-msgid "Power Supplies"
-msgstr "電源供給装置"
-
 msgid "Power Supply Unit"
 msgstr "電源ユニット"
 
@@ -41342,6 +41348,9 @@ msgstr "消費電力"
 
 msgid "Power state unknown"
 msgstr "電源状態不明"
+
+msgid "Power supplies"
+msgstr "電源供給装置"
 
 msgid "Powered OFF"
 msgstr "電源オフ"
@@ -42958,9 +42967,6 @@ msgstr "監視対象領域"
 msgid "Register Authenticator App"
 msgstr "認証アプリの登録"
 
-msgid "Register Host & download monitoring agents of your hosts"
-msgstr "ホストの登録と監視エージェントのダウンロード"
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr "すべてのホストの登録とすべての監視エージェントのダウンロード"
 
@@ -42987,6 +42993,10 @@ msgstr "新規ホストの登録"
 #, fuzzy
 msgid "Register authenticator app"
 msgstr "認証アプリの登録"
+
+#, fuzzy
+msgid "Register host & download monitoring agents of your hosts"
+msgstr "ホストの登録と監視エージェントのダウンロード"
 
 msgid ""
 "Register hosts that you are a contact for and then download monitoring "
@@ -43763,10 +43773,12 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "レポートの生成はバックグラウンドジョブ<a href=\"%s\">%s</a>で開始されました"
 
-msgid "Report of Host"
+#, fuzzy
+msgid "Report of host"
 msgstr "ホストのレポート"
 
-msgid "Report of Host Performance Graphs"
+#, fuzzy
+msgid "Report of host performance graphs"
 msgstr "ホストパフォーマンスグラフのレポート"
 
 msgid "Report options"
@@ -44476,21 +44488,22 @@ msgstr "ロボットフレームワーク:最終ログ"
 msgid "RobotMK logs"
 msgstr "RobotMKのログ"
 
-msgid "Robotmk"
-msgstr "Robotmk"
-
-#, fuzzy
-msgid "Robotmk (Windows)"
-msgstr "RobotMKのログ"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
 
 #, fuzzy
+msgid "Robotmk Scheduler (Windows)"
+msgstr "RobotMKのログ"
+
+#, fuzzy
 msgid "Robotmk Suite Status"
 msgstr "サイトステータス"
+
+#, fuzzy
+msgid "Robotmk Tests"
+msgstr "Robotmk"
 
 msgid "Role"
 msgstr "役割"
@@ -45144,9 +45157,6 @@ msgstr "SNAT使用量の上位レベル"
 msgid "SNMP"
 msgstr "SNMP"
 
-msgid "SNMP Agent Simulator"
-msgstr "SNMPエージェントシミュレータ"
-
 msgid "SNMP Community"
 msgstr "SNMPコミュニティ"
 
@@ -45167,6 +45177,10 @@ msgstr "トラップトランザクションに対するSNMP MIB"
 
 msgid "SNMP Management Board"
 msgstr "SNMP管理ボード"
+
+#, fuzzy
+msgid "SNMP agent simulator"
+msgstr "SNMPエージェントシミュレータ"
 
 msgid "SNMP check for EMC Isilon quotas"
 msgstr "EMC IsilonクォータのSNMPチェック"
@@ -45902,10 +45916,12 @@ msgstr "サイドバーエレメント'概要'でイベントを参照してく�
 msgid "See events not related to a known host"
 msgstr "既知のホストに関連しないイベントを表示する"
 
-msgid "See failed Notifications (all)"
+#, fuzzy
+msgid "See failed notifications (all)"
 msgstr "失敗した通知を見る(全て)"
 
-msgid "See failed Notifications (last 24 hours)"
+#, fuzzy
+msgid "See failed notifications (last 24 hours)"
 msgstr "失敗した通知を見る(直近24時間)"
 
 msgid "See foreign background jobs"
@@ -46333,9 +46349,6 @@ msgstr "サーバーネーム"
 msgid "Server OS"
 msgstr "サーバーOS"
 
-msgid "Server Time"
-msgstr "サーバー時間"
-
 msgid "Server connections"
 msgstr "サーバー接続"
 
@@ -46374,9 +46387,6 @@ msgstr "サービス(完全一致)"
 
 msgid "Service (regex)"
 msgstr "サービス(正規表現)"
-
-msgid "Service Availability"
-msgstr "サービスの可用性"
 
 msgid "Service Checks"
 msgstr "サービスチェック"
@@ -46423,9 +46433,6 @@ msgstr "ホストのサービスレベル"
 msgid "Service Level of services"
 msgstr "サービスのサービスレベル"
 
-msgid "Service Levels"
-msgstr "サービスレベル"
-
 msgid "Service Metrics"
 msgstr "サービスメトリクス"
 
@@ -46470,6 +46477,10 @@ msgstr "サービス代替表示名"
 
 msgid "Service alternative display name (regex)"
 msgstr "サービス代替表示名(正規表現)"
+
+#, fuzzy
+msgid "Service availability"
+msgstr "サービスの可用性"
 
 msgid "Service check command"
 msgstr "サービスチェックコマンド"
@@ -46671,6 +46682,10 @@ msgstr "イベントコンソールに表示される転送イベントのサー
 
 msgid "Service level of forwarded logs shown in Event Console."
 msgstr "イベントコンソールに表示される転送ログのサービスレベルを設定する。"
+
+#, fuzzy
+msgid "Service levels"
+msgstr "サービスレベル"
 
 msgid "Service limits"
 msgstr "サービス制限"
@@ -47281,7 +47296,8 @@ msgstr ""
 msgid "Set width"
 msgstr "幅を設定する"
 
-msgid "Set/Remove downtimes"
+#, fuzzy
+msgid "Set/remove downtimes"
 msgstr "ダウンタイムの設定/削除"
 
 msgid ""
@@ -48208,17 +48224,6 @@ msgstr ""
 msgid "Single"
 msgstr "シングル"
 
-msgid "Single Aggregation"
-msgstr "単一の集約"
-
-msgid "Single Aggregation for simple API calls"
-msgstr "シンプルなAPIコールの単一集約"
-
-msgid ""
-"Single Aggregation for simple API calls. Contains the state and state output."
-msgstr ""
-"シンプルなAPIコール用の単一アグリゲーション。状態と状態出力を含みます。"
-
 msgid "Single Bit (BOOL)"
 msgstr "シングルビット(BOOL)"
 
@@ -48227,6 +48232,20 @@ msgstr "単一Linuxホスト"
 
 msgid "Single Windows host"
 msgstr "単一Windowsホスト"
+
+#, fuzzy
+msgid "Single aggregation"
+msgstr "単一の集約"
+
+#, fuzzy
+msgid "Single aggregation for simple API calls"
+msgstr "シンプルなAPIコールの単一集約"
+
+#, fuzzy
+msgid ""
+"Single aggregation for simple API calls. Contains the state and state output."
+msgstr ""
+"シンプルなAPIコール用の単一アグリゲーション。状態と状態出力を含みます。"
 
 msgid "Single dataset"
 msgstr "単一のデータセット"
@@ -65737,11 +65756,12 @@ msgstr ""
 msgid "Use Checkmk sidebar"
 msgstr "Checkmkサイドバーを使用"
 
-msgid "Use Classic Backend"
-msgstr "クラシックバックエンドを使用する"
-
 msgid "Use Classic SNMP Backend"
 msgstr "クラシックSNMPバックエンドを使用する"
+
+#, fuzzy
+msgid "Use Classic backend"
+msgstr "クラシックバックエンドを使用する"
 
 msgid "Use DNS lookup cache"
 msgstr "DNSルックアップキャッシュを使用する"
@@ -65776,6 +65796,10 @@ msgstr "インラインSNMPを使用する(非推奨)"
 msgid "Use Inline SNMP Backend"
 msgstr "インラインSNMPバックエンドを使用する"
 
+#, fuzzy
+msgid "Use Inline SNMP backend"
+msgstr "インラインSNMPバックエンドを使用する"
+
 msgid ""
 "Use Jira Query Language (JQL) to get statistics out of your Jira instance."
 msgstr "Jiraクエリ言語(JQL)を使用して、Jiraインスタンスから統計を取得します。"
@@ -65799,7 +65823,8 @@ msgid "Use RCC for isolated execution"
 msgstr "接続にはSSLを使用します。"
 
 #, fuzzy, python-format
-msgid "Use RCC for isolated execution (%s in Robotmk Core)"
+msgid ""
+"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
 msgstr "接続にはSSLを使用します。"
 
 msgid "Use Reporting"
@@ -66970,6 +66995,10 @@ msgstr "VMスナップショットの概要"
 msgid "VM, Cloud, Container"
 msgstr "VM、クラウド、コンテナ"
 
+#, fuzzy
+msgid "VM, cloud, container"
+msgstr "VM、クラウド、コンテナ"
+
 msgid "VMTools activation state"
 msgstr "VMToolsアクティベーションステータス"
 
@@ -67381,9 +67410,6 @@ msgstr "ビデオチュートリアル"
 msgid "View"
 msgstr "ビュー"
 
-msgid "View Extension Package Manager"
-msgstr "拡張パッケージマネージャを見る"
-
 msgid "View Properties"
 msgstr "プロパティを表示"
 
@@ -67398,6 +67424,10 @@ msgstr "このサービスのパラメーターを表示および編集する"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
+
+#, fuzzy
+msgid "View extension package manager"
+msgstr "拡張パッケージマネージャを見る"
 
 msgid "View layout"
 msgstr "レイアウトを表示"
@@ -67432,12 +67462,6 @@ msgstr "仮想ホスト"
 msgid "Virtual Drive"
 msgstr "仮想ドライブ"
 
-msgid "Virtual Host Tree"
-msgstr "仮想ホストツリー"
-
-msgid "Virtual Host Trees"
-msgstr "仮想ホストツリー"
-
 msgid "Virtual Machine"
 msgstr "仮想マシン"
 
@@ -67465,6 +67489,14 @@ msgstr "バーチャルドメインインデックス"
 
 msgid "Virtual host"
 msgstr "仮想ホスト"
+
+#, fuzzy
+msgid "Virtual host tree"
+msgstr "仮想ホストツリー"
+
+#, fuzzy
+msgid "Virtual host trees"
+msgstr "仮想ホストツリー"
 
 msgid "Virtual machine (for example ESX) guest tools status"
 msgstr "仮想マシン(ESXなど)のゲストツールのステータス"
@@ -73024,11 +73056,12 @@ msgstr "最後の内の通知"
 msgid "ntopng Admin User"
 msgstr "ntopng管理者ユーザー"
 
-msgid "ntopng Connection Parameters (chargeable add-on)"
-msgstr "Ntopng接続パラメーター(有料アドオン)"
-
 msgid "ntopng Username"
 msgstr "ntopngユーザー名"
+
+#, fuzzy
+msgid "ntopng connection parameters (chargeable add-on)"
+msgstr "Ntopng接続パラメーター(有料アドオン)"
 
 #, python-format
 msgid ""
@@ -73798,6 +73831,44 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "Ω"
 msgstr ""
 
+#~ msgid "Acknowledge Incompatible Werks"
+#~ msgstr "互換性のないWerksの認識"
+
+#~ msgid "Audit Log"
+#~ msgstr "監査ログ"
+
+#~ msgid "Clear audit Log"
+#~ msgstr "監査ログをクリア"
+
+#, fuzzy
+#~| msgid "Enterprise feature"
+#~ msgid "Enterprise features"
+#~ msgstr "エンタープライズ機能"
+
+#~ msgid "InfluxDB Connection"
+#~ msgstr "InfluxDBコネクション"
+
+#~ msgid "InfluxDB Connections"
+#~ msgstr "InfluxDBコネクション"
+
+#~ msgid "Logfile Pattern Analyzer"
+#~ msgstr "ログファイルパターンアナライザー"
+
+#~ msgid "Network Topology"
+#~ msgstr "ネットワークトポロジー"
+
+#~ msgid "Other Services"
+#~ msgstr "他のサービス"
+
+#~ msgid "Power Supplies"
+#~ msgstr "電源供給装置"
+
+#~ msgid "Server Time"
+#~ msgstr "サーバー時間"
+
+#~ msgid "Service Levels"
+#~ msgstr "サービスレベル"
+
 #~ msgid "Add Authenticator App"
 #~ msgstr "認証Appの追加"
 
@@ -74103,9 +74174,6 @@ msgstr ""
 
 #~ msgid "Clear"
 #~ msgstr "クリアする"
-
-#~ msgid "Clear audit log"
-#~ msgstr "監査ログをクリア"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr "レガシー環境をデプロイする(Python 3.4 + モジュールの標準セット)"
@@ -75206,9 +75274,6 @@ msgstr ""
 
 #~ msgid "Sitename"
 #~ msgstr "サイト名"
-
-#~ msgid "Network topology"
-#~ msgstr "ネットワークトポロジー"
 
 #~ msgid "A description or title of this rule"
 #~ msgstr "このルールの説明またはタイトル"
@@ -76955,9 +77020,6 @@ msgstr ""
 
 #~ msgid "Other entity"
 #~ msgstr "その他のエンティティ"
-
-#~ msgid "Power supplies"
-#~ msgstr "電源供給装置"
 
 #~ msgid "Power supply"
 #~ msgstr "電源"

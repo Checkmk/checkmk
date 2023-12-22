@@ -2,50 +2,13 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self};
+use crate::config::{self, section};
 use crate::emit::header;
 use crate::ms_sql::sqls;
 use crate::utils;
 use anyhow::Result;
 
 use tiberius::Row;
-
-// section hand-made
-pub const INSTANCE_SECTION_NAME: &str = "instance";
-pub const COUNTERS_SECTION_NAME: &str = "counters";
-pub const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
-pub const BACKUP_SECTION_NAME: &str = "backup";
-pub const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
-pub const DATAFILES_SECTION_NAME: &str = "datafiles";
-pub const DATABASES_SECTION_NAME: &str = "databases";
-pub const CLUSTERS_SECTION_NAME: &str = "clusters";
-
-pub const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
-pub const CONNECTIONS_SECTION_NAME: &str = "connections";
-
-// query based section
-pub const JOBS_SECTION_NAME: &str = "jobs";
-pub const MIRRORING_SECTION_NAME: &str = "mirroring";
-pub const AVAILABILITY_GROUPS_SECTION_NAME: &str = "availability_groups";
-
-const PIPE_SEP_SECTIONS: [&str; 8] = [
-    INSTANCE_SECTION_NAME,
-    COUNTERS_SECTION_NAME,
-    BLOCKED_SESSIONS_SECTION_NAME,
-    BACKUP_SECTION_NAME,
-    TRANSACTION_LOG_SECTION_NAME,
-    DATAFILES_SECTION_NAME,
-    DATABASES_SECTION_NAME,
-    CLUSTERS_SECTION_NAME,
-];
-
-const SPACE_SEP_SECTIONS: [&str; 2] = [TABLE_SPACES_SECTION_NAME, CONNECTIONS_SECTION_NAME];
-
-const QUERY_BASED_SECTIONS: [&str; 3] = [
-    JOBS_SECTION_NAME,
-    MIRRORING_SECTION_NAME,
-    AVAILABILITY_GROUPS_SECTION_NAME,
-];
 
 #[derive(Debug, PartialEq)]
 pub enum SectionKind {
@@ -61,12 +24,25 @@ pub struct Section {
 }
 
 impl Section {
-    pub fn new(name: impl ToString, cache_age: Option<u32>) -> Self {
-        let name = name.to_string();
-        let sep = get_section_separator(&name);
+    pub fn make_instance_section() -> Self {
+        let name = section::names::INSTANCE.to_string();
+        let sep = section::get_default_separator(&name);
         Self {
             name,
             sep,
+            cache_age: None,
+        }
+    }
+
+    pub fn new(section: &config::section::Section, cache_age: u32) -> Self {
+        let cache_age = if section.kind() == config::section::SectionKind::Async {
+            Some(cache_age)
+        } else {
+            None
+        };
+        Self {
+            name: section.name().into(),
+            sep: section.sep().into(),
             cache_age,
         }
     }
@@ -120,7 +96,7 @@ impl Section {
         F: Fn() -> String,
     {
         match self.name.as_ref() {
-            JOBS_SECTION_NAME | MIRRORING_SECTION_NAME => closure(),
+            section::names::JOBS | section::names::MIRRORING => closure(),
             _ => "".to_string(),
         }
     }
@@ -130,9 +106,9 @@ impl Section {
             custom_query
         } else {
             match self.name.as_ref() {
-                JOBS_SECTION_NAME => Some(sqls::QUERY_JOBS),
-                MIRRORING_SECTION_NAME => Some(sqls::QUERY_MIRRORING),
-                AVAILABILITY_GROUPS_SECTION_NAME => Some(sqls::QUERY_AVAILABILITY_GROUP),
+                section::names::JOBS => Some(sqls::QUERY_JOBS),
+                section::names::MIRRORING => Some(sqls::QUERY_MIRRORING),
+                section::names::AVAILABILITY_GROUPS => Some(sqls::QUERY_AVAILABILITY_GROUP),
                 _ => None,
             }
         }
@@ -140,16 +116,18 @@ impl Section {
 
     pub fn main_db(&self) -> Option<String> {
         match self.name.as_ref() {
-            JOBS_SECTION_NAME => Some("msdb"),
-            MIRRORING_SECTION_NAME => Some("master"),
+            section::names::JOBS => Some("msdb"),
+            section::names::MIRRORING => Some("master"),
             _ => None,
         }
         .map(|s| s.to_string())
     }
 
     pub fn validate_rows(&self, rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
-        const ALLOW_TO_HAVE_EMPTY_OUTPUT: [&str; 2] =
-            [MIRRORING_SECTION_NAME, AVAILABILITY_GROUPS_SECTION_NAME];
+        const ALLOW_TO_HAVE_EMPTY_OUTPUT: [&str; 2] = [
+            section::names::MIRRORING,
+            section::names::AVAILABILITY_GROUPS,
+        ];
         if (!rows.is_empty() && !rows[0].is_empty())
             || (ALLOW_TO_HAVE_EMPTY_OUTPUT.contains(&self.name()))
         {
@@ -161,96 +139,32 @@ impl Section {
     }
 }
 
-pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
-    let sections = ms_sql.sections();
-    let mut base: Vec<Section> = sections
-        .get_filtered_always()
-        .iter()
-        .map(|n| Section::new(n, None))
-        .collect();
-    base.extend(
-        sections
-            .get_filtered_cached()
-            .iter()
-            .map(|n| Section::new(n, Some(ms_sql.sections().cache_age()))),
-    );
-    base
-}
-
-fn get_section_separator(name: &str) -> Option<char> {
-    match name {
-        _ if PIPE_SEP_SECTIONS.contains(&name) => Some('|'),
-        _ if SPACE_SEP_SECTIONS.contains(&name) => None,
-        _ if QUERY_BASED_SECTIONS.contains(&name) => Some('\t'),
-        _ => {
-            log::warn!("Unknown section: {}", name);
-            None
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::config::ms_sql::Config;
+    use crate::config::section;
 
     #[test]
     fn test_section_header() {
-        let section = Section::new("instance", None);
+        let section = Section::make_instance_section();
         assert_eq!(section.to_plain_header(), "<<<mssql_instance:sep(124)>>>\n");
         assert_eq!(section.to_work_header(), "<<<mssql_instance:sep(124)>>>\n");
-        let section = Section::new("instance", Some(100));
-        assert_eq!(section.to_plain_header(), "<<<mssql_instance:sep(124)>>>\n");
+
+        let section = Section::new(
+            &section::SectionBuilder::new("backup").set_async().build(),
+            100,
+        );
+        assert_eq!(section.to_plain_header(), "<<<mssql_backup:sep(124)>>>\n");
         assert!(section
             .to_work_header()
-            .starts_with("<<<mssql_instance:cached("));
+            .starts_with("<<<mssql_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>\n"));
     }
 
     #[test]
     fn test_work_sections() {
         let config = Config::default();
-        assert_eq!(get_work_sections(&config).len(), 13);
-    }
-
-    #[test]
-    fn test_sections_enabled() {
-        const CONFIG: &str = r#"
----
-mssql:
-  main: # mandatory, to be used if no specific config
-    authentication: # mandatory
-      username: "f" # mandatory
-    sections:
-      always: 
-      - "instance"
-      - "backup"
-      cached:
-      - "jobs"
-      disabled: 
-      - "backup"
-"#;
-        let sections = get_work_sections(&Config::from_string(CONFIG).unwrap().unwrap());
-        assert_eq!(
-            sections
-                .iter()
-                .map(|s| (s.name(), s.kind()))
-                .collect::<Vec<(&str, &SectionKind)>>(),
-            [
-                ("instance", &SectionKind::Sync),
-                ("jobs", &SectionKind::Async)
-            ]
-        );
-    }
-
-    #[test]
-    fn test_known_sections() {
-        assert!(get_section_separator("zu").is_none());
-        assert!(get_section_separator("tablespaces").is_none());
-        assert!(get_section_separator("connections").is_none());
-        assert_eq!(get_section_separator("jobs").unwrap(), '\t');
-        assert_eq!(get_section_separator("mirroring").unwrap(), '\t');
-        assert_eq!(get_section_separator("availability_groups").unwrap(), '\t');
-        assert_eq!(get_section_separator("instance").unwrap(), '|');
+        assert_eq!(config.all_sections().len(), 13);
     }
 }

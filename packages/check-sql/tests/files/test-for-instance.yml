@@ -8,12 +8,11 @@ mssql:
     connection:
       hostname: agentbuild3.lan.tribe29.com
     sections:
-      always: 
-        - "instance"
-      cached:
-        - "backup"
-      disabled: 
-      - "counters"
+      - instance:
+      - backup:
+          is_async: yes
+      - counters:
+          disabled: yes
     discovery:
       detect: no
       include: [ "SQLEXPRESS_NAME"]
@@ -26,3 +25,4 @@ mssql:
         conn:
           port: 123  # wrong port for testing
         
+

@@ -2,15 +2,16 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::config::defines::defaults;
 const PREFIX: &str = "mssql";
 
 pub fn header(name: &str, separator: Option<char>) -> String {
     match separator {
-        Some(s) => {
+        Some(s) if s != defaults::DEFAULT_SEP => {
             let sep = s as u8;
             format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
         }
-        None => format!("<<<{PREFIX}_{name}>>>\n"),
+        _ => format!("<<<{PREFIX}_{name}>>>\n"),
     }
 }
 
@@ -31,6 +32,7 @@ mod test {
         assert_eq!(header("name", Some('\t')), "<<<mssql_name:sep(09)>>>\n");
         assert_eq!(header("name", Some('|')), "<<<mssql_name:sep(124)>>>\n");
         assert_eq!(header("name", None), "<<<mssql_name>>>\n");
+        assert_eq!(header("name", Some(' ')), "<<<mssql_name>>>\n");
     }
 
     #[test]

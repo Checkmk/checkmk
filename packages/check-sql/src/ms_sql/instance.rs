@@ -3,10 +3,11 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::client::{self, Client};
-use super::section::{self, Section, SectionKind};
+use super::section::{Section, SectionKind};
 use crate::config::{
     self,
     ms_sql::{AuthType, CustomInstance, Endpoint},
+    section::names,
     CheckConfig,
 };
 use crate::emit;
@@ -253,7 +254,7 @@ impl SqlInstance {
                 }
             }
             Err(err) => {
-                let instance_section = Section::new(section::INSTANCE_SECTION_NAME, None); // this is important section always present
+                let instance_section = Section::make_instance_section(); // this is important section always present
                 result += &instance_section.to_plain_header();
                 result += &self.generate_state_entry(false, instance_section.sep());
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
@@ -339,15 +340,15 @@ impl SqlInstance {
     ) -> String {
         let sep = section.sep();
         match section.name() {
-            section::INSTANCE_SECTION_NAME => {
+            names::INSTANCE => {
                 self.generate_state_entry(true, section.sep())
                     + &self.generate_details_entry(client, section.sep()).await
             }
-            section::COUNTERS_SECTION_NAME => {
+            names::COUNTERS => {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
             }
-            section::BLOCKED_SESSIONS_SECTION_NAME => {
+            names::BLOCKED => {
                 self.generate_blocking_sessions_section(
                     client,
                     &sqls::get_blocking_sessions_query(),
@@ -355,38 +356,36 @@ impl SqlInstance {
                 )
                 .await
             }
-            section::TABLE_SPACES_SECTION_NAME => {
+            names::TABLE_SPACES => {
                 let databases = self.generate_databases(client).await;
                 self.generate_table_spaces_section(endpoint, &databases, sep)
                     .await
             }
-            section::BACKUP_SECTION_NAME => self.generate_backup_section(client, sep).await,
-            section::TRANSACTION_LOG_SECTION_NAME => {
+            names::BACKUP => self.generate_backup_section(client, sep).await,
+            names::TRANSACTION_LOG => {
                 let databases = self.generate_databases(client).await;
                 self.generate_transaction_logs_section(endpoint, &databases, sep)
                     .await
             }
-            section::DATAFILES_SECTION_NAME => {
+            names::DATAFILES => {
                 let databases = self.generate_databases(client).await;
                 self.generate_datafiles_section(endpoint, &databases, sep)
                     .await
             }
-            section::DATABASES_SECTION_NAME => {
+            names::DATABASES => {
                 self.generate_databases_section(client, sqls::QUERY_DATABASES, sep)
                     .await
             }
-            section::CLUSTERS_SECTION_NAME => {
+            names::CLUSTERS => {
                 let databases = self.generate_databases(client).await;
                 self.generate_clusters_section(endpoint, &databases, sep)
                     .await
             }
-            section::CONNECTIONS_SECTION_NAME => {
+            names::CONNECTIONS => {
                 self.generate_connections_section(client, sqls::QUERY_CONNECTIONS, sep)
                     .await
             }
-            section::MIRRORING_SECTION_NAME
-            | section::JOBS_SECTION_NAME
-            | section::AVAILABILITY_GROUPS_SECTION_NAME => {
+            names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                 self.generate_query_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
@@ -1200,10 +1199,11 @@ impl CheckConfig {
 
     /// Generate header for each section without any data, see vbs plugin
     fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
-        section::get_work_sections(ms_sql)
+        ms_sql
+            .valid_sections()
             .iter()
-            .map(Section::to_plain_header)
-            .collect::<Vec<String>>()
+            .map(|s| Section::new(s, ms_sql.cache_age()).to_plain_header())
+            .collect::<Vec<_>>()
             .join("")
     }
 
@@ -1231,13 +1231,17 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
         .map(|b: SqlInstanceBuilder| b.environment(environment).hash(ms_sql.hash()).build())
         .collect::<Vec<SqlInstance>>();
 
-    let sections = section::get_work_sections(ms_sql);
+    let sections = ms_sql
+        .valid_sections()
+        .into_iter()
+        .map(|s| Section::new(s, ms_sql.cache_age()))
+        .collect::<Vec<_>>();
     Ok(generate_instance_entries(&instances)
         + &generate_result(&instances, &sections, ms_sql).await?)
 }
 
 fn generate_instance_entries<P: AsRef<SqlInstance>>(instances: &[P]) -> String {
-    let section = Section::new(section::INSTANCE_SECTION_NAME, None);
+    let section = Section::make_instance_section();
     section.to_plain_header() // as in old plugin
      + &instances
         .iter()

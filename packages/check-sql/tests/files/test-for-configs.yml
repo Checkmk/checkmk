@@ -4,12 +4,11 @@ mssql:
     authentication: # mandatory
       username: "f" # mandatory
     sections:
-      always: 
-        - "instance"
-      cached:
-        - "backup"
-      disabled: 
-      - "counters"
+      - instance:
+      - backup:
+          is_async: yes
+      - counters:
+          disabled: yes
     discovery:
       detect: yes
       include: [ "SQLEXPRESS_WOW"]
@@ -18,10 +17,9 @@ mssql:
       authentication: # mandatory
         username: "f" # mandatory
       sections:
-        always: 
-        - "instance"
-        cached:
-        - "databases"
+        - instance:
+        - databases:
+            is_async: yes
       discovery:
         detect: yes
         include: [ "SQLEXPRESS_NAME"]

@@ -72,7 +72,7 @@ from .query import (
     StatusTable,
 )
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
-from .rule_packs import load_config as load_config_using
+from .rule_packs import load_active_config
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
 from .snmp import SNMPTrapParser
@@ -3405,7 +3405,7 @@ def make_config(config: ConfigFromWATO) -> Config:
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
-    config = load_config_using(settings)
+    config = load_active_config(settings)
     # If not set by command line, set the log level by configuration
     if settings.options.verbosity == 0:
         levels = config["log_level"]

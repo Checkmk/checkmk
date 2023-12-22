@@ -25,6 +25,7 @@ from cmk.gui import (
     default_permissions,
     graphing,
     gui_background_job,
+    hooks,
     inventory,
     login,
     logwatch,
@@ -54,6 +55,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.mkeventd.helpers import save_active_rule_packs
 from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.pages import page_registry
@@ -99,6 +101,7 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
 def register_sites_options() -> None:
+    hooks.register_builtin("mkeventd-activate-changes", save_active_rule_packs)
     visuals.MultipleSitesFilter.sites_options = cre_sites_options
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 

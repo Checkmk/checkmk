@@ -5,7 +5,8 @@
 
 from pathlib import Path
 
-from cmk.mkp_tool import PathConfig
+from cmk.mkp_tool import PackagePart, PathConfig
+from cmk.mkp_tool._parts import permissions
 
 
 def test_config_from_toml() -> None:
@@ -40,3 +41,12 @@ web_dir = "local_web_dir"
         ).web_dir
         == Path("local_web_dir")
     )
+
+
+def test_permissions() -> None:
+    assert permissions(PackagePart.CMK_PLUGINS, Path("agent_based/foo.py")) == 0o600
+    assert permissions(PackagePart.CMK_PLUGINS, Path("libexec/foo")) == 0o700
+    assert permissions(PackagePart.AGENT_BASED, Path("some_check.py")) == 0o600
+    assert permissions(PackagePart.BIN, Path("some_binary")) == 0o700
+    assert permissions(PackagePart.LIB, Path("nagios/plugins/check_foobar")) == 0o700
+    assert permissions(PackagePart.LIB, Path("something/else/check_foobar")) == 0o600

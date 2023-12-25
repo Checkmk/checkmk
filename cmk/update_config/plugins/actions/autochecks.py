@@ -30,9 +30,12 @@ from cmk.update_config.update_state import UpdateActionState
 _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
     CheckPluginName, Callable[[str | None], str | None]
 ] = {
+    CheckPluginName("barracuda_mailqueues"): (lambda _x: None),
     CheckPluginName("checkpoint_memory"): (lambda _x: None),
-    CheckPluginName("hp_procurve_mem"): (lambda _x: None),
     CheckPluginName("datapower_mem"): (lambda _x: None),
+    CheckPluginName("hp_procurve_mem"): (lambda _x: None),
+    CheckPluginName("nullmailer_mailq"): (lambda _x: None),
+    CheckPluginName("qmail_stats"): (lambda _x: None),
     CheckPluginName("ucd_mem"): (lambda _x: None),
 }
 

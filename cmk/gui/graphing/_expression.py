@@ -693,7 +693,6 @@ def _from_scalar(
 def _parse_single_expression(
     expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> MetricExpression:
     if expression not in translated_metrics:
         with contextlib.suppress(ValueError):
@@ -707,11 +706,11 @@ def _parse_single_expression(
 
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
-        metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
+        metric = Metric(var_name, consolidation_func_name)
         scalar = _from_scalar(scalar_name, metric)
         return Percent(percent_value=scalar, base_value=MaximumOf(metric)) if percent else scalar
 
-    metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
+    metric = Metric(var_name, consolidation_func_name)
     return Percent(percent_value=metric, base_value=MaximumOf(metric)) if percent else metric
 
 
@@ -721,7 +720,6 @@ RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">"
 def _parse_expression(
     expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> tuple[Sequence[MetricExpression | RPNOperators], str, str]:
     # Evaluates an expression, returns a triple of value, unit and color.
     # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
@@ -775,7 +773,6 @@ def _parse_expression(
                     _parse_single_expression(
                         p,
                         translated_metrics,
-                        enforced_consolidation_func_name,
                     )
                 )
 
@@ -930,7 +927,6 @@ def _add_explicit_unit_name_or_color(
 def parse_expression(
     expression: str | int | float,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> MetricExpression:
     if isinstance(expression, (int, float)):
         return Constant(expression)
@@ -939,11 +935,8 @@ def parse_expression(
         stack,
         explicit_unit_name,
         explicit_color,
-    ) = _parse_expression(
-        expression,
-        translated_metrics,
-        enforced_consolidation_func_name,
-    )
+    ) = _parse_expression(expression, translated_metrics)
+
     if isinstance(resolved := _resolve_stack(stack), MetricExpression):
         return (
             _add_explicit_unit_name_or_color(resolved, explicit_unit_name, explicit_color)
@@ -956,17 +949,13 @@ def parse_expression(
 def parse_conditional_expression(
     expression: str,
     translated_metrics: Mapping[str, TranslatedMetric],
-    enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> ConditionalMetricExpression:
     (
         stack,
         _explicit_unit_name,
         _explicit_color,
-    ) = _parse_expression(
-        expression,
-        translated_metrics,
-        enforced_consolidation_func_name,
-    )
+    ) = _parse_expression(expression, translated_metrics)
+
     if isinstance(
         resolved := _resolve_stack(stack),
         ConditionalMetricExpression,

@@ -34,7 +34,7 @@ repos:
             exclude: |
                 (?x)^(
                     ^agents/plugins/|
-                    ^enterprise/agents/plugins/|
+                    ^non-free/cmk-update-agent/|
                     ^tests/agent-plugin-unit/
                 )
     - repo: local

@@ -797,11 +797,14 @@ class DiscoveryPageRenderer:
 
         undecided_services = 0
         vanished_services = 0
+        changed_services = 0
         new_host_labels = len(discovery_result.new_labels)
         vanished_host_labels = len(discovery_result.vanished_labels)
         changed_host_labels = len(discovery_result.changed_labels)
 
         for service in discovery_result.check_table:
+            if service.check_source == DiscoveryState.CHANGED:
+                changed_services += 1
             if service.check_source == DiscoveryState.UNDECIDED:
                 undecided_services += 1
             if service.check_source == DiscoveryState.VANISHED:
@@ -810,6 +813,7 @@ class DiscoveryPageRenderer:
         if all(
             v == 0
             for v in [
+                changed_services,
                 undecided_services,
                 vanished_services,
                 new_host_labels,
@@ -822,6 +826,11 @@ class DiscoveryPageRenderer:
         html.icon("fixall", _("Service discovery details"))
 
         html.open_ul()
+        self._render_fix_all_element(
+            ungettext("Changed service: ", "Changed services: ", changed_services),
+            changed_services,
+            "#tree.table.checks_changed",
+        )
         self._render_fix_all_element(
             ungettext("Undecided service: ", "Undecided services: ", undecided_services),
             undecided_services,
@@ -851,6 +860,7 @@ class DiscoveryPageRenderer:
 
         if any(
             [
+                changed_services,
                 undecided_services,
                 vanished_services,
                 new_host_labels,

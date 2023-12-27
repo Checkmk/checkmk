@@ -74891,6 +74891,10 @@ msgstr "não tentado"
 msgid "not available"
 msgstr "não disponíveis"
 
+#, fuzzy
+msgid "not disabled"
+msgstr "inválido"
+
 msgid "not installed"
 msgstr "não instalado"
 

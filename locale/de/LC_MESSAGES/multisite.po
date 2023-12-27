@@ -74311,6 +74311,10 @@ msgstr "nicht ausgeführt"
 msgid "not available"
 msgstr "nicht verfügbar"
 
+#, fuzzy
+msgid "not disabled"
+msgstr "Sync deaktiviert"
+
 msgid "not installed"
 msgstr "nicht installiert"
 

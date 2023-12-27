@@ -75659,6 +75659,10 @@ msgid "not available"
 msgstr "no disponible"
 
 #, fuzzy
+msgid "not disabled"
+msgstr "deshabilitados"
+
+#, fuzzy
 msgid "not installed"
 msgstr "RAM instalada"
 

@@ -75536,6 +75536,10 @@ msgstr "nu s-a încercat"
 msgid "not available"
 msgstr "nu este disponibil"
 
+#, fuzzy
+msgid "not disabled"
+msgstr "dezactivat"
+
 msgid "not installed"
 msgstr "neinstalat"
 

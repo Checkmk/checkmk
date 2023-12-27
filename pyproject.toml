@@ -94,7 +94,7 @@ target-version = ['py311']
 explicit_package_bases = true
 mypy_path = """\
     $MYPY_CONFIG_FILE_DIR:\
-    $MYPY_CONFIG_FILE_DIR/enterprise:\
+    $MYPY_CONFIG_FILE_DIR/non-free/cmc-protocols:\
     $MYPY_CONFIG_FILE_DIR/non-free/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/livestatus/api/python:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\

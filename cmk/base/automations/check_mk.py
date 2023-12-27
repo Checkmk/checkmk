@@ -462,7 +462,8 @@ def active_check_preview_rows(
                 state=None,
                 output=make_output(active_service.description),
                 metrics=[],
-                labels={},
+                old_labels={},
+                new_labels={},
                 found_on_nodes=[host_name],
             )
             for active_service in active_check_config.get_active_service_descriptions(

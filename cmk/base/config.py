@@ -2615,7 +2615,8 @@ class ConfigCache:
                     state=None,
                     output=make_output(entry["service_description"]),
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[host_name],
                 )
                 for entry in custom_checks_

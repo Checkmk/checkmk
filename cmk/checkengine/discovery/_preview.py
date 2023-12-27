@@ -57,7 +57,8 @@ class CheckPreviewEntry:
     # discovery result in the request elements. Some perfdata VALUES are not parsable
     # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
     metrics: list[MetricTuple]
-    labels: dict[str, str]
+    old_labels: Mapping[str, str]
+    new_labels: Mapping[str, str]
     found_on_nodes: list[HostName]
 
 
@@ -182,6 +183,10 @@ def get_check_preview(
                 },
                 is_enforced=False,
             ),
+            new_service_labels={
+                n: ServiceLabel(n, v)
+                for n, v in DiscoveredService.newer(entry).service_labels.items()
+            },
             check_source=check_source,
             providers=providers,
             found_on_nodes=found_on_nodes,
@@ -192,6 +197,7 @@ def get_check_preview(
         _check_preview_table_row(
             host_name,
             service=service,
+            new_service_labels={},
             check_plugins=check_plugins,
             check_source="manual",  # "enforced" would be nicer
             providers=providers,
@@ -214,6 +220,7 @@ def _check_preview_table_row(
     host_name: HostName,
     *,
     service: ConfiguredService,
+    new_service_labels: Mapping[str, ServiceLabel],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
@@ -247,6 +254,7 @@ def _check_preview_table_row(
         state=result.state,
         output=make_output(),
         metrics=[],
-        labels={l.name: l.value for l in service.service_labels.values()},
+        old_labels={l.name: l.value for l in service.service_labels.values()},
+        new_labels={l.name: l.value for l in new_service_labels.values()},
         found_on_nodes=list(found_on_nodes),
     )

@@ -73034,6 +73034,10 @@ msgstr "試みられなかった"
 msgid "not available"
 msgstr "利用不可"
 
+#, fuzzy
+msgid "not disabled"
+msgstr "無効"
+
 msgid "not installed"
 msgstr "インストールされていない"
 

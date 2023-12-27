@@ -64,8 +64,9 @@ class DiscoveryState:
     # not sure why `Literal` this is needed explicitly.
     # Should be gone once we use `StrEnum`
     UNDECIDED: Literal["new"] = "new"
+    MONITORED: Literal["unchanged"] = "unchanged"
+    CHANGED: Literal["changed"] = "changed"
     VANISHED: Literal["vanished"] = "vanished"
-    MONITORED: Literal["old"] = "old"
     IGNORED: Literal["ignored"] = "ignored"
     REMOVED = "removed"
 
@@ -83,6 +84,7 @@ class DiscoveryState:
     def is_discovered(cls, table_source: str) -> bool:
         return table_source in [
             cls.UNDECIDED,
+            cls.CHANGED,
             cls.VANISHED,
             cls.MONITORED,
             cls.IGNORED,
@@ -116,7 +118,7 @@ class DiscoveryAction(enum.StrEnum):
 class UpdateType(enum.Enum):
     "States that an individual service can be changed to by clicking a button"
     UNDECIDED = "new"
-    MONITORED = "old"
+    MONITORED = "unchanged"
     IGNORED = "ignored"
     REMOVED = "removed"
 

@@ -160,12 +160,6 @@ def get_check_preview(
         on_error=on_error,
     )
 
-    # TODO: this is a hack to ensure that the GUI remains compatible with "old" transition
-    # can be removed once a concept for changed/unchanged services is planned
-    if "changed" in grouped_services or "unchanged" in grouped_services:
-        grouped_services["old"] = grouped_services.get("changed", [])
-        grouped_services["old"].extend(grouped_services.get("unchanged", []))
-
     entry: DiscoveredItem[AutocheckEntry]
     passive_rows = [
         _check_preview_table_row(

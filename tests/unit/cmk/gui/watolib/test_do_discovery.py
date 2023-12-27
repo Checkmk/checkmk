@@ -298,6 +298,11 @@ known_results = {
         DiscoveryState.CLUSTERED_VANISHED,
         DiscoveryState.CUSTOM_IGNORED,
     ): _expected_clustered(),
+    # TODO: investigate if this is correct
+    (
+        DiscoveryState.MONITORED,
+        DiscoveryState.CHANGED,
+    ): _expected_monitored_standard(),
 }
 
 empty_result: RESULT = (

@@ -38,7 +38,7 @@ from cmk.gui.watolib.services import (
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "cpu.loads",
             "cpu_load",
             None,
@@ -178,7 +178,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="lnx_thermal",
                     ruleset_name="temperature",
                     item="Zone 1",
@@ -309,7 +309,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     )
     mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
-        "old",
+        "unchanged",
         "active",
     ]
     assert discovery_result.new_labels == {}
@@ -333,7 +333,7 @@ def test_perform_discovery_single_update(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="checkmk_agent",
                     ruleset_name="agent_update",
                     item=None,
@@ -366,7 +366,7 @@ def test_perform_discovery_single_update(
                     found_on_nodes=[HostName("TODAY")],
                 ),
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="mem_linux",
                     ruleset_name="memory_linux",
                     item=None,
@@ -441,7 +441,7 @@ def test_perform_discovery_single_update(
         check_table_created=1654237821,
         check_table=[
             CheckPreviewEntry(
-                check_source="old",
+                check_source="unchanged",
                 check_plugin_name="checkmk_agent",
                 ruleset_name="agent_update",
                 item=None,
@@ -536,7 +536,7 @@ def test_perform_discovery_single_update(
         ),
         selected_services=(("mem_linux", None),),
         update_source="new",
-        update_target="old",
+        update_target="unchanged",
         host=sample_host,
         raise_errors=True,
     )
@@ -555,7 +555,7 @@ def test_perform_discovery_single_update(
         entry.check_source
         for entry in discovery_result.check_table
         if entry.check_plugin_name == "mem_linux"
-    ] == ["old"]
+    ] == ["unchanged"]
 
     store = AuditLogStore()
     assert [
@@ -575,7 +575,7 @@ def test_perform_discovery_action_update_services(
             output="",
             check_table=[
                 CheckPreviewEntry(
-                    check_source="old",
+                    check_source="unchanged",
                     check_plugin_name="df",
                     ruleset_name="filesystem",
                     item="/opt/omd/sites/heute/tmp",
@@ -741,7 +741,7 @@ def test_perform_discovery_action_update_services(
     mock_discovery_preview.assert_called_with(
         sample_host_name, prevent_fetching=True, raise_errors=False
     )
-    assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
+    assert [entry.check_source for entry in discovery_result.check_table] == ["unchanged"]
 
     store = AuditLogStore()
     assert [

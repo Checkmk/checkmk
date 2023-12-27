@@ -111,7 +111,7 @@ class DiscoveredItem(Generic[_DiscoveredItem]):
 
 
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
-    """Classify items into "new", "old" and "vanished" ones."""
+    """Classify items into "new", "unchanged", "changed", and "vanished" ones."""
 
     def __init__(
         self,

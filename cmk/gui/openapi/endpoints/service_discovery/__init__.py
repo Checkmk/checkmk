@@ -75,7 +75,8 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
 SERVICE_DISCOVERY_PHASES = {
     "undecided": "new",
     "vanished": "vanished",
-    "monitored": "old",
+    "monitored": "unchanged",
+    "changed": "changed",
     "ignored": "ignored",
     "removed": "removed",
     "manual": "manual",
@@ -432,7 +433,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 action=discovery_action,
                 discovery_result=discovery_result,
                 update_source="new",
-                update_target="old",
+                update_target="unchanged",
                 host=host,
                 selected_services=EVERYTHING,
                 raise_errors=False,

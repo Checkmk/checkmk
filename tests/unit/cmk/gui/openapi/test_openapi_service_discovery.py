@@ -27,7 +27,7 @@ from cmk.checkengine.discovery import CheckPreviewEntry
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "cpu_loads",
             "cpu_load",
             None,
@@ -46,7 +46,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "cpu_threads",
             "threads",
             None,
@@ -188,7 +188,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "df",
             "filesystem",
             "/boot/efi",
@@ -249,7 +249,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "kernel_performance",
             "kernel_performance",
             None,
@@ -270,7 +270,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "kernel_util",
             "cpu_iowait",
             None,
@@ -290,7 +290,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 0",
@@ -305,7 +305,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 1",
@@ -320,7 +320,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 2",
@@ -335,7 +335,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 3",
@@ -350,7 +350,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 4",
@@ -365,7 +365,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 5",
@@ -380,7 +380,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 6",
@@ -395,7 +395,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 7",
@@ -410,7 +410,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "lnx_thermal",
             "temperature",
             "Zone 8",
@@ -496,7 +496,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mkeventd_status",
             None,
             HostName("heute"),
@@ -521,7 +521,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mkeventd_status",
             None,
             "stable",
@@ -546,7 +546,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mknotifyd",
             None,
             HostName("heute"),
@@ -564,7 +564,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mknotifyd",
             None,
             "stable",
@@ -582,7 +582,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mounts",
             "fs_mount_options",
             "/",
@@ -597,7 +597,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mounts",
             "fs_mount_options",
             "/boot",
@@ -612,7 +612,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "mounts",
             "fs_mount_options",
             "/boot/efi",
@@ -649,7 +649,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "omd_apache",
             None,
             "heute",
@@ -704,7 +704,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "omd_apache",
             None,
             "stable",
@@ -759,7 +759,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "systemd_units_services_summary",
             "systemd_services_summary",
             "Summary",
@@ -774,7 +774,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "tcp_conn_stats",
             "tcp_conn_stats",
             None,
@@ -801,7 +801,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
         CheckPreviewEntry(
-            "old",
+            "unchanged",
             "uptime",
             "uptime",
             None,

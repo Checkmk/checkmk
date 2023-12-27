@@ -988,8 +988,11 @@ class DiscoveryPageRenderer:
             self._show_check_parameters(entry)
 
         if self._options.show_discovered_labels:
-            table.cell(_("Discovered labels"))
+            table.cell(_("Previously discovered"))
             self._show_discovered_labels(entry.old_labels)
+            if entry.check_source == "changed":
+                table.cell(_("Newly discovered"))
+                self._show_discovered_labels(entry.new_labels)
 
         if self._options.show_plugin_names:
             table.cell(
@@ -1224,9 +1227,9 @@ class DiscoveryPageRenderer:
 
     def _icon_button(
         self,
-        table_source: Literal["new", "old", "ignored", "vanished"],
+        table_source: Literal["new", "unchanged", "ignored", "vanished"],
         checkbox_name: str,
-        table_target: Literal["new", "old", "ignored"],
+        table_target: Literal["new", "unchanged", "ignored"],
         descr_target: Literal["undecided", "monitored", "disabled"],
         button_classes: list[str],
     ) -> Literal[1]:
@@ -1395,12 +1398,21 @@ class DiscoveryPageRenderer:
                 ),
             ),
             TableGroupEntry(
+                DiscoveryState.CHANGED,
+                show_bulk_actions=True,
+                title=_("Changed services"),
+                help_text=_(
+                    "These services have been discovered and a change from the currently monitored "
+                    "state has been detected."
+                ),
+            ),
+            TableGroupEntry(
                 DiscoveryState.MONITORED,
                 show_bulk_actions=True,
                 title=_("Monitored services"),
                 help_text=_(
-                    "These services had been found by a discovery and are currently configured "
-                    "to be monitored."
+                    "These services have been found by the discovery and are currently being "
+                    "monitored. No changes have been made to these services."
                 ),
             ),
             TableGroupEntry(

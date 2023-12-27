@@ -75,9 +75,7 @@ class DiscoveryResult:
     diff_text: str | None = None
 
 
-_BasicTransition = Literal[
-    "changed", "unchanged", "new", "vanished", "old"
-]  # TODO: "old" can be removed when GUI is adjusted
+_BasicTransition = Literal["changed", "unchanged", "new", "vanished"]
 _Transition = (
     _BasicTransition
     | Literal[
@@ -271,8 +269,8 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
     """
-    The output contains a selection of services in the states "new", "old", "ignored", "vanished"
-    (depending on the value of `mode`) and "clusterd_".
+    The output contains a selection of services in the states "new", "unchanged", "changed",
+     "ignored", "vanished" (depending on the value of `mode`) and "clusterd_".
 
     Service in with the state "custom", "active" and "manual" are currently not checked.
 
@@ -296,10 +294,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 post_discovery_services.update(new)
 
         elif (  # pylint: disable=consider-using-in
-            check_source == "old"
-            or check_source == "changed"
-            or check_source == "unchanged"
-            or check_source == "ignored"
+            check_source == "unchanged" or check_source == "changed" or check_source == "ignored"
         ):
             # keep currently existing valid services in any case
             post_discovery_services.update(
@@ -536,7 +531,8 @@ def _may_rediscover(
 # service_transition -> List[Service]
 # service_transition is the reason/state/source of the service:
 #    "new"           : Check is discovered but currently not yet monitored
-#    "old"           : Check is discovered and already monitored (most common)
+#    "unchanged"     : Check is discovered and already monitored (most common)
+#    "changed"       : Check is discovered and already monitored but changed
 #    "vanished"      : Check had been discovered previously, but item has vanished
 #    "ignored"       : discovered or static, but disabled via ignored_services
 #    "clustered_new" : New service found on a node that belongs to a cluster
@@ -750,8 +746,6 @@ def _get_cluster_services(
 ) -> ServicesTable[_Transition]:
     cluster_items: ServicesTable[_Transition] = {}  # actually _BasicTransition but typing...
 
-    # Get services of the nodes. We are only interested in "old", "new" and "vanished"
-    # From the states and parameters of these we construct the final state per service.
     for node in cluster_nodes:
         candidates = find_plugins(
             # This call doesn't seem to depend on `node` so we could

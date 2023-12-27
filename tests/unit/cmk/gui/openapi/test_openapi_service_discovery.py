@@ -42,6 +42,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("load15", 1.32, 40.0, 80.0, 0, 8),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -58,6 +59,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("threads", 1708, 2000.0, 4000.0, None, None),
                 ("thread_usage", 1.3496215054443164, None, None, None, None),
             ],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -89,6 +91,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("inodes_used", 1558, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -118,6 +121,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("fs_used_percent", 0.0, None, None, None, None),
                 ("inodes_used", 1, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -149,6 +153,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("inodes_used", 1412, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -179,6 +184,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("inodes_used", 1131429, 28009267.2, 29565337.599999998, 0.0, 31121408.0),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -207,6 +213,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("fs_size", 510.984375, None, None, None, None),
                 ("fs_used_percent", 2.9997247958902853, None, None, None, None),
             ],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -238,6 +245,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("inodes_used", 305, 42163.200000000004, 44505.6, 0.0, 46848.0),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -258,6 +266,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("page_swap_out", 0.0, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -277,6 +286,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("util", 26.948711508431227, None, None, 0, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -290,6 +300,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "25.0 °C",
             [("temp", 25.0, 107.0, 107.0, None, None)],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -305,6 +316,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "20.0 °C",
             [("temp", 20.0, 70.0, 80.0, None, None)],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -318,6 +330,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "54.0 °C",
             [("temp", 54.0, 78.0, 88.0, None, None)],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -333,6 +346,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "35.0 °C",
             [("temp", 35.0, 70.0, 80.0, None, None)],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -346,6 +360,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "41.0 °C",
             [("temp", 41.0, 70.0, 80.0, None, None)],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -361,6 +376,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "55.5 °C",
             [("temp", 55.5, 115.0, 115.0, None, None)],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -374,6 +390,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "64.0 °C",
             [("temp", 64.0, 99.0, 127.0, None, None)],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -389,6 +406,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "74.0 °C (warn/crit at 70.0/80.0 °C)",
             [("temp", 74.0, 70.0, 80.0, None, None)],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -402,6 +420,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "38.0 °C",
             [("temp", 38.0, 70.0, 80.0, None, None)],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -473,6 +492,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("writeback_tmp", 0, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -496,6 +516,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("average_connect_rate", 0.0, None, None, None, None),
                 ("average_request_time", 0.00027762370400620984, None, None, None, None),
             ],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -521,6 +542,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("average_request_time", 0.00039733688471126213, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -537,6 +559,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("last_updated", 20, None, None, None, None),
                 ("new_files", 0, None, None, None, None),
             ],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -555,6 +578,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("new_files", 0, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -569,6 +593,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Mount options exactly as expected",
             [],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -582,6 +607,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "Mount options exactly as expected",
             [],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -618,6 +644,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "Mount options exactly as expected",
             [],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -673,6 +700,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("bytes_other", 0.0, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -727,6 +755,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("bytes_other", 0.0, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -740,6 +769,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "138 services in total, Service 'kubelet' activating for: 0.00 s, 5 disabled services",
             [],
+            {},
             {},
             [HostName("heute")],
         ),
@@ -767,6 +797,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
                 ("TIME_WAIT", 108, None, None, None, None),
             ],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -781,6 +812,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Up since Tue Jun  2 07:50:48 2020, uptime: 7 days, 7:30:46",
             [("uptime", 631846.94, None, None, None, None)],
             {},
+            {},
             [HostName("heute")],
         ),
         CheckPreviewEntry(
@@ -794,6 +826,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             None,
             "WAITING - Active check, cannot be done offline",
             [],
+            {},
             {},
             [HostName("heute")],
         ),

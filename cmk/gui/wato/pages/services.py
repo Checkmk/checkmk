@@ -989,7 +989,7 @@ class DiscoveryPageRenderer:
 
         if self._options.show_discovered_labels:
             table.cell(_("Discovered labels"))
-            self._show_discovered_labels(entry.labels)
+            self._show_discovered_labels(entry.old_labels)
 
         if self._options.show_plugin_names:
             table.cell(

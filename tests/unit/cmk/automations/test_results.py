@@ -119,7 +119,8 @@ class TestTryDiscoveryResult:
                     state=0,
                     output="output",
                     metrics=[],
-                    labels={},
+                    old_labels={},
+                    new_labels={},
                     found_on_nodes=[],
                 )
             ],

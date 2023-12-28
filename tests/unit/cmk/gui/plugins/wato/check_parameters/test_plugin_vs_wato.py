@@ -283,11 +283,6 @@ class ErrorReporter:
             "azure_agent_info",
             RuleGroup.CheckgroupParameters("azure_agent_info"),
         ),
-        (
-            "check",
-            "cisco_cpu_memory",
-            RuleGroup.CheckgroupParameters("cisco_cpu_memory"),
-        ),
     }
     KNOWN_WATO_MISSING = {
         # type # instance # wato

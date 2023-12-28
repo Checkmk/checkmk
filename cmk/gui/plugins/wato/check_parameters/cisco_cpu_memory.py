@@ -6,11 +6,19 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.filesystem_utils import match_dual_level_type
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, Transform, Tuple
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    Integer,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 
 def _parameter_valuespec_memory():
@@ -94,10 +102,11 @@ def _parameter_valuespec_memory():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="cisco_cpu_memory",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory,
         title=lambda: _("Cisco CPU Memory"),
+        item_spec=lambda: TextInput(title=_("CPUs physical name")),
     )
 )

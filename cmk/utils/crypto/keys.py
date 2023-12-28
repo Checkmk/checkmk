@@ -195,6 +195,18 @@ class PrivateKey:
     def public_key(self) -> PublicKey:
         return PublicKey(self._key.public_key())
 
+    def get_raw_rsa_key(self) -> asym.rsa.RSAPrivateKey:
+        """
+        Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
+
+        This should be avoided, but can be useful in situations where other key types are not
+        supported yet.
+        """
+        if not isinstance(self._key, asym.rsa.RSAPrivateKey):
+            raise ValueError("Not an RSA private key")
+
+        return self._key
+
     def rsa_sign_data(
         self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
     ) -> Signature:
@@ -204,10 +216,9 @@ class PrivateKey:
         PKCS1v15 padding will be used. If the underlying key is not an RSA key, a ValueError is
         raised.
         """
-        if not isinstance(self._key, asym.rsa.RSAPrivateKey):
-            raise ValueError("rsa_sign_data used with non-rsa key")
-
-        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
+        return Signature(
+            self.get_raw_rsa_key().sign(data, padding.PKCS1v15(), hash_algorithm.value)
+        )
 
 
 class PublicKey:
@@ -264,6 +275,18 @@ class PublicKey:
             serialization.PublicFormat.OpenSSH,
         ).decode("utf-8")
 
+    def get_raw_rsa_key(self) -> asym.rsa.RSAPublicKey:
+        """
+        Get the raw underlying key IF it is an RSA key. Raise a ValueError otherwise.
+
+        This should be avoided, but can be useful in situations where other key types are not
+        supported yet.
+        """
+        if not isinstance(self._key, asym.rsa.RSAPublicKey):
+            raise ValueError("Not an RSA public key")
+
+        return self._key
+
     def rsa_verify(
         self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm
     ) -> None:
@@ -273,10 +296,9 @@ class PublicKey:
         PKCS1v15 padding is assumed. If the underlying key is not an RSA key, a ValueError is
         raised.
         """
-        if not isinstance(self._key, asym.rsa.RSAPublicKey):
-            raise ValueError("rsa_verify used with non-rsa key")
-
         try:
-            self._key.verify(signature, message, asym.padding.PKCS1v15(), digest_algorithm.value)
+            self.get_raw_rsa_key().verify(
+                signature, message, asym.padding.PKCS1v15(), digest_algorithm.value
+            )
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e

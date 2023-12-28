@@ -12,7 +12,7 @@ def main() {
                     name: "test-shellcheck",
                     // SHELLCHECK_OUTPUT_ARGS="-f gcc"
                     cmd: "make -C tests test-shellcheck",
-                    output_file: "shellcheck.txt"
+                    output_file: "shellcheck.txt",
                 ]);
 
                 test_jenkins_helper.analyse_issues("SHELLCHECK", "shellcheck.txt");

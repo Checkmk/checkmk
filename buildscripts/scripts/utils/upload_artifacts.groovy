@@ -9,11 +9,13 @@ hashfile_extension = ".hash"
 downloads_path = "/var/downloads/checkmk/"
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
+/* groovylint-disable ParameterCount */
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
     def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}_0.${DISTRO}_amd64.deb";
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, DISTRO);
 }
+/* groovylint-enable ParameterCount */
 
 def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
@@ -21,6 +23,7 @@ def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar');
 }
 
+/* groovylint-disable ParameterCount */
 def download_version_dir(DOWNLOAD_SOURCE,
                          PORT,
                          CMK_VERSION,
@@ -53,6 +56,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
         }
     }
 }
+/* groovylint-enable ParameterCount */
 
 def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
     println("""
@@ -64,7 +68,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
         ||==========================================================================================
         """.stripMargin());
     stage('Upload to download server') {
-        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
             sh("""
                 rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
@@ -88,7 +92,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
         """.stripMargin());
 
     create_hash(archive_base + "/" + cmk_version + "/" + filename);
-    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
         sh("""
             rsync -av --relative \
                 --exclude '*dbgsym*.deb' \
@@ -111,7 +115,7 @@ def create_hash(FILE_PATH) {
 }
 
 def execute_cmd_on_archive_server(cmd) {
-    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
         sh("""
            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${WEB_DEPLOY_PORT} ${WEB_DEPLOY_URL} "${cmd}"
         """);

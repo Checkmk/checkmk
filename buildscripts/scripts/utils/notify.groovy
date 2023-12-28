@@ -28,7 +28,6 @@ def slack_build_failed(error) {
     );
 }
 
-
 def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
@@ -92,11 +91,13 @@ def notify_error(error) {
             }
 
             /// fallback - for investigation
+            /* groovylint-disable DuplicateListLiteral */
             notify_emails = notify_emails ?: [
                 "timotheus.bachinger@checkmk.com",
                 "frans.fuerst@checkmk.com",
                 "jonas.scharpf@checkmk.com",
             ];
+            /* groovylint-enable DuplicateListLiteral */
 
             print("|| error-reporting: notify_emails ${notify_emails}");
 
@@ -120,7 +121,7 @@ def notify_error(error) {
     |""".stripMargin()),
            );
         }
-    } catch(Exception exc) {
+    } catch(Exception exc) {    // groovylint-disable CatchException
         print("Could not report error by mail - got ${exc}");
     }
 
@@ -134,7 +135,8 @@ def notify_error(error) {
     // teamDomain: <empty>, channel: build-notifications, color: danger,
     // botUser: true, tokenCredentialId: <empty>, iconEmoji <empty>, username
     // <empty>
-    //ERROR: Slack notification failed with exception: java.lang.IllegalArgumentException: the token with the provided ID could not be found and no token was specified
+    //ERROR: Slack notification failed with exception:
+    //java.lang.IllegalArgumentException: the token with the provided ID could not be found and no token was specified
     //
     //slack_build_failed(error)
     // after notifying everybody, the error needs to be thrown again
@@ -142,7 +144,9 @@ def notify_error(error) {
 
     StackTraceUtils.sanitize(error);
     print("ERROR: ${error.stackTrace.head()}: ${error}");
-    currentBuild.description += "<br>The build failed due to an exception (at ${error.stackTrace.head()}):<br><strong style='color:red'>${error}</strong>";
+    currentBuild.description += (
+        "<br>The build failed due to an exception (at ${error.stackTrace.head()}):" +
+        "<br><strong style='color:red'>${error}</strong>");
     throw error;
 }
 

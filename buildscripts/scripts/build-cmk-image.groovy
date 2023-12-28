@@ -8,7 +8,7 @@
 /// Other artifacts: ???
 /// Depends on: Jammy Ubuntu 22.04, see check_mk/docker_image/Dockerfile
 
-
+/* groovylint-disable MethodSize */
 def main() {
     check_job_parameters([
         "EDITION",
@@ -46,7 +46,7 @@ def main() {
     def push_to_registry = PUSH_TO_REGISTRY=='true';
     def build_image = PUSH_TO_REGISTRY_ONLY!='true';
 
-   print(
+    print(
         """
         |===== CONFIGURATION ===============================
         |branch_name:......... │${branch_name}│
@@ -74,10 +74,9 @@ def main() {
                 usernamePassword(
                     credentialsId: 'nexus',
                     passwordVariable: 'NEXUS_PASSWORD',
-                    usernameVariable: 'NEXUS_USERNAME')
+                    usernameVariable: 'NEXUS_USERNAME'),
             ]) {
                 dir("${checkout_dir}") {
-
                     conditional_stage('Prepare package directory', build_image) {
                         cleanup_directory("${package_dir}");
                     }
@@ -189,17 +188,17 @@ def main() {
 }
 
 def registry_credentials_id(edition) {
-   switch(edition) {
-       case "raw":
-       case "cloud":
-           return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
-       case "enterprise":
-       case "managed":
-           return "registry.checkmk.com";
-       case "saas":
-           return "nexus";
-       default:
-           throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
+    switch(edition) {
+        case "raw":
+        case "cloud":
+            return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
+        case "enterprise":
+        case "managed":
+            return "registry.checkmk.com";
+        case "saas":
+            return "nexus";
+        default:
+            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
     }
 }
 

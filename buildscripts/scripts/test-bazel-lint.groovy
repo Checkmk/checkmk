@@ -9,7 +9,7 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-bazel-lint",
             cmd: "make -C tests test-lint-bazel-docker",
-            output_file: "bazel-lint.txt"
+            output_file: "bazel-lint.txt",
         ]);
 
         test_jenkins_helper.analyse_issues("BAZELLINT", "bazel-lint.txt");

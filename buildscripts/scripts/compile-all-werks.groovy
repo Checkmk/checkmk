@@ -9,7 +9,7 @@ def main() {
     def targets_credentials = [
         [env.WEB_STAGING, "web-staging"],
         ["checkmk.com", "checkmk-deploy"],
-        ["customer.checkmk.com", "customer-deploy"]
+        ["customer.checkmk.com", "customer-deploy"],
     ];
 
     print(
@@ -31,6 +31,7 @@ def main() {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
                 dir("${checkout_dir}") {
+                    /* groovylint-disable LineLength */
                     sh("""
                         scripts/run-pipenv run echo build venv...
                         scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk ./ > cmk.json
@@ -45,6 +46,7 @@ def main() {
                             kube.json \
                             > all_werks.json
                     """);
+                    /* groovylint-enable LineLength */
 
                     archiveArtifacts(
                         artifacts: "all_werks.json",
@@ -60,6 +62,7 @@ def main() {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
                 dir("${checkout_dir}") {
                     try {
+                        /* groovylint-disable LineLength */
                         sh(script: """
                             ./scripts/npm-ci
                             echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
@@ -74,6 +77,7 @@ def main() {
                                 - < validate-werks.html \
                                 > validate-werks.error.txt
                         """);
+                        /* groovylint-enable LineLength */
                     } catch(Exception e) {
                         archiveArtifacts(
                             artifacts: "validate-werks.*, all_werks.json",

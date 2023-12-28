@@ -22,7 +22,7 @@ def main() {
 
     check_environment_variables([
         "DOCKER_TAG",
-        "EDITION"
+        "EDITION",
     ]);
 
     def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_tests");

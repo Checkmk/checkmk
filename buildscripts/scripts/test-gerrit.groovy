@@ -7,7 +7,6 @@ def main() {
     // no `def` - must be global
     test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def result_dir = "${checkout_dir}/results";
-    def issues = [];
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
 

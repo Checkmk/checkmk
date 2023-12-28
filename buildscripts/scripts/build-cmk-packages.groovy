@@ -12,6 +12,7 @@
 /// different scenario: packages are built for a subset of distros only and
 /// OMD package and Python optimizations are disabled.
 
+/* groovylint-disable MethodSize */
 def main() {
     check_job_parameters([
         "EDITION",
@@ -141,7 +142,7 @@ def main() {
     shout("pull packages");
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         distros.each { distro ->
-             docker.image("${distro}:${docker_tag}").pull();
+            docker.image("${distro}:${docker_tag}").pull();
         }
     }
 
@@ -257,27 +258,28 @@ def main() {
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
                         docker.image("${distro}:${docker_tag}").inside(
+                                /* groovylint-disable LineLength */
                                 "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
+                                /* groovylint-enable LineLength */
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
                                 sh("rm -rf ${distro_dir}");
                                 sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
                             }
                             stage("${distro} build package") {
-                                withCredentials([usernamePassword(
+                                withCredentials([
+                                    usernamePassword(
                                         credentialsId: 'nexus',
                                         passwordVariable: 'NEXUS_PASSWORD',
-                                        usernameVariable: 'NEXUS_USERNAME')
-                                ]) {
-                                    withCredentials([usernamePassword(
+                                        usernameVariable: 'NEXUS_USERNAME'),
+                                    usernamePassword(
                                         credentialsId: 'bazel-caching-credentials',
                                         /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
                                         passwordVariable: 'BAZEL_CACHE_PASSWORD',
-                                        usernameVariable: 'BAZEL_CACHE_USER')
-                                    ]) {
-                                        versioning.print_image_tag();
-                                        build_package(distro_package_type(distro), distro_dir, omd_env_vars);
-                                    }
+                                        usernameVariable: 'BAZEL_CACHE_USER'),
+                                ]) {
+                                    versioning.print_image_tag();
+                                    build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
                             }
                         }
@@ -399,7 +401,7 @@ def create_and_upload_bom(workspace, branch_version, version) {
                             credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6',
                             url: 'ssh://jenkins@review.lan.tribe29.com:29418/dependencyscanner'
                         ]
-                    ]
+                    ],
                 ]);
                 scanner_image = docker.build("dependencyscanner", "--tag dependencyscanner .");
             }
@@ -456,7 +458,19 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def ext_files = "robotmk_ext.exe";
         def check_sql = "check-sql.exe";
         def hashes_file = "windows_files_hashes.txt";
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}";
+        def artifacts = [
+            "check_mk_agent-64.exe",
+            "check_mk_agent.exe",
+            "${signed_msi}",
+            "${unsigned_msi}",
+            "check_mk.user.yml",
+            "python-3.cab",
+            "${ohm_files}",
+            "${ext_files}",
+            "${check_sql}",
+            "${hashes_file}",
+        ].join(",");
+
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh("mkdir -p ${agents_dir}");
             if(EDITION != 'raw') {
@@ -524,7 +538,13 @@ def build_package(package_type, build_dir, env) {
             def env_str = env.join(" ");
             sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
         } finally {
-            sh("cd '${checkout_dir}/omd'; echo 'Maximum heap size:'; bazel info peak-heap-size; echo 'Server log:'; cat \$(bazel info server_log)");
+            sh("""
+                cd '${checkout_dir}/omd'
+                echo 'Maximum heap size:'
+                bazel info peak-heap-size
+                echo 'Server log:'
+                cat \$(bazel info server_log)
+            """);
         }
     }
 }
@@ -565,11 +585,13 @@ def sign_package(source_dir, package_path) {
 }
 
 def test_package(package_path, name, workspace, source_dir, cmk_version) {
+    /* groovylint-disable LineLength */
     print("FN test_package(package_path=${package_path}, name=${name}, workspace=${workspace}, source_dir=${source_dir}, cmk_version=${cmk_version})");
+    /* groovylint-enable LineLength */
     try {
         withEnv([
-                "PACKAGE_PATH=${package_path}",
-                "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
+            "PACKAGE_PATH=${package_path}",
+            "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
         ]) {
             sh("make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging");
         }

@@ -5,6 +5,7 @@
 // library for calculation of version numbers
 import groovy.transform.Field
 
+/* groovylint-disable DuplicateListLiteral */
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -63,7 +64,8 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
-]
+];
+/* groovylint-enable DuplicateListLiteral */
 
 def branch_name(scm) {
     return env.GERRIT_BRANCH ?: scm.branches[0].name;
@@ -73,6 +75,7 @@ def safe_branch_name(scm) {
     return branch_name(scm).replaceAll("/", "-");
 }
 
+/* groovylint-disable DuplicateListLiteral */
 def get_cmk_version(branch_name, branch_version, version) {
     return (
       // Experimental builds
@@ -82,6 +85,7 @@ def get_cmk_version(branch_name, branch_version, version) {
       // else
       "${version}");
 }
+/* groovylint-enable DuplicateListLiteral */
 
 def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
     if(distro_list) {

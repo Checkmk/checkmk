@@ -81,14 +81,14 @@ def main() {
     success &= smart_stage(
             name: "Build CMK IMAGE",
             condition: build_image,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
     }
 
     success &= smart_stage(
             name: "Build Cloud Images",
             condition: build_cloud_images,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
     }
 
@@ -97,32 +97,31 @@ def main() {
             success &= smart_stage(
                     name: "Integration Test for Docker Container",
                     condition: run_image_tests,
-                    raiseOnError: false) {
+                    raiseOnError: false,) {
                 build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
             }
         },
-
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
                     condition: run_comp_tests,
-                    raiseOnError: false) {
+                    raiseOnError: false,) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
-        }
+        },
     ]);
 
     success &= smart_stage(
             name: "Integration Test for Packages",
             condition: run_int_tests,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }
 
     success &= smart_stage(
             name: "Update Test",
             condition: run_update_tests,
-            raiseOnError: false) {
+            raiseOnError: false,) {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
     }
 

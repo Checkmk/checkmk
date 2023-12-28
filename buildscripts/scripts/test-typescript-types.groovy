@@ -9,7 +9,7 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-typescript-types",
             cmd: "make -C tests test-typescript-types-docker",
-            output_file: "js-types.txt"
+            output_file: "js-types.txt",
         ]);
 
         test_jenkins_helper.analyse_issues("TSJSTYPES", "js-types.txt");

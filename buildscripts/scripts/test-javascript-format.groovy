@@ -9,7 +9,7 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-javascript-format",
             cmd: "make -C tests test-format-js-docker",
-            output_file: "js-prettier.txt"
+            output_file: "js-prettier.txt",
         ]);
 
         test_jenkins_helper.analyse_issues("TSJSFORMAT", "js-prettier.txt");

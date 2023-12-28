@@ -54,7 +54,7 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks, load_special_agents
 
 from cmk.discover_plugins import PluginLocation
 
@@ -1462,11 +1462,15 @@ def _get_legacy_check_file_names_to_load(
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table.
+    ssc_api_special_agents = load_special_agents()[1]
     filenames: list[str] = []
+
     for check_plugin_name in needed_check_plugin_names:
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
-        if not paths:
+
+        short_plugin_name = check_plugin_name.replace("agent_", "")
+        if not paths and short_plugin_name not in ssc_api_special_agents:
             raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
         for path in paths:

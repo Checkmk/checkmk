@@ -24,6 +24,23 @@ register_toolchains("@rules_foreign_cc//toolchains:preinstalled_m4_toolchain")
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_automake_toolchain")
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_pkgconfig_toolchain")
 
+RULES_PYTHON_SHA="84aec9e21cc56fbc7f1335035a71c850d1b9b5cc6ff497306f84cced9a769841"
+RULES_PYTHON_VERSION="0.23.1"
+
+http_archive(
+    name = "rules_python",
+    sha256 = RULES_PYTHON_SHA,
+    strip_prefix = "rules_python-{}".format(RULES_PYTHON_VERSION),
+    url = "https://github.com/bazelbuild/rules_python/releases/download/{}/rules_python-{}.tar.gz".format(RULES_PYTHON_VERSION,RULES_PYTHON_VERSION),
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
+
+# register python toolchain
+register_toolchains("@python//:python_toolchain")
+
 # Our implimentation of the shell toolchain in order to fix symlinks and other bugs
 register_toolchains("//foreign_cc_adapted:shell_toolchain")
 

@@ -279,10 +279,5 @@ def create_check_plugin_from_legacy(
         check_function=check_function,
         check_default_parameters=check_info_element.get("check_default_parameters", {}),
         check_ruleset_name=check_info_element.get("check_ruleset_name"),
-        # Legacy check plugins may return an item even if the service description
-        # does not contain a '%s'. In this case the old check API assumes an implicit,
-        # trailing '%s'. Therefore, we disable this validation for legacy check plugins.
-        # Once all check plugins are migrated to the new API this flag can be removed.
-        validate_item=False,
         validate_kwargs=validate_creation_kwargs,
     )

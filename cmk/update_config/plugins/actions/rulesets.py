@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from logging import Logger
 from re import match, Pattern
 from typing import Any
@@ -30,6 +30,10 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
 }
 
+RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
+    "mongodb_replica_set",
+}
+
 DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
 
 
@@ -45,6 +49,11 @@ class UpdateRulesets(UpdateAction):
             logger,
             all_rulesets,
             DEPRECATED_RULESET_PATTERNS,
+        )
+        _transform_rulesets_loosing_item(
+            logger,
+            all_rulesets,
+            RULESETS_LOOSING_THEIR_ITEM,
         )
         _transform_wato_ruleset_memory_simple(
             logger,
@@ -142,6 +151,28 @@ def _delete_deprecated_wato_rulesets(
             logger.log(VERBOSE, f"Removing ruleset {ruleset_name}")
             all_rulesets.delete(ruleset_name)
             continue
+
+
+def _transform_rulesets_loosing_item(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    rulesets_loosing_item: Iterable[str],
+) -> None:
+    for ruleset_name in rulesets_loosing_item:
+        logger.log(VERBOSE, f"Fixing items for ruleset {ruleset_name}")
+        for _folder, _index, rule in all_rulesets.get(
+            f"checkgroup_parameters:{ruleset_name}"
+        ).get_rules():
+            rule.conditions = RuleConditions(
+                host_folder=rule.conditions.host_folder,
+                host_tags=rule.conditions.host_tags,
+                host_label_groups=rule.conditions.host_label_groups,
+                host_name=rule.conditions.host_name,
+                service_description=None,
+                service_label_groups=rule.conditions.service_label_groups,
+            )
+        for _folder, _index, rule in all_rulesets.get(f"static_checks:{ruleset_name}").get_rules():
+            rule.value = (rule.value[0], None, rule.value[2])
 
 
 def _transform_wato_ruleset_memory_simple(

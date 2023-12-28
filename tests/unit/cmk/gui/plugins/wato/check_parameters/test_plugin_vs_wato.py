@@ -291,16 +291,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "mongodb_replica_set",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
-            "mongodb_replica_set_election",
-            RuleGroup.CheckgroupParameters("mongodb_replica_set"),
-        ),
-        (
-            "check",
             "netapp_fcpio",
             RuleGroup.CheckgroupParameters("netapp_fcportio"),
         ),

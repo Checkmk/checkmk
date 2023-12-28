@@ -64,6 +64,7 @@
     "file-loader": "^6.2.0",
     "merge": ">=2.1.1",
     "mini-css-extract-plugin": "^2.4.5",
+    "npm-groovy-lint": "^14.0.1",
     "pkg-dir": "^6.0.1",
     "postcss": "^8.2.4",
     "postcss-loader": "^6.2.1",

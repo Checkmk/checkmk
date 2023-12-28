@@ -32,6 +32,7 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
     "mongodb_replica_set",
+    "netapp_fcportio",
 }
 
 DEPRECATED_RULESET_PATTERNS: list[Pattern] = []

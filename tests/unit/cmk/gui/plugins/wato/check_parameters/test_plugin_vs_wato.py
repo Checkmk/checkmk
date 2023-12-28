@@ -288,11 +288,6 @@ class ErrorReporter:
             "cisco_cpu_memory",
             RuleGroup.CheckgroupParameters("cisco_cpu_memory"),
         ),
-        (
-            "check",
-            "netapp_fcpio",
-            RuleGroup.CheckgroupParameters("netapp_fcportio"),
-        ),
     }
     KNOWN_WATO_MISSING = {
         # type # instance # wato

@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.plugins.prism.server_side_calls.special_agent import generate_prism_command
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(
+    name="host name",
+    address="address",
+    alias="host",
+    ip_family=IPAddressFamily.IPV4,
+)
 
 
 @pytest.mark.parametrize(
@@ -18,7 +23,14 @@ pytestmark = pytest.mark.checks
     [
         pytest.param(
             {"username": "", "password": ("password", "")},
-            ["--server", "address", "--username", "", "--password", ""],
+            [
+                "--server",
+                "address",
+                "--username",
+                "",
+                "--password",
+                PlainTextSecret(value="", format="%s"),
+            ],
             id="explicit password and no port",
         ),
         pytest.param(
@@ -29,7 +41,7 @@ pytestmark = pytest.mark.checks
                 "--username",
                 "userid",
                 "--password",
-                "password",
+                PlainTextSecret(value="password", format="%s"),
                 "--port",
                 "9440",
             ],
@@ -43,7 +55,7 @@ pytestmark = pytest.mark.checks
                 "--username",
                 "userid",
                 "--password",
-                ("store", "prism", "%s"),
+                StoredSecret(value="prism", format="%s"),
                 "--port",
                 "9440",
             ],
@@ -51,8 +63,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_prism_argument_parsing(params: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
+def test_prism_argument_parsing(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_prism")
-    arguments = agent.argument_func(params, "host", "address")
-    assert arguments == expected_args
+    command = list(generate_prism_command(params, HOST_CONFIG, {}))[0]
+    assert command.command_arguments == expected_args

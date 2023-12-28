@@ -11,7 +11,7 @@ def main() {
                 test_jenkins_helper.execute_test([
                     name: "test-shell-unit",
                     cmd: "make -C tests test-unit-shell",
-                    output_file: "shell-unit.txt"
+                    output_file: "shell-unit.txt",
                 ]);
 
                 test_jenkins_helper.analyse_issues("SHELLUNIT", "shell-unit.txt");

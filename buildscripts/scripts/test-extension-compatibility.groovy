@@ -16,6 +16,7 @@ def main() {
         dir("${checkout_dir}") {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker_image_from_alias("IMAGE_TESTING").inside() {
+                    /* groovylint-disable LineLength */
                     sh("""
                         scripts/run-pipenv run \
                           tests/extension_compatibility/output_popular_extensions.py > /tmp/extension_compatibility.txt
@@ -25,12 +26,13 @@ def main() {
                         || { cat <<HERE && false
 
                         You can fix the above by running:
-                        pipenv run ./tests/extension_compatibility/output_popular_extensions.py > tests/extension_compatibility/current_extensions_under_test.txt
+                        scripts/run-pipenv run ./tests/extension_compatibility/output_popular_extensions.py > tests/extension_compatibility/current_extensions_under_test.txt
 
 
 HERE
 }
                     """);
+                    /* groovylint-enable LineLength */
                 }
             }
         }

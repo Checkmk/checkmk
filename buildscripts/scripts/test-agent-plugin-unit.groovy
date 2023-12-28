@@ -12,8 +12,6 @@ def get_agent_plugin_python_versions(String git_dir=".") {
 
 def main() {
     def python_versions = get_agent_plugin_python_versions(checkout_dir);
-
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def docker_args = "-v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}";
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

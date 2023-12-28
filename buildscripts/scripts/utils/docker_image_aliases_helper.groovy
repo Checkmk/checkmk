@@ -10,8 +10,6 @@ resolve_docker_image_alias = { alias_name ->
     ).replaceAll("[\r\n]+", "");
 }
 
-
 docker_image_from_alias = { alias_name ->
     return docker.image(resolve_docker_image_alias(alias_name));
 }
-

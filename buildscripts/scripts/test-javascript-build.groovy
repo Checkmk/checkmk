@@ -9,7 +9,7 @@ def main() {
         test_jenkins_helper.execute_test([
             name: "test-javascript-build",
             cmd: "make -C tests test-build-js-docker",
-            output_file: "js-build.txt"
+            output_file: "js-build.txt",
         ]);
 
         test_jenkins_helper.analyse_issues("TSJSBUILD", "js-build.txt");

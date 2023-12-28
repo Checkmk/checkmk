@@ -15,9 +15,9 @@ def main() {
     def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
 
     def docker_tag = versioning.select_docker_tag(
-            safe_branch_name,
-            "",
-            ""
+        safe_branch_name,
+        "",
+        ""
     );   // FIXME was DOCKER_TAG_DEFAULT before
 
     currentBuild.description += (

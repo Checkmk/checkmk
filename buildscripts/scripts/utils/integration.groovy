@@ -33,9 +33,9 @@ def run_make_targets(Map args) {
             // TODO dir + set WORKSPACE is needed due to nested dependency
             dir("${checkout_dir}") {
                 withEnv(["WORKSPACE=${WORKSPACE}"]) {
-
                     // TODO or DO NOT REMOVE: this versioning load is needed in order for uplaod_artifacts to have
                     // versioning.groovy available.... holy moly
+                    /* groovylint-disable-next-line UnusedVariable */
                     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
                     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
@@ -86,6 +86,7 @@ def run_make_targets(Map args) {
                     // * case VERSION="git" -> use daily build but patch it using f12
                     // * case VERSION="2.2.0-2023.06.07" -> use daily build of date as-is
                     try {
+                        /* groovylint-disable NestedBlockDepth */
                         args.DISTRO_LIST.each { DISTRO ->
                             DOCKER_BUILDS[DISTRO] = {
                                 stage(DISTRO + ' test') {
@@ -101,6 +102,7 @@ def run_make_targets(Map args) {
                                 }
                             }
                         }
+                        /* groovylint-enable NestedBlockDepth */
                         parallel DOCKER_BUILDS;
                     } finally {
                         stage("Archive / process test reports") {

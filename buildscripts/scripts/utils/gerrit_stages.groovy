@@ -5,7 +5,7 @@
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def log_stage_duration(last_stage_date) {
-    def this_stage_date = new Date();
+    def this_stage_date = new Date();   // groovylint-disable NoJavaUtilDate
     def duration = groovy.time.TimeCategory.minus(
         this_stage_date,
         last_stage_date,
@@ -107,7 +107,7 @@ def desc_add_row(ITEM_1, ITEM_2, ITEM_3, ITEM_4) {
 def desc_add_status_row(STAGE, DURATION, status, PATTERN) {
     desc_rm_table_bottom();
     if (PATTERN != '' && PATTERN != '--') {
-      PATTERN = "<a href=\"artifact/${PATTERN}\">${PATTERN}</a>";
+        PATTERN = "<a href=\"artifact/${PATTERN}\">${PATTERN}</a>";
     }
     currentBuild.description += """<tr>
     <td>${STAGE}</td>

@@ -752,7 +752,7 @@ def test_discover_systemd_units_sockets(
     [
         (
             SECTION,
-            [Service(item="Summary")],
+            [Service()],
         ),
     ],
 )
@@ -1070,10 +1070,5 @@ def test_check_systemd_units_services_summary(
     params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
 ) -> None:
     assert (
-        list(
-            check_systemd_units_services_summary(
-                item="nonsense-backward-compatibility", params=params, section=section
-            )
-        )
-        == check_results
+        list(check_systemd_units_services_summary(params=params, section=section)) == check_results
     )

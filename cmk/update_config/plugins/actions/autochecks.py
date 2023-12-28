@@ -36,6 +36,7 @@ _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
     CheckPluginName("hp_procurve_mem"): (lambda _x: None),
     CheckPluginName("nullmailer_mailq"): (lambda _x: None),
     CheckPluginName("qmail_stats"): (lambda _x: None),
+    CheckPluginName("systemd_units_services_summary"): (lambda _x: None),
     CheckPluginName("ucd_mem"): (lambda _x: None),
 }
 

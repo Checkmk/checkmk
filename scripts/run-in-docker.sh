@@ -99,6 +99,7 @@ docker run -a stdout -a stderr \
     --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \
     -e BANDIT_OUTPUT_ARGS \
+    -e GROOVYLINT_OUTPUT_ARGS \
     -e USER \
     -e JUNIT_XML \
     -e PYLINT_ARGS \

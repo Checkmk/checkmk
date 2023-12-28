@@ -1,0 +1,78 @@
+{
+    "extends": "recommended",
+    "rules":
+    {
+        "basic.DeadCode": "error",
+        "convention.CompileStatic": "off",
+        "convention.FieldTypeRequired": "info",
+        "convention.IfStatementCouldBeTernary": "info",
+        "convention.MethodReturnTypeRequired": "off",
+        "convention.NoDef": "off",
+        "convention.TrailingComma": "warning",
+        "convention.VariableTypeRequired": "off",
+        "design.Instanceof": "off",
+        "dry.DuplicateListLiteral": "info",
+        "dry.DuplicateMapLiteral": "warning",
+        "dry.DuplicateStringLiteral":
+        {
+            "ignoreStrings": "nexus",
+            "severity": "info"
+        },
+        "exceptions.ThrowException": "warning",
+        "exceptions.ThrowNullPointerException": "info",
+        "exceptions.ThrowRuntimeException": "info",
+        "exceptions.ThrowThrowable": "info",
+        "formatting.BracesForClass": "info",
+        "formatting.BracesForForLoop": "info",
+        "formatting.BracesForIfElse": "info",
+        "formatting.BracesForMethod": "info",
+        "formatting.BracesForTryCatchFinally": "info",
+        "formatting.ConsecutiveBlankLines": "warning",
+        "formatting.FileEndsWithoutNewline": "warning",
+        "formatting.Indentation":
+        {
+            "severity": "warning",
+            "spacesPerIndentLevel": 4
+        },
+        "formatting.LineLength":
+        {
+            "length": 140,
+            "severity": "warning"
+        },
+        "formatting.SpaceAroundMapEntryColon": "off",
+        "groovyism.ExplicitCallToEqualsMethod": "info",
+        "logging.Println": "off",
+        "naming.FactoryMethodName": "off",
+        "naming.ParameterName":
+        {
+            "regex": "^[a-zA-Z0-9_]*$",
+            "severity": "info"
+        },
+        "naming.VariableName":
+        {
+            "regex": "^[a-zA-Z0-9_]*$",
+            "severity": "info"
+        },
+        "size.MethodSize":
+        {
+            "maxLines": 150,
+            "severity": "warning"
+        },
+        "size.NestedBlockDepth":
+        {
+            "maxNestedBlockDepth": 8,
+            "severity": "warning"
+        },
+        "unnecessary.UnnecessaryGString": "off",
+        "unnecessary.UnnecessaryParenthesesForMethodCallWithClosure": "off",
+        "unnecessary.UnnecessaryReturnKeyword": "off",
+        "unnecessary.UnnecessarySemicolon": "off",
+        "unused.UnusedArray": "error",
+        "unused.UnusedMethodParameter": "error",
+        "unused.UnusedObject": "error",
+        "unused.UnusedPrivateField": "error",
+        "unused.UnusedPrivateMethod": "error",
+        "unused.UnusedPrivateMethodParameter": "error",
+        "unused.UnusedVariable": "error"
+    }
+}

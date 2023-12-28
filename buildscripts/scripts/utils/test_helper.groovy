@@ -77,6 +77,13 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 )
             ));
             break;
+        case "CODENARC":
+            issues.add(scanForIssues(
+                tool: codeNarc(
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
         case "CSSFORMAT":
             parserId = 'css-format';
             update_custom_parser([
@@ -104,6 +111,26 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
         case "GCC":
             issues.add(scanForIssues(
                 tool: gcc(
+                    pattern: "${result_check_file_pattern}"
+                )
+            ));
+            break;
+        case "GROOVY":
+            parserId = 'groovy-lint';
+            update_custom_parser([
+                id: parserId, // ID
+                name: 'Grooy Lint', // Name shown on left side menu
+                regex: '(.*\\.groovy$)\\n(\\s{2})(\\d+)(\\s+)(\\w+)(\\s{2,})(.*?)(?=\\s{2})(\\s{2})(\\w+)', // RegEx
+                mapping: 'return builder.setFileName(matcher.group(1)).setMessage(matcher.group(7)).setLineStart(Integer.parseInt(matcher.group(3))).setCategory(matcher.group(5)).setType(matcher.group(9)).buildOptional()', // Mapping script
+                example: """/home/jonasscharpf/git/check_mk/buildscripts/scripts/utils/upload_artifacts.groovy
+                  39    error    The variable [versioning] in class None is not used  UnusedVariable
+                  71    warning  Map [credentialsId:Release_Key, variable:RELEASE_KEY] is duplicated.  DuplicateMapLiteral"""  // example log message
+                // |                                                    1                                                    |
+                // |2|3|4| 5   |6|                                7                                 |8|          9           |
+            ]);
+            issues.add(scanForIssues(
+                tool: groovyScript(
+                    parserId: parserId,
                     pattern: "${result_check_file_pattern}"
                 )
             ));

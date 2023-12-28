@@ -112,8 +112,8 @@ def main() {
         // This stage is used only by bauwelt/bw-release in order to publish an already built release
         stage('Deploying previously build version to website only') {
             docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
-                artifacts_helper.deploy_to_website(cmk_version_rc_aware)
-                artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware)
+                artifacts_helper.deploy_to_website(cmk_version_rc_aware);
+                artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware);
             }
         }
         return;
@@ -145,7 +145,6 @@ def main() {
         }
     }
 
-
     shout("agents");
 
     // TODO iterate over all agent variants and put the condition per edition
@@ -162,13 +161,13 @@ def main() {
                             selector: specific(get_valid_build_id(win_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
-                        )
+                        );
                         copyArtifacts(
                             projectName: win_py_project_name,
                             selector: specific(get_valid_build_id(win_py_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
-                        )
+                        );
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
@@ -214,7 +213,7 @@ def main() {
             cleanup_source_package(checkout_dir, FINAL_SOURCE_PACKAGE_PATH);
         }
         stage("Test source package") {
-            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, checkout_dir, cmk_version)
+            test_package(FINAL_SOURCE_PACKAGE_PATH, "source", WORKSPACE, checkout_dir, cmk_version);
         }
         stage("Upload source package") {
             artifacts_helper.upload_via_rsync(
@@ -261,8 +260,8 @@ def main() {
                                 "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
-                                sh("rm -rf ${distro_dir}")
-                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/")
+                                sh("rm -rf ${distro_dir}");
+                                sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
                             }
                             stage("${distro} build package") {
                                 withCredentials([usernamePassword(
@@ -324,7 +323,7 @@ def main() {
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
-        def exclude_pattern = versioning.get_internal_distros_pattern()
+        def exclude_pattern = versioning.get_internal_distros_pattern();
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
@@ -336,7 +335,7 @@ def main() {
                     "*",
                     "all packages",
                     exclude_pattern,
-                )
+                );
                 artifacts_helper.upload_version_dir(
                     "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
                 if (deploy_to_website) {
@@ -401,7 +400,7 @@ def create_and_upload_bom(workspace, branch_version, version) {
                             url: 'ssh://jenkins@review.lan.tribe29.com:29418/dependencyscanner'
                         ]
                     ]
-                ])
+                ]);
                 scanner_image = docker.build("dependencyscanner", "--tag dependencyscanner .");
             }
         }
@@ -442,7 +441,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
     }
 
     stage("Vanilla agent sign package") {
-        sign_package(source_dir, "${source_dir}/agents/check-mk-agent-${cmk_version}-1.noarch.rpm")
+        sign_package(source_dir, "${source_dir}/agents/check-mk-agent-${cmk_version}-1.noarch.rpm");
     }
 
     stage("Create source package") {
@@ -451,35 +450,35 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def unsigned_msi = "check_mk_agent_unsigned.msi";
         def target_dir = "agents/windows";
         def scripts_dir = "${checkout_dir}/buildscripts/scripts";
-        def patch_script = "create_unsign_msi_patch.sh"
-        def patch_file = "unsign-msi.patch"
-        def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
-        def ext_files = "robotmk_ext.exe"
-        def check_sql = "check-sql.exe"
-        def hashes_file = "windows_files_hashes.txt"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
+        def patch_script = "create_unsign_msi_patch.sh";
+        def patch_file = "unsign-msi.patch";
+        def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe";
+        def ext_files = "robotmk_ext.exe";
+        def check_sql = "check-sql.exe";
+        def hashes_file = "windows_files_hashes.txt";
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}";
         if (params.FAKE_WINDOWS_ARTIFACTS) {
-            sh "mkdir -p ${agents_dir}"
+            sh("mkdir -p ${agents_dir}");
             if(EDITION != 'raw') {
-                sh "touch ${agents_dir}/cmk-update-agent"
-                sh "touch ${agents_dir}/cmk-update-agent-32"
+                sh("touch ${agents_dir}/cmk-update-agent");
+                sh("touch ${agents_dir}/cmk-update-agent-32");
             }
-            sh "touch ${agents_dir}/{${artifacts}}"
+            sh("touch ${agents_dir}/{${artifacts}}");
         }
         dir("${checkout_dir}") {
             if(EDITION != 'raw') {
-                sh "cp ${agents_dir}/cmk-update-agent non-free/cmk-update-agent/"
-                sh "cp ${agents_dir}/cmk-update-agent-32 non-free/cmk-update-agent/"
+                sh("cp ${agents_dir}/cmk-update-agent non-free/cmk-update-agent/");
+                sh("cp ${agents_dir}/cmk-update-agent-32 non-free/cmk-update-agent/");
             }
-            sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
-            sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
+            sh("cp ${agents_dir}/{${artifacts}} ${target_dir}");
+            sh("${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}");
             withCredentials([
                 usernamePassword(
                     credentialsId: 'nexus',
                     passwordVariable: 'NEXUS_PASSWORD',
                     usernameVariable: 'NEXUS_USERNAME')
             ]) {
-                sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+                sh('make dist || cat /root/.npm/_logs/*-debug.log');
             }
         }
     }
@@ -500,8 +499,8 @@ def cleanup_source_package(source_dir, package_path) {
 
 def copy_source_package(package_path, archive_path) {
     print("FN copy_source_package(package_path=${package_path}, archive_path=${archive_path})");
-    sh "mkdir -p \$(dirname ${archive_path})"
-    sh "cp ${package_path} ${archive_path}"
+    sh("mkdir -p \$(dirname ${archive_path})");
+    sh("cp ${package_path} ${archive_path}");
 }
 
 def build_package(package_type, build_dir, env) {
@@ -515,14 +514,14 @@ def build_package(package_type, build_dir, env) {
         //   cache key, including DISTRO information...)
         // * if we then build under an old distro, we get linker issues
         // * so as long as we don't have the protobuf build bazelized, we need to manually clean it up here.
-        sh("rm -fr omd/build/intermediate_install/protobuf*")
-        sh("rm -fr omd/build/stamps/protobuf*")
+        sh("rm -fr omd/build/intermediate_install/protobuf*");
+        sh("rm -fr omd/build/stamps/protobuf*");
 
 
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632
         try {
-            def env_str = env.join(" ")
+            def env_str = env.join(" ");
             sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
         } finally {
             sh("cd '${checkout_dir}/omd'; echo 'Maximum heap size:'; bazel info peak-heap-size; echo 'Server log:'; cat \$(bazel info server_log)");
@@ -572,13 +571,13 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
                 "PACKAGE_PATH=${package_path}",
                 "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
         ]) {
-            sh("make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging")
+            sh("make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging");
         }
     } finally {
         step([
             $class: "JUnitResultArchiver",
             testResults: "junit-${name}.xml",
-        ])
+        ]);
     }
 }
 

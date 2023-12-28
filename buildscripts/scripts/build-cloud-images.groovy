@@ -14,35 +14,35 @@ def main() {
     check_job_parameters([
         "EDITION",
         "VERSION",
-    ])
+    ]);
 
     if (EDITION != 'cloud') {
-        error "The AMI/Azure builds must currently *only* use the cloud edition."
+        error("The AMI/Azure builds must currently *only* use the cloud edition.");
     }
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(scm), branch_version, VERSION)
     if (cmk_version != versioning.strip_rc_number_from_version(cmk_version)) {
-        error "You may try to build a release candidate (${cmk_version}) for the cloud images but " +
+        error("You may try to build a release candidate (${cmk_version}) for the cloud images but " +
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +
-            "tested to be OK."
+            "tested to be OK.");
     }
-    shout("Building cloud images for version: ${cmk_version}")
+    shout("Building cloud images for version: ${cmk_version}");
 
-    def version_suffix = "${cmk_version}-build-${env.BUILD_NUMBER}"
-    def env_secret_map = build_env_secret_map(cmk_version, version_suffix)
-    def cloud_targets = ["amazon-ebs", "azure-arm"]
+    def version_suffix = "${cmk_version}-build-${env.BUILD_NUMBER}";
+    def env_secret_map = build_env_secret_map(cmk_version, version_suffix);
+    def cloud_targets = ["amazon-ebs", "azure-arm"];
 
     currentBuild.description += (
         """
         |Building the Cloud images
-        |""".stripMargin())
+        |""".stripMargin());
 
 
     stage('Cleanup') {
         dir("${checkout_dir}") {
-            sh("git clean -xdf")
+            sh("git clean -xdf");
         }
     }
 
@@ -51,7 +51,7 @@ def main() {
             stage('Packer init') {
                 dir("${checkout_dir}/packer") {
                     // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
-                    sh("packer init .")
+                    sh("packer init .");
                 }
             }
             parallel(create_stages(cloud_targets, env_secret_map));
@@ -101,8 +101,7 @@ def build_env_secret_map(cmk_version, version_suffix) {
                 credentialsId: 'azure_tenant_id',
                 variable: 'PKR_VAR_azure_tenant_id'),
         ],
-    ]
-
+    ];
 }
 
 def create_stages(cloud_targets, env_secret_map) {
@@ -124,4 +123,4 @@ def create_stages(cloud_targets, env_secret_map) {
     }
 }
 
-return this
+return this;

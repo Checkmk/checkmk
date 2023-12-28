@@ -27,7 +27,7 @@ def main() {
             MAKE_TARGET: "test-gui-crawl-docker",
             BRANCH: branch_name,
             cmk_version: cmk_version,
-        )
+        );
     } finally {
         stage('archive crawler report') {
             dir("${WORKSPACE}") {
@@ -39,9 +39,10 @@ def main() {
                     skipNoTestFiles: false,
                     stopProcessingIfError: true
                     )
-                ])
+                ]);
             }
         }
     }
 }
+
 return this;

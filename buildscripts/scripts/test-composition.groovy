@@ -56,7 +56,7 @@ def main() {
             MAKE_TARGET: "test-composition-docker",
             BRANCH: branch_name,  // FIXME was BRANCH before
             cmk_version: versioning.get_cmk_version(branch_name, branch_version, VERSION),
-        )
+        );
     }
 }
 

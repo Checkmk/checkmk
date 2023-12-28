@@ -18,8 +18,8 @@ def run_make_targets(Map args) {
         ||======================================================================
         """.stripMargin());
 
-    def DOCKER_BUILDS = [:]
-    def download_dir = "downloaded_packages_for_integration_tests"
+    def DOCKER_BUILDS = [:];
+    def download_dir = "downloaded_packages_for_integration_tests";
     // TODO: this should be done by the top level scripts
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside(
@@ -36,8 +36,8 @@ def run_make_targets(Map args) {
 
                     // TODO or DO NOT REMOVE: this versioning load is needed in order for uplaod_artifacts to have
                     // versioning.groovy available.... holy moly
-                    def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"
-                    def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"
+                    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+                    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
                     // TODO make independent from WORKSPACE
                     sh("rm -rf \"${WORKSPACE}/${download_dir}\"")
@@ -75,10 +75,10 @@ def run_make_targets(Map args) {
 
                     // Cleanup test results directory before starting the test to prevent previous
                     // runs somehow affecting the current run.
-                    sh("[ -d ${WORKSPACE}/test-results ] && rm -rf ${WORKSPACE}/test-results || true")
+                    sh("[ -d ${WORKSPACE}/test-results ] && rm -rf ${WORKSPACE}/test-results || true");
 
                     // Initialize our virtual environment before parallelization
-                    sh("make .venv")
+                    sh("make .venv");
 
                     // Then execute the tests
 
@@ -101,7 +101,7 @@ def run_make_targets(Map args) {
                                 }
                             }
                         }
-                        parallel DOCKER_BUILDS
+                        parallel DOCKER_BUILDS;
                     } finally {
                         stage("Archive / process test reports") {
                             dir(WORKSPACE) {
@@ -115,7 +115,7 @@ def run_make_targets(Map args) {
                                     pattern: "**/junit.xml",
                                     skipNoTestFiles: false,
                                     stopProcessingIfError: true
-                                )])
+                                )]);
                             }
                         }
                         /// remove downloaded packages since they consume dozens of GiB
@@ -126,4 +126,5 @@ def run_make_targets(Map args) {
         }
     }
 }
+
 return this;

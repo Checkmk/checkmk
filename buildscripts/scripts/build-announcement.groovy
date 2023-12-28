@@ -5,7 +5,6 @@
 // Builds a tar.gz which contains announcement text for publishing in the forum and on the mailing list.
 // Artifacts will be consumed by bw-release.
 
-
 def main() {
     stage("Clean workspace") {
         dir("${checkout_dir}") {

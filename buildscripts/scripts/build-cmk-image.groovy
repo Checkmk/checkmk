@@ -40,7 +40,7 @@ def main() {
     def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : branch_version;
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-    def source_dir = package_dir + "/" + cmk_version_rc_aware
+    def source_dir = package_dir + "/" + cmk_version_rc_aware;
     def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";
 
     def push_to_registry = PUSH_TO_REGISTRY=='true';
@@ -62,11 +62,9 @@ def main() {
         |Building the CMK docker image
         """.stripMargin());
 
-
     shout("build image");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             withCredentials([
                 usernamePassword(
@@ -194,14 +192,14 @@ def registry_credentials_id(edition) {
    switch(edition) {
        case "raw":
        case "cloud":
-           return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
+           return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
        case "enterprise":
        case "managed":
-           return "registry.checkmk.com"
+           return "registry.checkmk.com";
        case "saas":
-           return "nexus"
+           return "nexus";
        default:
-           throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
+           throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
     }
 }
 

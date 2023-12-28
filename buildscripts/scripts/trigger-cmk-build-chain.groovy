@@ -9,7 +9,6 @@
 /// Depends on:         Nothing
 
 def main() {
-
     /// make sure the listed parameters are set
     check_job_parameters([
         "VERSION",
@@ -48,7 +47,7 @@ def main() {
 
     // TODO we should take this list from a single source of truth
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
-        "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
+        "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = edition != "managed";
     def build_cloud_images = edition == "cloud";
@@ -111,7 +110,7 @@ def main() {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
         }
-    ])
+    ]);
 
     success &= smart_stage(
             name: "Integration Test for Packages",
@@ -128,6 +127,6 @@ def main() {
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";
-
 }
+
 return this;

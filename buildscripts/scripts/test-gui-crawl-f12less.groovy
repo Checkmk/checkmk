@@ -132,7 +132,7 @@ def main() {
                                     skipNoTestFiles: false,
                                     stopProcessingIfError: true
                                     )
-                                ])
+                                ]);
                             }
                         }
                     }

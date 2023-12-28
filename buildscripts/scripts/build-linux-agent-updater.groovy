@@ -109,7 +109,8 @@ def main() {
             setCustomBuildProperty(
                 key: "path_hashes",
                 // TODO: this must go to some SPoT
-                value: directory_hashes(["agents", "non-free/cmk-update-agent"]));
+                value: directory_hashes(["agents", "non-free/cmk-update-agent"])
+            );
         }
         dir("${WORKSPACE}/build") {
             show_duration("archiveArtifacts") {

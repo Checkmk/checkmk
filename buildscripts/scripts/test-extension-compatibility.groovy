@@ -50,4 +50,5 @@ HERE
         cmk_version: versioning.get_cmk_version(branch_name, branch_version, "daily"),
     );
 }
+
 return this;

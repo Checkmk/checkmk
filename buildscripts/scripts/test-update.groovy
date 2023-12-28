@@ -7,9 +7,9 @@ def build_make_target(edition) {
     def suffix = "-docker";
     switch(edition) {
         case 'enterprise':
-            return prefix + "cee" + suffix
+            return prefix + "cee" + suffix;
         case 'cloud':
-            return prefix + "cce" + suffix
+            return prefix + "cce" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }
@@ -39,4 +39,5 @@ def main() {
         cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
     );
 }
+
 return this;

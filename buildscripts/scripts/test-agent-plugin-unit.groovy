@@ -6,10 +6,9 @@ def get_agent_plugin_python_versions(String git_dir=".") {
     dir(git_dir) {
         def versions = (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS")
                 ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS from defines.make"));
-        return versions.split(" ")
+        return versions.split(" ");
     }
 }
-
 
 def main() {
     def python_versions = get_agent_plugin_python_versions(checkout_dir);
@@ -36,4 +35,5 @@ def main() {
         }
     }
 }
+
 return this;

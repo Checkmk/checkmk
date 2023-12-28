@@ -227,7 +227,8 @@ def main() {
         dir("${checkout_dir}") {
             setCustomBuildProperty(
                 key: "path_hashes",
-                value: scm_directory_hashes(scm.extensions));
+                value: scm_directory_hashes(scm.extensions)
+            );
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
                     artifacts: "*.deb,*.rpm,*.cma",

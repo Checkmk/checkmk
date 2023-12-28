@@ -22,4 +22,5 @@ def main() {
         cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
     );
 }
+
 return this;

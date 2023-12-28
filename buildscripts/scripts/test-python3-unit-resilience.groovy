@@ -19,8 +19,8 @@ def main() {
                         }
                     } catch(Exception e) {
                         // We want to keep failed resilience builds in order to follow a process, see CMK-14487
-                        currentBuild.setKeepLog(true)
-                        throw e
+                        currentBuild.setKeepLog(true);
+                        throw e;
                     } finally {
                         test_jenkins_helper.analyse_issues("JUNIT", relative_result_path);
                     }

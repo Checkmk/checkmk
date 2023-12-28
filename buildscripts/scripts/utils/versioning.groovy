@@ -142,7 +142,7 @@ def get_docker_tag(scm, String git_dir=".") {
 }
 
 def get_docker_artifact_name(edition, cmk_version) {
-    return "check-mk-${edition}-docker-${cmk_version}.tar.gz"
+    return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
@@ -184,9 +184,9 @@ def patch_themes(EDITION) {
         case 'free':
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
-                sh """
+                sh("""
                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                """
+                """);
             }
             break
     }
@@ -194,7 +194,7 @@ def patch_themes(EDITION) {
 
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
-        sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
+        sh('''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make''');
     }
 }
 
@@ -203,7 +203,7 @@ def set_version(cmk_version) {
 }
 
 def configure_checkout_folder(edition, cmk_version) {
-    assert edition in REPO_PATCH_RULES: "edition=${edition} not known"
+    assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
     patch_themes(edition);
     patch_demo(edition);
@@ -229,13 +229,15 @@ def delete_non_cre_files() {
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
     // Do not remove files in .git, .venv, .mypy_cache directories
-    sh """bash -c \"find . \\
+    sh("""
+        bash -c \"find . \\
         -not \\( -path ./.\\* -prune \\) \\
-        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""""
+        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\"
+    """);
 }
 
 def strip_rc_number_from_version(VERSION) {
-    return VERSION.split("-rc")[0]
+    return VERSION.split("-rc")[0];
 }
 
-return this
+return this;

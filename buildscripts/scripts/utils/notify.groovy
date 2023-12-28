@@ -11,7 +11,7 @@ def get_author_email() {
         onWindows ?
         /// windows will replace %ae with ae..
         cmd_output('git log -1 --pretty=format:%%ae') :
-        cmd_output('git log -1 --pretty=format:%ae'))
+        cmd_output('git log -1 --pretty=format:%ae'));
 }
 
 // Send a build failed massage to jenkins
@@ -25,7 +25,7 @@ def slack_build_failed(error) {
             |Error Message:
             |    ${error}
             |""".stripMargin()),
-    )
+    );
 }
 
 
@@ -33,7 +33,7 @@ def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
-    def projectname = currentBuild.fullProjectName
+    def projectname = currentBuild.fullProjectName;
     try {
         def isChangeValidation = projectname.contains("cv");
         def isTesting = projectname.contains("Testing");
@@ -78,17 +78,17 @@ def notify_error(error) {
 
             /// Inform cloud devs if cloud burns
             if (projectname.contains("build-cmk-cloud-images")) {
-                notify_emails += "max.linke@checkmk.com"
+                notify_emails += "max.linke@checkmk.com";
             }
 
             /// Inform nile devs if our extensions fail
             if (projectname.contains("test-extension-compatibility")) {
-                notify_emails.addAll(TEAM_NILE_MAIL.split(","))
+                notify_emails.addAll(TEAM_NILE_MAIL.split(","));
             }
 
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
-                notify_emails += "benedikt.seidl@checkmk.com"
+                notify_emails += "benedikt.seidl@checkmk.com";
             }
 
             /// fallback - for investigation
@@ -118,7 +118,7 @@ def notify_error(error) {
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),
-           )
+           );
         }
     } catch(Exception exc) {
         print("Could not report error by mail - got ${exc}");

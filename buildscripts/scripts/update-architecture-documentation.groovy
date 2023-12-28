@@ -14,7 +14,7 @@ def main() {
                 stash(
                     name: "htmlhelp",
                     includes: "doc/documentation/_build/htmlhelp/**"
-                )
+                );
             }
         }
 

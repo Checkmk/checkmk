@@ -9,7 +9,7 @@ def main() {
         dir("${checkout_dir}") {
             windows.build(
                 TARGET: 'test_integration'
-            )
+            );
         }
     }
 }

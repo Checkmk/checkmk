@@ -14,7 +14,7 @@ def main() {
 
     dir("${checkout_dir}") {
         stage("make setversion") {
-            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
+            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion");
         }
 
         withCredentials([string(
@@ -23,7 +23,7 @@ def main() {
         )]) {
             windows.build(
                 TARGET: 'check_sql_no_sign',
-            )
+            );
         }
     }
 }

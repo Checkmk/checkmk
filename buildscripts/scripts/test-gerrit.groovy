@@ -38,8 +38,8 @@ def main() {
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-            sh("scripts/run-in-docker.sh buildscripts/scripts/ensure-workspace-integrity")
-            sh("rm -rf ${result_dir}; mkdir ${result_dir}")
+            sh("scripts/run-in-docker.sh buildscripts/scripts/ensure-workspace-integrity");
+            sh("rm -rf ${result_dir}; mkdir ${result_dir}");
 
             /// Reason for the following try/catch block:
             /// Jenkins will abort jobs (e.g. in case of a new patch set) with SIGKILL (at least this is what we think)
@@ -114,7 +114,7 @@ def main() {
                         pattern: "results/*junit.xml",
                         skipNoTestFiles: true,
                         stopProcessingIfError: true,
-                )])
+                )]);
 
                 show_duration("archiveArtifacts") {
                     archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
@@ -124,4 +124,5 @@ def main() {
         time_stage_started = test_gerrit_helper.log_stage_duration(time_stage_started);
     }
 }
+
 return this;

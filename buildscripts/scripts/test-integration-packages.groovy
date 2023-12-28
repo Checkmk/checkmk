@@ -62,7 +62,7 @@ def main() {
             MAKE_TARGET: "test-integration-docker",
             BRANCH: versioning.branch_name(scm),
             cmk_version: cmk_version,
-        )
+        );
     }
 }
 

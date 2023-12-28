@@ -26,7 +26,7 @@ def main() {
             safe_branch_name,  // 'branch'
             "",                // 'build tag'
             "",                // 'folder tag'
-    )
+    );
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
@@ -72,7 +72,6 @@ def main() {
                 -v /var/run/docker.sock:/var/run/docker.sock") {
 
                 dir("${checkout_dir}") {
-
                     // Cleanup test results directory before starting the test to prevent previous
                     // runs somehow affecting the current run.
                     sh("rm -rf ${WORKSPACE}/test-results");
@@ -132,7 +131,7 @@ def main() {
                                     skipNoTestFiles: false,
                                     stopProcessingIfError: true
                                     )
-                                ])
+                                ]);
                             }
                         }
                     }

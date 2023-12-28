@@ -79,11 +79,11 @@ def build(Map args) {
                     stash(
                         name: args.STASH_NAME,
                         includes: artifacts
-                    )
+                    );
                 }
             }
         }
     }
 }
 
-return this
+return this;

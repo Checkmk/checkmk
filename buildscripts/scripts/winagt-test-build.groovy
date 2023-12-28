@@ -20,7 +20,7 @@ def main() {
         )]) {
             windows.build(
                 TARGET: 'agent_no_sign'
-            )
+            );
         }
     }
 }

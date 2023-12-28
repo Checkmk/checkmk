@@ -11,7 +11,7 @@ def main() {
                 sh("""
                     MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
                     make -C tests test-mypy-docker
-                   """);
+                """);
             }
         }
 
@@ -30,7 +30,7 @@ def main() {
                     type: 'TOTAL',
                     unstable: false,
                 ]]
-            )
+            );
         }
 
         stage("Publish coverage") {
@@ -42,7 +42,7 @@ def main() {
                 reportFiles: 'index.html',
                 reportName: 'Typing coverage',
                 reportTitles: '',
-            ])
+            ]);
         }
     }
 }

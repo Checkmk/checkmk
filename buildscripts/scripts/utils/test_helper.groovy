@@ -18,7 +18,7 @@ def execute_test(Map config = [:]) {
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             def cmd = defaultDict.cmd;
             if (defaultDict.output_file) {
-                cmd += " 2>&1 | tee ${defaultDict.output_file}"
+                cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
             sh("""
                 set -o pipefail

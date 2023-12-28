@@ -310,6 +310,8 @@ class PortModel(BaseModel):
     ============
     "node" -> node
     "port" -> name
+    "operational-speed" -> speed
+    "health-status" -> NOT AVAILABLE IN REST API
     ============
 
     """
@@ -318,8 +320,12 @@ class PortModel(BaseModel):
     name: str
     state: str
     speed: int | None = None
+    node_name: str
     port_type: str
     broadcast_domain: BroadcastDomain | None = None
+
+    def item_name(self) -> str:
+        return f"{self.port_type.capitalize()} port {self.node_name}.{self.name}"
 
 
 class InterfaceCounter(BaseModel):

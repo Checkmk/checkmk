@@ -278,7 +278,6 @@ class ErrorReporter:
 
     KNOWN_ITEM_REQUIREMENTS = {
         # type # plugin # wato
-        ("check", "azure_ad_sync", RuleGroup.CheckgroupParameters("azure_ad")),
         (
             "check",
             "azure_agent_info",

@@ -99,6 +99,8 @@ help:
 	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
+	@echo "test-lint-groovy                    - Run the Groovy linting"
+	@echo "test-lint-groovy-docker             - Run the Groovy linting in docker"
 	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
@@ -247,6 +249,12 @@ test-format-bazel:
 
 test-format-bazel-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-bazel
+
+test-lint-groovy:
+	cd ..; scripts/npm-ci && scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
+
+test-lint-groovy-docker:
+	../scripts/run-in-docker.sh make --quiet test-lint-groovy
 
 test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)

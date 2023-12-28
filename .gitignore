@@ -61,6 +61,7 @@ GPATH
 GRTAGS
 GTAGS
 htmlcov/
+logback.log
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*

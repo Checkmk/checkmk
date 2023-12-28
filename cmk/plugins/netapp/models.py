@@ -338,3 +338,40 @@ class InterfaceCountersRowModel(BaseModel):
     # "mcc_darz_a-01:FlexPodXCS_NFS_Frank:Test_300T:00b3e6b1-5781-11ee-b0c8-00a098c54c0b"
     id: str
     counters: Sequence[InterfaceCounter]
+
+
+class Version(BaseModel):
+    """Stores the NetApp ONTAP release version information"""
+
+    full: str
+    generation: int
+    major: int
+    minor: int
+
+
+class NodeModel(BaseModel):
+    """
+    Wraps information coming from /api/cluster/nodes/{node_uuid}
+    see https://library.netapp.com/ecmdocs/ECMLP2885799/html/index.html#/cluster/node_get
+
+    api: /api/cluster/nodes
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-get-node-info-iter
+
+
+    ============
+    OLD -> NEW:
+    ============
+    "node" -> name
+    "cpu-busytime": "cpu_busy" -> # ! NO REST equivalent
+    "nvram-battery-status" -> nvram.battery_state
+    "number-of-processors": "num_processors" -> controller.cpu.count
+    ============
+    config_scale={"cpu-busytime": 1000000},
+
+    """
+
+    name: str
+    uuid: str
+    version: Version
+    cpu_count: int | None = None  # default None inherited from old NetApp API logic
+    battery_state: str

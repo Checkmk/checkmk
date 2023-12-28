@@ -349,6 +349,28 @@ def fetch_interfaces_counters(
         )
 
 
+def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
+    field_query = {
+        "name",
+        "version",
+        "controller.cpu.count",
+        "nvram.battery_state",
+    }
+
+    for element in NetAppResource.Node.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.NodeModel(
+            name=element_data["name"],
+            uuid=element_data["uuid"],
+            version=element_data["version"],
+            cpu_count=element_data.get("controller", {}).get("cpu", {}).get("count"),
+            battery_state=element_data["nvram"]["battery_state"],
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -361,6 +383,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     interfaces = list(fetch_interfaces(connection))
     write_section("interfaces_rest", interfaces, logger)
     write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)
+    write_section("node", fetch_nodes(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

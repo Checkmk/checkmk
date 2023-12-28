@@ -1,0 +1,13 @@
+title: NetApp Filer: CPU Count
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ Checks the total number of CPU of a NetApp.
+
+item:
+ The name of the cluster node
+
+discovery:
+ One service per node is created.

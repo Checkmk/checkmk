@@ -5,7 +5,6 @@
 
 from datetime import datetime
 
-import cryptography.hazmat.primitives.asymmetric as asym
 import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
@@ -37,9 +36,6 @@ def fixture_rsa_key() -> PrivateKey:
 
 def rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
     """Check if two keys are the same RSA key"""
-    # Asserting key types here just to cut corners on type checking
-    # (ed25519 keys don't have private_numbers())
-    assert isinstance(key_a._key, asym.rsa.RSAPrivateKey) and isinstance(
-        key_b._key, asym.rsa.RSAPrivateKey
-    )
-    return key_a._key.private_numbers() == key_b._key.private_numbers()
+    # Assert keys are RSA keys here just to cut corners on type checking. ed25519 keys don't have
+    # private_numbers(). Also, no-one else needs __eq__ on PrivateKey at the moment.
+    return key_a.get_raw_rsa_key().private_numbers() == key_b.get_raw_rsa_key().private_numbers()

@@ -6,7 +6,6 @@
 from datetime import datetime
 from pathlib import Path
 
-import cryptography.hazmat.primitives.asymmetric.rsa as rsa
 import cryptography.x509 as x509
 from dateutil.relativedelta import relativedelta
 
@@ -151,8 +150,7 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     with on_time(100, "UTC"):
         ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
-    assert isinstance(ca.private_key._key, rsa.RSAPrivateKey)
-    assert ca.private_key._key.key_size == 1024
+    assert ca.private_key.get_raw_rsa_key().key_size == 1024
     assert ca.certificate.common_name == "peter"
     assert (
         str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40"

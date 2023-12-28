@@ -356,6 +356,11 @@ class PageUploadKey:
         except WrongPasswordError:
             raise MKUserError("key_p_passphrase", "Invalid pass phrase")
 
+        try:
+            _rsa_key = key_pair.private_key.get_raw_rsa_key()
+        except ValueError:
+            raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
+
         key = Key(
             certificate=key_pair.certificate.dump_pem().str,
             private_key=key_pair.private_key.dump_pem(passphrase).str,

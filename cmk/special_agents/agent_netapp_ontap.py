@@ -275,6 +275,78 @@ def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
     )
 
 
+def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceModel]:
+    field_query = {
+        "uuid",
+        "name",
+        "enabled",
+        "state",
+        "location.node.name",
+        "location.port.name",
+        "location.failover",
+        # "ip",
+    }
+
+    yield from (
+        models.IpInterfaceModel.model_validate(element.to_dict())
+        for element in NetAppResource.IpInterface.get_collection(
+            connection=connection, fields=",".join(field_query)
+        )
+    )
+
+
+def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
+    field_query = {
+        "uuid",
+        "name",
+        "state",
+        "speed",
+        "type",
+        "broadcast_domain.name",
+    }
+
+    for element in NetAppResource.Port.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.PortModel(
+            uuid=element_data["uuid"],
+            name=element_data["name"],
+            state=element_data["state"],
+            speed=element_data.get("speed"),
+            port_type=element_data["type"],
+            broadcast_domain=element_data.get("broadcast_domain"),
+        )
+
+
+def fetch_interfaces_counters(
+    connection: HostConnection, interfaces: Sequence[models.IpInterfaceModel]
+) -> Iterable[models.InterfaceCountersRowModel]:
+    """
+    id is composed in this way: {node_name}:{interface_name}:{unique_id}
+
+    - https://docs.netapp.com/us-en/ontap-pcmap-9141/lif.html
+
+    """
+    interfaces_counters_field_query = {"*"}
+
+    for interface in interfaces:
+        interface_id = f"{interface.location.node.name}:{interface.name}:*"
+
+        yield from (
+            models.InterfaceCountersRowModel.model_validate(element.to_dict())
+            for element in NetAppResource.CounterRow.get_collection(
+                "lif",
+                id=interface_id,
+                connection=connection,
+                fields="counters",
+                max_records=None,  # type: ignore # pylint disable=arg-type not working
+                **{"counters.name": "|".join(interfaces_counters_field_query)},
+            )
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -283,6 +355,10 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("luns", fetch_luns(connection), logger)
     write_section("aggr", fetch_aggr(connection), logger)
     write_section("vs_status", fetch_vs_status(connection), logger)
+    write_section("ports_rest", fetch_ports(connection), logger)
+    interfaces = list(fetch_interfaces(connection))
+    write_section("interfaces_rest", interfaces, logger)
+    write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

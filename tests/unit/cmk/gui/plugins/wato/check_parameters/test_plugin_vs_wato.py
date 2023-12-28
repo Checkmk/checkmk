@@ -294,11 +294,6 @@ class ErrorReporter:
             "netapp_fcpio",
             RuleGroup.CheckgroupParameters("netapp_fcportio"),
         ),
-        (
-            "check",
-            "systemd_units_services_summary",
-            RuleGroup.CheckgroupParameters("systemd_services_summary"),
-        ),
     }
     KNOWN_WATO_MISSING = {
         # type # instance # wato

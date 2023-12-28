@@ -276,14 +276,6 @@ class ErrorReporter:
             ("check", RuleGroup.CheckgroupParameters("robotmk_suite")),
         }
 
-    KNOWN_ITEM_REQUIREMENTS = {
-        # type # plugin # wato
-        (
-            "check",
-            "azure_agent_info",
-            RuleGroup.CheckgroupParameters("azure_agent_info"),
-        ),
-    }
     KNOWN_WATO_MISSING = {
         # type # instance # wato
         ("check", "3ware_units", "raid"),
@@ -636,7 +628,6 @@ class ErrorReporter:
         self._last_exception: t.Optional[DefaultLoadingFailed] = None
         self._failed = False
         self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
-        self._known_item_requirements = self.KNOWN_ITEM_REQUIREMENTS.copy()
         self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
         self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
 
@@ -678,10 +669,6 @@ class ErrorReporter:
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
-        element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in self._known_item_requirements:
-            self._known_item_requirements.remove(element)
-            return
         print(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
@@ -726,11 +713,9 @@ class ErrorReporter:
         """
         # ci does not report the variables, so we print them...
         print(self._known_error_loading_defaults)
-        print(self._known_item_requirements)
         print(self._known_wato_missing)
         print(self._known_wato_unused)
         assert len(self._known_error_loading_defaults) == 0
-        assert len(self._known_item_requirements) == 0
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0
 

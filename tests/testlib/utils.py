@@ -15,7 +15,7 @@ import textwrap
 # pylint: disable=redefined-outer-name
 import time
 from collections.abc import Callable, Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from pprint import pformat
 from urllib.parse import urlparse
@@ -55,7 +55,40 @@ class PExpectDialog:
 
 
 def repo_path() -> Path:
+    """Returns the checkout/worktree path (in contrast to the 'git-dir')
+    same as result of `git rev-parse --show-toplevel`, but repo_path is being executed
+    quite often, so we take the not-so-portable-but-more-efficient approach.
+    """
     return Path(__file__).resolve().parent.parent.parent
+
+
+def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
+    """Yields paths to all directories needed to be accessible in order to run git operations
+    Note that if a directory is a subdirectory of checkout_dir it will be skipped"""
+
+    # path to the 'real git repository directory', i.e. the common dir when dealing with work trees
+    common_dir = (
+        (
+            checkout_dir
+            / subprocess.check_output(
+                ["git", "rev-parse", "--git-common-dir"], cwd=checkout_dir, text=True
+            ).rstrip("\n")
+        )
+        .resolve()
+        .absolute()
+    )
+
+    if not common_dir.is_relative_to(checkout_dir):
+        yield common_dir.as_posix()
+
+    # In case of reference clones we also need to access them.
+    # Not sure if 'objects/info/alternates' can contain more than one line and if we really need
+    # the parent, but at least this one is working for us
+    with suppress(FileNotFoundError):
+        with (common_dir / "objects/info/alternates").open() as alternates:
+            for alternate in (Path(line).parent for line in alternates):
+                if not alternate.is_relative_to(checkout_dir):
+                    yield alternate.as_posix()
 
 
 def qa_test_data_path() -> Path:

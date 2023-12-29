@@ -1572,20 +1572,20 @@ void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,
 
 std::pair<std::vector<char>, int> RunAsyncPlugins(PluginMap &plugins,
                                                   bool start_immediately) {
-    std::vector<char> out;
+    std::vector<char> result;
 
     int count = 0;
     for (auto &plugin : plugins | std::views::values) {
         if (!plugin.async() || !provider::config::IsRunAsync(plugin)) {
             continue;
         }
-        auto ret = plugin.getResultsAsync(start_immediately);
-        if (!ret.empty()) {
+        auto data = plugin.getResultsAsync(start_immediately);
+        if (!data.empty()) {
             ++count;
         }
-        tools::AddVector(out, ret);
+        tools::AddVector(result, data);
     }
-    return {out, count};
+    return {result, count};
 }
 }  // namespace cma
 
@@ -1597,7 +1597,7 @@ std::wstring LocatePs1Proxy() {
         return L"";
     }
 
-    auto path_to_configure_and_exec =
+    const auto path_to_configure_and_exec =
         fs::path{cfg::GetRootInstallDir()} / cfg::files::kConfigureAndExecPs1;
     std::error_code ec;
     return fs::exists(path_to_configure_and_exec, ec)
@@ -1607,7 +1607,7 @@ std::wstring LocatePs1Proxy() {
 
 std::wstring MakePowershellWrapper() noexcept {
     try {
-        auto powershell_exe = FindPowershellExe();
+        const auto powershell_exe = FindPowershellExe();
         auto proxy = LocatePs1Proxy();
 
         return powershell_exe +

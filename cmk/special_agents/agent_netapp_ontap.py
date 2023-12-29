@@ -355,6 +355,11 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         "version",
         "controller.cpu.count",
         "nvram.battery_state",
+        "model",
+        "system_machine_type",
+        "serial_number",
+        "system_id",
+        "controller.cpu.processor",
     }
 
     for element in NetAppResource.Node.get_collection(
@@ -368,6 +373,11 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             version=element_data["version"],
             cpu_count=element_data.get("controller", {}).get("cpu", {}).get("count"),
             battery_state=element_data["nvram"]["battery_state"],
+            model=element_data["model"],
+            system_machine_type=element_data.get("system_machine_type"),
+            serial_number=element_data["serial_number"],
+            system_id=element_data["system_id"],
+            cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
         )
 
 

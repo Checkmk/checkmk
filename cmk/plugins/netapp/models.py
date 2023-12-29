@@ -357,7 +357,7 @@ class NodeModel(BaseModel):
     api: /api/cluster/nodes
     doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-get-node-info-iter
 
-
+    CPU/NVRAM plugin
     ============
     OLD -> NEW:
     ============
@@ -368,6 +368,22 @@ class NodeModel(BaseModel):
     ============
     config_scale={"cpu-busytime": 1000000},
 
+    INFO PLUGIN:
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-cache-mirror-get-iter
+
+    ============
+    OLD -> NEW:
+    ============
+
+    backplane-serial-number -> NA # ! TODO: NA
+    system-model -> model
+    system-machine-type -> system_machine_type
+    system-serial-number -> serial_number
+    system-id -> system_id
+    vendor-id -> NA # ! TODO: NA
+    cpu-processor-type -> controller.cpu.processor
+    ============
+
     """
 
     name: str
@@ -375,6 +391,12 @@ class NodeModel(BaseModel):
     version: Version
     cpu_count: int | None = None  # default None inherited from old NetApp API logic
     battery_state: str
+
+    model: str
+    system_machine_type: str | None = None
+    serial_number: str
+    system_id: str
+    cpu_processor: str | None = None  # default None inherited from old NetApp API logic
 
 
 class ShelfFanModel(BaseModel):

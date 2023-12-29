@@ -112,7 +112,7 @@ def check_netapp_ontap_nvram_bat(item: str, section: Section) -> CheckResult:
     )
 
 
-check_plugin_netapp_ontap_cpu_bat = CheckPlugin(
+check_plugin_netapp_ontap_nvram_bat = CheckPlugin(
     name="netapp_ontap_cpu_nvram_bat",
     service_name="NVRAM Battery %s",
     sections=["netapp_ontap_node"],

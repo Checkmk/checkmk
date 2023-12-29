@@ -1,0 +1,17 @@
+Title: veeam_cdp_jobs: Handle last sync time from the future
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1703838299
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+Previously, the veeam_cdp_jobs would crash when receiving last
+sync time from the future with a message:
+
+C+:
+raise ValueError("Cannot render negative timespan")
+C-:
+
+Now, the time since the last job run will be 0 for such cases.

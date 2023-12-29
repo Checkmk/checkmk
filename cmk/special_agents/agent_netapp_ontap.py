@@ -406,6 +406,44 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
             )
 
 
+def fetch_temperatures(
+    connection: HostConnection,
+) -> Iterable[models.ShelfTemperatureModel]:
+    field_query = {
+        "id",
+        "temperature_sensors.id",
+        "temperature_sensors.state",
+        # "fans.installed",  # ! NOT WORKING
+        "temperature_sensors.temperature",
+        "temperature_sensors.ambient",
+        "temperature_sensors.threshold.low.warning",
+        "temperature_sensors.threshold.low.critical",
+        "temperature_sensors.threshold.high.warning",
+        "temperature_sensors.threshold.high.critical",
+    }
+
+    for element in NetAppResource.Shelf.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+        list_id = element_data["id"]
+        temperatures = element_data["temperature_sensors"]
+
+        for temp in temperatures:
+            yield models.ShelfTemperatureModel(
+                list_id=list_id,
+                id=temp["id"],
+                # installed=temp["installed"],
+                state=temp["state"],
+                temperature=temp["temperature"],
+                ambient=temp["ambient"],
+                low_warning=temp.get("threshold", {}).get("low", {}).get("warning"),
+                low_critical=temp.get("threshold", {}).get("low", {}).get("critical"),
+                high_warning=temp.get("threshold", {}).get("high", {}).get("warning"),
+                high_critical=temp.get("threshold", {}).get("high", {}).get("critical"),
+            )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -420,6 +458,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)
     write_section("node", fetch_nodes(connection), logger)
     write_section("fan", fetch_fans(connection), logger)
+    write_section("temp", fetch_temperatures(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

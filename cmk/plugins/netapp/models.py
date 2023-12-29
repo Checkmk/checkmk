@@ -424,3 +424,44 @@ class ShelfFanModel(BaseModel):
 
     def item_name(self) -> str:
         return f"{self.list_id}/{self.id}"
+
+
+class ShelfTemperatureModel(BaseModel):
+    """
+
+    api: /api/storage/shelves
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//ses.html#storage-shelf-environment-list-info
+
+
+    ============
+    OLD -> NEW:
+    ============
+    temp-sensor-element-no → temperature_sensors.id
+    temp-sensor-is-not-installed → temperature_sensors.installed comment: temperature_sensors.installed is the inverse of temp-sensor-is-not-installed in REST
+    temp-sensor-is-error → temperature_sensors.state comment: temp-sensor-is-error is simplified to "ok" and "error" in REST
+
+    temp-sensor-current-temperature → temperature_sensors.temperature
+    temp-sensor-is-ambient → temperature_sensors.ambient
+    temp-sensor-current-condition → NA
+    temp-sensor-low-warning → temperature_sensors.threshold.low.warning
+    temp-sensor-low-critical → temperature_sensors.threshold.low.critical
+    temp-sensor-hi-warning → temperature_sensors.threshold.high.warning
+    temp-sensor-hi-critical → temperature_sensors.threshold.high.critical
+    ============
+    """
+
+    list_id: str  # shelf id
+    id: int
+    installed: bool | None = None  # TODO remove non when query fixed
+    state: str  # "ok" or "error"
+
+    temperature: int
+    ambient: bool
+
+    low_warning: int | None = None
+    low_critical: int | None = None
+    high_warning: int | None = None
+    high_critical: int | None = None
+
+    def item_name(self) -> str:
+        return f"{self.list_id}/{self.id}"

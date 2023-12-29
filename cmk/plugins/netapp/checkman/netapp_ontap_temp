@@ -1,0 +1,17 @@
+title: NetApp Filer: Temperature Sensors
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPLv2
+distribution: check_mk
+description:
+ The check monitors the state of the temperature sensors for a NetApp filer, grouped by shelfes.
+
+ The checks reports {WARN}/{CRIT} when the configured levels reported by the NetApp filer,
+ (e.g. {temp-sensor-hi-critical}) have been breached. You can also override the levels
+ with the WATO rule set for temperatures.
+
+item:
+ Either {{Internal Shelf}} or {{Ambient Shelf}} followed by the name of the shelf and the sensor
+
+discovery:
+ One service per sensor

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import overload
+from typing import get_args, overload, TypeAlias, TypeGuard
 
 import cryptography.exceptions
 import cryptography.hazmat.primitives.asymmetric as asym
@@ -42,6 +42,32 @@ class PublicKeyPEM(SerializedPEM):
     """A public key in pem format"""
 
 
+PublicKeyType: TypeAlias = (
+    asym.ed25519.Ed25519PublicKey
+    | asym.ed448.Ed448PublicKey
+    | asym.rsa.RSAPublicKey
+    | asym.ec.EllipticCurvePublicKey
+)
+
+
+def is_supported_public_key_type(key: asym.types.PublicKeyTypes) -> TypeGuard[PublicKeyType]:
+    # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
+    return isinstance(key, get_args(PublicKeyType))
+
+
+PrivateKeyType: TypeAlias = (
+    asym.ed25519.Ed25519PrivateKey
+    | asym.ed448.Ed448PrivateKey
+    | asym.rsa.RSAPrivateKey
+    | asym.ec.EllipticCurvePrivateKey
+)
+
+
+def is_supported_private_key_type(key: asym.types.PrivateKeyTypes) -> TypeGuard[PrivateKeyType]:
+    # get_args is a workaround for mypy bug https://github.com/python/mypy/issues/12155
+    return isinstance(key, get_args(PrivateKeyType))
+
+
 class PrivateKey:
     """
     A private key. Not every kind of private key is supported.
@@ -55,7 +81,7 @@ class PrivateKey:
     the lack of a use-case.
     """
 
-    def __init__(self, key: asym.types.CertificateIssuerPrivateKeyTypes) -> None:
+    def __init__(self, key: PrivateKeyType) -> None:
         self._key = key
 
     @classmethod
@@ -137,17 +163,11 @@ class PrivateKey:
                 raise WrongPasswordError
             raise InvalidPEMError
 
-        # mypy bug: isinstance should be fine with the union, but mypy isn't
-        # https://github.com/python/mypy/issues/12155
-        if not isinstance(
-            key,
-            asym.types.CertificateIssuerPrivateKeyTypes,  # type:ignore [arg-type]
-        ):
+        if not is_supported_private_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.
             raise ValueError(f"Unsupported private key type {type(key)}")
 
-        # mypy bug: see above; and now mypy doesn't know we checked it
-        return cls(key)  # type:ignore [arg-type]
+        return cls(key)
 
     @overload
     def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
@@ -234,24 +254,18 @@ class PublicKey:
     the lack of a use-case.
     """
 
-    def __init__(self, key: asym.types.CertificateIssuerPublicKeyTypes) -> None:
+    def __init__(self, key: PublicKeyType) -> None:
         self._key = key
 
     @classmethod
     def load_pem(cls, pem_data: PublicKeyPEM) -> PublicKey:
         key = serialization.load_pem_public_key(pem_data.bytes)
 
-        # mypy bug: isinstance should be fine with the union, but mypy isn't
-        # https://github.com/python/mypy/issues/12155
-        if not isinstance(
-            key,
-            asym.types.CertificateIssuerPublicKeyTypes,  # type:ignore [arg-type]
-        ):
+        if not is_supported_public_key_type(key):
             # We support only key types that can be used to for signatures. See class docstring.
             raise ValueError(f"Unsupported public key type {type(key)}")
 
-        # mypy bug: see above; and now mypy doesn't know we checked it
-        return cls(key)  # type:ignore [arg-type]
+        return cls(key)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PublicKey):

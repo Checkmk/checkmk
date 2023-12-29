@@ -20,6 +20,7 @@ DATA = [
     ["Test 3", "1632216559.87806", "Stopped"],
     ["Test 4", "null", "Disabled"],
     ["Test 5", "1632216559,73749", "Running"],
+    ["Test 6", "1632217660", "Running"],
 ]
 
 
@@ -34,6 +35,7 @@ DATA = [
                 Service(item="Test 3"),
                 Service(item="Test 4"),
                 Service(item="Test 5"),
+                Service(item="Test 6"),
             ],
         ),
     ],
@@ -98,6 +100,19 @@ def test_veeam_cdp_jobs_discovery(
                 Result(state=state.OK, summary="State: Running"),
                 Result(state=state.OK, summary="Time since last CDP Run: 1 minute 40 seconds"),
             ],
+        ),
+        pytest.param(
+            "Test 6",
+            veeam_cdp_jobs.CheckParams(age=(108000, 172800)),
+            DATA,
+            [
+                Result(state=state.OK, summary="State: Running"),
+                Result(
+                    state=state.WARN,
+                    summary="The timestamp of the file is in the future. Please investigate your host times",
+                ),
+            ],
+            id="last sync time from the future",
         ),
     ],
 )

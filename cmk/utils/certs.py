@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Final
 
 import cryptography.x509 as x509
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from dateutil.relativedelta import relativedelta
 
@@ -23,7 +22,7 @@ from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     X509Name,
 )
-from cmk.utils.crypto.keys import PrivateKey
+from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
 
 
 class _CNTemplate:
@@ -51,7 +50,8 @@ class RootCA(CertificateWithPrivateKey):
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
-        assert isinstance(key, RSAPrivateKey)  # TODO
+        if not is_supported_private_key_type(key):
+            raise ValueError(f"Unsupported private key type {type(key)}")
         return cls(certificate=Certificate(cert), private_key=PrivateKey(key))
 
     @classmethod

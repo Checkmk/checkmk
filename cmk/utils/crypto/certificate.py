@@ -35,7 +35,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple, TypeAlias
+from typing import assert_never, NamedTuple, TypeAlias
 
 import cryptography
 import cryptography.hazmat.primitives.asymmetric as asym
@@ -46,8 +46,10 @@ from dateutil.relativedelta import relativedelta
 from cmk.utils.crypto.keys import (
     EncryptedPrivateKeyPEM,
     InvalidSignatureError,
+    is_supported_public_key_type,
     PlaintextPrivateKeyPEM,
     PrivateKey,
+    PrivateKeyType,
     PublicKey,
 )
 from cmk.utils.crypto.password import Password
@@ -343,9 +345,13 @@ class Certificate:
                 critical=False,
             )
 
-        return cls(
-            builder.sign(private_key=issuer_signing_key._key, algorithm=HashAlgorithm.Sha512.value)
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(issuer_signing_key._key))
+            is not None
+            else None
         )
+        return cls(builder.sign(private_key=issuer_signing_key._key, algorithm=hash_algo))
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
@@ -376,7 +382,7 @@ class Certificate:
     @property
     def public_key(self) -> PublicKey:
         key = self._cert.public_key()
-        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        assert is_supported_public_key_type(key)
         return PublicKey(key)
 
     @property
@@ -545,6 +551,20 @@ class Certificate:
         """
         return datetime.now(tz=timezone.utc).replace(tzinfo=None)
 
+    @staticmethod
+    def _preferred_signing_hash_algorithm(key: PrivateKeyType) -> HashAlgorithm | None:
+        """
+        Choose the signature hash algorithm based on the type of the private key.
+        Some keys (Ed25519 and Ed448) must use 'None'.
+        """
+        match key:
+            case asym.ed25519.Ed25519PrivateKey() | asym.ed448.Ed448PrivateKey():
+                return None
+            case asym.rsa.RSAPrivateKey() | asym.ec.EllipticCurvePrivateKey():
+                return HashAlgorithm.Sha512
+            case unreachable:
+                assert_never(unreachable)
+
 
 X509NameOid: TypeAlias = x509.oid.NameOID
 
@@ -653,8 +673,14 @@ class CertificateSigningRequest:
                 The private key is needed to sign the CSR and prove ownership of the public key.
         """
 
+        hash_algo = (
+            hash_.value
+            if (hash_ := Certificate._preferred_signing_hash_algorithm(subject_private_key._key))
+            is not None
+            else None
+        )
         builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
-        return cls(builder.sign(subject_private_key._key, HashAlgorithm.Sha512.value))
+        return cls(builder.sign(subject_private_key._key, hash_algo))
 
     @property
     def subject(self) -> X509Name:
@@ -663,7 +689,7 @@ class CertificateSigningRequest:
     @property
     def public_key(self) -> PublicKey:
         key = self.csr.public_key()
-        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        assert is_supported_public_key_type(key)
         return PublicKey(key)
 
     @property

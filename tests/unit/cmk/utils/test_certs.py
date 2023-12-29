@@ -16,7 +16,7 @@ from livestatus import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
 from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
-from cmk.utils.crypto.keys import PrivateKey
+from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -203,7 +203,14 @@ def test_sign_csr_with_local_ca() -> None:
         is_ca=True,
     )
 
-    peter_key = PrivateKey.generate_rsa(1024)
+    peter_key = PrivateKey.load_pem(
+        PlaintextPrivateKeyPEM(
+            """
+-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
+-----END PRIVATE KEY-----"""
+        )
+    )
     peter_cert = Certificate._create(
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),

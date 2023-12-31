@@ -3,6 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import any_of, contains, SNMPTree
+from cmk.agent_based.v2.type_defs import StringTable
+
 # For Hitachi Unified Storage (HUS) devices which support the USPMIB
 # This devices has two units: Disk Controller (DKC) and Disk Unit (DKC)
 
@@ -23,6 +30,10 @@
 # .1.3.6.1.4.1.116.5.11.4.1.1.7.1.3 4
 # .1.3.6.1.4.1.116.5.11.4.1.1.7.1.4 3
 # .1.3.6.1.4.1.116.5.11.4.1.1.7.1.5 1
+
+
+def parse_hitachi_hus(string_table: StringTable) -> StringTable:
+    return string_table
 
 
 def inventory_hitachi_hus(info):
@@ -91,3 +102,37 @@ def check_hitachi_hus(item, _no_params, info):
         ]:
             if states:
                 yield state, "{}: {}".format(text, ", ".join(states))
+
+
+check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hus,
+    detect=any_of(
+        contains(".1.3.6.1.2.1.1.1.0", "hm700"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm800"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm850"),
+    ),
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.116.5.11.4.1.1.6.1",
+        oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    ),
+    service_name="HUS DKC Chassis %s",
+    discovery_function=inventory_hitachi_hus,
+    check_function=check_hitachi_hus,
+)
+
+
+check_info["hitachi_hus_dku"] = LegacyCheckDefinition(
+    parse_function=parse_hitachi_hus,
+    detect=any_of(
+        contains(".1.3.6.1.2.1.1.1.0", "hm700"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm800"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm850"),
+    ),
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.116.5.11.4.1.1.7.1",
+        oids=["1", "2", "3", "4", "5"],
+    ),
+    service_name="HUS DKU Chassis %s",
+    discovery_function=inventory_hitachi_hus,
+    check_function=check_hitachi_hus,
+)

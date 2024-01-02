@@ -47,6 +47,7 @@ void Query::badGateway(const std::string &message) const {
 bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
 bool Query::process(ICore &core) {
+    _output.setResponseHeader(parsed_query_.response_header);
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
     auto renderer = Renderer::make(parsed_query_.output_format, _output.os(),

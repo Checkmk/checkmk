@@ -531,6 +531,12 @@ class ActiveCheck:
                         f"active check plugin is missing an argument function or a service description"
                     )
                     continue
+                except Exception as e:
+                    if cmk.utils.debug.enabled():
+                        raise
+                    config_warnings.warn(
+                        f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
+                    )
 
     def _get_service_description_iterator(
         self,

@@ -32,30 +32,51 @@ fn test_signature_algorithm_rsassa_pss_sha256() {
     let out = certificate::check(
         &as_der(PEM),
         CertConfig::builder()
-            .signature_algorithm(Some(SignatureAlgorithm::RSASSA_PSS))
+            .signature_algorithm(Some(SignatureAlgorithm::RSASSA_PSS(String::from("sha256"))))
             .build(),
     );
     assert_eq!(
         out.to_string(),
-        format!("OK\nSignature algorithm: RSASSA_PSS")
+        format!("OK\nSignature algorithm: RSASSA_PSS-SHA256")
     );
 }
 
 #[test]
-fn test_signature_algorithm_rsassa_pss_sha256_neg() {
+fn test_signature_algorithm_rsassa_pss_sha256_wrong_alg() {
     // from openssl repo
     static PEM: &[u8] = include_bytes!("../assets/ee-pss-sha256-cert.pem");
 
     let out = certificate::check(
         &as_der(PEM),
         CertConfig::builder()
-            .signature_algorithm(Some(SignatureAlgorithm::RSA))
+            .signature_algorithm(Some(SignatureAlgorithm::RSAAES_OAEP(String::from(
+                "sha256",
+            ))))
             .build(),
     );
 
     assert_eq!(
         out.to_string(),
-        format!("WARNING - Signature algorithm is RSASSA_PSS but expected RSA (!)")
+        format!("WARNING - Signature algorithm is RSASSA_PSS-SHA256 but expected RSAAES_OAEP-SHA256 (!)")
+    );
+}
+
+#[test]
+fn test_signature_algorithm_rsassa_pss_sha256_wrong_hash() {
+    // from openssl repo
+    static PEM: &[u8] = include_bytes!("../assets/ee-pss-sha256-cert.pem");
+
+    let out = certificate::check(
+        &as_der(PEM),
+        CertConfig::builder()
+            .signature_algorithm(Some(SignatureAlgorithm::RSASSA_PSS(String::from("sha128"))))
+            .build(),
+    );
+    assert_eq!(
+        out.to_string(),
+        format!(
+            "WARNING - Signature algorithm is RSASSA_PSS-SHA256 but expected RSASSA_PSS-SHA128 (!)"
+        )
     );
 }
 
@@ -67,17 +88,19 @@ fn test_signature_algorithm_rsassa_pss_sha1() {
     let out = certificate::check(
         &as_der(PEM),
         CertConfig::builder()
-            .signature_algorithm(Some(SignatureAlgorithm::RSASSA_PSS))
+            .signature_algorithm(Some(SignatureAlgorithm::RSASSA_PSS(String::from(
+                "id-sha1",
+            ))))
             .build(),
     );
     assert_eq!(
         out.to_string(),
-        format!("OK\nSignature algorithm: RSASSA_PSS")
+        format!("OK\nSignature algorithm: RSASSA_PSS-ID-SHA1")
     );
 }
 
 #[test]
-fn test_signature_algorithm_rsassa_pss_sha1_neg() {
+fn test_signature_algorithm_rsassa_pss_sha1_wrong_alg() {
     // from openssl repo
     static PEM: &[u8] = include_bytes!("../assets/ee-pss-sha1-cert.pem");
 
@@ -90,6 +113,6 @@ fn test_signature_algorithm_rsassa_pss_sha1_neg() {
 
     assert_eq!(
         out.to_string(),
-        format!("WARNING - Signature algorithm is RSASSA_PSS but expected RSA (!)")
+        format!("WARNING - Signature algorithm is RSASSA_PSS-ID-SHA1 but expected RSA (!)")
     );
 }

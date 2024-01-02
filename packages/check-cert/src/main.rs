@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
 use check_cert::checker::certificate::{
     self, Config as CertChecks, SignatureAlgorithm as CertSignatureAlgorithm,
@@ -28,14 +28,18 @@ enum SignatureAlgorithm {
 }
 
 impl SignatureAlgorithm {
-    fn as_internal(&self) -> CertSignatureAlgorithm {
+    fn try_into_internal(&self, hash_algorithm: Option<String>) -> Result<CertSignatureAlgorithm> {
         match self {
-            Self::RSA => CertSignatureAlgorithm::RSA,
-            Self::RSASSA_PSS => CertSignatureAlgorithm::RSASSA_PSS,
-            Self::RSAAES_OAEP => CertSignatureAlgorithm::RSAAES_OAEP,
-            Self::DSA => CertSignatureAlgorithm::DSA,
-            Self::ECDSA => CertSignatureAlgorithm::ECDSA,
-            Self::ED25519 => CertSignatureAlgorithm::ED25519,
+            Self::RSA => Ok(CertSignatureAlgorithm::RSA),
+            Self::RSASSA_PSS => hash_algorithm
+                .map(CertSignatureAlgorithm::RSASSA_PSS)
+                .ok_or(anyhow!("Missing signature hash algorithm")),
+            Self::RSAAES_OAEP => hash_algorithm
+                .map(CertSignatureAlgorithm::RSAAES_OAEP)
+                .ok_or(anyhow!("Missing signature hash algorithm")),
+            Self::DSA => Ok(CertSignatureAlgorithm::DSA),
+            Self::ECDSA => Ok(CertSignatureAlgorithm::ECDSA),
+            Self::ED25519 => Ok(CertSignatureAlgorithm::ED25519),
         }
     }
 }
@@ -139,6 +143,10 @@ struct Args {
     #[arg(long)]
     signature_algorithm: Option<SignatureAlgorithm>,
 
+    /// Expected signature hash algorithm (required for RSA PSS and OAEP, ignored otherwise)
+    #[arg(long)]
+    signature_hash_algorithm: Option<String>,
+
     /// Expected public key algorithm
     #[arg(long)]
     pubkey_algorithm: Option<PubKeyAlgorithm>,
@@ -194,6 +202,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         check::abort("Failed to load trust store")
     };
 
+    let signature_algorithm = match args
+        .signature_algorithm
+        .map(|algo| algo.try_into_internal(args.signature_hash_algorithm))
+        .transpose()
+    {
+        Ok(sa) => sa,
+        Err(err) => check::abort(format!("{}", err)),
+    };
+
     let start = Instant::now();
     let chain = match fetcher::fetch_server_cert(
         &args.url,
@@ -237,7 +254,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .issuer_ou(args.issuer_ou)
             .issuer_st(args.issuer_st)
             .issuer_c(args.issuer_c)
-            .signature_algorithm(args.signature_algorithm.map(|alg| alg.as_internal()))
+            .signature_algorithm(signature_algorithm)
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))

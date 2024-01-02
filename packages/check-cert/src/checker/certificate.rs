@@ -14,8 +14,8 @@ use typed_builder::TypedBuilder;
 use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
 use x509_parser::error::X509Error;
 use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
-use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
+use x509_parser::prelude::{oid2sn, oid_registry, AlgorithmIdentifier};
 use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm as X509SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
@@ -52,29 +52,27 @@ fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) 
 #[derive(Debug, PartialEq)]
 pub enum SignatureAlgorithm {
     RSA,
-    RSASSA_PSS,
-    RSAAES_OAEP,
+    RSASSA_PSS(String),
+    RSAAES_OAEP(String),
     DSA,
     ECDSA,
     ED25519,
 }
 
-impl SignatureAlgorithm {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::RSA => "RSA",
-            Self::RSASSA_PSS => "RSASSA_PSS",
-            Self::RSAAES_OAEP => "RSAAES_OAEP",
-            Self::DSA => "DSA",
-            Self::ECDSA => "ECDSA",
-            Self::ED25519 => "ED25519",
-        }
-    }
-}
-
 impl Display for SignatureAlgorithm {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(f, "{}", String::from(self.as_str()))?;
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::RSA => "RSA".to_string(),
+                Self::RSASSA_PSS(hash) => format!("RSASSA_PSS-{}", hash.to_uppercase()),
+                Self::RSAAES_OAEP(hash) => format!("RSAAES_OAEP-{}", hash.to_uppercase()),
+                Self::DSA => "DSA".to_string(),
+                Self::ECDSA => "ECDSA".to_string(),
+                Self::ED25519 => "ED25519".to_string(),
+            }
+        )?;
         Ok(())
     }
 }
@@ -230,18 +228,31 @@ fn check_signature_algorithm(
     expected: Option<SignatureAlgorithm>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
+        fn format_oid(oid: &oid_registry::Oid) -> String {
+            match oid2sn(oid, oid_registry()) {
+                Ok(s) => s.to_owned(),
+                _ => format!("{}", oid),
+            }
+        }
+
         check_eq!(
             "Signature algorithm",
             match X509SignatureAlgorithm::try_from(signature_algorithm) {
-                Ok(X509SignatureAlgorithm::RSA) => SignatureAlgorithm::RSA,
-                Ok(X509SignatureAlgorithm::RSASSA_PSS(_)) => SignatureAlgorithm::RSASSA_PSS,
-                Ok(X509SignatureAlgorithm::RSAAES_OAEP(_)) => SignatureAlgorithm::RSAAES_OAEP,
-                Ok(X509SignatureAlgorithm::DSA) => SignatureAlgorithm::DSA,
-                Ok(X509SignatureAlgorithm::ECDSA) => SignatureAlgorithm::ECDSA,
-                Ok(X509SignatureAlgorithm::ED25519) => SignatureAlgorithm::ED25519,
+                Ok(X509SignatureAlgorithm::RSA) => "RSA".to_string(),
+                Ok(X509SignatureAlgorithm::RSASSA_PSS(params)) => format!(
+                    "RSASSA_PSS-{}",
+                    format_oid(params.hash_algorithm_oid()).to_uppercase()
+                ),
+                Ok(X509SignatureAlgorithm::RSAAES_OAEP(params)) => format!(
+                    "RSAAES_OAEP-{}",
+                    format_oid(params.hash_algorithm_oid()).to_uppercase()
+                ),
+                Ok(X509SignatureAlgorithm::DSA) => "DSA".to_string(),
+                Ok(X509SignatureAlgorithm::ECDSA) => "ECDSA".to_string(),
+                Ok(X509SignatureAlgorithm::ED25519) => "ED25519".to_string(),
                 Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
             },
-            expected
+            expected.to_string()
         )
     })
 }

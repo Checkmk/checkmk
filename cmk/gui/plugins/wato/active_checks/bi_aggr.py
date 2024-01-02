@@ -100,7 +100,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                         (
                             "auth_mode",
                             DropdownChoice(
-                                title=_("Authentication Mode"),
+                                title=_("Authentication mode"),
                                 default_value="header",
                                 choices=[
                                     ("header", _("Authorization Header")),

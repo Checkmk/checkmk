@@ -130,9 +130,9 @@ def _valuespec_active_checks_elasticsearch_query():
             (
                 "timerange",
                 Age(
-                    title=_("Timerange"),
+                    title=_("Time range"),
                     help=_(
-                        "Here you can define the timerange to query, eg. the last x minutes from now. "
+                        "Here you can define the time range to query, eg. the last x minutes from now. "
                         "The query will then check for the count of log messages in the defined range. "
                         "Default is 1 minute."
                     ),

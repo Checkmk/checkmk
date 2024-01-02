@@ -1350,7 +1350,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Attach a comment to the event. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
                     "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                    "etc matching group."
+                    "etc. matching group."
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text. "
@@ -1368,7 +1368,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Attach information about a contact person. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
                     "<tt>\\1</tt>, <tt>\\2</tt>, etc. for inserting the first, second "
-                    "etc matching group."
+                    "etc. matching group."
                 )
                 + _(
                     "The placeholder <tt>\\0</tt> will be replaced by the original text. "
@@ -3761,7 +3761,7 @@ class ConfigVariableEventConsole(ConfigVariable):
                 "classification daemon of Checkmk. You can also configure whether "
                 "or not the Event Console shal listen for incoming SNMP traps or "
                 "syslog messages. Please note that only a single Checkmk site per "
-                "Check_MK server can listen for such messages."
+                "Checkmk server can listen for such messages."
             ),
             label=_("Event Console enabled"),
             none_label=_("Event Console disabled"),

@@ -104,7 +104,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 (_("LDAP Connection"), [key for key, _vs in connection_elements]),
                 (_("Users"), [key for key, _vs in user_elements]),
                 (_("Groups"), [key for key, _vs in group_elements]),
-                (_("Attribute Sync Plugins"), ["active_plugins"]),
+                (_("Attribute Sync Plug-ins"), ["active_plugins"]),
                 (_("Other"), ["cache_livetime"]),
             ],
             render="form",
@@ -588,7 +588,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
             (
                 "active_plugins",
                 Dictionary(
-                    title=_("Attribute sync plugins"),
+                    title=_("Attribute sync plug-ins"),
                     help=_(
                         "It is possible to fetch several attributes of users, like Email or full names, "
                         "from the LDAP directory. This is done by plugins which can individually enabled "

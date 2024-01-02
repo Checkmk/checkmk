@@ -1714,7 +1714,7 @@ graph_info["if_errors"] = {
 }
 
 graph_info["bm_packets"] = {
-    "title": _("Broad-/Multicast"),
+    "title": _("Broadcast/Multicast"),
     "metrics": [
         ("if_in_mcast", "line"),
         ("if_in_bcast", "line"),

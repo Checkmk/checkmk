@@ -1813,7 +1813,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
             ),
             title=_("Downtime duration presets"),
             movable=True,
-            totext=_("%d timeranges"),
+            totext=_("%d time ranges"),
         )
 
 
@@ -2787,7 +2787,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
             help=_(
                 "In order to make Checkmk more consistent, "
                 "the descriptions of several services have been renamed in newer "
-                "Check_MK versions. One example is the filesystem services that have "
+                "Checkmk versions. One example is the filesystem services that have "
                 "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
                 "of existing services has many implications - including existing rules, performance "
                 "data and availability history - these renamings are disabled per default for "
@@ -2949,7 +2949,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
             title=_("Simulation mode"),
             label=_("Run in simulation mode"),
             help=_(
-                "This boolean variable allows you to bring check_mk into a dry run mode. "
+                "This boolean variable allows you to bring Checkmk into a dry run mode. "
                 "No hosts will be contacted, no DNS lookups will take place and data is read "
                 "from cache files that have been created during normal operation or have "
                 "been copied here from another monitoring site."
@@ -3046,7 +3046,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
             title=_("Maximum cache file age for clusters"),
             label=_("seconds"),
             help=_(
-                "The number of seconds a cache file may be old if check_mk should "
+                "The number of seconds a cache file may be old if Checkmk should "
                 "use it instead of getting information from the target hosts while "
                 "checking a cluster. Per default this is enabled and set to 90 seconds. "
                 "If your check cycle is set to a larger value than one minute then "
@@ -3477,7 +3477,7 @@ def _valuespec_extra_service_conf_check_interval():
         from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
         help=_(
-            "Check_MK usually uses an interval of one minute for the active Checkmk "
+            "Checkmk usually uses an interval of one minute for the active Checkmk "
             "check and for legacy checks. Here you can specify a larger interval. Please "
             "note, that this setting only applies to active checks (those with the "
             "reschedule button). If you want to change the check interval of "
@@ -4645,7 +4645,7 @@ def _valuespec_clustered_services_config():
                         "The worst outcome will determine the overall state of the clustered service."
                     ),
                     _(
-                        "Best: The check function of the plugin will be applied to each individual node. "
+                        "Best: The plug-in's check function will be applied to each individual node. "
                         "The best outcome will determine the overall state of the clustered service."
                     ),
                 )
@@ -5267,9 +5267,9 @@ def _valuespec_snmp_character_encodings():
     return DropdownChoice(
         title=_("Output text encoding settings for SNMP devices"),
         help=_(
-            "Some devices send texts in non-ASCII characters. Check_MK"
-            " always assumes UTF-8 encoding. You can declare other "
-            " other encodings here"
+            "Some devices send texts in non-ASCII characters. Checkmk "
+            "always assumes UTF-8 encoding. You can declare other "
+            "encodings here"
         ),
         choices=[
             ("utf-8", _("UTF-8")),
@@ -5327,7 +5327,7 @@ def _valuespec_snmp_bulk_size():
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
             "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "
-            "Check_MK and the target system, but may increase the OID overhead in case you "
+            "Checkmk and the target system, but may increase the OID overhead in case you "
             "only need a small amount of OIDs."
         ),
     )
@@ -5428,7 +5428,7 @@ SnmpTiming = HostRulespec(
 
 def _help_non_inline_snmp_hosts():
     return _(
-        "Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
+        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. This "
         "option is enabled by default for all SNMP hosts and it is a good idea to keep "
         "this default setting. However, there are SNMP devices which have problems with "
@@ -5874,9 +5874,9 @@ def _valuespec_agent_config_only_from():
         title=_("Allowed agent access via IP address (Linux, Windows)"),
         help=_(
             "This rule allows you to restrict the access to the "
-            "Check_MK agent to certain IP addresses and networks. "
+            "Checkmk agent to certain IP addresses and networks. "
             "Usually you configure just the IP addresses of your "
-            "Check_MK servers here. You can enter either IP addresses "
+            "Checkmk servers here. You can enter either IP addresses "
             "in the form <tt>1.2.3.4</tt> or networks in the style "
             "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
             "or create no rule then <b>all</b> addresses are allowed to "

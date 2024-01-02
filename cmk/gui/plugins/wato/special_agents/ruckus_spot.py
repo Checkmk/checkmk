@@ -61,7 +61,7 @@ def _valuespec_special_agents_ruckus_spot():
                     title=_("Also contact Checkmk agent"),
                     help=_(
                         "With this setting, the special agent will also contact the "
-                        "Check_MK agent on the same system at the specified port."
+                        "Checkmk agent on the same system at the specified port."
                     ),
                     elements=[
                         (

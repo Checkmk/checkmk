@@ -7843,7 +7843,7 @@ def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-
         from_end_choice: list[CascadingDropdownChoice] = [
             (
                 "month_end",
-                _("At the end of every month at day"),
+                _("At the end of every month on day"),
                 Integer(minvalue=1, maxvalue=28, unit=_("from the end")),
             ),
         ]
@@ -7855,7 +7855,7 @@ def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-
         ("week", _("Every week on..."), Weekday(title=_("Day of the week"))),
         (
             "month_begin",
-            _("At the beginning of every month at day"),
+            _("At the beginning of every month on day"),
             Integer(minvalue=1, maxvalue=28),
         ),
     ]

@@ -446,7 +446,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Browse the catalog of all check plugins, create static checks")
+        return _("Browse the catalog of all check plug-ins, create static checks")
 
     @property
     def sort_index(self) -> int:

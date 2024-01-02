@@ -2031,7 +2031,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         if changed_attr not in ldap_user:
             raise MKLDAPException(
                 _(
-                    'The "Authentication Expiration" attribute (%s) could not be fetched '
+                    'The "authentication expiration" attribute (%s) could not be fetched '
                     "from the LDAP server for user %s."
                 )
                 % (changed_attr, ldap_user)

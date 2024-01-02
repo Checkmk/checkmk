@@ -212,7 +212,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     is_shortcut=True,
                                     is_suggested=True,
                                     description=_(
-                                        "Make use of an Authenicatior App to generate time-based one-time validation codes."
+                                        "Make use of an authenicator app to generate time-based one-time validation codes."
                                     ),
                                 ),
                                 PageMenuEntry(
@@ -407,7 +407,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
 
 class RegisterTotpSecret(ABCUserProfilePage):
     def _page_title(self) -> str:
-        return _("Register Authenticator App")
+        return _("Register authenticator app")
 
     def __init__(self, secret: bytes | None = None) -> None:
         super().__init__("general.manage_2fa")

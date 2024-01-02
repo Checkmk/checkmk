@@ -36,7 +36,7 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
-class _VolumeInfo(TypedDict):
+class DockerBind(TypedDict):
     bind: str
     mode: Literal["ro"]
 
@@ -57,13 +57,11 @@ def execute_tests_in_container(
 
     # Start the container
     container: docker.Container
-    volumes = _runtime_volumes()
     with _start(
         client,
         image=image_name_with_tag,
         name=f"test-{container_name_suffix(distro_name, docker_tag)}",
         command="/bin/bash",
-        volumes=list(volumes),
         host_config=client.api.create_host_config(
             # Create some init process that manages signals and processes
             init=True,
@@ -75,7 +73,7 @@ def execute_tests_in_container(
             ulimits=[
                 docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
             ],
-            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in volumes.items()],
+            binds=_runtime_binds(),
             # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
             # docker daemon wide, but set some fixed local network which is not being routed.
             # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
@@ -299,7 +297,6 @@ def _create_cmk_image(
             return image_name_with_tag  # already found, nothing to do.
 
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
-    volumes = _image_build_volumes()
     with _start(
         client,
         name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
@@ -316,12 +313,11 @@ def _create_cmk_image(
             "com.tribe29.image_type": "cmk-image",
         },
         command=["tail", "-f", "/dev/null"],  # keep running
-        volumes=list(volumes.keys()),
         host_config=client.api.create_host_config(
             # needed to make the overlay mounts work on the /git directory
             # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
             privileged=True,
-            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in volumes.items()],
+            binds=_image_build_binds(),
         ),
     ) as container:
         logger.info(
@@ -449,38 +445,38 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
     return _hash
 
 
-def _image_build_volumes() -> Mapping[str, _VolumeInfo]:
+def _image_build_binds() -> Mapping[str, DockerBind]:
     if "WORKSPACE" in os.environ:
         logger.info("WORKSPACE set to %s", os.environ["WORKSPACE"])
         return {
-            **_runtime_volumes(),
-            os.path.join(os.environ["WORKSPACE"], "packages"): _VolumeInfo(
+            **_runtime_binds(),
+            os.path.join(os.environ["WORKSPACE"], "packages"): DockerBind(
                 bind="/packages", mode="ro"
             ),
         }
     logger.info("WORKSPACE not set")
-    return _runtime_volumes()
+    return _runtime_binds()
 
 
-def _git_repos() -> Mapping[str, _VolumeInfo]:
+def _git_repos() -> Mapping[str, DockerBind]:
     checkout_dir = testlib.repo_path()
     return {
         **{
             # This ensures that we can also work with git-worktrees and reference clones.
             # For this, the original git repository needs to be mapped into the container as well.
-            path: _VolumeInfo(bind=path, mode="ro")
+            path: DockerBind(bind=path, mode="ro")
             for path in testlib.utils.git_essential_directories(checkout_dir)
         },
         **{
             # To get access to the test scripts and for updating the version from
             # the current git checkout. Will also be used for updating the image with
             # the current git state
-            checkout_dir.as_posix(): _VolumeInfo(bind="/git-lowerdir", mode="ro"),
+            checkout_dir.as_posix(): DockerBind(bind="/git-lowerdir", mode="ro"),
         },
     }
 
 
-def _runtime_volumes() -> Mapping[str, _VolumeInfo]:
+def _runtime_binds() -> Mapping[str, DockerBind]:
     return {
         **_git_repos(),
         # Credentials file for fetching the package from the download server. Used by
@@ -488,7 +484,7 @@ def _runtime_volumes() -> Mapping[str, _VolumeInfo]:
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
-        (Path(os.environ["HOME"]) / ".cmk-credentials").as_posix(): _VolumeInfo(
+        (Path(os.environ["HOME"]) / ".cmk-credentials").as_posix(): DockerBind(
             bind="/root/.cmk-credentials",
             mode="ro",
         ),

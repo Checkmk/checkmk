@@ -122,7 +122,6 @@ public:
         return row.rawData<T>();
     }
 
-    [[nodiscard]] ICore *core() const { return _mc; }
     [[nodiscard]] Logger *logger() const;
 
 private:

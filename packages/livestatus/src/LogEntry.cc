@@ -354,13 +354,13 @@ bool LogEntry::textContains(const std::string &what) const {
 
 namespace {
 // TODO(sp) copy-n-paste from FetcherHelperChannel!
-template <class T, size_t N>
+template <typename T, size_t N>
 using one_of = std::array<std::pair<std::string_view, T>, N>;
 
 // As complicated and inefficient as it looks, the function below is completely
 // unfolded in code: It basically results in very fast if-then-else cascades,
 // guarded by the lengths, see: https://www.youtube.com/watch?v=INn3xa4pMfg
-template <class T, size_t N>
+template <typename T, size_t N>
 T parseState(std::string_view str, const one_of<T, N> &table, T default_value) {
     // Ugly: Depending on where we're called, the actual state type can be in
     // parentheses at the end, e.g. "ALERTHANDLER (OK)".

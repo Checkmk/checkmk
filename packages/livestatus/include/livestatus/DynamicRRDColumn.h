@@ -19,7 +19,7 @@ class ColumnOffsets;
 class Filter;
 class ICore;
 
-template <class T>
+template <typename T>
 class DynamicRRDColumn : public DynamicColumn {
 public:
     DynamicRRDColumn(const std::string &name, const std::string &description,

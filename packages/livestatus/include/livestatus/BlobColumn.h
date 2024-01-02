@@ -28,7 +28,7 @@ class Aggregator;
 class RowRenderer;
 class User;
 
-template <class T>
+template <typename T>
 class BlobColumn : public Column {
 public:
     BlobColumn(const std::string &name, const std::string &description,
@@ -70,7 +70,7 @@ private:
     const std::function<std::vector<char>(const T &)> f_;
 };
 
-template <class T>
+template <typename T>
 class BlobFileReader {
 public:
     explicit BlobFileReader(

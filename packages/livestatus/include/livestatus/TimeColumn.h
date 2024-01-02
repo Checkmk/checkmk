@@ -24,7 +24,7 @@ class User;
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the start of the epoch.
-template <class T>
+template <typename T>
 class TimeColumn : public Column {
 public:
     using value_type = std::chrono::system_clock::time_point;

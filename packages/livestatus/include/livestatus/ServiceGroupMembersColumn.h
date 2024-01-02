@@ -58,7 +58,7 @@ private:
     verbosity verbosity_;
 };
 
-template <class T, class U>
+template <typename T, typename U>
 struct ServiceGroupMembersColumn : ListColumn<T, U> {
     using ListColumn<T, U>::ListColumn;
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
@@ -75,7 +75,7 @@ inline std::string serialize<::column::service_group_members::Entry>(
 }
 }  // namespace column::detail
 
-template <class T, class U>
+template <typename T, typename U>
 std::unique_ptr<Filter> ServiceGroupMembersColumn<T, U>::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {

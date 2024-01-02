@@ -126,6 +126,10 @@ def _update_removed_global_config_vars(
                 logger,
                 global_config_updated,
             ),
+            **_convert_max_output_size(
+                logger,
+                global_config_updated,
+            ),
         }
     )
 
@@ -152,6 +156,26 @@ def _convert_user_idle_timeout(
             "user_idle_timeout": idle_timeout,
         }
     }
+
+
+def _convert_max_output_size(
+    logger: Logger,
+    global_config: GlobalSettings,
+) -> dict[str, int]:
+    """
+    Version 2.1 introduced 'max_long_output_size' as Optional. This should be an Integer.
+    Can be removed in 2.4.
+    """
+    # Factory setting if not explicitly set
+    if "max_long_output_size" not in global_config:
+        return {}
+
+    logger.log(VERBOSE, "Converting global setting 'max_long_output_size' to new format")
+    # None, this should not have happened
+    if (max_long_output_size := global_config.get("max_long_output_size")) is None:
+        return {"max_long_output_size": 2000}
+
+    return {"max_long_output_size": max_long_output_size}
 
 
 def _transform_global_config_value(config_var: str, config_val: object) -> object:

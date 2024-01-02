@@ -153,7 +153,6 @@ ParsedQuery::ParsedQuery(
     filter = AndingFilter::make(Filter::Kind::row, filters);
     wait_condition =
         AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
-    output.setResponseHeader(response_header);
 }
 
 namespace {

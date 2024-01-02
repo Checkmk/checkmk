@@ -11,7 +11,7 @@
 
 import json
 
-from cmk.base.check_api import check_levels, get_timestamp_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -203,7 +203,7 @@ def _mongodb_collections_bytes_human_readable(data, key):
 
 def _mongodb_collections_timestamp_human_readable(value):
     try:
-        return get_timestamp_human_readable(int(value))
+        return render.datetime(int(value))
     except (TypeError, ValueError):
         return "n/a"
 

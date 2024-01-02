@@ -4,15 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.redis import parse_redis_info
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # <<<redis_info>>>
 # [[[MY_FIRST_REDIS|127.0.0.1|6380]]]
@@ -200,12 +197,12 @@ def check_redis_info_persistence(item, params, item_data):
 
             duration_val = persistence_data.get("%s_time_sec" % duration)
             if duration_val is not None and duration_val != -1:
-                infotext += " (Duration: %s)" % get_age_human_readable(duration_val)
+                infotext += " (Duration: %s)" % render.timespan(duration_val)
             yield state, infotext
 
     rdb_save_time = persistence_data.get("rdb_last_save_time")
     if rdb_save_time is not None:
-        yield 0, "Last successful RDB save: %s" % get_timestamp_human_readable(rdb_save_time)
+        yield 0, "Last successful RDB save: %s" % render.datetime(rdb_save_time)
 
     rdb_changes = persistence_data.get("rdb_changes_since_last_save")
     if rdb_changes is not None:

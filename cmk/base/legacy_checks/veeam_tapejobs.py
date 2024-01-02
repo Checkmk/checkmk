@@ -6,15 +6,10 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_value_store
+from cmk.agent_based.v2 import get_value_store, render
 
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
 
@@ -68,14 +63,14 @@ def check_veeam_tapejobs(item, params, parsed):
     running_time = now - running_since
 
     yield 0, "Backup in progress since {} (currently {})".format(
-        get_timestamp_human_readable(running_since),
+        render.datetime(running_since),
         last_state.lower(),
     )
     yield check_levels(
         running_time,
         None,
         params["levels_upper"],
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.timespan,
         infoname="Running time",
     )
 

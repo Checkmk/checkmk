@@ -213,7 +213,7 @@ set_up_profiling() {
 unset_locale() {
     # eliminate localized outputs where possible
     # The locale logic here is used to make the Python encoding detection work (see CMK-2778).
-    unset -v LANG
+    unset -v LANG LC_ALL
     if inpath locale && inpath paste; then
         # match C.UTF-8 at the beginning, but not e.g. es_EC.UTF-8!
         case "$(locale -a | paste -sd ' ' -)" in

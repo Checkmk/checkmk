@@ -24,8 +24,7 @@
 #include "livestatus/Table.h"
 #include "livestatus/opids.h"
 
-using namespace std::chrono_literals;
-using namespace std::string_view_literals;
+using namespace std::literals;
 
 namespace {
 std::string_view nextStringArgument(std::string_view &str) {
@@ -58,7 +57,6 @@ void checkNoArguments(std::string_view str) {
 
 ParsedQuery::ParsedQuery(
     const std::vector<std::string> &lines, const Table &table,
-    OutputBuffer &output,
     const std::function<std::unique_ptr<const User>(const std::string &)>
         &find_user,
     const std::function<Row(const std::string &)> &get)
@@ -133,10 +131,10 @@ ParsedQuery::ParsedQuery(
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
-            output.setError(OutputBuffer::ResponseCode::bad_request,
-                            "while processing header '" + std::string{header} +
-                                "' for table '" + table.name() +
-                                "': " + e.what());
+            if (!error) {
+                error = "while processing header '" + std::string{header} +
+                        "': "s + e.what();
+            }
         }
     }
 

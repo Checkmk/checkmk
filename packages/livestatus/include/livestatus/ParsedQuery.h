@@ -31,11 +31,11 @@ class ParsedQuery {
 public:
     ParsedQuery(
         const std::vector<std::string> &lines, const Table &table,
-        OutputBuffer &output,
         const std::function<std::unique_ptr<const User>(const std::string &)>
             &find_user,
         const std::function<Row(const std::string &)> &get);
 
+    std::optional<std::string> error;
     std::unordered_set<std::string> all_column_names;
     std::vector<std::shared_ptr<Column>> columns;
     std::unique_ptr<Filter> filter;

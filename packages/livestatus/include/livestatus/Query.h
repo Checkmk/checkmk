@@ -41,6 +41,9 @@ public:
     bool processDataset(Row row);
 
     bool timelimitReached() const;
+
+    void badRequest(const std::string &message) const;
+    void payloadTooLarge(const std::string &message) const;
     void invalidRequest(const std::string &message) const;
     void badGateway(const std::string &message) const;
 

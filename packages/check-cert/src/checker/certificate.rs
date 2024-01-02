@@ -8,6 +8,7 @@ use crate::check::{
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
+use std::fmt::{Display, Formatter, Result as FormatResult};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
@@ -16,7 +17,7 @@ use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
 use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
-use x509_parser::signature_algorithm::SignatureAlgorithm;
+use x509_parser::signature_algorithm::SignatureAlgorithm as X509SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo};
 
@@ -46,13 +47,45 @@ fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) 
         .unwrap_or_default()
 }
 
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, PartialEq)]
+pub enum SignatureAlgorithm {
+    RSA,
+    RSASSA_PSS,
+    RSAAES_OAEP,
+    DSA,
+    ECDSA,
+    ED25519,
+}
+
+impl SignatureAlgorithm {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::RSA => "RSA",
+            Self::RSASSA_PSS => "RSASSA_PSS",
+            Self::RSAAES_OAEP => "RSAAES_OAEP",
+            Self::DSA => "DSA",
+            Self::ECDSA => "ECDSA",
+            Self::ED25519 => "ED25519",
+        }
+    }
+}
+
+impl Display for SignatureAlgorithm {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        write!(f, "{}", String::from(self.as_str()))?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
     pubkey_algorithm: Option<String>,
     pubkey_size: Option<usize>,
     serial: Option<String>,
-    signature_algorithm: Option<String>,
+    signature_algorithm: Option<SignatureAlgorithm>,
     subject_cn: Option<String>,
     subject_alt_names: Option<Vec<String>>,
     subject_o: Option<String>,
@@ -194,18 +227,18 @@ fn check_subject_alt_names(
 
 fn check_signature_algorithm(
     signature_algorithm: &AlgorithmIdentifier,
-    expected: Option<String>,
+    expected: Option<SignatureAlgorithm>,
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         check_eq!(
             "Signature algorithm",
-            match SignatureAlgorithm::try_from(signature_algorithm) {
-                Ok(SignatureAlgorithm::RSA) => "RSA",
-                Ok(SignatureAlgorithm::RSASSA_PSS(_)) => "RSASSA_PSS",
-                Ok(SignatureAlgorithm::RSAAES_OAEP(_)) => "RSAAES_OAEP",
-                Ok(SignatureAlgorithm::DSA) => "DSA",
-                Ok(SignatureAlgorithm::ECDSA) => "ECDSA",
-                Ok(SignatureAlgorithm::ED25519) => "ED25519",
+            match X509SignatureAlgorithm::try_from(signature_algorithm) {
+                Ok(X509SignatureAlgorithm::RSA) => SignatureAlgorithm::RSA,
+                Ok(X509SignatureAlgorithm::RSASSA_PSS(_)) => SignatureAlgorithm::RSASSA_PSS,
+                Ok(X509SignatureAlgorithm::RSAAES_OAEP(_)) => SignatureAlgorithm::RSAAES_OAEP,
+                Ok(X509SignatureAlgorithm::DSA) => SignatureAlgorithm::DSA,
+                Ok(X509SignatureAlgorithm::ECDSA) => SignatureAlgorithm::ECDSA,
+                Ok(X509SignatureAlgorithm::ED25519) => SignatureAlgorithm::ED25519,
                 Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
             },
             expected

@@ -4,7 +4,9 @@
 
 use anyhow::Result;
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
-use check_cert::checker::certificate::{self, Config as CertChecks};
+use check_cert::checker::certificate::{
+    self, Config as CertChecks, SignatureAlgorithm as CertSignatureAlgorithm,
+};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
@@ -26,14 +28,14 @@ enum SignatureAlgorithm {
 }
 
 impl SignatureAlgorithm {
-    fn as_str(&self) -> &'static str {
+    fn as_internal(&self) -> CertSignatureAlgorithm {
         match self {
-            Self::RSA => "RSA",
-            Self::RSASSA_PSS => "RSASSA_PSS",
-            Self::RSAAES_OAEP => "RSAAES_OAEP",
-            Self::DSA => "DSA",
-            Self::ECDSA => "ECDSA",
-            Self::ED25519 => "ED25519",
+            Self::RSA => CertSignatureAlgorithm::RSA,
+            Self::RSASSA_PSS => CertSignatureAlgorithm::RSASSA_PSS,
+            Self::RSAAES_OAEP => CertSignatureAlgorithm::RSAAES_OAEP,
+            Self::DSA => CertSignatureAlgorithm::DSA,
+            Self::ECDSA => CertSignatureAlgorithm::ECDSA,
+            Self::ED25519 => CertSignatureAlgorithm::ED25519,
         }
     }
 }
@@ -235,10 +237,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .issuer_ou(args.issuer_ou)
             .issuer_st(args.issuer_st)
             .issuer_c(args.issuer_c)
-            .signature_algorithm(
-                args.signature_algorithm
-                    .map(|sig| String::from(sig.as_str())),
-            )
+            .signature_algorithm(args.signature_algorithm.map(|alg| alg.as_internal()))
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after(Some(not_after))

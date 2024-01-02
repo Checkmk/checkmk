@@ -1,10 +1,9 @@
-use check_cert::checker::certificate::{self, Config as CertConfig};
+use check_cert::checker::certificate::{self, Config as CertConfig, SignatureAlgorithm};
 
 // Taken from `x509-parser`.
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
 
 static SERIAL: &str = "39:11:45:10:94";
-static SIG_ALG: &str = "RSA";
 static PUBKEY_ALG: &str = "RSA";
 static PUBKEY_SZ: usize = 2048;
 
@@ -26,7 +25,7 @@ fn test_cert_ok() {
             .issuer_ou(s("DCSSI"))
             .issuer_st(s("France"))
             .issuer_c(s("FR"))
-            .signature_algorithm(s(SIG_ALG))
+            .signature_algorithm(Some(SignatureAlgorithm::RSA))
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
@@ -44,7 +43,7 @@ fn test_cert_ok() {
             Issuer OU: DCSSI\n\
             Issuer ST: France\n\
             Issuer C: FR\n\
-            Signature algorithm: {SIG_ALG}\n\
+            Signature algorithm: RSA\n\
             Public key algorithm: {PUBKEY_ALG}\n\
             Public key size: {PUBKEY_SZ}"
         )

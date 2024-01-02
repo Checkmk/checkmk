@@ -1,0 +1,12 @@
+Title: Validate empty settings for "Maximum long output size"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1692626179
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p38
+
+It was possible to unset the settings for the global option "Maximum long
+output size" leading to an error on activating of changes.

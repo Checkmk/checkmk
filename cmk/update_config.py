@@ -468,6 +468,7 @@ class UpdateConfig:
     ) -> GlobalSettings:
         global_config = self._update_removed_global_config_vars(global_config)
         global_config = self._remove_unknown_themes_from_global_config(global_config)
+        global_config = self._convert_max_output_size(global_config)
         global_config = self._transform_global_config_values(global_config)
         return global_config
 
@@ -529,6 +530,26 @@ class UpdateConfig:
                 if config_var not in UNREGISTERED_SETTINGS
             }
         )
+        return global_config
+
+    def _convert_max_output_size(
+        self,
+        global_config: GlobalSettings,
+    ) -> GlobalSettings:
+        """
+        Version 2.1 introduced 'max_long_output_size' as Optional. This should be an Integer.
+        Can be removed in 2.4.
+        """
+        # Factory setting if not explicitly set
+        if "max_long_output_size" not in global_config:
+            return global_config
+
+        # None, this should not have happened
+        if (max_long_output_size := global_config.get("max_long_output_size")) is None:
+            global_config["max_long_output_size"] = 2000
+        else:
+            global_config["max_long_output_size"] = max_long_output_size
+
         return global_config
 
     def _rewrite_discovered_host_labels(self) -> None:
@@ -835,7 +856,6 @@ class UpdateConfig:
         agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
 
         for folder, _index, rule in target_version_ruleset.get_rules():
-
             new_rule = cmk.gui.watolib.rulesets.Rule.from_config(
                 rule.folder,
                 agent_update_ruleset,
@@ -862,7 +882,6 @@ class UpdateConfig:
         agent_update_ruleset = all_rulesets.get("checkgroup_parameters:agent_update")
 
         for folder, _index, rule in exit_spec_ruleset.get_rules():
-
             moved_values = {
                 key: rule.value.pop(key)
                 for key in ("restricted_address_mismatch", "legacy_pull_mode")
@@ -1409,7 +1428,6 @@ class UpdateConfig:
     ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
         with _save_user_instances(visual_type, all_visuals) as affected_user:
-
             # First modify all instances in memory and remember which things have changed
             for (owner, _name), visual_spec in all_visuals.items():
                 instance_modified, topic_created = self._transform_pre_17_topic_to_id(

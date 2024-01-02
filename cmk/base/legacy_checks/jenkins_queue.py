@@ -15,14 +15,10 @@
 import json
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-    state_markers,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 MAP_QUEUE_STATES = {
     True: "yes",
@@ -105,14 +101,14 @@ def check_jenkins_queue(_no_item, params, parsed):
             )
 
         long_output_str += ", In queue since: {} ({})".format(
-            get_age_human_readable(since),
-            get_timestamp_human_readable(timestamp_in_queue),
+            render.timespan(since),
+            render.datetime(timestamp_in_queue),
         )
 
         if len_state:
             long_output_str += " (warn/crit at {}/{}){}".format(
-                get_age_human_readable(levels[0]),
-                get_age_human_readable(levels[1]),
+                render.timespan(levels[0]),
+                render.timespan(levels[1]),
                 state_markers[len_state],
             )
 

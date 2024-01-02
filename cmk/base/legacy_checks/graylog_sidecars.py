@@ -8,14 +8,11 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import handle_iso_utc_to_localtimestamp, json
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
@@ -85,13 +82,13 @@ def check_graylog_sidecars(item, params, parsed):  # pylint: disable=too-many-br
         local_timestamp = handle_iso_utc_to_localtimestamp(last_seen)
         age = time.time() - local_timestamp
 
-        yield 0, "Last seen: %s" % get_timestamp_human_readable(local_timestamp)
+        yield 0, "Last seen: %s" % render.datetime(local_timestamp)
 
         yield check_levels(
             age,
             None,
             params.get("last_seen"),
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
             infoname="Before",
         )
 

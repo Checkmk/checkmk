@@ -35,11 +35,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -82,8 +78,8 @@ def check_mkbackup(job_state):
             0,
             "The job is running for %s since %s"
             % (
-                get_age_human_readable(duration),
-                get_timestamp_human_readable(job_state["started"]),
+                render.timespan(duration),
+                render.datetime(job_state["started"]),
             ),
             [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
         )
@@ -99,9 +95,9 @@ def check_mkbackup(job_state):
             0,
             "it was running for %s from %s till %s"
             % (
-                get_age_human_readable(duration),
-                get_timestamp_human_readable(job_state["started"]),
-                get_timestamp_human_readable(job_state["finished"]),
+                render.timespan(duration),
+                render.datetime(job_state["started"]),
+                render.datetime(job_state["finished"]),
             ),
             [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
         )
@@ -122,7 +118,7 @@ def check_mkbackup(job_state):
                 state = 2
             else:
                 state = 0
-            yield state, "Next run: %s" % get_timestamp_human_readable(next_run)
+            yield state, "Next run: %s" % render.datetime(next_run)
 
 
 def inventory_mkbackup_system(parsed):

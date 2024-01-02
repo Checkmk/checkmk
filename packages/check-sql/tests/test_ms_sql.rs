@@ -5,12 +5,15 @@
 mod common;
 use std::collections::HashSet;
 
-use check_sql::ms_sql::{
-    client::{self, Client},
-    instance::{self, SqlInstance, SqlInstanceBuilder},
-    query,
-    section::Section,
-    sqls,
+use check_sql::{
+    config::yaml::trace_tools,
+    ms_sql::{
+        client::{self, Client},
+        instance::{self, SqlInstance, SqlInstanceBuilder},
+        query,
+        section::Section,
+        sqls,
+    },
 };
 
 use check_sql::setup::Env;
@@ -1007,6 +1010,54 @@ mssql:
     connection:
        hostname: {}
 "#,
+        endpoint.user, endpoint.pwd, endpoint.host
+    )
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_check_config_exec_piggyback_remote() {
+    let dir = tools::create_temp_process_dir();
+    let content =
+        create_remote_config_with_piggyback(tools::get_remote_sql_from_env_var().unwrap());
+    tools::create_file_with_content(dir.path(), "check-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("check-sql.yml")).unwrap();
+    let output = check_config.exec(&Env::default()).await.unwrap();
+    trace_tools::write_stderr(&output);
+    assert!(!output.is_empty());
+}
+
+fn create_remote_config_with_piggyback(endpoint: SqlDbEndpoint) -> String {
+    format!(
+        r#"
+---
+mssql:
+  main:
+    authentication:
+      username: {}
+      password: {}
+      type: "sql_server"
+    connection:
+      hostname: {}
+      discovery:
+      detect: yes
+      include: [ "SQLEXPRESS_NAME"]
+    sections:
+      - instance:
+      - backup:
+          is_async: yes
+      - counters:
+          disabled: yes
+    instances:
+    - sid: "SQLEXPRESS_NAME"
+      piggyback: # optional
+        hostname: "the_host" # mandatory
+        sections:
+        - instance:
+        - backup:
+            is_async: yes
+        - counters:
+            disabled: yes
+ "#,
         endpoint.user, endpoint.pwd, endpoint.host
     )
 }

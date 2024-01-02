@@ -91,6 +91,17 @@ def git_essential_directories(checkout_dir: Path) -> Iterator[str]:
                     yield alternate.as_posix()
 
 
+def git_commit_id(path: Path | str) -> str:
+    """Returns the git hash for given @path."""
+    return subprocess.check_output(
+        # use the full hash - short hashes cannot be checked out and they are not
+        # unique among machines
+        ["git", "log", "--pretty=tformat:%H", "-n1"] + [str(path)],
+        cwd=repo_path(),
+        text=True,
+    ).strip("\n")
+
+
 def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 

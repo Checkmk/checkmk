@@ -53,8 +53,7 @@ def execute_tests_in_container(
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    base_image_name = f"{_DOCKER_REGISTRY}/{distro_name}"
-    image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
+    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version)
 
     # Start the container
     container: docker.Container
@@ -62,6 +61,7 @@ def execute_tests_in_container(
     with _start(
         client,
         image=image_name_with_tag,
+        name=f"test-{container_name_suffix(distro_name, docker_tag)}",
         command="/bin/bash",
         volumes=list(volumes),
         host_config=client.api.create_host_config(
@@ -246,10 +246,23 @@ def check_for_local_package(version: CMKVersion) -> bool:
     return False
 
 
+def container_name_suffix(distro_name: str, docker_tag: str) -> str:
+    """Container names are (currently) not needed at all but help with finding the context.
+    However they need to be informative but unique to avoid conflicts.
+    In order to be able to use the same naming scheme for incremental test-image builds soon,
+    we put everything in that qualifies a container for a certain scenario (distro, docker_tag,
+    Pipfile.lock) but make it 'unique' for now by adding a timestamp"""
+    return (
+        f"{distro_name}-{docker_tag}"
+        f"-{testlib.utils.git_commit_id('Pipfile.lock')[:10]}"
+        f"-{time.strftime('%Y%m%d%H%M%S')}"
+    )
+
+
 def _create_cmk_image(
-    client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
+    client: docker.DockerClient, distro_name: str, docker_tag: str, version: CMKVersion
 ) -> str:
-    base_image_name_with_tag = f"{base_image_name}:{docker_tag}"
+    base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
     if not (base_image := _get_or_load_image(client, base_image_name_with_tag)):
         raise RuntimeError(
@@ -261,7 +274,7 @@ def _create_cmk_image(
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
     image_name_with_tag = (
-        f"{base_image_name}-{version.edition.short}-{version.version}:{docker_tag}"
+        f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
 
     if use_local_package := check_for_local_package(version):
@@ -289,6 +302,7 @@ def _create_cmk_image(
     volumes = _image_build_volumes()
     with _start(
         client,
+        name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
             "org.tribe29.build_time": f"{int(time.time()):d}",
@@ -311,7 +325,10 @@ def _create_cmk_image(
         ),
     ) as container:
         logger.info(
-            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
+            "Building in container %s/%s (from [%s])",
+            container.name,
+            container.short_id,
+            base_image_name_with_tag,
         )
 
         _exec_run(container, ["mkdir", "-p", "/results"])

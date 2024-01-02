@@ -13,10 +13,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
 
 
 def parse_postgres_stat_database(string_table):
@@ -123,7 +123,7 @@ def check_postgres_stat_database_size(item, params, parsed):
         size,
         "size",
         levels,
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Size",
     )
 

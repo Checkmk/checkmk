@@ -108,7 +108,7 @@ def test_check_hr_fs(mocker: MockerFixture, section: Section) -> None:
             levels=(79.99999997407181, 89.9999999654291),
             boundaries=(0.0, 100.0),
         ),
-        Result(state=State.OK, summary="Used: 0.15% - 3.42 MiB of 2.16 GiB"),
+        Result(state=State.OK, summary="Used: 0.15% - 3.58 MB of 2.31 GB"),
         Metric("fs_size", 2206.8828125, boundaries=(0.0, None)),
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),

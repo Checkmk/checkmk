@@ -18,11 +18,12 @@ import time
 
 from cmk.base.check_api import (
     get_age_human_readable,
-    get_bytes_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkLicenseState",
@@ -49,7 +50,7 @@ def parse_splunk_license_state(string_table):
                 SplunkLicenseState(
                     max_violations,
                     window_period,
-                    get_bytes_human_readable(int(quota)),
+                    render.bytes(int(quota)),
                     get_timestamp_human_readable(int(expiration_time)),
                     time_to_expiration,
                     status,

@@ -7,7 +7,7 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
@@ -300,7 +300,7 @@ _UNITS_NODES_GC = {"gc_num_rate": "1/s"}
 _METRIC_SPECS: Sequence[tuple[str, str, Callable, str]] = [
     ("gc_num", "GC runs", int, "gc_runs"),
     ("gc_num_rate", "Rate", float, "gc_runs_rate"),
-    ("gc_bytes_reclaimed", "Bytes reclaimed by GC", get_bytes_human_readable, "gc_bytes"),
+    ("gc_bytes_reclaimed", "Bytes reclaimed by GC", render.bytes, "gc_bytes"),
     ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
     ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
 ]

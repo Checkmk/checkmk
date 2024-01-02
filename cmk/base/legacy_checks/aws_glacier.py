@@ -6,9 +6,11 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 Section = Mapping[str, Mapping]
 
@@ -50,7 +52,7 @@ def check_aws_glacier_archives(item, params, parsed):
         vault_size,
         "aws_glacier_vault_size",
         params.get("vault_size_levels", (None, None)),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.disksize,
         infoname="Vault size",
     )
 
@@ -108,14 +110,14 @@ def check_aws_glacier_summary(item, params, parsed):
         sum_size,
         "aws_glacier_total_vault_size",
         params.get("vault_size_levels", (None, None)),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.disksize,
         infoname="Total size",
     )
 
     if largest_vault:
         yield 0, "Largest vault: {} ({})".format(
             largest_vault,
-            get_bytes_human_readable(largest_vault_size),
+            render.disksize(largest_vault_size),
         ), [("aws_glacier_largest_vault_size", largest_vault_size)]
 
 

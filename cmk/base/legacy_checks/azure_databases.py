@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -14,6 +14,8 @@ from cmk.base.check_legacy_includes.azure import (
 )
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 
@@ -29,7 +31,7 @@ def check_azure_databases_storage(_item, params, resource):
         state, text, perf = mcheck
         abs_storage_metric = resource.metrics.get("average_storage")
         if abs_storage_metric is not None:
-            text += " (%s)" % get_bytes_human_readable(abs_storage_metric.value)
+            text += " (%s)" % render.bytes(abs_storage_metric.value)
         yield state, text, perf
 
 

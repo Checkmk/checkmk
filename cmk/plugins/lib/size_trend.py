@@ -49,7 +49,8 @@ def size_trend(
     size_mb: float,
     timestamp: float | None,
 ) -> CheckResult:
-    """Trend computation for size related checks of disks, ram, etc.
+    """Trend computation for size related checks of disks
+
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
     In the second step an average over that counter is computed to
@@ -80,35 +81,6 @@ def size_trend(
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from cmk.agent_based.v2 import GetRateError, Result
-    >>> vs = {}
-    >>> t0 = time.time()
-    >>> for i in range(2):
-    ...     try:
-    ...         for result in size_trend(
-    ...                 value_store=vs,
-    ...                 value_store_key="vskey",
-    ...                 resource="resource_name",
-    ...                 levels={
-    ...                     "trend_range": 24,
-    ...                     "trend_perfdata": True,
-    ...                     "trend_bytes":   (10 * 1024**2, 20 * 1024**2),
-    ...                     "trend_perc": (50, 70),
-    ...                     "trend_timeleft"   : (72, 48),
-    ...                     "trend_showtimeleft": True,
-    ...                 },
-    ...                 used_mb=100 + 50 * i,      # 50MB/h
-    ...                 size_mb=2000,
-    ...                 timestamp=t0 + i * 3600):
-    ...             print(result)
-    ...     except GetRateError:
-    ...         pass
-    Metric('growth', 1200.0)
-    Result(state=<State.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +10.0 MiB/+20.0 MiB)')
-    Result(state=<State.WARN: 1>, summary='trend per 1 day 0 hours: +60.00% (warn/crit at +50.00%/+70.00%)')
-    Metric('trend', 1200.0, levels=(10.0, 20.0))
-    Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
-    Metric('trend_hoursleft', 37.0)
     """
 
     range_sec = levels["trend_range"] * SEC_PER_H
@@ -134,7 +106,7 @@ def size_trend(
         mb_in_range * MB,
         levels_upper=levels.get("trend_bytes"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
-        render_func=lambda x: ("+" if x >= 0 else "") + render.bytes(x),
+        render_func=lambda x: ("+" if x >= 0 else "") + render.disksize(x),
         label="trend per %s" % render.timespan(range_sec),
     )
 

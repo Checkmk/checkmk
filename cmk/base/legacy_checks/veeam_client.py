@@ -8,11 +8,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -74,20 +70,20 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
     TotalSizeByte = int(data["TotalSizeByte"])
     perfdata.append(("totalsize", TotalSizeByte))
-    size_info.append(get_bytes_human_readable(TotalSizeByte))
+    size_info.append(render.bytes(TotalSizeByte))
     size_legend.append("total")
 
     # Output ReadSize and TransferedSize if available
     if "ReadSizeByte" in data:
         ReadSizeByte = int(data["ReadSizeByte"])
         perfdata.append(("readsize", ReadSizeByte))
-        size_info.append(get_bytes_human_readable(ReadSizeByte))
+        size_info.append(render.bytes(ReadSizeByte))
         size_legend.append("read")
 
     if "TransferedSizeByte" in data:
         TransferedSizeByte = int(data["TransferedSizeByte"])
         perfdata.append(("transferredsize", TransferedSizeByte))
-        size_info.append(get_bytes_human_readable(TransferedSizeByte))
+        size_info.append(render.bytes(TransferedSizeByte))
         size_legend.append("transferred")
 
     infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))

@@ -12,11 +12,12 @@ import re
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_bytes_human_readable,
     LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # params = {
 #     "mincount": (tuple, integer),
@@ -112,7 +113,7 @@ def check_filestats_extremes(files, params, show_files=False):
         return []
     long_output = {}
     for key, hr_function, minlabel, maxlabel in (
-        ("size", get_bytes_human_readable, "smallest", "largest"),
+        ("size", render.disksize, "smallest", "largest"),
         ("age", get_age_human_readable, "newest", "oldest"),
     ):
         files_with_metric = [f for f in files if f.get(key) is not None]
@@ -149,7 +150,7 @@ def check_filestats_extremes(files, params, show_files=False):
             if efile["path"] not in long_output:
                 text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
-                    get_bytes_human_readable(efile["size"]),
+                    render.disksize(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
@@ -168,7 +169,7 @@ def check_filestats_extremes(files, params, show_files=False):
             if efile["path"] not in long_output:
                 text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
-                    get_bytes_human_readable(efile["size"]),
+                    render.disksize(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
@@ -272,7 +273,7 @@ def check_filestats_single(item, params, parsed):
         yield 0, f'Status: {single_stat.get("stat_status")}'
         return
 
-    for key, hr_function in (("size", get_bytes_human_readable), ("age", get_age_human_readable)):
+    for key, hr_function in (("size", render.disksize), ("age", get_age_human_readable)):
         if (value := single_stat.get(key)) is None:
             continue
 

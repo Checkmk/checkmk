@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
@@ -17,7 +17,7 @@ def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
     return 0, "Total connections: {} ({}), Kernel blocked: {}, Kernel active: {}".format(
         total_connections,
-        get_bytes_human_readable(total_bytes),
+        render.bytes(total_bytes),
         kernel_mode_blocked,
         kernel_mode_active,
     )

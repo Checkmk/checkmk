@@ -8,14 +8,10 @@ import calendar
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_timestamp_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_timestamp_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_cluster_traffic>>>
@@ -55,7 +51,7 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
                 "graylog_%s" % key,
                 params.get(key),
                 infoname=infotext,
-                human_readable_func=get_bytes_human_readable,
+                human_readable_func=render.bytes,
             )
 
     last_updated = parsed.get("to")

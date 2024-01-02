@@ -1,0 +1,11 @@
+Title: Fix PDF export of host- and servicegroup views
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1704188131
+Edition: cee
+Level: 1
+Version: 2.1.0p38
+
+If you exported a view with host- or servicegroup context, an error like "Error
+while rendering element type" was shown because of missing context information.

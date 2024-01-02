@@ -2158,6 +2158,40 @@ def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) 
     return missing_context_filters(get_single_info_keys(single_infos), context)
 
 
+def get_missing_single_infos_group_aware(
+    single_infos: SingleInfos,
+    context: VisualContext,
+    datasource: object,
+) -> set[FilterName]:
+    """Return the missing single infos a view requires"""
+    missing_single_infos = get_missing_single_infos(single_infos, context)
+
+    # Special hack for the situation where host group views link to host views: The host view uses
+    # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
+    # single_info "hostgroup". To make this possible there exists a feature in
+    # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
+    # look at the description there.  We workaround the issue here by allowing this specific
+    # situation but validating all others.
+    #
+    # The more correct approach would be to find a way which allows filters of different datasources
+    # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
+    # day...
+    if (
+        datasource in ["hosts", "services"]
+        and missing_single_infos == {"hostgroup"}
+        and "opthostgroup" in context
+    ):
+        return set()
+    if (
+        datasource == "services"
+        and missing_single_infos == {"servicegroup"}
+        and "optservicegroup" in context
+    ):
+        return set()
+
+    return missing_single_infos
+
+
 def missing_context_filters(
     require_filters: Set[FilterName], context: VisualContext
 ) -> Set[FilterName]:

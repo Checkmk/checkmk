@@ -541,6 +541,10 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.preconfigured.Password():
             return _convert_to_legacy_individual_or_stored_password(to_convert, localizer)
+
+        case ruleset_api_v1.form_specs.MultipleChoice():
+            return _convert_to_legacy_list_choice(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -1464,4 +1468,39 @@ def _convert_to_legacy_individual_or_stored_password(
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
         allow_empty=False,
+    )
+
+
+def _convert_to_legacy_list_choice(
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListChoice | legacy_valuespecs.DualListChoice:
+    # arbitrarily chosen maximal size of created ListChoice
+    # if number of choices if bigger, MultipleChoice is converted to DualListChoice
+    MAX_LIST_CHOICE_SIZE: int = 10
+
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+    if to_convert.prefill_selections is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_selections
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    choices = [(e.name, e.title.localize(localizer)) for e in to_convert.elements]
+
+    if len(choices) <= MAX_LIST_CHOICE_SIZE:
+        return legacy_valuespecs.ListChoice(
+            choices=choices,
+            toggle_all=to_convert.show_toggle_all,
+            **converted_kwargs,
+        )
+
+    return legacy_valuespecs.DualListChoice(
+        choices=choices,
+        toggle_all=to_convert.show_toggle_all,
+        **converted_kwargs,
     )

@@ -16,7 +16,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 
-TableContactGroups::TableContactGroups(ICore *mc) : Table(mc) {
+TableContactGroups::TableContactGroups() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IContactGroup>>(
         "name", "Name of the contact group", offsets,

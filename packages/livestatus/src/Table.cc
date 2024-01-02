@@ -11,10 +11,7 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/DynamicColumn.h"
-#include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-
-Table::Table(ICore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 
@@ -91,5 +88,3 @@ Row Table::get(const std::string & /*unused*/, const ICore & /*core*/) const {
 }
 
 Row Table::getDefault(const ICore & /*core*/) const { return Row{nullptr}; }
-
-Logger *Table::logger() const { return _mc->loggerLivestatus(); }

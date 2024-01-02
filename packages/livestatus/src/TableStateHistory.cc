@@ -45,7 +45,7 @@ enum {
 using namespace std::chrono_literals;
 
 TableStateHistory::TableStateHistory(ICore *mc, LogCache *log_cache)
-    : Table{mc}, log_cache_{log_cache} {
+    : log_cache_{log_cache} {
     addColumns(this, *mc, "", ColumnOffsets{});
 }
 
@@ -554,17 +554,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                 }
 
                 auto state_changed = updateHostServiceState(
-                    query, user, query_timeframe, entry, state, only_update,
-                    notification_periods);
+                    query, user, core, query_timeframe, entry, state,
+                    only_update, notification_periods);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
                     entry->kind() == LogEntryKind::downtime_alert_host) {
                     if (state_changed == ModificationStatus::changed) {
                         for (auto &svc : state->_services) {
-                            updateHostServiceState(query, user, query_timeframe,
-                                                   entry, svc, only_update,
-                                                   notification_periods);
+                            updateHostServiceState(
+                                query, user, core, query_timeframe, entry, svc,
+                                only_update, notification_periods);
                         }
                     }
                 }
@@ -575,12 +575,12 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     const TimeperiodTransition tpt(entry->options());
                     notification_periods[tpt.name()] = tpt.to();
                     for (const auto &[key, hst] : state_info) {
-                        updateHostServiceState(query, user, query_timeframe,
-                                               entry, hst, only_update,
-                                               notification_periods);
+                        updateHostServiceState(
+                            query, user, core, query_timeframe, entry, hst,
+                            only_update, notification_periods);
                     }
                 } catch (const std::logic_error &e) {
-                    Warning(logger())
+                    Warning(core.loggerLivestatus())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                         << entry->message();
                 }
@@ -636,7 +636,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 }
 
 TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
-    Query &query, const User &user,
+    Query &query, const User &user, const ICore &core,
     std::chrono::system_clock::duration query_timeframe, const LogEntry *entry,
     HostServiceState *hss, bool only_update,
     const std::map<std::string, int> &notification_periods) {
@@ -813,7 +813,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
                     }
                 }
             } catch (const std::logic_error &e) {
-                Warning(logger())
+                Warning(core.loggerLivestatus())
                     << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                     << entry->message();
             }

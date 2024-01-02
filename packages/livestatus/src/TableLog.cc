@@ -50,8 +50,7 @@ public:
 
 }  // namespace
 
-TableLog::TableLog(ICore *mc, LogCache *log_cache)
-    : Table(mc), _log_cache(log_cache) {
+TableLog::TableLog(ICore *mc, LogCache *log_cache) : _log_cache(log_cache) {
     const ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};

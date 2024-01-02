@@ -16,7 +16,6 @@
 #include "livestatus/Row.h"
 
 class Column;
-class Logger;
 class ICore;
 class Query;
 class User;
@@ -52,7 +51,6 @@ enum class LockDowntimes { no, yes };
 /// timeperiods         | name
 class Table {
 public:
-    explicit Table(ICore *mc);
     virtual ~Table();
 
     void addColumn(std::unique_ptr<Column> col);
@@ -122,11 +120,7 @@ public:
         return row.rawData<T>();
     }
 
-    [[nodiscard]] Logger *logger() const;
-
 private:
-    ICore *_mc;
-
     [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
         const std::string &colname, const std::string &rest) const;
 

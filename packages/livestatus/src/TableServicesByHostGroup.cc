@@ -23,7 +23,7 @@ struct ServiceAndGroup {
 };
 }  // namespace
 
-TableServicesByHostGroup::TableServicesByHostGroup(ICore *mc) : Table(mc) {
+TableServicesByHostGroup::TableServicesByHostGroup(ICore *mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
         this, *mc, "",

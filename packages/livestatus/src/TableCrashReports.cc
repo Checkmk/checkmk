@@ -19,7 +19,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableCrashReports::TableCrashReports(ICore *mc) : Table(mc) {
+TableCrashReports::TableCrashReports(ICore *mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<CrashReport>>(
         "id", "The ID of a crash report", offsets,

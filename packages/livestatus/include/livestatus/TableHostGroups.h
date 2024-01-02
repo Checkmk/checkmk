@@ -17,7 +17,7 @@ class User;
 
 class TableHostGroups : public Table {
 public:
-    explicit TableHostGroups(ICore *mc);
+    TableHostGroups();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

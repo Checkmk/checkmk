@@ -15,33 +15,22 @@
 #include "livestatus/Table.h"
 
 Store::Store(ICore *mc)
-    : _mc(mc)
-    , _log_cache(mc)
-    , _table_columns(mc)
-    , _table_commands(mc)
-    , _table_comments(mc)
-    , _table_contactgroups(mc)
-    , _table_contacts(mc)
-    , _table_crash_reports(mc)
-    , _table_downtimes(mc)
-    , _table_eventconsoleevents(mc)
-    , _table_eventconsolehistory(mc)
-    , _table_eventconsolereplication(mc)
-    , _table_eventconsolerules(mc)
-    , _table_eventconsolestatus(mc)
-    , _table_hostgroups(mc)
-    , _table_hosts(mc)
-    , _table_hostsbygroup(mc)
-    , _table_labels(mc)
-    , _table_log(mc, &_log_cache)
-    , _table_servicegroups(mc)
-    , _table_services(mc)
-    , _table_servicesbygroup(mc)
-    , _table_servicesbyhostgroup(mc)
-    , _table_statehistory(mc, &_log_cache)
-    , _table_status(mc)
-    , _table_timeperiods(mc)
-    , _table_dummy(mc) {
+    : _mc{mc}
+    , _log_cache{mc}
+    , _table_comments{mc}
+    , _table_crash_reports{mc}
+    , _table_downtimes{mc}
+    , _table_eventconsoleevents{mc}
+    , _table_eventconsolehistory{mc}
+    , _table_eventconsolereplication{mc}
+    , _table_hosts{mc}
+    , _table_hostsbygroup{mc}
+    , _table_log{mc, &_log_cache}
+    , _table_services{mc}
+    , _table_servicesbygroup{mc}
+    , _table_servicesbyhostgroup{mc}
+    , _table_statehistory{mc, &_log_cache}
+    , _table_status{mc} {
     addTable(_table_columns);
     addTable(_table_commands);
     addTable(_table_comments);

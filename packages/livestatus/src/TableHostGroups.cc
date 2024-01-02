@@ -22,11 +22,12 @@
 
 enum class HostState;
 
-TableHostGroups::TableHostGroups(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+TableHostGroups::TableHostGroups() { addColumns(this, "", ColumnOffsets{}); }
+
 std::string TableHostGroups::name() const { return "hostgroups"; }
+
 std::string TableHostGroups::namePrefix() const { return "hostgroup_"; }
+
 namespace {
 std::vector<column::host_list::Entry> BuildHostListInfo(const IHostGroup &hg,
                                                         const User &user) {
@@ -42,6 +43,7 @@ std::vector<column::host_list::Entry> BuildHostListInfo(const IHostGroup &hg,
     return entries;
 }
 }  // namespace
+
 // static
 void TableHostGroups::addColumns(Table *table, const std::string &prefix,
                                  const ColumnOffsets &offsets) {

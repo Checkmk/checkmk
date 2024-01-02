@@ -14,9 +14,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableCommands::TableCommands(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+TableCommands::TableCommands() { addColumns(this, "", ColumnOffsets{}); }
 
 std::string TableCommands::name() const { return "commands"; }
 

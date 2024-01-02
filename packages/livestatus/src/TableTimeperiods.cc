@@ -29,7 +29,7 @@ std::string serialize(const std::chrono::system_clock::time_point &t) {
 }
 }  // namespace column::detail
 
-TableTimeperiods::TableTimeperiods(ICore *mc) : Table(mc) {
+TableTimeperiods::TableTimeperiods() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<ITimeperiod>>(
         "name", "The name of the timeperiod", offsets,

@@ -15,7 +15,7 @@ class User;
 
 class TableTimeperiods : public Table {
 public:
-    explicit TableTimeperiods(ICore *mc);
+    TableTimeperiods();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

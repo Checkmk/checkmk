@@ -427,7 +427,7 @@ ColumnDefinitions columns_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableColumns) {
     EXPECT_EQ(columns_columns(),  //
-              ColumnDefinitions(TableColumns{&mc_}));
+              ColumnDefinitions(TableColumns{}));
 }
 
 namespace {
@@ -441,7 +441,7 @@ ColumnDefinitions commands_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableCommands) {
     EXPECT_EQ(commands_columns(),  //
-              ColumnDefinitions(TableCommands{&mc_}));
+              ColumnDefinitions(TableCommands{}));
 }
 
 namespace {
@@ -481,7 +481,7 @@ ColumnDefinitions contact_groups_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableContactGroups) {
     EXPECT_EQ(contact_groups_columns(),
-              ColumnDefinitions(TableContactGroups{&mc_}));
+              ColumnDefinitions(TableContactGroups{}));
 }
 
 namespace {
@@ -524,7 +524,7 @@ ColumnDefinitions contacts_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableContacts) {
     EXPECT_EQ(contacts_columns(),  //
-              ColumnDefinitions(TableContacts{&mc_}));
+              ColumnDefinitions(TableContacts{}));
 }
 
 namespace {
@@ -637,7 +637,7 @@ ColumnDefinitions event_console_rules_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleRules) {
     EXPECT_EQ(event_console_rules_columns(),
-              ColumnDefinitions(TableEventConsoleRules{&mc_}));
+              ColumnDefinitions(TableEventConsoleRules{}));
 }
 
 namespace {
@@ -686,7 +686,7 @@ ColumnDefinitions event_console_status_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableEventConsoleStatus) {
     EXPECT_EQ(event_console_status_columns(),
-              ColumnDefinitions(TableEventConsoleStatus{&mc_}));
+              ColumnDefinitions(TableEventConsoleStatus{}));
 }
 
 namespace {
@@ -734,7 +734,7 @@ ColumnDefinitions host_groups_columns() {
 TEST_F(ColumnNamesAndTypesTest, TableHostGroups) {
     EXPECT_EQ(host_groups_columns() +  //
                   service_groups_columns(),
-              ColumnDefinitions(TableHostGroups{&mc_}));
+              ColumnDefinitions(TableHostGroups{}));
 }
 
 namespace {
@@ -904,7 +904,7 @@ ColumnDefinitions labels_columns() {
 
 TEST_F(ColumnNamesAndTypesTest, TableLabels) {
     EXPECT_EQ(labels_columns(),  //
-              ColumnDefinitions(TableLabels{&mc_}));
+              ColumnDefinitions(TableLabels{}));
 }
 
 namespace {
@@ -942,7 +942,7 @@ TEST_F(ColumnNamesAndTypesTest, TableLog) {
 
 TEST_F(ColumnNamesAndTypesTest, TableServiceGroups) {
     EXPECT_EQ(service_groups_columns(),
-              ColumnDefinitions(TableServiceGroups{&mc_}));
+              ColumnDefinitions(TableServiceGroups{}));
 }
 
 namespace {
@@ -1149,5 +1149,5 @@ ColumnDefinitions timeperiods_columns() {
 }  // namespace
 
 TEST_F(ColumnNamesAndTypesTest, TableTimeperiods) {
-    EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{&mc_}));
+    EXPECT_EQ(timeperiods_columns(), ColumnDefinitions(TableTimeperiods{}));
 }

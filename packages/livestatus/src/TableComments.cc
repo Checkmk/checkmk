@@ -22,7 +22,7 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
-TableComments::TableComments(ICore *mc) : Table(mc) {
+TableComments::TableComments(ICore *mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IComment>>(
         "author", "The contact that entered the comment", offsets,

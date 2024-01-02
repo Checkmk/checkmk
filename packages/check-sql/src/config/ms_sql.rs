@@ -730,6 +730,10 @@ piggyback:
         disabled: yes
   cache_age: 111
 "#;
+        pub const PIGGYBACK_SHORT: &str = r#"
+piggyback:
+  hostname: "piggy_host"
+"#;
         pub const INSTANCE: &str = r#"
 sid: "INST1"
 authentication:
@@ -950,6 +954,17 @@ discovery:
             ["cached1", "cached2"]
         );
         assert_eq!(as_names(all.select(&[SectionKind::Disabled])), ["disabled"]);
+    }
+
+    #[test]
+    fn test_piggyback_short() {
+        let piggyback =
+            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_SHORT), &Sections::default())
+                .unwrap()
+                .unwrap();
+        assert_eq!(piggyback.hostname(), "piggy_host");
+        let all = piggyback.sections();
+        assert_eq!(Sections::default(), all.clone());
     }
 
     #[test]

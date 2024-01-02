@@ -100,7 +100,7 @@ impl SqlInstanceBuilder {
         self
     }
     pub fn piggyback<S: Into<String>>(mut self, piggyback: Option<S>) -> Self {
-        self.piggyback = piggyback.map(|s| s.into());
+        self.piggyback = piggyback.map(|s| s.into().to_lowercase());
         self
     }
 
@@ -235,17 +235,28 @@ impl SqlInstance {
         }
     }
 
+    pub fn generate_header(&self) -> String {
+        self.piggyback
+            .as_ref()
+            .map(|h| emit::piggyback_header(h))
+            .unwrap_or_default()
+            .to_owned()
+    }
+
+    pub fn generate_footer(&self) -> String {
+        self.piggyback
+            .as_ref()
+            .map(|_| emit::piggyback_footer())
+            .unwrap_or_default()
+            .to_owned()
+    }
+
     pub async fn generate_sections(
         &self,
         ms_sql: &config::ms_sql::Config,
         sections: &[Section],
     ) -> String {
-        let mut result = self
-            .piggyback
-            .as_ref()
-            .map(|h| emit::piggyback_header(h) + &generate_instance_entries(&[self]))
-            .unwrap_or_default()
-            .to_owned();
+        let mut result = self.generate_header();
         let endpoint = &ms_sql.endpoint();
         match self.create_client(endpoint, None).await {
             Ok(mut client) => {
@@ -260,9 +271,7 @@ impl SqlInstance {
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
             }
         };
-        if self.piggyback.is_some() {
-            result += &emit::piggyback_footer();
-        }
+        result += &self.generate_footer();
         result
     }
 
@@ -1171,7 +1180,6 @@ impl CheckConfig {
         if let Some(ms_sql) = self.ms_sql() {
             CheckConfig::prepare_cache_sub_dir(environment, ms_sql.hash());
             log::info!("Generating main data");
-            let dumb_header = Self::generate_dumb_header(ms_sql);
             let data = generate_data(ms_sql, environment)
                 .await
                 .unwrap_or_else(|e| {
@@ -1190,21 +1198,11 @@ impl CheckConfig {
                     });
                 output.push(configs_data);
             }
-            Ok(dumb_header + &data + &output.join(""))
+            Ok(data + &output.join(""))
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")
         }
-    }
-
-    /// Generate header for each section without any data, see vbs plugin
-    fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
-        ms_sql
-            .valid_sections()
-            .iter()
-            .map(|s| Section::new(s, ms_sql.cache_age()).to_plain_header())
-            .collect::<Vec<_>>()
-            .join("")
     }
 
     fn prepare_cache_sub_dir(environment: &Env, hash: &str) {
@@ -1216,38 +1214,94 @@ impl CheckConfig {
     }
 }
 
+/// Generate header for each section without any data, see vbs plugin
+fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
+    ms_sql
+        .valid_sections()
+        .iter()
+        .map(|s| Section::new(s, ms_sql.cache_age()).to_plain_header())
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+fn generate_signaling_blocks(ms_sql: &config::ms_sql::Config, instances: &[SqlInstance]) -> String {
+    instances
+        .iter()
+        .map(|i| i.piggyback().as_deref().unwrap_or_default().to_string())
+        .collect::<HashSet<String>>()
+        .into_iter()
+        .map(|h| generate_signaling_block(ms_sql, &h))
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+fn generate_signaling_block(ms_sql: &config::ms_sql::Config, piggyback_host: &str) -> String {
+    let body = generate_dumb_header(ms_sql) + &Section::make_instance_section().to_plain_header();
+    if piggyback_host.is_empty() {
+        body
+    } else {
+        emit::piggyback_header(piggyback_host) + &body + &emit::piggyback_footer()
+    }
+}
+
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
 async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Result<String> {
-    let builders = find_usable_instance_builders(ms_sql).await?;
-    if builders.is_empty() {
+    let instances = find_usable_instances(ms_sql, environment).await?;
+    if instances.is_empty() {
         return Ok("ERROR: Failed to gather SQL server instances".to_string());
     } else {
-        log::info!("Found {} SQL server instances", builders.len())
+        log::info!("Found {} SQL server instances", instances.len())
     }
-
-    let instances = builders
-        .into_iter()
-        .map(|b: SqlInstanceBuilder| b.environment(environment).hash(ms_sql.hash()).build())
-        .collect::<Vec<SqlInstance>>();
 
     let sections = ms_sql
         .valid_sections()
         .into_iter()
         .map(|s| Section::new(s, ms_sql.cache_age()))
         .collect::<Vec<_>>();
-    Ok(generate_instance_entries(&instances)
+
+    Ok(generate_signaling_blocks(ms_sql, &instances)
+        + &generate_instance_entries(&instances)
         + &generate_result(&instances, &sections, ms_sql).await?)
 }
 
 fn generate_instance_entries<P: AsRef<SqlInstance>>(instances: &[P]) -> String {
-    let section = Section::make_instance_section();
-    section.to_plain_header() // as in old plugin
-     + &instances
+    instances
         .iter()
-        .flat_map(|i| [section.to_plain_header(), i.as_ref().generate_leading_entry(section.sep())])
+        .map(|i| generate_instance_entry(i.as_ref()))
         .collect::<Vec<String>>()
         .join("")
+}
+
+fn generate_instance_entry<P: AsRef<SqlInstance>>(instance: &P) -> String {
+    let section = Section::make_instance_section();
+    [
+        instance.as_ref().generate_header(),
+        section.to_plain_header(),
+        instance.as_ref().generate_leading_entry(section.sep()),
+        instance.as_ref().generate_footer(),
+    ]
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .collect::<Vec<_>>()
+    .join("")
+}
+
+async fn find_usable_instances(
+    ms_sql: &config::ms_sql::Config,
+    environment: &Env,
+) -> Result<Vec<SqlInstance>> {
+    let builders = find_usable_instance_builders(ms_sql).await?;
+    if builders.is_empty() {
+        return Ok(Vec::new());
+    } else {
+        log::info!("Found {} SQL server instances", builders.len());
+    }
+
+    Ok(builders
+        .into_iter()
+        .map(|b: SqlInstanceBuilder| b.environment(environment).hash(ms_sql.hash()).build())
+        .collect::<Vec<SqlInstance>>())
 }
 
 async fn find_usable_instance_builders(
@@ -1266,7 +1320,12 @@ pub async fn find_all_instance_builders(
     let detected = if ms_sql.discovery().detect() {
         find_detectable_instance_builders(ms_sql).await
     } else {
-        Vec::new()
+        ms_sql
+            .discovery()
+            .include()
+            .iter()
+            .map(|name| SqlInstanceBuilder::new().name(name))
+            .collect()
     };
     let customizations: HashMap<&String, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
@@ -1585,7 +1644,9 @@ fn to_sql_instance(
 
 #[cfg(test)]
 mod tests {
-    use super::SqlInstanceBuilder;
+    use super::{
+        generate_instance_entries, generate_signaling_blocks, SqlInstance, SqlInstanceBuilder,
+    };
     use crate::args::Args;
     use crate::setup::Env;
     use std::path::Path;
@@ -1603,6 +1664,92 @@ mod tests {
             format!("MSSQL_TEST_NAME.state.1\n")
         );
     }
+
+    fn make_instances() -> Vec<SqlInstance> {
+        let builders = vec![
+            SqlInstanceBuilder::new().name("A"),
+            SqlInstanceBuilder::new().name("B").piggyback(Some("Y")),
+        ];
+
+        builders
+            .into_iter()
+            .map(|b: SqlInstanceBuilder| b.build())
+            .collect::<Vec<SqlInstance>>()
+    }
+    #[test]
+    fn test_instance_entries() {
+        let instances = make_instances();
+        assert_eq!(
+            generate_instance_entries(&instances),
+            "\
+             <<<mssql_instance:sep(124)>>>\n\
+             MSSQL_A|config|||\n\
+             <<<<y>>>>\n\
+             <<<mssql_instance:sep(124)>>>\n\
+             MSSQL_B|config|||\n\
+             <<<<>>>>\n\
+             "
+        );
+    }
+
+    #[test]
+    fn test_signaling_blocks() {
+        const CONFIG_WITH_INSTANCES: &str = r#"---
+mssql:
+  main: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: u # mandatory
+      password: u
+      type: sql_server
+    connection:
+      hostname: am
+    sections:
+      - instance:
+      - backup:
+          is_async: yes
+      - counters:
+          disabled: yes
+    discovery:
+      detect: no
+      include: [ "A", "B"]
+    instances:
+      - sid: "B"
+        piggyback:
+          hostname: Y
+"#;
+
+        let ms_sql = crate::config::ms_sql::Config::from_string(CONFIG_WITH_INSTANCES)
+            .unwrap()
+            .unwrap();
+        let instances = make_instances();
+        assert_eq!(
+            generate_signaling_blocks(&ms_sql, &instances),
+            "\
+            <<<mssql_instance>>>\n\
+            <<<mssql_backup>>>\n\
+            <<<mssql_instance:sep(124)>>>\n\
+            <<<<y>>>>\n\
+            <<<mssql_instance>>>\n\
+            <<<mssql_backup>>>\n\
+            <<<mssql_instance:sep(124)>>>\n\
+            <<<<>>>>\n\
+            "
+        );
+    }
+
+    #[test]
+    fn test_instance_header_footer() {
+        let normal = SqlInstanceBuilder::new().name("test_name").build();
+        assert_eq!(normal.generate_header(), "");
+        assert_eq!(normal.generate_footer(), "");
+        let piggyback = SqlInstanceBuilder::new()
+            .name("test_name")
+            .piggyback(Some("Y"))
+            .build();
+        assert_eq!(piggyback.generate_header(), "<<<<y>>>>\n");
+        assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
+    }
+
     #[test]
     fn test_sql_builder() {
         let args = Args {
@@ -1620,7 +1767,7 @@ mod tests {
             .edition("edition")
             .environment(&Env::new(&args))
             .id("id")
-            .piggyback(Some("piggyback"));
+            .piggyback(Some("piggYback"));
         let cluster = standard.clone().cluster(Some("cluster"));
         assert_eq!(standard.get_port(), 2u16);
 

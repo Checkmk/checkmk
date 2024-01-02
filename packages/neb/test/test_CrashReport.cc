@@ -154,8 +154,7 @@ namespace {
 std::string query(Table &table, ICore &core,
                   const std::vector<std::string> &q) {
     OutputBuffer output{-1, [] { return false; }, table.logger()};
-    Query{ParsedQuery{q, table, output,
-                      [](auto &) { return std::unique_ptr<User>{}; },
+    Query{ParsedQuery{q, table, [](auto &) { return std::unique_ptr<User>{}; },
                       [](auto &) { return Row{nullptr}; }},
           table,
           Encoding::utf8,

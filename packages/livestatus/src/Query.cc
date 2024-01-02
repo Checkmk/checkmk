@@ -36,6 +36,14 @@ Query::Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
     , _current_line(0)
     , _logger(logger) {}
 
+void Query::badRequest(const std::string &message) const {
+    _output.setError(OutputBuffer::ResponseCode::bad_request, message);
+}
+
+void Query::payloadTooLarge(const std::string &message) const {
+    _output.setError(OutputBuffer::ResponseCode::payload_too_large, message);
+}
+
 void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
@@ -48,6 +56,9 @@ bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
 bool Query::process(ICore &core) {
     _output.setResponseHeader(parsed_query_.response_header);
+    if (parsed_query_.error) {
+        badRequest(*parsed_query_.error);
+    }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
     auto renderer = Renderer::make(parsed_query_.output_format, _output.os(),
@@ -91,11 +102,10 @@ bool Query::timelimitReached() const {
     }
     const auto &[duration, timeout] = *parsed_query_.time_limit;
     if (std::chrono::steady_clock::now() >= timeout) {
-        _output.setError(
-            OutputBuffer::ResponseCode::payload_too_large,
+        payloadTooLarge(
             "Maximum query time of " +
-                std::to_string(mk::ticks<std::chrono::seconds>(duration)) +
-                " seconds exceeded!");
+            std::to_string(mk::ticks<std::chrono::seconds>(duration)) +
+            " seconds exceeded!");
         return true;
     }
     return false;
@@ -104,16 +114,14 @@ bool Query::timelimitReached() const {
 bool Query::processDataset(Row row) {
     if (_output.shouldTerminate()) {
         // Not the perfect response code, but good enough...
-        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
-                         "core is shutting down");
+        payloadTooLarge("core is shutting down");
         return false;
     }
 
     if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
-        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
-                         "Maximum response size of " +
-                             std::to_string(_max_response_size) +
-                             " bytes exceeded!");
+        payloadTooLarge("Maximum response size of " +
+                        std::to_string(_max_response_size) +
+                        " bytes exceeded!");
         return false;
     }
 

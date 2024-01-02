@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
@@ -28,8 +29,6 @@
 #include "neb/Comment.h"   // IWYU pragma: keep
 #include "neb/Downtime.h"  // IWYU pragma: keep
 #include "neb/NebCore.h"
-
-class ICore;
 
 namespace fs = std::filesystem;
 
@@ -153,7 +152,8 @@ TEST_F(CrashReportTableFixture, TestTable) {
 namespace {
 std::string query(Table &table, ICore &core,
                   const std::vector<std::string> &q) {
-    OutputBuffer output{-1, [] { return false; }, table.logger()};
+    auto *logger = core.loggerLivestatus();
+    OutputBuffer output{-1, [] { return false; }, logger};
     Query{ParsedQuery{
               q, [&table]() { return table.allColumns(); },
               [](auto &) { return std::unique_ptr<User>{}; },
@@ -163,7 +163,7 @@ std::string query(Table &table, ICore &core,
           Encoding::utf8,
           5000,
           output,
-          table.logger()}
+          logger}
         .process(core);
     return output.str();
 }

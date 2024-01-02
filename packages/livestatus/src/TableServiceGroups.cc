@@ -35,7 +35,7 @@ std::vector<::column::service_group_members::Entry> BuildServiceGroupListInfo(
 }
 }  // namespace
 
-TableServiceGroups::TableServiceGroups(ICore *mc) : Table(mc) {
+TableServiceGroups::TableServiceGroups() {
     addColumns(this, "", ColumnOffsets{});
 }
 

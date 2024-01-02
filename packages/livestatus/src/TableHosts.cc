@@ -67,7 +67,7 @@ std::vector<::column::service_list::Entry> getServices(const IHost &hst,
 }
 }  // namespace
 
-TableHosts::TableHosts(ICore *mc) : Table(mc) {
+TableHosts::TableHosts(ICore *mc) {
     addColumns(this, *mc, "", ColumnOffsets{}, LockComments::yes,
                LockDowntimes::yes);
 }
@@ -750,6 +750,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
 
 void TableHosts::answerQuery(Query &query, const User &user,
                              const ICore &core) {
+    auto *logger = core.loggerLivestatus();
     auto process = [&](const IHost &hst) {
         return !user.is_authorized_for_host(hst) ||
                query.processDataset(Row{&hst});
@@ -757,7 +758,7 @@ void TableHosts::answerQuery(Query &query, const User &user,
 
     // If we know the host, we use it directly.
     if (auto value = query.stringValueRestrictionFor("name")) {
-        Debug(logger()) << "using host name index with '" << *value << "'";
+        Debug(logger) << "using host name index with '" << *value << "'";
         if (const auto *h = core.find_host(*value)) {
             process(*h);
         }
@@ -766,7 +767,7 @@ void TableHosts::answerQuery(Query &query, const User &user,
 
     // If we know the host group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
-        Debug(logger()) << "using host group index with '" << *value << "'";
+        Debug(logger) << "using host group index with '" << *value << "'";
         if (const auto *hg = core.find_hostgroup(*value)) {
             hg->all([&process](const IHost &h) { return process(h); });
         }
@@ -774,7 +775,7 @@ void TableHosts::answerQuery(Query &query, const User &user,
     }
 
     // In the general case, we have to process all hosts.
-    Debug(logger()) << "using full table scan";
+    Debug(logger) << "using full table scan";
     core.all_of_hosts([&process](const IHost &h) { return process(h); });
 }
 

@@ -19,7 +19,7 @@ class TableColumns : public Table {
 public:
     enum class Type { table, name, description, type };
 
-    explicit TableColumns(ICore *mc);
+    TableColumns();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

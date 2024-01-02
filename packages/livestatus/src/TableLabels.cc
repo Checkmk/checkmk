@@ -17,9 +17,7 @@
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
 
-TableLabels::TableLabels(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+TableLabels::TableLabels() { addColumns(this, "", ColumnOffsets{}); }
 
 std::string TableLabels::name() const { return "labels"; }
 

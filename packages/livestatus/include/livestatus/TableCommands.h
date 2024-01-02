@@ -16,7 +16,7 @@ class User;
 
 class TableCommands : public Table {
 public:
-    explicit TableCommands(ICore *mc);
+    TableCommands();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

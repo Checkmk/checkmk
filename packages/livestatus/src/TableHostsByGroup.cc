@@ -24,7 +24,7 @@ struct host_and_group {
 };
 }  // namespace
 
-TableHostsByGroup::TableHostsByGroup(ICore *mc) : Table(mc) {
+TableHostsByGroup::TableHostsByGroup(ICore *mc) {
     const ColumnOffsets offsets{};
     TableHosts::addColumns(this, *mc, "", offsets.add([](Row r) {
         return r.rawData<host_and_group>()->hst;

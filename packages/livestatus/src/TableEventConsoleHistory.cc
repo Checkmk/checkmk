@@ -13,8 +13,7 @@
 #include "livestatus/TableEventConsoleEvents.h"
 #include "livestatus/TimeColumn.h"
 
-TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc)
-    : TableEventConsole{mc} {
+TableEventConsoleHistory::TableEventConsoleHistory(ICore *mc) {
     const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",

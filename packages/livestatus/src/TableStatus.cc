@@ -23,7 +23,7 @@
 #include "livestatus/global_counters.h"
 #include "livestatus/mk_inventory.h"
 
-TableStatus::TableStatus(ICore *mc) : Table(mc) {
+TableStatus::TableStatus(ICore *mc) {
     const ColumnOffsets offsets{};
     addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
                       Counter::neb_callbacks);

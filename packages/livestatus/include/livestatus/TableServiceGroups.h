@@ -17,7 +17,7 @@ class User;
 
 class TableServiceGroups : public Table {
 public:
-    explicit TableServiceGroups(ICore *mc);
+    TableServiceGroups();
 
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;

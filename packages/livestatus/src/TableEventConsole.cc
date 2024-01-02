@@ -268,8 +268,6 @@ std::string ECRow::get(const std::string &column_name,
 
 const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
 
-TableEventConsole::TableEventConsole(ICore *mc) : Table{mc} {}
-
 namespace {
 std::function<bool(const ECRow &)> get_authorizer(const Table &table,
                                                   const User &user) {

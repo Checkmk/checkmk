@@ -26,9 +26,7 @@
 // identical to MAX_CONTACT_ADDRESSES from nagios
 constexpr int32_t max_contact_addresses = 6;
 
-TableContacts::TableContacts(ICore *mc) : Table(mc) {
-    addColumns(this, "", ColumnOffsets{});
-}
+TableContacts::TableContacts() { addColumns(this, "", ColumnOffsets{}); }
 
 std::string TableContacts::name() const { return "contacts"; }
 

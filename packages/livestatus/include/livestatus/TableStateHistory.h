@@ -51,7 +51,7 @@ private:
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hss);
     ModificationStatus updateHostServiceState(
-        Query &query, const User &user,
+        Query &query, const User &user, const ICore &core,
         std::chrono::system_clock::duration query_timeframe,
         const LogEntry *entry, HostServiceState *hss, bool only_update,
         const std::map<std::string, int> &notification_periods);

@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 import cmk.plugins.lib.docker as docker
+from cmk.agent_based.v2 import render
 
 
 def parse_docker_node_disk_usage(string_table):
@@ -21,8 +22,8 @@ def check_docker_node_disk_usage(item, params, parsed):
     if not (data := parsed.get(item)):
         return
     for key, human_readable_func in (
-        ("size", get_bytes_human_readable),
-        ("reclaimable", get_bytes_human_readable),
+        ("size", render.bytes),
+        ("reclaimable", render.bytes),
         ("count", lambda x: x),
         ("active", lambda x: x),
     ):

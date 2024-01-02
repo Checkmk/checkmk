@@ -21,7 +21,7 @@ checks = {
             [
                 (
                     0,
-                    "Used: 1.00% - 9.31 GiB of 931 GiB",
+                    "Used: 1.00% - 10.0 GB of 1.00 TB",
                     [
                         (
                             "fs_used",

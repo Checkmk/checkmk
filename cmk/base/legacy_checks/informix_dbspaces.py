@@ -6,8 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_informix_dbspaces(string_table):
@@ -52,8 +54,8 @@ def check_informix_dbspaces(item, params, parsed):
         used = size - free
         infotext = "Data files: {}, Size: {}, Used: {}".format(
             len(datafiles),
-            get_bytes_human_readable(size),
-            get_bytes_human_readable(used),
+            render.disksize(size),
+            render.disksize(used),
         )
         state = 0
         if "levels" in params:
@@ -64,8 +66,8 @@ def check_informix_dbspaces(item, params, parsed):
                 state = 1
             if state:
                 infotext += " (warn/crit at {}/{})".format(
-                    get_bytes_human_readable(warn),
-                    get_bytes_human_readable(crit),
+                    render.disksize(warn),
+                    render.disksize(crit),
                 )
 
         yield state, infotext, [("tablespace_size", size), ("tablespace_used", used)]

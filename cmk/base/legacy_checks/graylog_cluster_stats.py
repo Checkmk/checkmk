@@ -8,9 +8,10 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_cluster_stats>>>
@@ -162,9 +163,9 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
     if indice_data:
         for section, info, hr_func in [
             ("index_count", "Index count", int),
-            ("store_size", "Store size", get_bytes_human_readable),
-            ("id_cache_size", "ID cache size", get_bytes_human_readable),
-            ("field_data_size", "Field data size", get_bytes_human_readable),
+            ("store_size", "Store size", render.bytes),
+            ("id_cache_size", "ID cache size", render.bytes),
+            ("field_data_size", "Field data size", render.bytes),
         ]:
             indice_value = indice_data.get(section)
             if indice_value is None:
@@ -224,18 +225,18 @@ def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
                 "storage_size",
                 "Allocated storage",
                 "mongodb_collection_storage_size",
-                get_bytes_human_readable,
+                render.bytes,
             ),
-            ("index_size", "Total size", "indexes_size", get_bytes_human_readable),
+            ("index_size", "Total size", "indexes_size", render.bytes),
             (
                 "data_size",
                 "Total size of uncompressed data",
                 "mongodb_collection_size",
-                get_bytes_human_readable,
+                render.bytes,
             ),
-            ("file_size", "Total data files size", "file_size", get_bytes_human_readable),
-            ("ns_size_mb", "Total namespace size", "namespace_size", get_bytes_human_readable),
-            ("avg_obj_size", "Average document size", "avg_doc_size", get_bytes_human_readable),
+            ("file_size", "Total data files size", "file_size", render.bytes),
+            ("ns_size_mb", "Total namespace size", "namespace_size", render.bytes),
+            ("avg_obj_size", "Average document size", "avg_doc_size", render.bytes),
             ("num_extents", "Number of extents", "num_extents", int),
             ("collections", "Number of collections", "num_collections", int),
             ("objects", "Number of objects", "num_objects", int),

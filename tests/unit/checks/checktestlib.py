@@ -198,14 +198,14 @@ def assertBasicCheckResultsEqual(actual, expected):
 
     diff_idx = len(os.path.commonprefix((expected.infotext, actual.infotext)))
     diff_msg = ", differing at char %r" % diff_idx
-    assert expected.infotext == actual.infotext, msg % ("infotext", actual.infotext) + diff_msg
+    assert actual.infotext == expected.infotext, msg % ("infotext", actual.infotext) + diff_msg
 
     perf_count = len(actual.perfdata)
-    assert len(expected.perfdata) == perf_count, msg % ("perfdata count", perf_count)
+    assert perf_count == len(expected.perfdata), msg % ("perfdata count", perf_count)
     for pact, pexp in zip(actual.perfdata, expected.perfdata):
         assertPerfValuesEqual(pact, pexp)
 
-    assert expected.multiline == actual.multiline, msg % ("multiline", actual.multiline)
+    assert actual.multiline == expected.multiline, msg % ("multiline", actual.multiline)
 
 
 class CheckResult:

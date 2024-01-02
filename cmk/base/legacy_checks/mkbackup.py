@@ -31,20 +31,18 @@
 # }
 
 
-# TODO: Refactor this.
-
-
 # mypy: disable-error-code="var-annotated"
 
 import time
 
 from cmk.base.check_api import (
     get_age_human_readable,
-    get_bytes_human_readable,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_mkbackup(string_table):
@@ -111,7 +109,7 @@ def check_mkbackup(job_state):
         if "size" in job_state:
             yield (
                 0,
-                "Size: %s" % get_bytes_human_readable(job_state["size"]),
+                "Size: %s" % render.bytes(job_state["size"]),
                 [("backup_size", job_state["size"])],
             )
 

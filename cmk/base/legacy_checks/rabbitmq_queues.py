@@ -17,8 +17,10 @@
 
 import json
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_rabbitmq_queues(string_table):
@@ -104,7 +106,7 @@ def check_rabbitmq_queues(item, params, parsed):
             queue_memory,
             "mem_lnx_total_used",
             params.get("abs_memory"),
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
             infoname="Memory used",
         )
 

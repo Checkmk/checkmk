@@ -229,10 +229,11 @@
 # }
 
 
-# mypy: disable-error-code="arg-type"
-
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+# mypy: disable-error-code="arg-type"
+from cmk.agent_based.v2 import render
 
 
 def parse_zfs_arc_cache(string_table):
@@ -288,7 +289,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
     # size
     if "size" in parsed:
         size_bytes = parsed["size"]
-        size_readable = get_bytes_human_readable(size_bytes)
+        size_readable = render.bytes(size_bytes)
         yield 0, "Cache size: %s" % size_readable, [("size", float(size_bytes), None, None, 0)]
 
     # arc_meta
@@ -296,9 +297,9 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
     # in this case just do not report these values
     if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
         yield 0, "Arc Meta {} used, Limit {}, Max {}".format(
-            get_bytes_human_readable(parsed["arc_meta_used"]),
-            get_bytes_human_readable(parsed["arc_meta_limit"]),
-            get_bytes_human_readable(parsed["arc_meta_max"]),
+            render.bytes(parsed["arc_meta_used"]),
+            render.bytes(parsed["arc_meta_limit"]),
+            render.bytes(parsed["arc_meta_max"]),
         ), [
             ("arc_meta_used", float(parsed["arc_meta_used"]), None, None, 0),
             ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
@@ -349,7 +350,7 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
 
     # size
     if "l2_size" in parsed:
-        message += ", L2 size: %s" % get_bytes_human_readable(parsed["l2_size"])
+        message += ", L2 size: %s" % render.bytes(parsed["l2_size"])
         perfdata.append(("l2_size", float(parsed["l2_size"]), None, None, 0))
     else:
         message += ", no info about L2 size available"

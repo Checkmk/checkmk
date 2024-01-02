@@ -6,9 +6,11 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_aws_rds_limits(string_table):
@@ -21,7 +23,7 @@ def parse_aws_rds_limits(string_table):
             factor = 1024**4 / 1000.0
             limit = limit * factor
             amount = amount * factor
-            human_readable_f: Callable[[Any], str] | type[int] = get_bytes_human_readable
+            human_readable_f: Callable[[Any], str] | type[int] = render.bytes
         else:
             human_readable_f = int
         limits_by_region.setdefault(region, []).append(

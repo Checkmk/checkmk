@@ -11,8 +11,10 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "SplunkLicenseUsage", ["quota", "slaves_usage_bytes"]
@@ -43,7 +45,7 @@ def inventory_splunk_license_usage(parsed):
 def check_splunk_license_usage(item, params, parsed):
     data = parsed["License Usage"][0]
 
-    yield 0, "Quota: %s" % get_bytes_human_readable(data.quota)
+    yield 0, "Quota: %s" % render.bytes(data.quota)
 
     warn, crit = params["usage_bytes"]
 
@@ -56,7 +58,7 @@ def check_splunk_license_usage(item, params, parsed):
             value,
             "splunk_slave_usage_bytes",
             (warn, crit),
-            human_readable_func=get_bytes_human_readable,
+            human_readable_func=render.bytes,
             infoname=infotext,
         )
 

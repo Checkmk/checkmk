@@ -6,9 +6,11 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 Section = Mapping[str, Mapping]
 
@@ -54,13 +56,13 @@ def check_aws_s3_objects(item, params, parsed):
     bucket_sizes = metrics["BucketSizeBytes"]
     storage_infos = []
     for storage_type, value in bucket_sizes.items():
-        storage_infos.append(f"{storage_type}: {get_bytes_human_readable(value)}")
+        storage_infos.append(f"{storage_type}: {render.bytes(value)}")
     sum_size = sum(bucket_sizes.values())
     yield check_levels(
         sum_size,
         "aws_bucket_size",
         params.get("bucket_size_levels", (None, None)),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Bucket size",
     )
     if storage_infos:
@@ -122,14 +124,14 @@ def check_aws_s3_summary(item, params, parsed):
         sum_size,
         "aws_bucket_size",
         params.get("bucket_size_levels", (None, None)),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Total size",
     )
 
     if largest_bucket:
         yield 0, "Largest bucket: {} ({})".format(
             largest_bucket,
-            get_bytes_human_readable(largest_bucket_size),
+            render.bytes(largest_bucket_size),
         ), [("aws_largest_bucket_size", largest_bucket_size)]
 
 

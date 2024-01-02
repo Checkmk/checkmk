@@ -6,13 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 @mysql_parse_per_item
@@ -49,7 +47,7 @@ def check_mysql_slave(item, params, parsed):
         output.append("Slave-IO: running")
 
         if data["Relay_Log_Space"]:
-            output.append("Relay Log: %s" % get_bytes_human_readable(data["Relay_Log_Space"]))
+            output.append("Relay Log: %s" % render.bytes(data["Relay_Log_Space"]))
             perfdata.append(("relay_log_space", data["Relay_Log_Space"]))
 
     else:

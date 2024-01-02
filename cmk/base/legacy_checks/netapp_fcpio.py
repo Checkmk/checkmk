@@ -6,10 +6,18 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, exists, get_rate, get_value_store, SNMPTree, startswith
+from cmk.agent_based.v2 import (
+    all_of,
+    exists,
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+    startswith,
+)
 from cmk.agent_based.v2.type_defs import StringTable
 
 
@@ -27,7 +35,7 @@ def check_netapp_fcpio(item, params, info):
         avg_read,
         "read",
         params.get("read"),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Read",
     )
 
@@ -35,7 +43,7 @@ def check_netapp_fcpio(item, params, info):
         avg_write,
         "write",
         params.get("write"),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         infoname="Write",
     )
 

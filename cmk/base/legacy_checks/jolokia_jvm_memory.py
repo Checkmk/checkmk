@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
@@ -34,7 +34,7 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
         perf_name,
         params.get("abs_%s" % mem_type),
         infoname=mem_type.title(),
-        human_readable_func=get_bytes_human_readable,
+        human_readable_func=render.bytes,
         boundaries=(None, value_max),
     )
 
@@ -142,11 +142,11 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
     init = usage.get("init")
     if init is not None:
-        yield 0, "Initially: %s" % get_bytes_human_readable(init)
+        yield 0, "Initially: %s" % render.bytes(init)
 
     committed = usage.get("committed")
     if committed is not None:
-        yield 0, "Committed: %s" % get_bytes_human_readable(committed)
+        yield 0, "Committed: %s" % render.bytes(committed)
 
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(

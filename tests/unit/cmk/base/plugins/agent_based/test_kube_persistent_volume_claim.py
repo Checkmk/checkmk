@@ -91,15 +91,11 @@ def test_pvc_with_volume(bound_pvc: PersistentVolumeClaim) -> None:
     )
 
     results = [r.summary for r in check_result if isinstance(r, Result)]
-    expected_results = (
-        "Status: Bound",
-        "Used: 50.00% - 1000 B of 1.95 KiB",
-        "trend per",
-        "trend per",
-        "Time left until disk full:",
-    )
-
-    assert all(summary.startswith(expected_results[i]) for i, summary in enumerate(results))
+    assert results[0].startswith("Status: Bound")
+    assert results[1].startswith("Used: 50.00% - 1.00 kB of 2.00 kB")
+    assert results[2].startswith("trend per")
+    assert results[3].startswith("trend per")
+    assert results[4].startswith("Time left until disk full:")
 
 
 def test_pvc_with_critical_volume(bound_pvc: PersistentVolumeClaim) -> None:

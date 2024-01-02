@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith
+from cmk.agent_based.v2 import any_of, contains, render, SNMPTree, startswith
 from cmk.agent_based.v2.type_defs import StringTable
 
 
@@ -77,10 +77,10 @@ def check_dell_eql_storage(item, _no_params, info):
                 ("fs_free", total_bytes - used_bytes),
             ]
             yield 0, "Used: {}/{} (Snapshots: {}, Replication: {})".format(
-                get_bytes_human_readable(used_bytes),
-                get_bytes_human_readable(total_bytes),
-                get_bytes_human_readable(snap_bytes),
-                get_bytes_human_readable(repl_bytes),
+                render.disksize(used_bytes),
+                render.disksize(total_bytes),
+                render.disksize(snap_bytes),
+                render.disksize(repl_bytes),
             ), perfdata
 
 

@@ -6,9 +6,11 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>
@@ -40,7 +42,7 @@ def check_netapp_api_snapshots(item, params, parsed):
     reserved_bytes = int(data[0]["snapshot-blocks-reserved"]) * 1024.0
 
     if not reserved_bytes:
-        yield 0, "Used snapshot space: %s" % get_bytes_human_readable(snapshot_total), [
+        yield 0, "Used snapshot space: %s" % render.bytes(snapshot_total), [
             ("bytes", snapshot_total)
         ]
         yield params.get("state_noreserve", 1), "No snapshot reserve configured"
@@ -61,14 +63,14 @@ def check_netapp_api_snapshots(item, params, parsed):
 
     yield state, "Reserve used: {:.1f}% ({}){}".format(
         used_percent,
-        get_bytes_human_readable(snapshot_total),
+        render.bytes(snapshot_total),
         extra_info,
     )
 
     yield 0, "Total Reserve: {}% ({}) of {}".format(
         data[0]["snapshot-percent-reserved"],
-        get_bytes_human_readable(reserved_bytes),
-        get_bytes_human_readable(volume_total),
+        render.bytes(reserved_bytes),
+        render.bytes(volume_total),
     ), [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
 
 

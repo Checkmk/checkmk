@@ -6,10 +6,11 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import render
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
@@ -43,7 +44,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
                 % (
                     table_name,
                     table["ItemCount"],
-                    get_bytes_human_readable(table["TableSizeBytes"]),
+                    render.bytes(table["TableSizeBytes"]),
                     table["TableStatus"],
                 )
             )

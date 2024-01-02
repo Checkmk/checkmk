@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
@@ -82,7 +82,7 @@ def check_dell_idrac_disks(item, _no_params, info):
         if disk_name == item:
             yield 0, "[{}] Size: {}".format(
                 display_name,
-                get_bytes_human_readable(int(capacity_MB) * 1024 * 1024),
+                render.disksize(int(capacity_MB) * 1024 * 1024),
             )
 
             for what, what_key, what_text in [

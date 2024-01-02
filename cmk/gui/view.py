@@ -34,7 +34,7 @@ from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.painter.v0.base import Cell, JoinCell, painter_exists
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import sorter_registry, SorterEntry
-from cmk.gui.visuals import view_title
+from cmk.gui.visuals import get_missing_single_infos_group_aware, view_title
 
 
 class View:
@@ -336,34 +336,9 @@ class View:
     @property
     def missing_single_infos(self) -> set[FilterName]:
         """Return the missing single infos a view requires"""
-        missing_single_infos = visuals.get_missing_single_infos(
-            self.spec["single_infos"], self.context
+        return get_missing_single_infos_group_aware(
+            self.spec["single_infos"], self.context, self.spec["datasource"]
         )
-
-        # Special hack for the situation where host group views link to host views: The host view uses
-        # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
-        # single_info "hostgroup". To make this possible there exists a feature in
-        # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
-        # look at the description there.  We workaround the issue here by allowing this specific
-        # situation but validating all others.
-        #
-        # The more correct approach would be to find a way which allows filters of different datasources
-        # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
-        # day...
-        if (
-            self.spec["datasource"] in ["hosts", "services"]
-            and missing_single_infos == {"hostgroup"}
-            and "opthostgroup" in self.context
-        ):
-            return set()
-        if (
-            self.spec["datasource"] == "services"
-            and missing_single_infos == {"servicegroup"}
-            and "optservicegroup" in self.context
-        ):
-            return set()
-
-        return missing_single_infos
 
     def add_warning_message(self, message: str) -> None:
         self._warning_messages.append(message)

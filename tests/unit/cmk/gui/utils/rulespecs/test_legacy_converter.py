@@ -727,6 +727,80 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="Password",
         ),
+        pytest.param(
+            api_v1.form_specs.MultipleChoice(
+                elements=[
+                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First"))
+                ]
+            ),
+            legacy_valuespecs.ListChoice(choices=[("first", _("First"))]),
+            id="minimal MultipleChoice",
+        ),
+        pytest.param(
+            api_v1.form_specs.MultipleChoice(
+                title=api_v1.Localizable("my title"),
+                help_text=api_v1.Localizable("help text"),
+                elements=[
+                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First")),
+                    api_v1.form_specs.MultipleChoiceElement("second", api_v1.Localizable("Second")),
+                ],
+                show_toggle_all=True,
+                prefill_selections=["first", "second"],
+            ),
+            legacy_valuespecs.ListChoice(
+                choices=[("first", _("First")), ("second", _("Second"))],
+                toggle_all=True,
+                title=_("my title"),
+                help=_("help text"),
+                default_value=["first", "second"],
+            ),
+            id="MultipleChoice",
+        ),
+        pytest.param(
+            api_v1.form_specs.MultipleChoice(
+                title=api_v1.Localizable("my title"),
+                help_text=api_v1.Localizable("help text"),
+                elements=[
+                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First")),
+                    api_v1.form_specs.MultipleChoiceElement("second", api_v1.Localizable("Second")),
+                    api_v1.form_specs.MultipleChoiceElement("third", api_v1.Localizable("Third")),
+                    api_v1.form_specs.MultipleChoiceElement("fourth", api_v1.Localizable("Fourth")),
+                    api_v1.form_specs.MultipleChoiceElement("fifth", api_v1.Localizable("Fifth")),
+                    api_v1.form_specs.MultipleChoiceElement("sixth", api_v1.Localizable("Sixth")),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        "seventh", api_v1.Localizable("Seventh")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement("eight", api_v1.Localizable("Eight")),
+                    api_v1.form_specs.MultipleChoiceElement("ninth", api_v1.Localizable("Ninth")),
+                    api_v1.form_specs.MultipleChoiceElement("tenth", api_v1.Localizable("Tenth")),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        "eleventh", api_v1.Localizable("Eleventh")
+                    ),
+                ],
+                show_toggle_all=True,
+                prefill_selections=["first", "third"],
+            ),
+            legacy_valuespecs.DualListChoice(
+                choices=[
+                    ("first", _("First")),
+                    ("second", _("Second")),
+                    ("third", _("Third")),
+                    ("fourth", _("Fourth")),
+                    ("fifth", _("Fifth")),
+                    ("sixth", _("Sixth")),
+                    ("seventh", _("Seventh")),
+                    ("eight", _("Eight")),
+                    ("ninth", _("Ninth")),
+                    ("tenth", _("Tenth")),
+                    ("eleventh", _("Eleventh")),
+                ],
+                toggle_all=True,
+                title=_("my title"),
+                help=_("help text"),
+                default_value=["first", "third"],
+            ),
+            id="large MultipleChoice",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
@@ -1238,7 +1312,7 @@ def _compare_specs(actual: object, expected: object) -> None:
         if attr in ignored_attrs:
             continue
         actual_value = getattr(actual, attr)
-        if attr in ["_custom_validate", "_validate"]:
+        if attr in ["_custom_validate", "_validate", "_render_function"]:
             # testing the equality of the validation in a generic way seems very difficult
             #  check that the field was set during conversion and test behavior separately
             assert (actual_value is not None) is (expected_value is not None)
@@ -1573,7 +1647,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
 def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
     match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice():
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice():
             try:
                 _ = form_spec.transform
             except AttributeError:

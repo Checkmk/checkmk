@@ -684,6 +684,67 @@ class FileUpload:
     custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
 
 
+@dataclass(frozen=True)
+class MultipleChoiceElement:
+    """
+    Args:
+        name: Identifier of the MultipleChoiceElement
+        title: Human readable title that will be shown in the UI
+    """
+
+    name: str
+    title: Localizable
+
+
+@dataclass(frozen=True)
+class MultipleChoice:
+    """Specifies a multiple choice form
+
+    Args:
+        elements: Elements to choose from
+        show_toggle_all: Show toggle all elements option in the UI
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        prefill_selections: List of element names to check by default. If None, the backend
+            will decide whether to leave the selection empty or to prefill it with
+            a canonical value.
+        transform: Transformation of the stored configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+            builtin validation logic. Needs to raise a ValidationError in case
+            validation fails. The return value of the function will not be used.
+
+    Consumer model:
+        **Type**:
+            ``list[str]``
+
+            The configured value will be presented as a list consisting of the names
+            of the selected elements.
+
+        **Example**:
+          MultipleChoice with two selected elements would result
+          in::
+            ["choice1", "choice2"]
+
+    """
+
+    elements: Sequence[MultipleChoiceElement]
+    show_toggle_all: bool = False
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    prefill_selections: Sequence[str] | None = None
+    transform: Transform[Sequence[str]] | Migrate[Sequence[str]] | None = None
+    custom_validate: Callable[[Sequence[str]], object] | None = None
+
+    def __post_init__(self) -> None:
+        avail_idents = [elem.name for elem in self.elements]
+        if self.prefill_selections is not None and any(
+            ident not in avail_idents for ident in self.prefill_selections
+        ):
+            raise ValueError("Default element is not one of the specified elements")
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -710,4 +771,5 @@ FormSpec = (
     | MonitoredHost
     | MonitoredService
     | Password
+    | MultipleChoice
 )

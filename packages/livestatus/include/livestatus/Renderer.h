@@ -113,7 +113,7 @@ private:
     virtual void outputBlob(const std::vector<char> &value) = 0;
     virtual void outputString(const std::string &value) = 0;
 
-    template <class T>
+    template <typename T>
     std::ostream &outputHex(char prefix, int width, T value) {
         OStreamStateSaver s(_os);
         return _os << '\\' << prefix << std::hex << std::setw(width)

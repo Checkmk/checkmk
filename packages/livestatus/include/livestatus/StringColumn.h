@@ -24,7 +24,7 @@ class User;
 
 // TODO(ml, sp): C++-20 should let us use strings as default template parameter
 // (see P0732).
-template <class T>
+template <typename T>
 class StringColumn : public Column {
 public:
     StringColumn(const std::string &name, const std::string &description,
@@ -65,7 +65,7 @@ private:
     const std::function<std::string(const T &)> f_;
 };
 
-template <class T>
+template <typename T>
 class StringColumnPerfData : public StringColumn<T> {
 public:
     using StringColumn<T>::StringColumn;

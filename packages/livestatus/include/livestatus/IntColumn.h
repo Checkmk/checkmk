@@ -23,7 +23,7 @@
 #include "livestatus/opids.h"
 class Row;
 
-template <class T, int32_t Default = 0>
+template <typename T, int32_t Default = 0>
 class IntColumn : public Column {
 public:
     using value_type = int32_t;
@@ -84,7 +84,7 @@ namespace column::detail {
 constexpr int32_t toInt32(bool b) { return b ? 1 : 0; }
 }  // namespace column::detail
 
-template <class T, bool Default = false>
+template <typename T, bool Default = false>
 class BoolColumn : public IntColumn<T, column::detail::toInt32(Default)> {
 public:
     BoolColumn(const std::string &name, const std::string &description,

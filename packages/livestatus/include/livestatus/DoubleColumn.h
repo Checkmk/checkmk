@@ -27,7 +27,7 @@ class User;
 // Currently the default is hardwired to zero.
 // TODO(ml, sp): C++-20 should let us use double as default template parameter
 // (see P0732).
-template <class T>
+template <typename T>
 class DoubleColumn : public Column {
 public:
     using value_type = double;

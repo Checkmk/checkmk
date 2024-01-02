@@ -25,7 +25,7 @@ class Aggregator;
 class RowRenderer;
 class User;
 
-template <class T>
+template <typename T>
 class DictColumn : public Column {
 public:
     using value_type = std::unordered_map<std::string, std::string>;

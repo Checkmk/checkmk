@@ -294,7 +294,7 @@ def _parameter_valuespec_skype_sip():
             (
                 "authentication_errors",
                 Dictionary(
-                    title=_("Authentication System Errors"),
+                    title=_("Authentication system errors"),
                     elements=[
                         (
                             "upper",

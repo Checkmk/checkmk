@@ -190,7 +190,7 @@ PermissionDisableNotifications = Permission(
     name="disable_notifications",
     title=_l("Disable all personal notifications"),
     description=_l(
-        "This permissions provides a checkbox and timerange in the personal settings of the user that "
+        "This permissions provides a checkbox and time range in the personal settings of the user that "
         "allows him to completely disable all of his notifications. Use with caution."
     ),
     defaults=["admin"],

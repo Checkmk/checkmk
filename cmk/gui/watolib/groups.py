@@ -274,7 +274,7 @@ def is_alias_used(
         if timeperiod_spec_alias(value) == my_alias and (
             my_what != "timeperiods" or my_name != key
         ):
-            return False, _("This alias is already used in timeperiod %s.") % key
+            return False, _("This alias is already used in time period %s.") % key
 
     # Roles
     roles = load_roles()

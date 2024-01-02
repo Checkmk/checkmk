@@ -151,7 +151,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         return (
             "timerange",
             Timerange(
-                title=_("Timerange"),
+                title=_("Time range"),
                 default_value="25h",
             ),
         )

@@ -124,7 +124,7 @@ class NotificationParameterJiraIssues(NotificationParameter):
                         title=_("Monitoring URL"),
                         help=_(
                             "Configure the base URL for the Monitoring Web-GUI here. Include the site name. "
-                            "Used for link to check_mk out of jira."
+                            "Used for link to Checkmk out of jira."
                         ),
                     ),
                 ),

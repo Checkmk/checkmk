@@ -274,7 +274,7 @@ def _valuespec_active_checks_http() -> Migrate:
                                             "auth",
                                             Tuple(
                                                 title=_("Authorization"),
-                                                help=_("Credentials for HTTP Basic Authentication"),
+                                                help=_("Credentials for HTTP basic authentication"),
                                                 elements=[
                                                     TextInput(
                                                         title=_("Username"),

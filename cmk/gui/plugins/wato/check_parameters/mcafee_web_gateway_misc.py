@@ -58,7 +58,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             (
                 "client_requests_http",
                 Levels(
-                    title=_("Upper levels for the number of http request per second"),
+                    title=_("Upper levels for the number of HTTP requests per second"),
                     default_levels=(500.0, 1000.0),
                     default_value=(500.0, 1000.0),
                     default_difference=(10.0, 20.0),
@@ -68,7 +68,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             (
                 "client_requests_https",
                 Levels(
-                    title=_("Upper levels for the number of https request per second"),
+                    title=_("Upper levels for the number of HTTPS request per second"),
                     default_levels=(500.0, 1000.0),
                     default_value=(500.0, 1000.0),
                     default_difference=(10.0, 20.0),
@@ -78,7 +78,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             (
                 "client_requests_httpv2",
                 Levels(
-                    title=_("Upper levels for the number of httpv2 request per second"),
+                    title=_("Upper levels for the number of HTTP/2 requests per second"),
                     default_levels=(500.0, 1000.0),
                     default_value=(500.0, 1000.0),
                     default_difference=(10.0, 20.0),

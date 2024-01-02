@@ -132,7 +132,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     "When this option is active you will not get <b>any</b> "
                     "alerts or other notifications via email, SMS or similar. "
                     "This overrides all other notification settings and rules, so make "
-                    "sure that you know what you do. Moreover you can specify a timerange "
+                    "sure that you know what you do. Moreover you can specify a time range "
                     "where no notifications are generated."
                 ),
                 elements=[
@@ -147,7 +147,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     (
                         "timerange",
                         Tuple(
-                            title=_("Customize timerange"),
+                            title=_("Customize time range"),
                             elements=[
                                 AbsoluteDate(title=_("From:"), include_time=True),
                                 AbsoluteDate(title=_("To:"), include_time=True),

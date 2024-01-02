@@ -284,7 +284,7 @@ class ModeEditRole(WatoMode):
                 _(
                     "Each user defined role is based on one of the built-in roles. "
                     "When created it will start with all permissions of that role. When due to a software "
-                    "update or installation of an addons new permissions appear, the user role will get or "
+                    "update or installation of an add-on new permissions appear, the user role will get or "
                     "not get those new permissions based on the default settings of the built-in role it's "
                     "based on."
                 )

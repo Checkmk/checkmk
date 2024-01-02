@@ -1824,20 +1824,24 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             if len(connected_sites) == 1:
                 raise MKMissingDataError(
                     _(
-                        "As soon as you add your Checkmk server to the monitoring, a graph showing "
-                        "the history of your host problems will appear here.\n"
-                        "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
-                        "This dashlet currently only supports filtering for sites."
+                        "As soon as you add your Checkmk server to the "
+                        "monitoring, a graph showing the history of your host "
+                        "problems will appear here.\n Please also be aware that "
+                        "message might appear as a result of a filtered "
+                        "dashboard. This dashlet currently only supports "
+                        "filtering for sites."
                     )
                     + doc_ref
                 )
             raise MKMissingDataError(
                 _(
-                    "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
-                    "the history of your host problems will appear here. Currently the following "
-                    "Checkmk sites are not monitored: %s.\n"
-                    "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
-                    "This dashlet currently only supports filtering for sites."
+                    "As soon as you add your Checkmk server(s) to the "
+                    "monitoring, a graph showing the history of your host "
+                    "problems will appear here. Currently, the following Checkmk "
+                    "sites are not monitored: %s\n Please also be aware that "
+                    "this message might appear as a result of a filtered "
+                    "dashboard. This dashlet currently only supports filtering "
+                    "for sites."
                 )
                 % ", ".join(connected_sites - unique_sites_from_services)
                 + doc_ref

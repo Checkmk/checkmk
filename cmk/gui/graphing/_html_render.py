@@ -908,7 +908,7 @@ def _render_time_range_selection(
         rows.append(
             HTMLWriter.render_td(
                 _render_graph_html(graph_artwork, graph_data_range, graph_render_config),
-                title=_("Change graph timerange to: %s") % timerange_attrs["title"],
+                title=_("Change graph time range to: %s") % timerange_attrs["title"],
             )
         )
     return HTMLWriter.render_table(

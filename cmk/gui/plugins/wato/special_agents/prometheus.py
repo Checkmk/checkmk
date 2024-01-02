@@ -302,7 +302,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                                     (
                                                         "both",
                                                         _(
-                                                            "Both - Display the information for both, pod and container, levels"
+                                                            "Both - Display the information for both pod and container levels"
                                                         ),
                                                         Dictionary(
                                                             elements=[

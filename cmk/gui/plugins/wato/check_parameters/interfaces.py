@@ -1057,7 +1057,7 @@ def _parameter_valuespec_if() -> Dictionary:
             (
                 "average_bm",
                 Integer(
-                    title=_("Average values for broad- and multicast packet rates"),
+                    title=_("Average values for broadcast and multicast packet rates"),
                     help=_(
                         "By activating the computation of averages, the levels on "
                         "broad- and multicast packet rates are applied to "

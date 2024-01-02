@@ -40,8 +40,8 @@ def _sec_tuple(title: str) -> Tuple:
         ],
         help=_(
             "Replication lag is a delay between an operation on the primary and the application "
-            "of that operation from the oplog to the secondary."
-            "With this configuration, check_mk will alert if replication lag is "
+            "of that operation from the oplog to the secondary. "
+            "With this configuration, Checkmk will alert if replication lag is "
             "exceeding a threshold over an extended period of time."
         ),
     )

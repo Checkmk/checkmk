@@ -70,7 +70,7 @@ _GRAPH_VIEWS = {
             "column_headers": "off",
             "datasource": "services",
             "description": _l(
-                "Shows all graphs including timerange selections of a collection of services."
+                "Shows all graphs including time range selections of a collection of services."
             ),
             "group_painters": [
                 ColumnSpec(
@@ -117,7 +117,7 @@ _GRAPH_VIEWS = {
             "column_headers": "off",
             "datasource": "hosts",
             "description": _l(
-                "Shows host graphs including timerange selections of a collection of hosts."
+                "Shows host graphs including time range selections of a collection of hosts."
             ),
             "group_painters": [
                 ColumnSpec(
@@ -294,7 +294,7 @@ class PainterServiceGraphs(Painter):
         return "service_graphs"
 
     def title(self, cell):
-        return _("Service graphs with timerange previews")
+        return _("Service graphs with time range previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -337,7 +337,7 @@ class PainterHostGraphs(Painter):
         return "host_graphs"
 
     def title(self, cell):
-        return _("Host Graphs with Timerange Previews")
+        return _("Host Graphs with Time Range Previews")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

@@ -28,9 +28,9 @@ def _parameter_valuespec_graylog_failures():
             (
                 "failures_last",
                 Tuple(
-                    title=_("Index failure in the defined timerange upper levels"),
+                    title=_("Index failure in the defined time range upper levels"),
                     help=_(
-                        "Here you can set levels on failures in the timerange "
+                        "Here you can set levels on failures in the time range "
                         "specified in the datasource (default: 30m)."
                     ),
                     elements=[

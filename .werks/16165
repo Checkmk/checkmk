@@ -1,0 +1,19 @@
+Title: check_mk_agent: Set LC_ALL before running the agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1704190188
+Edition: cre
+Level: 1
+Version: 2.1.0p38
+
+Previously, Checkmk agents would be run with a preset LC_ALL
+environment variable if neither C.UTF-8 or C.utf-8 locales were
+installed.
+
+That led to invalid agent output and crashes in section parsing
+in multiple checks for some of the locales.
+
+Linux, AIX, Solaris, FreeBSD and OpenWrt agents were affected.
+
+Now, LC_ALL variable is set to C for the described case.

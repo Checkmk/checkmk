@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/Row.h"
@@ -56,6 +57,7 @@ public:
 
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
+    [[nodiscard]] std::vector<std::shared_ptr<Column>> allColumns() const;
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {

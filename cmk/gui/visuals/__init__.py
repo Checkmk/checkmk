@@ -29,6 +29,9 @@ from ._filter_context import get_filter as get_filter
 from ._filter_context import get_link_filter_names as get_link_filter_names
 from ._filter_context import get_merged_context as get_merged_context
 from ._filter_context import get_missing_single_infos as get_missing_single_infos
+from ._filter_context import (
+    get_missing_single_infos_group_aware as get_missing_single_infos_group_aware,
+)
 from ._filter_context import get_single_info_keys as get_single_info_keys
 from ._filter_context import get_singlecontext_vars as get_singlecontext_vars
 from ._filter_context import info_params as info_params

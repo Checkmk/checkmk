@@ -214,7 +214,7 @@ def _handle_api_error(e: docker.errors.APIError) -> None:
     raise e
 
 
-def check_for_local_package(version: CMKVersion) -> bool:
+def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
     """Checks package_download folder for a Checkmk package and returns True if
     exactly one package is available and meets some requirements. If there are
     invalid packages, the application terminates."""
@@ -233,10 +233,25 @@ def check_for_local_package(version: CMKVersion) -> bool:
             raise SystemExit(1)
 
         package_name = available_packages[0].name
-        package_pattern = rf"check-mk-{version.edition.long}-{version.version}.*\.(deb|rpm)"
-        if not re.match(f"^{package_pattern}$", package_name):
+        os_name = {
+            "debian-10": "buster",
+            "debian-11": "bullseye",
+            "debian-12": "bookworm",
+            "ubuntu-20.04": "focal",
+            "ubuntu-22.04": "jammy",
+            "ubuntu-23.04": "lunar",
+            "ubuntu-23.10": "mantic",
+            "centos-8": "el8",
+            "almalinux-9": "el9",
+            "sles-15sp3": "sles15sp3",
+            "sles-15sp4": "sles15sp4",
+            "sles-12sp5": "sles12sp5",
+            "sles-15sp5": "sles15sp5",
+        }.get(distro_name, f"UNKNOWN DISTRO: {distro_name}")
+        pkg_pattern = rf"check-mk-{version.edition.long}-{version.version}.*{os_name}.*\.(deb|rpm)"
+        if not re.match(f"^{pkg_pattern}$", package_name):
             logger.error("Error: '%s' does not match version=%s", package_name, version)
-            logger.error("Error:  (must be '%s')", package_pattern)
+            logger.error("Error:  (must be '%s')", pkg_pattern)
             raise SystemExit(1)
 
         logger.info("found %s", available_packages[0])
@@ -275,7 +290,7 @@ def _create_cmk_image(
         f"{_DOCKER_REGISTRY}/{distro_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
 
-    if use_local_package := check_for_local_package(version):
+    if use_local_package := check_for_local_package(version, distro_name):
         logger.info("+====================================================================+")
         logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
         logger.info("+====================================================================+")

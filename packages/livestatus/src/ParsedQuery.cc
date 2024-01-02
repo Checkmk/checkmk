@@ -21,7 +21,6 @@
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
 #include "livestatus/StringUtils.h"
-#include "livestatus/Table.h"
 #include "livestatus/opids.h"
 
 using namespace std::literals;
@@ -56,16 +55,15 @@ void checkNoArguments(std::string_view str) {
 }  // namespace
 
 ParsedQuery::ParsedQuery(
-    const std::vector<std::string> &lines, const Table &table,
+    const std::vector<std::string> &lines,
+    const std::function<std::vector<std::shared_ptr<Column>>()> &all_columns,
     const std::function<std::unique_ptr<const User>(const std::string &)>
         &find_user,
-    const std::function<Row(const std::string &)> &get)
+    const std::function<Row(const std::string &)> &get,
+    const ColumnCreator &make_column)
     : user{std::make_unique<NoAuthUser>()} {
     FilterStack filters;
     FilterStack wait_conditions;
-    auto make_column = [&table](std::string_view colname) {
-        return table.column(std::string{colname});
-    };
     for (const auto &line_str : lines) {
         std::string_view line{line_str};
         auto header = line.substr(0, line.find(':'));
@@ -139,10 +137,10 @@ ParsedQuery::ParsedQuery(
     }
 
     if (columns.empty() && stats_columns.empty()) {
-        table.any_column([this](const auto &c) {
-            return columns.push_back(c), all_column_names.insert(c->name()),
-                   false;
-        });
+        for (const auto &c : all_columns()) {
+            columns.push_back(c);
+            all_column_names.insert(c->name());
+        }
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         show_column_headers = true;
@@ -359,7 +357,7 @@ void ParsedQuery::parseStatsLine(std::string_view line,
 
 void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
                                   const ColumnCreator &make_column) {
-    auto column_name = nextStringArgument(line);
+    auto column_name = std::string{nextStringArgument(line)};
     auto rel_op = relationalOperatorForName(nextStringArgument(line));
     line.remove_prefix(
         std::min(line.size(), line.find_first_not_of(mk::whitespace)));
@@ -367,7 +365,7 @@ void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
         make_column(column_name)
             ->createFilter(Filter::Kind::row, rel_op, std::string{line});
     filters.push_back(std::move(sub_filter));
-    all_column_names.insert(std::string{column_name});
+    all_column_names.insert(column_name);
 }
 
 void ParsedQuery::parseAuthUserHeader(
@@ -380,7 +378,8 @@ void ParsedQuery::parseAuthUserHeader(
 void ParsedQuery::parseColumnsLine(std::string_view line,
                                    const ColumnCreator &make_column) {
     while (!line.empty()) {
-        auto column_name = line.substr(0, line.find_first_of(mk::whitespace));
+        auto column_name =
+            std::string{line.substr(0, line.find_first_of(mk::whitespace))};
         line.remove_prefix(std::min(
             line.size(),
             line.find_first_not_of(mk::whitespace, column_name.size())));
@@ -391,12 +390,11 @@ void ParsedQuery::parseColumnsLine(std::string_view line,
             // TODO(sp): Do we still need this fallback now that we require the
             // remote sites to be updated before the central site? We don't do
             // this for stats/filter lines, either.
-            column = std::make_shared<NullColumn>(std::string{column_name},
-                                                  "non-existing column",
-                                                  ColumnOffsets{});
+            column = std::make_shared<NullColumn>(
+                column_name, "non-existing column", ColumnOffsets{});
         }
         columns.push_back(column);
-        all_column_names.insert(std::string{column_name});
+        all_column_names.insert(column_name);
     }
     show_column_headers = false;
 }

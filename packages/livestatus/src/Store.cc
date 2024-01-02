@@ -79,9 +79,11 @@ bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
     return Query{
-        ParsedQuery{lines, table,
-                    [this](auto &name) { return _mc->find_user(name); },
-                    [this, &table](auto &key) { return table.get(key, *_mc); }},
+        ParsedQuery{
+            lines, [&table]() { return table.allColumns(); },
+            [this](auto &name) { return _mc->find_user(name); },
+            [this, &table](auto &key) { return table.get(key, *_mc); },
+            [&table](const auto &colname) { return table.column(colname); }},
         table,
         _mc->dataEncoding(),
         _mc->maxResponseSize(),

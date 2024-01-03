@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <compare>
+#include <cstddef>
 #include <sstream>
 #include <utility>
 
@@ -25,16 +26,14 @@
 
 using namespace std::chrono_literals;
 
-Query::Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
-             size_t max_response_size, OutputBuffer &output, Logger *logger)
+Query::Query(ParsedQuery parsed_query, Table &table, ICore &core,
+             OutputBuffer &output)
     : parsed_query_{std::move(parsed_query)}
-    , _data_encoding(data_encoding)
-    , _max_response_size(max_response_size)
-    , _output(output)
-    , _renderer_query(nullptr)
-    , _table(table)
-    , _current_line(0)
-    , _logger(logger) {}
+    , _table{table}
+    , core_{core}
+    , _output{output}
+    , _renderer_query{nullptr}
+    , _current_line{0} {}
 
 void Query::badRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::bad_request, message);
@@ -54,28 +53,28 @@ void Query::badGateway(const std::string &message) const {
 
 bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
-bool Query::process(ICore &core) {
+bool Query::process() {
     _output.setResponseHeader(parsed_query_.response_header);
     if (parsed_query_.error) {
         badRequest(*parsed_query_.error);
     }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
-    auto renderer = Renderer::make(parsed_query_.output_format, _output.os(),
-                                   _output.getLogger(),
-                                   parsed_query_.separators, _data_encoding);
-    doWait(core);
+    auto renderer = Renderer::make(
+        parsed_query_.output_format, _output.os(), _output.getLogger(),
+        parsed_query_.separators, core_.dataEncoding());
+    doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, *parsed_query_.user, core);
+    _table.answerQuery(*this, *parsed_query_.user, core_);
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
-    Informational(_logger) << "processed request in " << elapsed_ms
-                           << " ms, replied with " << _output.os().tellp()
-                           << " bytes";
+    Informational(core_.loggerLivestatus())
+        << "processed request in " << elapsed_ms << " ms, replied with "
+        << _output.os().tellp() << " bytes";
     return parsed_query_.keepalive;
 }
 
@@ -118,9 +117,9 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
+    if (static_cast<size_t>(_output.os().tellp()) > core_.maxResponseSize()) {
         payloadTooLarge("Maximum response size of " +
-                        std::to_string(_max_response_size) +
+                        std::to_string(core_.maxResponseSize()) +
                         " bytes exceeded!");
         return false;
     }
@@ -153,7 +152,7 @@ bool Query::processDataset(Row row) {
         {
             auto renderer = Renderer::make(
                 parsed_query_.output_format, os, _output.getLogger(),
-                parsed_query_.separators, _data_encoding);
+                parsed_query_.separators, core_.dataEncoding());
             QueryRenderer q(*renderer, EmitBeginEnd::off);
             RowRenderer r(q);
             for (const auto &column : parsed_query_.columns) {
@@ -193,7 +192,8 @@ void Query::finish(QueryRenderer &q) {
 std::unique_ptr<Filter> Query::partialFilter(
     const std::string &message, columnNamePredicate predicate) const {
     auto result = parsed_query_.filter->partialFilter(std::move(predicate));
-    Debug(_logger) << "partial filter for " << message << ": " << *result;
+    Debug(core_.loggerLivestatus())
+        << "partial filter for " << message << ": " << *result;
     return result;
 }
 
@@ -201,11 +201,12 @@ std::optional<std::string> Query::stringValueRestrictionFor(
     const std::string &column_name) const {
     auto result = parsed_query_.filter->stringValueRestrictionFor(column_name);
     if (result) {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " is restricted to '" << *result << "'";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " is restricted to '" << *result << "'";
     } else {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " is unrestricted";
+        Debug(core_.loggerLivestatus()) << "column " << _table.name() << "."
+                                        << column_name << " is unrestricted";
     }
     return result;
 }
@@ -215,14 +216,16 @@ std::optional<int32_t> Query::greatestLowerBoundFor(
     auto result = parsed_query_.filter->greatestLowerBoundFor(
         column_name, parsed_query_.timezone_offset);
     if (result) {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has greatest lower bound " << *result << " ("
-                       << FormattedTimePoint(
-                              std::chrono::system_clock::from_time_t(*result))
-                       << ")";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has greatest lower bound " << *result << " ("
+            << FormattedTimePoint(
+                   std::chrono::system_clock::from_time_t(*result))
+            << ")";
     } else {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has no greatest lower bound";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has no greatest lower bound";
     }
     return result;
 }
@@ -232,14 +235,16 @@ std::optional<int32_t> Query::leastUpperBoundFor(
     auto result = parsed_query_.filter->leastUpperBoundFor(
         column_name, parsed_query_.timezone_offset);
     if (result) {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has least upper bound " << *result << " ("
-                       << FormattedTimePoint(
-                              std::chrono::system_clock::from_time_t(*result))
-                       << ")";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has least upper bound " << *result << " ("
+            << FormattedTimePoint(
+                   std::chrono::system_clock::from_time_t(*result))
+            << ")";
     } else {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has no least upper bound";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has no least upper bound";
     }
     return result;
 }
@@ -249,12 +254,13 @@ std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
     auto result = parsed_query_.filter->valueSetLeastUpperBoundFor(
         column_name, parsed_query_.timezone_offset);
     if (result) {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has possible values "
-                       << FormattedBitSet<32>{*result};
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has possible values " << FormattedBitSet<32>{*result};
     } else {
-        Debug(_logger) << "column " << _table.name() << "." << column_name
-                       << " has no value set restriction";
+        Debug(core_.loggerLivestatus())
+            << "column " << _table.name() << "." << column_name
+            << " has no value set restriction";
     }
     return result;
 }
@@ -270,14 +276,14 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
         std::vector<std::unique_ptr<Aggregator>> aggrs;
         aggrs.reserve(parsed_query_.stats_columns.size());
         for (const auto &sc : parsed_query_.stats_columns) {
-            aggrs.push_back(sc->createAggregator(_logger));
+            aggrs.push_back(sc->createAggregator(core_.loggerLivestatus()));
         }
         it = _stats_groups.emplace(groupspec, std::move(aggrs)).first;
     }
     return it->second;
 }
 
-void Query::doWait(ICore &core) {
+void Query::doWait() {
     if (parsed_query_.wait_condition->is_contradiction() &&
         parsed_query_.wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
@@ -285,16 +291,16 @@ void Query::doWait(ICore &core) {
     }
     auto wait_object = parsed_query_.wait_object;
     if (!parsed_query_.wait_condition->is_tautology() && wait_object.isNull()) {
-        wait_object = _table.getDefault(core);
+        wait_object = _table.getDefault(core_);
         if (wait_object.isNull()) {
             invalidRequest("missing WaitObject");
             return;
         }
     }
-    core.triggers().wait_for(parsed_query_.wait_trigger,
-                             parsed_query_.wait_timeout, [this, &wait_object] {
-                                 return parsed_query_.wait_condition->accepts(
-                                     wait_object, *parsed_query_.user,
-                                     parsed_query_.timezone_offset);
-                             });
+    core_.triggers().wait_for(parsed_query_.wait_trigger,
+                              parsed_query_.wait_timeout, [this, &wait_object] {
+                                  return parsed_query_.wait_condition->accepts(
+                                      wait_object, *parsed_query_.user,
+                                      parsed_query_.timezone_offset);
+                              });
 }

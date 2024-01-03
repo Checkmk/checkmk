@@ -152,19 +152,14 @@ TEST_F(CrashReportTableFixture, TestTable) {
 namespace {
 std::string query(Table &table, ICore &core,
                   const std::vector<std::string> &q) {
-    auto *logger = core.loggerLivestatus();
-    OutputBuffer output{-1, [] { return false; }, logger};
+    OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};
     Query{ParsedQuery{
               q, [&table]() { return table.allColumns(); },
               [](auto &) { return std::unique_ptr<User>{}; },
               [](auto &) { return Row{nullptr}; },
               [&table](const auto &colname) { return table.column(colname); }},
-          table,
-          Encoding::utf8,
-          5000,
-          output,
-          logger}
-        .process(core);
+          table, core, output}
+        .process();
     return output.str();
 }
 }  // namespace

@@ -14,7 +14,7 @@ from icalendar import Calendar, Event  # type: ignore[import]
 from icalendar.prop import vDDDTypes  # type: ignore[import]
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import timeperiod_spec_alias
+from cmk.utils.timeperiod import builtin_timeperiods, load_timeperiods, timeperiod_spec_alias
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -157,7 +157,7 @@ class ModeTimeperiods(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._timeperiods = watolib.timeperiods.load_timeperiods()
+        self._timeperiods = load_timeperiods()
 
     def title(self) -> str:
         return _("Time periods")
@@ -211,7 +211,7 @@ class ModeTimeperiods(WatoMode):
 
         try:
             watolib.timeperiods.delete_timeperiod(delname)
-            self._timeperiods = watolib.timeperiods.load_timeperiods()
+            self._timeperiods = load_timeperiods()
 
         except watolib.timeperiods.TimePeriodBuiltInError:
             raise MKUserError("_delete", _("Built-in time periods can not be modified"))
@@ -237,7 +237,7 @@ class ModeTimeperiods(WatoMode):
 
                 table.cell(_("Actions"), css=["buttons"])
                 alias = timeperiod_spec_alias(timeperiod)
-                if name in watolib.timeperiods.builtin_timeperiods():
+                if name in builtin_timeperiods():
                     html.i(_("(built-in)"))
                 else:
                     self._action_buttons(name, alias)
@@ -454,12 +454,12 @@ class ModeEditTimeperiod(WatoMode):
         return ModeTimeperiods
 
     def _from_vars(self):
-        self._timeperiods = watolib.timeperiods.load_timeperiods()
+        self._timeperiods = load_timeperiods()
         self._name = request.var("edit")  # missing -> new group
         # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
         self._new = self._name is None
 
-        if self._name in watolib.timeperiods.builtin_timeperiods():
+        if self._name in builtin_timeperiods():
             raise MKUserError("edit", _("Built-in time periods can not be modified"))
         if self._new:
             clone_name = request.var("clone")
@@ -687,7 +687,7 @@ class ModeEditTimeperiod(WatoMode):
             assert self._name is not None
             watolib.timeperiods.modify_timeperiod(self._name, self._timeperiod)
 
-        self._timeperiods = watolib.timeperiods.load_timeperiods()
+        self._timeperiods = load_timeperiods()
         return redirect(mode_url("timeperiods"))
 
     def page(self) -> None:

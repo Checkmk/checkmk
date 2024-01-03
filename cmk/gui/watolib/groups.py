@@ -7,12 +7,11 @@ import copy
 import re
 from typing import Any, Callable, Literal
 
-import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
-from cmk.utils.timeperiod import timeperiod_spec_alias
+from cmk.utils.timeperiod import load_timeperiods, timeperiod_spec_alias
 
 import cmk.gui.hooks as hooks
 from cmk.gui.customer import customer_api
@@ -269,7 +268,7 @@ def is_alias_used(
                 return False, _("This alias is already used in the %s group %s.") % (what, gid)
 
     # Timeperiods
-    timeperiods = cmk.gui.watolib.timeperiods.load_timeperiods()
+    timeperiods = load_timeperiods()
     for key, value in timeperiods.items():
         if timeperiod_spec_alias(value) == my_alias and (
             my_what != "timeperiods" or my_name != key

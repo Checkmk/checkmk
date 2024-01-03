@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+from pathlib import Path
 from typing import TypeAlias
 
 import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
+import cmk.utils.store as store
 from cmk.utils.caching import cache_manager
 from cmk.utils.exceptions import MKTimeout
+from cmk.utils.i18n import _
 
 __all__ = [
     "TimeperiodName",
@@ -88,3 +92,114 @@ def cleanup_timeperiod_caches() -> None:
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)
+
+
+def builtin_timeperiods() -> TimeperiodSpecs:
+    return {
+        "24X7": {
+            "alias": _("Always"),
+            "monday": [("00:00", "24:00")],
+            "tuesday": [("00:00", "24:00")],
+            "wednesday": [("00:00", "24:00")],
+            "thursday": [("00:00", "24:00")],
+            "friday": [("00:00", "24:00")],
+            "saturday": [("00:00", "24:00")],
+            "sunday": [("00:00", "24:00")],
+        }
+    }
+
+
+def load_timeperiods() -> TimeperiodSpecs:
+    timeperiods = store.load_from_mk_file(_get_timeperiods_conf_file_path(), "timeperiods", {})
+    timeperiods.update(builtin_timeperiods())
+    return timeperiods
+
+
+def _get_timeperiods_conf_file_path() -> Path:
+    return Path(cmk.utils.paths.check_mk_config_dir, "wato", "timeperiods.mk")
+
+
+# TODO improve typing of time_tuple_list, it's a list[tuple[str, str]]
+def _is_time_in_timeperiod(
+    current_time: str,
+    time_tuple_list: str | list[str] | list[tuple[str, str]],
+) -> bool:
+    for start, end in time_tuple_list:  # type: ignore[misc]
+        if start <= current_time <= end:
+            return True
+    return False
+
+
+def is_timeperiod_active(
+    current_datetime: datetime,
+    timeperiod_name: TimeperiodName,
+    all_timeperiods: TimeperiodSpecs,
+) -> bool:
+    if (timeperiod_definition := all_timeperiods.get(timeperiod_name)) is None:
+        raise ValueError("Time period %s not found." % timeperiod_name)
+
+    if _is_timeperiod_excluded_via_timeperiod(
+        current_datetime=current_datetime,
+        timeperiod_definition=timeperiod_definition,
+        all_timeperiods=all_timeperiods,
+    ):
+        return False
+
+    days = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    current_time = current_datetime.strftime("%H:%M")
+    if _is_timeperiod_excluded_via_exception(
+        timeperiod_definition,
+        days,
+        current_time,
+    ):
+        return False
+
+    if (weekday := days[current_datetime.weekday()]) in timeperiod_definition:
+        return _is_time_in_timeperiod(current_time, timeperiod_definition[weekday])
+
+    return False
+
+
+def _is_timeperiod_excluded_via_timeperiod(
+    current_datetime: datetime,
+    timeperiod_definition: TimeperiodSpec,
+    all_timeperiods: TimeperiodSpecs,
+) -> bool:
+    for excluded_timeperiod in timeperiod_definition.get("exclude", []):
+        assert isinstance(excluded_timeperiod, str)
+        return is_timeperiod_active(
+            current_datetime=current_datetime,
+            timeperiod_name=excluded_timeperiod,
+            all_timeperiods=all_timeperiods,
+        )
+
+    return False
+
+
+def _is_timeperiod_excluded_via_exception(
+    timeperiod_definition: TimeperiodSpec,
+    days: list[str],
+    current_time: str,
+) -> bool:
+    for key, value in timeperiod_definition.items():
+        if key in days + ["alias", "exclude"]:
+            continue
+
+        try:
+            datetime.strptime(key, "%Y-%m-%d")
+        except ValueError:
+            print(timeperiod_definition)
+            continue
+
+        if _is_time_in_timeperiod(current_time, value):
+            return True
+
+    return False

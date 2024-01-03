@@ -17,7 +17,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import TimeperiodSpec
+from cmk.utils.timeperiod import load_timeperiods, TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -38,7 +38,6 @@ from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
-    load_timeperiods,
     modify_timeperiod,
     TimePeriodBuiltInError,
     TimePeriodInUseError,

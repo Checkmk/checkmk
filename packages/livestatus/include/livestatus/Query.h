@@ -20,6 +20,7 @@
 #include "livestatus/Filter.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/User.h"
 
 class ICore;
 class OutputBuffer;
@@ -66,6 +67,8 @@ private:
     Table &_table;
     ICore &core_;
     OutputBuffer &_output;
+    std::unique_ptr<const User> user_;
+
     QueryRenderer *_renderer_query;
     unsigned _current_line;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>

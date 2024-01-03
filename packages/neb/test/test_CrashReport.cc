@@ -21,10 +21,8 @@
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Query.h"
-#include "livestatus/Row.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableCrashReports.h"
-#include "livestatus/User.h"
 #include "livestatus/data_encoding.h"
 #include "neb/Comment.h"   // IWYU pragma: keep
 #include "neb/Downtime.h"  // IWYU pragma: keep
@@ -151,12 +149,11 @@ TEST_F(CrashReportTableFixture, TestTable) {
 
 namespace {
 std::string query(Table &table, ICore &core,
-                  const std::vector<std::string> &q) {
+                  const std::vector<std::string> &lines) {
     OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};
     Query{ParsedQuery{
-              q, [&table]() { return table.allColumns(); },
-              [](auto &) { return std::unique_ptr<User>{}; },
-              [](auto &) { return Row{nullptr}; },
+              lines, [&table]() { return table.allColumns(); },
+              [&table, &core](auto &key) { return table.get(key, core); },
               [&table](const auto &colname) { return table.column(colname); }},
           table, core, output}
         .process();

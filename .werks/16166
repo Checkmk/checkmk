@@ -1,0 +1,15 @@
+Title: ibm storwize: Fix missing data when monitoring nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1704272720
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+lsnodestats command was used for monitoring nodes in IBM Storwize devices.
+Storwize devices don't have the lsnodestats command which led to missing data
+in ibm_svc_nodestats services.
+
+Now, the IBM SVC agent uses the lsnodestats if it's available and lsnodecanisterstats
+otherwise.

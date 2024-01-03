@@ -1,0 +1,18 @@
+Title: Abort CMC on irrecoverable filesystem errors
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1704295653
+Edition: cee
+Level: 1
+Version: 2.2.0p18
+
+The errors
+
+LI: too many files open (EMFILE)
+LI: too many files open in system (ENFILE)
+LI: no buffer space (ENOBUFS)
+LI: not enough memory (ENOMEM)
+
+now exit the core.  Correct monitoring cannot be
+guaranteed when the server is in this state.

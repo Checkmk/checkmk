@@ -8,7 +8,6 @@
 
 #include <bitset>
 #include <chrono>
-#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -23,18 +22,16 @@
 #include "livestatus/Renderer.h"
 
 class ICore;
-enum class Encoding;
-class Logger;
 class OutputBuffer;
 class Row;
 class Table;
 
 class Query {
 public:
-    Query(ParsedQuery parsed_query, Table &table, Encoding data_encoding,
-          size_t max_response_size, OutputBuffer &output, Logger *logger);
+    Query(ParsedQuery parsed_query, Table &table, ICore &core,
+          OutputBuffer &output);
 
-    bool process(ICore &core);
+    bool process();
 
     // NOTE: We cannot make this 'const' right now, it increments _current_line
     // and calls the non-const getAggregatorsFor() member function.
@@ -66,20 +63,18 @@ public:
 
 private:
     const ParsedQuery parsed_query_;
-    const Encoding _data_encoding;
-    const size_t _max_response_size;
+    Table &_table;
+    ICore &core_;
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
-    Table &_table;
     unsigned _current_line;
-    Logger *const _logger;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
 
     bool doStats() const;
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
-    void doWait(ICore &core);
+    void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // _stats_groups.

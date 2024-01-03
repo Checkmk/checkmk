@@ -73,12 +73,8 @@ bool Store::answerGetRequest(const std::vector<std::string> &lines,
             [this](auto &name) { return _mc->find_user(name); },
             [this, &table](auto &key) { return table.get(key, *_mc); },
             [&table](const auto &colname) { return table.column(colname); }},
-        table,
-        _mc->dataEncoding(),
-        _mc->maxResponseSize(),
-        output,
-        logger()}
-        .process(*_mc);
+        table, *_mc, output}
+        .process();
 }
 
 void Store::addTable(Table &table) {

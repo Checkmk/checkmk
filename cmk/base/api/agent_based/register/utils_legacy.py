@@ -6,7 +6,7 @@
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any, Generator, NotRequired, TypedDict
 
-from cmk.agent_based.v2 import Service, SNMPDetectSpecification, SNMPTree
+from cmk.agent_based.v2 import IgnoreResults, Metric, Result, SNMPDetectSpecification, SNMPTree
 from cmk.agent_based.v2.type_defs import DiscoveryResult
 
 _DiscoveredParameters = Mapping | tuple | str | None
@@ -30,7 +30,7 @@ _CheckFunctionLegacy = Callable[
     ...,
     None | _SingleResult | Iterable[_SingleResult] | Generator[_SingleResult, None, None],
 ]
-_CheckFunctionV2Compliant = Callable[..., Generator[Service, None, None]]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
 
 
 class LegacyCheckDefinition(TypedDict):

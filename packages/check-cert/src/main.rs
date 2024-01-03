@@ -4,9 +4,7 @@
 
 use anyhow::{anyhow, Result};
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy};
-use check_cert::checker::certificate::{
-    self, Config as CertChecks, SignatureAlgorithm as CertSignatureAlgorithm,
-};
+use check_cert::checker::certificate::{self, Config as CertChecks, SignatureAlgorithm};
 use check_cert::checker::fetcher::{self as fetcher_check, Config as FetcherChecks};
 use check_cert::checker::verification::{self, Config as VerifChecks};
 use check_cert::fetcher::{self, Config as FetcherConfig};
@@ -18,7 +16,7 @@ use time::{Duration, Instant};
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
-enum SignatureAlgorithm {
+enum ClapSignatureAlgorithm {
     RSA,
     RSASSA_PSS,
     RSAAES_OAEP,
@@ -27,19 +25,22 @@ enum SignatureAlgorithm {
     ED25519,
 }
 
-impl SignatureAlgorithm {
-    fn try_into_internal(&self, hash_algorithm: Option<String>) -> Result<CertSignatureAlgorithm> {
+impl ClapSignatureAlgorithm {
+    fn try_into_signature_algorithm(
+        &self,
+        hash_algorithm: Option<String>,
+    ) -> Result<SignatureAlgorithm> {
         match self {
-            Self::RSA => Ok(CertSignatureAlgorithm::RSA),
+            Self::RSA => Ok(SignatureAlgorithm::RSA),
             Self::RSASSA_PSS => hash_algorithm
-                .map(CertSignatureAlgorithm::RSASSA_PSS)
+                .map(SignatureAlgorithm::RSASSA_PSS)
                 .ok_or(anyhow!("Missing signature hash algorithm")),
             Self::RSAAES_OAEP => hash_algorithm
-                .map(CertSignatureAlgorithm::RSAAES_OAEP)
+                .map(SignatureAlgorithm::RSAAES_OAEP)
                 .ok_or(anyhow!("Missing signature hash algorithm")),
-            Self::DSA => Ok(CertSignatureAlgorithm::DSA),
-            Self::ECDSA => Ok(CertSignatureAlgorithm::ECDSA),
-            Self::ED25519 => Ok(CertSignatureAlgorithm::ED25519),
+            Self::DSA => Ok(SignatureAlgorithm::DSA),
+            Self::ECDSA => Ok(SignatureAlgorithm::ECDSA),
+            Self::ED25519 => Ok(SignatureAlgorithm::ED25519),
         }
     }
 }
@@ -47,7 +48,7 @@ impl SignatureAlgorithm {
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, ValueEnum)]
-enum PubKeyAlgorithm {
+enum ClapPubKeyAlgorithm {
     RSA,
     EC,
     DSA,
@@ -56,7 +57,7 @@ enum PubKeyAlgorithm {
     Unknown,
 }
 
-impl PubKeyAlgorithm {
+impl ClapPubKeyAlgorithm {
     fn as_str(&self) -> &'static str {
         match self {
             Self::RSA => "RSA",
@@ -141,7 +142,7 @@ struct Args {
 
     /// Expected signature algorithm
     #[arg(long)]
-    signature_algorithm: Option<SignatureAlgorithm>,
+    signature_algorithm: Option<ClapSignatureAlgorithm>,
 
     /// Expected signature hash algorithm (required for RSA PSS and OAEP, ignored otherwise)
     #[arg(long)]
@@ -149,7 +150,7 @@ struct Args {
 
     /// Expected public key algorithm
     #[arg(long)]
-    pubkey_algorithm: Option<PubKeyAlgorithm>,
+    pubkey_algorithm: Option<ClapPubKeyAlgorithm>,
 
     /// Expected public key size
     #[arg(long)]
@@ -204,7 +205,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let signature_algorithm = match args
         .signature_algorithm
-        .map(|algo| algo.try_into_internal(args.signature_hash_algorithm))
+        .map(|algo| algo.try_into_signature_algorithm(args.signature_hash_algorithm))
         .transpose()
     {
         Ok(sa) => sa,

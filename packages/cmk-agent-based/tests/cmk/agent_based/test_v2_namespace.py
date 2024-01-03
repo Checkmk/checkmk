@@ -87,6 +87,7 @@ def test_v2_render() -> None:
         "nicspeed",
         "percent",
         "timespan",
+        "time_offset",
     }
     assert _names(v2.render) == expected
 

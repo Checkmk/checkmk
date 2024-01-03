@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.graylog import (
     handle_iso_utc_to_localtimestamp,
     parse_graylog_agent_data,
@@ -83,7 +83,7 @@ def check_graylog_license(_no_item, params, parsed):
             time_to_expiration,
             None,
             (None, None, warn, crit),
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.time_offset,
             infoname="Expires in",
         )
 

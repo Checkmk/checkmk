@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.acme import DETECT_ACME
 
@@ -34,10 +34,10 @@ def check_acme_certificates(item, params, info):
             state = 0
 
             time_diff = expire_time - now
-            if expire_time <= now:
-                age_info = "%s ago" % get_age_human_readable(abs(time_diff))
+            if time_diff < 0:
+                age_info = "%s ago" % render.timespan(-time_diff)
             else:
-                age_info = "%s to go" % get_age_human_readable(time_diff)
+                age_info = "%s to go" % render.timespan(time_diff)
 
             infotext = f"Expire: {expire} ({age_info})"
 
@@ -48,8 +48,8 @@ def check_acme_certificates(item, params, info):
                     state = 1
                 if state:
                     infotext += " (warn/crit below {}/{})".format(
-                        get_age_human_readable(warn),
-                        get_age_human_readable(crit),
+                        render.timespan(warn),
+                        render.timespan(crit),
                     )
             else:
                 state = 2

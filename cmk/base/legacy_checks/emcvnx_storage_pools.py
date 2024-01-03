@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -220,7 +220,7 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
             "emcvnx_time_to_complete",
             params["time_to_complete"],
             infoname="Age",
-            human_readable_func=get_age_human_readable,
+            human_readable_func=render.timespan,
         )
 
 

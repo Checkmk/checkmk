@@ -29,8 +29,10 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_saprouter_cert(string_table):
@@ -80,7 +82,7 @@ def check_saprouter_cert(_no_item, params, parsed):
         infotext = "Valid from {} to {}, {} to go".format(
             not_before_readable,
             not_after_readable,
-            get_age_human_readable(validity_age),
+            render.timespan(validity_age),
         )
 
         state = 0
@@ -91,8 +93,8 @@ def check_saprouter_cert(_no_item, params, parsed):
 
         if state:
             infotext += " (warn/crit below {}/{})".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
 
         return state, infotext

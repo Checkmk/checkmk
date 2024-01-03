@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert_int_without_unit
 
 # example output
@@ -42,7 +42,7 @@ def check_liebert_maintenance(_no_item, params, parsed):
 
     warn_days, crit_days = params["levels"]
     levels = (None, None, warn_days * 86400, crit_days * 86400)
-    yield check_levels(time_left_seconds, None, levels, human_readable_func=get_age_human_readable)
+    yield check_levels(time_left_seconds, None, levels, human_readable_func=render.timespan)
 
 
 check_info["liebert_maintenance"] = LegacyCheckDefinition(

@@ -6,11 +6,11 @@
 
 from collections.abc import Sequence
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, equals, SNMPTree
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree
 from cmk.agent_based.v2.type_defs import StringTable
 
 
@@ -94,7 +94,7 @@ def inventory_wagner_titanus_topsense_info(info):
 def check_wagner_titanus_topsense_info(item, _no_params, info):
     parsed = parse_wagner_titanus_topsens(info)
     message = "System: " + parsed[0][0][0]
-    message += ", Uptime: " + get_age_human_readable(int(parsed[0][0][1]) // 100)
+    message += ", Uptime: " + render.timespan(int(parsed[0][0][1]) // 100)
     message += ", System Name: " + parsed[0][0][3]
     message += ", System Contact: " + parsed[0][0][2]
     message += ", System Location: " + parsed[0][0][4]

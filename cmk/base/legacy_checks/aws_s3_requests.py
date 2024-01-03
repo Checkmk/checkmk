@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -171,7 +171,7 @@ def check_aws_s3_latency(item, params, metrics):
                 "metric_name": perf_key,
                 "levels": levels,
                 "info_name": title,
-                "human_readable_func": get_age_human_readable,
+                "human_readable_func": render.time_offset,
             }
         )
 

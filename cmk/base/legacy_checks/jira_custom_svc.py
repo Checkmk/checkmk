@@ -14,10 +14,10 @@
 import json
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_value_store
+from cmk.agent_based.v2 import get_value_store, render
 
 
 def parse_jira_custom_svc(string_table):
@@ -91,7 +91,7 @@ def check_jira_custom_svc(item, params, parsed):
                 diff,
                 "jira_diff",
                 diff_levels_upper + diff_levels_lower,
-                infoname="Difference last %s" % get_age_human_readable(timespan),
+                infoname="Difference last %s" % render.time_offset(timespan),
             )
 
 

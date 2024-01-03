@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
@@ -162,7 +162,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
                     metric_name,
                     levels,
                     infoname=f"{statistic} latency {operation}",
-                    human_readable_func=get_age_human_readable,
+                    human_readable_func=render.timespan,
                 )
 
     if go_stale:

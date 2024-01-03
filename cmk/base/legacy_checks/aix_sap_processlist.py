@@ -37,8 +37,10 @@
 import re
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_aix_sap_processlist(string_table):
@@ -90,9 +92,7 @@ def check_aix_sap_processlist(item, _no_params, parsed):
             start = time.strftime("%c", start_time)
             elapsed = time.time() - time.mktime(start_time)
             perfdata = [("runtime", elapsed)]
-            infotexts.append(
-                f"Start Time: {start}, Elapsed Time: {get_age_human_readable(elapsed)}"
-            )
+            infotexts.append(f"Start Time: {start}, Elapsed Time: {render.timespan(elapsed)}")
 
         if status == "GREEN":
             state = 0

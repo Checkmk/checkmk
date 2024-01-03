@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     check_aws_http_errors,
@@ -122,7 +122,7 @@ def check_aws_elb_latency(item, params, parsed):
                 "metric_val": parsed.get("Latency"),
                 "metric_name": "aws_load_balancer_latency",
                 "levels": params.get("levels_latency"),
-                "human_readable_func": get_age_human_readable,
+                "human_readable_func": render.timespan,
             }
         ]
     )

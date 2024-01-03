@@ -82,7 +82,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         cmk_key,
         (levels or (None, None)) + (levels_lower or (None, None)),
         infoname=display_name,
-        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),  # type: ignore[arg-type]
+        human_readable_func=_AZURE_METRIC_FMT.get(unit, lambda x: f"{x}"),
         boundaries=(0, None),
     )
 

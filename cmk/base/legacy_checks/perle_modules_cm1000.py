@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
@@ -17,69 +19,58 @@ def parse_perle_modules(string_table: StringTable) -> StringTable:
 
 
 def inventory_perle_cm_modules(info):
-    inventory = []
-    for (
-        _name,
-        _led,
-        index,
-        _fiber_lprf,
-        _fiber_link,
-        _fiber_conn,
-        _fiber_speed,
-        _cooper_lprf,
-        _copper_link,
-        _copper_conn,
-        _copper_speed,
-    ) in info:
-        inventory.append((index, None))
-    return inventory
+    yield from ((index, {}) for _name, _led, index, *_rest, in info)
+
+
+MAP_SPEED: Mapping[str, str] = {
+    "0": "10 Mbs",
+    "1": "100 Mbps",
+    "2": "1000 Mbps",
+}
+
+MAP_POWER_LED: Mapping[str, tuple[int, str]] = {
+    "0": (2, "no power"),
+    "1": (0, "power to the module"),
+    "2": (0, "loopback enabled"),
+}
+
+MAP_FIBER_LPRF: Mapping[str, tuple[int, str]] = {
+    "0": (0, "ok"),
+    "1": (2, "offline"),
+    "2": (2, "link fault"),
+    "3": (2, "auto neg error"),
+    # available for cm1110 modules
+    "99": (2, "not applicable"),
+}
+MAP_FIBER_LINK: Mapping[str, tuple[int, str]] = {
+    "0": (1, "down"),
+    "1": (0, "up"),
+}
+
+MAP_FIBER_CONNECTOR: Mapping[str, str] = {
+    "0": "sc",
+    "1": "lc",
+    "2": "st",
+    "3": "sfp",
+    "5": "fc",
+    "6": "mtrj",
+}
+MAP_COPPER_LPRF: Mapping[str, tuple[int, str]] = {
+    "0": (0, "ok"),
+    "1": (2, "remote fault"),
+}
+
+MAP_COPPER_LINK: Mapping[str, tuple[int, str]] = {
+    "0": (1, "down"),
+    "1": (0, "ok"),
+}
+
+MAP_COPPER_CONNECTOR: Mapping[str, str] = {
+    "0": "rj45",
+}
 
 
 def check_perle_cm_modules(item, _no_params, info):
-    mappings = {
-        "speed": {
-            "0": "10 Mbs",
-            "1": "100 Mbps",
-            "2": "1000 Mbps",
-        },
-        "power_led": {
-            "0": (2, "no power"),
-            "1": (0, "power to the module"),
-            "2": (0, "loopback enabled"),
-        },
-        "fiber_lprf": {
-            "0": (0, "ok"),
-            "1": (2, "offline"),
-            "2": (2, "link fault"),
-            "3": (2, "auto neg error"),
-            # available for cm1110 modules
-            "99": (2, "not applicable"),
-        },
-        "fiber_link": {
-            "0": (1, "down"),
-            "1": (0, "up"),
-        },
-        "fiber_connector": {
-            "0": "sc",
-            "1": "lc",
-            "2": "st",
-            "3": "sfp",
-            "5": "fc",
-            "6": "mtrj",
-        },
-        "copper_lprf": {
-            "0": (0, "ok"),
-            "1": (2, "remote fault"),
-        },
-        "copper_link": {
-            "0": (1, "down"),
-            "1": (0, "ok"),
-        },
-        "copper_connector": {
-            "0": "rj45",
-        },
-    }
-
     for (
         _name,
         power_led,
@@ -93,23 +84,25 @@ def check_perle_cm_modules(item, _no_params, info):
         copper_connector,
         copper_speed,
     ) in info:
-        if item == index:
-            state, state_readable = mappings["power_led"][power_led]  # type: ignore[index]
-            yield state, "Power status: %s" % state_readable
+        if item != index:
+            continue
 
-            for what, lprf, link, speed, connector in [
-                ("Fiber", fiber_lprf, fiber_link, fiber_speed, fiber_connector),
-                ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
-            ]:
-                yield 0, "{} Speed: {}".format(what, mappings["speed"][speed])  # type: ignore[index]
+        state, state_readable = MAP_POWER_LED[power_led]
+        yield state, "Power status: %s" % state_readable
 
-                for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:
-                    state, state_readable = mappings[f"{what.lower()}_{what_key.lower()}"][  # type: ignore[index]
-                        what_state
-                    ]
-                    yield state, f"{what_key}: {state_readable}"
+        yield 0, f"Fiber speed: {MAP_SPEED[fiber_speed]}"
+        state, state_readable = MAP_FIBER_LPRF[fiber_lprf]
+        yield state, f"LPRF: {state_readable}"
+        state, state_readable = MAP_FIBER_LINK[fiber_link]
+        yield state, f"Link: {state_readable}"
+        yield 0, f"Connector: {MAP_FIBER_CONNECTOR[fiber_connector]}"
 
-                yield 0, "Connector: %s" % mappings["%s_connector" % what.lower()][connector]  # type: ignore[index]
+        yield 0, f"Copper speed: {MAP_SPEED[copper_speed]}"
+        state, state_readable = MAP_COPPER_LPRF[cooper_lprf]
+        yield state, f"LPRF: {state_readable}"
+        state, state_readable = MAP_COPPER_LINK[copper_link]
+        yield state, f"Link: {state_readable}"
+        yield 0, f"Connector: {MAP_COPPER_CONNECTOR[copper_connector]}"
 
 
 check_info["perle_modules_cm1110"] = LegacyCheckDefinition(

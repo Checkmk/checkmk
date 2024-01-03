@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
@@ -10,6 +11,7 @@ from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2.type_defs import StringTable
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.1 "BATT 3.0V"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.2 "STBY 12V"
@@ -57,8 +59,10 @@ from cmk.agent_based.v2 import SNMPTree
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.8 12900
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.9 5420
 
+Section = Mapping[str, Mapping[str, float | tuple[int, str] | tuple[float, tuple[int, str]]]]
 
-def parse_fsc_sc2_voltage(info):
+
+def parse_fsc_sc2_voltage(string_table: StringTable) -> Section:
     # dev_state:
     # sc2VoltageStatus OBJECT-TYPE
     # SYNTAX       INTEGER
@@ -75,24 +79,24 @@ def parse_fsc_sc2_voltage(info):
     # DESCRIPTION  "Voltage status"
     # ::= { sc2Voltages 4 }
 
-    parsed: dict = {}
-    for designation, dev_state, value, min_value, max_value in info:
+    parsed: dict[str, dict[str, float | tuple[int, str] | tuple[float, tuple[int, str]]]] = {}
+    for designation, dev_state, r_value, r_min_value, r_max_value in string_table:
         if dev_state == "2":
             continue
         try:
-            value = float(value) / 1000.0
-            min_value = float(min_value) / 1000.0
-            max_value = float(max_value) / 1000.0
+            value = float(r_value) / 1000.0
+            min_value = float(r_min_value) / 1000.0
+            max_value = float(r_max_value) / 1000.0
         except ValueError:
-            state_info = 3, "Could not get all values"
-            parsed.setdefault(designation, {"device_state": state_info})
-        else:
-            state_info = value
-            if value < min_value:
-                state_info = value, (2, "too low, deceeds %.2f V" % min_value)  # type: ignore[assignment]
-            elif value >= max_value:
-                state_info = value, (2, "too high, exceeds %.2f V" % max_value)  # type: ignore[assignment]
-            parsed.setdefault(designation, {"voltage": state_info})
+            parsed.setdefault(designation, {"device_state": (3, "Could not get all values")})
+            continue
+
+        state_info: float | tuple[float, tuple[int, str]] = value
+        if value < min_value:
+            state_info = value, (2, "too low, deceeds %.2f V" % min_value)
+        elif value >= max_value:
+            state_info = value, (2, "too high, exceeds %.2f V" % max_value)
+        parsed.setdefault(designation, {"voltage": state_info})
     return parsed
 
 

@@ -23,10 +23,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.agent_based.v2 import IgnoreResultsError, render
 from cmk.agent_based.v2.type_defs import StringTable
 
 
@@ -119,14 +119,12 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
             # we found a negative time for last checkpoint
             infotext += (
                 ", oldest checkpoint is in the future  %s(!), check the time on the server"
-                % get_age_human_readable(int(oldest_checkpoint_age) * -1)
+                % render.timespan(int(oldest_checkpoint_age) * -1)
             )
             state = max(state, 1)
 
         else:
-            infotext += ", oldest Checkpoint %s ago" % (
-                get_age_human_readable(int(oldest_checkpoint_age))
-            )
+            infotext += ", oldest Checkpoint %s ago" % (render.timespan(int(oldest_checkpoint_age)))
 
         if (
             (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
@@ -159,8 +157,8 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                     state = max(1, state)
 
             infotext += " (warn/crit at {}/{} )".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
 
         if offlinecount > 0:
@@ -174,14 +172,14 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
         if oldest_backup_age > 0:
             infotext += " %i datafiles in backup mode oldest is %s" % (
                 backup_count,
-                get_age_human_readable(oldest_backup_age),
+                render.timespan(oldest_backup_age),
             )
 
             if params.get("backup_age"):
                 warn, crit = params["backup_age"]
                 infotext += " (warn/crit at {}/{})".format(
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit),
+                    render.timespan(warn),
+                    render.timespan(crit),
                 )
                 perfdata.append(("backup_age", oldest_backup_age, warn, crit))
 

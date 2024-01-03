@@ -10,10 +10,10 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import render, SNMPTree
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 
@@ -57,21 +57,13 @@ def check_fortigate_signatures(_no_item, params, parsed):
     for key, title, version, age in parsed:
         if age is None:
             continue
-        infotext = f"[{version}] {title} age: {get_age_human_readable(age)}"
-        state = 0
-        levels = params.get(key)
-        if levels is not None:
-            warn, crit = levels
-            if crit is not None and age >= crit:
-                state = 2
-            elif warn is not None and age >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at {}/{})".format(
-                    get_age_human_readable(warn),
-                    get_age_human_readable(crit),
-                )
-        yield state, infotext
+        yield check_levels(
+            age,
+            None,
+            params.get(key),
+            human_readable_func=render.timespan,
+            infoname=f"[{version}] {title} age",
+        )
 
 
 check_info["fortigate_signatures"] = LegacyCheckDefinition(

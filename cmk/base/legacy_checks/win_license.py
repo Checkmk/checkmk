@@ -12,8 +12,10 @@
 # Time remaining: 11820 minute(s) (8 day(s))
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, regex
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
 from cmk.base.config import check_info
+
+from cmk.agent_based.v2 import render
 
 
 def parse_win_license(string_table):
@@ -45,9 +47,7 @@ def inventory_win_license(parsed):
 
 
 def check_win_license(_item, params, parsed):
-    sw_license = parsed.get("License", None)
-
-    if not sw_license:
+    if (sw_license := parsed.get("License")) is None:
         return
 
     message = "Software is %s" % sw_license
@@ -59,26 +59,20 @@ def check_win_license(_item, params, parsed):
 
     yield license_state, message
 
-    time_left = parsed.get("expiration_time", None)
-
-    if not time_left:
+    if (time_left := parsed.get("expiration_time")) is None:
         return
 
-    time_message = "License will expire in %s" % get_age_human_readable(time_left)
+    if time_left < 0:
+        yield 2, f"Licence expired {render.timespan(-time_left)} ago"
+        return
 
-    warn, crit = params["expiration_time"]
-
-    time_state = 0
-
-    if time_left < crit:
-        time_state = 2
-    elif time_left < warn:
-        time_state = 1
-
-    if time_state:
-        time_message += " (warn/crit at %s/%s)" % tuple(map(get_age_human_readable, (warn, crit)))
-
-    yield time_state, time_message
+    yield check_levels(
+        time_left,
+        None,
+        (None, None) + params["expiration_time"],
+        human_readable_func=render.timespan,
+        infoname="Time until license expires",
+    )
 
 
 check_info["win_license"] = LegacyCheckDefinition(

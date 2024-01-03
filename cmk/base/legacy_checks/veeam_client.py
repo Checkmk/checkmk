@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -112,17 +112,17 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
             state = 2
             label = "(!!)"
             levels = " (Warn/Crit: {}/{})".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
             levels = " (Warn/Crit: {}/{})".format(
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+                render.timespan(warn),
+                render.timespan(crit),
             )
-        infotexts.append(f"Last backup: {get_age_human_readable(age)} ago{label}{levels}")
+        infotexts.append(f"Last backup: {render.timespan(age)} ago{label}{levels}")
 
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
@@ -134,7 +134,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
             duration += minutes * 60
             duration += hours * 60 * 60
             duration += days * 60 * 60 * 24
-            infotexts.append("Duration: %s" % get_age_human_readable(duration))
+            infotexts.append("Duration: %s" % render.timespan(duration))
             perfdata.append(("duration", duration))
 
     if "AvgSpeedBps" in data:

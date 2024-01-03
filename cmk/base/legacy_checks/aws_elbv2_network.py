@@ -176,7 +176,7 @@ check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
 #             yield check_levels(perc,
 #                                'aws_overall_hosts_health_perc',
 #                                params.get('levels_overall_hosts_health_perc'),
-#                                human_readable_func=get_percent_human_readable,
+#                                human_readable_func=render.percent,
 #                                infoname="Proportion of healthy hosts")
 #
 #

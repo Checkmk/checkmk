@@ -38,7 +38,7 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import IgnoreResultsError, render
@@ -133,14 +133,13 @@ def check_websphere_mq_queues(item, params, parsed):
                 time.strptime(time_str, "%Y-%m-%d %H.%M.%S")
             )
 
-            diff_state, diff_info, _diff_perf = check_levels(
+            yield check_levels(
                 time_diff,
                 None,
                 params.get("age", (None, None)),
-                human_readable_func=get_age_human_readable,
+                human_readable_func=render.timespan,
+                infoname="Time since last processing of messages",
             )
-
-            yield diff_state, "Messages not processed since %s" % diff_info
 
         elif cur_depth:
             yield params.get("state", 0), "No age of %d message%s not processed" % (

@@ -6,15 +6,10 @@
 from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
-from cmk.base.check_api import check_levels, CheckResult, get_age_human_readable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    render,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.check_api import check_levels, CheckResult
 
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.wmi import get_wmi_time
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
 from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
@@ -329,7 +324,7 @@ def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
         perfvar,
         get_levels_quadruple(levels),
         infoname=infoname,
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.time_offset,
     )
 
 

@@ -72,7 +72,7 @@ checks = {
                     [("queue", 1000, 1000, 1200, None, None)],
                 ),
                 (0, "Of max. 100000 messages: 1.00%", []),
-                (0, "Messages not processed since 1 hour 0 minutes", []),
+                (0, "Time since last processing of messages: 1 hour 0 minutes", []),
             ],
         ),
         (

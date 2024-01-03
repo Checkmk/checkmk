@@ -15,7 +15,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import render
@@ -55,7 +55,7 @@ def check_netapp_api_systemtime(item, params, parsed):
         "time_difference",
         params.get("levels", (None, None)),
         infoname="Time difference",
-        human_readable_func=get_age_human_readable,
+        human_readable_func=render.time_offset,
     )
 
 

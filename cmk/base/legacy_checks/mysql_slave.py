@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
 
@@ -62,7 +62,7 @@ def check_mysql_slave(item, params, parsed):
             output.append("Time behind master: NULL (Lost connection?)(!!)")
             state = 2
         else:
-            out = "Time behind Master: %s" % get_age_human_readable(data["Seconds_Behind_Master"])
+            out = "Time behind Master: %s" % render.timespan(data["Seconds_Behind_Master"])
             warn, crit = params.get("seconds_behind_master", (None, None))
             if crit is not None and data["Seconds_Behind_Master"] > crit:
                 state = 2

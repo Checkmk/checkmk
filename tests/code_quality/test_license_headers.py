@@ -37,29 +37,10 @@ ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
 
 
 OMD_HEADER = re.compile(
-    r"""(#!/usr/bin/env python3|!/omd/versions/###OMD_VERSION###/bin/python3)(\n# vim:.+)?
-#
-#       U  ___ u  __  __   ____
-#        \/"_ \/U|' \/ '|u|  _"\
-#        | | | |\| |\/| |/| | | |
-#    .-,_| |_| | | |  | |U| |_| |\
-#     \_\)-\___/  |_|  |_| |____/ u
-#          \\   <<,-,,-.   |||_
-#         \(__\)   \(./  \.\) \(__\)_\)
-#
-# This file is part of OMD - The Open Monitoring Distribution.
-# The official homepage is at <http://omdistro.org>.
-#
-# OMD  is  free software;  you  can  redistribute it  and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the  Free Software  Foundation  in  version 2.  OMD  is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+    r"""#!/omd/versions/###OMD_VERSION###/bin/python3
+# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """,
     re.MULTILINE,
 )
@@ -147,7 +128,7 @@ def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=t
     elif needs_enterprise_license(rel_path):
         if not ENTERPRISE_HEADER.match(get_file_header(abs_path, length=4)):
             yield "enterprise header not matching", rel_path
-    elif rel_path.startswith("omd/packages/omd/"):
+    elif rel_path == "omd/packages/omd/omd.bin":
         if not OMD_HEADER.match(get_file_header(abs_path, length=23)):
             yield "omd gpl license header not matching", rel_path
     elif rel_path.startswith("tests/agent-plugin-unit/") or rel_path.startswith("agents/plugins/"):

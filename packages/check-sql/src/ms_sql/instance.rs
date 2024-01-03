@@ -1717,23 +1717,29 @@ mssql:
         piggyback:
           hostname: Y
 "#;
-
+        // blocks below may follow in any order
+        const EXPECTED_OK_BLOCK: &str = "\
+        <<<mssql_instance>>>\n\
+        <<<mssql_backup>>>\n\
+        <<<mssql_instance:sep(124)>>>\n\
+        ";
+        const EXPECTED_PB_BLOCK: &str = "\
+        <<<<y>>>>\n\
+        <<<mssql_instance>>>\n\
+        <<<mssql_backup>>>\n\
+        <<<mssql_instance:sep(124)>>>\n\
+        <<<<>>>>\n\
+        ";
         let ms_sql = crate::config::ms_sql::Config::from_string(CONFIG_WITH_INSTANCES)
             .unwrap()
             .unwrap();
         let instances = make_instances();
+        let blocks = generate_signaling_blocks(&ms_sql, &instances);
+        assert!(blocks.contains(EXPECTED_OK_BLOCK));
+        assert!(blocks.contains(EXPECTED_PB_BLOCK));
         assert_eq!(
-            generate_signaling_blocks(&ms_sql, &instances),
-            "\
-            <<<mssql_instance>>>\n\
-            <<<mssql_backup>>>\n\
-            <<<mssql_instance:sep(124)>>>\n\
-            <<<<y>>>>\n\
-            <<<mssql_instance>>>\n\
-            <<<mssql_backup>>>\n\
-            <<<mssql_instance:sep(124)>>>\n\
-            <<<<>>>>\n\
-            "
+            blocks.len(),
+            EXPECTED_OK_BLOCK.len() + EXPECTED_PB_BLOCK.len()
         );
     }
 

@@ -75,7 +75,7 @@ get_candidates_from_filesystem() {
 
 filter_for_python_files() {
     # Exclude files below packages: The package specific jobs deal with them
-    grep --null --null-data -v /packages/ |
+    grep --null --null-data -v "^$(realpath /packages/)" |
         sort --zero-terminated |
         xargs --no-run-if-empty --null \
             grep --binary-files=without-match --files-with-matches '^#!.*python3$'

@@ -12,67 +12,46 @@ from tests.testlib import repo_path
 
 LOGGER = logging.getLogger()
 
-ENTERPRISE_HEADER = re.compile(
-    r"""#!/usr/bin/env python3
-# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterprise License
+GPL = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package."""
-)
+
+ENTERPRISE = r"""# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterprise License
+# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package."""
+
+ENTERPRISE_HEADER = re.compile(rf"#!/usr/bin/env python3\n{ENTERPRISE}")
 ENTERPRISE_HEADER_CODING = re.compile(
-    r"""#!/usr/bin/env python3
+    rf"""#!/usr/bin/env python3
 # -\*- coding: utf-8 -\*-
-# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterprise License
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package."""
+{ENTERPRISE}"""
 )
 
 ENTERPRISE_HEADER_ALERT_HANDLERS = re.compile(
-    r"""#!/usr/bin/env python3
+    rf"""#!/usr/bin/env python3
 # .+
 
-# Copyright \(C\) \d{4} Checkmk GmbH - License: Checkmk Enterprise License
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package."""
+{ENTERPRISE}"""
 )
 
 
-OMD_HEADER = re.compile(
-    r"""#!/omd/versions/###OMD_VERSION###/bin/python3
-# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-""",
-    re.MULTILINE,
-)
+OMD_HEADER = re.compile(rf"#!/omd/versions/###OMD_VERSION###/bin/python3\n{GPL}")
 
-GPL_HEADER = re.compile(
-    r"""#!/usr/bin/env python3
-# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-""",
-    re.MULTILINE,
-)
+GPL_HEADER = re.compile(rf"#!/usr/bin/env python3\n{GPL}")
 
 GPL_HEADER_CODING = re.compile(
-    r"""#\!/usr/bin/env python3
+    rf"""#\!/usr/bin/env python3
 # -\*- coding: utf-8 -\*-
-# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-""",
-    re.MULTILINE,
+{GPL}
+"""
 )
 
 GPL_HEADER_NOTIFICATION = re.compile(
-    r"""#!/usr/bin/env python3
+    rf"""#!/usr/bin/env python3
 # .+(\n# Bulk: (yes|no))?
 
-# Copyright \(C\) \d{4} Checkmk GmbH - License: GNU General Public License v2
-# This file is part of Checkmk \(https://checkmk.com\). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-""",
-    re.MULTILINE,
+{GPL}
+"""
 )
 
 
@@ -121,10 +100,10 @@ def get_file_header(path: str, length: int = 30) -> str:
 def check_for_license_header_violation(rel_path, abs_path):  # pylint: disable=too-many-branches
     if rel_path.startswith("non-free/cmk-update-agent/"):
         if not ENTERPRISE_HEADER_CODING.match(get_file_header(abs_path, length=5)):
-            yield "enterpsie header with coding not matching", rel_path
+            yield "enterprise header with coding not matching", rel_path
     elif rel_path.startswith("omd/packages/enterprise/alert_handlers/"):
         if not ENTERPRISE_HEADER_ALERT_HANDLERS.match(get_file_header(abs_path, length=8)):
-            yield "enterpsie header with coding not matching", rel_path
+            yield "enterprise header with alert handler not matching", rel_path
     elif needs_enterprise_license(rel_path):
         if not ENTERPRISE_HEADER.match(get_file_header(abs_path, length=4)):
             yield "enterprise header not matching", rel_path

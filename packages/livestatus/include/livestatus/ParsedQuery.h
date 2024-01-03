@@ -23,7 +23,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/Triggers.h"
-#include "livestatus/User.h"
+
 class Column;
 
 class ParsedQuery {
@@ -31,14 +31,11 @@ public:
     using ColumnCreator =
         std::function<std::shared_ptr<Column>(const std::string &)>;
 
-    ParsedQuery(
-        const std::vector<std::string> &lines,
-        const std::function<std::vector<std::shared_ptr<Column>>()>
-            &all_columns,
-        const std::function<std::unique_ptr<const User>(const std::string &)>
-            &find_user,
-        const std::function<Row(const std::string &)> &get,
-        const ColumnCreator &make_column);
+    ParsedQuery(const std::vector<std::string> &lines,
+                const std::function<std::vector<std::shared_ptr<Column>>()>
+                    &all_columns,
+                const std::function<Row(const std::string &)> &get,
+                const ColumnCreator &make_column);
 
     std::optional<std::string> error;
     std::unordered_set<std::string> all_column_names;
@@ -56,7 +53,7 @@ public:
     bool keepalive{false};
     OutputBuffer::ResponseHeader response_header{
         OutputBuffer::ResponseHeader::off};
-    std::unique_ptr<const User> user;
+    std::optional<std::string> user;
     std::chrono::milliseconds wait_timeout{0};
     Triggers::Kind wait_trigger{Triggers::Kind::all};
     Row wait_object{nullptr};
@@ -88,9 +85,7 @@ private:
     void parseOutputFormatLine(std::string_view line);
     void parseKeepAliveLine(std::string_view line);
     void parseResponseHeaderLine(std::string_view line);
-    void parseAuthUserHeader(std::string_view line,
-                             const std::function<std::unique_ptr<const User>(
-                                 const std::string &name)> &find_user);
+    void parseAuthUserHeader(std::string_view line);
     void parseWaitTimeoutLine(std::string_view line);
     void parseWaitTriggerLine(std::string_view line);
     void parseWaitObjectLine(

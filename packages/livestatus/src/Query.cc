@@ -33,7 +33,13 @@ Query::Query(ParsedQuery parsed_query, Table &table, ICore &core,
     , core_{core}
     , _output{output}
     , _renderer_query{nullptr}
-    , _current_line{0} {}
+    , _current_line{0} {
+    // NOTE: Doing this in the initializer list above leads to a segfault with
+    // clang-tidy-17's bugprone-unchecked-optional-access, there are various
+    // issues like this on https://github.com/llvm/llvm-project/issues.
+    user_ = parsed_query_.user ? core_.find_user(*parsed_query_.user)
+                               : std::make_unique<NoAuthUser>();
+}
 
 void Query::badRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::bad_request, message);
@@ -68,7 +74,7 @@ bool Query::process() {
     // TODO(sp) The construct below is horrible, refactor this!
     _renderer_query = &q;
     start(q);
-    _table.answerQuery(*this, *parsed_query_.user, core_);
+    _table.answerQuery(*this, *user_, core_);
     finish(q);
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
@@ -124,7 +130,7 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (!parsed_query_.filter->accepts(row, *parsed_query_.user,
+    if (!parsed_query_.filter->accepts(row, *user_,
                                        parsed_query_.timezone_offset)) {
         return true;
     }
@@ -156,20 +162,17 @@ bool Query::processDataset(Row row) {
             QueryRenderer q(*renderer, EmitBeginEnd::off);
             RowRenderer r(q);
             for (const auto &column : parsed_query_.columns) {
-                column->output(row, r, *parsed_query_.user,
-                               parsed_query_.timezone_offset);
+                column->output(row, r, *user_, parsed_query_.timezone_offset);
             }
         }
         for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-            aggr->consume(row, *parsed_query_.user,
-                          parsed_query_.timezone_offset);
+            aggr->consume(row, *user_, parsed_query_.timezone_offset);
         }
     } else {
         assert(_renderer_query);  // Missing call to `process()`.
         RowRenderer r(*_renderer_query);
         for (const auto &column : parsed_query_.columns) {
-            column->output(row, r, *parsed_query_.user,
-                           parsed_query_.timezone_offset);
+            column->output(row, r, *user_, parsed_query_.timezone_offset);
         }
     }
     return true;
@@ -300,7 +303,7 @@ void Query::doWait() {
     core_.triggers().wait_for(parsed_query_.wait_trigger,
                               parsed_query_.wait_timeout, [this, &wait_object] {
                                   return parsed_query_.wait_condition->accepts(
-                                      wait_object, *parsed_query_.user,
+                                      wait_object, *user_,
                                       parsed_query_.timezone_offset);
                               });
 }

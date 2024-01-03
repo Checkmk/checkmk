@@ -57,11 +57,8 @@ void checkNoArguments(std::string_view str) {
 ParsedQuery::ParsedQuery(
     const std::vector<std::string> &lines,
     const std::function<std::vector<std::shared_ptr<Column>>()> &all_columns,
-    const std::function<std::unique_ptr<const User>(const std::string &)>
-        &find_user,
     const std::function<Row(const std::string &)> &get,
-    const ColumnCreator &make_column)
-    : user{std::make_unique<NoAuthUser>()} {
+    const ColumnCreator &make_column) {
     FilterStack filters;
     FilterStack wait_conditions;
     for (const auto &line_str : lines) {
@@ -98,7 +95,7 @@ ParsedQuery::ParsedQuery(
             } else if (header == "Timelimit"sv) {
                 parseTimelimitLine(line);
             } else if (header == "AuthUser"sv) {
-                parseAuthUserHeader(line, find_user);
+                parseAuthUserHeader(line);
             } else if (header == "Separators"sv) {
                 parseSeparatorsLine(line);
             } else if (header == "OutputFormat"sv) {
@@ -368,12 +365,7 @@ void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
     all_column_names.insert(column_name);
 }
 
-void ParsedQuery::parseAuthUserHeader(
-    std::string_view line,
-    const std::function<std::unique_ptr<const User>(const std::string &)>
-        &find_user) {
-    user = find_user(std::string{line});
-}
+void ParsedQuery::parseAuthUserHeader(std::string_view line) { user = line; }
 
 void ParsedQuery::parseColumnsLine(std::string_view line,
                                    const ColumnCreator &make_column) {

@@ -474,8 +474,8 @@ msgstr "%d Instanzen mit Fehlern: %s"
 msgid "%d specific settings"
 msgstr "%d spezifische Einstellungen"
 
-#, python-format
-msgid "%d timeranges"
+#, fuzzy, python-format
+msgid "%d time ranges"
 msgstr "%d Zeiträume"
 
 #, python-format
@@ -800,10 +800,11 @@ msgstr "'Minor' Status"
 msgid "'Warning' state"
 msgstr "'Warning' Status"
 
+#, fuzzy
 msgid ""
-"'git' command was not found on this system, but it is requried for "
+"'git' command was not found on this system, but it is required for "
 "versioning the configuration.Please either install 'git' or disable git "
-"configuration tracking in WATO."
+"configuration tracking in setup."
 msgstr ""
 "Der Befehl 'git' wurde auf diesem System nicht gefunden, wird aber für die "
 "Versionierung der Konfiguration benötigt. git' muss entweder installiert "
@@ -4226,10 +4227,11 @@ msgstr ""
 "dem Punkt das Byte und die nach dem Punkt das Bit nennt, welches geholt "
 "werden soll. Die Nummer des Bits liegt immer zwischen 0 und 7."
 
+#, fuzzy
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
-"sensors (temperature, fans, ...) to check_mk.This does require .Net to be "
+"sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
 "different way to monitor sensors. You also don't need this if you are "
 "running the regular OpenHardwareMonitor software."
@@ -6423,12 +6425,12 @@ msgstr ""
 msgid "As server"
 msgstr "Als Server"
 
+#, fuzzy
 msgid ""
 "As soon as you add your Checkmk server to the monitoring, a graph showing "
 "the history of your host problems will appear here.\n"
-"Please also be aware that you might see this message might appear as a "
-"result of a filtered dashboard.This dashlet currently only supports "
-"filtering for sites."
+" Please also be aware that message might appear as a result of a filtered "
+"dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "Sobald Sie Ihren Checkmk-Server ins Monitoring aufnehmen, erscheint hier ein "
 "Graph, der die History der Host-Probleme zeigt.\n"
@@ -6436,14 +6438,13 @@ msgstr ""
 "erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern von "
 "Websites."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
-"the history of your host problems will appear here. Currently the following "
-"Checkmk sites are not monitored: %s.\n"
-"Please also be aware that you might see this message might appear as a "
-"result of a filtered dashboard.This dashlet currently only supports "
-"filtering for sites."
+"the history of your host problems will appear here. Currently, the following "
+"Checkmk sites are not monitored: %s\n"
+" Please also be aware that this message might appear as a result of a "
+"filtered dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "Sobald Sie Ihre Checkmk-Server ins Monitoring aufnehmen, erscheint hier ein "
 "Graph, der die History der Host-Probleme zeigt. Derzeit werden die folgenden "
@@ -6569,7 +6570,8 @@ msgstr "Asynchron"
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
 
-msgid "Asynchronous execution of plugins"
+#, fuzzy
+msgid "Asynchronous execution of plug-ins"
 msgstr "Asynchrone Ausführen von Plugins"
 
 msgid "Asynchronous keep alive connections"
@@ -6606,12 +6608,13 @@ msgstr ""
 "Maximal so viele Alarme werden für das Zusammenfassen zurückgehalten. Ein "
 "Wert von 1 schaltet das Zusammenfassen faktisch aus."
 
+#, fuzzy
 msgid ""
-"At start the CMC creates a fixed number of worker processes that are used "
-"for executing classical active checks. This number is configured here. If "
-"the number of processes is too low for then not all checks can be executed "
-"in time. Checks that run for a longer time block the workers longer. A "
-"larger number of helpers will consume more memory."
+"At start, the CMC creates a fixed number of worker processes that are used "
+"for executing standard active checks. This fixed number is configured here. "
+"If the number of processes is too low, not all checks can be executed in "
+"time. Checks that run for a longer time block the worker processes for "
+"longer. A larger number of helpers will consume more memory."
 msgstr ""
 "Beim Start erzeugt der CMC eine feste Anzahl von Arbeitsprozessen, die für "
 "die Ausführung von klassischen aktiven Checks zuständig sind. Deren Anzahl "
@@ -6620,13 +6623,15 @@ msgstr ""
 "die eine längere Laufzeit haben, blockieren die Arbeitsprozesse länger. Eine "
 "große Anzahl von Prozessen verbraucht mehr Speicher."
 
-msgid "At the beginning of every month at day"
+#, fuzzy
+msgid "At the beginning of every month on day"
 msgstr "Am Beginn jedes Monats bei Tag"
 
 msgid "At the center of the page"
 msgstr "In der Mitte der Seite"
 
-msgid "At the end of every month at day"
+#, fuzzy
+msgid "At the end of every month on day"
 msgstr "Am Ende jedes Monats bei Tag"
 
 msgid ""
@@ -6641,19 +6646,21 @@ msgstr ""
 msgid "Att."
 msgstr "Att."
 
+#, fuzzy
 msgid ""
 "Attach a comment to the event. If you have bracketed groups in the text to "
 "match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</tt>, etc. "
-"for inserting the first, second etc matching group."
+"for inserting the first, second etc. matching group."
 msgstr ""
 "Fügen Sie einen Kommentar ans Ereignis an. Wenn Sie Gruppen mit Klammern in "
 "den Texten verwenden dann stehen die Platzhalter <tt>\\1</tt>, <tt>\\2</tt> "
 "etc für das Einsetzen des 1., 2., etc Vorkommens."
 
+#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
-"tt>, etc. for inserting the first, second etc matching group."
+"tt>, etc. for inserting the first, second etc. matching group."
 msgstr ""
 "Fügen Sie Informationen über Kontaktperson an. Wenn Sie Gruppen mit Klammern "
 "in Texten verwenden dann stehen die Platzhalter <tt>\\1</tt>, <tt>\\2</tt> "
@@ -6668,13 +6675,15 @@ msgstr "Atto Fibrebridge FC port"
 msgid "Attribute"
 msgstr "Attribut"
 
-msgid "Attribute Sync Plugins"
+#, fuzzy
+msgid "Attribute Sync Plug-ins"
 msgstr "Sync-Plugins für Attribute"
 
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
 
-msgid "Attribute sync plugins"
+#, fuzzy
+msgid "Attribute sync plug-ins"
 msgstr "Sync-Plugins für Attribute"
 
 msgid "Attribute to search"
@@ -6732,20 +6741,15 @@ msgstr "Ablauf der Authentifizierung"
 msgid "Authentication Failures"
 msgstr "Authentifizierungsfehler"
 
-msgid "Authentication Mode"
-msgstr "Authentifizierungsmodus"
-
-msgid "Authentication Source"
-msgstr "Authentifizierungsquelle"
-
-msgid "Authentication System Errors"
-msgstr "Authentifizierungssystem-Fehler"
-
 msgid "Authentication failed"
 msgstr "Authentifizierung fehlgeschlagen"
 
 msgid "Authentication failed. Invalid login/password."
 msgstr "Authentifizierung fehlgeschlagen. Benutzername/Passwort ungültig."
+
+#, fuzzy
+msgid "Authentication failures"
+msgstr "Authentifizierungsfehler"
 
 msgid "Authentication failures (last 5 minutes)"
 msgstr "Authentifizierungsfehler (letzte 5 Minuten)"
@@ -6759,11 +6763,23 @@ msgstr "Authentifizierungsmechanismus"
 msgid "Authentication method"
 msgstr "Authentifizierungsmethode"
 
+#, fuzzy
+msgid "Authentication mode"
+msgstr "Authentifizierungsmodus"
+
 msgid "Authentication password"
 msgstr "Authentifizierungspasswort"
 
 msgid "Authentication protocol"
 msgstr "Authentifizierungsprotokoll"
+
+#, fuzzy
+msgid "Authentication source"
+msgstr "Authentifizierungsquelle"
+
+#, fuzzy
+msgid "Authentication system errors"
+msgstr "Authentifizierungssystem-Fehler"
 
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
@@ -7271,7 +7287,8 @@ msgstr "Durschnittswert des folgenden numerischen Feldes: "
 msgid "Average values"
 msgstr "Durchschnittswerte"
 
-msgid "Average values for broad- and multicast packet rates"
+#, fuzzy
+msgid "Average values for broadcast and multicast packet rates"
 msgstr "Durchschnittliche Werte für Broad- und Multicast Paketraten"
 
 msgid "Average values for used bandwidth"
@@ -7581,9 +7598,6 @@ msgstr "Backup"
 msgid "Backup & restore"
 msgstr "Backup & Wiederherstellung"
 
-msgid "Backup Age"
-msgstr "Backup-Alter"
-
 msgid "Backup age"
 msgstr "Backup-Alter"
 
@@ -7834,10 +7848,10 @@ msgstr "Bester Status"
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Bester Status, %d Knoten, auf %s begrenzen"
 
+#, fuzzy
 msgid ""
-"Best: The check function of the plugin will be applied to each individual "
-"node. The best outcome will determine the overall state of the clustered "
-"service."
+"Best: The plug-in's check function will be applied to each individual node. "
+"The best outcome will determine the overall state of the clustered service."
 msgstr ""
 "Am besten: Die Prüffunktion des Plugins wird auf jeden einzelnen Knoten "
 "angewendet. Das beste Ergebnis bestimmt den Gesamtzustand des geclusterten "
@@ -7977,7 +7991,8 @@ msgstr "Rahmenbreite"
 msgid "Both"
 msgstr "Beide"
 
-msgid "Both - Display the information for both, pod and container, levels"
+#, fuzzy
+msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Zeige Informationen für beide Levels (Gruppe und Container)"
 
 msgid "Bottom"
@@ -8007,14 +8022,15 @@ msgstr "Helligkeit"
 msgid "Brightness Levels"
 msgstr "Helligkeitsschwellwerte"
 
-msgid "Broad-/Multicast"
-msgstr "Broad-/Multicast"
-
 msgid "Broadcast packet rates"
 msgstr "Rate an Broadcast-Paketen"
 
 msgid "Broadcast packets"
 msgstr "Broadcastpakete"
+
+#, fuzzy
+msgid "Broadcast/Multicast"
+msgstr "Broad-/Multicast"
 
 msgid "Broadcom bonding network interface on Windows"
 msgstr "Broadcom Bonding-Netwerkgeräte unter Windows"
@@ -8037,7 +8053,8 @@ msgstr "Gebrochen"
 msgid "Broken GUI extensions"
 msgstr "Defekte GUI-Erweiterungen"
 
-msgid "Browse the catalog of all check plugins, create static checks"
+#, fuzzy
+msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
 
 msgid "Bucket"
@@ -8215,11 +8232,12 @@ msgstr "Business Intelligence Regeln und Aggregate"
 msgid "Business reporting"
 msgstr "Business Bericht"
 
+#, fuzzy
 msgid ""
-"Business time series display seasonalities as a result of the human\n"
-"behaviors they represent. 5-day work weeks can produce higher loads and\n"
-"repetition on each week. While vacations can produce effects that repeat\n"
-"each year. Seasonality are this periodic oscillations of the time series."
+"Business time series display seasonalities as a result of the human "
+"behaviors they represent. 5-day working weeks can produce higher loads and "
+"weekly repetition, while vacations can produce effects that repeat each "
+"year. Seasonality are these periodic oscillations of the time series."
 msgstr ""
 "Geschäftszeitreihen zeigen Saisonalitäten als Ergebnis des menschlichen \n"
 "Verhaltens, das sie darstellen. 5-Tage-Arbeitswochen können zu höheren "
@@ -8253,8 +8271,9 @@ msgstr "Allerdings können Sie trotzdem Änderungen vornehmen. "
 msgid "But you are not a member of any contact group."
 msgstr "Aber Sie sind kein Mitglied einer Kontaktgruppe."
 
+#, fuzzy
 msgid ""
-"Buttons for switching globally states such as enabling checks and "
+"Buttons for globally switching states such as enabling checks and "
 "notifications"
 msgstr ""
 "Knöpfe zum globalen Ändern von Stati, wie z.B. Aktivierung von Checks und "
@@ -8410,19 +8429,21 @@ msgstr ""
 "verbrauchte Bandbreite sind optional. Wenn Sie Schwellwerte einrichten dann "
 "sollten Sie auch einen Durchschnittswert verwenden."
 
+#, fuzzy
 msgid ""
-"By activating this option you will deploy the agent plugin <tt>mk_db2</tt> "
+"By activating this option you can set levels on the total CPU utilization "
+"for all included processes."
+msgstr ""
+"Durch diese Option können Schwellwerte für die CPU Auslastung aller "
+"enthaltenen Prozesse definiert werden."
+
+#, fuzzy
+msgid ""
+"By activating this option you will deploy the <tt>mk_db2</tt> agent plug-in "
 "on your target system."
 msgstr ""
 "Durch Aktivieren dieser Option rollen Sie das Agentenplugin <tt>mk_db2</tt> "
 "auf Ihr Zielsystem aus."
-
-msgid ""
-"By activating this options you can set levels on the total CPU utilization "
-"of all included processes."
-msgstr ""
-"Durch diese Option können Schwellwerte für die CPU Auslastung aller "
-"enthaltenen Prozesse definiert werden."
 
 msgid ""
 "By adding rules to this ruleset you can define a subset of your hosts to be "
@@ -9868,9 +9889,6 @@ msgstr "Kontextinformation ändern zu"
 msgid "Change OK State to"
 msgstr "Ok-Status ändern zu"
 
-msgid "Change Timerange"
-msgstr "Zeitraum ändern"
-
 msgid "Change WARNING State to"
 msgstr "Warnung-Status ändern zu"
 
@@ -9904,8 +9922,8 @@ msgstr "Ändere Ereignisstatus"
 msgid "Change event state?"
 msgstr "Ereignisstatus ändern?"
 
-#, python-format
-msgid "Change graph timerange to: %s"
+#, fuzzy, python-format
+msgid "Change graph time range to: %s"
 msgstr "Graphzeitraum ändern auf: %s"
 
 msgid "Change infotext in check output"
@@ -9933,6 +9951,10 @@ msgstr "Zustand ändern"
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Das Standardthema der Benutzeroberfläche der Checkmk-Installation ändern"
+
+#, fuzzy
+msgid "Change time range"
+msgstr "Zeitraum ändern"
 
 msgid "Change view display columns"
 msgstr "Verändere Spalten der Ansichtenanzeige"
@@ -10398,7 +10420,8 @@ msgstr ""
 "einen Host zuzugreifen, zum Beispiel via Agent, SNMPv1 und SNMPv2, um die "
 "korrekte Konfiguration für den Host zu ermitteln."
 
-msgid "Check-Sql plugin uses different methods to find MS SQL instances"
+#, fuzzy
+msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
 msgstr ""
 "Check-SQL Plugin verwendet verschiedene Methoden, um die SQL-Instanzen zu "
 "finden"
@@ -10411,36 +10434,6 @@ msgstr ""
 "Check_MK Livestatus hört zugungsten von Performance und Sicherheit "
 "normalerweise auf einem lokalen UNIX-Socket. Diese Optionen ermöglicht es "
 "diesen Socket zusätzlich per TCP über das Netzwerk verfügbar zu machen."
-
-msgid ""
-"Check_MK has an efficient SNMP implementation called Inline SNMP which "
-"reduces the load produced by SNMP monitoring on the monitoring host "
-"significantly. This option is enabled by default for all SNMP hosts and it "
-"is a good idea to keep this default setting. However, there are SNMP devices "
-"which have problems with this SNMP implementation. You can use this rule to "
-"disable Inline SNMP for these hosts."
-msgstr ""
-"Checkmk verfügt über eine effiziente SNMP-Implementierung namens Inline-"
-"SNMP, welche die durch die SNMP-Überwachung erzeugte Last auf dem "
-"Monitoringhost erheblich reduziert. Diese Option ist standardmäßig für alle "
-"SNMP-Hosts aktiviert, und es ist empfehlenswert, diese Standardeinstellung "
-"beizubehalten. Allerdings gibt es SNMP-Geräte, die Probleme mit dieser SNMP-"
-"Implementierung haben. Sie können diese Regel verwenden, um Inline-SNMP für "
-"diese Hosts zu deaktivieren."
-
-msgid ""
-"Check_MK usually uses an interval of one minute for the active Checkmk check "
-"and for legacy checks. Here you can specify a larger interval. Please note, "
-"that this setting only applies to active checks (those with the reschedule "
-"button). If you want to change the check interval of the 'Check_MK' service "
-"only, specify <tt><b>Check_MK$</b></tt> in the list of services."
-msgstr ""
-"Checkmk verwendet normalerweise ein Intervall von einer Minute für die "
-"aktive Checkmk-Prüfung und für ältere Prüfungen. Hier können Sie ein "
-"größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
-"für aktive Checks gilt (solche mit dem Button \"Neu terminieren\"). Wenn Sie "
-"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
-"<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
 #, fuzzy
 msgid "Checkbox selection livetime"
@@ -10632,6 +10625,23 @@ msgstr ""
 "Implementierungen haben. Sie können diese Regel verwenden, um das SNMP-"
 "Backend für diese Hosts auszuwählen."
 
+#, fuzzy
+msgid ""
+"Checkmk has an efficient SNMP implementation called Inline SNMP which "
+"reduces the load produced by SNMP monitoring on the monitoring host "
+"significantly. This option is enabled by default for all SNMP hosts and it "
+"is a good idea to keep this default setting. However, there are SNMP devices "
+"which have problems with this SNMP implementation. You can use this rule to "
+"disable Inline SNMP for these hosts."
+msgstr ""
+"Checkmk verfügt über eine effiziente SNMP-Implementierung namens Inline-"
+"SNMP, welche die durch die SNMP-Überwachung erzeugte Last auf dem "
+"Monitoringhost erheblich reduziert. Diese Option ist standardmäßig für alle "
+"SNMP-Hosts aktiviert, und es ist empfehlenswert, diese Standardeinstellung "
+"beizubehalten. Allerdings gibt es SNMP-Geräte, die Probleme mit dieser SNMP-"
+"Implementierung haben. Sie können diese Regel verwenden, um Inline-SNMP für "
+"diese Hosts zu deaktivieren."
+
 msgid "Checkmk helper usage"
 msgstr "Checkmk Hilfsprozess Auslastung"
 
@@ -10691,6 +10701,21 @@ msgstr ""
 "eines neuen Dateisystems 5% für root reserviert. Mit dieser Option können "
 "Sie Checkmk den momentan reservierten aber noch ungenutzten Platz anzeigen "
 "lassen."
+
+#, fuzzy
+msgid ""
+"Checkmk usually uses an interval of one minute for the active Checkmk check "
+"and for legacy checks. Here you can specify a larger interval. Please note, "
+"that this setting only applies to active checks (those with the reschedule "
+"button). If you want to change the check interval of the 'Check_MK' service "
+"only, specify <tt><b>Check_MK$</b></tt> in the list of services."
+msgstr ""
+"Checkmk verwendet normalerweise ein Intervall von einer Minute für die "
+"aktive Checkmk-Prüfung und für ältere Prüfungen. Hier können Sie ein "
+"größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
+"für aktive Checks gilt (solche mit dem Button \"Neu terminieren\"). Wenn Sie "
+"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
+"<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
 msgid "Checkmk versions"
 msgstr "Checkmk-Versionen"
@@ -12233,9 +12258,10 @@ msgstr ""
 msgid "Configure the automatic removal of monitored hosts."
 msgstr "Automatische Entfernung überwachter Hosts konfigurieren."
 
+#, fuzzy
 msgid ""
 "Configure the base URL for the Monitoring Web-GUI here. Include the site "
-"name. Used for link to check_mk out of jira."
+"name. Used for link to Checkmk out of jira."
 msgstr ""
 "Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI und geben "
 "Sie den Namen der Site mit an. Die URL wird für Links zu Checkmk aus Jira "
@@ -13750,7 +13776,8 @@ msgstr "Zugangsdaten abgelaufen"
 msgid "Credentials for Connect (ODBC interface)"
 msgstr "Credentials für Connect (ODBC-Schnittstelle)"
 
-msgid "Credentials for HTTP Basic Authentication"
+#, fuzzy
+msgid "Credentials for HTTP basic authentication"
 msgstr "Anmeldedaten für HTTP Basis-Authentifizierung"
 
 msgid "Credentials for SNMPv3 with authentication and privacy (authPriv)"
@@ -14165,7 +14192,8 @@ msgstr "Benutzerdefinierte Fußzeilen-Links"
 msgid "Custom graph"
 msgstr "Benutzerdefinierter Graph"
 
-msgid "Custom graph timeranges"
+#, fuzzy
+msgid "Custom graph time ranges"
 msgstr "Benutzerdefinierte Zeiträume für Graphen"
 
 msgid "Custom graphs"
@@ -14377,7 +14405,8 @@ msgstr ""
 "$COUNT_NOTIFICATIONS$</tt> die Anzahl der Alarmierungen und mit <tt>"
 "$COUNT_HOSTS$</tt> die Anzahl der Hosts ausgegeben werden."
 
-msgid "Customize timerange"
+#, fuzzy
+msgid "Customize time range"
 msgstr "Zeitraum festlegen"
 
 msgid "Customize title"
@@ -15221,7 +15250,8 @@ msgstr "Standard-Parameter, wenn keine Zeitperiode zutrifft"
 msgid "Default profile"
 msgstr "Standard-Profil"
 
-msgid "Default reporting timerange"
+#, fuzzy
+msgid "Default reporting time range"
 msgstr "Standardzeitraum für Berichte"
 
 msgid "Default rule pack"
@@ -17042,7 +17072,8 @@ msgstr "SLA Statistiken anzeigen"
 msgid "Display SLA subresults for each requirement"
 msgstr "Zeige SLA Zwischenergebnisse für jede Bedingung an"
 
-msgid "Display SLA timerange and period in table header"
+#, fuzzy
+msgid "Display SLA time range and period in table header"
 msgstr "Zeige SLA-Zeitraum und Periode in der Tabellenüberschrift an"
 
 msgid "Display VM power state <i>additionally</i> on"
@@ -18528,10 +18559,11 @@ msgstr ""
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
+#, fuzzy
 msgid ""
 "Each user defined role is based on one of the built-in roles. When created "
 "it will start with all permissions of that role. When due to a software "
-"update or installation of an addons new permissions appear, the user role "
+"update or installation of an add-on new permissions appear, the user role "
 "will get or not get those new permissions based on the default settings of "
 "the built-in role it's based on."
 msgstr ""
@@ -24143,9 +24175,10 @@ msgstr ""
 "Hier können Sie den Status des Incidents im Falle eines auslaufenden "
 "Acknowledgements des Host- oder Serviceproblems definieren."
 
+#, fuzzy
 msgid ""
-"Here you can define the timerange to query, eg. the last x minutes from now. "
-"The query will then check for the count of log messages in the defined "
+"Here you can define the time range to query, eg. the last x minutes from "
+"now. The query will then check for the count of log messages in the defined "
 "range. Default is 1 minute."
 msgstr ""
 "Hier können Sie den Zeitraum für die Abfrage festlegen, z.Bsp. die letzten x "
@@ -24436,8 +24469,9 @@ msgstr ""
 "Hier können Sie die Schwellwerte für die Metriken des ORACLE Performance "
 "setzen."
 
+#, fuzzy
 msgid ""
-"Here you can set levels on failures in the timerange specified in the "
+"Here you can set levels on failures in the time range specified in the "
 "datasource (default: 30m)."
 msgstr ""
 "Hier können Schwellwerte für Ausfälle in dem angegebenen Zeitraum der "
@@ -24887,7 +24921,8 @@ msgstr "Unerreichbar"
 msgid "Host Events"
 msgstr "Hostereignisse"
 
-msgid "Host Graphs with Timerange Previews"
+#, fuzzy
+msgid "Host Graphs with Time Range Previews"
 msgstr "Hostgraphen mit Zeitraumvorschau"
 
 msgid "Host IP"
@@ -25154,12 +25189,6 @@ msgstr "Host hat Softwarepaket"
 msgid "Host has tag <b>%s</b>"
 msgstr "Der Host hat das Tag <b>%s</b>"
 
-msgid "Host hover menu shown in BI visualization"
-msgstr "Host-Tooltipp sichtbar in BI Visualisierung"
-
-msgid "Host hover menu shown in topolgoy visualization"
-msgstr "Host-Tooltipp sichtbar in Topologie-Visualisierung"
-
 msgid "Host icons"
 msgstr "Hostsymbole"
 
@@ -25392,6 +25421,14 @@ msgstr "Hostmerkmake (mit Titeln)"
 
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Zu verwendender Host für die Verbindung zu Cisco Prime"
+
+#, fuzzy
+msgid "Host tooltip shown in BI visualization"
+msgstr "Host-Tooltipp sichtbar in BI Visualisierung"
+
+#, fuzzy
+msgid "Host tooltip shown in topolgoy visualization"
+msgstr "Host-Tooltipp sichtbar in Topologie-Visualisierung"
 
 #, python-format
 msgid "Host uses xinetd or systemd %s"
@@ -25682,8 +25719,9 @@ msgstr "Hosts ohne gebackenen Agenten"
 msgid "Hosts without system description OID"
 msgstr "Hosts ohne Systembeschreibungs-OID"
 
+#, fuzzy
 msgid ""
-"Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring "
+"Hosts, Services, Groups, Time Periods, Business Intelligence and Monitoring "
 "Configuration"
 msgstr ""
 "Hosts, Services, Gruppen, Zeitperioden, Business Intelligence und Monitoring-"
@@ -28322,9 +28360,10 @@ msgstr ""
 "Ablauf dieser Zeit bleiben alle Perioden in ihrem letzten Zustand. Stellen "
 "Sie sicher, dass Sie vor diesem Zeitpunkt die <i>Änderungen aktivieren</i>."
 
+#, fuzzy
 msgid ""
 "In order to make Checkmk more consistent, the descriptions of several "
-"services have been renamed in newer Check_MK versions. One example is the "
+"services have been renamed in newer Checkmk versions. One example is the "
 "filesystem services that have been renamed from <tt>fs_</tt> into "
 "<tt>Filesystem</tt>. But since renaming of existing services has many "
 "implications - including existing rules, performance data and availability "
@@ -28726,7 +28765,8 @@ msgstr "Index"
 msgid "Index absolute levels"
 msgstr "Absolute Schellen für den Index"
 
-msgid "Index failure in the defined timerange upper levels"
+#, fuzzy
+msgid "Index failure in the defined time range upper levels"
 msgstr "Indexfehler in den definierten Obergrenzen des Zeitraums"
 
 msgid "Index hitratio"
@@ -32150,9 +32190,6 @@ msgstr "Laden..."
 msgid "Local"
 msgstr "Lokal"
 
-msgid "Local Authentication Data"
-msgstr "Lokale Anmeldungsdaten"
-
 msgid "Local Client - Remote Server"
 msgstr "Lokaler Client - Entfernter Server"
 
@@ -32188,6 +32225,10 @@ msgstr "Lokale Variablen"
 
 msgid "Local Volumes"
 msgstr "Lokale Volumes"
+
+#, fuzzy
+msgid "Local authentication data"
+msgstr "Lokale Anmeldungsdaten"
 
 msgid "Local checks"
 msgstr "Lokale Checks"
@@ -33356,8 +33397,9 @@ msgstr ""
 "kryptographische Schlüssel zu registrieren, die von "
 "Authentifizierungsgeräten wie YubiKey erzeugt wurden."
 
+#, fuzzy
 msgid ""
-"Make use of an Authenicatior App to generate time-based one-time validation "
+"Make use of an authenicator app to generate time-based one-time validation "
 "codes."
 msgstr ""
 "Nutzen Sie eine Authenticator-App, um zeitbasierte Einmalvalidierungscodes "
@@ -36647,9 +36689,6 @@ msgstr "Nein (Fehler: %s, Code: %d, Tiefe: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "Keine API-Integrationen, kein Checkmk-Agent"
 
-msgid "No Authentication"
-msgstr "Keine Authentifizierung"
-
 msgid "No CSRF token received"
 msgstr "Kein CSRF-Token erhalten"
 
@@ -36702,6 +36741,10 @@ msgstr "Keine Anträge auf Agentenregistrierung verarbeitet"
 
 msgid "No appropriate request ID"
 msgstr "Keine passende Anfrage-ID"
+
+#, fuzzy
+msgid "No authentication"
+msgstr "Keine Authentifizierung"
 
 msgid "No authentication, no privacy"
 msgstr "Keine Authentifizierung, keine Privacy"
@@ -37023,11 +37066,11 @@ msgstr "Kein Testhost"
 msgid "No title"
 msgstr "Kein Titel"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
 "you need to create files below the directory <tt>%s/local</tt> of your "
-"Check_MK instance."
+"Checkmk instance."
 msgstr ""
 "Keine unpaketierten Dateien gefunden. Wenn Sie neue Erweiterungspakete "
 "erstellen möchten, dann müssen Sie Dateien in Ihrer Checkmk-Instanz "
@@ -40812,7 +40855,8 @@ msgstr ""
 "berechnet. Das auf eine Gruppe von Metriken angewandte Perzentil wird bei "
 "jedem Zeitschritt berechnet."
 
-msgid "Percentile within the timerange"
+#, fuzzy
+msgid "Percentile within the time range"
 msgstr "Perzentil innerhalb des Zeitraums"
 
 msgid "Percentual levels"
@@ -43770,9 +43814,6 @@ msgstr "Name der Region"
 msgid "Regions to monitor"
 msgstr "Zu überwachende Regionen"
 
-msgid "Register Authenticator App"
-msgstr "Authenticator-App registrieren"
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr "Alle Hosts registrieren & Monitoringagenten herunterladen"
 
@@ -44535,10 +44576,11 @@ msgstr "Replikation ist abgeschaltet"
 msgid "Replication lag"
 msgstr "Replikationsverzögerung"
 
+#, fuzzy
 msgid ""
 "Replication lag is a delay between an operation on the primary and the "
-"application of that operation from the oplog to the secondary.With this "
-"configuration, check_mk will alert if replication lag is exceeding a "
+"application of that operation from the oplog to the secondary. With this "
+"configuration, Checkmk will alert if replication lag is exceeding a "
 "threshold over an extended period of time."
 msgstr ""
 "Replikationslag ist die Verzögerung zwischen einer Operation und der "
@@ -44558,10 +44600,11 @@ msgstr "Bericht"
 msgid "Report Properties"
 msgstr "Berichteigenschaften"
 
+#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
-"Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
+"Time range: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
 "$UNTIL_TIME$"
 msgstr ""
 "Bericht erzeugt $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
@@ -45289,9 +45332,6 @@ msgstr "Robot-Framework: Letztes Fehlerprotokoll"
 msgid "Robot Framework: Last log"
 msgstr "Robot-Framework: Letztes Protokoll"
 
-msgid "RobotMK logs"
-msgstr "Robotmk-Protokolle"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
@@ -45309,6 +45349,10 @@ msgstr "Robotmk Suite Status"
 #, fuzzy
 msgid "Robotmk Tests"
 msgstr "Robotmk"
+
+#, fuzzy
+msgid "Robotmk logs"
+msgstr "Robotmk-Protokolle"
 
 msgid "Role"
 msgstr "Rolle"
@@ -45893,7 +45937,8 @@ msgstr "SLA Einstellungen"
 msgid "SLA specification"
 msgstr "SLA Spezifikation"
 
-msgid "SLA timerange"
+#, fuzzy
+msgid "SLA time range"
 msgstr "SLA Zeitraum"
 
 msgid "SLA type"
@@ -47436,7 +47481,8 @@ msgstr "Servicegraphen"
 msgid "Service graphs of host"
 msgstr "Servicesgraphen von Host"
 
-msgid "Service graphs with timerange previews"
+#, fuzzy
+msgid "Service graphs with time range previews"
 msgstr "Service-Graphen mit Zeitraumvorschau"
 
 msgid "Service group"
@@ -47468,9 +47514,6 @@ msgstr "Service-Gruppen, zusammengeführt"
 
 msgid "Service hard states"
 msgstr "Service Status (hart)"
-
-msgid "Service hover menu shown in BI visualization"
-msgstr "Service-Tooltipp in der BI-Visualisierung angezeigt"
 
 msgid "Service icons"
 msgstr "Service Symbole"
@@ -47646,6 +47689,10 @@ msgstr "Service-Tags"
 
 msgid "Service tags (with titles)"
 msgstr "Service-Merkmale (mit Titeln)"
+
+#, fuzzy
+msgid "Service tooltip shown in BI visualization"
+msgstr "Service-Tooltipp in der BI-Visualisierung angezeigt"
 
 msgid "Service was WARN and goes CRIT - acknowledgment doesn't expire."
 msgstr "Service war auf WARN und geht auf CRIT - Quittierung läuft nicht ab."
@@ -48850,8 +48897,9 @@ msgstr "Passwort anzeigen/ausblenden"
 msgid "Shows a single aggregation."
 msgstr "Zeigt ein einzelnes Aggregat."
 
+#, fuzzy
 msgid ""
-"Shows all graphs including timerange selections of a collection of services."
+"Shows all graphs including time range selections of a collection of services."
 msgstr ""
 "Zeigt alle Diagramme einschließlich der Zeitraumauswahl einer Sammlung von "
 "Services."
@@ -48859,8 +48907,9 @@ msgstr ""
 msgid "Shows details of a host."
 msgstr "Zeit die Details eines Hosts."
 
+#, fuzzy
 msgid ""
-"Shows host graphs including timerange selections of a collection of hosts."
+"Shows host graphs including time range selections of a collection of hosts."
 msgstr ""
 "Zeigt Graphen von Hosts einschließlich einer Übersicht und Auswahl von "
 "Zeiträumen."
@@ -49602,9 +49651,10 @@ msgstr ""
 msgid "Some but not all package types are signed with key '%s'"
 msgstr "Einige, aber nicht alle Pakete sind signiert mit dem Schlüssel '%s'"
 
+#, fuzzy
 msgid ""
-"Some devices send texts in non-ASCII characters. Check_MK always assumes "
-"UTF-8 encoding. You can declare other  other encodings here"
+"Some devices send texts in non-ASCII characters. Checkmk always assumes "
+"UTF-8 encoding. You can declare other encodings here"
 msgstr ""
 "Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer "
 "UTF-8 Kodierung. Andere Kodierungen können Sie hier einstellen"
@@ -52382,9 +52432,6 @@ msgstr "Meldungen in wie Syslog in Dateien schreiben"
 msgid "System"
 msgstr "System"
 
-msgid "System Authentication"
-msgstr "System-Authentifizierung"
-
 msgid "System Events on APX Inrow Devices"
 msgstr "Systemereigniesse auf APX Inrow-Geräten"
 
@@ -52411,6 +52458,10 @@ msgstr "System-Parameter"
 
 msgid "System Stats"
 msgstr "Systemstatistiken"
+
+#, fuzzy
+msgid "System authentication"
+msgstr "System-Authentifizierung"
 
 msgid "System global targets"
 msgstr "Systemweite Sicherungsziele"
@@ -53043,9 +53094,9 @@ msgstr "Soviele Berechtigungen befinden sich nicht in der Fabrikseinstellung."
 msgid "That many times the message must occur until an event is created"
 msgstr "So oft muss die Nachricht auftreten, bis ein Ereignis erstellt wird"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The \"Authentication Expiration\" attribute (%s) could not be fetched from "
+"The \"authentication expiration\" attribute (%s) could not be fetched from "
 "the LDAP server for user %s."
 msgstr ""
 "Das Attribut \"Ablauf der Authentifizierung\" (%s) kann für Benutzer %s "
@@ -53919,20 +53970,21 @@ msgstr ""
 "einzelne Datei überwacht werden. Wenn keine Abschnitte angegeben werden, "
 "erzeugt das Plugin keine Ausgabe."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
 "logfiles for new messages, classifies these according to a set of rules and "
-"sends (only) relevant messages to the Check_MK server for further "
-"processing. Here the messages can further be (re-)classified using the <a "
-"href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch "
-"Ruleset</a>. <b>Note:</b> If you want to configure several log files with "
-"different sets of patterns, then simply create several rules. In this "
-"ruleset <b>all</b> matching rules are being executed, not only the first "
-"one. <b>Note (2):</b> This duplicate possibility for classification is due "
-"to performance issues. It is always a good idea that the agent forwards only "
-"messages that are potential problems in order to cut down network traffic. "
-"Central reclassification on the other hand is more convenient because no "
-"agent update is necessary when rules need to be changed."
+"sends (only) relevant messages to the Checkmk server for further processing. "
+"Here the messages can further be (re-)classified using the <a href='wato.py?"
+"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch Ruleset</a>. "
+"<b>Note:</b> If you want to configure several log files with different sets "
+"of patterns, then simply create several rules. In this ruleset <b>all</b> "
+"matching rules are being executed, not only the first one. <b>Note (2):</b> "
+"This duplicate possibility for classification is due to performance issues. "
+"It is always a good idea that the agent forwards only messages that are "
+"potential problems in order to cut down network traffic. Central "
+"reclassification on the other hand is more convenient because no agent "
+"update is necessary when rules need to be changed."
 msgstr ""
 "Das Agenten-Plugin <tt>mk_logwatch.py</tt> überwacht einen konfigurierten "
 "Satz von Text-Logfiles auf neue Meldungen, klassifiziert diese nach einem "
@@ -56019,8 +56071,9 @@ msgstr ""
 "Die Anzahl der im Dateisystem verfügbaren Inodes. Auf manchen Dateiesystemen "
 "ist diese Einstellung bedeutungslos."
 
+#, fuzzy
 msgid ""
-"The number of seconds a cache file may be old if check_mk should use it "
+"The number of seconds a cache file may be old if Checkmk should use it "
 "instead of getting information from the target hosts while checking a "
 "cluster. Per default this is enabled and set to 90 seconds. If your check "
 "cycle is set to a larger value than one minute then you should increase this "
@@ -58133,8 +58186,8 @@ msgstr "Dieser Alias wird bereits in der %s-Gruppe %s verwendet."
 msgid "This alias is already used in the role %s."
 msgstr "Dieser Alias wird bereits in der Rolle %s verwendet."
 
-#, python-format
-msgid "This alias is already used in timeperiod %s."
+#, fuzzy, python-format
+msgid "This alias is already used in time period %s."
 msgstr "Dieser Alias wird bereits in der Zeitperiode %s verwendet."
 
 msgid ""
@@ -58205,8 +58258,9 @@ msgstr "Dieser Sicherungs-Job existiert nicht."
 msgid "This backup target does not exist."
 msgstr "Dieses Sicherungsziel existiert nicht."
 
+#, fuzzy
 msgid ""
-"This boolean variable allows you to bring check_mk into a dry run mode. No "
+"This boolean variable allows you to bring Checkmk into a dry run mode. No "
 "hosts will be contacted, no DNS lookups will take place and data is read "
 "from cache files that have been created during normal operation or have been "
 "copied here from another monitoring site."
@@ -58689,10 +58743,11 @@ msgstr ""
 "von sofort eingeplanten Checks hinausgehen. Hinweis: Die maximale "
 "Verzögerung ist das fünffache normale Checkintervall"
 
+#, fuzzy
 msgid ""
-"This interval is applied to all new non-Check_MK active checks that go "
-"beyond the number of immediately scheduled checks. Note: the maximum delay "
-"is five times the normal check interval"
+"This interval is applied to all new non-Checkmk active checks that go beyond "
+"the number of immediately scheduled checks. Note: the maximum delay is five "
+"times the normal check interval"
 msgstr ""
 "Dieses Intervall wird für alle neuen Nicht-Checkmk-Checks verwendet, welche "
 "über die Anzahl der sofort eingeplanten Checks hinausgehen. Hinweis: Das "
@@ -59248,11 +59303,12 @@ msgstr ""
 "Hosts und Services aufbaut. Das beschleunigt Anfragen in großen Installation "
 "dramatisch."
 
+#, fuzzy
 msgid ""
 "This option enables the Event Console - The event processing and "
 "classification daemon of Checkmk. You can also configure whether or not the "
 "Event Console shal listen for incoming SNMP traps or syslog messages. Please "
-"note that only a single Checkmk site per Check_MK server can listen for such "
+"note that only a single Checkmk site per Checkmk server can listen for such "
 "messages."
 msgstr ""
 "Diese Option aktiviert die Event Console - den Ereignisverarbeitungs- und "
@@ -59692,8 +59748,9 @@ msgstr ""
 "Werkzeug verwenden. Ohne diese Berechtigung sind alle Verweise auf Setup "
 "(Buttons, Links, Snapins) nicht sichtbar."
 
+#, fuzzy
 msgid ""
-"This permissions provides a checkbox and timerange in the personal settings "
+"This permissions provides a checkbox and time range in the personal settings "
 "of the user that allows him to completely disable all of his notifications. "
 "Use with caution."
 msgstr ""
@@ -60311,10 +60368,11 @@ msgstr ""
 msgid "This rule allows you to override netapp warnings"
 msgstr "Diese Regel erlaubt das Überschreiben von NetApp Warnungen"
 
+#, fuzzy
 msgid ""
-"This rule allows you to restrict the access to the Check_MK agent to certain "
+"This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
-"your Check_MK servers here. You can enter either IP addresses in the form "
+"your Checkmk servers here. You can enter either IP addresses in the form "
 "<tt>1.2.3.4</tt> or networks in the style <tt>1.2.0.0/16</tt>. If you leave "
 "this configuration empty or create no rule then <b>all</b> addresses are "
 "allowed to access the agent. IPv6 addresses and networks are also allowed."
@@ -61712,13 +61770,14 @@ msgstr ""
 "Mit dieser Einstellung legen Sie den TCP Port für Verbindungen zum Agenten "
 "pro Host fest. "
 
+#, fuzzy
 msgid ""
 "This variable allows you to configure the numbr of OIDs Checkmk should "
 "request at once. This rule only applies to SNMP hosts that are configured to "
 "be bulk walk hosts.You may want to use this rule to tune SNMP performance. "
 "Be aware: A higher value is not always better. It may decrease the "
-"transactions between Check_MK and the target system, but may increase the "
-"OID overhead in case you only need a small amount of OIDs."
+"transactions between Checkmk and the target system, but may increase the OID "
+"overhead in case you only need a small amount of OIDs."
 msgstr ""
 "Mit dieser Variable können Sie die Anzahl der OIDs konfigurieren, die "
 "Checkmk auf einmal abfragen soll. Diese Regel gilt nur für SNMP-Hosts, die "
@@ -62209,6 +62268,10 @@ msgstr "Zeitraum für Temperatur-Trendberechnung"
 msgid "Time range from report context"
 msgstr "Zeitraum aus Berichtskontext"
 
+#, fuzzy
+msgid "Time range synchronization"
+msgstr "Zeitraumsynchronisation"
+
 msgid "Time range to consider"
 msgstr "Zu berücksichtigender Zeitraum"
 
@@ -62497,12 +62560,6 @@ msgstr "Timeout für das Warten auf einen freien Kanal"
 
 msgid "Timer"
 msgstr "Timer"
-
-msgid "Timerange"
-msgstr "Zeitraum"
-
-msgid "Timerange synchronization"
-msgstr "Zeitraumsynchronisation"
 
 msgid "Times"
 msgstr "Zeiten"
@@ -66508,17 +66565,20 @@ msgstr "Obere Schwellen für die Lizenznutzung"
 msgid "Upper levels for the logs usage size"
 msgstr "Obergrenzen der Log-Nutzungsgröße"
 
-msgid "Upper levels for the number of active database connections"
-msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
-
-msgid "Upper levels for the number of http request per second"
+#, fuzzy
+msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Obere Schwellwerte für die Anzahl der HTTP-Anfragen pro Sekunde"
 
-msgid "Upper levels for the number of https request per second"
-msgstr "Obere Schwellwerte für die Anzahl der HTTPS-Anfragen pro Sekunde"
-
-msgid "Upper levels for the number of httpv2 request per second"
+#, fuzzy
+msgid "Upper levels for the number of HTTP/2 requests per second"
 msgstr "Obere Schwellwerte für die Anzahl der HTTPv2-Anfragen pro Sekunde"
+
+#, fuzzy
+msgid "Upper levels for the number of HTTPS request per second"
+msgstr "Obere Schwellwerte für die Anzahl der HTTP-Anfragen pro Sekunde"
+
+msgid "Upper levels for the number of active database connections"
+msgstr "Obere Grenzen für aktive Datenbank Verbindungen"
 
 msgid "Upper levels for the number of locks"
 msgstr "Obergrenzen für die Anzahl der Sperren"
@@ -69909,11 +69969,12 @@ msgstr ""
 "berechnet, <b>bevor</b> diese mit den Schwellwerten verglichen werden. Wird "
 "diese auf Null gesetzt, wird die Durchschnittsbildung deaktiviert."
 
+#, fuzzy
 msgid ""
 "When this option is active you will not get <b>any</b> alerts or other "
 "notifications via email, SMS or similar. This overrides all other "
 "notification settings and rules, so make sure that you know what you do. "
-"Moreover you can specify a timerange where no notifications are generated."
+"Moreover you can specify a time range where no notifications are generated."
 msgstr ""
 "Wenn diese Option aktiviert ist, werden Sie <b>keinerlei</b> Alarmierungen "
 "oder andere Benachrichtigungen via E-Mail, SMS o.ä. erhalten. Dies setzt "
@@ -70695,8 +70756,9 @@ msgstr ""
 "ist)</li><li>$SERVICEDESC_URL_ENCODED$: Wie oben, allerdings URL-codiert</"
 "li><li>$USER_ID$: Die Benutzer-ID des aktuell aktiven Benutzers</li></ul>"
 
+#, fuzzy
 msgid ""
-"With this setting, the special agent will also contact the Check_MK agent on "
+"With this setting, the special agent will also contact the Checkmk agent on "
 "the same system at the specified port."
 msgstr ""
 "Mit dieser Option kontaktiert der Special-Agent zusätzlich den Checkmk-Agent "
@@ -71031,20 +71093,21 @@ msgstr "Es gibt bereits ein Element mit der ID <b>%s</b>"
 msgid "You are analysing this notification"
 msgstr "Sie analysieren diesen Alarm"
 
+#, fuzzy
 msgid ""
 "You are currently not using the Checkmk Micro Core, but this snapshot uses "
-"the Check_MK Micro Core. If you need to migrate your data, you could "
-"consider changing the core, restoring the snapshot and changing the core "
-"back again."
+"the Checkmk Micro Core. If you need to migrate your data, you could consider "
+"changing the core, restoring the snapshot and changing the core back again."
 msgstr ""
 "Sie verwenden derzeit nicht den Checkmk Micro Core, aber dieser Snapshot "
 "verwendet den Checkmk Micro Core. Wenn Sie Ihre Daten migrieren müssen, "
 "könnten Sie den Kern ändern, den Snapshot wiederherstellen und den Kern dann "
 "wieder ändern."
 
+#, fuzzy
 msgid ""
 "You are currently using the Checkmk Micro Core, but this snapshot does not "
-"use the Check_MK Micro Core. If you need to migrate your data, you could "
+"use the Checkmk Micro Core. If you need to migrate your data, you could "
 "consider changing the core, restoring the snapshot and changing the core "
 "back again."
 msgstr ""
@@ -71155,17 +71218,18 @@ msgstr "Sie sind nicht berechtigt, diese Seite zu sehen"
 msgid "You are required to change your password before proceeding."
 msgstr "Bevor Sie weitermachen können, müssen Sie Ihr Passwort ändern."
 
+msgid "You are trying to edit a rule which does not exist anymore."
+msgstr "Sie versuchen eine nicht mehr vorhandene Regel zu editieren."
+
+#, fuzzy
 msgid ""
-"You are trying to Checkmk together with a threaded Apache multiprocessing "
-"module (MPM). Check_MK is only working with the prefork module. Please "
-"change the MPM module to make Check_MK work."
+"You are trying to use Checkmk together with a threaded Apache "
+"multiprocessing module (MPM). Checkmk is only working with the prefork "
+"module. Please change the MPM module to make Checkmk work."
 msgstr ""
 "Sie versuchen gerade Checkmk zusammen mit Threaded-MPM (Apache Multi-"
 "Processing-Modul). Checkmk funktioniert aber nur mit dem Prefork-Modul. "
 "Bitte ändern Sie das MPM-Modul, damit Checkmk läuft."
-
-msgid "You are trying to edit a rule which does not exist anymore."
-msgstr "Sie versuchen eine nicht mehr vorhandene Regel zu editieren."
 
 #, python-format
 msgid ""
@@ -75112,6 +75176,18 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#~ msgid "Backup Age"
+#~ msgstr "Backup-Alter"
+
+#~ msgid "Register Authenticator App"
+#~ msgstr "Authenticator-App registrieren"
+
+#~ msgid "Timerange"
+#~ msgstr "Zeitraum"
+
+#~ msgid "Upper levels for the number of https request per second"
+#~ msgstr "Obere Schwellwerte für die Anzahl der HTTPS-Anfragen pro Sekunde"
 
 #~ msgid "Acknowledge Incompatible Werks"
 #~ msgstr "Inkompatible Werks quittieren"

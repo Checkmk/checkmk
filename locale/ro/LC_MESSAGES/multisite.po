@@ -475,8 +475,8 @@ msgstr "%d site-uri cu erori: %s"
 msgid "%d specific settings"
 msgstr "%d setări specifice"
 
-#, python-format
-msgid "%d timeranges"
+#, fuzzy, python-format
+msgid "%d time ranges"
 msgstr "%d timeranges"
 
 #, python-format
@@ -802,10 +802,11 @@ msgstr "Starea \"Minor"
 msgid "'Warning' state"
 msgstr "Starea \"Avertizare"
 
+#, fuzzy
 msgid ""
-"'git' command was not found on this system, but it is requried for "
+"'git' command was not found on this system, but it is required for "
 "versioning the configuration.Please either install 'git' or disable git "
-"configuration tracking in WATO."
+"configuration tracking in setup."
 msgstr ""
 "Comanda 'git' nu a fost găsită pe acest sistem, dar este necesară pentru "
 "versiunea configurației.Vă rugăm să instalați 'git' sau să dezactivați "
@@ -4250,10 +4251,11 @@ msgstr ""
 "punct specifică bitul care trebuie recuperat. Numărul bitului este "
 "întotdeauna cuprins între 0 și 7."
 
+#, fuzzy
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
-"sensors (temperature, fans, ...) to check_mk.This does require .Net to be "
+"sensors (temperature, fans, ...) to Checkmk. This does require .Net to be "
 "installed on the target system. Please leave this disabled if you have a "
 "different way to monitor sensors. You also don't need this if you are "
 "running the regular OpenHardwareMonitor software."
@@ -6499,12 +6501,12 @@ msgstr ""
 msgid "As server"
 msgstr "Ca server"
 
+#, fuzzy
 msgid ""
 "As soon as you add your Checkmk server to the monitoring, a graph showing "
 "the history of your host problems will appear here.\n"
-"Please also be aware that you might see this message might appear as a "
-"result of a filtered dashboard.This dashlet currently only supports "
-"filtering for sites."
+" Please also be aware that message might appear as a result of a filtered "
+"dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "De îndată ce adăugați serverul Checkmk la monitorizare, aici va apărea un "
 "grafic care arată istoricul problemelor gazdei dumneavoastră.\n"
@@ -6512,14 +6514,13 @@ msgstr ""
 "apară ca urmare a unui tablou de bord filtrat. în prezent, acest tablou de "
 "bord acceptă doar filtrarea pentru site-uri."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
-"the history of your host problems will appear here. Currently the following "
-"Checkmk sites are not monitored: %s.\n"
-"Please also be aware that you might see this message might appear as a "
-"result of a filtered dashboard.This dashlet currently only supports "
-"filtering for sites."
+"the history of your host problems will appear here. Currently, the following "
+"Checkmk sites are not monitored: %s\n"
+" Please also be aware that this message might appear as a result of a "
+"filtered dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
 "De îndată ce adăugați serverul (serverele) Checkmk la monitorizare, aici va "
 "apărea un grafic care arată istoricul problemelor gazdei dumneavoastră. În "
@@ -6649,7 +6650,8 @@ msgstr "Asincronă"
 msgid "Asynchronous closing connections"
 msgstr "Închiderea asincronă a conexiunilor"
 
-msgid "Asynchronous execution of plugins"
+#, fuzzy
+msgid "Asynchronous execution of plug-ins"
 msgstr "Executarea asincronă a plugin-urilor"
 
 msgid "Asynchronous keep alive connections"
@@ -6687,12 +6689,13 @@ msgstr ""
 "Cel mult atâtea notificări sunt reținute pentru încărcare. O valoare de 1 "
 "dezactivează, în esență, aglomerarea notificărilor."
 
+#, fuzzy
 msgid ""
-"At start the CMC creates a fixed number of worker processes that are used "
-"for executing classical active checks. This number is configured here. If "
-"the number of processes is too low for then not all checks can be executed "
-"in time. Checks that run for a longer time block the workers longer. A "
-"larger number of helpers will consume more memory."
+"At start, the CMC creates a fixed number of worker processes that are used "
+"for executing standard active checks. This fixed number is configured here. "
+"If the number of processes is too low, not all checks can be executed in "
+"time. Checks that run for a longer time block the worker processes for "
+"longer. A larger number of helpers will consume more memory."
 msgstr ""
 "La pornire, CMC creează un număr fix de procese de lucru care sunt utilizate "
 "pentru executarea verificărilor active clasice. Acest număr este configurat "
@@ -6701,13 +6704,15 @@ msgstr ""
 "mai lungă de timp blochează lucrătorii mai mult timp. Un număr mai mare de "
 "asistenți va consuma mai multă memorie."
 
-msgid "At the beginning of every month at day"
+#, fuzzy
+msgid "At the beginning of every month on day"
 msgstr "La începutul fiecărei luni, în ziua"
 
 msgid "At the center of the page"
 msgstr "În centrul paginii"
 
-msgid "At the end of every month at day"
+#, fuzzy
+msgid "At the end of every month on day"
 msgstr "La sfârșitul fiecărei luni, în ziua"
 
 msgid ""
@@ -6722,20 +6727,22 @@ msgstr ""
 msgid "Att."
 msgstr "Att."
 
+#, fuzzy
 msgid ""
 "Attach a comment to the event. If you have bracketed groups in the text to "
 "match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</tt>, etc. "
-"for inserting the first, second etc matching group."
+"for inserting the first, second etc. matching group."
 msgstr ""
 "Atașați un comentariu la eveniment. Dacă aveți grupuri între paranteze în "
 "textul care trebuie să se potrivească, atunci puteți utiliza caracterele de "
 "poziție <tt>\\1</tt>, <tt>\\2</tt>, etc. pentru a insera primul, al doilea "
 "etc. grup care se potrivește."
 
+#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
-"tt>, etc. for inserting the first, second etc matching group."
+"tt>, etc. for inserting the first, second etc. matching group."
 msgstr ""
 "Atașați informații despre o persoană de contact. Dacă aveți grupuri între "
 "paranteze în textul care trebuie să se potrivească, atunci puteți utiliza "
@@ -6751,13 +6758,15 @@ msgstr "Portul Atto Fibrebridge FC"
 msgid "Attribute"
 msgstr "Atributul"
 
-msgid "Attribute Sync Plugins"
+#, fuzzy
+msgid "Attribute Sync Plug-ins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
 msgid "Attribute match value"
 msgstr "Valoarea de potrivire a atributului"
 
-msgid "Attribute sync plugins"
+#, fuzzy
+msgid "Attribute sync plug-ins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
 msgid "Attribute to search"
@@ -6815,20 +6824,15 @@ msgstr "Expirarea autentificării"
 msgid "Authentication Failures"
 msgstr "Eșecuri de autentificare"
 
-msgid "Authentication Mode"
-msgstr "Mod de autentificare"
-
-msgid "Authentication Source"
-msgstr "Sursa de autentificare"
-
-msgid "Authentication System Errors"
-msgstr "Erori ale sistemului de autentificare"
-
 msgid "Authentication failed"
 msgstr "Autentificarea a eșuat"
 
 msgid "Authentication failed. Invalid login/password."
 msgstr "Autentificarea a eșuat. Autentificare/parolă invalidă."
+
+#, fuzzy
+msgid "Authentication failures"
+msgstr "Eșecuri de autentificare"
 
 msgid "Authentication failures (last 5 minutes)"
 msgstr "Eșecuri de autentificare (ultimele 5 minute)"
@@ -6842,11 +6846,23 @@ msgstr "Mecanism de autentificare"
 msgid "Authentication method"
 msgstr "Metoda de autentificare"
 
+#, fuzzy
+msgid "Authentication mode"
+msgstr "Mod de autentificare"
+
 msgid "Authentication password"
 msgstr "Parola de autentificare"
 
 msgid "Authentication protocol"
 msgstr "Protocol de autentificare"
+
+#, fuzzy
+msgid "Authentication source"
+msgstr "Sursa de autentificare"
+
+#, fuzzy
+msgid "Authentication system errors"
+msgstr "Erori ale sistemului de autentificare"
 
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
@@ -7360,7 +7376,8 @@ msgstr "Valoarea medie a următorului câmp numeric: "
 msgid "Average values"
 msgstr "Valori medii"
 
-msgid "Average values for broad- and multicast packet rates"
+#, fuzzy
+msgid "Average values for broadcast and multicast packet rates"
 msgstr "Valori medii pentru ratele pachetelor de tip broad- și multicast"
 
 msgid "Average values for used bandwidth"
@@ -7670,9 +7687,6 @@ msgstr "Backup"
 msgid "Backup & restore"
 msgstr "Backup & Restaurare"
 
-msgid "Backup Age"
-msgstr "Vârsta de rezervă"
-
 msgid "Backup age"
 msgstr "Vârsta de rezervă"
 
@@ -7926,10 +7940,10 @@ msgstr "Cel mai bun stat"
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Cea mai bună stare, noduri %d, restricție la %s."
 
+#, fuzzy
 msgid ""
-"Best: The check function of the plugin will be applied to each individual "
-"node. The best outcome will determine the overall state of the clustered "
-"service."
+"Best: The plug-in's check function will be applied to each individual node. "
+"The best outcome will determine the overall state of the clustered service."
 msgstr ""
 "Cel mai bun: Funcția de verificare a plugin-ului va fi aplicată fiecărui nod "
 "în parte. Cel mai bun rezultat va determina starea generală a serviciului "
@@ -8071,7 +8085,8 @@ msgstr "Lățimea marginii"
 msgid "Both"
 msgstr "Atât"
 
-msgid "Both - Display the information for both, pod and container, levels"
+#, fuzzy
+msgid "Both - Display the information for both pod and container levels"
 msgstr ""
 "Ambele - Afișează informațiile pentru ambele niveluri, pod și container"
 
@@ -8103,14 +8118,15 @@ msgstr "Luminozitate"
 msgid "Brightness Levels"
 msgstr "Niveluri de luminozitate"
 
-msgid "Broad-/Multicast"
-msgstr "Broad-/Multicast"
-
 msgid "Broadcast packet rates"
 msgstr "Ratele pachetelor de difuzare"
 
 msgid "Broadcast packets"
 msgstr "Pachete de difuzare"
+
+#, fuzzy
+msgid "Broadcast/Multicast"
+msgstr "Broad-/Multicast"
 
 msgid "Broadcom bonding network interface on Windows"
 msgstr "Interfață de rețea Broadcom bonding pe Windows"
@@ -8133,7 +8149,8 @@ msgstr "Rupt"
 msgid "Broken GUI extensions"
 msgstr "Extensii GUI sparte"
 
-msgid "Browse the catalog of all check plugins, create static checks"
+#, fuzzy
+msgid "Browse the catalog of all check plug-ins, create static checks"
 msgstr ""
 "Răsfoiți catalogul tuturor plugin-urilor de verificare, creați verificări "
 "statice"
@@ -8312,11 +8329,12 @@ msgstr "Reguli și agregări Business Intelligence"
 msgid "Business reporting"
 msgstr "Raportarea afacerilor"
 
+#, fuzzy
 msgid ""
-"Business time series display seasonalities as a result of the human\n"
-"behaviors they represent. 5-day work weeks can produce higher loads and\n"
-"repetition on each week. While vacations can produce effects that repeat\n"
-"each year. Seasonality are this periodic oscillations of the time series."
+"Business time series display seasonalities as a result of the human "
+"behaviors they represent. 5-day working weeks can produce higher loads and "
+"weekly repetition, while vacations can produce effects that repeat each "
+"year. Seasonality are these periodic oscillations of the time series."
 msgstr ""
 "Seriile de timp ale întreprinderilor prezintă sezonalități ca urmare a\n"
 "comportamentelor umane pe care le reprezintă. Săptămânile de lucru de 5 zile "
@@ -8350,8 +8368,9 @@ msgstr "Dar oricum aveți voie să faceți modificări. "
 msgid "But you are not a member of any contact group."
 msgstr "Dar nu sunteți membru al niciunui grup de contact."
 
+#, fuzzy
 msgid ""
-"Buttons for switching globally states such as enabling checks and "
+"Buttons for globally switching states such as enabling checks and "
 "notifications"
 msgstr ""
 "Butoane pentru comutarea stărilor la nivel global, cum ar fi activarea "
@@ -8504,19 +8523,21 @@ msgstr ""
 "lățimea de bandă totală utilizată este opțională. Dacă setați niveluri, "
 "puteți lua în considerare și utilizarea mediei."
 
+#, fuzzy
 msgid ""
-"By activating this option you will deploy the agent plugin <tt>mk_db2</tt> "
+"By activating this option you can set levels on the total CPU utilization "
+"for all included processes."
+msgstr ""
+"Prin activarea acestei opțiuni, puteți seta nivelurile de utilizare totală a "
+"CPU pentru toate procesele incluse."
+
+#, fuzzy
+msgid ""
+"By activating this option you will deploy the <tt>mk_db2</tt> agent plug-in "
 "on your target system."
 msgstr ""
 "Prin activarea acestei opțiuni, veți implementa pluginul agent <tt>mk_db2</"
 "tt> pe sistemul țintă."
-
-msgid ""
-"By activating this options you can set levels on the total CPU utilization "
-"of all included processes."
-msgstr ""
-"Prin activarea acestei opțiuni, puteți seta nivelurile de utilizare totală a "
-"CPU pentru toate procesele incluse."
 
 msgid ""
 "By adding rules to this ruleset you can define a subset of your hosts to be "
@@ -9976,9 +9997,6 @@ msgstr "Schimbați Context Info în"
 msgid "Change OK State to"
 msgstr "Schimbați starea OK în"
 
-msgid "Change Timerange"
-msgstr "Modificarea intervalului de timp"
-
 msgid "Change WARNING State to"
 msgstr "Schimbați starea de AVERTIZARE în"
 
@@ -10012,8 +10030,8 @@ msgstr "Schimbarea stării evenimentului"
 msgid "Change event state?"
 msgstr "Schimbați starea evenimentului?"
 
-#, python-format
-msgid "Change graph timerange to: %s"
+#, fuzzy, python-format
+msgid "Change graph time range to: %s"
 msgstr "Schimbați intervalul de timp al graficului la: %s."
 
 msgid "Change infotext in check output"
@@ -10041,6 +10059,10 @@ msgstr "Schimbați starea"
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Schimbați tema implicită a interfeței de utilizator a instalației Checkmk"
+
+#, fuzzy
+msgid "Change time range"
+msgstr "Modificarea intervalului de timp"
 
 msgid "Change view display columns"
 msgstr "Modificarea coloanelor de afișare a vizualizării"
@@ -10517,7 +10539,7 @@ msgstr ""
 "care o gazdă poate fi accesată, de exemplu prin agent, SNMPv1, SNMPv2 pentru "
 "a afla configurația corectă de monitorizare pentru gazda respectivă."
 
-msgid "Check-Sql plugin uses different methods to find MS SQL instances"
+msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
 msgstr ""
 
 msgid ""
@@ -10528,36 +10550,6 @@ msgstr ""
 "Check_MK Livestatus ascultă, de obicei, doar pe un socket UNIX local - din "
 "motive de performanță și securitate. Această opțiune este utilizată pentru a-"
 "l face accesibil prin TCP pe un port configurabil cu LIVESTATUS_TCP_PORT."
-
-msgid ""
-"Check_MK has an efficient SNMP implementation called Inline SNMP which "
-"reduces the load produced by SNMP monitoring on the monitoring host "
-"significantly. This option is enabled by default for all SNMP hosts and it "
-"is a good idea to keep this default setting. However, there are SNMP devices "
-"which have problems with this SNMP implementation. You can use this rule to "
-"disable Inline SNMP for these hosts."
-msgstr ""
-"Check_MK are o implementare SNMP eficientă numită Inline SNMP care reduce "
-"semnificativ sarcina produsă de monitorizarea SNMP pe gazda de monitorizare. "
-"Această opțiune este activată în mod implicit pentru toate gazdele SNMP și "
-"este o idee bună să păstrați această setare implicită. Cu toate acestea, "
-"există dispozitive SNMP care au probleme cu această implementare SNMP. "
-"Puteți utiliza această regulă pentru a dezactiva Inline SNMP pentru aceste "
-"gazde."
-
-msgid ""
-"Check_MK usually uses an interval of one minute for the active Checkmk check "
-"and for legacy checks. Here you can specify a larger interval. Please note, "
-"that this setting only applies to active checks (those with the reschedule "
-"button). If you want to change the check interval of the 'Check_MK' service "
-"only, specify <tt><b>Check_MK$</b></tt> in the list of services."
-msgstr ""
-"Check_MK utilizează de obicei un interval de un minut pentru verificarea "
-"Checkmk activă și pentru verificările tradiționale. Aici puteți specifica un "
-"interval mai mare. Vă rugăm să rețineți că această setare se aplică numai la "
-"controalele active (cele cu buton de reprogramare). Dacă doriți să "
-"modificați intervalul de verificare numai pentru serviciul \"Check_MK\", "
-"specificați <tt><b>Check_MK$</b></tt> în lista de servicii."
 
 #, fuzzy
 msgid "Checkbox selection livetime"
@@ -10747,6 +10739,23 @@ msgstr ""
 "dispozitive SNMP care au probleme cu unele implementări SNMP. Puteți utiliza "
 "această regulă pentru a selecta SNMP Backend pentru aceste gazde."
 
+#, fuzzy
+msgid ""
+"Checkmk has an efficient SNMP implementation called Inline SNMP which "
+"reduces the load produced by SNMP monitoring on the monitoring host "
+"significantly. This option is enabled by default for all SNMP hosts and it "
+"is a good idea to keep this default setting. However, there are SNMP devices "
+"which have problems with this SNMP implementation. You can use this rule to "
+"disable Inline SNMP for these hosts."
+msgstr ""
+"Check_MK are o implementare SNMP eficientă numită Inline SNMP care reduce "
+"semnificativ sarcina produsă de monitorizarea SNMP pe gazda de monitorizare. "
+"Această opțiune este activată în mod implicit pentru toate gazdele SNMP și "
+"este o idee bună să păstrați această setare implicită. Cu toate acestea, "
+"există dispozitive SNMP care au probleme cu această implementare SNMP. "
+"Puteți utiliza această regulă pentru a dezactiva Inline SNMP pentru aceste "
+"gazde."
+
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 
@@ -10805,6 +10814,21 @@ msgstr ""
 "root atunci când se creează un nou sistem de fișiere. Cu această opțiune "
 "puteți face ca Checkmk să afișeze cantitatea actuală de spațiu rezervat, dar "
 "încă neutilizat."
+
+#, fuzzy
+msgid ""
+"Checkmk usually uses an interval of one minute for the active Checkmk check "
+"and for legacy checks. Here you can specify a larger interval. Please note, "
+"that this setting only applies to active checks (those with the reschedule "
+"button). If you want to change the check interval of the 'Check_MK' service "
+"only, specify <tt><b>Check_MK$</b></tt> in the list of services."
+msgstr ""
+"Check_MK utilizează de obicei un interval de un minut pentru verificarea "
+"Checkmk activă și pentru verificările tradiționale. Aici puteți specifica un "
+"interval mai mare. Vă rugăm să rețineți că această setare se aplică numai la "
+"controalele active (cele cu buton de reprogramare). Dacă doriți să "
+"modificați intervalul de verificare numai pentru serviciul \"Check_MK\", "
+"specificați <tt><b>Check_MK$</b></tt> în lista de servicii."
 
 msgid "Checkmk versions"
 msgstr "Versiuni Checkmk"
@@ -12364,9 +12388,10 @@ msgstr ""
 msgid "Configure the automatic removal of monitored hosts."
 msgstr "Configurați eliminarea automată a gazdelor monitorizate."
 
+#, fuzzy
 msgid ""
 "Configure the base URL for the Monitoring Web-GUI here. Include the site "
-"name. Used for link to check_mk out of jira."
+"name. Used for link to Checkmk out of jira."
 msgstr ""
 "Configurați aici URL-ul de bază pentru Monitorizare Web-GUI. Includeți "
 "numele site-ului. Utilizat pentru linkul către check_mk din jira."
@@ -13889,7 +13914,8 @@ msgstr "Expirarea acreditărilor"
 msgid "Credentials for Connect (ODBC interface)"
 msgstr "Acreditive pentru Connect (interfața ODBC)"
 
-msgid "Credentials for HTTP Basic Authentication"
+#, fuzzy
+msgid "Credentials for HTTP basic authentication"
 msgstr "Datele de autentificare pentru autentificarea HTTP Basic"
 
 msgid "Credentials for SNMPv3 with authentication and privacy (authPriv)"
@@ -14310,7 +14336,8 @@ msgstr "Legături personalizate în subsol"
 msgid "Custom graph"
 msgstr "Grafic personalizat"
 
-msgid "Custom graph timeranges"
+#, fuzzy
+msgid "Custom graph time ranges"
 msgstr "Timerangele grafice personalizate"
 
 msgid "Custom graphs"
@@ -14524,7 +14551,8 @@ msgstr ""
 "cantitatea de notificări, iar dacă se utilizează <tt>$COUNT_HOSTS$</tt> "
 "atunci se va aplica cantitatea de gazde."
 
-msgid "Customize timerange"
+#, fuzzy
+msgid "Customize time range"
 msgstr "Personalizați intervalul de timp"
 
 msgid "Customize title"
@@ -15372,7 +15400,8 @@ msgstr ""
 msgid "Default profile"
 msgstr "Profil de utilizator implicit"
 
-msgid "Default reporting timerange"
+#, fuzzy
+msgid "Default reporting time range"
 msgstr "Interval de timp de raportare implicit"
 
 msgid "Default rule pack"
@@ -17208,7 +17237,8 @@ msgstr "Afișarea statisticilor SLA"
 msgid "Display SLA subresults for each requirement"
 msgstr "Afișați subrezultatele SLA pentru fiecare cerință"
 
-msgid "Display SLA timerange and period in table header"
+#, fuzzy
+msgid "Display SLA time range and period in table header"
 msgstr "Afișarea intervalului de timp și a perioadei SLA în antetul tabelului"
 
 msgid "Display VM power state <i>additionally</i> on"
@@ -18705,10 +18735,11 @@ msgstr ""
 "Fiecare etichetă trebuie să fie unică și nu poate fi folosită de mai multe "
 "ori."
 
+#, fuzzy
 msgid ""
 "Each user defined role is based on one of the built-in roles. When created "
 "it will start with all permissions of that role. When due to a software "
-"update or installation of an addons new permissions appear, the user role "
+"update or installation of an add-on new permissions appear, the user role "
 "will get or not get those new permissions based on the default settings of "
 "the built-in role it's based on."
 msgstr ""
@@ -24365,9 +24396,10 @@ msgstr ""
 "Aici puteți defini starea incidentului în cazul unei confirmări finale a "
 "gazdei sau a unei probleme de serviciu."
 
+#, fuzzy
 msgid ""
-"Here you can define the timerange to query, eg. the last x minutes from now. "
-"The query will then check for the count of log messages in the defined "
+"Here you can define the time range to query, eg. the last x minutes from "
+"now. The query will then check for the count of log messages in the defined "
 "range. Default is 1 minute."
 msgstr ""
 "Aici puteți defini intervalul de timp de interogare, de exemplu, ultimele x "
@@ -24652,8 +24684,9 @@ msgstr ""
 "Aici puteți seta nivelurile pentru indicatorii de performanță ORACLE "
 "Performance."
 
+#, fuzzy
 msgid ""
-"Here you can set levels on failures in the timerange specified in the "
+"Here you can set levels on failures in the time range specified in the "
 "datasource (default: 30m)."
 msgstr ""
 "Aici puteți seta niveluri la eșecuri în intervalul de timp specificat în "
@@ -25102,7 +25135,8 @@ msgstr "Gazda Down"
 msgid "Host Events"
 msgstr "Gazda evenimentelor"
 
-msgid "Host Graphs with Timerange Previews"
+#, fuzzy
+msgid "Host Graphs with Time Range Previews"
 msgstr "Grafice gazdă cu previziuni ale intervalului de timp"
 
 msgid "Host IP"
@@ -25369,12 +25403,6 @@ msgstr "Gazda are un pachet software"
 msgid "Host has tag <b>%s</b>"
 msgstr "Gazda are eticheta <b>%s</b>"
 
-msgid "Host hover menu shown in BI visualization"
-msgstr "Meniul hover al gazdei afișat în vizualizarea BI"
-
-msgid "Host hover menu shown in topolgoy visualization"
-msgstr "Meniul hover al gazdei afișat în vizualizarea topolgoy"
-
 msgid "Host icons"
 msgstr "Icoane gazdă"
 
@@ -25608,6 +25636,14 @@ msgstr "Etichete gazdă (cu titluri)"
 
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Gazda care trebuie utilizată pentru conectarea la Cisco Prime"
+
+#, fuzzy
+msgid "Host tooltip shown in BI visualization"
+msgstr "Meniul hover al gazdei afișat în vizualizarea BI"
+
+#, fuzzy
+msgid "Host tooltip shown in topolgoy visualization"
+msgstr "Meniul hover al gazdei afișat în vizualizarea topolgoy"
 
 #, python-format
 msgid "Host uses xinetd or systemd %s"
@@ -25903,8 +25939,9 @@ msgstr "Gazde fără un agent copt"
 msgid "Hosts without system description OID"
 msgstr "Gazde fără descriere de sistem OID"
 
+#, fuzzy
 msgid ""
-"Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring "
+"Hosts, Services, Groups, Time Periods, Business Intelligence and Monitoring "
 "Configuration"
 msgstr ""
 "Gazde, Servicii, Grupuri, Perioade de timp, Business Intelligence și "
@@ -28580,9 +28617,10 @@ msgstr ""
 "precalcul. După acest timp, toate perioadele rămân în ultima lor stare. "
 "Asigurați-vă că ați <i>Activate Changes</i> înainte de acel moment."
 
+#, fuzzy
 msgid ""
 "In order to make Checkmk more consistent, the descriptions of several "
-"services have been renamed in newer Check_MK versions. One example is the "
+"services have been renamed in newer Checkmk versions. One example is the "
 "filesystem services that have been renamed from <tt>fs_</tt> into "
 "<tt>Filesystem</tt>. But since renaming of existing services has many "
 "implications - including existing rules, performance data and availability "
@@ -28978,7 +29016,8 @@ msgstr "Index"
 msgid "Index absolute levels"
 msgstr "Niveluri absolute ale indicelui"
 
-msgid "Index failure in the defined timerange upper levels"
+#, fuzzy
+msgid "Index failure in the defined time range upper levels"
 msgstr ""
 "Eșecul indicelui în nivelurile superioare ale intervalului de timp definit"
 
@@ -32448,9 +32487,6 @@ msgstr "Încărcare..."
 msgid "Local"
 msgstr "Local"
 
-msgid "Local Authentication Data"
-msgstr "Date de autentificare locală"
-
 msgid "Local Client - Remote Server"
 msgstr "Client local - Server la distanță"
 
@@ -32487,6 +32523,10 @@ msgstr "Variabile locale"
 
 msgid "Local Volumes"
 msgstr "Volumele locale"
+
+#, fuzzy
+msgid "Local authentication data"
+msgstr "Date de autentificare locală"
 
 msgid "Local checks"
 msgstr "Controale locale"
@@ -33680,8 +33720,9 @@ msgstr ""
 "înregistra cheile criptografice generate de dispozitive de autentificare, "
 "cum ar fi YubiKey."
 
+#, fuzzy
 msgid ""
-"Make use of an Authenicatior App to generate time-based one-time validation "
+"Make use of an authenicator app to generate time-based one-time validation "
 "codes."
 msgstr ""
 "Utilizați o aplicație Authenicatior App pentru a genera coduri de validare "
@@ -37011,9 +37052,6 @@ msgstr "Nu (Eroare: %s, Cod: %d, Adâncime: %d)"
 msgid "No API integrations, no Checkmk agent"
 msgstr "Fără integrări API, fără agent Checkmk"
 
-msgid "No Authentication"
-msgstr "Fără autentificare"
-
 msgid "No CSRF token received"
 msgstr "Nu s-a primit niciun token CSRF"
 
@@ -37066,6 +37104,10 @@ msgstr "Nu au fost procesate cereri de înregistrare a agenților"
 
 msgid "No appropriate request ID"
 msgstr "Nu există un ID de cerere corespunzător"
+
+#, fuzzy
+msgid "No authentication"
+msgstr "Fără autentificare"
 
 msgid "No authentication, no privacy"
 msgstr "Fără autentificare, fără confidențialitate"
@@ -37389,11 +37431,11 @@ msgstr "Nici o gazdă de testare"
 msgid "No title"
 msgstr "Fără titlu"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "No unpackaged files found. If you want to create new extension packages then "
 "you need to create files below the directory <tt>%s/local</tt> of your "
-"Check_MK instance."
+"Checkmk instance."
 msgstr ""
 "Nu s-au găsit fișiere neambalate. Dacă doriți să creați noi pachete de "
 "extensii, atunci trebuie să creați fișiere sub directorul <tt>%s/local</tt> "
@@ -41211,7 +41253,8 @@ msgstr ""
 "timp afișat. Procentuala aplicată unui grup de măsurători se calculează la "
 "fiecare pas de timp."
 
-msgid "Percentile within the timerange"
+#, fuzzy
+msgid "Percentile within the time range"
 msgstr "Procentuală în cadrul intervalului de timp"
 
 msgid "Percentual levels"
@@ -44184,9 +44227,6 @@ msgstr "Numele regiunii"
 msgid "Regions to monitor"
 msgstr "Regiuni de monitorizat"
 
-msgid "Register Authenticator App"
-msgstr "Înregistrați aplicația Authenticator App"
-
 msgid "Register all hosts & download all monitoring agents"
 msgstr "Înregistrați toate gazdele & descărcați toți agenții de monitorizare"
 
@@ -44962,10 +45002,11 @@ msgstr "Replicația este dezactivată"
 msgid "Replication lag"
 msgstr "Decalaj de replicare"
 
+#, fuzzy
 msgid ""
 "Replication lag is a delay between an operation on the primary and the "
-"application of that operation from the oplog to the secondary.With this "
-"configuration, check_mk will alert if replication lag is exceeding a "
+"application of that operation from the oplog to the secondary. With this "
+"configuration, Checkmk will alert if replication lag is exceeding a "
 "threshold over an extended period of time."
 msgstr ""
 "Decalajul de replicare este o întârziere între o operațiune de pe primar și "
@@ -44985,10 +45026,11 @@ msgstr "Raport"
 msgid "Report Properties"
 msgstr "Proprietăți de raport"
 
+#, fuzzy
 msgid ""
 "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
 "\n"
-"Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
+"Time range: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
 "$UNTIL_TIME$"
 msgstr ""
 "Raport creat $NOW_DATE$ $NOW_TIME$ de $USER_ALIAS$ ($USER_ID$)\n"
@@ -45735,9 +45777,6 @@ msgstr "Cadrul robotului: Ultimul jurnal de erori"
 msgid "Robot Framework: Last log"
 msgstr "Cadrul robotului: Ultimul jurnal"
 
-msgid "RobotMK logs"
-msgstr "Jurnalele RobotMK"
-
 msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
@@ -45754,6 +45793,10 @@ msgstr "Starea sitului"
 #, fuzzy
 msgid "Robotmk Tests"
 msgstr "Robotmk"
+
+#, fuzzy
+msgid "Robotmk logs"
+msgstr "Jurnalele RobotMK"
 
 msgid "Role"
 msgstr "Rol"
@@ -46342,7 +46385,8 @@ msgstr "Setări SLA"
 msgid "SLA specification"
 msgstr "Specificația SLA"
 
-msgid "SLA timerange"
+#, fuzzy
+msgid "SLA time range"
 msgstr "Interval de timp SLA"
 
 msgid "SLA type"
@@ -47912,7 +47956,8 @@ msgstr "Grafice de servicii"
 msgid "Service graphs of host"
 msgstr "Grafice de servicii ale gazdei"
 
-msgid "Service graphs with timerange previews"
+#, fuzzy
+msgid "Service graphs with time range previews"
 msgstr "Grafice de servicii cu previzualizări ale intervalului de timp"
 
 # georgem ##############
@@ -47951,9 +47996,6 @@ msgstr "Grupuri de servicii, fuzionate"
 
 msgid "Service hard states"
 msgstr "Stări tari de serviciu"
-
-msgid "Service hover menu shown in BI visualization"
-msgstr "Meniul de navigare a serviciului afișat în vizualizarea BI"
 
 msgid "Service icons"
 msgstr "Icoane de serviciu"
@@ -48135,6 +48177,10 @@ msgstr "Etichete de serviciu"
 
 msgid "Service tags (with titles)"
 msgstr "Etichete de serviciu (cu titluri)"
+
+#, fuzzy
+msgid "Service tooltip shown in BI visualization"
+msgstr "Meniul de navigare a serviciului afișat în vizualizarea BI"
 
 msgid "Service was WARN and goes CRIT - acknowledgment doesn't expire."
 msgstr ""
@@ -49357,8 +49403,9 @@ msgstr "Afișați / Ascundeți parola"
 msgid "Shows a single aggregation."
 msgstr "Afișează o singură agregare."
 
+#, fuzzy
 msgid ""
-"Shows all graphs including timerange selections of a collection of services."
+"Shows all graphs including time range selections of a collection of services."
 msgstr ""
 "Afișează toate graficele, inclusiv selecțiile de interval de timp ale unei "
 "colecții de servicii."
@@ -49366,8 +49413,9 @@ msgstr ""
 msgid "Shows details of a host."
 msgstr "Afișează detalii despre o gazdă."
 
+#, fuzzy
 msgid ""
-"Shows host graphs including timerange selections of a collection of hosts."
+"Shows host graphs including time range selections of a collection of hosts."
 msgstr ""
 "Afișează grafice ale gazdelor, inclusiv selecții ale intervalelor de timp "
 "ale unei colecții de gazde."
@@ -50113,9 +50161,10 @@ msgstr ""
 msgid "Some but not all package types are signed with key '%s'"
 msgstr "Unele, dar nu toate tipurile de pachete sunt semnate cu cheia '%s'"
 
+#, fuzzy
 msgid ""
-"Some devices send texts in non-ASCII characters. Check_MK always assumes "
-"UTF-8 encoding. You can declare other  other encodings here"
+"Some devices send texts in non-ASCII characters. Checkmk always assumes "
+"UTF-8 encoding. You can declare other encodings here"
 msgstr ""
 "Unele dispozitive trimit texte în caractere non-ASCII. Check_MK presupune "
 "întotdeauna codificarea UTF-8. Puteți declara și alte codificări aici"
@@ -52935,9 +52984,6 @@ msgstr "Înregistrarea mesajelor de tip Syslog"
 msgid "System"
 msgstr "Sistem"
 
-msgid "System Authentication"
-msgstr "Autentificarea sistemului"
-
 msgid "System Events on APX Inrow Devices"
 msgstr "Evenimente de sistem pe dispozitivele APX Inrow"
 
@@ -52964,6 +53010,10 @@ msgstr "Parametrii sistemului"
 
 msgid "System Stats"
 msgstr "Statistici de sistem"
+
+#, fuzzy
+msgid "System authentication"
+msgstr "Autentificarea sistemului"
 
 msgid "System global targets"
 msgstr "Obiective globale ale sistemului"
@@ -53603,9 +53653,9 @@ msgstr "Că multe permisiuni nu folosesc valorile implicite din fabrică."
 msgid "That many times the message must occur until an event is created"
 msgstr "De câte ori trebuie să apară mesajul până când se creează un eveniment"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The \"Authentication Expiration\" attribute (%s) could not be fetched from "
+"The \"authentication expiration\" attribute (%s) could not be fetched from "
 "the LDAP server for user %s."
 msgstr ""
 "Atributul \"Authentication Expiration\" (%s) nu a putut fi preluat de pe "
@@ -54485,20 +54535,21 @@ msgstr ""
 "poate fi monitorizat și un singur fișier. Dacă nu sunt specificate secțiuni, "
 "pluginul nu produce rezultate."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
 "logfiles for new messages, classifies these according to a set of rules and "
-"sends (only) relevant messages to the Check_MK server for further "
-"processing. Here the messages can further be (re-)classified using the <a "
-"href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch "
-"Ruleset</a>. <b>Note:</b> If you want to configure several log files with "
-"different sets of patterns, then simply create several rules. In this "
-"ruleset <b>all</b> matching rules are being executed, not only the first "
-"one. <b>Note (2):</b> This duplicate possibility for classification is due "
-"to performance issues. It is always a good idea that the agent forwards only "
-"messages that are potential problems in order to cut down network traffic. "
-"Central reclassification on the other hand is more convenient because no "
-"agent update is necessary when rules need to be changed."
+"sends (only) relevant messages to the Checkmk server for further processing. "
+"Here the messages can further be (re-)classified using the <a href='wato.py?"
+"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch Ruleset</a>. "
+"<b>Note:</b> If you want to configure several log files with different sets "
+"of patterns, then simply create several rules. In this ruleset <b>all</b> "
+"matching rules are being executed, not only the first one. <b>Note (2):</b> "
+"This duplicate possibility for classification is due to performance issues. "
+"It is always a good idea that the agent forwards only messages that are "
+"potential problems in order to cut down network traffic. Central "
+"reclassification on the other hand is more convenient because no agent "
+"update is necessary when rules need to be changed."
 msgstr ""
 "Plugin-ul agent <tt>mk_logwatch.py</tt> monitorizează un set configurat de "
 "fișiere de jurnal de text pentru mesaje noi, le clasifică în funcție de un "
@@ -56605,8 +56656,9 @@ msgstr ""
 "această setare nu are niciun efect asupra unor verificări ale sistemului de "
 "fișiere."
 
+#, fuzzy
 msgid ""
-"The number of seconds a cache file may be old if check_mk should use it "
+"The number of seconds a cache file may be old if Checkmk should use it "
 "instead of getting information from the target hosts while checking a "
 "cluster. Per default this is enabled and set to 90 seconds. If your check "
 "cycle is set to a larger value than one minute then you should increase this "
@@ -58728,8 +58780,8 @@ msgstr "Acest pseudonim este deja utilizat în grupul %s %s."
 msgid "This alias is already used in the role %s."
 msgstr "Acest pseudonim este deja utilizat în rolul %s."
 
-#, python-format
-msgid "This alias is already used in timeperiod %s."
+#, fuzzy, python-format
+msgid "This alias is already used in time period %s."
 msgstr "Acest pseudonim este deja utilizat în perioada de timp %s."
 
 msgid ""
@@ -58802,8 +58854,9 @@ msgstr "Această sarcină de backup nu există."
 msgid "This backup target does not exist."
 msgstr "Această țintă de backup nu există."
 
+#, fuzzy
 msgid ""
-"This boolean variable allows you to bring check_mk into a dry run mode. No "
+"This boolean variable allows you to bring Checkmk into a dry run mode. No "
 "hosts will be contacted, no DNS lookups will take place and data is read "
 "from cache files that have been created during normal operation or have been "
 "copied here from another monitoring site."
@@ -59292,10 +59345,11 @@ msgstr ""
 "controale programate imediat. Notă: întârzierea maximă este de cinci ori mai "
 "mare decât intervalul normal de verificare"
 
+#, fuzzy
 msgid ""
-"This interval is applied to all new non-Check_MK active checks that go "
-"beyond the number of immediately scheduled checks. Note: the maximum delay "
-"is five times the normal check interval"
+"This interval is applied to all new non-Checkmk active checks that go beyond "
+"the number of immediately scheduled checks. Note: the maximum delay is five "
+"times the normal check interval"
 msgstr ""
 "Acest interval se aplică tuturor noilor controale active non-Check_MK care "
 "depășesc numărul de controale imediat programate. Notă: întârzierea maximă "
@@ -59856,11 +59910,12 @@ msgstr ""
 "de stare ale gazdelor și serviciilor. Acest lucru accelerează dramatic "
 "interogările de disponibilitate pentru instalațiile mari."
 
+#, fuzzy
 msgid ""
 "This option enables the Event Console - The event processing and "
 "classification daemon of Checkmk. You can also configure whether or not the "
 "Event Console shal listen for incoming SNMP traps or syslog messages. Please "
-"note that only a single Checkmk site per Check_MK server can listen for such "
+"note that only a single Checkmk site per Checkmk server can listen for such "
 "messages."
 msgstr ""
 "Această opțiune activează Event Console - Daemonul de procesare și "
@@ -60297,8 +60352,9 @@ msgstr ""
 "administrare web al Checkmk's. Fără această permisiune, toate referințele la "
 "Setup (butoane, linkuri, snapins) vor fi invizibile."
 
+#, fuzzy
 msgid ""
-"This permissions provides a checkbox and timerange in the personal settings "
+"This permissions provides a checkbox and time range in the personal settings "
 "of the user that allows him to completely disable all of his notifications. "
 "Use with caution."
 msgstr ""
@@ -60926,10 +60982,11 @@ msgstr ""
 msgid "This rule allows you to override netapp warnings"
 msgstr "Această regulă vă permite să anulați avertismentele netapp"
 
+#, fuzzy
 msgid ""
-"This rule allows you to restrict the access to the Check_MK agent to certain "
+"This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
-"your Check_MK servers here. You can enter either IP addresses in the form "
+"your Checkmk servers here. You can enter either IP addresses in the form "
 "<tt>1.2.3.4</tt> or networks in the style <tt>1.2.0.0/16</tt>. If you leave "
 "this configuration empty or create no rule then <b>all</b> addresses are "
 "allowed to access the agent. IPv6 addresses and networks are also allowed."
@@ -62357,13 +62414,14 @@ msgstr ""
 "Această variabilă permite specificarea portului TCP care urmează să fie "
 "utilizat pentru conectarea la agent în funcție de gazdă. "
 
+#, fuzzy
 msgid ""
 "This variable allows you to configure the numbr of OIDs Checkmk should "
 "request at once. This rule only applies to SNMP hosts that are configured to "
 "be bulk walk hosts.You may want to use this rule to tune SNMP performance. "
 "Be aware: A higher value is not always better. It may decrease the "
-"transactions between Check_MK and the target system, but may increase the "
-"OID overhead in case you only need a small amount of OIDs."
+"transactions between Checkmk and the target system, but may increase the OID "
+"overhead in case you only need a small amount of OIDs."
 msgstr ""
 "Această variabilă vă permite să configurați numărul de OID-uri pe care "
 "Checkmk trebuie să le solicite simultan. Această regulă se aplică numai "
@@ -62855,6 +62913,10 @@ msgstr "Intervalul de timp pentru calcularea tendinței temperaturii"
 msgid "Time range from report context"
 msgstr "Intervalul de timp de la contextul raportului"
 
+#, fuzzy
+msgid "Time range synchronization"
+msgstr "Sincronizarea intervalului de timp"
+
 msgid "Time range to consider"
 msgstr "Intervalul de timp de luat în considerare"
 
@@ -63151,12 +63213,6 @@ msgstr "Timeout în așteptarea unui canal liber"
 
 msgid "Timer"
 msgstr "Cronometru"
-
-msgid "Timerange"
-msgstr "Interval de timp"
-
-msgid "Timerange synchronization"
-msgstr "Sincronizarea intervalului de timp"
 
 msgid "Times"
 msgstr "Times"
@@ -67671,17 +67727,20 @@ msgstr "Niveluri superioare pentru utilizarea licenței"
 msgid "Upper levels for the logs usage size"
 msgstr "Niveluri superioare pentru dimensiunea de utilizare a jurnalelor"
 
-msgid "Upper levels for the number of active database connections"
-msgstr "Niveluri superioare pentru numărul de conexiuni active la baza de date"
-
-msgid "Upper levels for the number of http request per second"
+#, fuzzy
+msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Niveluri superioare pentru numărul de cereri http pe secundă"
 
-msgid "Upper levels for the number of https request per second"
-msgstr "Niveluri superioare pentru numărul de cereri https pe secundă"
-
-msgid "Upper levels for the number of httpv2 request per second"
+#, fuzzy
+msgid "Upper levels for the number of HTTP/2 requests per second"
 msgstr "Niveluri superioare pentru numărul de cereri httpv2 pe secundă"
+
+#, fuzzy
+msgid "Upper levels for the number of HTTPS request per second"
+msgstr "Niveluri superioare pentru numărul de cereri http pe secundă"
+
+msgid "Upper levels for the number of active database connections"
+msgstr "Niveluri superioare pentru numărul de conexiuni active la baza de date"
 
 msgid "Upper levels for the number of locks"
 msgstr "Niveluri superioare pentru numărul de încuietori"
@@ -71109,11 +71168,12 @@ msgstr ""
 "mediate <b>înainte de</b> aplicarea nivelurilor. Dacă setați această opțiune "
 "la zero, se dezactivează calcularea mediei."
 
+#, fuzzy
 msgid ""
 "When this option is active you will not get <b>any</b> alerts or other "
 "notifications via email, SMS or similar. This overrides all other "
 "notification settings and rules, so make sure that you know what you do. "
-"Moreover you can specify a timerange where no notifications are generated."
+"Moreover you can specify a time range where no notifications are generated."
 msgstr ""
 "Atunci când această opțiune este activă, nu veți primi <b>nicio alertă</b> "
 "sau alte notificări prin e-mail, SMS sau altele similare. Această opțiune "
@@ -71908,8 +71968,9 @@ msgstr ""
 "mai sus, dar cu URL codificat</li><li>$USER_ID$: ID-ul de utilizator al "
 "utilizatorului activ în prezent</li></ul>."
 
+#, fuzzy
 msgid ""
-"With this setting, the special agent will also contact the Check_MK agent on "
+"With this setting, the special agent will also contact the Checkmk agent on "
 "the same system at the specified port."
 msgstr ""
 "Cu această setare, agentul special va contacta, de asemenea, agentul "
@@ -72250,20 +72311,21 @@ msgstr "Aveți deja un element cu ID-ul <b>%s</b>."
 msgid "You are analysing this notification"
 msgstr "Analizați această notificare"
 
+#, fuzzy
 msgid ""
 "You are currently not using the Checkmk Micro Core, but this snapshot uses "
-"the Check_MK Micro Core. If you need to migrate your data, you could "
-"consider changing the core, restoring the snapshot and changing the core "
-"back again."
+"the Checkmk Micro Core. If you need to migrate your data, you could consider "
+"changing the core, restoring the snapshot and changing the core back again."
 msgstr ""
 "În prezent nu utilizați Checkmk Micro Core, dar acest instantaneu utilizează "
 "Check_MK Micro Core. Dacă aveți nevoie să migrați datele, ați putea lua în "
 "considerare schimbarea nucleului, restaurarea instantaneului și schimbarea "
 "nucleului din nou."
 
+#, fuzzy
 msgid ""
 "You are currently using the Checkmk Micro Core, but this snapshot does not "
-"use the Check_MK Micro Core. If you need to migrate your data, you could "
+"use the Checkmk Micro Core. If you need to migrate your data, you could "
 "consider changing the core, restoring the snapshot and changing the core "
 "back again."
 msgstr ""
@@ -72375,17 +72437,18 @@ msgstr "Nu aveți voie să vizualizați această pagină"
 msgid "You are required to change your password before proceeding."
 msgstr "Vi se cere să vă schimbați parola înainte de a continua."
 
+msgid "You are trying to edit a rule which does not exist anymore."
+msgstr "Încercați să editați o regulă care nu mai există."
+
+#, fuzzy
 msgid ""
-"You are trying to Checkmk together with a threaded Apache multiprocessing "
-"module (MPM). Check_MK is only working with the prefork module. Please "
-"change the MPM module to make Check_MK work."
+"You are trying to use Checkmk together with a threaded Apache "
+"multiprocessing module (MPM). Checkmk is only working with the prefork "
+"module. Please change the MPM module to make Checkmk work."
 msgstr ""
 "Încercați să utilizați Checkmk împreună cu un modul de multiprocesare Apache "
 "(MPM) cu fire de execuție. Check_MK funcționează numai cu modulul prefork. "
 "Vă rugăm să schimbați modulul MPM pentru ca Check_MK să funcționeze."
-
-msgid "You are trying to edit a rule which does not exist anymore."
-msgstr "Încercați să editați o regulă care nu mai există."
 
 #, python-format
 msgid ""
@@ -76347,6 +76410,18 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Backup Age"
+#~ msgstr "Vârsta de rezervă"
+
+#~ msgid "Register Authenticator App"
+#~ msgstr "Înregistrați aplicația Authenticator App"
+
+#~ msgid "Timerange"
+#~ msgstr "Interval de timp"
+
+#~ msgid "Upper levels for the number of https request per second"
+#~ msgstr "Niveluri superioare pentru numărul de cereri https pe secundă"
 
 #~ msgid "Acknowledge Incompatible Werks"
 #~ msgstr "Recunoașteți lucrările incompatibile"

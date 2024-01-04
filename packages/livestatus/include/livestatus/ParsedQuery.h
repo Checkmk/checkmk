@@ -20,7 +20,6 @@
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/RendererBrokenCSV.h"
-#include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/Triggers.h"
 
@@ -34,7 +33,6 @@ public:
     ParsedQuery(const std::vector<std::string> &lines,
                 const std::function<std::vector<std::shared_ptr<Column>>()>
                     &all_columns,
-                const std::function<Row(const std::string &)> &get,
                 const ColumnCreator &make_column);
 
     std::optional<std::string> error;
@@ -56,7 +54,7 @@ public:
     std::optional<std::string> user;
     std::chrono::milliseconds wait_timeout{0};
     Triggers::Kind wait_trigger{Triggers::Kind::all};
-    Row wait_object{nullptr};
+    std::optional<std::string> wait_object;
     std::chrono::seconds timezone_offset{0};
 
 private:
@@ -88,9 +86,7 @@ private:
     void parseAuthUserHeader(std::string_view line);
     void parseWaitTimeoutLine(std::string_view line);
     void parseWaitTriggerLine(std::string_view line);
-    void parseWaitObjectLine(
-        std::string_view line,
-        const std::function<Row(const std::string &)> &get);
+    void parseWaitObjectLine(std::string_view line);
     void parseLocaltimeLine(std::string_view line);
 };
 

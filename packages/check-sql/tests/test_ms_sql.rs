@@ -5,15 +5,12 @@
 mod common;
 use std::collections::HashSet;
 
-use check_sql::{
-    config::yaml::trace_tools,
-    ms_sql::{
-        client::{self, Client},
-        instance::{self, SqlInstance, SqlInstanceBuilder},
-        query,
-        section::Section,
-        sqls,
-    },
+use check_sql::ms_sql::{
+    client::{self, Client},
+    instance::{self, SqlInstance, SqlInstanceBuilder},
+    query,
+    section::Section,
+    sqls,
 };
 
 use check_sql::setup::Env;
@@ -877,13 +874,17 @@ fn test_run_local_as_plugin_without_config() {
 fn test_check_log_file() {
     let log_dir = tools::create_temp_process_dir();
     let log_dir_path = log_dir.path();
-    let _ = tools::run_bin()
+    let output = tools::run_bin()
         .env("MK_CONFDIR", ".")
         .env("MK_LOGDIR", log_dir_path)
-        .unwrap_err()
-        .as_output()
-        .unwrap();
-    assert!(log_dir_path.join("check-sql_rCURRENT.log").exists());
+        .unwrap_err();
+    let (stderr, code) = tools::get_bad_results(&output).unwrap();
+    assert!(
+        log_dir_path.join("check-sql_rCURRENT.log").exists(),
+        "{:?}\n{:?}",
+        stderr,
+        code
+    );
 }
 
 const EXPECTED_START: &str = r"<<<mssql_instance:sep(124)>>>
@@ -1022,7 +1023,6 @@ async fn test_check_config_exec_piggyback_remote() {
     tools::create_file_with_content(dir.path(), "check-sql.yml", &content);
     let check_config = CheckConfig::load_file(&dir.path().join("check-sql.yml")).unwrap();
     let output = check_config.exec(&Env::default()).await.unwrap();
-    trace_tools::write_stderr(&output);
     assert!(!output.is_empty());
 }
 

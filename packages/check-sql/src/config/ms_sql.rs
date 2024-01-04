@@ -263,10 +263,16 @@ impl Connection {
                     .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
                     .to_lowercase(),
                 fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
-                port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
+                port: conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
+                    log::debug!("no port specified, using default");
+                    defaults::CONNECTION_PORT
+                }),
                 socket: conn.get_pathbuf(keys::SOCKET),
                 tls: ConnectionTls::from_yaml(conn)?,
-                timeout: conn.get_int::<u64>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
+                timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
+                    log::debug!("no timeout specified, using default");
+                    defaults::CONNECTION_TIMEOUT
+                }),
             }
             .ensure(auth),
         ))

@@ -3,11 +3,12 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::args::Args;
+use crate::config::system::{Logging, SystemConfig};
 use crate::config::CheckConfig;
 use crate::constants;
 use anyhow::Result;
 use clap::Parser;
-use flexi_logger::{self, FileSpec, LogSpecification};
+use flexi_logger::{self, Cleanup, Criterion, FileSpec, LogSpecification};
 use std::env::ArgsOs;
 use std::path::{Path, PathBuf};
 
@@ -85,47 +86,64 @@ pub enum SendTo {
 
 pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
     let args = Args::parse_from(args);
+    let config_file = get_config_file(&args);
+
+    let logging_config = get_system_config(&config_file)
+        .map(|x| Some(x.logging().to_owned()))
+        .unwrap_or(None);
     let environment = Env::new(&args);
-    init_logging(&args, &environment)?;
-    Ok((get_check_config(&args)?, environment))
+    init_logging(&args, &environment, logging_config)?;
+    Ok((get_check_config(&config_file)?, environment))
 }
 
-fn init_logging(args: &Args, environment: &Env) -> Result<()> {
-    let level = &args.logging_level();
+fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Result<()> {
+    let l = logging.unwrap_or(Logging::default());
+    let level = args.logging_level().unwrap_or_else(|| l.level());
     let send_to = if args.display_log {
         SendTo::Stderr
     } else {
         SendTo::Null
     };
 
-    apply_logging_parameters(level, environment.log_dir(), send_to)?;
+    apply_logging_parameters(level, environment.log_dir(), send_to, l)?;
     Ok(())
 }
 
-fn get_check_config(args: &Args) -> Result<CheckConfig> {
-    let file = match args.config_file {
-        Some(ref config_file) => config_file,
-        None => &constants::DEFAULT_CONFIG_FILE,
-    };
+fn get_check_config(file: &Path) -> Result<CheckConfig> {
     log::info!("Using config file: {}", file.display());
+
     CheckConfig::load_file(file)
 }
 
+fn get_system_config(file: &Path) -> Result<SystemConfig> {
+    SystemConfig::load_file(file)
+}
+
+fn get_config_file(args: &Args) -> PathBuf {
+    match args.config_file {
+        Some(ref config_file) => config_file,
+        None => &constants::DEFAULT_CONFIG_FILE,
+    }
+    .to_owned()
+}
+
 fn apply_logging_parameters(
-    level: &str,
+    level: log::Level,
     log_dir: Option<&Path>,
     send_to: SendTo,
+    logging: Logging,
 ) -> Result<flexi_logger::LoggerHandle> {
-    let spec = LogSpecification::parse(format!("{level}, tiberius=warn"))?;
+    let spec =
+        LogSpecification::parse(format!("{}, tiberius=warn", level.as_str().to_lowercase()))?;
     let mut logger = flexi_logger::Logger::with(spec);
 
     logger = if let Some(dir) = log_dir {
         logger
             .log_to_file(make_log_file_spec(dir))
             .rotate(
-                constants::log::FILE_MAX_SIZE,
+                Criterion::Size(logging.max_size()),
                 constants::log::FILE_NAMING,
-                constants::log::FILE_CLEANUP,
+                Cleanup::KeepLogFiles(logging.max_count()),
             )
             .append()
     } else {
@@ -140,6 +158,7 @@ fn apply_logging_parameters(
         SendTo::Stdout => logger.log_to_stdout(),
     };
 
+    log::info!("Log level: {}", level.as_str());
     Ok(logger.format(flexi_logger::detailed_format).start()?)
 }
 

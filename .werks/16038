@@ -1,0 +1,13 @@
+Title: SLA tooltip missing UNKN state
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1704356932
+Edition: cee
+Level: 1
+Version: 2.2.0p18
+
+The SLA tooltip would always show UNKN (0%) even if the state was UNKN.
+The corresponding value was aggregated as a PEND state.
+
+Now the UNKN state is displayed correctly.

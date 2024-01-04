@@ -7205,14 +7205,30 @@ class LabelGroups(LabelGroup):
     _first_element_label: str | None = "Label"
     _sub_vs: ValueSpec = LabelGroup()
     _magic: str = "@!@"  # Used by ListOf class to count through entries
-    _default_value: ListOfAndOrNotDropdownValue = [("and", [("and", "")])]
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        show_empty_group_by_default: bool = True,
+        # ListOf
+        add_label: str | None = None,
+        # ValueSpec
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+    ) -> None:
+        super().__init__(
+            add_label,
+            title,
+            help,
+        )
+        self._default_value: ListOfAndOrNotDropdownValue = (
+            [("and", [("and", "")])] if show_empty_group_by_default else []
+        )
 
     @property
     def del_label(self) -> str:
         return _("Remove this label group")
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
-        # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
         html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
@@ -7229,7 +7245,8 @@ class LabelGroups(LabelGroup):
         return value
 
     def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
-        # By default, i.e. without any user input, rendered and submitted LabelGroups return a value
+        # If LabelGroups are initiated with the parameter show_empty_groups_by_default set to
+        # True, rendered and submitted LabelGroups (without any user input) return a value
         # of [("and", [("and", "")])]  (self._default_value)
         # For this default case we provide an actually empty value [] here
         value = super().from_html_vars(varprefix)

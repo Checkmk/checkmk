@@ -2314,6 +2314,7 @@ class VSExplicitConditions(Transform):
 
     def _vs_host_label_condition(self) -> LabelGroups:
         return LabelGroups(
+            show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Host labels"),
             help=_("Rule only applies to hosts matching the label conditions."),
@@ -2321,6 +2322,7 @@ class VSExplicitConditions(Transform):
 
     def _vs_service_label_condition(self) -> LabelGroups:
         return LabelGroups(
+            show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Service labels"),
             help=_("Use this condition to select services based on the configured service labels."),

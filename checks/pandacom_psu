@@ -31,6 +31,15 @@ def parse_pandacom_psu(info):
         "9": "48 V DC 1100 W",
         "10": "230 V AC 1100 W",
         "255": "type not available",
+        "65025": "48 V DC 60 W",
+        "65026": "230 V AC 60 W",
+        "65027": "48 V DC 250 W",
+        "65028": "230 V AC 250 W",
+        "65029": "48 V DC 1100 W",
+        "65030": "230 V AC 1100 W",
+        "65031": "48 V DC 1100 W 1 UH",
+        "65032": "230 V AC 1100 W 1 UH",
+        "65033": "230 V AC 1200W 1 UH",
     }
     map_psu_state = {
         "0": (3, "not installed"),

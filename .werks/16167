@@ -1,0 +1,14 @@
+Title: pandacom_psu: New PSU types added
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1704373672
+Edition: cre
+Level: 1
+Version: 2.2.0p18
+
+Pandacom devices with PSU types 65025-65033 caused a crash during
+section parsing.
+
+Now, Checkmk recognizes the new type codes and reports the correct
+PSU type.

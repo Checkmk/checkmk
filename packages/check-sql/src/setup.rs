@@ -116,7 +116,7 @@ fn apply_logging_parameters(
     log_dir: Option<&Path>,
     send_to: SendTo,
 ) -> Result<flexi_logger::LoggerHandle> {
-    let spec = LogSpecification::parse(level)?;
+    let spec = LogSpecification::parse(format!("{level}, tiberius=warn"))?;
     let mut logger = flexi_logger::Logger::with(spec);
 
     logger = if let Some(dir) = log_dir {

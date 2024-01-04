@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use std::path::{Path, PathBuf};
 pub mod log {
     use flexi_logger::{Cleanup, Criterion, Naming};
-    pub const FILE_MAX_SIZE: Criterion = Criterion::Size(100000);
+    pub const FILE_MAX_SIZE: Criterion = Criterion::Size(500000);
     pub const FILE_NAMING: Naming = Naming::Numbers;
     pub const FILE_CLEANUP: Cleanup = Cleanup::KeepLogFiles(5);
 }

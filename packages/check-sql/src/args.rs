@@ -17,7 +17,6 @@ pub struct Args {
     /// Sends log to stderr.
     #[arg(short = 'l', long)]
     pub display_log: bool,
-
     /// Prints config, parameters, important variables
     #[arg(short, long)]
     pub show_config: bool,

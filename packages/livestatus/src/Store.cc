@@ -67,12 +67,11 @@ bool Store::answerGetRequest(const std::vector<std::string> &lines,
                              OutputBuffer &output,
                              const std::string &tablename) {
     auto &table = findTable(output, tablename);
-    return Query{
-        ParsedQuery{
-            lines, [&table]() { return table.allColumns(); },
-            [this, &table](auto &key) { return table.get(key, *_mc); },
-            [&table](const auto &colname) { return table.column(colname); }},
-        table, *_mc, output}
+    return Query{ParsedQuery{lines, [&table]() { return table.allColumns(); },
+                             [&table](const auto &colname) {
+                                 return table.column(colname);
+                             }},
+                 table, *_mc, output}
         .process();
 }
 

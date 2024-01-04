@@ -57,7 +57,6 @@ void checkNoArguments(std::string_view str) {
 ParsedQuery::ParsedQuery(
     const std::vector<std::string> &lines,
     const std::function<std::vector<std::shared_ptr<Column>>()> &all_columns,
-    const std::function<Row(const std::string &)> &get,
     const ColumnCreator &make_column) {
     FilterStack filters;
     FilterStack wait_conditions;
@@ -117,7 +116,7 @@ ParsedQuery::ParsedQuery(
             } else if (header == "WaitTrigger"sv) {
                 parseWaitTriggerLine(line);
             } else if (header == "WaitObject"sv) {
-                parseWaitObjectLine(line, get);
+                parseWaitObjectLine(line);
             } else if (header == "WaitTimeout"sv) {
                 parseWaitTimeoutLine(line);
             } else if (header == "Localtime"sv) {
@@ -478,13 +477,8 @@ void ParsedQuery::parseWaitTriggerLine(std::string_view line) {
     wait_trigger = Triggers::find(std::string{nextStringArgument(line)});
 }
 
-void ParsedQuery::parseWaitObjectLine(
-    std::string_view line, const std::function<Row(const std::string &)> &get) {
-    wait_object = get(std::string{line});
-    if (wait_object.isNull()) {
-        throw std::runtime_error("primary key '" + std::string{line} +
-                                 "' not found or not supported by this table");
-    }
+void ParsedQuery::parseWaitObjectLine(std::string_view line) {
+    wait_object = line;
 }
 
 void ParsedQuery::parseLocaltimeLine(std::string_view line) {

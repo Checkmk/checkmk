@@ -153,7 +153,6 @@ std::string query(Table &table, ICore &core,
     OutputBuffer output{-1, [] { return false; }, core.loggerLivestatus()};
     Query{ParsedQuery{
               lines, [&table]() { return table.allColumns(); },
-              [&table, &core](auto &key) { return table.get(key, core); },
               [&table](const auto &colname) { return table.column(colname); }},
           table, core, output}
         .process();

@@ -292,7 +292,18 @@ void Query::doWait() {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
     }
-    auto wait_object = parsed_query_.wait_object;
+
+    Row wait_object{nullptr};
+    if (parsed_query_.wait_object) {
+        wait_object = _table.get(*parsed_query_.wait_object, core_);
+        if (wait_object.isNull()) {
+            invalidRequest("primary key '" + *parsed_query_.wait_object +
+                           "' not found or not supported by table '" +
+                           _table.name() + "'");
+            return;
+        }
+    }
+
     if (!parsed_query_.wait_condition->is_tautology() && wait_object.isNull()) {
         wait_object = _table.getDefault(core_);
         if (wait_object.isNull()) {
@@ -300,6 +311,7 @@ void Query::doWait() {
             return;
         }
     }
+
     core_.triggers().wait_for(parsed_query_.wait_trigger,
                               parsed_query_.wait_timeout, [this, &wait_object] {
                                   return parsed_query_.wait_condition->accepts(

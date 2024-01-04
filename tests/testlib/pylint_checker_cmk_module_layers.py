@@ -272,6 +272,9 @@ def _allow_for_gui_cee(
             _in_component(
                 imported=imported, component=Component("cmk.cee.robotmk.bakery.rulespecs")
             ),
+            _in_component(
+                imported=imported, component=Component("cmk.cee.robotmk.free_tier_banner")
+            ),
         )
     )
 

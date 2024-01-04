@@ -43,11 +43,11 @@ pub struct Args {
 }
 
 impl Args {
-    pub fn logging_level(&self) -> String {
+    pub fn logging_level(&self) -> Option<log::Level> {
         match self.verbose {
-            2.. => String::from("trace"),
-            1 => String::from("debug"),
-            _ => String::from("info"),
+            2.. => Some(log::Level::Trace),
+            1 => Some(log::Level::Trace),
+            _ => None,
         }
     }
 }

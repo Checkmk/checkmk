@@ -7,10 +7,10 @@ pub const VERSION: &str = "2.3.0b1";
 use lazy_static::lazy_static;
 use std::path::{Path, PathBuf};
 pub mod log {
-    use flexi_logger::{Cleanup, Criterion, Naming};
-    pub const FILE_MAX_SIZE: Criterion = Criterion::Size(500000);
+    use flexi_logger::Naming;
+    pub const FILE_MAX_SIZE: u64 = 500_000;
     pub const FILE_NAMING: Naming = Naming::Numbers;
-    pub const FILE_CLEANUP: Cleanup = Cleanup::KeepLogFiles(5);
+    pub const FILE_MAX_COUNT: usize = 5;
 }
 
 pub mod environment {

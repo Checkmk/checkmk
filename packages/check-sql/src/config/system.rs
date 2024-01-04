@@ -3,7 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::yaml::{Get, Yaml};
+use crate::utils;
 use anyhow::Result;
+use std::path::Path;
 use yaml_rust::YamlLoader;
 
 mod keys {
@@ -16,9 +18,10 @@ mod keys {
 }
 
 mod defaults {
-    pub const LOG_LEVEL: log::Level = log::Level::Warn;
-    pub const LOG_MAX_SIZE: usize = 1_000_000;
-    pub const LOG_MAX_COUNT: usize = 5;
+    use crate::constants;
+    pub const LOG_LEVEL: log::Level = log::Level::Info;
+    pub const LOG_MAX_SIZE: u64 = constants::log::FILE_MAX_SIZE;
+    pub const LOG_MAX_COUNT: usize = constants::log::FILE_MAX_COUNT;
 }
 
 #[derive(PartialEq, Debug, Default)]
@@ -26,50 +29,70 @@ pub struct SystemConfig {
     logging: Logging,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Default, Clone)]
 pub struct Logging {
-    level: log::Level,
-    max_size: usize,
-    max_count: usize,
-}
-
-impl Default for Logging {
-    fn default() -> Self {
-        Self {
-            level: defaults::LOG_LEVEL,
-            max_size: defaults::LOG_MAX_SIZE,
-            max_count: defaults::LOG_MAX_COUNT,
-        }
-    }
+    level: Option<log::Level>,
+    max_size: Option<u64>,
+    max_count: Option<usize>,
 }
 
 impl Logging {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        use std::str::FromStr;
+    pub fn from_string(source: &str) -> Result<Option<Self>> {
+        YamlLoader::load_from_str(source)?
+            .get(0)
+            .and_then(|e| Logging::from_yaml(e).transpose())
+            .transpose()
+    }
+
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let logging = yaml.get(keys::LOGGING);
-        Ok(Self {
-            level: logging
-                .get_string(keys::LEVEL)
-                .map(|s| log::Level::from_str(&s))
-                .unwrap_or(Ok(defaults::LOG_LEVEL))
-                .unwrap_or(defaults::LOG_LEVEL),
-            max_size: logging.get_int(keys::MAX_SIZE, defaults::LOG_MAX_SIZE),
-            max_count: logging.get_int(keys::MAX_COUNT, defaults::LOG_MAX_COUNT),
-        })
+        if logging.is_badvalue() {
+            return Ok(None);
+        }
+
+        Logging::parse_logging_from_yaml(logging)
+    }
+
+    fn parse_logging_from_yaml(logging: &Yaml) -> Result<Option<Self>> {
+        use std::str::FromStr;
+        let level = logging
+            .get_string(keys::LEVEL)
+            .and_then(|s| log::Level::from_str(&s).ok());
+        let max_size = logging.get_int(keys::MAX_SIZE);
+        let max_count = logging.get_int(keys::MAX_COUNT);
+
+        Ok(Some(Self {
+            level,
+            max_size,
+            max_count,
+        }))
     }
 
     pub fn level(&self) -> log::Level {
-        self.level
+        self.level.unwrap_or(defaults::LOG_LEVEL)
     }
-    pub fn max_size(&self) -> usize {
-        self.max_size
+    pub fn max_size(&self) -> u64 {
+        self.max_size.unwrap_or(defaults::LOG_MAX_SIZE)
     }
     pub fn max_count(&self) -> usize {
-        self.max_count
+        self.max_count.unwrap_or(defaults::LOG_MAX_COUNT)
     }
 }
 
 impl SystemConfig {
+    pub fn load_file(file: &Path) -> Result<Self> {
+        match utils::read_file(file) {
+            Ok(content) => Self::from_string(&content),
+            Err(e) => anyhow::bail!(
+                "Can't read file: {}, {e} ",
+                // Use relatively complicated  method to print name of the file
+                // as it is not possible to use "{file_name:?}": produces to many backslashes
+                // in Windows. Probability to NOT decode filename as UTF-8 is nil.
+                file.as_os_str().to_str().unwrap_or("")
+            ),
+        }
+    }
+
     pub fn from_string(source: &str) -> Result<Self> {
         YamlLoader::load_from_str(source)?
             .get(0)
@@ -83,7 +106,7 @@ impl SystemConfig {
             return Ok(Self::default());
         }
 
-        let logging = Logging::from_yaml(system).unwrap_or_else(|_| Logging::default());
+        let logging = Logging::from_yaml(system)?.unwrap_or_default();
 
         Ok(Self { logging })
     }

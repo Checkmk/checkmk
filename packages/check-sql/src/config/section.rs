@@ -221,7 +221,10 @@ impl Section {
 
 impl Sections {
     pub fn from_yaml(yaml: &Yaml, default: Sections) -> Result<Self> {
-        let cache_age = yaml.get_int::<u32>(keys::CACHE_AGE, default.cache_age());
+        let cache_age = yaml.get_int::<u32>(keys::CACHE_AGE).unwrap_or_else(|| {
+            log::debug!("Using default cache age");
+            default.cache_age()
+        });
         let sections = Sections::get_sections(yaml.get(keys::SECTIONS));
         Ok(Self {
             sections: sections.unwrap_or(default.sections().clone()),

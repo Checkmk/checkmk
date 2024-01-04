@@ -5,8 +5,18 @@
 use anyhow::Result;
 /// Platform independent file and time routines
 use std::fs;
+use std::fs::File;
+use std::io::Read;
+
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
+
+pub fn read_file(file_name: &Path) -> Result<String> {
+    let mut file = File::open(file_name)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    Ok(content)
+}
 
 pub fn touch_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
     fs::File::create(path.as_ref().join(".touch"))?;

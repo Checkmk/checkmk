@@ -2,9 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::utils::read_file;
 use anyhow::{anyhow, Result};
-use std::fs::File;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use yaml_rust::YamlLoader;
 pub type Yaml = yaml_rust::yaml::Yaml;
@@ -40,7 +39,7 @@ pub trait Get {
     fn get_string(&self, key: &str) -> Option<String>
     where
         Self: Sized;
-    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
+    fn get_int<T>(&self, key: &str) -> Option<T>
     where
         Self: Sized,
         T: std::convert::TryFrom<i64>;
@@ -67,16 +66,15 @@ impl Get for Yaml {
         self[key].as_str().map(PathBuf::from)
     }
 
-    /// always with default
-    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
+    fn get_int<T>(&self, key: &str) -> Option<T>
     where
         T: std::convert::TryFrom<i64>,
     {
         if let Some(value) = self[key].as_i64() {
-            TryInto::try_into(value).unwrap_or(default)
+            TryInto::try_into(value).ok()
         } else {
-            log::debug!("{key} not found, using default {default:?}");
-            default
+            log::debug!("{key} not found");
+            None
         }
     }
 
@@ -144,13 +142,6 @@ pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
             file_name.as_os_str().to_str().unwrap_or("")
         ),
     }
-}
-
-fn read_file(file_name: &Path) -> Result<String> {
-    let mut file = File::open(file_name)?;
-    let mut content = String::new();
-    file.read_to_string(&mut content)?;
-    Ok(content)
 }
 
 fn load_from_str(content: &str) -> Result<Vec<Yaml>> {

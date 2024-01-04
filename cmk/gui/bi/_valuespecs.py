@@ -408,7 +408,12 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
             ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
             (
                 "host_label_groups",
-                LabelGroups(add_label=_("Add to condition"), title=_("Host Labels"), help=""),
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Host Labels"),
+                    help="",
+                ),
             ),
             ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
         ]
@@ -452,7 +457,12 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
             ),
             (
                 "service_label_groups",
-                LabelGroups(add_label=_("Add to condition"), title=_("Service Labels"), help=""),
+                LabelGroups(
+                    show_empty_group_by_default=False,
+                    add_label=_("Add to condition"),
+                    title=_("Service Labels"),
+                    help="",
+                ),
             ),
         ]
 

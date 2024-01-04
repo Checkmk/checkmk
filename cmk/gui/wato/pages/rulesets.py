@@ -36,6 +36,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
+from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html, use_vue_rendering
 from cmk.gui.http import mandatory_parameter, request
@@ -1965,6 +1966,8 @@ class ABCEditRuleMode(WatoMode):
         return "_vue_edit_rule"
 
     def page(self) -> None:
+        call_hooks("ruleset_banner", self._ruleset.name)
+
         help_text = self._ruleset.help()
         if help_text:
             html.div(HTML(help_text), class_="info")

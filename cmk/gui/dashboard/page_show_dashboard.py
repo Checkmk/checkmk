@@ -23,6 +23,7 @@ import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
+from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -154,6 +155,8 @@ def draw_dashboard(name: DashboardName) -> None:
             breadcrumb, name, board, board_context, unconfigured_single_infos, mode
         ),
     )
+
+    call_hooks("dashboard_banner", name)
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 

@@ -23,6 +23,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request
@@ -233,6 +234,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
         for message in self.view.warning_messages:
             html.show_warning(message)
+
+        call_hooks("view_banner", self.view.name)
 
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")

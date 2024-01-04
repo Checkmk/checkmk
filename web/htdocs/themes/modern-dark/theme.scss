@@ -42,9 +42,11 @@
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
 @import "../facelift/scss/cee/_license_usage.scss";
+@import "../facelift/scss/cee/_robotmk.scss";
 @if $ENTERPRISE == "yes" {
   @include graphs_cee;
   @include reporting;
   @include ntop;
   @include license_usage;
+  @include robotmk;
 }

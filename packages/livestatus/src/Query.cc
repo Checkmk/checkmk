@@ -88,9 +88,6 @@ std::unique_ptr<Renderer> Query::makeRenderer(std::ostream &os) {
 }
 
 void Query::start(QueryRenderer &q) {
-    if (parsed_query_.columns.empty()) {
-        getAggregatorsFor({});
-    }
     if (parsed_query_.show_column_headers) {
         RowRenderer r{q};
         for (const auto &column : parsed_query_.columns) {

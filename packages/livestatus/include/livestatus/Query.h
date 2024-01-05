@@ -9,7 +9,6 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
-#include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
@@ -35,7 +34,7 @@ public:
 
     bool process();
 
-    // NOTE: We cannot make this 'const' right now, it increments current_line_
+    // NOTE: We cannot make this 'const' right now, it increments _current_line
     // and calls the non-const getAggregatorsFor() member function.
     bool processDataset(Row row);
 
@@ -65,24 +64,23 @@ public:
 
 private:
     const ParsedQuery parsed_query_;
-    Table &table_;
+    Table &_table;
     ICore &core_;
-    OutputBuffer &output_;
+    OutputBuffer &_output;
     std::unique_ptr<const User> user_;
 
-    QueryRenderer *query_renderer_;
-    int current_line_;
+    QueryRenderer *_renderer_query;
+    unsigned _current_line;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
-        stats_groups_;
+        _stats_groups;
 
     bool doStats() const;
-    std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
     void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
-    // stats_groups_.
+    // _stats_groups.
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
         const RowFragment &groupspec);
 };

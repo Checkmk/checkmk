@@ -180,7 +180,9 @@ void ParsedQuery::parseNegateLine(std::string_view line, FilterStack &filters) {
     if (filters.empty()) {
         stack_underflow(1, 0);
     }
-    filters.back() = filters.back()->negate();
+    auto top = std::move(filters.back());
+    filters.pop_back();
+    filters.push_back(top->negate());
 }
 
 void ParsedQuery::parseStatsAndOrLine(std::string_view line,
@@ -204,8 +206,10 @@ void ParsedQuery::parseStatsNegateLine(std::string_view line) {
     if (stats_columns.empty()) {
         stack_underflow(1, 0);
     }
-    stats_columns.back() = std::make_unique<StatsColumnCount>(
-        stats_columns.back()->stealFilter()->negate());
+    auto to_negate = stats_columns.back()->stealFilter();
+    stats_columns.pop_back();
+    stats_columns.push_back(
+        std::make_unique<StatsColumnCount>(to_negate->negate()));
 }
 
 namespace {
@@ -322,26 +326,26 @@ const std::map<std::string_view, AggregationFactory> stats_ops{
 
 void ParsedQuery::parseStatsLine(std::string_view line,
                                  const ColumnCreator &make_column) {
-    // The first token is either the column name or the aggregation operator.
-    auto col_or_aggr = nextStringArgument(line);
-    auto it = stats_ops.find(col_or_aggr);
+    // first token is either aggregation operator or column name
+    std::string column_name;
+    std::unique_ptr<StatsColumn> sc;
+    auto col_or_op = nextStringArgument(line);
+    auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
-        auto column_name = std::string{col_or_aggr};
+        column_name = col_or_op;
         auto rel_op = relationalOperatorForName(nextStringArgument(line));
         line.remove_prefix(
             std::min(line.size(), line.find_first_not_of(mk::whitespace)));
-        auto value = std::string{line};
-        stats_columns.push_back(std::make_unique<StatsColumnCount>(
+        sc = std::make_unique<StatsColumnCount>(
             make_column(column_name)
-                ->createFilter(Filter::Kind::stats, rel_op, value)));
-        all_column_names.insert(column_name);
+                ->createFilter(Filter::Kind::stats, rel_op, std::string{line}));
     } else {
-        auto aggregation_factory = it->second;
-        auto column_name = std::string{nextStringArgument(line)};
-        stats_columns.push_back(std::make_unique<StatsColumnOp>(
-            aggregation_factory, make_column(column_name)));
-        all_column_names.insert(column_name);
+        column_name = nextStringArgument(line);
+        sc = std::make_unique<StatsColumnOp>(it->second,
+                                             make_column(column_name));
     }
+    stats_columns.push_back(std::move(sc));
+    all_column_names.insert(column_name);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     show_column_headers = false;
@@ -353,9 +357,10 @@ void ParsedQuery::parseFilterLine(std::string_view line, FilterStack &filters,
     auto rel_op = relationalOperatorForName(nextStringArgument(line));
     line.remove_prefix(
         std::min(line.size(), line.find_first_not_of(mk::whitespace)));
-    auto value = std::string{line};
-    filters.push_back(make_column(column_name)
-                          ->createFilter(Filter::Kind::row, rel_op, value));
+    auto sub_filter =
+        make_column(column_name)
+            ->createFilter(Filter::Kind::row, rel_op, std::string{line});
+    filters.push_back(std::move(sub_filter));
     all_column_names.insert(column_name);
 }
 

@@ -9,8 +9,11 @@
 #include <charconv>
 #include <cmath>
 #include <compare>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <map>
+#include <ranges>
 #include <ratio>
 #include <stdexcept>
 #include <system_error>
@@ -20,6 +23,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
+#include "livestatus/StatsColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/opids.h"
 
@@ -148,12 +152,19 @@ ParsedQuery::ParsedQuery(
 }
 
 namespace {
-[[noreturn]] void stack_underflow(int expected, int actual) {
-    throw std::runtime_error("cannot combine filters: expecting " +
-                             std::to_string(expected) + " " +
-                             (expected == 1 ? "filter" : "filters") +
-                             ", but only " + std::to_string(actual) + " " +
-                             (actual == 1 ? "is" : "are") + " on stack");
+template <typename Stack>
+Stack popN(Stack &stack, size_t n) {
+    if (stack.size() < n) {
+        throw std::runtime_error(
+            "cannot combine filters: expecting " + std::to_string(n) + " " +
+            (n == 1 ? "filter" : "filters") + ", but only " +
+            std::to_string(stack.size()) + " " +
+            (stack.size() == 1 ? "is" : "are") + " on stack");
+    }
+    Stack result;
+    std::move(stack.end() - n, stack.end(), std::back_inserter(result));
+    stack.erase(stack.end() - n, stack.end());
+    return result;
 }
 }  // namespace
 
@@ -162,50 +173,28 @@ void ParsedQuery::parseAndOrLine(std::string_view line, Filter::Kind kind,
                                  const LogicalConnective &connective,
                                  FilterStack &filters) {
     auto number = nextNonNegativeIntegerArgument(line);
-    Filters subfilters;
-    for (auto i = 0; i < number; ++i) {
-        if (filters.empty()) {
-            stack_underflow(number, i);
-        }
-        subfilters.push_back(std::move(filters.back()));
-        filters.pop_back();
-    }
-    std::reverse(subfilters.begin(), subfilters.end());
-    filters.push_back(connective(kind, subfilters));
+    filters.push_back(connective(kind, popN(filters, number)));
 }
 
 // static
 void ParsedQuery::parseNegateLine(std::string_view line, FilterStack &filters) {
     checkNoArguments(line);
-    if (filters.empty()) {
-        stack_underflow(1, 0);
-    }
-    filters.back() = filters.back()->negate();
+    filters.push_back(popN(filters, 1)[0]->negate());
 }
 
 void ParsedQuery::parseStatsAndOrLine(std::string_view line,
                                       const LogicalConnective &connective) {
     auto number = nextNonNegativeIntegerArgument(line);
-    Filters subfilters;
-    for (auto i = 0; i < number; ++i) {
-        if (stats_columns.empty()) {
-            stack_underflow(number, i);
-        }
-        subfilters.push_back(stats_columns.back()->stealFilter());
-        stats_columns.pop_back();
-    }
-    std::reverse(subfilters.begin(), subfilters.end());
+    auto v = popN(stats_columns, number) |  // TODO(sp): simplify with C++23
+             std::views::transform([](auto &c) { return c->stealFilter(); });
     stats_columns.push_back(std::make_unique<StatsColumnCount>(
-        connective(Filter::Kind::stats, subfilters)));
+        connective(Filter::Kind::stats, Filters{v.begin(), v.end()})));
 }
 
 void ParsedQuery::parseStatsNegateLine(std::string_view line) {
     checkNoArguments(line);
-    if (stats_columns.empty()) {
-        stack_underflow(1, 0);
-    }
-    stats_columns.back() = std::make_unique<StatsColumnCount>(
-        stats_columns.back()->stealFilter()->negate());
+    stats_columns.push_back(std::make_unique<StatsColumnCount>(
+        popN(stats_columns, 1)[0]->stealFilter()->negate()));
 }
 
 namespace {

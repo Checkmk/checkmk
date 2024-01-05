@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import Service, SNMPTree
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 from cmk.plugins.lib.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def inventory_mcafee_emailgateway_av_authentium(section: StringTable) -> DiscoveryResult:
+def discover_mcafee_emailgateway_av_authentium(section: StringTable) -> DiscoveryResult:
     if section and section[0][0] == "1":
         yield Service()
 
@@ -44,6 +44,6 @@ check_info["mcafee_emailgateway_av_authentium"] = LegacyCheckDefinition(
         oids=["4", "5", "6"],
     ),
     service_name="AV Authentium",
-    discovery_function=inventory_mcafee_emailgateway_av_authentium,
+    discovery_function=discover_mcafee_emailgateway_av_authentium,
     check_function=check_mcafee_emailgateway_av_authentium,
 )

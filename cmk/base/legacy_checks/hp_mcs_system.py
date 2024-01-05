@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import OIDBytes, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import OIDBytes, Service, SNMPTree, startswith
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 
-def inventory_hp_mcs_system(section: StringTable) -> DiscoveryResult:
+def discover_hp_mcs_system(section: StringTable) -> DiscoveryResult:
     if not section:
         return
     yield Service(item=section[0][0])
@@ -45,6 +45,6 @@ check_info["hp_mcs_system"] = LegacyCheckDefinition(
         oids=["2.2.4.2", OIDBytes("11.2.10.1"), "11.2.10.3"],
     ),
     service_name="%s",
-    discovery_function=inventory_hp_mcs_system,
+    discovery_function=discover_hp_mcs_system,
     check_function=check_hp_mcs_system,
 )

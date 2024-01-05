@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.base.legacy_checks.ra32e_power import check_ra32e_power, inventory_ra32e_power
+from cmk.base.legacy_checks.ra32e_power import check_ra32e_power, discover_ra32e_power
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Service
 
 from .checktestlib import BasicCheckResult
 
@@ -16,9 +16,12 @@ pytestmark = pytest.mark.checks
 RA32E_POWER = "ra32e_power"
 
 
-@pytest.mark.parametrize("info,result", [([[""]], []), ([["0"]], [(None, {})])])
-def test_ra32e_power_discovery(info: StringTable, result: object) -> None:
-    assert list(inventory_ra32e_power(info)) == result
+def test_ra32e_power_discover_nothing() -> None:
+    assert not list(discover_ra32e_power([[""]]))
+
+
+def test_ra32e_power_discover_something() -> None:
+    assert list(discover_ra32e_power([["0"]])) == [Service()]
 
 
 def test_ra32e_power_check_battery() -> None:

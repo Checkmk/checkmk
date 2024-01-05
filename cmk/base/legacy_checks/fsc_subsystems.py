@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, exists, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, any_of, exists, Service, SNMPTree, startswith
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 
-def inventory_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:
+def discover_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:
     yield from (Service(item=line[0]) for line in string_table if int(line[1]) > 0)
 
 
@@ -52,6 +52,6 @@ check_info["fsc_subsystems"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     service_name="FSC %s",
-    discovery_function=inventory_fsc_subsystems,
+    discovery_function=discover_fsc_subsystems,
     check_function=check_fsc_subsystems,
 )

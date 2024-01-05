@@ -6,7 +6,7 @@
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.didactum import (
-    inventory_didactum_sensors,
+    discover_didactum_sensors,
     parse_didactum_sensors,
 )
 from cmk.base.config import check_info
@@ -16,7 +16,7 @@ from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 
 def inventory_didactum_sensors_outlet_relay(parsed):
-    return inventory_didactum_sensors(parsed, "relay")
+    return discover_didactum_sensors(parsed, "relay")
 
 
 def check_didactum_sensors_outlet_relay(item, params, parsed):

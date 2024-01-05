@@ -4320,7 +4320,6 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                 "custom",
                                 _("Custom service configuration update"),
                                 Dictionary(
-                                    title=_("Custom service configuration update"),
                                     elements=[
                                         (
                                             "add_new_services",
@@ -4344,7 +4343,8 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                             ),
                                         ),
                                     ],
-                                    optional_keys=False,
+                                    optional_keys=[],
+                                    indent=False,
                                 ),
                             ),
                         ],

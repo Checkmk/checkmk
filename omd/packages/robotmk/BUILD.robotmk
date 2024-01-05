@@ -8,10 +8,10 @@ filegroup(
 genrule(
     name = "build",
     srcs = [":package_source_files"],
-    outs = ["robotmk.exe", "robotmk_agent.exe", "rcc.exe"],
+    outs = ["robotmk_scheduler.exe", "robotmk_agent_plugin.exe", "rcc.exe"],
     cmd = """
          target_path=$$(realpath $(RULEDIR));
          cd external/robotmk/artifact/;
-         cp robotmk.exe robotmk_agent.exe windows64/rcc.exe $${target_path};
+         cp robotmk_scheduler.exe robotmk_agent_plugin.exe windows64/rcc.exe $${target_path};
     """,
 )

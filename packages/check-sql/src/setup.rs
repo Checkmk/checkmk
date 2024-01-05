@@ -8,7 +8,7 @@ use crate::config::CheckConfig;
 use crate::constants;
 use anyhow::Result;
 use clap::Parser;
-use flexi_logger::{self, Cleanup, Criterion, FileSpec, LogSpecification};
+use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
 use std::env::ArgsOs;
 use std::path::{Path, PathBuf};
 
@@ -127,6 +127,21 @@ fn get_config_file(args: &Args) -> PathBuf {
     .to_owned()
 }
 
+fn custom_format(
+    w: &mut dyn std::io::Write,
+    now: &mut DeferredNow,
+    record: &Record,
+) -> Result<(), std::io::Error> {
+    write!(
+        w,
+        "{} [{}] [{}]: {}",
+        now.format("%Y-%m-%d %H:%M:%S%.3f %:z"),
+        record.level(),
+        record.module_path().unwrap_or("<unnamed>"),
+        &record.args()
+    )
+}
+
 fn apply_logging_parameters(
     level: log::Level,
     log_dir: Option<&Path>,
@@ -159,7 +174,7 @@ fn apply_logging_parameters(
     };
 
     log::info!("Log level: {}", level.as_str());
-    Ok(logger.format(flexi_logger::detailed_format).start()?)
+    Ok(logger.format(custom_format).start()?)
 }
 
 fn make_log_file_spec(log_dir: &Path) -> FileSpec {

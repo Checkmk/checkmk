@@ -801,6 +801,28 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="large MultipleChoice",
         ),
+        pytest.param(
+            api_v1.form_specs.MultilineText(),
+            legacy_valuespecs.TextAreaUnicode(),
+            id="minimal MultilineText",
+        ),
+        pytest.param(
+            api_v1.form_specs.MultilineText(
+                monospaced=True,
+                title=api_v1.Localizable("my title"),
+                help_text=api_v1.Localizable("help text"),
+                label=api_v1.Localizable("label"),
+                prefill_value="default text",
+            ),
+            legacy_valuespecs.TextAreaUnicode(
+                monospaced=True,
+                title=_("my title"),
+                help=_("help text"),
+                label=_("label"),
+                default_value="default text",
+            ),
+            id="MultilineText",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
@@ -1647,7 +1669,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
 def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
     match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice():
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
             try:
                 _ = form_spec.transform
             except AttributeError:

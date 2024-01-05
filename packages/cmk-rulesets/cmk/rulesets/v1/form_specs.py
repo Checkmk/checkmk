@@ -745,6 +745,46 @@ class MultipleChoice:
             raise ValueError("Default element is not one of the specified elements")
 
 
+@dataclass(frozen=True)
+class MultilineText:
+    """Specifies a multiline text form
+
+    Args:
+        monospaced: Display text in the form as monospaced
+        label: Text displayed in front of the input field
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
+            whether to leave the field empty or to prefill it with a canonical value.
+        transform: Transformation of the stored configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+            builtin validation logic. Needs to raise a ValidationError in case
+            validation fails. The return value of the function will not be used.
+
+    Consumer model:
+        **Type**:
+            ``str``
+
+            The configured value will be presented as a string.
+
+        **Example**:
+          Inputting "some text" in a MultilineText form would result
+          in::
+            "some text\n"
+
+    """
+
+    monospaced: bool = False
+
+    label: Localizable | None = None
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    prefill_value: str | None = None
+    transform: Transform[str] | Migrate[str] | None = None
+    custom_validate: Callable[[str], object] | None = None
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -772,4 +812,5 @@ FormSpec = (
     | MonitoredService
     | Password
     | MultipleChoice
+    | MultilineText
 )

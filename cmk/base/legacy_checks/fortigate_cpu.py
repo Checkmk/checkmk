@@ -4,19 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, exists, not_exists, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, exists, not_exists, Service, SNMPTree
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 
 def parse_fortigate_cpu(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def inventory_fortigate_cpu(string_table: StringTable) -> DiscoveryResult:
+def discover_fortigate_cpu(string_table: StringTable) -> DiscoveryResult:
     yield Service()
 
 
@@ -44,7 +44,7 @@ check_info["fortigate_cpu_base"] = LegacyCheckDefinition(
         oids=["3"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_fortigate_cpu,
+    discovery_function=discover_fortigate_cpu,
     check_function=check_fortigate_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
@@ -63,7 +63,7 @@ check_info["fortigate_cpu"] = LegacyCheckDefinition(
         oids=["8"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_fortigate_cpu,
+    discovery_function=discover_fortigate_cpu,
     check_function=check_fortigate_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

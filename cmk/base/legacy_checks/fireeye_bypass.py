@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import Service, SNMPTree
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 from cmk.plugins.lib.fireeye import DETECT
 
 # .1.3.6.1.4.1.25597.13.1.41.0 0
@@ -16,7 +16,7 @@ from cmk.plugins.lib.fireeye import DETECT
 # .1.3.6.1.4.1.25597.13.1.43.0 0
 
 
-def inventory_bypass(section: StringTable) -> DiscoveryResult:
+def discover_bypass(section: StringTable) -> DiscoveryResult:
     if section:
         value = int(section[0][0])
         yield Service(parameters={"value": value})
@@ -42,6 +42,6 @@ check_info["fireeye_bypass"] = LegacyCheckDefinition(
         oids=["41"],
     ),
     service_name="Bypass Mail Rate",
-    discovery_function=inventory_bypass,
+    discovery_function=discover_bypass,
     check_function=check_fireeye_bypass,
 )

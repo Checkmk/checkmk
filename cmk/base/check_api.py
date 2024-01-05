@@ -17,7 +17,7 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 import socket
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Any, Generator, Literal
 
 import cmk.utils.debug as _debug
@@ -62,15 +62,7 @@ ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 
 
 # to ease migration:
-DiscoveryResult = Generator[tuple[str | None, Mapping[str, object]], None, None]
 CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
-
-
-# to ease migration:
-def Service(
-    *, item: str | None = None, parameters: Mapping[str, object] | None = None
-) -> tuple[str | None, Mapping[str, object]]:
-    return item, parameters or {}
 
 
 def get_check_api_context() -> _config.CheckContext:

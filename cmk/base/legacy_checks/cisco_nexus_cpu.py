@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, exists, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, exists, Service, SNMPTree
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 
-def inventory_cisco_nexus_cpu(section: StringTable) -> DiscoveryResult:
+def discover_cisco_nexus_cpu(section: StringTable) -> DiscoveryResult:
     if section and section[0][0]:
         yield Service()
 
@@ -43,7 +43,7 @@ check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_cisco_nexus_cpu,
+    discovery_function=discover_cisco_nexus_cpu,
     check_function=check_cisco_nexus_cpu,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={

@@ -9,15 +9,15 @@
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import Service, SNMPTree
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 from cmk.plugins.lib.sni_octopuse import DETECT_SNI_OCTOPUSE
 
 
-def inventory_octopus_status(section: StringTable) -> DiscoveryResult:
+def discover_octopus_status(section: StringTable) -> DiscoveryResult:
     if len(section[0]) == 1:
         yield Service()
 
@@ -53,6 +53,6 @@ check_info["sni_octopuse_status"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="Global status",
-    discovery_function=inventory_octopus_status,
+    discovery_function=discover_octopus_status,
     check_function=check_octopus_status,
 )

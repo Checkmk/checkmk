@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, Service, SNMPTree, startswith
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 # We fetch the following columns from SNMP:
 # 13: name of the temperature sensor (used as item)
@@ -18,7 +18,7 @@ from cmk.agent_based.v2.type_defs import StringTable
 # 8:  critical level
 
 
-def inventory_fsc_temp(string_table: StringTable) -> DiscoveryResult:
+def discover_fsc_temp(string_table: StringTable) -> DiscoveryResult:
     # Ignore non-connected sensors
     yield from (Service(item=line[0]) for line in string_table if int(line[1]) < 500)
 
@@ -58,7 +58,7 @@ check_info["fsc_temp"] = LegacyCheckDefinition(
         oids=["13", "11", "6", "8"],
     ),
     service_name="Temperature %s",
-    discovery_function=inventory_fsc_temp,
+    discovery_function=discover_fsc_temp,
     check_function=check_fsc_temp,
     check_ruleset_name="temperature",
 )

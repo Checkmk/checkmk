@@ -5,7 +5,8 @@
 
 from collections.abc import Mapping
 
-from cmk.base.check_api import DiscoveryResult, Service
+from cmk.agent_based.v2 import Service
+from cmk.agent_based.v2.type_defs import DiscoveryResult
 
 from .elphase import check_elphase
 from .humidity import check_humidity
@@ -71,7 +72,7 @@ def parse_didactum_sensors(info):
     return parsed
 
 
-def inventory_didactum_sensors(
+def discover_didactum_sensors(
     parsed: Mapping[str, Mapping[str, Mapping[str, str]]], what: str
 ) -> DiscoveryResult:
     yield from (

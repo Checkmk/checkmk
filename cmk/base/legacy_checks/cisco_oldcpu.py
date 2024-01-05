@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, exists, Service, SNMPTree, startswith
+from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
 
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 
 
-def inventory_cisco_oldcpu(section: StringTable) -> DiscoveryResult:
+def discover_cisco_oldcpu(section: StringTable) -> DiscoveryResult:
     if section and section[0][0]:
         yield Service()
 
@@ -39,7 +39,7 @@ check_info["cisco_oldcpu"] = LegacyCheckDefinition(
         oids=["57"],
     ),
     service_name="CPU utilization",
-    discovery_function=inventory_cisco_oldcpu,
+    discovery_function=discover_cisco_oldcpu,
     check_function=check_cisco_oldcpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},

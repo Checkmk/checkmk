@@ -6,6 +6,8 @@
 from datetime import datetime
 from logging import Logger
 
+from cmk.utils.log import VERBOSE
+
 from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_users, save_users, Users, UserSpec
@@ -46,6 +48,9 @@ def _update_user_attributes(users: Users, logger: Logger) -> Users:
             _remove_flexible_notifications(user_spec)
             logger.warning("Removed notification configuration from user: %s" % user_id)
         _add_user_scheme_serial(user_spec)
+
+    _remove_deprecated_language_none(logger, users)
+
     return users
 
 
@@ -64,7 +69,7 @@ def _remove_flexible_notifications(user: UserSpec) -> None:
         "service_notification_options",
         "notification_method",
     ]:
-        if not key in user:
+        if key not in user:
             continue
 
         del user[key]  # type: ignore
@@ -76,6 +81,25 @@ class UpdateUserAttributes(UpdateAction):
             _update_user_attributes(load_users(lock=True), logger),
             datetime.now(),
         )
+
+
+def _remove_deprecated_language_none(logger: Logger, users: Users) -> Users:
+    """
+    With version 2.2.0 we retyped user languages from None | str to str only.
+    This function removes language params set to None in existing user configs.
+    """
+    changed_user_specs: bool = False
+    for user_spec in users.values():
+        if user_spec.get("language", -1) is None:
+            changed_user_specs = True
+            del user_spec["language"]
+
+    if changed_user_specs:
+        logger.log(
+            VERBOSE,
+            "Removing deprecated user languages set to None. (The default remains English)",
+        )
+    return users
 
 
 update_action_registry.register(

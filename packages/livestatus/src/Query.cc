@@ -66,9 +66,7 @@ bool Query::process() {
     }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
-    auto renderer = Renderer::make(
-        parsed_query_.output_format, output_.os(), output_.getLogger(),
-        parsed_query_.separators, core_.dataEncoding());
+    auto renderer = makeRenderer(output_.os());
     doWait();
     QueryRenderer q{*renderer, EmitBeginEnd::on};
     // TODO(sp) The construct below is horrible, refactor this!
@@ -82,6 +80,11 @@ bool Query::process() {
         << "processed request in " << elapsed_ms << " ms, replied with "
         << output_.os().tellp() << " bytes";
     return parsed_query_.keepalive;
+}
+
+std::unique_ptr<Renderer> Query::makeRenderer(std::ostream &os) {
+    return Renderer::make(parsed_query_.output_format, os, output_.getLogger(),
+                          parsed_query_.separators, core_.dataEncoding());
 }
 
 void Query::start(QueryRenderer &q) {
@@ -156,9 +159,7 @@ bool Query::processDataset(Row row) {
         // string here (RowFragment) and output it later in a verbatim manner.
         std::ostringstream os;
         {
-            auto renderer = Renderer::make(
-                parsed_query_.output_format, os, output_.getLogger(),
-                parsed_query_.separators, core_.dataEncoding());
+            auto renderer = makeRenderer(os);
             QueryRenderer q{*renderer, EmitBeginEnd::off};
             RowRenderer r{q};
             for (const auto &column : parsed_query_.columns) {

@@ -71,7 +71,7 @@ private:
     std::unique_ptr<const User> user_;
 
     QueryRenderer *query_renderer_;
-    unsigned current_line_;
+    int current_line_;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         stats_groups_;
 

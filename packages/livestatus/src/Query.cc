@@ -139,8 +139,7 @@ bool Query::processDataset(Row row) {
     }
 
     current_line_++;
-    if (parsed_query_.limit >= 0 &&
-        static_cast<int>(current_line_) > parsed_query_.limit) {
+    if (parsed_query_.limit && current_line_ > *parsed_query_.limit) {
         return false;
     }
 

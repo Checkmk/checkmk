@@ -9,6 +9,7 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
@@ -75,6 +76,7 @@ private:
         stats_groups_;
 
     bool doStats() const;
+    std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
     void doWait();

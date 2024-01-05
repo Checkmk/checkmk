@@ -97,7 +97,6 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                 "custom",
                                 _("Custom service configuration update"),
                                 Dictionary(
-                                    title=_("Custom service configuration update"),
                                     elements=[
                                         (
                                             "add_new_services",
@@ -121,7 +120,8 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                             ),
                                         ),
                                     ],
-                                    optional_keys=False,
+                                    optional_keys=[],
+                                    indent=False,
                                 ),
                             ),
                         ],

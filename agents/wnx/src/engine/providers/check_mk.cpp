@@ -20,15 +20,6 @@ using namespace std::string_literals;
 
 namespace cma::provider {
 
-std::string GetTimezoneOffset() {
-    const auto tm =
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    const auto ret = std::put_time(std::localtime(&tm), "%z");
-    std::stringstream sss;
-    sss << ret;
-    return sss.str();
-}
-
 // function to provide format compatibility for monitoring site
 // probably, a bit to pedantic
 std::string AddressToCheckMkString(std::string_view entry) {
@@ -78,7 +69,6 @@ std::string MakeInfo() {
         {"AgentOS", "windows"},
         {"Hostname", cfg::GetHostName()},
         {"Architecture", tgt::Is64bit() ? "64bit" : "32bit"},
-        {"Time", PrintIsoTime(std::chrono::system_clock::now())},
     };
     std::string out;
     for (const auto &info : infos) {

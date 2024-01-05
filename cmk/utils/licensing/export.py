@@ -70,19 +70,17 @@ class SubscriptionDetailsLimitType(Enum):
 
     @classmethod
     def parse(cls, raw_subscription_details_limit_type: str) -> SubscriptionDetailsLimitType:
-        try:
-            return _SUBSCRIPTION_DETAILS_LIMIT_TYPE_MAP[raw_subscription_details_limit_type]
-        except KeyError:
-            raise SubscriptionDetailsError(
-                f"Unknown subscription details source {raw_subscription_details_limit_type}"
-            ) from None
-
-
-_SUBSCRIPTION_DETAILS_LIMIT_TYPE_MAP = {
-    "fixed": SubscriptionDetailsLimitType.fixed,
-    "unlimited": SubscriptionDetailsLimitType.unlimited,
-    "custom": SubscriptionDetailsLimitType.custom,
-}
+        match raw_subscription_details_limit_type:
+            case "fixed":
+                return SubscriptionDetailsLimitType.fixed
+            case "unlimited":
+                return SubscriptionDetailsLimitType.unlimited
+            case "custom":
+                return SubscriptionDetailsLimitType.custom
+            case _:
+                raise SubscriptionDetailsError(
+                    f"Unknown subscription details source {raw_subscription_details_limit_type}"
+                ) from None
 
 
 class SubscriptionDetailsLimit(NamedTuple):
@@ -93,15 +91,13 @@ class SubscriptionDetailsLimit(NamedTuple):
         return (self.limit_type.name, self.limit_value)
 
     def for_config(self) -> str | tuple[str, int]:
-        if self.limit_type == SubscriptionDetailsLimitType.fixed:
-            return str(self.limit_value)
-
-        if self.limit_type == SubscriptionDetailsLimitType.unlimited:
-            return "2000000+"
-
-        if self.limit_type == SubscriptionDetailsLimitType.custom:
-            return ("custom", self.limit_value)
-
+        match self.limit_type:
+            case SubscriptionDetailsLimitType.fixed:
+                return str(self.limit_value)
+            case SubscriptionDetailsLimitType.unlimited:
+                return "2000000+"
+            case SubscriptionDetailsLimitType.custom:
+                return ("custom", self.limit_value)
         raise SubscriptionDetailsError()
 
     @classmethod
@@ -348,29 +344,25 @@ class LicenseUsageSample:
         }
 
     @classmethod
-    def get_parser(cls, version: str) -> LicenseUsageSampleParser:
-        if version == "1.0":
-            return cls._parse_sample_v1_0
-
-        if version in ["1.1", "1.2", "1.3"]:
-            return cls._parse_sample_v1_1
-
-        if version == "1.4":
-            return cls._parse_sample_v1_4
-
-        if version == "1.5":
-            return cls._parse_sample_v1_5
-
-        if version in ["2.0", "2.1"]:
-            return cls._parse_sample_v2_0
-
-        if version in ["3.0"]:
-            return cls._parse_sample_v3_0
-
-        raise UnknownSampleParserError("Unknown report version: %r" % version)
+    def get_parser(cls, protocol_version: str) -> LicenseUsageSampleParser:
+        match protocol_version:
+            case "1.0":
+                return cls._parse_v1_0
+            case "1.1" | "1.2" | "1.3":
+                return cls._parse_v1_1
+            case "1.4":
+                return cls._parse_v1_4
+            case "1.5":
+                return cls._parse_v1_5
+            case "2.0" | "2.1":
+                return cls._parse_v2_0
+            case "3.0":
+                return cls._parse_v3_0
+            case _:
+                raise UnknownSampleParserError("Unknown protocol version: %r" % protocol_version)
 
     @classmethod
-    def _parse_sample_v1_0(
+    def _parse_v1_0(
         cls,
         raw_sample: object,
         *,
@@ -407,7 +399,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_1(
+    def _parse_v1_1(
         cls,
         raw_sample: object,
         *,
@@ -444,7 +436,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_4(
+    def _parse_v1_4(
         cls,
         raw_sample: object,
         *,
@@ -481,7 +473,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_5(
+    def _parse_v1_5(
         cls,
         raw_sample: object,
         *,
@@ -521,7 +513,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v2_0(
+    def _parse_v2_0(
         cls,
         raw_sample: object,
         *,
@@ -561,7 +553,7 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v3_0(
+    def _parse_v3_0(
         cls,
         raw_sample: object,
         *,

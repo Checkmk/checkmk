@@ -823,7 +823,7 @@ def test_license_usage_report_from_remote() -> None:
                 ],
             }
         )
-    assert str(e.value) == "Unknown report version: '-1'"
+    assert str(e.value) == "Unknown protocol version: '-1'"
 
 
 def test_history_add_sample() -> None:

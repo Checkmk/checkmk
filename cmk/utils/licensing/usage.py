@@ -370,10 +370,10 @@ class LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
 
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong report version type: %r" % type(version))
+        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
+            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(protocol_version)
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
             for raw_sample in raw_report.get("history", [])
@@ -387,10 +387,10 @@ class LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
 
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong report version type: %r" % type(version))
+        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
+            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(protocol_version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:

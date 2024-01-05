@@ -42,7 +42,7 @@ public:
     std::unique_ptr<Filter> wait_condition;
     std::vector<std::unique_ptr<StatsColumn>> stats_columns;
     bool show_column_headers{true};
-    std::optional<int> limit;
+    int limit{-1};
     std::optional<
         std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
         time_limit;

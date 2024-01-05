@@ -545,6 +545,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.MultipleChoice():
             return _convert_to_legacy_list_choice(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.MultilineText():
+            return _convert_to_legacy_text_area(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -1502,5 +1505,26 @@ def _convert_to_legacy_list_choice(
     return legacy_valuespecs.DualListChoice(
         choices=choices,
         toggle_all=to_convert.show_toggle_all,
+        **converted_kwargs,
+    )
+
+
+def _convert_to_legacy_text_area(
+    to_convert: ruleset_api_v1.form_specs.MultilineText, localizer: Callable[[str], str]
+) -> legacy_valuespecs.TextAreaUnicode:
+    converted_kwargs: MutableMapping[str, Any] = {}
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.TextAreaUnicode(
+        monospaced=to_convert.monospaced,
+        label=_localize_optional(to_convert.label, localizer),
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
         **converted_kwargs,
     )

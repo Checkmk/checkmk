@@ -454,7 +454,9 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
                 name="checkbox_selection",
                 title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
+                item=make_javascript_link(
+                    "cmk.selection.toggle_all_rows(cmk.utils.querySelectorID('main_page_content'));"
+                ),
                 is_enabled=is_enabled,
             ),
         ],

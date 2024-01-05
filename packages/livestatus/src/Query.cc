@@ -70,7 +70,7 @@ bool Query::process() {
         parsed_query_.output_format, output_.os(), output_.getLogger(),
         parsed_query_.separators, core_.dataEncoding());
     doWait();
-    QueryRenderer q(*renderer, EmitBeginEnd::on);
+    QueryRenderer q{*renderer, EmitBeginEnd::on};
     // TODO(sp) The construct below is horrible, refactor this!
     query_renderer_ = &q;
     start(q);
@@ -89,7 +89,7 @@ void Query::start(QueryRenderer &q) {
         getAggregatorsFor({});
     }
     if (parsed_query_.show_column_headers) {
-        RowRenderer r(q);
+        RowRenderer r{q};
         for (const auto &column : parsed_query_.columns) {
             r.output(column->name());
         }
@@ -159,8 +159,8 @@ bool Query::processDataset(Row row) {
             auto renderer = Renderer::make(
                 parsed_query_.output_format, os, output_.getLogger(),
                 parsed_query_.separators, core_.dataEncoding());
-            QueryRenderer q(*renderer, EmitBeginEnd::off);
-            RowRenderer r(q);
+            QueryRenderer q{*renderer, EmitBeginEnd::off};
+            RowRenderer r{q};
             for (const auto &column : parsed_query_.columns) {
                 column->output(row, r, *user_, parsed_query_.timezone_offset);
             }
@@ -170,7 +170,7 @@ bool Query::processDataset(Row row) {
         }
     } else {
         assert(query_renderer_);  // Missing call to `process()`.
-        RowRenderer r(*query_renderer_);
+        RowRenderer r{*query_renderer_};
         for (const auto &column : parsed_query_.columns) {
             column->output(row, r, *user_, parsed_query_.timezone_offset);
         }
@@ -181,7 +181,7 @@ bool Query::processDataset(Row row) {
 void Query::finish(QueryRenderer &q) {
     if (doStats()) {
         for (const auto &[groupspec, aggregators] : stats_groups_) {
-            RowRenderer r(q);
+            RowRenderer r{q};
             if (!groupspec._str.empty()) {
                 r.output(groupspec);
             }

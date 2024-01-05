@@ -232,7 +232,7 @@ class RawLicenseUsageExtensions(TypedDict):
     ntop: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class LicenseUsageExtensions:
     ntop: bool
 
@@ -302,7 +302,7 @@ class UnknownSampleParserError(Exception):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class LicenseUsageSample:
     instance_id: UUID | None
     site_hash: str

@@ -326,13 +326,13 @@ const std::map<std::string_view, AggregationFactory> stats_ops{
 
 void ParsedQuery::parseStatsLine(std::string_view line,
                                  const ColumnCreator &make_column) {
-    // first token is either aggregation operator or column name
+    // The first token is either the column name or the aggregation operator.
     std::string column_name;
     std::unique_ptr<StatsColumn> sc;
-    auto col_or_op = nextStringArgument(line);
-    auto it = stats_ops.find(col_or_op);
+    auto col_or_aggr = nextStringArgument(line);
+    auto it = stats_ops.find(col_or_aggr);
     if (it == stats_ops.end()) {
-        column_name = col_or_op;
+        column_name = col_or_aggr;
         auto rel_op = relationalOperatorForName(nextStringArgument(line));
         line.remove_prefix(
             std::min(line.size(), line.find_first_not_of(mk::whitespace)));

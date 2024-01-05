@@ -34,7 +34,7 @@ public:
 
     bool process();
 
-    // NOTE: We cannot make this 'const' right now, it increments _current_line
+    // NOTE: We cannot make this 'const' right now, it increments current_line_
     // and calls the non-const getAggregatorsFor() member function.
     bool processDataset(Row row);
 
@@ -64,15 +64,15 @@ public:
 
 private:
     const ParsedQuery parsed_query_;
-    Table &_table;
+    Table &table_;
     ICore &core_;
-    OutputBuffer &_output;
+    OutputBuffer &output_;
     std::unique_ptr<const User> user_;
 
-    QueryRenderer *_renderer_query;
-    unsigned _current_line;
+    QueryRenderer *query_renderer_;
+    unsigned current_line_;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
-        _stats_groups;
+        stats_groups_;
 
     bool doStats() const;
     void start(QueryRenderer &q);
@@ -80,7 +80,7 @@ private:
     void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
-    // _stats_groups.
+    // stats_groups_.
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
         const RowFragment &groupspec);
 };

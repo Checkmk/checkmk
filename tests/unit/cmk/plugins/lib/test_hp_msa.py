@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib import hp_msa
+from cmk.plugins.hp_msa.agent_based.lib import parse_hp_msa
 
 
 def test_parse_hp_msa_if() -> None:
-    assert hp_msa.parse_hp_msa(
+    assert parse_hp_msa(
         [
             ["port", "3", "durable-id", "hostport_A1"],
             ["port", "3", "controller", "A"],

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
 from cmk.agent_based.v2 import StringTable
 
@@ -10,8 +11,8 @@ from cmk.agent_based.v2 import StringTable
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
 
-Object = dict[str, str]
-Section = dict[str, Object]
+Entity = Mapping[str, str]
+Section = Mapping[str, Entity]
 
 
 def _parse_hp_msa_objects(string_table: StringTable) -> Section:
@@ -32,7 +33,7 @@ def _parse_hp_msa_objects(string_table: StringTable) -> Section:
                      'controller-numeric': '1',
                      'item_type': 'port'}}
     """
-    info_enrolment: Section = {}
+    info_enrolment: dict[str, dict[str, str]] = {}
     item_id = None
     for line in string_table:
         if line[2] == "durable-id":  # marks start of new object
@@ -45,13 +46,12 @@ def _parse_hp_msa_objects(string_table: StringTable) -> Section:
 
 def _get_hp_msa_object_item(
     key: str,
-    data: Object,
+    data: Entity,
 ) -> str:
     """
-    >>> from pprint import pprint
-    >>> pprint(_get_hp_msa_object_item('key', {}))
+    >>> _get_hp_msa_object_item('key', {})
     'key'
-    >>> pprint(_get_hp_msa_object_item('key', {'location': 'location'}))
+    >>> _get_hp_msa_object_item('key', {'location': 'location'})
     'location'
     """
     item = data.get("location", key).replace("- ", "")

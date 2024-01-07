@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_msa import (
-    check_hp_msa_health,
-    inventory_hp_msa_health,
-    parse_hp_msa,
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
+from .health import check_hp_msa_health, discover_hp_msa_health
+from .lib import parse_hp_msa, Section
 
 # <<<hp_msa_psu>>>
 # power-supplies 1 durable-id psu_1.1
@@ -57,10 +63,15 @@ from cmk.base.config import check_info
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
-check_info["hp_msa_psu"] = LegacyCheckDefinition(
+agent_section_hp_msa_psu_health = AgentSection(
+    name="hp_msa_psu",
     parse_function=parse_hp_msa,
+)
+
+check_plugin_hp_msa_psu_health = CheckPlugin(
+    name="hp_msa_psu",
     service_name="Power Supply Health %s",
-    discovery_function=inventory_hp_msa_health,
+    discovery_function=discover_hp_msa_health,
     check_function=check_hp_msa_health,
 )
 
@@ -74,10 +85,8 @@ check_info["hp_msa_psu"] = LegacyCheckDefinition(
 #   |                                        |___/                         |
 #   '----------------------------------------------------------------------'
 
-# Just an assumption
 
-
-def inventory_hp_msa_psu(parsed):
+def discover_hp_msa_psu(section: Section) -> DiscoveryResult:
     """detect if PSU info is invalid
 
     Some fields where deprecated for HP MSA 1050/2050.
@@ -85,13 +94,15 @@ def inventory_hp_msa_psu(parsed):
     that means data is not valid
     """
     indicators = ("dc12v", "dc5v", "dc33v", "dc12i", "dc5i", "dctemp")
-    for item, data in parsed.items():
+    for item, data in section.items():
         if any(data.get(i) != "0" for i in indicators):
-            yield item, {}
+            yield Service(item=item)
 
 
-def check_hp_msa_psu(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_hp_msa_psu(
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     for psu_type, psu_type_readable, levels_type in [
         ("dc12v", "12 V", "levels_12v_"),
@@ -99,14 +110,20 @@ def check_hp_msa_psu(item, params, parsed):
         ("dc33v", "3.3 V", "levels_33v_"),
     ]:
         psu_voltage = float(data[psu_type]) / 100
-        levels = params[levels_type + "upper"] + params[levels_type + "lower"]
-        yield check_levels(psu_voltage, None, levels, unit="V", infoname=psu_type_readable)
+        yield from check_levels(
+            psu_voltage,
+            levels_lower=params[levels_type + "lower"],
+            levels_upper=params[levels_type + "upper"],
+            render_func=lambda x: f"{x:.2f} V",
+            label=psu_type_readable,
+        )
 
 
-check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
+check_plugin_hp_msa_psu_sensor = CheckPlugin(
+    name="hp_msa_psu_sensor",
     service_name="Power Supply Voltage %s",
     sections=["hp_msa_psu"],
-    discovery_function=inventory_hp_msa_psu,
+    discovery_function=discover_hp_msa_psu,
     check_function=check_hp_msa_psu,
     check_ruleset_name="hp_msa_psu_voltage",
     check_default_parameters={
@@ -130,16 +147,32 @@ check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def check_hp_msa_psu_temp(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_hp_msa_psu_temp(
+    item: str,
+    params: TempParamType,
+    section: Section,
+) -> CheckResult:
+    yield from check_hp_msa_psu_temp_testable(item, params, section, get_value_store())
+
+
+def check_hp_msa_psu_temp_testable(
+    item: str,
+    params: TempParamType,
+    section: Section,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    yield check_temperature(float(data["dctemp"]), params, "hp_msa_psu_temp_%s" % item)
+    yield from check_temperature(
+        float(data["dctemp"]), params, value_store=value_store, unique_name=""
+    )
 
 
-check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
+check_plugin_hp_msa_psu_temp = CheckPlugin(
+    name="hp_msa_psu_temp",
     service_name="Temperature Power Supply %s",
     sections=["hp_msa_psu"],
-    discovery_function=inventory_hp_msa_psu,
+    discovery_function=discover_hp_msa_psu,
     check_function=check_hp_msa_psu_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

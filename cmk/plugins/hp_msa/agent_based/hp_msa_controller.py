@@ -3,11 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.check_legacy_includes.hp_msa import parse_hp_msa
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
+
+from .lib import parse_hp_msa, Section
 
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A
@@ -47,24 +57,37 @@ from cmk.base.config import check_info
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-
-def inventory_hp_msa_controller_cpu(parsed):
-    for key in parsed:
-        yield key, {}
-
-
-def check_hp_msa_controller_cpu(item, params, parsed):
-    if item in parsed:
-        # hp msa 2040 reference guide:
-        # cpu-load: percentage of time the CPU is busy, from 0-100
-        return check_cpu_util(float(parsed[item]["cpu-load"]), params)
-    return None
-
-
-check_info["hp_msa_controller"] = LegacyCheckDefinition(
+agent_section_hp_msa_controller = AgentSection(
+    name="hp_msa_controller",
     parse_function=parse_hp_msa,
+)
+
+
+def discovery_hp_msa_controller_cpu(section: Section) -> DiscoveryResult:
+    for key in section:
+        yield Service(item=key)
+
+
+def check_hp_msa_controller_cpu(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
+
+    # hp msa 2040 reference guide:
+    # cpu-load: percentage of time the CPU is busy, from 0-100
+    yield from check_cpu_util(
+        util=float(data["cpu-load"]),
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+check_plugin_hp_msa_controller = CheckPlugin(
+    name="hp_msa_controller",
     service_name="CPU Utilization %s",
-    discovery_function=inventory_hp_msa_controller_cpu,
+    discovery_function=discovery_hp_msa_controller_cpu,
     check_function=check_hp_msa_controller_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={

@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
-from cmk.base.config import check_info
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, StringTable
+
+from .health import check_hp_msa_health, discover_hp_msa_health
 
 # <<<hp_msa_system>>>
 # system 1 system-name IMSAKO2B1
@@ -48,8 +50,8 @@ from cmk.base.config import check_info
 # redundancy 2 other-MC-status-numeric 4754
 
 
-def parse_hp_msa_system(string_table):
-    parsed = {}
+def parse_hp_msa_system(string_table: StringTable) -> Mapping[str, Mapping[str, str]]:
+    parsed: dict[str, dict[str, str]] = {}
     for line in string_table:
         if line[2] == "system-name":
             system_name = " ".join(line[3:])
@@ -62,9 +64,14 @@ def parse_hp_msa_system(string_table):
     return parsed
 
 
-check_info["hp_msa_system"] = LegacyCheckDefinition(
+agent_section_hp_msa_system = AgentSection(
+    name="hp_msa_system",
     parse_function=parse_hp_msa_system,
+)
+
+check_plugin_hp_msa_system = CheckPlugin(
+    name="hp_msa_system",
     service_name="System Health %s",
-    discovery_function=inventory_hp_msa_health,
+    discovery_function=discover_hp_msa_health,
     check_function=check_hp_msa_health,
 )

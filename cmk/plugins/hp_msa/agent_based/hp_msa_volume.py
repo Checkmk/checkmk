@@ -3,13 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from collections.abc import Mapping
 
-# mypy: disable-error-code="var-annotated"
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.check_legacy_includes.hp_msa import check_hp_msa_health, inventory_hp_msa_health
-from cmk.base.config import check_info
+from .health import check_hp_msa_health, discover_hp_msa_health
 
 # <<<hp_msa_volume>>>
 # volumes 1 durable-id V0
@@ -122,6 +130,9 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
+Section = Mapping[str, Mapping[str, str]]
+
+
 def _get_item_data(item, parsed):
     # ensure backward compatibility: get data in case either item is
     # "durable-id" (old) or item is "volume-name" (new)
@@ -131,12 +142,11 @@ def _get_item_data(item, parsed):
     return {}
 
 
-def check_hp_msa_volume_health(item, params, parsed):
-    parsed = _get_item_data(item, parsed)
-    return check_hp_msa_health(item, params, parsed)
+def check_hp_msa_volume_health(item, section):
+    yield from check_hp_msa_health(item, _get_item_data(item, section))
 
 
-def parse_hp_msa_volume(string_table):
+def parse_hp_msa_volume(string_table: StringTable) -> Section:
     # use numerical id (2nd row from left) as uid for items,
     # in case of several values the values are whitespace separated as usual
     item_type_idx = 0
@@ -144,7 +154,7 @@ def parse_hp_msa_volume(string_table):
     key_idx = 2
     value_idx = 3
     min_list_elements_cnt_with_values = 4
-    pre_parsed = {}
+    pre_parsed: dict[str, dict[str, str]] = {}
 
     for line in string_table:
         if len(line) < min_list_elements_cnt_with_values:
@@ -161,17 +171,23 @@ def parse_hp_msa_volume(string_table):
             pre_parsed.setdefault(numerical_id, {}).setdefault("item_type", item_type)
 
     # replace numerical id with volume-name as uid for items, convert data
-    parsed = {}
+    parsed: dict[str, dict[str, str]] = {}
     for v in pre_parsed.values():
         parsed.setdefault(v["volume-name"], v)
 
     return parsed
 
 
-check_info["hp_msa_volume"] = LegacyCheckDefinition(
+agent_section_hp_msa_volume = AgentSection(
+    name="hp_msa_volume",
     parse_function=parse_hp_msa_volume,
+)
+
+
+check_plugin_hp_msa_volume = CheckPlugin(
+    name="hp_msa_volume",
     service_name="Volume Health %s",
-    discovery_function=inventory_hp_msa_health,
+    discovery_function=discover_hp_msa_health,
     check_function=check_hp_msa_volume_health,
 )
 
@@ -186,27 +202,49 @@ check_info["hp_msa_volume"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def inventory_hp_msa_volume_df(parsed):
-    for key in parsed:
-        yield key, {}
+def discover_hp_msa_volume_df(section):
+    for key in section:
+        yield Service(item=key)
 
 
-def check_hp_msa_volume_df(item, params, parsed):
-    parsed = _get_item_data(item, parsed)
-    if item in parsed:
-        yield 0, "{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
-
-        size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
-        alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2
-        avail_mb = size_mb - alloc_mb
-
-        yield df_check_filesystem_single(item, size_mb, avail_mb, 0, None, None, params)
+def check_hp_msa_volume_df(item, params, section):
+    yield from check_hp_msa_volume_df_testable(
+        item, params, section, get_value_store(), time.time()
+    )
 
 
-check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
+def check_hp_msa_volume_df_testable(item, params, section, value_store, this_time):
+    parsed = _get_item_data(item, section)
+    if item not in parsed:
+        return
+
+    yield Result(
+        state=State.OK,
+        summary="{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"]),
+    )
+
+    size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
+    alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2
+    avail_mb = size_mb - alloc_mb
+
+    yield from df_check_filesystem_single(
+        value_store=value_store,
+        mountpoint=item,
+        filesystem_size=size_mb,
+        free_space=avail_mb,
+        reserved_space=0,
+        inodes_total=None,
+        inodes_avail=None,
+        params=params,
+        this_time=this_time,
+    )
+
+
+check_plugin_hp_msa_volume_df = CheckPlugin(
+    name="hp_msa_volume_df",
     service_name="Filesystem %s",
     sections=["hp_msa_volume"],
-    discovery_function=inventory_hp_msa_volume_df,
+    discovery_function=discover_hp_msa_volume_df,
     check_function=check_hp_msa_volume_df,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

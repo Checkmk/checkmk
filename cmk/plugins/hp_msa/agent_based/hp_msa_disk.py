@@ -4,14 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.hp_msa import (
-    check_hp_msa_health,
-    inventory_hp_msa_health,
-    parse_hp_msa,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
-from cmk.base.config import check_info
+from cmk.plugins.lib.temperature import (
+    aggregate_temperature_results,
+    check_temperature,
+    TemperatureSensor,
+    TempParamDict,
+)
+
+from .health import check_hp_msa_health, discover_hp_msa_health
+from .lib import parse_hp_msa, Section
 
 # drives 1 durable-id disk_01.01
 # drives 1 enclosure-id 1
@@ -142,51 +151,45 @@ from cmk.base.config import check_info
 # disk-statistics 1 number-of-block-reassigns-2 0
 # disk-statistics 1 number-of-bad-blocks-2 0
 
-#   .--health--------------------------------------------------------------.
-#   |                    _                _ _   _                          |
-#   |                   | |__   ___  __ _| | |_| |__                       |
-#   |                   | '_ \ / _ \/ _` | | __| '_ \                      |
-#   |                   | | | |  __/ (_| | | |_| | | |                     |
-#   |                   |_| |_|\___|\__,_|_|\__|_| |_|                     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                           main check                                 |
-#   '----------------------------------------------------------------------'
 
-check_info["hp_msa_disk"] = LegacyCheckDefinition(
+agent_section_hp_msa_disk = AgentSection(
+    name="hp_msa_disk",
     parse_function=parse_hp_msa,
+)
+
+check_plugin_hp_msa_disk = CheckPlugin(
+    name="hp_msa_disk",
     service_name="Disk Health %s",
-    discovery_function=inventory_hp_msa_health,
+    discovery_function=discover_hp_msa_health,
     check_function=check_hp_msa_health,
 )
 
 
-# .
-#   .--temperature---------------------------------------------------------.
-#   |      _                                      _                        |
-#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
-#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
-#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
-#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
-#   |                       |_|                                            |
-#   '----------------------------------------------------------------------'
+def discovery_hp_msa_disk_temp(section: Section) -> DiscoveryResult:
+    yield Service(item="Disks")
 
 
-def inventory_hp_msa_disk_temp(parsed):
-    return [("Disks", {})]
+def check_hp_msa_disk_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
+    temp_and_ids = ((k, float(v["temperature-numeric"])) for k, v in section.items())
+    yield from aggregate_temperature_results(
+        [
+            TemperatureSensor(
+                k,
+                temp,
+                check_temperature(temp, params).reading,
+            )
+            for k, temp in temp_and_ids
+        ],
+        params,
+        get_value_store(),
+    )
 
 
-def check_hp_msa_disk_temp(item, params, parsed):
-    disks: list[tuple[str, float, CheckTempKwargs]] = [
-        (key, float(values["temperature-numeric"]), {}) for key, values in parsed.items()
-    ]
-    yield from check_temperature_list(disks, params)
-
-
-check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
+check_plugin_hp_msa_disk_temp = CheckPlugin(
+    name="hp_msa_disk_temp",
     service_name="Temperature %s",
     sections=["hp_msa_disk"],
-    discovery_function=inventory_hp_msa_disk_temp,
+    discovery_function=discovery_hp_msa_disk_temp,
     check_function=check_hp_msa_disk_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

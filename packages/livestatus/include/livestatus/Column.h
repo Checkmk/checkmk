@@ -52,6 +52,7 @@ public:
 
     [[nodiscard]] std::string name() const { return _name; }
     [[nodiscard]] std::string description() const { return _description; }
+    [[nodiscard]] ColumnOffsets offsets() const { return _offsets; }
 
     template <typename T>
     [[nodiscard]] const T *columnData(Row row) const {

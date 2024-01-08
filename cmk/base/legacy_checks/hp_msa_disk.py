@@ -10,7 +10,7 @@ from cmk.base.check_legacy_includes.hp_msa import (
     inventory_hp_msa_health,
     parse_hp_msa,
 )
-from cmk.base.check_legacy_includes.temperature import check_temperature_list
+from cmk.base.check_legacy_includes.temperature import check_temperature_list, CheckTempKwargs
 from cmk.base.config import check_info
 
 # drives 1 durable-id disk_01.01
@@ -177,10 +177,9 @@ def inventory_hp_msa_disk_temp(parsed):
 
 
 def check_hp_msa_disk_temp(item, params, parsed):
-    disks = []
-    for key, values in parsed.items():
-        disks.append((key, float(values["temperature-numeric"])))
-
+    disks: list[tuple[str, float, CheckTempKwargs]] = [
+        (key, float(values["temperature-numeric"]), {}) for key, values in parsed.items()
+    ]
     return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
 
 

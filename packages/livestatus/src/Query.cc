@@ -6,7 +6,6 @@
 #include "livestatus/Query.h"
 
 #include <algorithm>
-#include <cassert>
 #include <compare>
 #include <cstddef>
 #include <sstream>
@@ -32,7 +31,8 @@ Query::Query(ParsedQuery parsed_query, Table &table, ICore &core,
     , table_{table}
     , core_{core}
     , output_{output}
-    , query_renderer_{nullptr}
+    , renderer_{makeRenderer(output_.os())}
+    , query_renderer_{*renderer_, EmitBeginEnd::on}
     , current_line_{0} {
     // NOTE: Doing this in the initializer list above leads to a segfault with
     // clang-tidy-17's bugprone-unchecked-optional-access, there are various
@@ -66,14 +66,16 @@ bool Query::process() {
     }
     // Precondition: output has been reset
     auto start_time = std::chrono::system_clock::now();
-    auto renderer = makeRenderer(output_.os());
     doWait();
-    QueryRenderer q{*renderer, EmitBeginEnd::on};
-    // TODO(sp) The construct below is horrible, refactor this!
-    query_renderer_ = &q;
-    start(q);
+    if (parsed_query_.show_column_headers) {
+        renderColumnHeaders();
+    }
     table_.answerQuery(*this, *user_, core_);
-    finish(q);
+    // Non-Stats queries output all rows directly, so there's nothing left
+    // to do in that case.
+    if (doStats()) {
+        renderAggregators();
+    }
     auto elapsed_ms = mk::ticks<std::chrono::milliseconds>(
         std::chrono::system_clock::now() - start_time);
     Informational(core_.loggerLivestatus())
@@ -87,17 +89,15 @@ std::unique_ptr<Renderer> Query::makeRenderer(std::ostream &os) {
                           parsed_query_.separators, core_.dataEncoding());
 }
 
-void Query::start(QueryRenderer &q) {
-    if (parsed_query_.show_column_headers) {
-        RowRenderer r{q};
-        for (const auto &column : parsed_query_.columns) {
-            r.output(column->name());
-        }
+void Query::renderColumnHeaders() {
+    RowRenderer r{query_renderer_};
+    for (const auto &column : parsed_query_.columns) {
+        r.output(column->name());
+    }
 
-        // Output dummy headers for stats columns
-        for (size_t col = 1; col <= parsed_query_.stats_columns.size(); ++col) {
-            r.output("stats_" + std::to_string(col));
-        }
+    // Output dummy headers for stats columns
+    for (size_t col = 1; col <= parsed_query_.stats_columns.size(); ++col) {
+        r.output("stats_" + std::to_string(col));
     }
 }
 
@@ -147,35 +147,23 @@ bool Query::processDataset(Row row) {
     }
 
     if (doStats()) {
-        // Things get a bit tricky here: For stats queries, we have to combine
-        // rows with the same values in the non-stats columns. But when we
-        // finally output those non-stats columns in finish(), we don't have the
-        // row anymore, so we can't use Column::output() then.  :-/ The slightly
-        // hacky workaround is to pre-render all non-stats columns into a single
-        // string here (RowFragment) and output it later in a verbatim manner.
         for (const auto &aggregator : getAggregatorsFor(row)) {
             aggregator->consume(row, *user_, parsed_query_.timezone_offset);
         }
     } else {
-        assert(query_renderer_);  // Missing call to `process()`.
-        renderColumns(row, *query_renderer_);
+        renderColumns(row, query_renderer_);
     }
     return true;
 }
 
-void Query::finish(QueryRenderer &q) {
-    if (!doStats()) {
-        // non-Stats queries output all rows directly, so there's nothing left
-        // to do here.
-        return;
-    }
+void Query::renderAggregators() {
     if (stats_groups_.empty()) {
         // We have a Stats query, but no row has passed filtering etc., so we
         // have to create a dummy RowFragment and a stats group for it.
         getAggregatorsFor(Row{nullptr});
     }
     for (const auto &[row_fragment, aggregators] : stats_groups_) {
-        RowRenderer r{q};
+        RowRenderer r{query_renderer_};
         if (!parsed_query_.columns.empty()) {
             r.output(row_fragment);
         }
@@ -272,6 +260,12 @@ void Query::renderColumns(Row row, QueryRenderer &q) const {
     }
 }
 
+// Things get a bit tricky here: For stats queries, we have to combine rows with
+// the same values in the non-stats columns. But when we finally output those
+// non-stats columns in finish(), we don't have the row anymore, so we can't use
+// Column::output() then. :-/ The slightly hacky workaround is to pre-render all
+// non-stats columns into a single string here (RowFragment) and output it later
+// in a verbatim manner.
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     Row row) {
     std::ostringstream os;

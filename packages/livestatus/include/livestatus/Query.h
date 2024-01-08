@@ -70,15 +70,16 @@ private:
     OutputBuffer &output_;
     std::unique_ptr<const User> user_;
 
-    QueryRenderer *query_renderer_;
+    std::unique_ptr<Renderer> renderer_;
+    QueryRenderer query_renderer_;
     int current_line_;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         stats_groups_;
 
     bool doStats() const;
     std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
-    void start(QueryRenderer &q);
-    void finish(QueryRenderer &q);
+    void renderColumnHeaders();
+    void renderAggregators();
     void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into

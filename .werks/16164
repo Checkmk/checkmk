@@ -14,4 +14,7 @@ C+:
 raise ValueError("Cannot render negative timespan")
 C-:
 
-Now, the time since the last job run will be 0 for such cases.
+Now, the affected service will be in state WARN and report the following message:
+C+:
+"The timestamp of the file is in the future. Please investigate your host times"
+C-:

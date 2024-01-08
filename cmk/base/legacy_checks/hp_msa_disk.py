@@ -180,7 +180,7 @@ def check_hp_msa_disk_temp(item, params, parsed):
     disks: list[tuple[str, float, CheckTempKwargs]] = [
         (key, float(values["temperature-numeric"]), {}) for key, values in parsed.items()
     ]
-    return check_temperature_list(disks, params, "hp_msa_disk_temp_%s" % item)
+    return check_temperature_list(disks, params)
 
 
 check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(

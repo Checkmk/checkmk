@@ -469,7 +469,6 @@ def check_temperature(  # pylint: disable=too-many-branches
 def check_temperature_list(
     sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
     params: TempParamDict,
-    unique_name: str,
 ) -> None | tuple[int, str, list[tuple[str, Number]]]:
     output_unit = params.get("output_unit", "c")
 
@@ -518,7 +517,7 @@ def check_temperature_list(
         )
 
         trend_status, trend_infotext = check_temperature_trend(
-            tempavg, params["trend_compute"], output_unit, crit, crit_lower, unique_name
+            tempavg, params["trend_compute"], output_unit, crit, crit_lower, ""
         )
         status = max(status, trend_status)
         if trend_infotext:

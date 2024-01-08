@@ -30,7 +30,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.servicename import ServiceName
+from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
@@ -422,6 +422,13 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         if not service.description:
             config_warnings.warn(
                 f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
+            )
+            continue
+
+        if len(service.description) > MAX_SERVICE_NAME_LEN:
+            config_warnings.warn(
+                f"Skipping invalid service exceeding the name length limit of {MAX_SERVICE_NAME_LEN} "
+                f"(plugin: {service.check_plugin_name}) on host: {hostname}, Service: {service.description}"
             )
             continue
 

@@ -29,7 +29,6 @@ from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     add_python_paths,
-    cmc_path,
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
@@ -432,7 +431,6 @@ def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> It
 
 
 __all__ = [
-    "cmc_path",
     "repo_path",
     "add_python_paths",
     "create_linux_test_host",

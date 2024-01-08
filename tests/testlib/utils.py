@@ -106,10 +106,6 @@ def qa_test_data_path() -> Path:
     return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
-def cmc_path() -> Path:
-    return repo_path() / "enterprise"
-
-
 def is_enterprise_repo() -> bool:
     return (repo_path() / "omd" / "packages" / "enterprise").exists()
 

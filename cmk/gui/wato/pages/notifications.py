@@ -725,6 +725,9 @@ class ModeNotifications(ABCNotificationsMode):
 
         notification_nr = str(advanced_test_options["notification_nr"])
         if service_desc := general_test_options.get("service_choice"):
+            if not service_desc:
+                raise MKUserError(None, _("Please provide a service."))
+
             context["SERVICEDESC"] = service_desc
 
             context["WHAT"] = "SERVICE"
@@ -739,7 +742,9 @@ class ModeNotifications(ABCNotificationsMode):
                 if "downtime" in simulation_mode
                 else service_state_name(int(simulation_mode[1]["svc_states"][1]))
             )
-            context["SERVICESTATEID"] = simulation_mode[1]["svc_states"][1]
+            context["SERVICESTATEID"] = (
+                "0" if "downtime" in simulation_mode else simulation_mode[1]["svc_states"][1]
+            )
         else:
             context["WHAT"] = "HOST"
             context["HOSTNOTIFICATIONNUMBER"] = notification_nr
@@ -1229,10 +1234,12 @@ class ModeNotifications(ABCNotificationsMode):
                     TextInput(
                         title=_("Plugin output"),
                         placeholder=_("This is a notification test"),
+                        size=37,
                     ),
                 ),
             ],
             optional_keys=[],
+            validate=_validate_general_opts,
         )
 
     def _vs_advanced_test_options(self) -> Foldable:
@@ -1283,6 +1290,10 @@ class ModeNotifications(ABCNotificationsMode):
         )
         with output_funnel.plugged():
             with html.form_context("test_notifications", method="POST"):
+                # TODO adjust info
+                html.show_message(
+                    _("Test if a given notification matches your notification rules.")
+                )
                 self._vs_test_on_options()
                 self._vs_general_test_options().render_input_as_form("general_opts", {})
                 self._vs_advanced_test_options().render_input("advanced_opts", "")
@@ -1296,6 +1307,15 @@ class ModeNotifications(ABCNotificationsMode):
             )
 
             return HTML(output_funnel.drain())
+
+
+def _validate_general_opts(value, varprefix):
+    # TODO also validate service_choice, this can currently be an empty str and
+    # will result in a host notification
+    if not value["hostname_choice"]:
+        raise MKUserError(
+            f"{varprefix}_p_hostname_choice", _("Please provide a hostname to test with.")
+        )
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):

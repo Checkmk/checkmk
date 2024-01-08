@@ -17,7 +17,6 @@
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-#include "livestatus/NullColumn.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
@@ -154,16 +153,12 @@ bool Query::processDataset(Row row) {
         // row anymore, so we can't use Column::output() then.  :-/ The slightly
         // hacky workaround is to pre-render all non-stats columns into a single
         // string here (RowFragment) and output it later in a verbatim manner.
-        for (const auto &aggregator :
-             getAggregatorsFor(row, parsed_query_.columns)) {
+        for (const auto &aggregator : getAggregatorsFor(row)) {
             aggregator->consume(row, *user_, parsed_query_.timezone_offset);
         }
     } else {
         assert(query_renderer_);  // Missing call to `process()`.
-        RowRenderer r{*query_renderer_};
-        for (const auto &column : parsed_query_.columns) {
-            column->output(row, r, *user_, parsed_query_.timezone_offset);
-        }
+        renderColumns(row, *query_renderer_);
     }
     return true;
 }
@@ -177,13 +172,7 @@ void Query::finish(QueryRenderer &q) {
     if (stats_groups_.empty()) {
         // We have a Stats query, but no row has passed filtering etc., so we
         // have to create a dummy RowFragment and a stats group for it.
-        std::vector<std::shared_ptr<Column>> columns;
-        columns.reserve(parsed_query_.columns.size());
-        for (const auto &column : parsed_query_.columns) {
-            columns.push_back(make_shared<NullColumn>(
-                column->name(), column->description(), column->offsets()));
-        }
-        getAggregatorsFor(Row{nullptr}, columns);
+        getAggregatorsFor(Row{nullptr});
     }
     for (const auto &[row_fragment, aggregators] : stats_groups_) {
         RowRenderer r{q};
@@ -276,16 +265,20 @@ const std::unordered_set<std::string> &Query::allColumnNames() const {
     return parsed_query_.all_column_names;
 }
 
+void Query::renderColumns(Row row, QueryRenderer &q) const {
+    RowRenderer r{q};
+    for (const auto &column : parsed_query_.columns) {
+        column->output(row, r, *user_, parsed_query_.timezone_offset);
+    }
+}
+
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
-    Row row, const std::vector<std::shared_ptr<Column>> &columns) {
+    Row row) {
     std::ostringstream os;
     {
         auto renderer = makeRenderer(os);
         QueryRenderer q{*renderer, EmitBeginEnd::off};
-        RowRenderer r{q};
-        for (const auto &column : columns) {
-            column->output(row, r, *user_, parsed_query_.timezone_offset);
-        }
+        renderColumns(row, q);
     }
     RowFragment row_fragment{os.str()};
     auto it = stats_groups_.find(row_fragment);

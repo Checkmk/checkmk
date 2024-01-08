@@ -6,21 +6,18 @@
 # pylint: disable=unused-import
 
 import time
-from typing import AnyStr
+from collections.abc import Mapping, Sequence
+from typing import AnyStr, NotRequired, TypedDict
 
 from cmk.base.check_api import check_levels, state_markers
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_average,
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-)
 
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError, State
 from cmk.plugins.lib.temperature import _migrate_params
 from cmk.plugins.lib.temperature import fahrenheit_to_celsius as fahrenheit_to_celsius
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
+from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.lib.temperature import TempParamType as TempParamType
 from cmk.plugins.lib.temperature import to_celsius as to_celsius
 from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType
@@ -33,6 +30,15 @@ PerfDataType = list[PerfDataEntryType]
 
 # Generic Check Type. Can be used elsewhere too.
 CheckType = tuple[StatusType, AnyStr, PerfDataType]
+
+
+class CheckTempKwargs(TypedDict):
+    dev_unit: NotRequired[str]
+    dev_levels: NotRequired[TwoLevelsType | None]
+    dev_levels_lower: NotRequired[TwoLevelsType | None]
+    dev_status: NotRequired[StatusType | None]
+    dev_status_name: NotRequired[str]
+
 
 #################################################################################################
 #
@@ -460,39 +466,28 @@ def check_temperature(  # pylint: disable=too-many-branches
 # and kwargs a dict of keyword arguments for check_temperature
 
 
-def check_temperature_list(sensorlist, params, unique_name):
+def check_temperature_list(
+    sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
+    params: TempParamDict,
+    unique_name: str,
+) -> None | tuple[int, str, list[tuple[str, Number]]]:
     output_unit = params.get("output_unit", "c")
 
-    def worststate(a, b):
-        if a != 3 and b != 3:
-            return max(a, b)
-        if a != 2 and b != 2:
-            return 3
-        return 2
-
-    if sensorlist == []:
+    if not sensorlist:
         return None
 
     sensor_count = len(sensorlist)
-    tempsum = 0
+    tempsum: Number = 0
     tempmax = sensorlist[0][1]
     tempmin = sensorlist[0][1]
     status = 0
     detailtext = ""
-    for entry in sensorlist:
-        if len(entry) == 2:
-            sub_item, temp = entry
-            kwargs = {}
-        else:
-            sub_item, temp, kwargs = entry
-        if not isinstance(temp, (float, int)):
-            temp = float(temp)
-
+    for sub_item, temp, kwargs in sensorlist:
         tempsum += temp
         tempmax = max(tempmax, temp)
         tempmin = min(tempmin, temp)
         sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
-        status = worststate(status, sub_status)
+        status = State.worst(status, sub_status).value
         if status != 0:
             detailtext += sub_item + ": " + sub_infotext + state_markers[sub_status] + ", "
     if detailtext:

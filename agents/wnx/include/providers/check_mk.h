@@ -37,12 +37,8 @@ private:
 
 std::string GetTimezoneOffset();
 
-template <typename T>
-std::string PrintIsoTime(std::chrono::time_point<T> t) {
-    return std::format("{:%FT%T}{}",
-                       std::chrono::time_point_cast<std::chrono::seconds>(t),
-                       GetTimezoneOffset());
-}
+std::string PrintIsoTime(
+    std::chrono::time_point<std::chrono::system_clock> now);
 }  // namespace cma::provider
 
 #endif  // CHECK_MK_H

@@ -109,7 +109,22 @@ std::string MakeDirs() {
     return out;
 }
 
+std::tm ToLocalTime(std::chrono::time_point<std::chrono::system_clock> now) {
+    const std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm local_time;
+    auto _ = localtime_s(&now_c, &local_time);
+    return local_time;
+}
+
 }  // namespace
+
+std::string PrintIsoTime(
+    std::chrono::time_point<std::chrono::system_clock> now) {
+    auto lt = ToLocalTime(now);
+    return fmt::format("{:4}-{:02}-{:02}T{:02}:{:02}:{:02}{}",
+                       lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour,
+                       lt.tm_min, lt.tm_sec, GetTimezoneOffset());
+}
 
 std::string CheckMk::makeBody() {
     auto out = MakeInfo();

@@ -8,14 +8,9 @@
 
 namespace cma::provider {
 
-TEST(CheckMkHeader, GetTimeZone) {
-    constexpr std::chrono::system_clock::time_point tp;
-    EXPECT_EQ(GetTimezoneOffset(), "+0100");
-}
-
 TEST(CheckMkHeader, IsoTime) {
     constexpr std::chrono::system_clock::time_point tp;
-    EXPECT_EQ(PrintIsoTime(tp), "1970-01-01T00:00:00+0100");
+    EXPECT_EQ(PrintIsoTime(tp), "1970-01-01T01:00:00+0100");
 }
 
 TEST(CheckMkHeader, Convert) {

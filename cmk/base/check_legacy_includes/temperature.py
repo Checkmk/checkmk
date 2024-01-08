@@ -461,8 +461,6 @@ def check_temperature(  # pylint: disable=too-many-branches
 
 
 def check_temperature_list(sensorlist, params, unique_name):
-    params = _migrate_params(params)
-
     output_unit = params.get("output_unit", "c")
 
     def worststate(a, b):

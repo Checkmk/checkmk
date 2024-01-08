@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-12-21 15:28+0000\n"
+"PO-Revision-Date: 2024-01-08 10:01+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -474,7 +474,7 @@ msgstr "%d Instanzen mit Fehlern: %s"
 msgid "%d specific settings"
 msgstr "%d spezifische Einstellungen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d time ranges"
 msgstr "%d Zeiträume"
 
@@ -800,7 +800,6 @@ msgstr "'Minor' Status"
 msgid "'Warning' state"
 msgstr "'Warning' Status"
 
-#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
 "versioning the configuration.Please either install 'git' or disable git "
@@ -3037,6 +3036,10 @@ msgstr ""
 "ist. Für Cluster und Nodes können Grenzen für die Anzahl der freien Pods "
 "festgelegt werden."
 
+#, fuzzy
+msgid "Accounts display name"
+msgstr "Anzeigename"
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -3055,9 +3058,8 @@ msgstr "Alle inkompatiblen Werke quittieren"
 msgid "Acknowledge host and service problems and remove acknowledgements"
 msgstr "Quittiere Host- und Serviceprobleme - entferne Quittierungen"
 
-#, fuzzy
 msgid "Acknowledge incompatible Werks"
-msgstr "Quittierte inkompatible Werks"
+msgstr "Inkompatible Werks quittieren"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -3595,9 +3597,8 @@ msgstr "Backup-Job hinzufügen"
 msgid "Add backup target"
 msgstr "Backup-Ziel hinzufügen"
 
-#, fuzzy
 msgid "Add bookmark"
-msgstr "Lesezeichen speichern"
+msgstr "Lesezeichen hinzufügen"
 
 msgid "Add child node generator"
 msgstr "Generator für Child-Node hinzufügen"
@@ -3745,9 +3746,8 @@ msgstr "Neue Nachricht hinzufügen"
 msgid "Add metric level"
 msgstr "Metrik-Schwellwert hinzufügen"
 
-#, fuzzy
 msgid "Add micro seconds to timestamps in logfiles"
-msgstr "Zeitstempel in Logdateien mit Mikrosekunden"
+msgstr "Mikrosekunden zu Zeitstempeln in Logdateien hinzufügen"
 
 msgid "Add missing, remove vanished"
 msgstr "Fehlende hinzufügen, verschwundene entfernen"
@@ -4664,9 +4664,8 @@ msgstr "Agentenbacken beendet."
 msgid "Agent based plugins (deprecated)"
 msgstr "Agenten-basierte Plugins (veraltet)"
 
-#, fuzzy
 msgid "Agent certificates"
-msgstr "Agent-Zertifikate"
+msgstr "Agenten-Zertifikate"
 
 msgid "Agent controller"
 msgstr "Agent Controller"
@@ -4877,13 +4876,11 @@ msgstr "Aggregation: einfaches Kasten-Layout"
 msgid "Aggregations"
 msgstr "Aggregationen"
 
-#, fuzzy
 msgid "Aggregations affected by host"
 msgstr "Von Host betroffene Aggregationen"
 
-#, fuzzy
 msgid "Aggregations affected by service"
-msgstr "Aggregationen betroffen von Service"
+msgstr "Von Service betroffene Aggregationen"
 
 msgid "Aggregations are equal"
 msgstr "Aggregationen sind gleich"
@@ -5578,9 +5575,9 @@ msgstr "Berechtigung, Teile des Baumes zu sehen"
 msgid "Allowed to see the whole tree"
 msgstr "Erlaube, den ganzen Baum zu sehen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Allowed values range from %s to %s."
-msgstr "Clustr-Knoten umbenannt von %s nach %s."
+msgstr "Erlaubte Werte gehen von %s bis %s."
 
 msgid "Allows a user to create or modify entries in the report scheduler."
 msgstr ""
@@ -6425,7 +6422,6 @@ msgstr ""
 msgid "As server"
 msgstr "Als Server"
 
-#, fuzzy
 msgid ""
 "As soon as you add your Checkmk server to the monitoring, a graph showing "
 "the history of your host problems will appear here.\n"
@@ -6435,10 +6431,10 @@ msgstr ""
 "Sobald Sie Ihren Checkmk-Server ins Monitoring aufnehmen, erscheint hier ein "
 "Graph, der die History der Host-Probleme zeigt.\n"
 "Bitte beachten Sie auch, dass diese Meldung bei einem gefilterten Dashboard "
-"erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern von "
-"Websites."
+"erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern nach "
+"Instanzen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
 "the history of your host problems will appear here. Currently, the following "
@@ -6446,12 +6442,12 @@ msgid ""
 " Please also be aware that this message might appear as a result of a "
 "filtered dashboard. This dashlet currently only supports filtering for sites."
 msgstr ""
-"Sobald Sie Ihre Checkmk-Server ins Monitoring aufnehmen, erscheint hier ein "
-"Graph, der die History der Host-Probleme zeigt. Derzeit werden die folgenden "
-"Checkmk-Instanzen nicht überwacht: %s.\n"
+"Sobald Sie Ihre(n) Checkmk-Server ins Monitoring aufnehmen, erscheint hier "
+"ein Graph, der die History der Host-Probleme zeigt. Derzeit werden die "
+"folgenden Checkmk-Instanzen nicht überwacht: %s.\n"
 "Bitte beachten Sie auch, dass diese Meldung bei einem gefilterten Dashboard "
-"erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern von "
-"Websites."
+"erscheinen kann. Dieses Dashlet unterstützt derzeit nur das Filtern nach "
+"Instanzen."
 
 msgid ""
 "As soon as you configure expected strings in the response the check will "
@@ -6570,7 +6566,6 @@ msgstr "Asynchron"
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
 
-#, fuzzy
 msgid "Asynchronous execution of plug-ins"
 msgstr "Asynchrone Ausführen von Plugins"
 
@@ -6795,9 +6790,8 @@ msgstr "Authentifizierung mit TLS"
 msgid "Authenticator app"
 msgstr "Authenticator-App hinzufügen"
 
-#, fuzzy
 msgid "Authenticator apps"
-msgstr "Authenticator-App hinzufügen"
+msgstr "Authenticator-Apps"
 
 msgid "Authmethod"
 msgstr "Authentifizierungsmethode"
@@ -7287,9 +7281,8 @@ msgstr "Durschnittswert des folgenden numerischen Feldes: "
 msgid "Average values"
 msgstr "Durchschnittswerte"
 
-#, fuzzy
 msgid "Average values for broadcast and multicast packet rates"
-msgstr "Durchschnittliche Werte für Broad- und Multicast Paketraten"
+msgstr "Durchschnittliche Werte für Broad- und Multicast-Paketraten"
 
 msgid "Average values for used bandwidth"
 msgstr "Durchschnittliche Werte für die verwendete Bandbreite"
@@ -7475,11 +7468,9 @@ msgstr "Baum der BI-Aggregationsgruppen"
 msgid "BI aggregations for hosts by host groups"
 msgstr "BI-Aggregationen für Hosts nach Host-Gruppen"
 
-#, fuzzy
 msgid "BI aggregations summary state"
 msgstr "Gesamtstatus der BI-Aggregationen"
 
-#, fuzzy
 msgid "BI availability"
 msgstr "BI Verfügbarkeit"
 
@@ -7594,7 +7585,6 @@ msgstr "Backplanes"
 msgid "Backup"
 msgstr "Backup"
 
-#, fuzzy
 msgid "Backup & restore"
 msgstr "Backup & Wiederherstellung"
 
@@ -7607,9 +7597,8 @@ msgstr "Backup-Code"
 msgid "Backup codes"
 msgstr "Backup-Codes"
 
-#, fuzzy
 msgid "Backup codes left:"
-msgstr "Backup-Codes"
+msgstr "Verbleibende Backup-Codes:"
 
 msgid "Backup configured"
 msgstr "Datensicherung konfiguriert"
@@ -7848,7 +7837,6 @@ msgstr "Bester Status"
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Bester Status, %d Knoten, auf %s begrenzen"
 
-#, fuzzy
 msgid ""
 "Best: The plug-in's check function will be applied to each individual node. "
 "The best outcome will determine the overall state of the clustered service."
@@ -7991,9 +7979,8 @@ msgstr "Rahmenbreite"
 msgid "Both"
 msgstr "Beide"
 
-#, fuzzy
 msgid "Both - Display the information for both pod and container levels"
-msgstr "Beide - Zeige Informationen für beide Levels (Gruppe und Container)"
+msgstr "Beide - Zeige Informationen für das Pod- und das Container-Level"
 
 msgid "Bottom"
 msgstr "Unten"
@@ -8028,9 +8015,8 @@ msgstr "Rate an Broadcast-Paketen"
 msgid "Broadcast packets"
 msgstr "Broadcastpakete"
 
-#, fuzzy
 msgid "Broadcast/Multicast"
-msgstr "Broad-/Multicast"
+msgstr "Broadcast/Multicast"
 
 msgid "Broadcom bonding network interface on Windows"
 msgstr "Broadcom Bonding-Netwerkgeräte unter Windows"
@@ -8053,9 +8039,8 @@ msgstr "Gebrochen"
 msgid "Broken GUI extensions"
 msgstr "Defekte GUI-Erweiterungen"
 
-#, fuzzy
 msgid "Browse the catalog of all check plug-ins, create static checks"
-msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
+msgstr "Den Katalog aller Check-Plugins durchsuchen, statische Checks erstellen"
 
 msgid "Bucket"
 msgstr "Bucket"
@@ -8221,11 +8206,9 @@ msgstr "Busgeschwindigkeit"
 msgid "Business Intelligence"
 msgstr "Business Intelligence"
 
-#, fuzzy
 msgid "Business Intelligence administration"
-msgstr "Business-Intelligence-Administration"
+msgstr "Business Intelligence Administration"
 
-#, fuzzy
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regeln und Aggregate"
 
@@ -9290,6 +9273,10 @@ msgstr "CPU-Auslastung für Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
 msgstr "CPU-Auslastung: Cluster"
+
+#, fuzzy
+msgid "CPUs physical name"
+msgstr "Physikalischer Datenträgername"
 
 msgid "CR"
 msgstr "CR"
@@ -30798,13 +30785,6 @@ msgstr "Checkmk kennenlernen"
 msgid "Leave layout mode"
 msgstr "Verlasse Layout Modus"
 
-msgid ""
-"Leave this empty for systems without modules, which just have one global "
-"memory usage."
-msgstr ""
-"Lassen Sie dies leer bei Systemen ohne Module (die nur eine global "
-"Speicherbelegung haben)."
-
 msgid "Left"
 msgstr "Links"
 
@@ -33258,6 +33238,14 @@ msgstr "Mails in gescheiterter Mail-Warteschlange"
 msgid "Mails in outgoing mail queue"
 msgstr "Mails in der Warteschlange für ausgehende Mails"
 
+#, fuzzy
+msgid "Mails in outgoing mail queue (multiple queues)"
+msgstr "Mails in der Warteschlange für ausgehende Mails"
+
+#, fuzzy
+msgid "Mails in outgoing mail queue (single queue)"
+msgstr "Mails in der Warteschlange für ausgehende Mails"
+
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Mail in ausgehender / deferred Mailschlange"
 
@@ -33288,7 +33276,12 @@ msgstr "Hauptspeichernutzung von ESX Hostsystemen"
 msgid "Main memory usage of devices with modules"
 msgstr "Hauptspeichernutzung von Geräten mit Modulen"
 
-msgid "Main memory usage of simple devices"
+#, fuzzy
+msgid "Main memory usage of simple devices with multiple services"
+msgstr "Hauptspeichernutzung von Geräten mit Modulen"
+
+#, fuzzy
+msgid "Main memory usage of simple devices with single services"
 msgstr "Hauptspeichernutzung von einfachen Geräten"
 
 msgid "Maintenance"
@@ -35352,9 +35345,6 @@ msgstr "Modulname"
 
 msgid "Module name"
 msgstr "Modulname"
-
-msgid "Module name or empty"
-msgstr "Modulname oder leer"
 
 msgid "Modules"
 msgstr "Module"
@@ -47946,9 +47936,6 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "Maximales Alter einstellen"
 
-msgid "Set maximum long output size"
-msgstr "Maximale Größe der langen Ausgabe festlegen"
-
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Monitoring-Zustände für rauchfreie und rauchentwickelnde Situationen"
 
@@ -52044,8 +52031,9 @@ msgstr "Das Passwort wurde erfolgreich geändert."
 msgid "Successfully changed the credential."
 msgstr "Die Zugangsdaten wurden erfolgreich geändert."
 
-msgid "Successfully copied rule value representation to the clipboard."
-msgstr "Regelwertdarstellung erfolgreich in die Zwischenablage kopiert."
+#, fuzzy
+msgid "Successfully copied to clipboard."
+msgstr "Das Passwort wurde erfolgreich geändert."
 
 #, python-format
 msgid ""
@@ -75176,6 +75164,22 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#~ msgid "Set maximum long output size"
+#~ msgstr "Maximale Größe der langen Ausgabe festlegen"
+
+#~ msgid "Successfully copied rule value representation to the clipboard."
+#~ msgstr "Regelwertdarstellung erfolgreich in die Zwischenablage kopiert."
+
+#~ msgid ""
+#~ "Leave this empty for systems without modules, which just have one global "
+#~ "memory usage."
+#~ msgstr ""
+#~ "Lassen Sie dies leer bei Systemen ohne Module (die nur eine global "
+#~ "Speicherbelegung haben)."
+
+#~ msgid "Module name or empty"
+#~ msgstr "Modulname oder leer"
 
 #~ msgid "Backup Age"
 #~ msgstr "Backup-Alter"

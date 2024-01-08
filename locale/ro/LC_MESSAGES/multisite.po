@@ -3045,6 +3045,10 @@ msgstr ""
 "fost în așteptare mai mult decât durata stabilită. Pentru clustere și noduri "
 "se pot defini niveluri privind numărul de poduri libere."
 
+#, fuzzy
+msgid "Accounts display name"
+msgstr "Afișați numele"
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -9403,6 +9407,10 @@ msgstr "Utilizare CPU pe Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
 msgstr "Utilizare CPU: Cluster"
+
+#, fuzzy
+msgid "CPUs physical name"
+msgstr "Denumirea volumului fizic"
 
 msgid "CR"
 msgstr "CR"
@@ -31073,13 +31081,6 @@ msgstr "Învățare Checkmk"
 msgid "Leave layout mode"
 msgstr "Ieșiți din modul layout"
 
-msgid ""
-"Leave this empty for systems without modules, which just have one global "
-"memory usage."
-msgstr ""
-"Lăsați această opțiune goală pentru sistemele fără module, care au doar o "
-"singură utilizare globală a memoriei."
-
 msgid "Left"
 msgstr "Stânga"
 
@@ -33573,6 +33574,14 @@ msgstr "Mesajele din coada de corespondență eșuată"
 msgid "Mails in outgoing mail queue"
 msgstr "Mesaje în coada de corespondență de ieșire"
 
+#, fuzzy
+msgid "Mails in outgoing mail queue (multiple queues)"
+msgstr "Mesaje în coada de corespondență de ieșire"
+
+#, fuzzy
+msgid "Mails in outgoing mail queue (single queue)"
+msgstr "Mesaje în coada de corespondență de ieșire"
+
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Mesaje în coada de corespondență de ieșire/mesaje amânate"
 
@@ -33604,7 +33613,12 @@ msgstr "Utilizarea memoriei principale a sistemului gazdă ESX"
 msgid "Main memory usage of devices with modules"
 msgstr "Utilizarea memoriei principale a dispozitivelor cu module"
 
-msgid "Main memory usage of simple devices"
+#, fuzzy
+msgid "Main memory usage of simple devices with multiple services"
+msgstr "Utilizarea memoriei principale a dispozitivelor cu module"
+
+#, fuzzy
+msgid "Main memory usage of simple devices with single services"
 msgstr "Utilizarea memoriei principale a dispozitivelor simple"
 
 msgid "Maintenance"
@@ -35689,9 +35703,6 @@ msgstr "Denumirea modulului"
 
 msgid "Module name"
 msgstr "Numele modulului"
-
-msgid "Module name or empty"
-msgstr "Numele modulului sau gol"
 
 msgid "Modules"
 msgstr "Module"
@@ -48441,9 +48452,6 @@ msgstr ""
 msgid "Set maximum age"
 msgstr "Setați vârsta maximă"
 
-msgid "Set maximum long output size"
-msgstr "Setați dimensiunea maximă a ieșirii lungi"
-
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Setați stările de monitorizare pentru cazurile fără fum și cu fum"
 
@@ -52584,8 +52592,9 @@ msgstr "Parola a fost schimbată cu succes."
 msgid "Successfully changed the credential."
 msgstr "Ați schimbat cu succes credențialul."
 
-msgid "Successfully copied rule value representation to the clipboard."
-msgstr "A fost copiată cu succes reprezentarea valorii regulii în clipboard."
+#, fuzzy
+msgid "Successfully copied to clipboard."
+msgstr "Parola a fost schimbată cu succes."
 
 #, python-format
 msgid ""
@@ -76410,6 +76419,23 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Set maximum long output size"
+#~ msgstr "Setați dimensiunea maximă a ieșirii lungi"
+
+#~ msgid "Successfully copied rule value representation to the clipboard."
+#~ msgstr ""
+#~ "A fost copiată cu succes reprezentarea valorii regulii în clipboard."
+
+#~ msgid ""
+#~ "Leave this empty for systems without modules, which just have one global "
+#~ "memory usage."
+#~ msgstr ""
+#~ "Lăsați această opțiune goală pentru sistemele fără module, care au doar o "
+#~ "singură utilizare globală a memoriei."
+
+#~ msgid "Module name or empty"
+#~ msgstr "Numele modulului sau gol"
 
 #~ msgid "Backup Age"
 #~ msgstr "Vârsta de rezervă"

@@ -3022,6 +3022,10 @@ msgstr ""
 "afwachting is. Voor clusters en nodes kunnen niveaus worden ingesteld voor "
 "het aantal vrije pods."
 
+#, fuzzy
+msgid "Accounts display name"
+msgstr "Naam weergeven"
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -9331,6 +9335,10 @@ msgstr "CPU-gebruik op Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
 msgstr "CPU gebruik: Cluster"
+
+#, fuzzy
+msgid "CPUs physical name"
+msgstr "Fysieke volumenaam"
 
 msgid "CR"
 msgstr "CR"
@@ -30876,13 +30884,6 @@ msgstr "Leren Checkmk"
 msgid "Leave layout mode"
 msgstr "Verlaat opmaakmodus"
 
-msgid ""
-"Leave this empty for systems without modules, which just have one global "
-"memory usage."
-msgstr ""
-"Laat dit leeg voor systemen zonder modules, die slechts één globaal "
-"geheugengebruik hebben."
-
 msgid "Left"
 msgstr "Links"
 
@@ -33376,6 +33377,14 @@ msgstr "Mails in mislukte mail wachtrij"
 msgid "Mails in outgoing mail queue"
 msgstr "Mails in uitgaande mail wachtrij"
 
+#, fuzzy
+msgid "Mails in outgoing mail queue (multiple queues)"
+msgstr "Mails in uitgaande mail wachtrij"
+
+#, fuzzy
+msgid "Mails in outgoing mail queue (single queue)"
+msgstr "Mails in uitgaande mail wachtrij"
+
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Mails in de wachtrij voor uitgaande mail/uitgestelde mails"
 
@@ -33406,7 +33415,12 @@ msgstr "Hoofdgeheugengebruik van ESX hostsysteem"
 msgid "Main memory usage of devices with modules"
 msgstr "Hoofdgeheugengebruik van apparaten met modules"
 
-msgid "Main memory usage of simple devices"
+#, fuzzy
+msgid "Main memory usage of simple devices with multiple services"
+msgstr "Hoofdgeheugengebruik van apparaten met modules"
+
+#, fuzzy
+msgid "Main memory usage of simple devices with single services"
 msgstr "Hoofdgeheugengebruik van eenvoudige toestellen"
 
 msgid "Maintenance"
@@ -35482,9 +35496,6 @@ msgstr "Naam van de module"
 
 msgid "Module name"
 msgstr "Naam van de module"
-
-msgid "Module name or empty"
-msgstr "Naam van de module of leeg"
 
 msgid "Modules"
 msgstr "Modules"
@@ -48133,10 +48144,6 @@ msgid "Set maximum age"
 msgstr "Maximumleeftijd instellen"
 
 #, fuzzy
-msgid "Set maximum long output size"
-msgstr "Maximumleeftijd instellen"
-
-#, fuzzy
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Bewakingstoestand voor elke andere eenheidstoestand"
 
@@ -52228,8 +52235,9 @@ msgstr "Wachtwoord succesvol gewijzigd."
 msgid "Successfully changed the credential."
 msgstr "Succesvol veranderd de geloofsbrieven."
 
-msgid "Successfully copied rule value representation to the clipboard."
-msgstr "Succesvol gekopieerde regelwaarde representatie naar het klembord."
+#, fuzzy
+msgid "Successfully copied to clipboard."
+msgstr "Wachtwoord succesvol gewijzigd."
 
 #, python-format
 msgid ""
@@ -75910,6 +75918,24 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Set maximum age"
+#~ msgid "Set maximum long output size"
+#~ msgstr "Maximumleeftijd instellen"
+
+#~ msgid "Successfully copied rule value representation to the clipboard."
+#~ msgstr "Succesvol gekopieerde regelwaarde representatie naar het klembord."
+
+#~ msgid ""
+#~ "Leave this empty for systems without modules, which just have one global "
+#~ "memory usage."
+#~ msgstr ""
+#~ "Laat dit leeg voor systemen zonder modules, die slechts één globaal "
+#~ "geheugengebruik hebben."
+
+#~ msgid "Module name or empty"
+#~ msgstr "Naam van de module of leeg"
 
 #~ msgid "Backup Age"
 #~ msgstr "Back-up Leeftijd"

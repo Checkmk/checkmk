@@ -3047,6 +3047,10 @@ msgstr ""
 "los pods haya estado pendiente durante más tiempo del establecido. Para los "
 "clusters y nodos se pueden definir niveles en el número de pods libres."
 
+#, fuzzy
+msgid "Accounts display name"
+msgstr "Mostrar nombre"
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -9405,6 +9409,10 @@ msgstr "Utilización de la CPU en Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
 msgstr "Utilización de la CPU de los clusters"
+
+#, fuzzy
+msgid "CPUs physical name"
+msgstr "Nombre del volumen físico"
 
 msgid "CR"
 msgstr "CR"
@@ -31126,13 +31134,6 @@ msgstr "Aprendizaje Checkmk"
 msgid "Leave layout mode"
 msgstr "Salir del modo de diseño"
 
-msgid ""
-"Leave this empty for systems without modules, which just have one global "
-"memory usage."
-msgstr ""
-"Déjelo vacío para los sistemas sin módulos, que sólo tienen un uso de "
-"memoria global."
-
 msgid "Left"
 msgstr "Izquierda"
 
@@ -33658,6 +33659,14 @@ msgstr "Correos en la cola de correo fallido"
 msgid "Mails in outgoing mail queue"
 msgstr "Correos en la cola de salida"
 
+#, fuzzy
+msgid "Mails in outgoing mail queue (multiple queues)"
+msgstr "Correos en la cola de salida"
+
+#, fuzzy
+msgid "Mails in outgoing mail queue (single queue)"
+msgstr "Correos en la cola de salida"
+
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr "Correos en la cola de salida/correos diferidos"
 
@@ -33689,7 +33698,12 @@ msgstr "Uso de la memoria principal del sistema host ESX"
 msgid "Main memory usage of devices with modules"
 msgstr "Uso de la memoria principal de los dispositivos con módulos"
 
-msgid "Main memory usage of simple devices"
+#, fuzzy
+msgid "Main memory usage of simple devices with multiple services"
+msgstr "Uso de la memoria principal de los dispositivos con módulos"
+
+#, fuzzy
+msgid "Main memory usage of simple devices with single services"
 msgstr "Uso de la memoria principal de los dispositivos simples"
 
 msgid "Maintenance"
@@ -35784,9 +35798,6 @@ msgstr "Nombre del módulo"
 
 msgid "Module name"
 msgstr "Nombre del módulo"
-
-msgid "Module name or empty"
-msgstr "Nombre del módulo o vacío"
 
 msgid "Modules"
 msgstr "Módulos"
@@ -48564,10 +48575,6 @@ msgid "Set maximum age"
 msgstr "Fijar la edad máxima"
 
 #, fuzzy
-msgid "Set maximum long output size"
-msgstr "Fijar la edad máxima"
-
-#, fuzzy
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Estado de supervisión de cualquier otro estado de la unidad"
 
@@ -52704,10 +52711,9 @@ msgstr "Se ha cambiado la contraseña con éxito."
 msgid "Successfully changed the credential."
 msgstr "Se ha cambiado la credencial con éxito."
 
-msgid "Successfully copied rule value representation to the clipboard."
-msgstr ""
-"Se ha copiado con éxito la representación del valor de la regla en el "
-"portapapeles."
+#, fuzzy
+msgid "Successfully copied to clipboard."
+msgstr "Se ha cambiado la contraseña con éxito."
 
 #, python-format
 msgid ""
@@ -76516,6 +76522,26 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 msgid "Ω"
 msgstr "Ω"
+
+#, fuzzy
+#~| msgid "Set maximum age"
+#~ msgid "Set maximum long output size"
+#~ msgstr "Fijar la edad máxima"
+
+#~ msgid "Successfully copied rule value representation to the clipboard."
+#~ msgstr ""
+#~ "Se ha copiado con éxito la representación del valor de la regla en el "
+#~ "portapapeles."
+
+#~ msgid ""
+#~ "Leave this empty for systems without modules, which just have one global "
+#~ "memory usage."
+#~ msgstr ""
+#~ "Déjelo vacío para los sistemas sin módulos, que sólo tienen un uso de "
+#~ "memoria global."
+
+#~ msgid "Module name or empty"
+#~ msgstr "Nombre del módulo o vacío"
 
 #~ msgid "Backup Age"
 #~ msgstr "Edad de reserva"

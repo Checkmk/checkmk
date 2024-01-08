@@ -5,8 +5,9 @@
 // library for uploading packages
 package lib
 
-hashfile_extension = ".hash"
-downloads_path = "/var/downloads/checkmk/"
+hashfile_extension = ".hash";
+downloads_path = "/var/downloads/checkmk/";
+tstbuilds_path = "/tstbuilds/";
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */
@@ -122,6 +123,16 @@ def execute_cmd_on_archive_server(cmd) {
     }
 }
 
+def execute_cmd_on_tst_server(cmd) {
+    // INTERNAL_DEPLOY_DEST configured as "deploy@tstbuilds-artifacts.lan.tribe29.com:/tstbuilds/"
+    def internal_deploy_server = INTERNAL_DEPLOY_DEST.split(":")[0];
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {    // groovylint-disable DuplicateMapLiteral
+        sh("""
+           ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${INTERNAL_DEPLOY_PORT} ${internal_deploy_server} "${cmd}"
+        """);
+    }
+}
+
 def deploy_to_website(CMK_VERS) {
     stage("Deploy to Website") {
         // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
@@ -141,6 +152,7 @@ def deploy_to_website(CMK_VERS) {
 def cleanup_rc_candidates_of_version(CMK_VERS) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
     execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");
+    execute_cmd_on_tst_server("rm -rf ${tstbuilds_path}${TARGET_VERSION}-rc*;");
 }
 
 return this;

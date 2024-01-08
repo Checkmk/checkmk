@@ -8,7 +8,14 @@ from itertools import chain
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
-from cmk.gui.type_defs import FilterName, InfoName, SingleInfos, Visual, VisualContext
+from cmk.gui.type_defs import (
+    FilterName,
+    HTTPVariables,
+    InfoName,
+    SingleInfos,
+    Visual,
+    VisualContext,
+)
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
 from .filter import Filter, filter_registry
@@ -102,7 +109,7 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
     return show_filters
 
 
-def context_to_uri_vars(context: VisualContext) -> list[tuple[str, str]]:
+def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
     return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
 

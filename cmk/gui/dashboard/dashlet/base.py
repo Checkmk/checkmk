@@ -15,7 +15,7 @@ from cmk.gui import visuals
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.type_defs import RoleName, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -293,7 +293,7 @@ class Dashlet(abc.ABC, Generic[T]):
         new_qs = urllib.parse.urlencode(url_vars)
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
-    def _dashlet_context_vars(self) -> list[tuple[str, str]]:
+    def _dashlet_context_vars(self) -> HTTPVariables:
         return visuals.context_to_uri_vars(self.context)
 
     def unconfigured_single_infos(self) -> set[str]:

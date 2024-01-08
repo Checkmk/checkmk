@@ -39,9 +39,6 @@ pytest_plugins = ("tests.testlib.playwright.plugin",)
 import tests.testlib as testlib
 
 collect_ignore = []
-# TODO Hack: Exclude cee tests in cre repo
-if not Path(testlib.utils.cmc_path()).exists():
-    collect_ignore_glob = ["*/cee/*"]
 
 # Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
 # runs and prevent us from spot the important messages easily. Reduce the Reduce the log level

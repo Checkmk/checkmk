@@ -24,6 +24,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.cse.userdb.cognito.oauth2 import load_admin_panel_url
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -603,7 +604,7 @@ class SidebarRenderer:
         html.open_div(
             id_="saas",
             title=_("Go to the Saas Admin Panel"),
-            onclick="window.open('https://admin-panel.saas-prod.cloudsandbox.check-mk.net/', '_blank')",
+            onclick=f"window.open('{load_admin_panel_url()}', '_blank')",
         )
         html.icon("saas")
         if not user.get_attribute("nav_hide_icons_title"):

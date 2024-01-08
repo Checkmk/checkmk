@@ -23,6 +23,7 @@
 #include "livestatus/Renderer.h"
 #include "livestatus/User.h"
 
+class Column;
 class ICore;
 class OutputBuffer;
 class Row;
@@ -84,7 +85,7 @@ private:
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // stats_groups_.
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
-        const RowFragment &groupspec);
+        Row row, const std::vector<std::shared_ptr<Column>> &columns);
 };
 
 #endif  // Query_h

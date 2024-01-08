@@ -17,6 +17,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
+#include "livestatus/NullColumn.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
@@ -88,9 +89,6 @@ std::unique_ptr<Renderer> Query::makeRenderer(std::ostream &os) {
 }
 
 void Query::start(QueryRenderer &q) {
-    if (parsed_query_.columns.empty()) {
-        getAggregatorsFor({});
-    }
     if (parsed_query_.show_column_headers) {
         RowRenderer r{q};
         for (const auto &column : parsed_query_.columns) {
@@ -156,17 +154,9 @@ bool Query::processDataset(Row row) {
         // row anymore, so we can't use Column::output() then.  :-/ The slightly
         // hacky workaround is to pre-render all non-stats columns into a single
         // string here (RowFragment) and output it later in a verbatim manner.
-        std::ostringstream os;
-        {
-            auto renderer = makeRenderer(os);
-            QueryRenderer q{*renderer, EmitBeginEnd::off};
-            RowRenderer r{q};
-            for (const auto &column : parsed_query_.columns) {
-                column->output(row, r, *user_, parsed_query_.timezone_offset);
-            }
-        }
-        for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
-            aggr->consume(row, *user_, parsed_query_.timezone_offset);
+        for (const auto &aggregator :
+             getAggregatorsFor(row, parsed_query_.columns)) {
+            aggregator->consume(row, *user_, parsed_query_.timezone_offset);
         }
     } else {
         assert(query_renderer_);  // Missing call to `process()`.
@@ -179,15 +169,29 @@ bool Query::processDataset(Row row) {
 }
 
 void Query::finish(QueryRenderer &q) {
-    if (doStats()) {
-        for (const auto &[groupspec, aggregators] : stats_groups_) {
-            RowRenderer r{q};
-            if (!groupspec._str.empty()) {
-                r.output(groupspec);
-            }
-            for (const auto &aggregator : aggregators) {
-                aggregator->output(r);
-            }
+    if (!doStats()) {
+        // non-Stats queries output all rows directly, so there's nothing left
+        // to do here.
+        return;
+    }
+    if (stats_groups_.empty()) {
+        // We have a Stats query, but no row has passed filtering etc., so we
+        // have to create a dummy RowFragment and a stats group for it.
+        std::vector<std::shared_ptr<Column>> columns;
+        columns.reserve(parsed_query_.columns.size());
+        for (const auto &column : parsed_query_.columns) {
+            columns.push_back(make_shared<NullColumn>(
+                column->name(), column->description(), column->offsets()));
+        }
+        getAggregatorsFor(Row{nullptr}, columns);
+    }
+    for (const auto &[row_fragment, aggregators] : stats_groups_) {
+        RowRenderer r{q};
+        if (!parsed_query_.columns.empty()) {
+            r.output(row_fragment);
+        }
+        for (const auto &aggregator : aggregators) {
+            aggregator->output(r);
         }
     }
 }
@@ -273,8 +277,18 @@ const std::unordered_set<std::string> &Query::allColumnNames() const {
 }
 
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
-    const RowFragment &groupspec) {
-    auto it = stats_groups_.find(groupspec);
+    Row row, const std::vector<std::shared_ptr<Column>> &columns) {
+    std::ostringstream os;
+    {
+        auto renderer = makeRenderer(os);
+        QueryRenderer q{*renderer, EmitBeginEnd::off};
+        RowRenderer r{q};
+        for (const auto &column : columns) {
+            column->output(row, r, *user_, parsed_query_.timezone_offset);
+        }
+    }
+    RowFragment row_fragment{os.str()};
+    auto it = stats_groups_.find(row_fragment);
     if (it == stats_groups_.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggregators;
         aggregators.reserve(parsed_query_.stats_columns.size());
@@ -282,7 +296,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
             aggregators.push_back(
                 sc->createAggregator(core_.loggerLivestatus()));
         }
-        it = stats_groups_.emplace(groupspec, std::move(aggregators)).first;
+        it = stats_groups_.emplace(row_fragment, std::move(aggregators)).first;
     }
     return it->second;
 }

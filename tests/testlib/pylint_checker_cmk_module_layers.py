@@ -548,6 +548,10 @@ _COMPONENTS = (
         Component("tests.integration.cmk.base"),
         _allow_default_plus_component_under_test_bakery_checkengine,
     ),
+    (
+        Component("tests.integration.cmk.cee.robotmk"),
+        _allow_default_plus_component_under_test,
+    ),
     (Component("cmk.agent_based"), _in_component),  # wants to be a package someday
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,

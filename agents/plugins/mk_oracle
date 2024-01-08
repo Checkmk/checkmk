@@ -206,6 +206,10 @@ CONFIGURATION CUSTOM SQLS:
                         Only useful if SQLS_SECTION_NAME is not 'oracle_sql'.
                         ASCII code, eg. '58' means ':'.
                         Can be set globally or within a section definition.
+                        If an error occurs, the error message will have the
+                        following format, independent of the separator chosen.
+
+                            <sid>|FAILURE|<error description>
 
   SQLS_ITEM_NAME=item_name
                         Only useful if SQLS_SECTION_NAME is 'oracle_sql'. In

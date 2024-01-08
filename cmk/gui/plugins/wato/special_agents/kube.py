@@ -11,7 +11,7 @@ import pydantic
 import pydantic_core
 
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import Edition, edition, mark_edition_only
+from cmk.utils.version import Edition, edition
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -37,6 +37,8 @@ from cmk.gui.wato import (
     RulespecGroupVMCloudContainer,
 )
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
+
+OPENSHIFT_EDITIONS = (Edition.CME, Edition.CCE, Edition.CEE)
 
 
 def is_valid_hostname(hostname: str) -> bool:
@@ -139,7 +141,7 @@ def _tcp_timeouts():
 
 
 def _usage_endpoint() -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
-    if edition() in (Edition.CCE, Edition.CME):
+    if edition() in OPENSHIFT_EDITIONS:
         return (
             "usage_endpoint",
             CascadingDropdown(
@@ -173,9 +175,7 @@ def _is_cre_spec(k: str, vs: object) -> bool:
 
 def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
     return (
-        p
-        if edition() in (Edition.CME, Edition.CCE)
-        else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+        p if edition() in OPENSHIFT_EDITIONS else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
     )
 
 
@@ -188,7 +188,7 @@ def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Migrate]:
     return (
         "prometheus",
-        mark_edition_only(_("Use data from OpenShift"), [Edition.CME, Edition.CCE]),
+        _("Use data from OpenShift"),
         Migrate(
             valuespec=Dictionary(
                 elements=[

@@ -3061,6 +3061,10 @@ msgstr ""
 "Pour les clusters et les nœuds, on peut définir des niveaux pour le nombre "
 "de pods libres."
 
+#, fuzzy
+msgid "Accounts display name"
+msgstr "Nom d'affichage"
+
 msgid "Ack"
 msgstr "Ack"
 
@@ -9414,6 +9418,10 @@ msgstr "Utilisation du CPU sur Linux/UNIX"
 
 msgid "CPU utilization: Cluster"
 msgstr "Utilisation du CPU : Cluster"
+
+#, fuzzy
+msgid "CPUs physical name"
+msgstr "Nom du volume physique"
 
 msgid "CR"
 msgstr "CR"
@@ -31195,13 +31203,6 @@ msgstr "Contrôle de l'apprentissage"
 msgid "Leave layout mode"
 msgstr "Quitter le mode de mise en page"
 
-msgid ""
-"Leave this empty for systems without modules, which just have one global "
-"memory usage."
-msgstr ""
-"Laissez cette option vide pour les systèmes sans modules, qui n'ont qu'une "
-"seule utilisation globale de la mémoire."
-
 msgid "Left"
 msgstr "Gauche"
 
@@ -33716,6 +33717,14 @@ msgstr "Courriers dans la file d'attente des courriers ayant échoué"
 msgid "Mails in outgoing mail queue"
 msgstr "Courriers dans la file d'attente des courriers sortants"
 
+#, fuzzy
+msgid "Mails in outgoing mail queue (multiple queues)"
+msgstr "Courriers dans la file d'attente des courriers sortants"
+
+#, fuzzy
+msgid "Mails in outgoing mail queue (single queue)"
+msgstr "Courriers dans la file d'attente des courriers sortants"
+
 msgid "Mails in outgoing mail queue/deferred mails"
 msgstr ""
 "Courriers dans la file d'attente du courrier sortant/courriers différés"
@@ -33749,7 +33758,12 @@ msgstr "Utilisation de la mémoire principale du système hôte ESX"
 msgid "Main memory usage of devices with modules"
 msgstr "Utilisation de la mémoire principale des appareils avec modules"
 
-msgid "Main memory usage of simple devices"
+#, fuzzy
+msgid "Main memory usage of simple devices with multiple services"
+msgstr "Utilisation de la mémoire principale des appareils avec modules"
+
+#, fuzzy
+msgid "Main memory usage of simple devices with single services"
 msgstr "Utilisation de la mémoire principale de dispositifs simples"
 
 msgid "Maintenance"
@@ -35843,9 +35857,6 @@ msgstr "Nom du module"
 
 msgid "Module name"
 msgstr "Nom du module"
-
-msgid "Module name or empty"
-msgstr "Nom du module ou vide"
 
 msgid "Modules"
 msgstr "Modules"
@@ -48672,10 +48683,6 @@ msgid "Set maximum age"
 msgstr "Fixer l'âge maximum"
 
 #, fuzzy
-msgid "Set maximum long output size"
-msgstr "Fixer l'âge maximum"
-
-#, fuzzy
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "État de surveillance pour tout autre état d'unité"
 
@@ -52817,10 +52824,9 @@ msgstr "Le mot de passe a été changé avec succès."
 msgid "Successfully changed the credential."
 msgstr "Le changement d'identifiant a réussi."
 
-msgid "Successfully copied rule value representation to the clipboard."
-msgstr ""
-"La représentation de la valeur de la règle a été copiée avec succès dans le "
-"presse-papiers."
+#, fuzzy
+msgid "Successfully copied to clipboard."
+msgstr "Le mot de passe a été changé avec succès."
 
 #, python-format
 msgid ""
@@ -76802,6 +76808,26 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 msgid "Ω"
 msgstr ""
+
+#, fuzzy
+#~| msgid "Set maximum age"
+#~ msgid "Set maximum long output size"
+#~ msgstr "Fixer l'âge maximum"
+
+#~ msgid "Successfully copied rule value representation to the clipboard."
+#~ msgstr ""
+#~ "La représentation de la valeur de la règle a été copiée avec succès dans "
+#~ "le presse-papiers."
+
+#~ msgid ""
+#~ "Leave this empty for systems without modules, which just have one global "
+#~ "memory usage."
+#~ msgstr ""
+#~ "Laissez cette option vide pour les systèmes sans modules, qui n'ont "
+#~ "qu'une seule utilisation globale de la mémoire."
+
+#~ msgid "Module name or empty"
+#~ msgstr "Nom du module ou vide"
 
 #~ msgid "Backup Age"
 #~ msgstr "Âge de sauvegarde"

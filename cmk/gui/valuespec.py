@@ -1471,6 +1471,7 @@ class Url(TextInput):
         maxlen: int | None = None,
         onkeyup: str | None = None,
         autocomplete: bool = True,
+        placeholder: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1493,6 +1494,7 @@ class Url(TextInput):
             maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
+            placeholder=placeholder,
             title=title,
             help=help,
             default_value=default_value,

@@ -94,7 +94,7 @@ def _validate(url: str, varprefix: str) -> None:
         raise MKUserError(varprefix, f"{url} has problem(s): {message}") from e
 
 
-def _url(title: str, _help: str, default_value: str) -> Url:
+def _url(title: str, _help: str, default_value: str, placeholder: str = "") -> Url:
     return Url(
         allow_empty=False,
         show_as_link=True,
@@ -103,6 +103,7 @@ def _url(title: str, _help: str, default_value: str) -> Url:
         default_value=default_value,
         validate=_validate,
         size=80,
+        placeholder=placeholder,
         help=_help,
     )
 
@@ -229,7 +230,8 @@ def _cluster_collector() -> tuple[str, str, Migrate]:
                         "endpoint_v2",
                         _url(
                             title=_("Collector NodePort / Ingress endpoint"),
-                            default_value="https://<service url>:30035",
+                            default_value="",
+                            placeholder="https://<service url>:30035",
                             _help=_(
                                 "The full URL to the Cluster Collector service including "
                                 "the protocol (http or https) and the port. Depending on "
@@ -262,7 +264,8 @@ def _api_endpoint() -> tuple[str, Migrate]:
                         "endpoint_v2",
                         _url(
                             title=_("Endpoint"),
-                            default_value="https://<control plane ip>:443",
+                            default_value="",
+                            placeholder="https://<control plane ip>:443",
                             _help=_(
                                 "The full URL to the Kubernetes API server including the protocol "
                                 "(http or https) and the port. One trailing slash (if present) "

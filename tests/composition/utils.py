@@ -8,33 +8,13 @@ import logging
 import time
 from pathlib import Path
 
-from tests.testlib.agent import get_package_type
+from tests.testlib.agent import get_package_type, wait_for_baking_job
 from tests.testlib.site import Site
 
 from tests.composition.constants import TEST_HOST_1
 
 LOGGER = logging.getLogger("composition-tests")
 LOGGER.setLevel(logging.INFO)
-
-
-def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
-    waiting_time = 1
-    waiting_cycles = 20
-    for _ in range(waiting_cycles):
-        time.sleep(waiting_time)
-        baking_status = central_site.openapi.get_baking_status()
-        assert baking_status.state in (
-            "running",
-            "finished",
-        ), f"Unexpected baking state: {baking_status}"
-        assert (
-            baking_status.started >= expected_start_time
-        ), f"No baking job started after expected starting time: {expected_start_time}"
-        if baking_status.state == "finished":
-            return
-    raise AssertionError(
-        f"Now waiting {waiting_cycles*waiting_time} seconds for baking job to finish, giving up..."
-    )
 
 
 def get_package_extension() -> str:

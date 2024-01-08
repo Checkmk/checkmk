@@ -9,6 +9,7 @@ import logging
 import os
 import socketserver
 import subprocess
+import time
 from collections.abc import Iterator, Mapping
 from multiprocessing import Process
 from pathlib import Path
@@ -243,4 +244,24 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
             services_response := site.openapi.get(f"objects/host/{hostname}/collections/services")
         ).ok
         else 0
+    )
+
+
+def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
+    waiting_time = 1
+    waiting_cycles = 20
+    for _ in range(waiting_cycles):
+        time.sleep(waiting_time)
+        baking_status = central_site.openapi.get_baking_status()
+        assert baking_status.state in (
+            "running",
+            "finished",
+        ), f"Unexpected baking state: {baking_status}"
+        assert (
+            baking_status.started >= expected_start_time
+        ), f"No baking job started after expected starting time: {expected_start_time}"
+        if baking_status.state == "finished":
+            return
+    raise AssertionError(
+        f"Now waiting {waiting_cycles*waiting_time} seconds for baking job to finish, giving up..."
     )

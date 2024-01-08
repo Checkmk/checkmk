@@ -143,9 +143,10 @@ def copy_view_into_dashlet(
             ).items()
         ),
     )
+    dashletcontext_vars = visuals.context_to_uri_vars(dashlet["context"])
     dashlet["title_url"] = makeuri_contextless(
         request,
-        name_part + singlecontext_vars,
+        name_part + singlecontext_vars + dashletcontext_vars,
         filename="view.py",
     )
 

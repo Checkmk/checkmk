@@ -118,7 +118,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
                     {},
                 )
             )
-    return check_temperature_list(sensor_list, params)
+    yield from check_temperature_list(sensor_list, params)
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(

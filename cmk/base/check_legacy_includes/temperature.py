@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# /usr/bin/env python3
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -6,7 +6,7 @@
 # pylint: disable=unused-import
 
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from typing import AnyStr, NotRequired, TypedDict
 
 from cmk.base.check_api import check_levels, state_markers
@@ -469,42 +469,27 @@ def check_temperature(  # pylint: disable=too-many-branches
 def check_temperature_list(
     sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
     params: TempParamDict,
-) -> None | tuple[int, str, list[tuple[str, Number]]]:
+) -> Generator[tuple[int, str, list[tuple[str, Number]]], None, None]:
     output_unit = params.get("output_unit", "c")
 
     if not sensorlist:
         return None
 
     sensor_count = len(sensorlist)
-    tempsum: Number = 0
-    tempmax = sensorlist[0][1]
-    tempmin = sensorlist[0][1]
-    status = 0
-    detailtext = ""
-    for sub_item, temp, kwargs in sensorlist:
-        tempsum += temp
-        tempmax = max(tempmax, temp)
-        tempmin = min(tempmin, temp)
-        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
-        status = State.worst(status, sub_status).value
-        if status != 0:
-            detailtext += sub_item + ": " + sub_infotext + state_markers[sub_status] + ", "
-    if detailtext:
-        detailtext = " " + detailtext[:-2]  # Drop trailing ", ", add space to join with summary
+    yield 0, f"Sensors: {sensor_count}", []
 
     unitsym = temp_unitsym[output_unit]
-    tempavg = tempsum / float(sensor_count)
-    summarytext = "%d Sensors; Highest: %s %s, Average: %s %s, Lowest: %s %s" % (
-        sensor_count,
-        render_temp(tempmax, output_unit),
-        unitsym,
-        render_temp(tempavg, output_unit),
-        unitsym,
-        render_temp(tempmin, output_unit),
-        unitsym,
-    )
-    infotext = summarytext + detailtext
-    perfdata = [("temp", tempmax)]
+    tempmax = max(temp for _item, temp, _kwargs in sensorlist)
+    yield 0, f"Highest: {render_temp(tempmax, output_unit)} {unitsym}", [("temp", tempmax)]
+    tempavg = sum(temp for _item, temp, _kwargs in sensorlist) / float(sensor_count)
+    yield 0, f"Average: {render_temp(tempavg, output_unit)} {unitsym}", []
+    tempmin = min(temp for _item, temp, _kwargs in sensorlist)
+    yield 0, f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}", []
+
+    for sub_item, temp, kwargs in sensorlist:
+        sub_status, sub_infotext, _sub_perfdata = check_temperature(temp, params, None, **kwargs)
+        if sub_status != 0:
+            yield sub_status, f"{sub_item}: {sub_infotext}", []
 
     if "trend_compute" in params and "period" in params["trend_compute"]:
         usr_warn, usr_crit = params.get("levels") or (None, None)
@@ -519,8 +504,5 @@ def check_temperature_list(
         trend_status, trend_infotext = check_temperature_trend(
             tempavg, params["trend_compute"], output_unit, crit, crit_lower, ""
         )
-        status = max(status, trend_status)
         if trend_infotext:
-            infotext += ", " + trend_infotext
-
-    return status, infotext, perfdata
+            yield trend_status, trend_infotext, []

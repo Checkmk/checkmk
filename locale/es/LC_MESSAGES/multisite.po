@@ -6836,6 +6836,10 @@ msgstr "Caducidad de la autenticación"
 msgid "Authentication Failures"
 msgstr "Fallos de autenticación"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Modo de autenticación"
+
 msgid "Authentication failed"
 msgstr "Autenticación fallida"
 
@@ -11427,6 +11431,10 @@ msgstr "Eliminar la autenticación de dos factores de %s"
 msgid "Click to toggle this setting"
 msgstr "Haz clic para activar esta opción"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Eliminar la autenticación de dos factores de %s"
+
 msgid "Clickable URLs"
 msgstr "URLs clicables"
 
@@ -13250,6 +13258,10 @@ msgstr "Regla de copia: %s"
 
 msgid "Copy rules from central site"
 msgstr "Copiar reglas del sitio central"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Secreto copiado en el portapapeles"
 
 msgid "Core"
 msgstr "Núcleo"
@@ -19879,6 +19891,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Introduzca la dirección"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "Identificación externa (opcional)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "Autenticación de VCenter"
+
 msgid "Enter group"
 msgstr "Introduzca el grupo"
 
@@ -23318,6 +23338,10 @@ msgstr "No se ha conseguido crear un archivo de volcado"
 
 msgid "Grab user from found processess"
 msgstr "Tomar el usuario de los procesos encontrados"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Periodo de tiempo"
 
 msgid "Gracefully finishing"
 msgstr "Terminar con elegancia"
@@ -39722,6 +39746,11 @@ msgstr "Abrir el menú de acción"
 msgid "Open the host action menu"
 msgstr "Abrir el menú de acciones del host"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Abrir esta agregación"
 
@@ -46883,6 +46912,9 @@ msgstr "Espacio ahorrado"
 msgid "Scale to width of page"
 msgstr "Escala al ancho de la página"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Escanear todos los hosts"
 
@@ -52712,6 +52744,10 @@ msgid "Successfully changed the credential."
 msgstr "Se ha cambiado la credencial con éxito."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Se ha cambiado la contraseña con éxito."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Se ha cambiado la contraseña con éxito."
 
@@ -53051,6 +53087,12 @@ msgstr "Sincronización de"
 
 msgid "Synology Updates"
 msgstr "Actualizaciones de Synology"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -56486,6 +56528,19 @@ msgstr ""
 "La modificación se ha guardado, pero este cliente no tiene usuarios "
 "asignados. Es necesario crear un usuario global o asignar al menos un "
 "usuario al cliente configurado para poder acceder a los sitios asignados."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -66245,6 +66300,10 @@ msgstr "Treshold"
 msgid "Trial expired"
 msgstr "La prueba ha caducado"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "La prueba ha caducado"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr ""
 
@@ -69506,9 +69565,6 @@ msgstr "Válido hasta"
 
 msgid "Valid until Checkmk version"
 msgstr "Válido hasta la versión Checkmk"
-
-msgid "Validate OTP"
-msgstr ""
 
 msgid "Validate server certificate during port query"
 msgstr "Validar el certificado del servidor durante la consulta del puerto"
@@ -76236,8 +76292,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "tareas"
 
+#, fuzzy
+msgid "test"
+msgstr "pruebas"
+
 msgid "testing"
 msgstr "pruebas"
+
+#, fuzzy
+msgid "tests"
+msgstr "Realización de pruebas"
 
 msgid "th notification"
 msgstr "ª notificación"

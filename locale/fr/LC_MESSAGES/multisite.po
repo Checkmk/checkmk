@@ -6838,6 +6838,10 @@ msgstr "Expiration de l'authentification"
 msgid "Authentication Failures"
 msgstr "Échecs d'authentification"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Mode d'authentification"
+
 msgid "Authentication failed"
 msgstr "Échec de l'authentification"
 
@@ -11432,6 +11436,10 @@ msgstr "Supprimer l'authentification à deux facteurs de %s"
 msgid "Click to toggle this setting"
 msgstr "Cliquez pour basculer ce paramètre"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Supprimer l'authentification à deux facteurs de %s"
+
 msgid "Clickable URLs"
 msgstr "URLs cliquables"
 
@@ -13257,6 +13265,10 @@ msgstr "Règle de copie : %s"
 
 msgid "Copy rules from central site"
 msgstr "Copier les règles du site central"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Copie du secret dans le presse-papiers"
 
 msgid "Core"
 msgstr "Core"
@@ -19894,6 +19906,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Entrez l'adresse"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "ID externe (facultatif)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "Authentification du VCenter"
+
 msgid "Enter group"
 msgstr "Entrer le groupe"
 
@@ -23333,6 +23353,10 @@ msgstr "Aucun résultat pour créer le fichier de vidage"
 
 msgid "Grab user from found processess"
 msgstr "Récupérer l'utilisateur dans les processus trouvés"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Période de temps"
 
 msgid "Gracefully finishing"
 msgstr "Finir en beauté"
@@ -39798,6 +39822,11 @@ msgstr "Ouvrir le menu d'action"
 msgid "Open the host action menu"
 msgstr "Ouvrir le menu d'action de l'hôte"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Ouvrir cette agrégation"
 
@@ -46985,6 +47014,9 @@ msgstr "Espace économisé"
 msgid "Scale to width of page"
 msgstr "S'adapte à la largeur de la page"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Analyse de tous les hôtes"
 
@@ -52825,6 +52857,10 @@ msgid "Successfully changed the credential."
 msgstr "Le changement d'identifiant a réussi."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Le mot de passe a été changé avec succès."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Le mot de passe a été changé avec succès."
 
@@ -53165,6 +53201,12 @@ msgstr "Synchroniser"
 
 msgid "Synology Updates"
 msgstr "Mises à jour de Synology"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -56624,6 +56666,19 @@ msgstr ""
 "client. Vous devez créer un utilisateur global ou affecter au moins un "
 "utilisateur au client configuré pour pouvoir vous connecter aux sites "
 "affectés."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -66440,6 +66495,10 @@ msgstr "Seuil"
 msgid "Trial expired"
 msgstr "Essai expiré"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "Essai expiré"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr ""
 
@@ -69722,9 +69781,6 @@ msgstr "Valable jusqu'au"
 
 msgid "Valid until Checkmk version"
 msgstr "Valable jusqu'à la version Checkmk"
-
-msgid "Validate OTP"
-msgstr ""
 
 msgid "Validate server certificate during port query"
 msgstr "Validation du certificat du serveur lors de l'interrogation du port"
@@ -76522,8 +76578,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "tâches"
 
+#, fuzzy
+msgid "test"
+msgstr "tests"
+
 msgid "testing"
 msgstr "tests"
+
+#, fuzzy
+msgid "tests"
+msgstr "Exécuter des tests"
 
 msgid "th notification"
 msgstr "e notification"

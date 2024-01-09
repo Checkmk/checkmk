@@ -6788,6 +6788,10 @@ msgstr "Validade da Autenticação"
 msgid "Authentication Failures"
 msgstr "Falhas de Autenticação"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Modo de Autenticação"
+
 msgid "Authentication failed"
 msgstr "A autenticação falhou"
 
@@ -11335,6 +11339,10 @@ msgstr "Remover a autenticação de dois factores de %s"
 msgid "Click to toggle this setting"
 msgstr "Clique para activar esta definição"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Remover a autenticação de dois factores de %s"
+
 msgid "Clickable URLs"
 msgstr "URLs clicáveis"
 
@@ -13132,6 +13140,10 @@ msgstr "Regra de cópia: %s"
 
 msgid "Copy rules from central site"
 msgstr "Copiar regras do sítio central"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Segredo copiado para a área de transferência"
 
 msgid "Core"
 msgstr "Núcleo"
@@ -19685,6 +19697,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Digite o endereço"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "Identificação externa (opcional)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "autenticação do VCenter"
+
 msgid "Enter group"
 msgstr "Entrar no grupo"
 
@@ -23103,6 +23123,10 @@ msgstr "Não obtive qualquer resultado para criar um ficheiro de despejo"
 
 msgid "Grab user from found processess"
 msgstr "Agarrar usuário de processess encontrado"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Período de tempo"
 
 msgid "Gracefully finishing"
 msgstr "Graciosamente terminada"
@@ -39335,6 +39359,11 @@ msgstr "Abra o menu de ação"
 msgid "Open the host action menu"
 msgstr "Abrir o menu de acção do anfitrião"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Abra esta Agregação"
 
@@ -46429,6 +46458,9 @@ msgstr "Espaço guardado"
 msgid "Scale to width of page"
 msgstr "Escala à largura da página"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Verificar todos os anfitriões"
 
@@ -52203,6 +52235,10 @@ msgid "Successfully changed the credential."
 msgstr "A credencial foi alterada com sucesso."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Mudança de senha com sucesso."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Mudança de senha com sucesso."
 
@@ -52537,6 +52573,12 @@ msgstr "Sincronização"
 
 msgid "Synology Updates"
 msgstr "Atualizações de Sinologia"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -55932,6 +55974,19 @@ msgstr ""
 "A modificação foi gravada, mas este cliente não tem usuários atribuídos. É "
 "necessário criar um usuário global ou atribuir pelo menos um usuário ao "
 "cliente configurado para poder efetuar logon nos locais atribuídos."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -65615,6 +65670,10 @@ msgstr "Treshold"
 msgid "Trial expired"
 msgstr "O julgamento expirou"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "O julgamento expirou"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr "Período experimental terminado: \"Ativar alterações\" está bloqueado"
 
@@ -68817,9 +68876,6 @@ msgstr "Válido até"
 
 msgid "Valid until Checkmk version"
 msgstr "Válido até a versão Checkmk"
-
-msgid "Validate OTP"
-msgstr "Validar OTP"
 
 msgid "Validate server certificate during port query"
 msgstr "Validar o certificado do servidor durante a consulta do porto"
@@ -75478,8 +75534,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "tarefas"
 
+#, fuzzy
+msgid "test"
+msgstr "teste"
+
 msgid "testing"
 msgstr "teste"
+
+#, fuzzy
+msgid "tests"
+msgstr "Realizar testes"
 
 msgid "th notification"
 msgstr "esta notificação"
@@ -75766,6 +75830,9 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Validate OTP"
+#~ msgstr "Validar OTP"
 
 #~ msgid "Set maximum long output size"
 #~ msgstr "Definir o tamanho máximo da saída longa"

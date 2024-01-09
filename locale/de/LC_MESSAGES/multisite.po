@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-01-08 10:01+0000\n"
+"PO-Revision-Date: 2024-01-09 09:07+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -823,11 +823,11 @@ msgstr "(Keine Fallback-Emailadresse konfiguriert!)"
 
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
-msgstr "(SLA Schwellwerte bei %d%%/%d%% übrig)"
+msgstr "(SLA Alert-Level bei %d%%/%d%% verbleibend)"
 
 #, python-format
 msgid "(SLA alert levels at %d/%d incidents left)"
-msgstr "(SLA Schwellwerte bei %d/%d Ausfällen übrig)"
+msgstr "(SLA Alert-Level bei %d/%d Vorfällen verbleibend)"
 
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP und DNS Namen)"
@@ -1043,10 +1043,10 @@ msgid "10x14"
 msgstr "10x14"
 
 msgid "12 Volt Output Lower Levels"
-msgstr "Untere Schwellen für 12 Volt"
+msgstr "Untere Ausgangslevel für 12 Volt"
 
 msgid "12 Volt Output Upper Levels"
-msgstr "Obere Schwellen für 12 Volt"
+msgstr "Obere Ausgangslevel für 12 Volt"
 
 msgid "15 minutes"
 msgstr "15 Minuten"
@@ -1070,10 +1070,10 @@ msgid "3 months"
 msgstr "3 Monate"
 
 msgid "3.3 Volt Output Lower Levels"
-msgstr "Untere Schwellen für 3.3 Volt"
+msgstr "Untere Ausgangslevel für 3.3 Volt"
 
 msgid "3.3 Volt Output Upper Levels"
-msgstr "Obere Schwellen für 3.3 Volt"
+msgstr "Obere Ausgangslevel für 3.3 Volt"
 
 msgid "30 Minutes"
 msgstr "30 Minuten"
@@ -1106,10 +1106,10 @@ msgid "4xx error rate"
 msgstr "4xx Fehlerrate"
 
 msgid "5 Volt Output Lower Levels"
-msgstr "Untere Schwellen für 5 Volt"
+msgstr "Untere Ausgangslevel für 5 Volt"
 
 msgid "5 Volt Output Upper Levels"
-msgstr "Obere Schwellen für 5 Volt"
+msgstr "Obere Ausgangslevel für 5 Volt"
 
 msgid "5 minutes"
 msgstr "5 Minuten"
@@ -1863,7 +1863,6 @@ msgstr ""
 "dem es verbunden ist. Mit dieser Option können Sie diesen Parameter außer "
 "Kraft setzen.</p>"
 
-#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
@@ -2188,8 +2187,8 @@ msgstr ""
 "Eine Provisionierung von über 100% heißt Überprovisionierung und kann eine "
 "sinnvolle Strategie zur Speicherplatzersparnis sein, doch es kann nicht mehr "
 "garantiert werden, dass jede VM wirklich allen Platz, der ihr zugeteilt "
-"wurde, nutzen kann. Hier können Sie die Schwellwerte für die maximale "
-"Provisionierung einstellen. Ein Warnschwellwert von 150% warnt bei 50% "
+"wurde, nutzen kann. Hier können Sie die Level für die maximale "
+"Provisionierung einstellen. Ein Warn-Level von 150% warnt bei 50% "
 "Überprovisionierung."
 
 #, no-python-format
@@ -2729,11 +2728,10 @@ msgid "About Checkmk"
 msgstr "Über Checkmk"
 
 msgid "Absolut level for total number of used file descriptors"
-msgstr ""
-"Absoluter Schwellwert der Gesamtanzahl von benutzten Datei-Deskriptoren"
+msgstr "Absolutes Level der Gesamtanzahl von benutzten Datei-Deskriptoren"
 
 msgid "Absolut level for total number of used sockets"
-msgstr "Absoluter Schwellwert für die Gesamtanzahl an benutzten Sockets"
+msgstr "Absolutes Level für die Gesamtanzahl an benutzten Sockets"
 
 msgid "Absolute"
 msgstr "Absolut"
@@ -2755,7 +2753,7 @@ msgid "Absolute free"
 msgstr "Absolute freie Anzahl"
 
 msgid "Absolute free leases levels"
-msgstr "Absolute Schwellwerte für freie Leases"
+msgstr "Absolute Levels für freie Leases"
 
 msgid "Absolute free memory"
 msgstr "Absoluter freier Speicherplatz"
@@ -2764,67 +2762,67 @@ msgid "Absolute free space"
 msgstr "Absoluter freier Speicherplatz"
 
 msgid "Absolute levels"
-msgstr "Absolute Schwellen"
+msgstr "Absolute Levels"
 
 #, python-format
 msgid "Absolute levels for %s memory"
-msgstr "Absolute Schwellwerte für %s Arbeitsspeicher"
+msgstr "Absolute Levels für %s Arbeitsspeicher"
 
 msgid "Absolute levels for committed heap space"
-msgstr "Absolute Schwellwerte für 'comitted heap space'"
+msgstr "Absolute Levels für 'comitted heap space'"
 
 msgid "Absolute levels for decoded traffic"
-msgstr "Absolute Schellwerter für 'decoded traffic'"
+msgstr "Absolute Level für 'decoded traffic'"
 
 #, python-format
 msgid "Absolute levels for free %s"
-msgstr "Absolute Schwellwerte für freien %s"
+msgstr "Absolute Level für freien %s"
 
 msgid "Absolute levels for free RAM"
-msgstr "Absolute Schwellwerte für freien RAM"
+msgstr "Absolute Level für freien RAM"
 
 msgid "Absolute levels for free memory"
-msgstr "Absolute Schwellwerte für freien Speicher"
+msgstr "Absolute Level für freien Speicher"
 
 msgid "Absolute levels for free swap"
-msgstr "Absolute Schwellwerte für freien Swap"
+msgstr "Absolute Level für freien Swap"
 
 msgid "Absolute levels for free temp space"
-msgstr "Absolute Schwellwerte für freien temporären Speicherplatz"
+msgstr "Absolute Level für freien temporären Speicherplatz"
 
 msgid "Absolute levels for input traffic"
-msgstr "Absolute Schwellwerte für eigehenden Verkehr"
+msgstr "Absolute Level für eingehenden Verkehr"
 
 msgid "Absolute levels for logged-in users"
-msgstr "Absolute Schwellen für angemeldete Benutzer"
+msgstr "Absolute Levels für angemeldete Benutzer"
 
 msgid "Absolute levels for memory reclaimed by GC"
-msgstr "Absolute Schwellwerte für Arbeitsspeicher 'reclaimed by GC'"
+msgstr "Absolute Level für Arbeitsspeicher 'reclaimed by GC'"
 
 msgid "Absolute levels for output traffic"
-msgstr "Absolute Schwellwerte für ausgehenden Verkehr"
+msgstr "Absolute Level für ausgehenden Verkehr"
 
 msgid "Absolute levels for total number of used processes"
-msgstr "Absolute Schwellwerte für die Gesamtanzahl an benutzten Prozessen"
+msgstr "Absolute Level für die Gesamtanzahl an benutzten Prozessen"
 
 msgid "Absolute levels for unused licenses"
-msgstr "Absolutschwellwerte für ungenutzte Lizenzen"
+msgstr "Absolute Level für ungenutzte Lizenzen"
 
 #, python-format
 msgid "Absolute levels for used %s"
-msgstr "Absolute Schwellen für belegten %s"
+msgstr "Absolute Level für belegten %s"
 
 msgid "Absolute levels for used heap space"
-msgstr "Absolute Schwellwerte für belegten 'heap space'"
+msgstr "Absolute Level für belegten 'heap space'"
 
 msgid "Absolute levels for used memory"
-msgstr "Absolute Schwellwerte für benutzten Arbeitsspeicher"
+msgstr "Absolute Level für benutzten Arbeitsspeicher"
 
 msgid "Absolute levels in bits or bytes per second"
-msgstr "Schwellenwert in Bits oder Bytes pro Sekunde"
+msgstr "Absolute Level in Bits oder Bytes pro Sekunde"
 
 msgid "Absolute levels of active sessions"
-msgstr "Absolute Schwellen für aktive Sitzungen"
+msgstr "Absolute Level für aktive Sitzungen"
 
 msgid "Absolute number of active connections"
 msgstr "Gesamtzahl von aktiven Verbindungen"
@@ -2839,7 +2837,7 @@ msgid "Absolute number of incoming connections"
 msgstr "Gesamtzahl von eingehenden Verbindungen"
 
 msgid "Absolute used leases levels"
-msgstr "Absolute Schwellen für benutzte Leases"
+msgstr "Absolute Level für benutzte Leases"
 
 msgid "Absolute value"
 msgstr "Absoluter Wert"
@@ -3033,7 +3031,7 @@ msgstr ""
 "ausstehenden Pods wird festgehalten, wie lange sie bereits ausstehend sind. "
 "Wenn eine tolerierbare Zeitperiode eingestellt ist, geht der Dienst auf WARN/"
 "CRIT, sobald einer der Pods länger als die eingestellte Dauer ausstehend "
-"ist. Für Cluster und Nodes können Grenzen für die Anzahl der freien Pods "
+"ist. Für Cluster und Nodes können Level für die Anzahl der freien Pods "
 "festgelegt werden."
 
 #, fuzzy
@@ -3744,7 +3742,7 @@ msgid "Add messages"
 msgstr "Neue Nachricht hinzufügen"
 
 msgid "Add metric level"
-msgstr "Metrik-Schwellwert hinzufügen"
+msgstr "Metrik-Level hinzufügen"
 
 msgid "Add micro seconds to timestamps in logfiles"
 msgstr "Mikrosekunden zu Zeitstempeln in Logdateien hinzufügen"
@@ -4227,7 +4225,6 @@ msgstr ""
 "dem Punkt das Byte und die nach dem Punkt das Bit nennt, welches geholt "
 "werden soll. Die Nummer des Bits liegt immer zwischen 0 und 7."
 
-#, fuzzy
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
@@ -4236,12 +4233,13 @@ msgid ""
 "different way to monitor sensors. You also don't need this if you are "
 "running the regular OpenHardwareMonitor software."
 msgstr ""
-"Fügt dem Windows-Agenten eine Version des OpenHardwareMonitor ohne GUI "
-"hinzu. Der Agent nutzt dies automatisch, um Werte von Hardware-Sensoren "
-"(Temperatur, Lüfter...) an Checkmk zu senden. Dies setzt voraus, dass .Net "
-"auf dem Zielsystem installiert ist. Bitte lassen Sie dies deaktiviert, Sie "
-"Hardwaresensoren auf anderem Wege überwachen. Sie brauchen dies auch nicht, "
-"wenn Sie den normalen OpenHardwareMonitor nutzen."
+"Fügt dem Windows-Agenten eine Headless-Version des OpenHardwareMonitor "
+"hinzu. Der Agent verwendet diesen dann automatisch, um Messwerte von "
+"Hardware-Sensoren (Temperatur, Lüfter, ...) an Checkmk zu übermitteln. Dazu "
+"muss allerdings .Net auf dem Zielsystem installiert sein. Bitte lassen Sie "
+"dies deaktiviert, wenn Sie eine andere Möglichkeit haben, Sensoren zu "
+"überwachen. Sie brauchen dies auch nicht, wenn Sie die reguläre "
+"OpenHardwareMonitor-Software verwenden."
 
 msgid ""
 "Adds the user to contactgroups based on the group memberships in LDAP. This "
@@ -4527,7 +4525,7 @@ msgid "Age in weeks of log data to fetch"
 msgstr "Alter der abgerufenen Logdaten (in Wochen)"
 
 msgid "Age levels"
-msgstr "Altersstufen"
+msgstr "Alterslevels"
 
 msgid "Age of Anti-Virus signature"
 msgstr "Alter der AntiVirus-Signatur"
@@ -4898,7 +4896,7 @@ msgid "Airflow deviation"
 msgstr "Luftstromabweichung"
 
 msgid "Airflow levels"
-msgstr "Schwellwerte für Luftströmung"
+msgstr "Levels für Luftströmung"
 
 msgid "Alarms"
 msgstr "Alarme"
@@ -4948,7 +4946,7 @@ msgid "Alert handler failed"
 msgstr "Alerthandler gescheitert"
 
 msgid "Alert handler log level"
-msgstr "Loglevel für Alerthandler"
+msgstr "Log-Level für Alert Handler"
 
 msgid "Alert handler rule"
 msgstr "Alerthandler-Regel"
@@ -5617,22 +5615,22 @@ msgid ""
 "Allows to define absolute levels for all, running, paused, and stopped "
 "containers."
 msgstr ""
-"Erlaubt die Definition von Schwellwerten für alle, laufende, pausierte und "
+"Erlaubt die Definition von Levels für alle, laufende, pausierte und "
 "gestoppte Container."
 
 msgid ""
 "Allows to define absolute levels for running, waiting, terminated and total "
 "containers."
 msgstr ""
-"Ermöglicht die Festlegung absoluter Werte für laufende, wartende, beendete "
+"Ermöglicht die Festlegung absoluter Level für laufende, wartende, beendete "
 "und gesamte Container."
 
 msgid ""
 "Allows to define levels for the counts and size of Docker Containers, "
 "Images, Local Volumes, and the Build Cache."
 msgstr ""
-"Erlaubt die Definition von Schwellwerten für die Anzahl und die Größe von "
-"Docker Containern, Images, lokalen Volumes und den Build Cache."
+"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker "
+"Containern, Images, lokalen Volumes und den Build Cache."
 
 #, python-format
 msgid "Allows to delete %s created by other users."
@@ -5807,7 +5805,7 @@ msgid "Always use and expect piggyback data"
 msgstr "Immer Piggyback-Daten verwenden und erwarten"
 
 msgid "Always use service level from rule"
-msgstr "Immer Service Level der Regel verwenden"
+msgstr "Immer Service-Ebene der Regel verwenden"
 
 msgid "Always when an event is being cancelled"
 msgstr "Immer wenn eine Ereignis aufgehoben wird"
@@ -6276,7 +6274,7 @@ msgid "Apply rule to undo Tablespaces"
 msgstr "Die Regel auf Undo-Tablespaces anwenden"
 
 msgid "Apply single-core levels defined in 'Levels on single cores'"
-msgstr "Single-core levels anwenden (definiert in 'Levels on single cores')"
+msgstr "Single-core Levels anwenden (definiert in 'Levels on single cores')"
 
 msgid ""
 "Apply the graph tunings to matching graphs only in specific places, for "
@@ -6290,15 +6288,15 @@ msgid ""
 "Apply the levels for single cores to the averaged instead of the "
 "instantaneous utilizations."
 msgstr ""
-"Wende die durchschnittlichen Levels, anstatt der momentanen Levels, für "
-"single cores an."
+"Anwenden der Level für einzelne Kerne auf die gemittelte statt auf die "
+"momentane Auslastung."
 
 msgid ""
 "Apply these levels to clusters that have at least the following number of "
 "nodes:"
 msgstr ""
-"Wenden Sie diese Schwellerte auf Cluster an, die mindestens die folgende "
-"Anzahl von Knoten haben:"
+"Wenden Sie diese Level auf Cluster an, die mindestens die folgende Anzahl "
+"von Knoten haben:"
 
 msgid "Apply this rule only on the following sites"
 msgstr "Diese Regel nur auf den folgenden Sites anwenden"
@@ -6603,7 +6601,6 @@ msgstr ""
 "Maximal so viele Alarme werden für das Zusammenfassen zurückgehalten. Ein "
 "Wert von 1 schaltet das Zusammenfassen faktisch aus."
 
-#, fuzzy
 msgid ""
 "At start, the CMC creates a fixed number of worker processes that are used "
 "for executing standard active checks. This fixed number is configured here. "
@@ -6612,22 +6609,20 @@ msgid ""
 "longer. A larger number of helpers will consume more memory."
 msgstr ""
 "Beim Start erzeugt der CMC eine feste Anzahl von Arbeitsprozessen, die für "
-"die Ausführung von klassischen aktiven Checks zuständig sind. Deren Anzahl "
-"wird hier konfiguriert. Wenn die Anzahl der Prozesse zu klein ist, dann "
-"können nicht alle Checks in der geplanten Zeit ausgeführt werden. Checks, "
-"die eine längere Laufzeit haben, blockieren die Arbeitsprozesse länger. Eine "
-"große Anzahl von Prozessen verbraucht mehr Speicher."
+"die Ausführung von standardmäßigen aktiven Checks zuständig sind. Diese "
+"feste Anzahl wird hier konfiguriert. Wenn die Anzahl der Prozesse zu klein "
+"ist, können nicht alle Checks in der geplanten Zeit ausgeführt werden. "
+"Checks, die länger laufen, blockieren die Arbeitsprozesse länger. Eine "
+"größere Helper-Anzahl verbraucht mehr Speicher."
 
-#, fuzzy
 msgid "At the beginning of every month on day"
-msgstr "Am Beginn jedes Monats bei Tag"
+msgstr "Am Beginn jedes Monats am Tag"
 
 msgid "At the center of the page"
 msgstr "In der Mitte der Seite"
 
-#, fuzzy
 msgid "At the end of every month on day"
-msgstr "Am Ende jedes Monats bei Tag"
+msgstr "Am Ende jedes Monats am Tag"
 
 msgid ""
 "At the time the report was created not all Checkmk sites were reachable. So "
@@ -6641,25 +6636,25 @@ msgstr ""
 msgid "Att."
 msgstr "Att."
 
-#, fuzzy
 msgid ""
 "Attach a comment to the event. If you have bracketed groups in the text to "
 "match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</tt>, etc. "
 "for inserting the first, second etc. matching group."
 msgstr ""
-"Fügen Sie einen Kommentar ans Ereignis an. Wenn Sie Gruppen mit Klammern in "
-"den Texten verwenden dann stehen die Platzhalter <tt>\\1</tt>, <tt>\\2</tt> "
-"etc für das Einsetzen des 1., 2., etc Vorkommens."
+"Fügen Sie dem Ereignis einen Kommentar hinzu. Wenn Sie Gruppen im Text "
+"eingeklammert haben, die greifen sollen, können Sie die Platzhalter <tt>\\1</"
+"tt>, <tt>\\2</tt> usw. zum Einfügen der ersten, zweiten usw. greifenden "
+"Gruppe verwenden."
 
-#, fuzzy
 msgid ""
 "Attach information about a contact person. If you have bracketed groups in "
 "the text to match, then you can use the placeholders <tt>\\1</tt>, <tt>\\2</"
 "tt>, etc. for inserting the first, second etc. matching group."
 msgstr ""
-"Fügen Sie Informationen über Kontaktperson an. Wenn Sie Gruppen mit Klammern "
-"in Texten verwenden dann stehen die Platzhalter <tt>\\1</tt>, <tt>\\2</tt> "
-"etc für das Einsetzen des 1., 2. etc Vorkommens."
+"Fügen Sie Informationen über Kontaktperson an. Wenn Sie Gruppen im Text "
+"eingeklammert haben, die greifen sollen, können Sie die Platzhalter <tt>\\1</"
+"tt>, <tt>\\2</tt> usw. zum Einfügen der ersten, zweiten usw. greifenden "
+"Gruppe verwenden."
 
 msgid "Attempt to interpret OEM data"
 msgstr "Versuch der Interpretation von OEM-Daten"
@@ -6670,14 +6665,12 @@ msgstr "Atto Fibrebridge FC port"
 msgid "Attribute"
 msgstr "Attribut"
 
-#, fuzzy
 msgid "Attribute Sync Plug-ins"
 msgstr "Sync-Plugins für Attribute"
 
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
 
-#, fuzzy
 msgid "Attribute sync plug-ins"
 msgstr "Sync-Plugins für Attribute"
 
@@ -6736,13 +6729,16 @@ msgstr "Ablauf der Authentifizierung"
 msgid "Authentication Failures"
 msgstr "Authentifizierungsfehler"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Authentifizierungsmodus"
+
 msgid "Authentication failed"
 msgstr "Authentifizierung fehlgeschlagen"
 
 msgid "Authentication failed. Invalid login/password."
 msgstr "Authentifizierung fehlgeschlagen. Benutzername/Passwort ungültig."
 
-#, fuzzy
 msgid "Authentication failures"
 msgstr "Authentifizierungsfehler"
 
@@ -6758,7 +6754,6 @@ msgstr "Authentifizierungsmechanismus"
 msgid "Authentication method"
 msgstr "Authentifizierungsmethode"
 
-#, fuzzy
 msgid "Authentication mode"
 msgstr "Authentifizierungsmodus"
 
@@ -6768,11 +6763,9 @@ msgstr "Authentifizierungspasswort"
 msgid "Authentication protocol"
 msgstr "Authentifizierungsprotokoll"
 
-#, fuzzy
 msgid "Authentication source"
 msgstr "Authentifizierungsquelle"
 
-#, fuzzy
 msgid "Authentication system errors"
 msgstr "Authentifizierungssystem-Fehler"
 
@@ -6786,9 +6779,8 @@ msgstr "Authentifizierungsarten"
 msgid "Authentication with TLS"
 msgstr "Authentifizierung mit TLS"
 
-#, fuzzy
 msgid "Authenticator app"
-msgstr "Authenticator-App hinzufügen"
+msgstr "Authenticator-App"
 
 msgid "Authenticator apps"
 msgstr "Authenticator-Apps"
@@ -7048,10 +7040,10 @@ msgid "Availability is unknown"
 msgstr "Verfügbarkeit ist nicht bekannt"
 
 msgid "Availability levels"
-msgstr "Verfügbarkeitsschwellen"
+msgstr "Verfügbarkeitslevel"
 
 msgid "Availability levels:"
-msgstr "Verfügbarkeitsschwellen:"
+msgstr "Verfügbarkeitslevel:"
 
 msgid "Availability of"
 msgstr "Verfügbarkeit von"
@@ -7090,7 +7082,7 @@ msgid "Available macros and search result(s)"
 msgstr "Verfügbare Makros und Suchergebnis(se)"
 
 msgid "Available memory lower levels"
-msgstr "Untere Schwellwerte für verfügbaren Speicher"
+msgstr "Untere Level für verfügbaren Speicher"
 
 msgid "Available options"
 msgstr "Verfügbare Optionen"
@@ -7199,10 +7191,10 @@ msgstr ""
 "Durchschnittliche Latenzzeit, von Azure Storage für eine erfolgreiche Anfrage"
 
 msgid "Average message count lower levels"
-msgstr "Untere Schwellwerte für die durchschnittliche Anzahl an Meldungen"
+msgstr "Untere Level für die durchschnittliche Anzahl an Meldungen"
 
 msgid "Average message count upper levels"
-msgstr "Obere Schwellwerte für die durchschnittliche Anzahl an Meldungen"
+msgstr "Obere Level für die durchschnittliche Anzahl an Meldungen"
 
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
@@ -7254,7 +7246,7 @@ msgid ""
 "applied."
 msgstr ""
 "Durchschnittliche CPU-Auslastung über die angegebene Zeitperiode, bevor die "
-"Schwellenwerte angewendet werden."
+"Level angewendet werden."
 
 msgid "Average time messages stay on queue"
 msgstr "Durchnittliche Zeit, die eine Nachricht in der Warteschlange verbringt"
@@ -7294,10 +7286,10 @@ msgid "Average write request size"
 msgstr "Größe der durchschnittlichen Schreibanfrage"
 
 msgid "Averaged values lower level"
-msgstr "Untere Schwellwerte der gemittelten Werte"
+msgstr "Untere Level der gemittelten Werte"
 
 msgid "Averaged values upper level"
-msgstr "Obere Schwellwerte der gemittelten Werte"
+msgstr "Obere Level der gemittelten Werte"
 
 msgid "Averaging"
 msgstr "Durchschnittsbildung"
@@ -7687,7 +7679,7 @@ msgid "Bandwidth"
 msgstr "Bandbreite"
 
 msgid "Bandwidth levels"
-msgstr "Bandbreitenstufen"
+msgstr "Bandbreiten-Level"
 
 msgid "Bank (30 day) month"
 msgstr "Vorrat (30 Tage) Monat"
@@ -7777,7 +7769,7 @@ msgid "Batch Requests/sec"
 msgstr "Batchanfragen/sec"
 
 msgid "Battery Levels"
-msgstr "Batteriestände"
+msgstr "Batterie-Level"
 
 msgid "Battery capacity"
 msgstr "Batteriekapazität"
@@ -7849,10 +7841,10 @@ msgid "Biggest input buffer"
 msgstr "Größter Input Buffer"
 
 msgid "Biggest input buffer lower level"
-msgstr "Untere Schwellwerte für den größten Eingabepuffer"
+msgstr "Untere Level für den größten Eingabepuffer"
 
 msgid "Biggest input buffer upper level"
-msgstr "Obere Schwellwerte für den größten Eingabepuffer"
+msgstr "Obere Level für den größten Eingabepuffer"
 
 msgid "Bike"
 msgstr "Rad"
@@ -8007,7 +7999,7 @@ msgid "Brightness"
 msgstr "Helligkeit"
 
 msgid "Brightness Levels"
-msgstr "Helligkeitsschwellwerte"
+msgstr "Helligkeitslevel"
 
 msgid "Broadcast packet rates"
 msgstr "Rate an Broadcast-Paketen"
@@ -8040,7 +8032,8 @@ msgid "Broken GUI extensions"
 msgstr "Defekte GUI-Erweiterungen"
 
 msgid "Browse the catalog of all check plug-ins, create static checks"
-msgstr "Den Katalog aller Check-Plugins durchsuchen, statische Checks erstellen"
+msgstr ""
+"Den Katalog aller Check-Plugins durchsuchen, statische Checks erstellen"
 
 msgid "Bucket"
 msgstr "Bucket"
@@ -8061,22 +8054,17 @@ msgid "Buckets"
 msgstr "Buckets"
 
 msgid "Buckets only: Levels for disk queue drain rate"
-msgstr ""
-"Nur für Buckets: Schwellwerte für die Abbaurate der Festplattenwarteschlange"
+msgstr "Nur für Buckets: Level für die Abbaurate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for disk queue fill rate"
-msgstr ""
-"Nur für Buckets: Schwellwerte für die Auffüllrate der "
-"Festplattenwarteschlange"
+msgstr "Nur für Buckets: Level für die Auffüllrate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for length of disk write queue"
-msgstr ""
-"Nur für Buckets: Schwellwerte für die Länge der Festplattenwarteschlange"
+msgstr "Nur für Buckets: Level für die Länge der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for number of items fetched from disk"
 msgstr ""
-"Nur für Buckets: Schwellwerte für Anzahl an abgerufenen Items von einer "
-"Festplatte"
+"Nur für Buckets: Level für Anzahl an abgerufenen Items von einer Festplatte"
 
 msgid "Buffer cache size"
 msgstr "Größe des Puffercache"
@@ -8215,20 +8203,18 @@ msgstr "Business Intelligence Regeln und Aggregate"
 msgid "Business reporting"
 msgstr "Business Bericht"
 
-#, fuzzy
 msgid ""
 "Business time series display seasonalities as a result of the human "
 "behaviors they represent. 5-day working weeks can produce higher loads and "
 "weekly repetition, while vacations can produce effects that repeat each "
 "year. Seasonality are these periodic oscillations of the time series."
 msgstr ""
-"Geschäftszeitreihen zeigen Saisonalitäten als Ergebnis des menschlichen \n"
-"Verhaltens, das sie darstellen. 5-Tage-Arbeitswochen können zu höheren "
-"Belastungen \n"
-"und Wiederholungen pro Woche führen. Während Ferien Effekte hervorrufen "
-"können, \n"
-"die sich jedes Jahr wiederholen. Saisonalität sind diese periodischen "
-"Schwankungen der Zeitreihen."
+"Geschäftliche Zeitreihen weisen aufgrund der menschlichen Verhaltensweisen, "
+"die sie darstellen, saisonale Schwankungen auf. Eine 5-Tage-Woche kann zu "
+"einer höheren Auslastung und einer wöchentlichen Wiederholung führen, "
+"während Urlaube zu Effekten führen können, die sich jedes Jahr wiederholen. "
+"Unter Saisonalität versteht man diese periodischen Schwankungen der "
+"Zeitreihen."
 
 msgid "Busy and idle servers"
 msgstr "Beschäftigte und untätige Server"
@@ -8254,13 +8240,12 @@ msgstr "Allerdings können Sie trotzdem Änderungen vornehmen. "
 msgid "But you are not a member of any contact group."
 msgstr "Aber Sie sind kein Mitglied einer Kontaktgruppe."
 
-#, fuzzy
 msgid ""
 "Buttons for globally switching states such as enabling checks and "
 "notifications"
 msgstr ""
-"Knöpfe zum globalen Ändern von Stati, wie z.B. Aktivierung von Checks und "
-"Benachrichtigungen"
+"Knöpfe für das globale Umschalten von Zuständen wie die Aktivierung von "
+"Checks und Benachrichtigungen"
 
 msgid "By"
 msgstr "Von"
@@ -8294,11 +8279,11 @@ msgid ""
 "defined alerting levels then these will automatically be applied on the "
 "averaged value. This helps to mask out short peaks. "
 msgstr ""
-"Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
+"Indem Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der Resident-Memory-Auslastung in "
-"Prozent des gesamten RAMs. Wenn Sie Schwellwerte definiert haben, so werden "
-"diese automatisch auf den Durchschnittswert angewandt. So können kurze "
-"Lastspitzen ausgefiltert werden. "
+"Prozent des gesamten RAMs. Wenn Sie Alerting-Level definiert haben, so "
+"werden diese automatisch auf den Durchschnittswert angewandt. So können "
+"kurze Lastspitzen ausgefiltert werden. "
 
 msgid ""
 "By activating averaging, Checkmk will compute an exponential moving average "
@@ -8308,9 +8293,9 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der Resident-Memory-Auslastung in "
-"Prozent des gesamten RAMs. Wenn Sie Schwellwerte definiert haben, so werden "
-"diese automatisch auf den Durchschnittswert angewandt. So können kurze "
-"Lastspitzen ausgefiltert werden. "
+"Prozent des gesamten RAMs. Wenn Sie Alerting-Level definiert haben, so "
+"werden diese automatisch auf den Durchschnittswert angewandt. So können "
+"kurze Lastspitzen ausgefiltert werden. "
 
 msgid ""
 "By activating averaging, Checkmk will compute an exponential moving average "
@@ -8320,7 +8305,7 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der CPU-Auslastung. Wenn Sie "
-"Schwellwerte definiert haben, so werden diese automatisch auf den "
+"Alerting-Level definiert haben, so werden diese automatisch auf den "
 "Durchschnittswert angewandt. So können kurze Lastspitzen ausgefiltert "
 "werden. "
 
@@ -8332,7 +8317,7 @@ msgid ""
 msgstr ""
 "Indem sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
 "exponentiellen beweglichen Durchschnitt der virtuellen Speicher-Auslastung. "
-"Wenn Sie Schwellwerte definiert haben, so werden diese automatisch auf den "
+"Wenn Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
 "Durchschnittswert angewandt. So können kurze Lastspitzen ausgefiltert "
 "werden. "
 
@@ -8343,9 +8328,9 @@ msgid ""
 "peaks. "
 msgstr ""
 "Wenn Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
-"Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Die "
-"oben definierten Schwellwerte gelten dann automatisch für diesen "
-"Durchschnittswert. So können kurze Spitzen ausgefiltert werden. "
+"Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Wenn "
+"Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
+"Durchschnittswert angewandt. So können kurze Spitzen ausgefiltert werden. "
 
 msgid ""
 "By activating averaging, Checkmk will compute the average of the message "
@@ -8354,9 +8339,9 @@ msgid ""
 "peaks."
 msgstr ""
 "Indem Sie die Durchschnittsbildung aktivieren, berechnet Checkmk den "
-"Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Die "
-"oben definierten Schwellwerte gelten dann automatisch für diesen "
-"Durchschnittswert. So können kurze Spitzen ausgefiltert werden."
+"Durchschnitt der Nachrichtenanzahl über ein angegebenes Zeitintervall. Wenn "
+"Sie Alerting-Level definiert haben, so werden diese automatisch auf den "
+"Durchschnittswert angewandt. So können kurze Spitzen ausgefiltert werden."
 
 msgid ""
 "By activating the computation of averages, the levels on broad- and "
@@ -8408,25 +8393,23 @@ msgid ""
 "is optional. If you do set levels you might also consider using averaging."
 msgstr ""
 "Bei Aktivierung dieser Option wird die Summe über den ein- und ausgehenden "
-"Verkehr mittels einer separaten Metrik überwacht. Schwellwerte für die "
-"verbrauchte Bandbreite sind optional. Wenn Sie Schwellwerte einrichten dann "
-"sollten Sie auch einen Durchschnittswert verwenden."
+"Verkehr mittels einer separaten Metrik überwacht. Level für die verbrauchte "
+"Bandbreite sind optional. Wenn Sie Level einrichten dann sollten Sie auch "
+"einen Durchschnittswert verwenden."
 
-#, fuzzy
 msgid ""
 "By activating this option you can set levels on the total CPU utilization "
 "for all included processes."
 msgstr ""
-"Durch diese Option können Schwellwerte für die CPU Auslastung aller "
-"enthaltenen Prozesse definiert werden."
+"Durch Aktivierung dieser Option können Sie Levels für die Gesamt-CPU-"
+"Auslastung für alle enthaltenen Prozesse festlegen."
 
-#, fuzzy
 msgid ""
 "By activating this option you will deploy the <tt>mk_db2</tt> agent plug-in "
 "on your target system."
 msgstr ""
-"Durch Aktivieren dieser Option rollen Sie das Agentenplugin <tt>mk_db2</tt> "
-"auf Ihr Zielsystem aus."
+"Durch Aktivierung dieser Option verteilen Sie das Agentenplugin <tt>mk_db2</"
+"tt> auf Ihrem Zielsystem."
 
 msgid ""
 "By adding rules to this ruleset you can define a subset of your hosts to be "
@@ -8924,10 +8907,10 @@ msgid "Byte count"
 msgstr "Byte Anzahl"
 
 msgid "Byte count lower levels"
-msgstr "Untere Schwellwerte für Byte-Zählung"
+msgstr "Untere Level für Byte-Zählung"
 
 msgid "Byte count upper levels"
-msgstr "Obere Schwellwerte für Byte-Zählung"
+msgstr "Obere Level für Byte-Zählung"
 
 msgid "Bytes"
 msgstr "Bytes"
@@ -8975,7 +8958,7 @@ msgid "Bytes uploaded"
 msgstr "Bytes hochgeladen"
 
 msgid "Bytes used for cache upper levels"
-msgstr "Für obere Cache-Schwellwerte genutzte Bytes"
+msgstr "Für obere Cache-Level genutzte Bytes"
 
 msgid "C"
 msgstr "C"
@@ -9366,7 +9349,7 @@ msgid "Cache generated %s ago, cache interval: %s"
 msgstr "Cache vor %s erstellt, Cache-Intervall: %s"
 
 msgid "Cache hit rate lower levels"
-msgstr "Unterer Schwellwert Cache-Trefferrate"
+msgstr "Unterer Level Cache-Trefferrate"
 
 msgid "Cache hit ratio"
 msgstr "Cache-Trefferrate"
@@ -9909,7 +9892,7 @@ msgstr "Ändere Ereignisstatus"
 msgid "Change event state?"
 msgstr "Ereignisstatus ändern?"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Change graph time range to: %s"
 msgstr "Graphzeitraum ändern auf: %s"
 
@@ -9939,7 +9922,6 @@ msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Das Standardthema der Benutzeroberfläche der Checkmk-Installation ändern"
 
-#, fuzzy
 msgid "Change time range"
 msgstr "Zeitraum ändern"
 
@@ -10407,10 +10389,9 @@ msgstr ""
 "einen Host zuzugreifen, zum Beispiel via Agent, SNMPv1 und SNMPv2, um die "
 "korrekte Konfiguration für den Host zu ermitteln."
 
-#, fuzzy
 msgid "Check-SQL plug-in uses different methods to find MS SQL instances"
 msgstr ""
-"Check-SQL Plugin verwendet verschiedene Methoden, um die SQL-Instanzen zu "
+"Check-SQL Plugin verwendet verschiedene Methoden, um MS SQL-Instanzen zu "
 "finden"
 
 msgid ""
@@ -10422,9 +10403,8 @@ msgstr ""
 "normalerweise auf einem lokalen UNIX-Socket. Diese Optionen ermöglicht es "
 "diesen Socket zusätzlich per TCP über das Netzwerk verfügbar zu machen."
 
-#, fuzzy
 msgid "Checkbox selection livetime"
-msgstr "Checkboxauswahl (Lebenszeit)"
+msgstr "Lebenszeit der Checkbox-Auswahl"
 
 msgid "Checked"
 msgstr "Geprüft"
@@ -10612,7 +10592,6 @@ msgstr ""
 "Implementierungen haben. Sie können diese Regel verwenden, um das SNMP-"
 "Backend für diese Hosts auszuwählen."
 
-#, fuzzy
 msgid ""
 "Checkmk has an efficient SNMP implementation called Inline SNMP which "
 "reduces the load produced by SNMP monitoring on the monitoring host "
@@ -10622,9 +10601,9 @@ msgid ""
 "disable Inline SNMP for these hosts."
 msgstr ""
 "Checkmk verfügt über eine effiziente SNMP-Implementierung namens Inline-"
-"SNMP, welche die durch die SNMP-Überwachung erzeugte Last auf dem "
-"Monitoringhost erheblich reduziert. Diese Option ist standardmäßig für alle "
-"SNMP-Hosts aktiviert, und es ist empfehlenswert, diese Standardeinstellung "
+"SNMP, welche die durch das SNMP-Monitoring erzeugte Last auf dem Monitoring-"
+"Host erheblich reduziert. Diese Option ist standardmäßig für alle SNMP-Hosts "
+"aktiviert, und es ist empfehlenswert, diese Standardeinstellung "
 "beizubehalten. Allerdings gibt es SNMP-Geräte, die Probleme mit dieser SNMP-"
 "Implementierung haben. Sie können diese Regel verwenden, um Inline-SNMP für "
 "diese Hosts zu deaktivieren."
@@ -10689,7 +10668,6 @@ msgstr ""
 "Sie Checkmk den momentan reservierten aber noch ungenutzten Platz anzeigen "
 "lassen."
 
-#, fuzzy
 msgid ""
 "Checkmk usually uses an interval of one minute for the active Checkmk check "
 "and for legacy checks. Here you can specify a larger interval. Please note, "
@@ -10700,8 +10678,8 @@ msgstr ""
 "Checkmk verwendet normalerweise ein Intervall von einer Minute für die "
 "aktive Checkmk-Prüfung und für ältere Prüfungen. Hier können Sie ein "
 "größeres Intervall festlegen. Bitte beachten Sie, dass diese Einstellung nur "
-"für aktive Checks gilt (solche mit dem Button \"Neu terminieren\"). Wenn Sie "
-"nur das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
+"für aktive Checks gilt (solche mit dem Knopf \"Neu ansetzen\"). Wenn Sie nur "
+"das Prüfintervall des Checks \"Check_MK\" ändern wollen, geben Sie "
 "<tt><b>Check_MK$</b></tt> in der Liste der Services an."
 
 msgid "Checkmk versions"
@@ -10784,7 +10762,7 @@ msgstr ""
 "Agenten gesendet wird, erzeugt einen Dienst. Durch die Definition von "
 "Gruppierungsmustern können Sie zu den Prüfungen <tt>fileinfo.groups</tt> "
 "oder <tt>sap_hana_fileinfo.groups</tt> wechseln. Diese Prüfungen überwachen "
-"jeweils eine ganze Liste von Dateien. Sie können nicht nur Stufen für die "
+"jeweils eine ganze Liste von Dateien. Sie können nicht nur Level für die "
 "Gesamtgröße und das Alter der ältesten/jüngsten Datei festlegen, sondern "
 "auch für die Anzahl. Sie können ein oder mehrere Muster für eine Gruppe "
 "definieren, die <tt>*</tt> und <tt>?</tt> enthält, zum Beispiel <tt>/var/log/"
@@ -10849,7 +10827,6 @@ msgstr "CPU-Zeit von Kindprozessen im Userspace"
 msgid "China"
 msgstr "China"
 
-#, fuzzy
 msgid "Choose SNMP backend"
 msgstr "SNMP-Backend auswählen"
 
@@ -11010,21 +10987,21 @@ msgid ""
 "Choose time levels (in seconds) for which a unit is allowed to be in a "
 "'reloading' state"
 msgstr ""
-"Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich eine Einheit "
-"in einem 'neu ladenden' Zustand befinden darf"
+"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"einem 'neu ladenden' Zustand befinden darf"
 
 msgid ""
 "Choose time levels (in seconds) for which a unti is allowed to be in an "
 "'deactivating' state"
 msgstr ""
-"Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich eine Einheit "
-"in einem 'deaktivierenden' Zustand befinden darf"
+"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"einem 'deaktivierenden' Zustand befinden darf"
 
 msgid ""
 "Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr ""
-"Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich eine Einheit "
-"in einem 'aktivierenden' Zustand befinden darf"
+"Wählen Sie die Level für die Zeit (in Sekunden) die sich eine Einheit in "
+"einem 'aktivierenden' Zustand befinden darf"
 
 msgid ""
 "Choose what kind of ouput data is sent to the Checkmk server: Only count the "
@@ -11263,12 +11240,20 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr "Klicken Sie hier, um den Aktivierungsstatus pro Seite zu sehen."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Click on 'Register %s' to enable two-factor authentication via %s."
-msgstr "Zwei-Faktor-Authentifizierung von %s entfernen"
+msgstr ""
+"Klicken Sie auf 'Registriere %s' um die Zwei-Faktor-Authentifizierung über "
+"%s zu aktivieren."
 
 msgid "Click to toggle this setting"
 msgstr "Klicken, um Einstellung sofort umzuschalten"
+
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr ""
+"Klicken Sie auf 'Registriere %s' um die Zwei-Faktor-Authentifizierung über "
+"%s zu aktivieren."
 
 msgid "Clickable URLs"
 msgstr "Anklickbare URLs"
@@ -11814,7 +11799,7 @@ msgid "Commit Limit"
 msgstr "Commit-Limit"
 
 msgid "Commit charge Levels"
-msgstr "Commit-Charge Schwellwerte"
+msgstr "Commit-Charge Level"
 
 msgid "Commit charge in percent (relative to commit limit)"
 msgstr "Commit-Belastung in Prozent (bezogen auf Commit-Limit)"
@@ -11836,7 +11821,7 @@ msgid ""
 "engine) will be logged in this log level."
 msgstr ""
 "Die Kommunikation zwischen verschiedenen Komponenten von Checkmk (z.B. GUI "
-"und Check-Engine) wird in dieser Log-Stufe protokolliert."
+"und Check-Engine) wird in diesem Log-Level protokolliert."
 
 msgid "Community forum"
 msgstr "Community Forum"
@@ -11870,7 +11855,7 @@ msgstr ""
 "Vergleicht die maximale Anzahl gleichzeitiger Verbindungen seit Start des "
 "Servers mit der auf dem Server konfigurierten maximal erlaubten "
 "Verbindungsanzahl. Dieser Wert schaltet in den Status WARN oder CRIT, wenn "
-"der prozentuale Wert erreicht oder überschritten wird."
+"das prozentuale Level erreicht oder überschritten wird."
 
 msgid ""
 "Compares the number of currently open connections to the server with the "
@@ -11880,7 +11865,7 @@ msgid ""
 msgstr ""
 "Vergleicht die maximale Anzahl aktuell geöffneter Verbindungen zum Server "
 "mit maximal erlaubten Verbindungsanzahl. Dieser Wert schaltet in den Status "
-"WARN oder CRIT, wenn der prozentuale Wert erreicht oder überschritten wird."
+"WARN oder CRIT, wenn das prozentuale Level erreicht oder überschritten wird."
 
 msgid ""
 "Compares the time which the slave can be behind the master. This rule makes "
@@ -11889,7 +11874,7 @@ msgid ""
 msgstr ""
 "Vergleicht die Zeit, die der Slave hinter dem Master her sein kann. Diese "
 "Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich oder über den "
-"eingestellten Schwellen liegt."
+"eingestellten Leveln liegt."
 
 msgid "Compatibility"
 msgstr "Kompatibilität"
@@ -12164,17 +12149,17 @@ msgid ""
 "for user processes and kernel routines over all available cores within the "
 "last check interval. The possible range is from 0% to 100%"
 msgstr ""
-"Konfigurieren Sie die Werte für die gemittelte CPU-Auslastung in "
+"Konfigurieren Sie die Level für die gemittelte CPU-Auslastung in "
 "Abhängigkeit von der Anzahl der Cluster-Knoten. Die CPU-Auslastung summiert "
 "den prozentualen Anteil der CPU-Zeit, der für Benutzerprozesse und Kernel-"
 "Routinen über alle verfügbaren Kerne innerhalb des letzten Prüfintervalls "
 "verwendet wird. Der zulässige Bereich reicht von 0% bis 100%"
 
 msgid "Configure levels on smoke"
-msgstr "Rauch-Schwellwerte festlegen"
+msgstr "Rauch-Level festlegen"
 
 msgid "Configure lower levels"
-msgstr "Untere Schwellwerte konfigurieren"
+msgstr "Untere Level konfigurieren"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12191,7 +12176,7 @@ msgstr ""
 "Lizenzierung von Checkmk-Instanzen."
 
 msgid "Configure policy violation levels"
-msgstr "Konfigurieren Sie die Grenzwerte der Richtlinienverletzung"
+msgstr "Konfigurieren Sie die Level der Richtlinienverletzung"
 
 msgid "Configure proxy server usage"
 msgstr "Proxy-Server Gebrauch konfigurieren"
@@ -12245,14 +12230,13 @@ msgstr ""
 msgid "Configure the automatic removal of monitored hosts."
 msgstr "Automatische Entfernung überwachter Hosts konfigurieren."
 
-#, fuzzy
 msgid ""
 "Configure the base URL for the Monitoring Web-GUI here. Include the site "
 "name. Used for link to Checkmk out of jira."
 msgstr ""
-"Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI und geben "
-"Sie den Namen der Site mit an. Die URL wird für Links zu Checkmk aus Jira "
-"heraus verwendet."
+"Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI. Geben Sie "
+"den Namen der Instanz mit an. Wird für den Link zu Checkmk aus Jira heraus "
+"verwendet."
 
 #, python-format
 msgid ""
@@ -12411,7 +12395,7 @@ msgstr ""
 "viele Knoten sie haben."
 
 msgid "Configure upper levels"
-msgstr "Obere Schwellwerte konfigurieren"
+msgstr "Obere Level konfigurieren"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -12679,7 +12663,7 @@ msgid ""
 "connection"
 msgstr ""
 "Verbindungsstatus für jede Instanz und Knopf zum Ein-/Ausschalten der "
-"Verbindung"
+"Instanz-Verbindung"
 
 msgid "Connection status"
 msgstr "Verbindungsstatus"
@@ -12878,7 +12862,7 @@ msgid "Container"
 msgstr "Container"
 
 msgid "Container - Display the information on container level"
-msgstr "Container - Anzeige der Informationen auf Containerebene"
+msgstr "Container - Anzeige der Informationen auf Container-Level"
 
 msgid "Container ID"
 msgstr "Container-ID"
@@ -12902,10 +12886,10 @@ msgid "Containers"
 msgstr "Container"
 
 msgid "Containers lower levels"
-msgstr "Untere Schwellwerte für Container"
+msgstr "Untere Level für Container"
 
 msgid "Containers upper levels"
-msgstr "Obere Schwellwerte für Container"
+msgstr "Obere Level für Container"
 
 #, python-format
 msgid "Contains corrupt file %s"
@@ -13069,6 +13053,10 @@ msgstr "Regel kopieren: %s"
 
 msgid "Copy rules from central site"
 msgstr "Kopiere Regeln von der Zentral-Instanz"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Geheimnis (Secret) in die Zwischenablage kopiert"
 
 msgid "Core"
 msgstr "Kern"
@@ -13318,10 +13306,10 @@ msgid "Counter ID"
 msgstr "Zähler-ID"
 
 msgid "Counter level"
-msgstr "Zählerschwellwert"
+msgstr "Zähler-Level"
 
 msgid "Counter levels"
-msgstr "Zählerschwellwerte"
+msgstr "Zähler-Level"
 
 msgid ""
 "Counter rates of DNS parameters for Citrix Netscaler Loadbalancer Appliances"
@@ -13763,7 +13751,6 @@ msgstr "Zugangsdaten abgelaufen"
 msgid "Credentials for Connect (ODBC interface)"
 msgstr "Credentials für Connect (ODBC-Schnittstelle)"
 
-#, fuzzy
 msgid "Credentials for HTTP basic authentication"
 msgstr "Anmeldedaten für HTTP Basis-Authentifizierung"
 
@@ -13924,10 +13911,10 @@ msgid "Critical if under"
 msgstr "Kritsch wenn unter"
 
 msgid "Critical level for remaining"
-msgstr "Kritischer Level für verbleibende"
+msgstr "Kritisches Level für verbleibende"
 
 msgid "Critical level is at least"
-msgstr "Kritische Schwelle ist mindestens"
+msgstr "Kritisches Level ist mindestens"
 
 msgid "Critical of "
 msgstr "Kritisch bei "
@@ -13980,7 +13967,7 @@ msgid "Current connections"
 msgstr "Aktuelle Verbindungen"
 
 msgid "Current connections upper levels"
-msgstr "Obergrenze für aktuelle Verbindungen"
+msgstr "Obere Level für aktuelle Verbindungen"
 
 msgid "Current date"
 msgstr "Aktuelles Datum"
@@ -14047,10 +14034,10 @@ msgid "Current subscriptions"
 msgstr "Aktuelle Subskription"
 
 msgid "Current thread count levels"
-msgstr "Schwellen für die Anzahl von Threads"
+msgstr "Level für die Anzahl von Threads"
 
 msgid "Current threads busy levels"
-msgstr "Schwellen für die Anzahl von arbeitenden Threads"
+msgstr "Level für die Anzahl von arbeitenden Threads"
 
 #, python-format
 msgid "Current value: %.2f"
@@ -14179,7 +14166,6 @@ msgstr "Benutzerdefinierte Fußzeilen-Links"
 msgid "Custom graph"
 msgstr "Benutzerdefinierter Graph"
 
-#, fuzzy
 msgid "Custom graph time ranges"
 msgstr "Benutzerdefinierte Zeiträume für Graphen"
 
@@ -14392,9 +14378,8 @@ msgstr ""
 "$COUNT_NOTIFICATIONS$</tt> die Anzahl der Alarmierungen und mit <tt>"
 "$COUNT_HOSTS$</tt> die Anzahl der Hosts ausgegeben werden."
 
-#, fuzzy
 msgid "Customize time range"
-msgstr "Zeitraum festlegen"
+msgstr "Zeitraum anpassen"
 
 msgid "Customize title"
 msgstr "Titel anpassen"
@@ -14746,7 +14731,7 @@ msgid "Data not found"
 msgstr "Daten nicht gefunden"
 
 msgid "Data path availability lower levels"
-msgstr "Untere Schwellwerte der Datenpfadverfügbarkeit"
+msgstr "Untere Level der Datenpfadverfügbarkeit"
 
 msgid "Data range"
 msgstr "Datenbereich"
@@ -15165,9 +15150,8 @@ msgstr "Default %s Vorlage"
 msgid "Default (%s)"
 msgstr "Voreinstellung (%s)"
 
-#, fuzzy
 msgid "Default BI visualization settings"
-msgstr "Voreingestellte BI Visualisierungseinstellungen"
+msgstr "Standard BI Visualisierungseinstellungen"
 
 msgid "Default Increment"
 msgstr "Standardinkrement"
@@ -15193,9 +15177,8 @@ msgstr "Standard-Zugangsdaten"
 msgid "Default expiration time (relative)"
 msgstr "Standard-Verfallsdatum (relativ)"
 
-#, fuzzy
 msgid "Default graph layout"
-msgstr "Standardgraphlayout"
+msgstr "Standard Graph-Layout"
 
 msgid "Default is 22."
 msgstr "Default ist 22."
@@ -15237,9 +15220,8 @@ msgstr "Standard-Parameter, wenn keine Zeitperiode zutrifft"
 msgid "Default profile"
 msgstr "Standard-Profil"
 
-#, fuzzy
 msgid "Default reporting time range"
-msgstr "Standardzeitraum für Berichte"
+msgstr "Standard Berichtszeitraum"
 
 msgid "Default rule pack"
 msgstr "Standard-Regelpaket"
@@ -15342,35 +15324,36 @@ msgstr ""
 "standardmäßig verwendete Zuordnung."
 
 msgid "Define levels for pending pods"
-msgstr "Grenzwerte für ausstehende Pods definieren"
+msgstr "Level für ausstehende Pods festlegen"
 
 #, python-format
 msgid "Define levels on the %s detection rate."
-msgstr "Stufen der Erkennungsrate für %s."
+msgstr "Level der Erkennungsrate für %s festlegen."
 
 msgid ""
 "Define levels on the number of authentication failures within the last 5 "
 "minutes."
 msgstr ""
-"Stufen für die Anzahl von Authentifizierungsfehlern innerhalb von 5 Minuten."
+"Level für die Anzahl von Authentifizierungsfehlern innerhalb von 5 Minuten "
+"festlegen."
 
 msgid "Define levels on the queue length."
-msgstr "Stufen für die Warteschlangenlänge."
+msgstr "Level für die Warteschlangenlänge festlegen."
 
 msgid "Define lower levels for free pods (clusters and nodes only)"
-msgstr "Untergrenze für freie Pods definieren (nur Cluster und Nodes)"
+msgstr "Untere Level für freie Pods definieren (nur Cluster und Nodes)"
 
 msgid "Define lower levels for number of running containers"
-msgstr "Definieren Sie die Untergrenze für die Anzahl der laufenden Container"
+msgstr "Definieren Sie die unteren Level für die Anzahl der laufenden Container"
 
 msgid "Define lower levels for number of terminated containers"
-msgstr "Definieren Sie die Untergrenze der Anzahl der abgebrochenen Container"
+msgstr "Definieren Sie die unteren Level der Anzahl der abgebrochenen Container"
 
 msgid "Define lower levels for number of total containers"
-msgstr "Definieren Sie Untergrenzen für die Gesamtzahl der Container"
+msgstr "Definieren Sie die unteren Level für die Gesamtzahl der Container"
 
 msgid "Define lower levels for number of waiting containers"
-msgstr "Definieren Sie Untergrenzen für die Anzahl der wartenden Container"
+msgstr "Definieren Sie die unteren Level für die Anzahl der wartenden Container"
 
 msgid "Define name of NetBIOS server"
 msgstr "Name des NetBIOS-Servers festlegen"
@@ -15410,16 +15393,17 @@ msgstr ""
 "Benutzer erneut authentifizieren."
 
 msgid "Define upper levels for number of running containers"
-msgstr "Definieren Sie Obergrenzen für die Anzahl der laufenden Container"
+msgstr "Definieren Sie die oberen Level für die Anzahl der laufenden Container"
 
 msgid "Define upper levels for number of terminated containers"
-msgstr "Definieren Sie Obergrenzen für die Anzahl der abgebrochenen Container"
+msgstr ""
+"Definieren Sie die oberen Level für die Anzahl der abgebrochenen Container"
 
 msgid "Define upper levels for number of total containers"
-msgstr "Definieren Sie Obergrenzen für die Gesamtzahl der Container"
+msgstr "Definieren Sie die oberen Level für die Gesamtzahl der Container"
 
 msgid "Define upper levels for number of waiting containers"
-msgstr "Definieren Sie Obergrenzen für die Anzahl der wartenden Container"
+msgstr "Definieren Sie die oberen Level für die Anzahl der wartenden Container"
 
 msgid ""
 "Define which monitoring state maps which input state. This applies for every "
@@ -15569,9 +15553,8 @@ msgstr "Verarbeitete Emails dieses Checks löschen"
 msgid "Delete annotation #%d"
 msgstr "Annotation #%d löschen"
 
-#, fuzzy
 msgid "Delete authentication via "
-msgstr "Test-Authentifizierung"
+msgstr "Authentifizierung löschen über "
 
 msgid "Delete auxiliary tag"
 msgstr "Lösche Hilfsmerkmal"
@@ -16535,16 +16518,16 @@ msgstr ""
 "Sekunden"
 
 msgid "Difference on summed up values lower level"
-msgstr "Unterschied der summierten Werte und des niedrigeren Levels"
+msgstr "Differenz zum Gesamtwert am unteren Level"
 
 msgid "Difference on summed up values upper level"
-msgstr "Unterschied der summierten Werte und des oberen Levels"
+msgstr "Differenz zum Gesamtwert am oberen Level"
 
 msgid "Difference on total number of issues lower level"
-msgstr "Differenz zur Gesamtzahl der Untergrenze-Meldungen"
+msgstr "Differenz zur Gesamtzahl der Ereignisse am unteren Level"
 
 msgid "Difference on total number of issues upper level"
-msgstr "Differenz zur Gesamtzahl der Obergrenze-Meldungen"
+msgstr "Differenz zur Gesamtzahl der Ereignisse am oberen Level"
 
 msgid "Differences to currently monitored services on a host."
 msgstr "Unterschiede zu den aktuell überwachten Services eines Hosts."
@@ -16934,10 +16917,10 @@ msgid "Disk IO discovery"
 msgstr "Erkennung Disk-IO"
 
 msgid "Disk IO levels"
-msgstr "Disk IO Schwellwerte"
+msgstr "Disk IO Level"
 
 msgid "Disk IO levels (old style checks)"
-msgstr "Disk IO Schwellwerte (Checks nach altem Muster)"
+msgstr "Disk IO Level (Checks nach altem Muster)"
 
 msgid "Disk Latency"
 msgstr "Plattenlatenz"
@@ -17059,9 +17042,8 @@ msgstr "SLA Statistiken anzeigen"
 msgid "Display SLA subresults for each requirement"
 msgstr "Zeige SLA Zwischenergebnisse für jede Bedingung an"
 
-#, fuzzy
 msgid "Display SLA time range and period in table header"
-msgstr "Zeige SLA-Zeitraum und Periode in der Tabellenüberschrift an"
+msgstr "Zeige SLA-Zeitraum und Periode in der Tabellenüberschrift"
 
 msgid "Display VM power state <i>additionally</i> on"
 msgstr "VM-Zustand <i>zusätzlich</i> anzeigen auf"
@@ -17216,7 +17198,7 @@ msgid "Display values in (see also help text)"
 msgstr "Werte anzeigen in (siehe auch Hilfetext)"
 
 msgid "Display warn/crit levels in check output..."
-msgstr "Schwellwerte für WARN/CRIT im Check anzeigen..."
+msgstr "Level für WARN/CRIT im Check anzeigen..."
 
 msgid "Displaying the overall state of Checkmk servers\n"
 msgstr "Zeigt den allgemeinen Zustand des Checkmk-Servers an.\n"
@@ -17697,7 +17679,7 @@ msgid "Do not display icons for history and timeline"
 msgstr "Keine Symbole für Historie und Zeitleiste anzeigen"
 
 msgid "Do not display legend for availability levels"
-msgstr "Keine Legende für die Schwellwerte zeigen"
+msgstr "Keine Legende für die Verfügbarkeitslevel zeigen"
 
 msgid "Do not display plugin output in timeline"
 msgstr "Plugin-Ausgabe nicht in der Timeline anzeigen"
@@ -17751,10 +17733,10 @@ msgid "Do not group interfaces"
 msgstr "Interfaces nicht gruppieren"
 
 msgid "Do not impose levels"
-msgstr "Keine Schwellwerte anwenden"
+msgstr "Keine Level anwenden"
 
 msgid "Do not impose levels, always be OK"
-msgstr "Keine Schwellwerte anwenden, immer OK"
+msgstr "Keine Level anwenden, immer OK"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr "Die automatische Registrierung von Controllern nicht verwalten"
@@ -17833,7 +17815,7 @@ msgid "Do not use Checkmk Python, even if it has been installed"
 msgstr "Verwende Checkmk Python nicht, auch wenn es installiert wurde"
 
 msgid "Do not use absolute levels"
-msgstr "Keine absolute Schwellen benutzen"
+msgstr "Keine absoluten Level benutzen"
 
 msgid "Do not validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage nicht validieren"
@@ -17877,7 +17859,7 @@ msgid "Docker node and containers"
 msgstr "Docker Node und Container"
 
 msgid "Docker node container levels"
-msgstr "Docker Node Container Schwellwerte"
+msgstr "Docker Node Container Level"
 
 msgid "Docker node disk usage"
 msgstr "Docker Node Festplattenauslastung"
@@ -18011,7 +17993,7 @@ msgid "Dose equivalent"
 msgstr "Entsprechende Dosis"
 
 msgid "DotNet (.Net) runtime memory levels"
-msgstr "DotNet (.Net) Runtime Speicherschwellwerte"
+msgstr "DotNet (.Net) Runtime Speicher-Level"
 
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
@@ -18039,7 +18021,6 @@ msgstr "SNMP-Walk herunterladen"
 msgid "Download agent output"
 msgstr "Agentenausgabe herunterladen"
 
-#, fuzzy
 msgid "Download agent output / SNMP walks"
 msgstr "Agentenausgabe / SNMP-Walks herunterladen"
 
@@ -18239,7 +18220,7 @@ msgid "Duration in percent of Lambda timeout"
 msgstr "Dauer in Prozent des Lambda-Timeouts"
 
 msgid "Duration levels"
-msgstr "Schwellwerte für die Dauer"
+msgstr "Level für die Dauer"
 
 msgid "Duration of CRITICAL state of 'Check_MK' service"
 msgstr "Dauer des CRITICAL-Zustands des 'Check_MK' Service"
@@ -18330,13 +18311,13 @@ msgid "Dynamic host management"
 msgstr "Dynamische Host-Verwaltung"
 
 msgid "Dynamic levels"
-msgstr "Dynamische Schwellwerte"
+msgstr "Dynamische Level"
 
 msgid "Dynamic levels - lower bound"
-msgstr "Dynamische Schwellen (untere Grenze)"
+msgstr "Dynamische Level - untere Grenze"
 
 msgid "Dynamic levels - upper bound"
-msgstr "Dynamische Schwellen (obere Grenze)"
+msgstr "Dynamische Level - obere Grenze"
 
 msgid "DynamoDB"
 msgstr "DynamoDB"
@@ -18546,7 +18527,6 @@ msgstr ""
 msgid "Each tag must be unique and cannot be used multiple times"
 msgstr "Jedes Tag muss eindeutig sein und darf nicht mehrfach verwendet werden"
 
-#, fuzzy
 msgid ""
 "Each user defined role is based on one of the built-in roles. When created "
 "it will start with all permissions of that role. When due to a software "
@@ -18555,12 +18535,11 @@ msgid ""
 "the built-in role it's based on."
 msgstr ""
 "Jede benutzerdefinierte Rolle basiert auf einer der mitgelieferten Rollen. "
-"Beim Anlegen erhält die Rolle alle Berechtigungen der Ausgangsrolle. Wenn "
-"sie erstellt wird, beginnt sie mit allen Berechtigungen dieser Rolle. Wenn "
-"durch ein Software-Update oder die Installation eines Add-ons neue "
-"Berechtigungen hinzukommen, erhält die Benutzerrolle diese neuen "
-"Berechtigungen oder nicht, je nach den Standardeinstellungen der "
-"mitgelieferten Rolle, auf der sie basiert."
+"Wenn sie erstellt wird, verfügt sie zunächst über alle Berechtigungen dieser "
+"Rolle. Wenn durch ein Software-Update oder die Installation eines Add-ons "
+"neue Berechtigungen hinzukommen, erhält die Benutzerrolle diese neuen "
+"Berechtigungen oder erhält sie nicht, je nach den Standardeinstellungen der "
+"mitgelieferten Rolle, auf der sie beruht."
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -19239,9 +19218,8 @@ msgstr ""
 "GZIP-Komprimierung des Backups aktivieren. Alle Tar-Archive der Sicherung "
 "werden während der Sicherung mit GZIP gepackt."
 
-#, fuzzy
 msgid "Enable handling of Real-Time checks"
-msgstr "Bearbeitung von Echtzeitchecks einschalten"
+msgstr "Bearbeitung von Echtzeit-Checks einschalten"
 
 msgid "Enable host notifications"
 msgstr "Hostalarme ein"
@@ -19616,6 +19594,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Adresse eingeben"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "Externe ID (optional)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "VCenter-Authentifizierung"
+
 msgid "Enter group"
 msgstr "Gruppe eingeben"
 
@@ -19723,6 +19709,8 @@ msgstr ""
 
 msgid "Enter the six-digit code from your authenticator app to log in."
 msgstr ""
+"Geben Sie den sechsstelligen Code aus Ihrer Authenticator-App ein, um sich "
+"anzumelden."
 
 msgid ""
 "Enter the uniserve service name here (has nothing to do with service "
@@ -19782,7 +19770,7 @@ msgstr "Entity-ID"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr ""
-"Entitätsebene, die zum Erstellen von Checkmk-Piggyback-Hosts verwendet wird"
+"Entitätslevel, die zum Erstellen von Checkmk-Piggyback-Hosts verwendet wird"
 
 msgid "Entries"
 msgstr "Einträge"
@@ -21425,7 +21413,7 @@ msgid "File Size"
 msgstr "Größe der Datei"
 
 msgid "File Size Levels"
-msgstr "Schwellwerte für Dateigrößen"
+msgstr "Level für Dateigrößen"
 
 msgid "File accessed"
 msgstr "Datei zugegriffen"
@@ -21540,7 +21528,7 @@ msgid "Filename: %s"
 msgstr "Dateiname: %s"
 
 msgid "Filer Disk Levels (NetApp, IBM SVC)"
-msgstr "Schwellwerte für Filer-Platten (NetApp, IBM SVC)"
+msgstr "Level für Filer-Platten (NetApp, IBM SVC)"
 
 msgid "Files"
 msgstr "Dateien"
@@ -21756,7 +21744,7 @@ msgid "Fix this"
 msgstr "Problem beheben"
 
 msgid "Fixed Levels"
-msgstr "Feste Schwellwerte"
+msgstr "Feste Level"
 
 msgid "Fixed el."
 msgstr "Seitenel."
@@ -21779,7 +21767,6 @@ msgstr "Im Inhalt erwartete Zeichenkette"
 msgid "Flap"
 msgstr "Unstetig"
 
-#, fuzzy
 msgid "Flap detection"
 msgstr "Unstetigkeitserkennung"
 
@@ -21865,7 +21852,7 @@ msgstr "Dieser Ordner existiert nicht"
 
 #, python-format
 msgid "Folder level %d"
-msgstr "Ordnerebene %d"
+msgstr "Ordner-Level %d"
 
 msgid "Folder path"
 msgstr "Ordner Pfad"
@@ -22445,10 +22432,10 @@ msgid "Free SGA memory available"
 msgstr "Freier SGA-Speicher vorhanden"
 
 msgid "Free leases levels"
-msgstr "Schwellen für freie Leases"
+msgstr "Level für freie Leases"
 
 msgid "Free leases levels in percent"
-msgstr "Schwellwerte für freie Leases in Prozent"
+msgstr "Level für freie Leases in Prozent"
 
 msgid "Free space"
 msgstr "Freier Platz"
@@ -22839,9 +22826,8 @@ msgstr "Generelle Eigenschaften"
 msgid "Generate"
 msgstr "Erzeugen"
 
-#, fuzzy
 msgid "Generate backup codes"
-msgstr "Backup-Codes neu erzeugen"
+msgstr "Backup-Codes erzeugen"
 
 msgid "Generate core config parallelized"
 msgstr "Parallele Erzeugung der Kernkonfiguration"
@@ -22908,7 +22894,8 @@ msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
 "100%."
 msgstr ""
-"FPGA-Auslastung in Prozent angeben. Der Wertebereich ist von 0% bis 100%."
+"FPGA-Auslastungslevel in Prozent angeben. Der Wertebereich ist von 0% bis "
+"100%."
 
 msgid ""
 "Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</"
@@ -22991,7 +22978,7 @@ msgid "Go to the web page where this package came from"
 msgstr "Zu Webseite, von der dieses Paket kommt, gehen"
 
 msgid "Go up one tree level"
-msgstr "Im Baum eine Ebene nach oben"
+msgstr "Im Baum ein Level nach oben"
 
 #, python-format
 msgid "Going to update %d sites"
@@ -23029,6 +23016,10 @@ msgstr "Kein Ergebnis zum Erstellen der Dump-Datei vorhanden"
 
 msgid "Grab user from found processess"
 msgstr "Benutzer aus gefundenen Prozessen holen"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Zeitperiode"
 
 msgid "Gracefully finishing"
 msgstr "Anständig beenden"
@@ -23407,7 +23398,7 @@ msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
 
 msgid "HP MSA Power Supply Voltage Levels"
-msgstr "HP MSA Netzteilspannung"
+msgstr "HP MSA Netzteilspannungslevel"
 
 msgid "HP MSA via Web Interface"
 msgstr "HP MSA via Web Interface"
@@ -23744,7 +23735,7 @@ msgid "Health check percentage healty"
 msgstr "Health check Prozent Gesunde"
 
 msgid "Health probe status lower levels"
-msgstr "Health probe Status untere Schwellwerte"
+msgstr "Health probe Status untere Level"
 
 msgid "Healthy hosts"
 msgstr "Gesunde Hosts"
@@ -23872,9 +23863,8 @@ msgid ""
 "Here you can Set upper levels for the time difference between agent and "
 "system time."
 msgstr ""
-"Hier können Sie obere Schwellwerte für die Anzahl der Infizierungen "
-"einstellen, die durch die McAfee Gateway Anti-Malware Engine aufgedeckt "
-"wurden."
+"Hier können Sie obere Level für die Anzahl der Infizierungen einstellen, die "
+"durch die McAfee Gateway Anti-Malware Engine aufgedeckt wurden."
 
 msgid ""
 "Here you can add icons, for example to use them in bookmarks or in custom "
@@ -23899,18 +23889,17 @@ msgid ""
 msgstr ""
 "Hier können Sie das Clusterverhalten auswählen. Der beste Zustand aller "
 "Knoten ist der Standard. Das heißt, wenn Sie mindestens einen Knoten im "
-"Status UP haben, gibt die Prüfung OK zurück. Das Gesundheitsniveau sollte "
-"auf jedem Knoten gleich sein. Wenn Sie am schlechtesten wählen, gibt die "
-"Prüfung CRIT zurück, wenn sich mindestens ein Knoten in einem anderen "
-"Zustand als OK befindet. Die Gesundheitsstufen sollten auf jedem Knoten "
-"gleich sein, so dass nur der erste Knoten die Gesundheitsstufen überprüft "
-"werden."
+"Status UP haben, gibt die Prüfung OK zurück. Das Gesundheitslevel sollte auf "
+"jedem Knoten gleich sein. Wenn Sie am schlechtesten wählen, gibt die Prüfung "
+"CRIT zurück, wenn sich mindestens ein Knoten in einem anderen Zustand als OK "
+"befindet. Die Gesundheitslevel sollten auf jedem Knoten gleich sein, so dass "
+"nur der erste Knoten die Gesundheitslevel überprüft werden."
 
 msgid ""
 "Here you can configure absolute levels for total restart count and restarts "
 "in the last hour."
 msgstr ""
-"Hier können Sie absolute Werte für die Gesamtzahl der Neustarts und "
+"Hier können Sie absolute Level für die Gesamtzahl der Neustarts und "
 "Neustarts in der letzten Stunde konfigurieren."
 
 msgid ""
@@ -23926,27 +23915,27 @@ msgid ""
 "Here you can configure levels for usage, requests utilization and limits "
 "utilization, respectively."
 msgstr ""
-"Hier können Sie die Grenzen für die Auslastung, die Request-Auslastung und "
-"die Limit-Auslastung einzeln konfigurieren."
+"Hier können Sie die Level für die Auslastung, die Request-Auslastung und die "
+"Limit-Auslastung einzeln konfigurieren."
 
 msgid ""
 "Here you can configure levels for usage, requests utilization, limits "
 "utilization and node utilization, respectively."
 msgstr ""
-"Hier können Sie die Grenzen für die Auslastung, die Request-Auslastung, die "
+"Hier können Sie die Level für die Auslastung, die Request-Auslastung, die "
 "Limit-Auslastung und Node-Auslastung einzeln konfigurieren."
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each chassis."
 msgstr ""
-"Hier können Sie die Schwellwerte für die 3.3 V und 12 V Versorgungsspannung "
-"für jede Gehäuse definieren."
+"Hier können Sie die Level für die 3.3 V und 12 V Versorgungsspannung für "
+"jede Gehäuse definieren."
 
 msgid ""
 "Here you can configure the 3.3V and 12V voltage levels for each power supply."
 msgstr ""
-"Hier können Sie die Schwellwerte für die 3.3 V und 12 V Versorgungsspannung "
-"für jedes Netzteil konfigurieren."
+"Hier können Sie die Level für die 3.3 V und 12 V Versorgungsspannung für "
+"jedes Netzteil konfigurieren."
 
 msgid ""
 "Here you can configure the background color for specific states. The "
@@ -23967,14 +23956,14 @@ msgid ""
 "then be sent to the Event Console when you forward notifications to it and "
 "will override the setting of the matching rule."
 msgstr ""
-"Hier legen Sie mögliche Service-Levels für Hosts, Services und Ereignsse an. "
-"Ein Servicelevel kann einem Host oder Service via Konfiguration zugeordnet "
-"werden. Die Event Console kann über Regeln den erzeugten Ereignissen "
-"Servicelevel zuordnen. Intern werden Service-Level durch Ganzzahlen "
-"abgebildet. Achtung: größere Zahlen stehen für einen höheren Service-Level. "
-"Das ist wichtig, wenn Ansichten nach dem Service-Level gefiltert werden. "
-"<p>Sie können Service-Level auch an Hosts/Services im Monitoring binden. "
-"Diese Level werden dann an die Event Console gesendet wenn Sie Alarme "
+"Hier legen Sie mögliche Service-Ebenen für Hosts, Services und Ereignisse "
+"an. Eine Service-Ebene kann einem Host oder Service via Konfiguration "
+"zugeordnet werden. Die Event Console kann über Regeln den erzeugten "
+"Ereignissen Service-Ebenen zuordnen. Intern werden Level durch Ganzzahlen "
+"abgebildet. Achtung: größere Zahlen stehen für eine höhere Service-Ebene. "
+"Das ist wichtig, wenn Ansichten nach der Service-Ebene gefiltert werden. "
+"<p>Sie können Service-Ebenen auch an Hosts/Services im Monitoring binden. "
+"Diese Ebenen werden dann an die Event Console gesendet wenn Sie Alarme "
 "weiterleiten und werden die Einstellung von passenden Regeln überschreiben."
 
 msgid "Here you can configure timeout settings in seconds."
@@ -24045,8 +24034,8 @@ msgid ""
 "state. This is a filter at display level not query level."
 msgstr ""
 "Hier können Sie konfigurieren, welche Dienste abhängig von ihrem Zustand "
-"angezeigt werden. Dies ist ein Filter auf Anzeigeebene, nicht auf "
-"Abfrageebene."
+"angezeigt werden. Dies ist ein Filter auf Anzeige-Level, nicht auf Abfrage-"
+"Level."
 
 msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
@@ -24094,37 +24083,37 @@ msgid ""
 "performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
 msgstr ""
-"Hier können Sie Schwellwerte für die CPU-Auslastung einzelner Prozesse "
-"definieren. Aus Performancegründen werden Mittelwerte für die CPU-Auslastung "
-"einzelner Prozesse nicht berechnet."
+"Hier können Sie Level für die CPU-Auslastung einzelner Prozesse definieren. "
+"Aus Performancegründen wird die CPU-Mittelung nicht auf die Ebenen einzelner "
+"Prozesse angewendet."
 
 msgid ""
 "Here you can define levels on the resident memory utilization (in percentage "
 "of total RAM) of single processes. For performance reasons resident memory "
 "averaging will not be applied to to the levels of single processes."
 msgstr ""
-"Hier können Sie Stufen für die Nutzung des permanenten Speichers (in Prozent "
-"des Gesamt-RAM) einzelner Prozesse festlegen. Aus Leistungsgründen wird der "
-"Mittelwert des permanenten Speichers nicht auf die Werte einzelner Prozesse "
-"angewendet."
+"Hier können Sie Level für die Nutzung des permanenten Speichers (in Prozent "
+"des Gesamt-RAM) einzelner Prozesse festlegen. Aus Performancegründen wird "
+"die Mittelung des permanenten Speichers nicht auf die Level einzelner "
+"Prozesse angewendet."
 
 msgid ""
 "Here you can define levels on the resident memory utilization of single "
 "processes. For performance reasons resident memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"Hier können Sie Stufen für die Nutzung des permanenten Speichers einzelner "
-"Prozesse festlegen. Aus Leistungsgründen wird der Mittelwert des permanenten "
-"Speichers nicht auf die Werte einzelner Prozesse angewendet."
+"Hier können Sie Level für die Nutzung des permanenten Speichers einzelner "
+"Prozesse festlegen. Aus Performancegründen wird der Mittelwert des "
+"permanenten Speichers nicht auf die Level einzelner Prozesse angewendet."
 
 msgid ""
 "Here you can define levels on the virtual memory utilization of single "
 "processes. For performance reasons virtual memory averaging will not be "
 "applied to to the levels of single processes."
 msgstr ""
-"Hier können Sie Stufen für die Nutzung des virtuellen Speichers einzelner "
-"Prozesse festlegen. Aus Leistungsgründen wird der Mittelwert des virtuellen "
-"Speichers nicht auf die Werte einzelner Prozesse angewendet."
+"Hier können Sie Level für die Nutzung des virtuellen Speichers einzelner "
+"Prozesse festlegen. Aus Performancegründen wird der Mittelwert des "
+"virtuellen Speichers nicht auf die Level einzelner Prozesse angewendet."
 
 #, python-format
 msgid ""
@@ -24162,13 +24151,12 @@ msgstr ""
 "Hier können Sie den Status des Incidents im Falle eines auslaufenden "
 "Acknowledgements des Host- oder Serviceproblems definieren."
 
-#, fuzzy
 msgid ""
 "Here you can define the time range to query, eg. the last x minutes from "
 "now. The query will then check for the count of log messages in the defined "
 "range. Default is 1 minute."
 msgstr ""
-"Hier können Sie den Zeitraum für die Abfrage festlegen, z.Bsp. die letzten x "
+"Hier können Sie den Zeitraum für die Abfrage festlegen, z.B. die letzten x "
 "Minuten von jetzt an. Die Abfrage überprüft dann die Anzahl der Log Einträge "
 "im definierten Bereich. Standardeinstellung ist 1 Minute."
 
@@ -24796,9 +24784,8 @@ msgstr "Rotation der Historie: Regelmäßige Rotation"
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "Rotation der Historie: Nach Größe (limitierte Dateigröße)"
 
-#, fuzzy
 msgid "History of event"
-msgstr "Historie von Ereignis"
+msgstr "Historie des Ereignisses"
 
 msgid "History of hardware/software inventory"
 msgstr "Historie der Hardware/Software-Inventur"
@@ -24908,9 +24895,8 @@ msgstr "Unerreichbar"
 msgid "Host Events"
 msgstr "Hostereignisse"
 
-#, fuzzy
 msgid "Host Graphs with Time Range Previews"
-msgstr "Hostgraphen mit Zeitraumvorschau"
+msgstr "Host-Graphen mit Zeitraumvorschau"
 
 msgid "Host IP"
 msgstr "Host-IP"
@@ -25083,7 +25069,6 @@ msgstr "ID des benutzerdefinierten Host Feldes"
 msgid "Host customer"
 msgstr "Host Kunde"
 
-#, fuzzy
 msgid "Host diagnostic"
 msgstr "Host-Diagnose"
 
@@ -25409,13 +25394,11 @@ msgstr "Hostmerkmake (mit Titeln)"
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Zu verwendender Host für die Verbindung zu Cisco Prime"
 
-#, fuzzy
 msgid "Host tooltip shown in BI visualization"
-msgstr "Host-Tooltipp sichtbar in BI Visualisierung"
+msgstr "Angezeigter Host-Tooltipp in BI Visualisierung"
 
-#, fuzzy
 msgid "Host tooltip shown in topolgoy visualization"
-msgstr "Host-Tooltipp sichtbar in Topologie-Visualisierung"
+msgstr "Angezeigter Host-Tooltipp in Topologie-Visualisierung"
 
 #, python-format
 msgid "Host uses xinetd or systemd %s"
@@ -25706,7 +25689,6 @@ msgstr "Hosts ohne gebackenen Agenten"
 msgid "Hosts without system description OID"
 msgstr "Hosts ohne Systembeschreibungs-OID"
 
-#, fuzzy
 msgid ""
 "Hosts, Services, Groups, Time Periods, Business Intelligence and Monitoring "
 "Configuration"
@@ -27508,11 +27490,17 @@ msgid ""
 "any of these codes to login. Generating backup codes automatically "
 "invalidates existing codes."
 msgstr ""
+"Wenn Sie den Zugang zu Ihrer Authentifizierungs-App / Ihrem Sicherheits-"
+"Token verlieren, können Sie jeden dieser Codes zur Anmeldung verwenden. "
+"Durch die Erstellung von Backup-Codes werden vorhandene Codes automatisch "
+"ungültig."
 
 msgid ""
 "If you lose access to your authentication device, you can use any of the "
 "generated backup codes to login."
 msgstr ""
+"Wenn Sie den Zugang zu Ihrem Authentifizierungsgerät verlieren, können Sie "
+"einen der generierten Backup-Codes zur Anmeldung verwenden."
 
 msgid ""
 "If you multiply the number of data points with the number of steps "
@@ -28463,8 +28451,8 @@ msgstr ""
 "Eingabefelder usw. in zwei Kategorien ein, die mehr oder weniger Einträge "
 "anzeigen. Mit dieser Option können Sie einen Standardmodus für nicht "
 "besuchte Menüs festlegen. Alternativ können Sie auch erzwingen, dass mehr "
-"angezeigt wird, so dass die runde Schaltfläche mit den drei Punkten gar "
-"nicht angezeigt wird."
+"angezeigt wird, so dass der runde Knopf mit den drei Punkten gar nicht "
+"angezeigt wird."
 
 msgid ""
 "In some rare cases the unit that is signalled by the sensor is wrong and e."
@@ -39216,6 +39204,11 @@ msgstr "Aktionsmenü öffnen"
 msgid "Open the host action menu"
 msgstr "Host-Aktionsmenü öffnen"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Dieses Aggregat öffnen"
 
@@ -41539,7 +41532,7 @@ msgid "Please first create some <a href='%s'>contact groups</a>"
 msgstr "Bitte zuerst einige <a href='%s'>Kontakt Gruppen</a> anlegen"
 
 msgid "Please follow your browser's instructions for authentication."
-msgstr ""
+msgstr "Bitte folgen Sie den Anweisungen Ihres Browsers zur Authentifizierung."
 
 msgid "Please leave either both from and until empty or enter two times."
 msgstr "Bitte beide Werte entweder leer lassen oder angeben."
@@ -43820,6 +43813,8 @@ msgstr ""
 
 msgid "Register an authentication device before generating backup codes."
 msgstr ""
+"Registrieren Sie ein Authentifizierungsgerät, bevor Sie Backup-Codes "
+"erzeugen."
 
 msgid "Register any existing host"
 msgstr "Einen vorhandenen Host registrieren"
@@ -43865,9 +43860,8 @@ msgstr "Registrierte Agenten"
 msgid "Registered at"
 msgstr "Eingetragen am"
 
-#, fuzzy
 msgid "Registered at "
-msgstr "Eingetragen am"
+msgstr "Eingetragen am "
 
 msgid "Registered desktops"
 msgstr "Registrierte Desktops"
@@ -46270,6 +46264,9 @@ msgstr "Gesparter Platz"
 
 msgid "Scale to width of page"
 msgstr "Auf Papierbreite skalieren"
+
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
 
 msgid "Scan all hosts"
 msgstr "Scanne alle Hosts"
@@ -52032,6 +52029,10 @@ msgid "Successfully changed the credential."
 msgstr "Die Zugangsdaten wurden erfolgreich geändert."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Das Passwort wurde erfolgreich geändert."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Das Passwort wurde erfolgreich geändert."
 
@@ -52356,6 +52357,12 @@ msgstr "Synchronisieren"
 
 msgid "Synology Updates"
 msgstr "Updates für Synology"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 msgid "Synthetic services"
 msgstr "Synthetische Services"
@@ -53716,8 +53723,8 @@ msgid ""
 "The SAML login button on the login page will display this name. Choose a "
 "clear and short name to help others identify this connection."
 msgstr ""
-"Die SAML-Login-Button auf der Anmeldeseite wird diesen Namen anzeigen. "
-"Wählen Sie einen eindeutigen und kurzen Namen, damit andere diese Verbindung "
+"Der SAML-Login-Knopf auf der Anmeldeseite wird diesen Namen anzeigen. Wählen "
+"Sie einen eindeutigen und kurzen Namen, damit andere diese Verbindung "
 "identifizieren können."
 
 msgid "The SAP system ID."
@@ -55622,9 +55629,9 @@ msgstr ""
 "Der maximal erlaubte prozentuale Paketverlust, bevor der Service in WARN/"
 "CRIT wechselt."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The maximum allowed value is %s."
-msgstr "%s ist zu %s. Der %s erlaubte Wert ist %s."
+msgstr "Der maximal erlaubte Wert ist %s."
 
 msgid ""
 "The maximum average roundtrip time in ms before this service goes into "
@@ -55730,9 +55737,9 @@ msgstr ""
 "des resultierenden Dienstes angezeigt. Der Metrikname wird als Bezeichnung "
 "genommen, wenn nichts angegeben wurde."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The minimum allowed value is %s."
-msgstr "%s ist zu %s. Der %s erlaubte Wert ist %s."
+msgstr "Der minimal erlaubte Wert ist %s."
 
 #, python-format
 msgid ""
@@ -55751,6 +55758,19 @@ msgstr ""
 "zugeordnet. Damit Sie sich in den Sites einloggen können, die diesem Kunden "
 "zugeordnet sind, müssen Sie mindestens einen globalen Nutzer anlegen oder "
 "dem Kunden einen Nutzer zuordnen."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -59012,9 +59032,8 @@ msgstr ""
 msgid "This message has been created at %s and is valid till %s."
 msgstr "Diese Meldung wurde um %s erstellt und ist bis %s gültig."
 
-#, fuzzy
 msgid "This message is not supposed to be used. Ever."
-msgstr "Diese URL darf nicht als Lesezeichen benutzt werden"
+msgstr "Diese Nachricht soll nicht verwendet werden. Niemals."
 
 msgid ""
 "This might be needed to make the synchronization accept problems with SSL "
@@ -59734,7 +59753,7 @@ msgid ""
 msgstr ""
 "Mit dieser Berechtigung dürfen Benutzer Setup - Checkmks Web Verwaltungs-"
 "Werkzeug verwenden. Ohne diese Berechtigung sind alle Verweise auf Setup "
-"(Buttons, Links, Snapins) nicht sichtbar."
+"(Knöpfe, Links, Snapins) nicht sichtbar."
 
 #, fuzzy
 msgid ""
@@ -60124,10 +60143,10 @@ msgid ""
 "visible in the sidebar, because it needs a host to be called. Call it via a "
 "button at a view that is displaying one host."
 msgstr ""
-"Dieser Bericht zeigt verschiedene Informationen über einen einzelnen Host. "
-"Er ist in der Seitenleiste nicht sichtbar, weil er die Angabe eines Hosts "
-"benötigt, um abgerufen zu werden. Bei den Details zu einem Host gibt es "
-"einen Knopf, um den Bericht aufzurufen."
+"Dieser Bericht zeigt verschiedene Informationen über einen einzelnen Host "
+"an. Er ist nicht in der Seitenleiste sichtbar, da er einen Host benötigt, um "
+"aufgerufen zu werden. Rufen Sie ihn über einen Knopf in einer Ansicht auf, "
+"in der ein Host angezeigt wird."
 
 msgid ""
 "This report will be use only to describe the front matter of a report. It "
@@ -61364,8 +61383,8 @@ msgid ""
 "in the command form."
 msgstr ""
 "Diese Einstellung ermöglicht es, einen Ad-hoc-Wartungszeitkommentar und "
-"dessen Dauer festzulegen. Wenn sie aktiviert ist, wird eine neuer Knopf "
-"<i>Ad-hoc-Wartungszeit für __ Minuten</i> im Befehlsformular verfügbar."
+"dessen Dauer festzulegen. Wenn sie aktiviert ist, wird ein neuer Knopf <i>Ad-"
+"hoc-Wartungszeit für __ Minuten</i> im Befehlsformular verfügbar."
 
 msgid ""
 "This setting allows you to convert all incoming states to another state. The "
@@ -64982,6 +65001,10 @@ msgstr "Schwellwert"
 msgid "Trial expired"
 msgstr "Testversion abgelaufen"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "Testversion abgelaufen"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr "Testzeitraum beendet: \"Änderungen aktivieren\" ist blockiert"
 
@@ -65043,10 +65066,10 @@ msgid "Tune forecast model - %s"
 msgstr "Prognosemodell abstimmen - %s"
 
 msgid "Tuning of Smart PING"
-msgstr "Einstellungen für Smart PING"
+msgstr "Tuning des Smart PING"
 
 msgid "Tuning of flap detection"
-msgstr "Unstetigkeitserkennung"
+msgstr "Tuning der Unstetigkeitserkennung"
 
 msgid "Tunings"
 msgstr "Tunings"
@@ -67128,7 +67151,7 @@ msgid "Use normal state, ignore downtime"
 msgstr "Normalen Zustand benutzen, Wartungszeit ignorieren"
 
 msgid "Use one of your backup codes to sign in."
-msgstr ""
+msgstr "Verwenden Sie einen Ihrer Backup-Codes, um sich anzumelden."
 
 msgid "Use only lower case letters, digits, and underscores here."
 msgstr "Hier nur Kleinbuchstaben, Ziffern und Unterstriche verwenden."
@@ -68201,9 +68224,6 @@ msgstr "Gültig bis"
 
 msgid "Valid until Checkmk version"
 msgstr "Gültig bis Checkmk-Version"
-
-msgid "Validate OTP"
-msgstr "OTP validieren"
 
 msgid "Validate server certificate during port query"
 msgstr "Serverzertifikat bei Portabfrage validieren"
@@ -71326,8 +71346,8 @@ msgid ""
 "You can change these assignments according to your needs and then start the "
 "import by clicking on the <i>Import</i> button above."
 msgstr ""
-"Sie können diese Zuweisungen an ihren Bedürfnisse anpassen und dann den "
-"Import starten, indem Sie auf den obigen <i>Import</i> Button klicken."
+"Sie können diese Zuweisungen an Ihre Bedürfnisse anpassen und dann den "
+"Import starten, indem Sie auf den obigen <i>Import</i> Knopf klicken."
 
 msgid "You can choose from different aggregation modes of clustered services:"
 msgstr ""
@@ -71531,10 +71551,10 @@ msgid ""
 "defined for this logfile. All patterns for this logfile are listed below. "
 "Matching patterns will be highlighted after clicking the \"Try out\" button."
 msgstr ""
-"Sie können Text (z.B. die Zeile einer Logdatei) eingeben, um das Such-Muster "
-"zu testen. Alle festgelegten Muster für diese Logdatei finden Sie unten. "
-"Nachdem Sie auf \"Versuche\" geklickt haben, werden Übereinstimmungen "
-"hervorgehoben."
+"Sie können einen Text einfügen (z.B. eine Zeile der Logdatei), um die für "
+"diese Logdatei definierten Muster zu testen. Alle Muster für diese Logdatei "
+"sind unten aufgelistet. Übereinstimmende Muster werden hervorgehoben, "
+"nachdem Sie auf den \"Ausprobieren\"-Knopf geklickt haben."
 
 msgid ""
 "You can limit the number of current events created by a single host here. "
@@ -72147,10 +72167,11 @@ msgid ""
 "the \"Save & Test\" button to execute the tests. After the page reload, you "
 "should see the results of the test here."
 msgstr ""
-"Sie können einzelne Teile Ihrer LDAP-Konfiguration mit diesem Dialog testen. "
-"Tragen Sie einfach Ihre Konfiguration in dem Formular auf der linken Seite "
-"ein und drücken Sie auf \"Speichern & Testen\". Nach dem Neuladen der Seite "
-"sehen Sie hier die Resultate."
+"Mit diesem Dialog können Sie die einzelnen Teile Ihrer ldap-Konfiguration "
+"überprüfen. Tragen Sie einfach Ihre Konfiguration in das Formular auf der "
+"linken Seite ein und klicken Sie auf den Knopf \"Speichern & Testen\", um "
+"die Tests durchzuführen. Nachdem die Seite neu geladen wurde, sollten Sie "
+"hier die Ergebnisse des Tests sehen."
 
 msgid ""
 "You cannot activate changes while some hosts have an invalid configuration: "
@@ -72395,6 +72416,8 @@ msgid ""
 "You have multiple methods enabled. Please select the security method you "
 "want to use to log in."
 msgstr ""
+"Sie haben mehrere Methoden aktiviert. Bitte wählen Sie die "
+"Sicherheitsmethode aus, die Sie für die Anmeldung verwenden möchten."
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -72876,9 +72899,9 @@ msgstr ""
 "Ihr Symbol steht im Konflikt mit einem mitgelieferten Checkmk-Symbol. Bitte "
 "wählen Sie einen anderen Namen für Ihr Symbol."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your input does not match the required format '%s'."
-msgstr "Ihre Eingabe '%s' entspricht nicht dem erforderlichen Format '%s'."
+msgstr "Ihre Eingabe entspricht nicht dem erforderlichen Format '%s'."
 
 msgid "Your input does not match the required format."
 msgstr "Ihre Eingabe entspricht nicht dem vorgeschriebenen Format."
@@ -72891,10 +72914,11 @@ msgstr "Ihre Eingabe entspricht nicht dem vorgeschriebenen Format."
 msgid ""
 "Your input is not a valid URL conforming to any allowed protocols ('%s')."
 msgstr ""
+"Ihre Eingabe ist keine gültige URL, die einem der zulässigen Protokolle "
+"entspricht ('%s')."
 
-#, fuzzy
 msgid "Your input is not a valid email address."
-msgstr "Alle Benutzer mit Email-Adresse"
+msgstr "Ihre Eingabe ist keine gültige E-Mail Adresse."
 
 #, python-format
 msgid ""
@@ -74876,8 +74900,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "Aufgaben"
 
+#, fuzzy
+msgid "test"
+msgstr "Test läuft"
+
 msgid "testing"
 msgstr "Test läuft"
+
+#, fuzzy
+msgid "tests"
+msgstr "Tests ausführen"
 
 msgid "th notification"
 msgstr "ter Alarm"
@@ -75164,6 +75196,9 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#~ msgid "Validate OTP"
+#~ msgstr "OTP validieren"
 
 #~ msgid "Set maximum long output size"
 #~ msgstr "Maximale Größe der langen Ausgabe festlegen"

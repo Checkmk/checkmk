@@ -65,9 +65,10 @@ def check_netapp_api_temp(item, params, parsed):
     ]
 
     if not sensorlist:
-        return 0, "No temperature sensors assigned to this filer"
+        yield 0, "No temperature sensors assigned to this filer"
+        return
 
-    return check_temperature_list(sensorlist, params)
+    yield from check_temperature_list(sensorlist, params)
 
 
 check_info["netapp_api_temp"] = LegacyCheckDefinition(

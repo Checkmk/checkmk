@@ -163,7 +163,7 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
         for key, values in sorted(parsed.items())
         if key.startswith(sensor_item) and "AmbientTemp" in values
     ]
-    return check_temperature_list(sensor_list, params)
+    yield from check_temperature_list(sensor_list, params)
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(

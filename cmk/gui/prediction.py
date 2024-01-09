@@ -111,8 +111,8 @@ def page_graph() -> None:
         )
         html.hidden_fields()
 
-    swapped = swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
-    vertical_range = compute_vertical_range(swapped)
+    swapped = _swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
+    vertical_range = _compute_vertical_range(swapped)
     legend = [
         ("#000000", _("Reference")),
         ("#ffffff", _("OK area")),
@@ -122,7 +122,7 @@ def page_graph() -> None:
     if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
-    create_graph(
+    _create_graph(
         selected_prediction_info.name,
         graph_size,
         selected_prediction_info.range,
@@ -131,12 +131,12 @@ def page_graph() -> None:
     )
 
     if selected_prediction_info.params.levels_upper is not None:
-        render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
-        render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
+        _render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
+        _render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
 
     if selected_prediction_info.params.levels_lower is not None:
-        render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
-        render_area(swapped.lower_crit, "#ff0000", 0.1)
+        _render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
+        _render_area(swapped.lower_crit, "#ff0000", 0.1)
 
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
@@ -144,19 +144,19 @@ def page_graph() -> None:
     time_scala = [
         [selected_prediction_info.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)
     ]
-    render_coordinates(vert_scala, time_scala)
+    _render_coordinates(vert_scala, time_scala)
 
     if selected_prediction_info.params.levels_lower is not None:
-        render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
-        render_curve(swapped.lower_warn, "#e0e000", square=True)
-        render_curve(swapped.lower_crit, "#f0b0a0", square=True)
+        _render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
+        _render_curve(swapped.lower_warn, "#e0e000", square=True)
+        _render_curve(swapped.lower_crit, "#f0b0a0", square=True)
 
     if selected_prediction_info.params.levels_upper is not None:
-        render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
-        render_curve(swapped.upper_warn, "#e0e000", square=True)
-        render_curve(swapped.upper_crit, "#f0b0b0", square=True)
-    render_curve(swapped.average, "#000000")
-    render_curve(swapped.average, "#000000")  # repetition makes line bolder
+        _render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
+        _render_curve(swapped.upper_warn, "#e0e000", square=True)
+        _render_curve(swapped.upper_crit, "#f0b0b0", square=True)
+    _render_curve(swapped.average, "#000000")
+    _render_curve(swapped.average, "#000000")  # repetition makes line bolder
 
     # Try to get current RRD data and render it also
     from_time, until_time = selected_prediction_info.range
@@ -180,12 +180,12 @@ def page_graph() -> None:
 
         rrd_data = response.values
 
-        render_curve(rrd_data, "#0000ff", 2)
+        _render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
             _group, rel_time = PREDICTION_PERIODS[selected_prediction_info.params.period].groupby(
                 int(now)
             )
-            render_point(from_time + rel_time, current_value, "#0000ff")
+            _render_point(from_time + rel_time, current_value, "#0000ff")
 
     html.footer()
 
@@ -271,7 +271,7 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | N
 
 
 # Compute check levels from prediction data and check parameters
-def swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameters) -> SwappedStats:
+def _swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameters) -> SwappedStats:
     swapped = SwappedStats()
     for step in tg_data.points:
         if step is not None:
@@ -304,7 +304,7 @@ def swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameter
     return swapped
 
 
-def compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
+def _compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
     points = (
         swapped.average
         + swapped.min_
@@ -319,7 +319,7 @@ def compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 
 
-def create_graph(name, size, bounds, v_range, legend):
+def _create_graph(name, size, bounds, v_range, legend):
     html.open_table(class_="prediction")
     html.open_tr()
     html.open_td()
@@ -346,38 +346,38 @@ def create_graph(name, size, bounds, v_range, legend):
     )
 
 
-def render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
+def _render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
+def _render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
+def _render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_point({json.dumps(t)}, {json.dumps(v)}, {json.dumps(color)});"
     )
 
 
-def render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_area_reverse({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_dual_area(  # type: ignore[no-untyped-def]
+def _render_dual_area(  # type: ignore[no-untyped-def]
     lower_points, upper_points, color, alpha=1.0
 ) -> None:
     html.javascript(

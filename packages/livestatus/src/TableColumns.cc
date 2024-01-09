@@ -15,26 +15,35 @@
 
 using row_type = Column;
 
+using namespace std::string_literals;
+
+namespace {
+constexpr const char *typenames[8] = {"int",  "float", "string", "list",
+                                      "time", "dict",  "blob",   "null"};
+}
+
 TableColumns::TableColumns() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
         "table", "The name of the table", offsets, [this](const row_type &row) {
-            return this->getValue(row, Type::table);
+            for (const auto &[name, table] : tables_) {
+                if (table->any_column(
+                        [&](const auto &c) { return c.get() == &row; })) {
+                    return table->name();
+                }
+            }
+            return ""s;  // never reached if no bug
         }));
     addColumn(std::make_unique<StringColumn<row_type>>(
         "name", "The name of the column within the table", offsets,
-        [this](const row_type &row) {
-            return this->getValue(row, Type::name);
-        }));
+        [](const row_type &row) { return row.name(); }));
     addColumn(std::make_unique<StringColumn<row_type>>(
         "description", "A description of the column", offsets,
-        [this](const row_type &row) {
-            return this->getValue(row, Type::description);
-        }));
+        [](const row_type &row) { return row.description(); }));
     addColumn(std::make_unique<StringColumn<row_type>>(
         "type", "The data type of the column (int, float, string, list)",
-        offsets, [this](const row_type &row) {
-            return this->getValue(row, Type::type);
+        offsets, [](const row_type &row) {
+            return typenames[static_cast<int>(row.type())];
         }));
 }
 
@@ -52,31 +61,4 @@ void TableColumns::answerQuery(Query &query, const User & /*user*/,
         table->any_column(
             [&](const auto &c) { return !query.processDataset(Row{c.get()}); });
     }
-}
-
-std::string TableColumns::getValue(const Column &column, Type colcol) const {
-    static const char *typenames[8] = {"int",  "float", "string", "list",
-                                       "time", "dict",  "blob",   "null"};
-
-    switch (colcol) {
-        case Type::table:
-            return tableNameOf(column);
-        case Type::name:
-            return column.name();
-        case Type::description:
-            return column.description();
-        case Type::type:
-            return typenames[static_cast<int>(column.type())];
-    }
-    return "";
-}
-
-std::string TableColumns::tableNameOf(const Column &column) const {
-    for (const auto &[name, table] : tables_) {
-        if (table->any_column(
-                [&](const auto &c) { return c.get() == &column; })) {
-            return table->name();
-        }
-    }
-    return "";  // never reached if no bug
 }

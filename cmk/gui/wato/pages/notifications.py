@@ -569,7 +569,7 @@ class ModeNotifications(ABCNotificationsMode):
                                 PageMenuEntry(
                                     title=_("Test notifications"),
                                     name="test_notifications",
-                                    icon_name="analyze",
+                                    icon_name="analysis",
                                     item=PageMenuPopup(
                                         content=self._render_test_notifications(),
                                     ),

@@ -132,11 +132,11 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         - that are shadow services
     num_services_excluded: Services
         - with the "cmk/licensing:excluded" label
-    num_services_synthetic Services
+    num_synthetic_tests Services
         - with the check_command: robotmk_test
         - that are not shadow services
         - without the "cmk/licensing:excluded" label
-    num_services_synthetic_excluded: Services
+    num_synthetic_tests_excluded: Services
         - with the check_command: robotmk_test
         - that are not shadow services
         - with the "cmk/licensing:excluded" label
@@ -175,8 +175,8 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
         num_services_cloud=cloud_counter.services,
         num_services_shadow=services_counter.num_shadow,
         num_services_excluded=services_counter.num_excluded,
-        num_services_synthetic=synthetic_monitoring_counter.num_services,
-        num_services_synthetic_excluded=synthetic_monitoring_counter.num_excluded,
+        num_synthetic_tests=synthetic_monitoring_counter.num_services,
+        num_synthetic_tests_excluded=synthetic_monitoring_counter.num_excluded,
         sample_time=sample_time,
         timezone=now.tz,
         extension_ntop=extensions.ntop,

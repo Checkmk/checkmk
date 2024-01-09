@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NewType, TypeVar
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 import cmk.utils
 
@@ -58,8 +58,11 @@ class PerformanceSample(common.IdentifiableSample):
 
     container_name: ContainerName
     metric_name: UsedMetric
-    value: float = Field(..., alias="metric_value_string")
+    metric_value_string: str
     timestamp: float
+
+    def value(self) -> float:
+        return float(self.metric_value_string)
 
 
 class MemorySample(PerformanceSample):
@@ -115,7 +118,7 @@ T = TypeVar("T", bound=common.IdentifiableSample)
 
 def _aggregate_memory_metrics(metrics: Iterable[MemorySample]) -> section.PerformanceUsage:
     return section.PerformanceUsage(
-        resource=section.Memory(usage=sum((m.value for m in metrics), start=0.0))
+        resource=section.Memory(usage=sum((m.value() for m in metrics), start=0.0))
     )
 
 
@@ -211,4 +214,4 @@ def _calculate_rate(counter_metric: CPUSample, old_counter_metric: CPUSample) ->
         1.0
     """
     time_delta = counter_metric.timestamp - old_counter_metric.timestamp
-    return (counter_metric.value - old_counter_metric.value) / time_delta
+    return (counter_metric.value() - old_counter_metric.value()) / time_delta

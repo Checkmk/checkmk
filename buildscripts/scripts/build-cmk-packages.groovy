@@ -231,28 +231,28 @@ def main() {
     shout("packages");
     def package_builds = distros.collectEntries { distro ->
         [("distro ${distro}") : {
-                // The following node call allocates a new workspace for each
-                // DISTRO.
-                //
-                // Note: Do it inside the first node block to ensure all distro
-                // workspaces start with a fresh one. Otherwise one of the node
-                // calls would reuse the workspace of the source package step.
-                //
-                // The DISTRO workspaces will then be initialized with the contents
-                // of the first workspace, which contains the prepared git repo.
+            // The following node call allocates a new workspace for each
+            // DISTRO.
+            //
+            // Note: Do it inside the first node block to ensure all distro
+            // workspaces start with a fresh one. Otherwise one of the node
+            // calls would reuse the workspace of the source package step.
+            //
+            // The DISTRO workspaces will then be initialized with the contents
+            // of the first workspace, which contains the prepared git repo.
 
-                /// For now make sure, we're on the SAME node (but different WORKDIR)
-                /// To make the builds run across different nodes we have to
-                /// use `stash` to distribute the source
-                node(env.NODE_NAME) {
-                    /// $WORKSPACE is different now - we must not use variables
-                    /// like $checkout_dir which are based on the parent
-                    /// workspace accidentally (and
-                    assert "${WORKSPACE}/checkout" != checkout_dir;
+            /// For now make sure, we're on the SAME node (but different WORKDIR)
+            /// To make the builds run across different nodes we have to
+            /// use `stash` to distribute the source
+            node(env.NODE_NAME) {
+                /// $WORKSPACE is different now - we must not use variables
+                /// like $checkout_dir which are based on the parent
+                /// workspace accidentally (and
+                assert "${WORKSPACE}/checkout" != checkout_dir;
 
-                    def distro_dir = "${WORKSPACE}/checkout";
+                def distro_dir = "${WORKSPACE}/checkout";
 
-                    lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
+                lock(label: 'bzl_lock_' + env.NODE_NAME.split("\\.")[0].split("-")[-1], quantity: 1, resource : null) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         // For the package build we need a higher ulimit
                         // * Bazel opens many files which can lead to crashes
@@ -283,40 +283,40 @@ def main() {
                                 }
                             }
                         }
-                        }
-
-                        docker_image_from_alias("IMAGE_TESTING").inside(
-                                "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro") {
-                            def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
-                            def build_package_path = "${distro_dir}/${package_name}";
-                            def node_version_dir = "${WORKSPACE}/versions";
-                            def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
-
-                            stage("${distro} sign package") {
-                                sign_package(distro_dir, build_package_path);
-                            }
-
-                            stage("${distro} test package") {
-                                test_package(build_package_path, distro, WORKSPACE, distro_dir, cmk_version);
-                            }
-
-                            stage("${distro} copy package") {
-                                copy_package(build_package_path, distro, final_package_path);
-                            }
-
-                            stage("${distro} upload package") {
-                                artifacts_helper.upload_via_rsync(
-                                    "${node_version_dir}",
-                                    "${cmk_version_rc_aware}",
-                                    "${package_name}",
-                                    "${upload_path}",
-                                    INTERNAL_DEPLOY_PORT,
-                                );
-                            }
-                        }
                     }
                 }
-            }]
+
+                docker_image_from_alias("IMAGE_TESTING").inside(
+                        "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro") {
+                    def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
+                    def build_package_path = "${distro_dir}/${package_name}";
+                    def node_version_dir = "${WORKSPACE}/versions";
+                    def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
+
+                    stage("${distro} sign package") {
+                        sign_package(distro_dir, build_package_path);
+                    }
+
+                    stage("${distro} test package") {
+                        test_package(build_package_path, distro, WORKSPACE, distro_dir, cmk_version);
+                    }
+
+                    stage("${distro} copy package") {
+                        copy_package(build_package_path, distro, final_package_path);
+                    }
+
+                    stage("${distro} upload package") {
+                        artifacts_helper.upload_via_rsync(
+                            "${node_version_dir}",
+                            "${cmk_version_rc_aware}",
+                            "${package_name}",
+                            "${upload_path}",
+                            INTERNAL_DEPLOY_PORT,
+                        );
+                    }
+                }
+            }
+        }]
     }
     parallel package_builds;
 

@@ -15,6 +15,7 @@
 #    => These already bear all information about the contact, the plugin
 #       to call and its parameters.
 
+import datetime
 import io
 import logging
 import os
@@ -70,7 +71,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
 import cmk.base.config as config
 import cmk.base.core
@@ -459,7 +460,7 @@ def notify_rulebased(
     for rule in config.notification_rules + user_notification_rules():
         contact_info = _get_contact_info_text(rule)
 
-        why_not = rbn_match_rule(rule, raw_context)
+        why_not = rbn_match_rule(rule, raw_context, analyse)
         if why_not:
             logger.log(log.VERBOSE, contact_info)
             logger.log(log.VERBOSE, " -> does not match: %s", why_not)
@@ -840,7 +841,15 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
     return None
 
 
-def rbn_match_rule(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_rule(
+    rule: EventRule,
+    context: EventContext,
+    analyse: bool = False,
+) -> str | None:
+    if analyse:
+        if (result := rbn_match_timeperiod(rule, context)) is not None:
+            return result
+
     return events.apply_matchers(
         [
             rbn_match_rule_disabled,
@@ -853,10 +862,36 @@ def rbn_match_rule(rule: EventRule, context: EventContext) -> str | None:
             rbn_match_hostlabels,
             rbn_match_servicelabels,
             rbn_match_event_console,
+            rbn_match_event_console,
         ],
         rule,
         context,
     )
+
+
+def rbn_match_timeperiod(rule: EventRule, context: EventContext) -> str | None:
+    if (timeperiod_name := rule.get("match_timeperiod")) is None:
+        return None
+
+    if timeperiod_name == "24X7":
+        return None
+
+    all_timeperiods = load_timeperiods()
+    if "MICROTIME" in context:
+        timestamp = float(context["MICROTIME"]) / 1000000.0
+    else:
+        timestamp = datetime.datetime.strptime(
+            context["SHORTDATETIME"], "%Y-%m-%d %H:%M:%S"
+        ).timestamp()
+
+    if not is_timeperiod_active(
+        timestamp=timestamp,
+        timeperiod_name=timeperiod_name,
+        all_timeperiods=all_timeperiods,
+    ):
+        return f"The notification does not match the timeperiod '{timeperiod_name}'"
+
+    return None
 
 
 def rbn_match_rule_disabled(rule: EventRule, _context: EventContext) -> str | None:

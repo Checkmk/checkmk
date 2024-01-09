@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TypeAlias
 
+from dateutil.tz import tzlocal
+
 import livestatus
 
 import cmk.utils.cleanup
@@ -131,15 +133,15 @@ def _is_time_in_timeperiod(
 
 
 def is_timeperiod_active(
-    current_datetime: datetime,
+    timestamp: float,
     timeperiod_name: TimeperiodName,
     all_timeperiods: TimeperiodSpecs,
 ) -> bool:
     if (timeperiod_definition := all_timeperiods.get(timeperiod_name)) is None:
-        raise ValueError("Time period %s not found." % timeperiod_name)
+        raise ValueError(f"Time period {timeperiod_name} not found.")
 
     if _is_timeperiod_excluded_via_timeperiod(
-        current_datetime=current_datetime,
+        timestamp=timestamp,
         timeperiod_definition=timeperiod_definition,
         all_timeperiods=all_timeperiods,
     ):
@@ -154,6 +156,7 @@ def is_timeperiod_active(
         "saturday",
         "sunday",
     ]
+    current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
     current_time = current_datetime.strftime("%H:%M")
     if _is_timeperiod_excluded_via_exception(
         timeperiod_definition,
@@ -169,14 +172,14 @@ def is_timeperiod_active(
 
 
 def _is_timeperiod_excluded_via_timeperiod(
-    current_datetime: datetime,
+    timestamp: float,
     timeperiod_definition: TimeperiodSpec,
     all_timeperiods: TimeperiodSpecs,
 ) -> bool:
     for excluded_timeperiod in timeperiod_definition.get("exclude", []):
         assert isinstance(excluded_timeperiod, str)
         return is_timeperiod_active(
-            current_datetime=current_datetime,
+            timestamp=timestamp,
             timeperiod_name=excluded_timeperiod,
             all_timeperiods=all_timeperiods,
         )
@@ -196,7 +199,6 @@ def _is_timeperiod_excluded_via_exception(
         try:
             datetime.strptime(key, "%Y-%m-%d")
         except ValueError:
-            print(timeperiod_definition)
             continue
 
         if _is_time_in_timeperiod(current_time, value):

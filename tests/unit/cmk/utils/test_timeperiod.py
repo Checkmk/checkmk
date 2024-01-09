@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime
+from tests.testlib import set_timezone
 
 from cmk.utils.timeperiod import is_timeperiod_active, TimeperiodSpecs
 
@@ -42,10 +42,11 @@ def test_is_timeperiod_active() -> None:
         },
     }
 
-    test_datetime = datetime(2024, 1, 3, 11, 11, 0)
-    assert is_timeperiod_active(test_datetime, "time_period_1", timeperiods)
-    assert not is_timeperiod_active(test_datetime, "time_period_2", timeperiods)
-    assert not is_timeperiod_active(test_datetime, "time_period_3", timeperiods)
-    assert is_timeperiod_active(test_datetime, "time_period_4", timeperiods)
-    assert not is_timeperiod_active(test_datetime, "time_period_5", timeperiods)
-    assert not is_timeperiod_active(test_datetime, "time_period_6", timeperiods)
+    test_timestamp = 1704276660.0
+    with set_timezone("CET"):
+        assert is_timeperiod_active(test_timestamp, "time_period_1", timeperiods)
+        assert not is_timeperiod_active(test_timestamp, "time_period_2", timeperiods)
+        assert not is_timeperiod_active(test_timestamp, "time_period_3", timeperiods)
+        assert is_timeperiod_active(test_timestamp, "time_period_4", timeperiods)
+        assert not is_timeperiod_active(test_timestamp, "time_period_5", timeperiods)
+        assert not is_timeperiod_active(test_timestamp, "time_period_6", timeperiods)

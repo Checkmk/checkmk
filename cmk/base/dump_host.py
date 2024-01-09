@@ -18,7 +18,6 @@ from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetc
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import SourceType
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
@@ -227,15 +226,14 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     tty.print_table(headers, colors, table_data, "  ")
 
 
-def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> str:
-    if not isinstance(params, TimespecificParameters):
-        return repr(params)
-
-    if params.is_constant():
-        return repr(params.evaluate(timeperiod_active))
-    return "Timespecific parameters at {}: {!r}".format(
-        cmk.utils.render.date_and_time(time.time()),
-        params.evaluate(timeperiod_active),
+def _evaluate_params(params: TimespecificParameters) -> str:
+    return (
+        repr(params.evaluate(timeperiod_active))
+        if params.is_constant()
+        else "Timespecific parameters at {}: {!r}".format(
+            cmk.utils.render.date_and_time(time.time()),
+            params.evaluate(timeperiod_active),
+        )
     )
 
 

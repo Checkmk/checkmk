@@ -81,13 +81,6 @@ TEST_F(CrashReportFixture, DirectoryAndFileExist) {
     EXPECT_TRUE(fs::is_regular_file(fullpath));
 }
 
-TEST_F(CrashReportFixture, AccessorsAreCorrect) {
-    ASSERT_TRUE(fs::exists(fullpath));
-    const CrashReport cr{uuid, component};
-    EXPECT_EQ(uuid, cr.id());
-    EXPECT_EQ(component, cr.component());
-}
-
 TEST_F(CrashReportFixture, ForEachCrashReport) {
     ASSERT_TRUE(fs::exists(basepath));
     std::optional<CrashReport> result;
@@ -96,8 +89,8 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
         result = cr;
         return true;
     });
-    EXPECT_TRUE(result && uuid == result->id());
-    EXPECT_TRUE(result && component == result->component());
+    EXPECT_TRUE(result && uuid == result->id);
+    EXPECT_TRUE(result && component == result->component);
 }
 
 TEST_F(CrashReportFixture, TestDeleteId) {

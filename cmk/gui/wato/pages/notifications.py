@@ -876,7 +876,7 @@ class ModeNotifications(ABCNotificationsMode):
         context: NotificationContext | None,
         analyse: NotifyAnalysisInfo | None,
     ) -> None:
-        if context is None:
+        if not context:
             return
 
         with table_element(
@@ -905,11 +905,7 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     )
 
-            date: str = time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(float(context["MICROTIME"]) / 1000000.0)
-            )
-
-            table.cell(_("Date and time"), date, css=["nobr"])
+            table.cell(_("Date and time"), self._get_date(context), css=["nobr"])
             nottype = context.get("NOTIFICATIONTYPE", "")
             table.cell(_("Type"), nottype)
 
@@ -999,19 +995,8 @@ class ModeNotifications(ABCNotificationsMode):
                     html.icon("checkmark", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), str(nr + 1), css=["number"])
-                if "MICROTIME" in context:
-                    date: str = time.strftime(
-                        "%Y-%m-%d %H:%M:%S", time.localtime(int(context["MICROTIME"]) / 1000000.0)
-                    )
-                else:
-                    date = (
-                        context.get("SHORTDATETIME")
-                        or context.get("LONGDATETIME")
-                        or context.get("DATE")
-                        or _("Unknown date")
-                    )
 
-                table.cell(_("Time"), date, css=["nobr"])
+                table.cell(_("Time"), self._get_date(context), css=["nobr"])
                 nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 
@@ -1046,6 +1031,18 @@ class ModeNotifications(ABCNotificationsMode):
 
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(css=["notification_context hidden"])
+
+    def _get_date(self, context: NotificationContext) -> str:
+        if "MICROTIME" in context:
+            return time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(float(context["MICROTIME"]) / 1000000.0)
+            )
+        return (
+            context.get("SHORTDATETIME")
+            or context.get("LONGDATETIME")
+            or context.get("DATE")
+            or _("Unknown date")
+        )
 
     def _add_state_cells(self, table: Table, nottype: str) -> None:
         if nottype.startswith("DOWNTIME"):

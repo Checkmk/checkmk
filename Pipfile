@@ -130,7 +130,7 @@ pyrsistent = "==0.19.3"  # needed by jsonschema
 werkzeug = "==2.2.3"  # direct dependency and needed by flask
 flask = "~=2.2"  # direct dependency
 pytz = "==2023.3"  # direct dependency
-openapi-spec-validator = "==0.5.6"  # direct dependency
+openapi-spec-validator = "==0.7.1"  # direct dependency
 psutil = "==5.9.4"  # needed for omdlib
 oauthlib = "==3.2.2"
 requests-oauthlib = "==1.3.1"

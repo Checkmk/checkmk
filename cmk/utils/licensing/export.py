@@ -623,7 +623,6 @@ class MonthlyServiceAverage:
 
 
 class RawMonthlyServiceAggregation(TypedDict):
-    owner: str
     daily_services: Sequence[Mapping[str, float]]
     monthly_service_averages: Sequence[Mapping[str, float]]
     last_service_report: Mapping[str, float] | None
@@ -639,12 +638,9 @@ class MonthlyServiceAverages:
 
     def __init__(
         self,
-        username: str,
         subscription_details: SubscriptionDetails | None,
         short_samples: Sequence[tuple[int, int]],
     ) -> None:
-        self._username = username
-
         self._subscription_start = (
             None if subscription_details is None else subscription_details.start
         )
@@ -681,7 +677,6 @@ class MonthlyServiceAverages:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
         return {
-            "owner": self._username,
             "daily_services": [d.for_report() for d in self._daily_services],
             "monthly_service_averages": [a.for_report() for a in self._monthly_service_averages],
             "last_service_report": self._get_last_service_report(),

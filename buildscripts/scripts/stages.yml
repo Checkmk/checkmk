@@ -36,7 +36,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' || true"
 
     - NAME: CHANGED_GROOVY_FILE
-      SH: "echo '${CHANGED_FILES_REL}' | grep '*.groovy' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '\\.groovy$' || true"
 
     - NAME: CHANGED_PYPROJECT_TOML_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' || true"

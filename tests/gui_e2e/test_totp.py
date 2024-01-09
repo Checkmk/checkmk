@@ -24,15 +24,17 @@ def test_totp(
     logged_in_page.main_area.get_suggestion("Register authenticator app").click()
     # Now extract TOTP secret from text and submit
     logged_in_page.main_area.check_page_title("Register authenticator app")
-    text_list = logged_in_page.main_area.locator(
-        "text=Alternatively you can enter your secret manually: "
-    ).all_text_contents()
+    text_list = (
+        logged_in_page.main_area.locator("a[class='copy_to_clipboard']")
+        .locator("span")
+        .all_text_contents()
+    )
     assert len(text_list) == 1
-    secret = text_list[0].split(" ")[-1]
+    secret = text_list[0]
     authenticator = TOTP(b32decode(secret))
     current_time = authenticator.calculate_generation(datetime.now())
     otp_value = authenticator.generate_totp(current_time)
-    logged_in_page.main_area.get_input("profile_p_ValidateOTP").fill(otp_value)
+    logged_in_page.main_area.get_input("auth_code").fill(otp_value)
     logged_in_page.main_area.get_suggestion("Save").click()
     # Removing the two factor mechanism
     logged_in_page.main_area.locator(

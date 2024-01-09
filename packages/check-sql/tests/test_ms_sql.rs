@@ -52,6 +52,8 @@ fn is_instance_good(i: &SqlInstance) -> bool {
         && i.version.chars().filter(|&c| c == '.').count() == 3
         && i.port().is_some()
         && i.cluster.is_none()
+        && i.version_major() >= 12
+        && i.version_build() > 0
 }
 
 #[cfg(windows)]

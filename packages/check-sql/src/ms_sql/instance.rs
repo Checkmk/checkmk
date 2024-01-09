@@ -133,6 +133,7 @@ impl SqlInstanceBuilder {
     }
 
     pub fn build(self) -> SqlInstance {
+        let version_table = parse_version(&self.version);
         SqlInstance {
             alias: self.alias,
             name: self.name.unwrap_or_default().to_uppercase(),
@@ -148,7 +149,20 @@ impl SqlInstanceBuilder {
             environment: self.environment.unwrap_or_default(),
             hash: self.hash.unwrap_or_default(),
             piggyback: self.piggyback,
+            version_table,
         }
+    }
+}
+
+fn parse_version(version: &Option<String>) -> [u32; 3] {
+    if let Some(version) = version {
+        let mut parts = version.split('.');
+        let major = parts.next().and_then(|s| s.parse::<u32>().ok());
+        let minor = parts.next().and_then(|s| s.parse::<u32>().ok());
+        let build = parts.next().and_then(|s| s.parse::<u32>().ok());
+        [major.unwrap_or(0), minor.unwrap_or(0), build.unwrap_or(0)]
+    } else {
+        [0, 0, 0]
     }
 }
 
@@ -168,6 +182,7 @@ pub struct SqlInstance {
     environment: Env,
     hash: String,
     piggyback: Option<String>,
+    version_table: [u32; 3],
 }
 
 impl AsRef<SqlInstance> for SqlInstance {
@@ -233,6 +248,18 @@ impl SqlInstance {
         } else {
             ""
         }
+    }
+
+    pub fn version_major(&self) -> u32 {
+        self.version_table[0]
+    }
+
+    pub fn version_minor(&self) -> u32 {
+        self.version_table[1]
+    }
+
+    pub fn version_build(&self) -> u32 {
+        self.version_table[2]
     }
 
     pub fn generate_header(&self) -> String {

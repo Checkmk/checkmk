@@ -418,7 +418,6 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-        session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -464,7 +463,10 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
             raw_response = self._session.post(
-                self.base_url, data=post_data, verify=self._session.verify
+                self.base_url,
+                data=post_data,
+                verify=self._session.verify,
+                timeout=self._config["timeout"],
             )
         except requests.exceptions.ConnectionError:
             if DEBUG:

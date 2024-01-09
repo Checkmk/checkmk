@@ -68,7 +68,7 @@ pub enum SectionKind {
 
 pub struct SectionBuilder {
     name: String,
-    sep: Option<char>,
+    sep: char,
     is_async: bool,
     is_disabled: bool,
     sql: Option<String>,
@@ -87,7 +87,9 @@ impl SectionBuilder {
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
-        self.sep = sep;
+        if let Some(c) = sep {
+            self.sep = c;
+        }
         self
     }
     pub fn set_async(mut self) -> Self {
@@ -108,7 +110,7 @@ impl SectionBuilder {
     pub fn build(self) -> Section {
         Section {
             name: self.name,
-            sep: self.sep.unwrap_or(defaults::DEFAULT_SEP),
+            sep: self.sep,
             kind: if self.is_disabled {
                 SectionKind::Disabled
             } else if self.is_async {
@@ -259,16 +261,16 @@ impl Sections {
     }
 }
 
-pub fn get_default_separator(name: &str) -> Option<char> {
+fn get_default_separator(name: &str) -> char {
     if PIPE_SEP_SECTIONS.contains(&name) {
-        Some('|')
+        '|'
     } else if SPACE_SEP_SECTIONS.contains(&name) {
-        None
+        ' '
     } else if QUERY_BASED_SECTIONS.contains(&name) {
-        Some('\t')
+        '\t'
     } else {
         log::warn!("Unknown section: {}", name);
-        None
+        ' '
     }
 }
 
@@ -356,12 +358,12 @@ _nothing: "nothing"
 
     #[test]
     fn test_known_sections() {
-        assert!(get_default_separator("zu").is_none());
-        assert!(get_default_separator("tablespaces").is_none());
-        assert!(get_default_separator("connections").is_none());
-        assert_eq!(get_default_separator("jobs").unwrap(), '\t');
-        assert_eq!(get_default_separator("mirroring").unwrap(), '\t');
-        assert_eq!(get_default_separator("availability_groups").unwrap(), '\t');
-        assert_eq!(get_default_separator("instance").unwrap(), '|');
+        assert_eq!(get_default_separator("zu"), ' ');
+        assert_eq!(get_default_separator("tablespaces"), ' ');
+        assert_eq!(get_default_separator("connections"), ' ');
+        assert_eq!(get_default_separator("jobs"), '\t');
+        assert_eq!(get_default_separator("mirroring"), '\t');
+        assert_eq!(get_default_separator("availability_groups"), '\t');
+        assert_eq!(get_default_separator("instance"), '|');
     }
 }

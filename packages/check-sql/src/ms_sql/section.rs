@@ -19,17 +19,16 @@ pub enum SectionKind {
 #[derive(Debug, Clone)]
 pub struct Section {
     name: String,
-    sep: Option<char>,
+    sep: char,
     cache_age: Option<u32>,
 }
 
 impl Section {
     pub fn make_instance_section() -> Self {
-        let name = section::names::INSTANCE.to_string();
-        let sep = section::get_default_separator(&name);
+        let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
         Self {
-            name,
-            sep,
+            name: config_section.name().to_string(),
+            sep: config_section.sep(),
             cache_age: None,
         }
     }
@@ -42,7 +41,7 @@ impl Section {
         };
         Self {
             name: section.name().into(),
-            sep: section.sep().into(),
+            sep: section.sep(),
             cache_age,
         }
     }
@@ -72,7 +71,7 @@ impl Section {
     }
 
     pub fn sep(&self) -> char {
-        self.sep.unwrap_or(' ')
+        self.sep
     }
 
     pub fn kind(&self) -> &SectionKind {

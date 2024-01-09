@@ -1719,14 +1719,14 @@ mssql:
 "#;
         // blocks below may follow in any order
         const EXPECTED_OK_BLOCK: &str = "\
-        <<<mssql_instance>>>\n\
-        <<<mssql_backup>>>\n\
+        <<<mssql_instance:sep(124)>>>\n\
+        <<<mssql_backup:sep(124)>>>\n\
         <<<mssql_instance:sep(124)>>>\n\
         ";
         const EXPECTED_PB_BLOCK: &str = "\
         <<<<y>>>>\n\
-        <<<mssql_instance>>>\n\
-        <<<mssql_backup>>>\n\
+        <<<mssql_instance:sep(124)>>>\n\
+        <<<mssql_backup:sep(124)>>>\n\
         <<<mssql_instance:sep(124)>>>\n\
         <<<<>>>>\n\
         ";

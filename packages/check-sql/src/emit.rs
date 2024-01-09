@@ -5,13 +5,12 @@
 use super::config::defines::defaults;
 const PREFIX: &str = "mssql";
 
-pub fn header(name: &str, separator: Option<char>) -> String {
-    match separator {
-        Some(s) if s != defaults::DEFAULT_SEP => {
-            let sep = s as u8;
-            format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
-        }
-        _ => format!("<<<{PREFIX}_{name}>>>\n"),
+pub fn header(name: &str, separator: char) -> String {
+    if separator == defaults::DEFAULT_SEP {
+        format!("<<<{PREFIX}_{name}>>>\n")
+    } else {
+        let sep = separator as u8;
+        format!("<<<{PREFIX}_{name}:sep({sep:0>2})>>>\n")
     }
 }
 
@@ -28,11 +27,10 @@ mod test {
     use super::*;
     #[test]
     fn test_header() {
-        assert_eq!(header("name", Some('\n')), "<<<mssql_name:sep(10)>>>\n");
-        assert_eq!(header("name", Some('\t')), "<<<mssql_name:sep(09)>>>\n");
-        assert_eq!(header("name", Some('|')), "<<<mssql_name:sep(124)>>>\n");
-        assert_eq!(header("name", None), "<<<mssql_name>>>\n");
-        assert_eq!(header("name", Some(' ')), "<<<mssql_name>>>\n");
+        assert_eq!(header("name", '\n'), "<<<mssql_name:sep(10)>>>\n");
+        assert_eq!(header("name", '\t'), "<<<mssql_name:sep(09)>>>\n");
+        assert_eq!(header("name", '|'), "<<<mssql_name:sep(124)>>>\n");
+        assert_eq!(header("name", ' '), "<<<mssql_name>>>\n");
     }
 
     #[test]

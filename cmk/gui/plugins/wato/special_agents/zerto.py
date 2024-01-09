@@ -7,7 +7,7 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Integer
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
@@ -21,12 +21,23 @@ def _valuespec_special_agents_zerto():
     return Dictionary(
         elements=[
             (
+                "port",
+                Integer(
+                    title=_("API connection port"),
+                    label=_("port:"),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=9669,
+                ),
+            ),
+            (
                 "authentication",
                 DropdownChoice(
                     title=_("Authentication method"),
                     choices=[
                         ("windows", _("Windows authentication")),
                         ("vcenter", _("VCenter authentication")),
+                        ("oauth", _("OAuth2 (Keycloak) authentication")),
                     ],
                     help=_("Default is Windows authentication"),
                 ),

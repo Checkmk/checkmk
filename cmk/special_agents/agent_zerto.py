@@ -30,6 +30,7 @@ def parse_arguments(argv):
     parser.add_argument(
         "-d", "--debug", action="store_true", help="Debug mode: raise Python exceptions"
     )
+    parser.add_argument("-c", "--port", default="9669", help="API port for the connection")
     parser.add_argument("-v", "--verbose", action="count", help="Be more verbose")
     parser.add_argument("-u", "--username", required=True, help="Zerto user name")
     parser.add_argument("-p", "--password", required=True, help="Zerto user password")
@@ -52,9 +53,13 @@ def parse_arguments(argv):
 
 
 class ZertoRequest:
-    def __init__(self, connection_url, session_id) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, connection_url, session_id, authentication) -> None:  # type:ignore[no-untyped-def]
         self._endpoint = "%s/vms" % connection_url
-        self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
+        if authentication == 'oauth':
+            self._headers = {"Authorization": f'Bearer {session_id}', "content-type": "application/json"}
+        else:
+            self._headers = {"x-zerto-session": session_id, "content-type": "application/json"}
+
 
     def get_vms_data(self):
         response = requests.get(  # nosec B501, B113 # BNS:016141, BNS:773085
@@ -75,12 +80,40 @@ class ZertoRequest:
 
 
 class ZertoConnection:
-    def __init__(self, hostaddress, username, password) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, hostaddress, port, username, password) -> None:  # type:ignore[no-untyped-def]
         self._credentials = username, password
         self._host = hostaddress
-        self.base_url = "https://%s:9669/v1" % self._host
+        self._port = port
+        self.base_url = f"https://{self._host}:{self._port}/v1"
 
     def get_session_id(self, authentication):
+        if authentication == "oauth":
+            url = f"https://{self._host}:{self._port}/auth/realms/zerto/protocol/openid-connect/token"
+            headers = {
+                    'content-type': 'application/x-www-form-urlencoded'
+            }
+            body = {
+                    'client_id': 'zerto-client',
+                    'grant_type': 'password',
+                    'username': self._credentials[0],
+                    'password': self._credentials[1]
+            }
+            response = requests.post(url, headers=headers, data=body, verify=False)
+            if response.status_code != 200:
+                LOGGER.info("response status code: %s", response.status_code)
+                LOGGER.debug("response text: %s", response.text)
+                raise AuthError("Failed authenticating to the Zerto Virtual Manager")
+
+            json = response.json()
+
+            if 'accedd_token' not in json.keys():
+                LOGGER.info("bearer token not found in response header")
+                LOGGER.debug("response header: %s", response.headers)
+                LOGGER.debug("response json: %s", json)
+
+            return json['access_token'] 
+
+
         url = "%s/session/add" % self.base_url
         if authentication == "windows":
             response = requests.post(  # nosec B501, B113 # BNS:016141, BNS:77308
@@ -113,14 +146,14 @@ def main(argv=None):
     args = parse_arguments(argv or sys.argv[1:])
     sys.stdout.write("<<<zerto_agent:sep(0)>>>")
     try:
-        connection = ZertoConnection(args.hostaddress, args.username, args.password)
+        connection = ZertoConnection(args.hostaddress, args.port, args.username, args.password)
         session_id = connection.get_session_id(args.authentication)
     except Exception as e:
         sys.stdout.write(f"Error: {e}")
         sys.exit(1)
     sys.stdout.write("Initialized OK")
 
-    request = ZertoRequest(connection.base_url, session_id)
+    request = ZertoRequest(connection.base_url, session_id, args.authentication)
     vm_data = request.get_vms_data()
     for vm in vm_data:
         try:

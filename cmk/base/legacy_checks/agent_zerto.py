@@ -21,6 +21,8 @@ def agent_zerto_arguments(
     return [
         "--authentication",
         params.get("authentication", "windows"),
+        "-c",
+        params.get("port"),
         "-u",
         params["username"],
         "-p",

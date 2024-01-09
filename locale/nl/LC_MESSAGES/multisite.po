@@ -6770,6 +6770,10 @@ msgstr "Authenticatie Verval"
 msgid "Authentication Failures"
 msgstr "Authenticatie mislukkingen"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Authenticatie modus"
+
 msgid "Authentication failed"
 msgstr "Authenticatie mislukt"
 
@@ -11326,6 +11330,10 @@ msgstr "Twee-factor authenticatie verwijderen van %s"
 msgid "Click to toggle this setting"
 msgstr "Klik om deze instelling aan te zetten"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Twee-factor authenticatie verwijderen van %s"
+
 msgid "Clickable URLs"
 msgstr "Klikbare URL's"
 
@@ -13139,6 +13147,10 @@ msgstr "Kopieer regel: %s"
 
 msgid "Copy rules from central site"
 msgstr "Regels kopiëren van centrale site"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Geheim gekopieerd naar klembord"
 
 msgid "Core"
 msgstr "Kern"
@@ -19702,6 +19714,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Voer adres in"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "Externe ID (facultatief)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "VCenter-authenticatie"
+
 msgid "Enter group"
 msgstr "Voer groep in"
 
@@ -23110,6 +23130,10 @@ msgstr "Ik heb geen resultaat om een dump bestand te maken"
 
 msgid "Grab user from found processess"
 msgstr "Haal gebruiker uit gevonden processess"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Tijdsduur"
 
 msgid "Gracefully finishing"
 msgstr "Sierlijk afmaken"
@@ -39394,6 +39418,11 @@ msgstr "Open het actie menu"
 msgid "Open the host action menu"
 msgstr "Open het actiemenu van de host"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Open deze samenvoeging"
 
@@ -46463,6 +46492,9 @@ msgstr "Gereserveerde ruimte"
 msgid "Scale to width of page"
 msgstr "Schaal naar breedte van pagina"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Scan alle hosts"
 
@@ -52236,6 +52268,10 @@ msgid "Successfully changed the credential."
 msgstr "Succesvol veranderd de geloofsbrieven."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Wachtwoord succesvol gewijzigd."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Wachtwoord succesvol gewijzigd."
 
@@ -52571,6 +52607,12 @@ msgstr "Synchroniseren"
 
 msgid "Synology Updates"
 msgstr "Synology Updates"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -55990,6 +56032,19 @@ msgstr ""
 "toegewezen. U moet een globale gebruiker aanmaken of ten minste één "
 "gebruiker toewijzen aan de geconfigureerde klant om in te kunnen loggen op "
 "de toegewezen sites."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -65701,6 +65756,10 @@ msgstr "Treshold"
 msgid "Trial expired"
 msgstr "Proef vervallen"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "Proef vervallen"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr ""
 
@@ -68918,9 +68977,6 @@ msgstr "Geldig tot"
 
 msgid "Valid until Checkmk version"
 msgstr "Geldig tot Checkmk versie"
-
-msgid "Validate OTP"
-msgstr ""
 
 msgid "Validate server certificate during port query"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
@@ -75632,8 +75688,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "taken"
 
+#, fuzzy
+msgid "test"
+msgstr "testen"
+
 msgid "testing"
 msgstr "testen"
+
+#, fuzzy
+msgid "tests"
+msgstr "Tests uitvoeren"
 
 msgid "th notification"
 msgstr "e kennisgeving"

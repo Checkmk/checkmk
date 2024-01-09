@@ -6792,6 +6792,10 @@ msgstr "Scadenza dell'autenticazione"
 msgid "Authentication Failures"
 msgstr "Fallimenti di autenticazione"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Modalità di autenticazione"
+
 msgid "Authentication failed"
 msgstr "Autenticazione fallita"
 
@@ -11370,6 +11374,10 @@ msgstr "Rimuovere l'autenticazione a due fattori di %s"
 msgid "Click to toggle this setting"
 msgstr "Fare clic per attivare questa impostazione"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Rimuovere l'autenticazione a due fattori di %s"
+
 msgid "Clickable URLs"
 msgstr "URL cliccabili"
 
@@ -13179,6 +13187,10 @@ msgstr "Copia regola: %s"
 
 msgid "Copy rules from central site"
 msgstr "Copiare le regole dal sito centrale"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Copia del segreto negli appunti"
 
 msgid "Core"
 msgstr "Core"
@@ -19767,6 +19779,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Inserire l'indirizzo"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "ID esterno (opzionale)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "Autenticazione VCenter"
+
 msgid "Enter group"
 msgstr "Inserire il gruppo"
 
@@ -23190,6 +23210,10 @@ msgstr "Non è stato possibile creare un file di dump"
 
 msgid "Grab user from found processess"
 msgstr "Prendi l'utente dai processi trovati"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Periodo di tempo"
 
 msgid "Gracefully finishing"
 msgstr "Finire con grazia"
@@ -39523,6 +39547,11 @@ msgstr "Aprire il menu azione"
 msgid "Open the host action menu"
 msgstr "Aprire il menu d'azione dell'host"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Aprire questa aggregazione"
 
@@ -46653,6 +46682,9 @@ msgstr "Spazio risparmiato"
 msgid "Scale to width of page"
 msgstr "Scala alla larghezza della pagina"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Scansione di tutti gli host"
 
@@ -52440,6 +52472,10 @@ msgid "Successfully changed the credential."
 msgstr "La modifica della credenziale è avvenuta con successo."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Password cambiata con successo."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Password cambiata con successo."
 
@@ -52777,6 +52813,12 @@ msgstr "Sincronizzazione di"
 
 msgid "Synology Updates"
 msgstr "Aggiornamenti Synology"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -56188,6 +56230,19 @@ msgstr ""
 "La modifica è stata salvata, ma questo cliente non ha utenti assegnati. È "
 "necessario creare un utente globale o assegnare almeno un utente al cliente "
 "configurato per poter accedere ai siti assegnati."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -65922,6 +65977,10 @@ msgstr "Treshold"
 msgid "Trial expired"
 msgstr "Prova scaduta"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "Prova scaduta"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr ""
 
@@ -69157,9 +69216,6 @@ msgstr "Valido fino a"
 
 msgid "Valid until Checkmk version"
 msgstr "Valido fino alla versione Checkmk"
-
-msgid "Validate OTP"
-msgstr ""
 
 msgid "Validate server certificate during port query"
 msgstr ""
@@ -75864,8 +75920,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "compiti"
 
+#, fuzzy
+msgid "test"
+msgstr "test"
+
 msgid "testing"
 msgstr "test"
+
+#, fuzzy
+msgid "tests"
+msgstr "Eseguire i test"
 
 msgid "th notification"
 msgstr "la notifica"

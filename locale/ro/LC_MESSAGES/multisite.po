@@ -6828,6 +6828,10 @@ msgstr "Expirarea autentificării"
 msgid "Authentication Failures"
 msgstr "Eșecuri de autentificare"
 
+#, fuzzy
+msgid "Authentication code (OTP / TOTP)"
+msgstr "Mod de autentificare"
+
 msgid "Authentication failed"
 msgstr "Autentificarea a eșuat"
 
@@ -11411,6 +11415,10 @@ msgstr "Eliminați autentificarea cu doi factori a %s"
 msgid "Click to toggle this setting"
 msgstr "Faceți clic pentru a comuta această setare"
 
+#, fuzzy
+msgid "Click ‘Save’ to enable the two-factor authentication."
+msgstr "Eliminați autentificarea cu doi factori a %s"
+
 msgid "Clickable URLs"
 msgstr "URL-uri pe care se poate face clic"
 
@@ -13223,6 +13231,10 @@ msgstr "Regula de copiere: %s"
 
 msgid "Copy rules from central site"
 msgstr "Copierea regulilor de pe site-ul central"
+
+#, fuzzy
+msgid "Copy secret to clipboard"
+msgstr "Secret copiat în clipboard"
 
 msgid "Core"
 msgstr "Core"
@@ -19821,6 +19833,14 @@ msgstr ""
 msgid "Enter address"
 msgstr "Introduceți adresa"
 
+#, fuzzy
+msgid "Enter alias (optional)"
+msgstr "ID extern (opțional)"
+
+#, fuzzy
+msgid "Enter authentication code"
+msgstr "Autentificare VCenter"
+
 msgid "Enter group"
 msgstr "Introduceți grupul"
 
@@ -23256,6 +23276,10 @@ msgstr ""
 
 msgid "Grab user from found processess"
 msgstr "Preia utilizatorul din procesele găsite"
+
+#, fuzzy
+msgid "Grace period"
+msgstr "Perioada de timp"
 
 msgid "Gracefully finishing"
 msgstr "Finalizarea cu grație"
@@ -39615,6 +39639,11 @@ msgstr "Deschideți meniul de acțiune"
 msgid "Open the host action menu"
 msgstr "Deschideți meniul de acțiune al gazdei"
 
+msgid ""
+"Open the two-factor authenticator app on your device and enter the shown "
+"authentication code below."
+msgstr ""
+
 msgid "Open this Aggregation"
 msgstr "Deschideți această agregare"
 
@@ -46743,6 +46772,9 @@ msgstr "Spațiu economisit"
 msgid "Scale to width of page"
 msgstr "Scala la lățimea paginii"
 
+msgid "Scan QR-Code or enter secret manually"
+msgstr ""
+
 msgid "Scan all hosts"
 msgstr "Scaneaza toate elementele"
 
@@ -52593,6 +52625,10 @@ msgid "Successfully changed the credential."
 msgstr "Ați schimbat cu succes credențialul."
 
 #, fuzzy
+msgid "Successfully copied to clipboard"
+msgstr "Parola a fost schimbată cu succes."
+
+#, fuzzy
 msgid "Successfully copied to clipboard."
 msgstr "Parola a fost schimbată cu succes."
 
@@ -52929,6 +52965,12 @@ msgstr "Sincronizare"
 
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
+
+#, python-format
+msgid ""
+"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
+"subscription). You are currently monitoring %d %s on this site."
+msgstr ""
 
 #, fuzzy
 msgid "Synthetic services"
@@ -56357,6 +56399,19 @@ msgstr ""
 "atribuit. Trebuie să creați fie un utilizator global, fie să atribuiți cel "
 "puțin un utilizator clientului configurat pentru a se putea conecta la site-"
 "urile atribuite."
+
+msgid ""
+"The monitoring core cannot be reached and the current number of services "
+"cannot be determined. If you have more than 750 services, you need to apply "
+"a valid license before the 30-day trial ends."
+msgstr ""
+
+msgid ""
+"The monitoring core cannot be reached. This may be because the 30-day trial "
+"period ended and you are exceeding the limit of 750 services. In this case, "
+"please apply a valid license or reduce the number of services and restart "
+"the monitoring core"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -66158,6 +66213,10 @@ msgstr "Treshold"
 msgid "Trial expired"
 msgstr "Procesul a expirat"
 
+#, fuzzy
+msgid "Trial period ended"
+msgstr "Procesul a expirat"
+
 msgid "Trial period ended: 'Activate changes' is blocked"
 msgstr "Perioada de probă s-a încheiat: 'Activează modificările' este blocat"
 
@@ -69402,9 +69461,6 @@ msgstr "Valabil până la"
 
 msgid "Valid until Checkmk version"
 msgstr "Valabil până la versiunea Checkmk"
-
-msgid "Validate OTP"
-msgstr "Validarea OTP"
 
 msgid "Validate server certificate during port query"
 msgstr "Validarea certificatului serverului în timpul interogării portului"
@@ -76129,8 +76185,16 @@ msgstr "systemd"
 msgid "tasks"
 msgstr "sarcini"
 
+#, fuzzy
+msgid "test"
+msgstr "testare"
+
 msgid "testing"
 msgstr "testare"
+
+#, fuzzy
+msgid "tests"
+msgstr "Executați testele"
 
 msgid "th notification"
 msgstr "a notificare"
@@ -76419,6 +76483,9 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Validate OTP"
+#~ msgstr "Validarea OTP"
 
 #~ msgid "Set maximum long output size"
 #~ msgstr "Setați dimensiunea maximă a ieșirii lungi"

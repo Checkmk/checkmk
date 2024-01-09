@@ -13,24 +13,29 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
+using row_type = Column;
+
 TableColumns::TableColumns() {
     const ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<Column>>(
-        "table", "The name of the table", offsets, [this](const Column &col) {
-            return this->getValue(col, Type::table);
+    addColumn(std::make_unique<StringColumn<row_type>>(
+        "table", "The name of the table", offsets, [this](const row_type &row) {
+            return this->getValue(row, Type::table);
         }));
-    addColumn(std::make_unique<StringColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "name", "The name of the column within the table", offsets,
-        [this](const Column &col) { return this->getValue(col, Type::name); }));
-    addColumn(std::make_unique<StringColumn<Column>>(
-        "description", "A description of the column", offsets,
-        [this](const Column &col) {
-            return this->getValue(col, Type::description);
+        [this](const row_type &row) {
+            return this->getValue(row, Type::name);
         }));
-    addColumn(std::make_unique<StringColumn<Column>>(
+    addColumn(std::make_unique<StringColumn<row_type>>(
+        "description", "A description of the column", offsets,
+        [this](const row_type &row) {
+            return this->getValue(row, Type::description);
+        }));
+    addColumn(std::make_unique<StringColumn<row_type>>(
         "type", "The data type of the column (int, float, string, list)",
-        offsets,
-        [this](const Column &col) { return this->getValue(col, Type::type); }));
+        offsets, [this](const row_type &row) {
+            return this->getValue(row, Type::type);
+        }));
 }
 
 std::string TableColumns::name() const { return "columns"; }

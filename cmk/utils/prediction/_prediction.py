@@ -16,7 +16,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import PeriodInfo, PeriodName, time_slices, Timegroup
+from ._grouping import PeriodName, time_slices, Timegroup
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
 
 logger = logging.getLogger("cmk.prediction")
@@ -134,11 +134,11 @@ class PredictionStore:
 
 def compute_prediction(
     info: PredictionInfo,
-    now: int,
-    period_info: PeriodInfo,
     get_recorded_data: Callable[[str, int, int], MetricRecord],
 ) -> PredictionData:
-    time_windows = time_slices(now, info.params.horizon * 86400, period_info, info.name)
+    time_windows = time_slices(
+        info.time, info.params.horizon * 86400, info.params.period, info.name
+    )
 
     from_time = time_windows[0][0]
     raw_slices = [

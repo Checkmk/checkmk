@@ -36,7 +36,7 @@ def test_group_by(
 
 
 @pytest.mark.parametrize(
-    "utcdate, timezone, horizon, period_info, timegroup, result",
+    "utcdate, timezone, horizon, period_name, timegroup, result",
     [
         # North Summertime
         # days after each other, start is previous day end
@@ -44,7 +44,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "UTC",
             86400 * 3,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)],
         ),
@@ -53,7 +53,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "Europe/Berlin",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1531000800, 1531087200), (1530914400, 1531000800)],
         ),
@@ -62,7 +62,7 @@ def test_group_by(
             "2018-07-08 2:00",
             "America/New_York",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1530936000, 1531022400), (1530849600, 1530936000)],
         ),
@@ -71,7 +71,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "UTC",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1540684800, 1540771200), (1540598400, 1540684800)],
         ),
@@ -80,7 +80,7 @@ def test_group_by(
             "2018-10-28 2:00",
             "Europe/Berlin",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1540681200, 1540767600), (1540591200, 1540677600)],
         ),
@@ -89,7 +89,7 @@ def test_group_by(
             "2018-10-28 0:00",
             "Europe/Berlin",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1540677600, 1540764000), (1540591200, 1540677600)],
         ),
@@ -98,7 +98,7 @@ def test_group_by(
             "2018-11-04 7:00",
             "America/New_York",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1541307600, 1541394000), (1541217600, 1541304000)],
         ),
@@ -107,7 +107,7 @@ def test_group_by(
             "2018-11-04 5:00",
             "America/New_York",
             86400 * 2,
-            _grouping.PREDICTION_PERIODS["hour"],
+            "hour",
             "everyday",
             [(1541304000, 1541390400), (1541217600, 1541304000)],
         ),
@@ -116,7 +116,7 @@ def test_group_by(
             "2019-04-02 10:00",
             "Europe/Berlin",
             86400 * 12,
-            _grouping.PREDICTION_PERIODS["wday"],
+            "wday",
             "tuesday",
             [(1554156000, 1554242400), (1553554800, 1553641200)],
         ),
@@ -126,7 +126,7 @@ def test_time_slices(
     utcdate: str,
     timezone: str,
     horizon: int,
-    period_info: _grouping.PeriodInfo,
+    period_name: _grouping.PeriodName,
     timegroup: _grouping.Timegroup,
     result: Sequence[tuple[Timestamp, Timestamp]],
 ) -> None:
@@ -139,7 +139,7 @@ def test_time_slices(
         timestamp = time.time()
         print(timestamp)
 
-        slices = _grouping.time_slices(int(timestamp), horizon, period_info, timegroup)
+        slices = _grouping.time_slices(int(timestamp), horizon, period_name, timegroup)
         pprint([("ontz", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     pprint([("sys", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result

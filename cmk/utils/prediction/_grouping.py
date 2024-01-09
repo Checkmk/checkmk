@@ -94,12 +94,14 @@ PREDICTION_PERIODS: Final[Mapping[PeriodName, PeriodInfo]] = {
 def time_slices(
     timestamp: int,
     horizon_seconds: int,
-    period_info: PeriodInfo,
+    period_name: PeriodName,
     timegroup: Timegroup,
 ) -> Sequence[tuple[int, int]]:
     "Collect all slices back into the past until time horizon is reached"
     timestamp = int(timestamp)
     abs_begin = timestamp - horizon_seconds
+
+    period_info = PREDICTION_PERIODS[period_name]
 
     # Note: due to the f**king DST, we can have several shifts between DST
     # and non-DST during a computation. Treatment is unfair on those longer

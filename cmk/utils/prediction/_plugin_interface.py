@@ -115,8 +115,6 @@ class PredictionUpdater:
 
             data_for_pred = compute_prediction(
                 info,
-                now,
-                period_info,
                 self._get_recorded_data,
             )
             prediction_store.save_prediction(info, data_for_pred)

@@ -118,7 +118,7 @@ def main(argv=None):
     except Exception as e:
         sys.stdout.write(f"Error: {e}")
         sys.exit(1)
-    sys.stdout.write("Initialized OK")
+    sys.stdout.write("Initialized OK\n")
 
     request = ZertoRequest(connection.base_url, session_id)
     vm_data = request.get_vms_data()

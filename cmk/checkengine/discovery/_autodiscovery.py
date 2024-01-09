@@ -139,7 +139,7 @@ def automation_discovery(
         # new discovered check parameters.
         # this is a weird way of updating changed services:
         # forgetting the old onces, add adding changed ones, that now appear to be "new"
-        if settings.update_changed_services:
+        if settings.update_changed_service_labels and settings.update_changed_service_parameters:
             result.self_removed += sum(
                 # this is cluster-aware!
                 remove_autochecks_of_host(

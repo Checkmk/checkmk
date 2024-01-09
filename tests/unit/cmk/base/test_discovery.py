@@ -1160,7 +1160,8 @@ def test__check_host_labels_up_to_date() -> None:
             add_new_services=False,
             remove_vanished_services=False,
             update_host_labels=True,
-            update_changed_services=False,
+            update_changed_service_labels=False,
+            update_changed_service_parameters=False,
         ),
     ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
 
@@ -1184,7 +1185,8 @@ def test__check_host_labels_changed() -> None:
             add_new_services=False,
             remove_vanished_services=False,
             update_host_labels=True,
-            update_changed_services=False,
+            update_changed_service_labels=False,
+            update_changed_service_parameters=False,
         ),
     ) == (
         [

@@ -328,7 +328,13 @@ def db2_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
         import ibm_db  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
         import ibm_db_dbi  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
     except ImportError as exc:
-        bail_out(3, "%s. Please install it via pip." % exc)
+        # TODO: CMK-15528 remove user info when ibm_db is python 3.12 ready
+        bail_out(
+            3,
+            "%s. Please install it via pip. \n"
+            "Please also note that ibm_db v3.2.1 is not Python 3.12 compatible: "
+            "https://github.com/ibmdb/python-ibmdb/issues/890" % exc,
+        )
 
     cstring = (
         "DRIVER={IBM DB2 ODBC DRIVER};DATABASE=%s;"

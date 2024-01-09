@@ -4,8 +4,8 @@
 #  conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import re
-from collections.abc import Sequence
-from typing import Final, Sized
+from collections.abc import Sequence, Sized
+from typing import Final
 from urllib.parse import urlparse
 
 from cmk.rulesets.v1._localize import Localizable

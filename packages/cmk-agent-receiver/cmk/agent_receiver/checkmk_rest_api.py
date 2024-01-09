@@ -111,8 +111,8 @@ def log_http_exception(
     def wrapper(
         log_text: str,
         /,
-        *args: _TEndpointParams.args,
-        **kwargs: _TEndpointParams.kwargs,
+        *args: _TEndpointParams.args,  # pylint: disable=no-member
+        **kwargs: _TEndpointParams.kwargs,  # pylint: disable=no-member
     ) -> _TEndpointReturn:
         try:
             return endpoint_call(*args, **kwargs)

@@ -3,6 +3,13 @@
 
 load("@python_modules//:requirements.bzl", "packages")
 
+def get_pip_options(module_name):
+    return {
+        # * avoid installing BLAS libs - we don't need super fast numpy (yet)
+        # * disable compiler options which are not supported under all distros (e.g. sles)
+        "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
+    }.get(module_name, "")
+
 def create_requirements_file(name, outs):
     """This macro is creating a requirements file per module.
     """
@@ -82,6 +89,12 @@ build_cmd = """
         cp -r {requirements}/** $$REQUIREMENTS
     fi
 
+    # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
+    # Enforce here the usage of the build image compiler and in the same time enable local building.
+    # TODO: CMK-15581 The whole toolchain registration should be bazel wide!
+    export CXX="$$(which g++)"
+    export CC="$$(which gcc)"
+
     # install requirements
     export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
@@ -96,5 +109,6 @@ build_cmd = """
       --no-warn-script-location \\
       --prefix="$$HOME/$(OUTS)" \\
       -i {pypi_mirror} \\
+      {pip_add_opts} \\
       $$REQUIREMENTS
 """

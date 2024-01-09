@@ -1309,6 +1309,11 @@ def test_update_notification_method_cancel_previous(
 
 @managedtest
 @pytest.mark.parametrize("plugin_data", plugin_test_data)
+@pytest.mark.skip(
+    reason="TODO CMK-15531: Renable this test. "
+    "It is failing at random plugin_data with: "
+    "The folder '~' could not be found"
+)
 def test_update_notification_method(
     clients: ClientRegistry,
     plugin_data: PluginType,

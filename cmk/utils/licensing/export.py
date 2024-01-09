@@ -278,8 +278,8 @@ class RawLicenseUsageSample(TypedDict):
     num_services_cloud: int
     num_services_shadow: int
     num_services_excluded: int
-    num_services_synthetic: int
-    num_services_synthetic_excluded: int
+    num_synthetic_tests: int
+    num_synthetic_tests_excluded: int
     extension_ntop: bool
 
 
@@ -316,8 +316,8 @@ class LicenseUsageSample:
     num_services_cloud: int
     num_services_shadow: int
     num_services_excluded: int
-    num_services_synthetic: int
-    num_services_synthetic_excluded: int
+    num_synthetic_tests: int
+    num_synthetic_tests_excluded: int
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
@@ -338,8 +338,8 @@ class LicenseUsageSample:
             "num_services_cloud": self.num_services_cloud,
             "num_services_shadow": self.num_services_shadow,
             "num_services_excluded": self.num_services_excluded,
-            "num_services_synthetic": self.num_services_synthetic,
-            "num_services_synthetic_excluded": self.num_services_synthetic_excluded,
+            "num_synthetic_tests": self.num_synthetic_tests,
+            "num_synthetic_tests_excluded": self.num_synthetic_tests_excluded,
             "extension_ntop": self.extension_ntop,
         }
 
@@ -393,8 +393,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=0,
-            num_services_synthetic=0,
-            num_services_synthetic_excluded=0,
+            num_synthetic_tests=0,
+            num_synthetic_tests_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -430,8 +430,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
-            num_services_synthetic=0,
-            num_services_synthetic_excluded=0,
+            num_synthetic_tests=0,
+            num_synthetic_tests_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -467,8 +467,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
-            num_services_synthetic=0,
-            num_services_synthetic_excluded=0,
+            num_synthetic_tests=0,
+            num_synthetic_tests_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -507,8 +507,8 @@ class LicenseUsageSample:
             num_services_cloud=0,
             num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
-            num_services_synthetic=0,
-            num_services_synthetic_excluded=0,
+            num_synthetic_tests=0,
+            num_synthetic_tests_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -547,8 +547,8 @@ class LicenseUsageSample:
             num_services_cloud=raw_sample["num_services_cloud"],
             num_services_shadow=raw_sample["num_services_shadow"],
             num_services_excluded=raw_sample["num_services_excluded"],
-            num_services_synthetic=0,
-            num_services_synthetic_excluded=0,
+            num_synthetic_tests=0,
+            num_synthetic_tests_excluded=0,
             extension_ntop=extensions.ntop,
         )
 
@@ -587,8 +587,8 @@ class LicenseUsageSample:
             num_services_cloud=raw_sample["num_services_cloud"],
             num_services_shadow=raw_sample["num_services_shadow"],
             num_services_excluded=raw_sample["num_services_excluded"],
-            num_services_synthetic=raw_sample["num_services_synthetic"],
-            num_services_synthetic_excluded=raw_sample["num_services_synthetic_excluded"],
+            num_synthetic_tests=raw_sample["num_synthetic_tests"],
+            num_synthetic_tests_excluded=raw_sample["num_synthetic_tests_excluded"],
             extension_ntop=extensions.ntop,
         )
 

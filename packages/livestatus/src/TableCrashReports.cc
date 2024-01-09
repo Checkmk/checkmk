@@ -25,10 +25,10 @@ TableCrashReports::TableCrashReports(ICore *mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
         "id", "The ID of a crash report", offsets,
-        [](const row_type &row) { return row._id; }));
+        [](const row_type &row) { return row.id; }));
     addColumn(std::make_unique<StringColumn<row_type>>(
         "component", "The component that crashed (gui, agent, check, etc.)",
-        offsets, [](const row_type &row) { return row._component; }));
+        offsets, [](const row_type &row) { return row.component; }));
     addDynamicColumn(std::make_unique<DynamicFileColumn<row_type>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
         [mc](const row_type & /*row*/) {

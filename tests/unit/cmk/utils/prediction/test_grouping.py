@@ -175,6 +175,6 @@ def test_time_slices(
         assert callable(period_info.groupby)
         timegroup = period_info.groupby(now)[0]
 
-        time_windows = _grouping.time_slices(now, params.horizon * 86400, period_info, timegroup)
+        time_windows = _grouping.time_slices(now, params.horizon * 86400, params.period, timegroup)
 
     assert time_windows == windows_expected

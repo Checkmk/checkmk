@@ -212,6 +212,7 @@ class PerformanceSampleFactory(ModelFactory):
 
 class MemorySampleFactory(ModelFactory):
     __model__ = performance.MemorySample
+    metric_value_string = Use(ModelFactory.__random__.choice, ["1.0", "10.0", "2000.0"])
 
 
 class CPURateSampleFactory(ModelFactory):
@@ -220,6 +221,7 @@ class CPURateSampleFactory(ModelFactory):
 
 class CPUSampleFactory(ModelFactory):
     __model__ = performance.CPUSample
+    metric_value_string = Use(ModelFactory.__random__.choice, ["1.0", "10.0", "2000.0"])
 
 
 class IdentifiableSampleFactory(ModelFactory):

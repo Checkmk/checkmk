@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    CPUSampleFactory,
     IdentifiableSampleFactory,
-    PerformanceSampleFactory,
 )
 
 from cmk.special_agents.utils_kubernetes.common import (
@@ -22,7 +22,7 @@ from cmk.special_agents.utils_kubernetes.performance import _determine_cpu_rate_
 
 
 def test_determine_cpu_rate_metrics() -> None:
-    current_cpu_metric = PerformanceSampleFactory.build(timestamp=1)
+    current_cpu_metric = CPUSampleFactory.build(timestamp=1)
     old_cpu_metric = current_cpu_metric.copy()
     old_cpu_metric.timestamp = 0
     containers_rate_metrics = _determine_cpu_rate_metrics([current_cpu_metric], [old_cpu_metric])
@@ -35,7 +35,7 @@ def test_determine_cpu_rate_metrics() -> None:
 
 def test_determine_cpu_rate_metrics_for_containers_with_same_timestamp() -> None:
     """Test that no rate metrics are returned if no rates can be determined."""
-    cpu_metric = PerformanceSampleFactory.build()
+    cpu_metric = CPUSampleFactory.build()
     containers_rate_metrics = _determine_cpu_rate_metrics([cpu_metric], [cpu_metric])
     assert len(containers_rate_metrics) == 0
 

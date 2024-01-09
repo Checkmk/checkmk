@@ -542,27 +542,34 @@ class SidebarRenderer:
 
         # The heading. A click on the heading mini/maximizes the snapin
         toggle_actions: dict[str, str] = {}
+        img_id = f"treeangle.snapin.{name}"
+        onclick = "cmk.sidebar.toggle_sidebar_snapin(this, %s, %s)" % (
+            json.dumps(toggle_url),
+            json.dumps(img_id),
+        )
         if user.may("general.configure_sidebar"):
             toggle_actions = {
-                "onclick": "cmk.sidebar.toggle_sidebar_snapin(this,'%s')" % toggle_url,
+                "onclick": onclick,
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'",
             }
+
+        if may_configure:
+            html.img(
+                id_=img_id,
+                title=_("Open/close this element"),
+                class_=[
+                    "treeangle",
+                    "open" if snapin.visible == SnapinVisibility.OPEN else "closed",
+                ],
+                src=theme.url("images/tree_closed.svg"),
+                onclick=onclick,
+            )
         html.b(
             textwrap.shorten(snapin_class.title(), width=27, placeholder="..."),
             class_=["heading"],
             **toggle_actions,
         )
-
-        if may_configure:
-            # Icon for mini/maximizing
-            html.span(
-                "",
-                class_="minisnapin",
-                title=_("Open/close this element"),
-                onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url,
-            )
-
         # End of header
         html.close_div()
 

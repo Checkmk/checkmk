@@ -512,12 +512,17 @@ function remove_snapin(id: string) {
     }
 }
 
-export function toggle_sidebar_snapin(oH2: HTMLElement, url: string) {
+export function toggle_sidebar_snapin(
+    oH2: HTMLElement,
+    url: string,
+    imgId: string
+) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
     const childs = oH2.parentNode!.parentNode!
         .childNodes as NodeListOf<HTMLElement>;
 
     let oContent: HTMLElement, oHead: HTMLElement;
+    const oImg: HTMLElement | null = document.getElementById(imgId);
     for (const i in childs) {
         const child = childs[i];
         if (child.tagName == "DIV" && child.className == "content")
@@ -534,9 +539,11 @@ export function toggle_sidebar_snapin(oH2: HTMLElement, url: string) {
     if (closed) {
         oContent!.style.display = "block";
         utils.change_class(oHead!, "closed", "open");
+        utils.change_class(oImg!, "closed", "open");
     } else {
         oContent!.style.display = "none";
         utils.change_class(oHead!, "open", "closed");
+        utils.change_class(oImg!, "open", "closed");
     }
     /* make this persistent -> save */
     ajax.call_ajax(url + (closed ? "open" : "closed"), {method: "POST"});

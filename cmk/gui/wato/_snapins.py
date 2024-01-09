@@ -330,7 +330,6 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-unt
             id_="/" + folder[".path"],
             isopen=False,
             title=HTML(title),
-            icon="foldable_sidebar",
             padding=6,
         ):
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):

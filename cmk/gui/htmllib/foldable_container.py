@@ -46,25 +46,12 @@ def foldable_container(
     html.open_div(class_=["foldable", "open" if isopen else "closed"])
     html.open_div(class_="foldable_header", onclick=None if title_url else onclick)
 
-    if icon:
-        html.img(
-            id_=img_id,
-            # Although foldable_sidebar is given via the argument icon it should not be displayed as big as an icon.
-            class_=(
-                ["treeangle", "title"]
-                + (["icon"] if icon != "foldable_sidebar" else [])
-                + ["open" if isopen else "closed"]
-            ),
-            src=theme.detect_icon_path(icon, "icon_"),
-            onclick=onclick if title_url else None,
-        )
-    else:
-        html.img(
-            id_=img_id,
-            class_=["treeangle", "open" if isopen else "closed"],
-            src=theme.url("images/tree_closed.svg"),
-            onclick=onclick if title_url else None,
-        )
+    html.img(
+        id_=img_id,
+        class_=["treeangle", "open" if isopen else "closed"] + (["title", "icon"] if icon else []),
+        src=theme.detect_icon_path(icon, "icon_") if icon else theme.url("images/tree_closed.svg"),
+        onclick=onclick if title_url else None,
+    )
 
     if isinstance(title, HTML):  # custom HTML code
         html.write_text(title)

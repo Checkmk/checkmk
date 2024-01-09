@@ -208,7 +208,6 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
         isopen=False,
         title=topic.title,
         indent=True,
-        icon="foldable_sidebar",
     ):
         for item in topic.items:
             if show_item_icons:

@@ -140,7 +140,6 @@ class VirtualHostTree(SidebarSnapin):
                     id_=".".join(map(str, path)),
                     isopen=False,
                     title=bullet + title,
-                    icon="foldable_sidebar",
                 )
 
         with container:

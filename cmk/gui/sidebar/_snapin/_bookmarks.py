@@ -269,7 +269,6 @@ class Bookmarks(SidebarSnapin):
                 isopen=False,
                 title=topic,
                 indent=False,
-                icon="foldable_sidebar",
             ):
                 for bookmark in bookmarks:
                     icon = bookmark["icon"]

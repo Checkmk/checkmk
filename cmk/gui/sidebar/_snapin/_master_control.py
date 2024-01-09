@@ -60,7 +60,6 @@ class MasterControlSnapin(SidebarSnapin):
                     id_=site_id,
                     isopen=True,
                     title=site_alias,
-                    icon="foldable_sidebar",
                 )
                 if not site_config.is_single_local_site()
                 else nullcontext(False)

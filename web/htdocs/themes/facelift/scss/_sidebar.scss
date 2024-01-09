@@ -266,25 +266,16 @@ div.snapin {
       padding-bottom: 0;
     }
 
+    img.treeangle {
+      padding-bottom: 4px;
+    }
+
     b.heading {
       padding-bottom: 3px;
+      margin-left: 3px;
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
-    }
-
-    &.closed span.minisnapin {
-      background-image: url("images/icon_maxisnapin.svg");
-    }
-
-    span.minisnapin {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      margin-left: 6px;
-      line-height: 0;
-      cursor: pointer;
-      background: no-repeat center / 100% url("images/icon_minisnapin.svg");
     }
   }
 
@@ -300,33 +291,6 @@ div.snapin {
     transition: opacity 0s;
   }
 
-  span.moresnapin {
-    display: inline-block;
-    width: 16px; /* FIXME: get rid of the animation that uses 4 images */
-    height: 16px;
-    margin-right: 4px;
-    vertical-align: middle;
-
-    img {
-      width: 16px;
-      height: 16px;
-      padding: 0;
-    }
-  }
-
-  span.closesnapin {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    vertical-align: middle;
-
-    img {
-      width: 12px;
-      height: 12px;
-      padding: 0;
-    }
-  }
-
   div.content {
     top: 64px;
     width: 100%;
@@ -334,6 +298,13 @@ div.snapin {
     color: $font-color;
     border-bottom: 1px solid $snapin-heading-border-color;
     box-sizing: border-box;
+
+    li.sidebar {
+      padding-left: 0;
+    }
+    .foldable {
+      margin-left: $spacing-double;
+    }
   }
 
   select {

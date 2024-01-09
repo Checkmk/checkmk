@@ -25,16 +25,17 @@ struct service_and_group {
 };
 }  // namespace
 
+using row_type = service_and_group;
+
 TableServicesByGroup::TableServicesByGroup(ICore *mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(
         this, *mc, "",
-        offsets.add([](Row r) { return r.rawData<service_and_group>()->svc; }),
+        offsets.add([](Row r) { return r.rawData<row_type>()->svc; }),
         TableServices::AddHosts::yes, LockComments::yes, LockDowntimes::yes);
     TableServiceGroups::addColumns(
-        this, "servicegroup_", offsets.add([](Row r) {
-            return r.rawData<service_and_group>()->group;
-        }));
+        this, "servicegroup_",
+        offsets.add([](Row r) { return r.rawData<row_type>()->group; }));
 }
 
 std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
@@ -49,8 +50,8 @@ bool ProcessServiceGroup(Query &query, const User &user,
                if (!user.is_authorized_for_service(s)) {
                    return true;
                }
-               service_and_group sag{&s, &sg};
-               return query.processDataset(Row{&sag});
+               row_type row{&s, &sg};
+               return query.processDataset(Row{&row});
            });
 }
 }  // namespace

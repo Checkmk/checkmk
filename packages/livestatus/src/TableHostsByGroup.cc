@@ -24,14 +24,16 @@ struct host_and_group {
 };
 }  // namespace
 
+using row_type = host_and_group;
+
 TableHostsByGroup::TableHostsByGroup(ICore *mc) {
     const ColumnOffsets offsets{};
     TableHosts::addColumns(this, *mc, "", offsets.add([](Row r) {
-        return r.rawData<host_and_group>()->hst;
+        return r.rawData<row_type>()->hst;
     }),
                            LockComments::yes, LockDowntimes::yes);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return r.rawData<host_and_group>()->group;
+        return r.rawData<row_type>()->group;
     }));
 }
 
@@ -47,8 +49,8 @@ void TableHostsByGroup::answerQuery(Query &query, const User &user,
                    if (!user.is_authorized_for_host(h)) {
                        return true;
                    }
-                   host_and_group hag{&h, &hg};
-                   return query.processDataset(Row{&hag});
+                   row_type row{&h, &hg};
+                   return query.processDataset(Row{&row});
                });
     });
 }

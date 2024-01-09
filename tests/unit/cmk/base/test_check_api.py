@@ -93,4 +93,4 @@ def test_check_levels(  # type: ignore[no-untyped-def]
 def test_http_proxy(mocker: Mock) -> None:
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
-    assert proxy_patch.called_once()
+    proxy_patch.assert_called_once()

@@ -20,11 +20,11 @@ import enum
 import importlib
 import os
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Final, Generic, Hashable, Protocol, TypeVar
+from typing import Final, Generic, Protocol, TypeVar
 
 _CMK_PLUGINS = "cmk.plugins"
 _CMK_ADDONS_PLUGINS = "cmk_addons.plugins"

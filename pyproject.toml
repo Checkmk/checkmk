@@ -101,7 +101,7 @@ mypy_path = """\
     $MYPY_CONFIG_FILE_DIR/tests/typeshed\
     """
 plugins = ["pydantic.mypy"]
-python_version = "3.11"
+python_version = "3.12"
 scripts_are_modules = true
 # When all of these are true, we can enable --strict
 check_untyped_defs = true

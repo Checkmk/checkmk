@@ -12,7 +12,10 @@ filegroup(
 configure_make(
     name = "net-snmp",
     args = ["-j4"],
-    build_data = ["@omd_packages//omd/packages/perl-modules:perl-modules"],
+    build_data = [
+        "@omd_packages//omd/packages/perl-modules:perl-modules",
+        "@omd_packages//omd/packages/python3-modules:python3-modules-modify",
+    ],
     configure_in_place = True,
     configure_options = [
         "-v",
@@ -34,6 +37,7 @@ configure_make(
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
         "PERL_DIR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules)",
+        "PYTHONPATH": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules-modify)/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
         "HOME": "/home/\\$$\\$${USER}/",
     },
     lib_source = ":all_srcs",

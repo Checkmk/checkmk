@@ -13,6 +13,7 @@ def mod_wsgi(version_str, sha256):
         ],
         patches = [
             "//omd/packages/mod_wsgi/patches:0001-wsgi_fixVersionCheck.dif",
+            "//omd/packages/mod_wsgi/patches:0002-Migrate-from-distutils-to-setuptools-sysconfig.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

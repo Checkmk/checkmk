@@ -12,7 +12,7 @@ def netsnmp(version_str, sha256):
             UPSTREAM_MIRROR_URL + filename,
         ],
         patches = [
-            "//omd/packages/net-snmp/patches:0001-Favour-setuptools-over-distutils-in-a-clean-way.dif",
+            "//omd/packages/net-snmp/patches:0001-remove-distutils.dif",
             "//omd/packages/net-snmp/patches:0002-We-use-a-C-extension-so-we-are-better-not-zip_safe.dif",
             "//omd/packages/net-snmp/patches:0003-Added-handling-of-opaque-floats.dif",
             "//omd/packages/net-snmp/patches:0004-Fixed-copy-n-paste-error-regarding-the-context-engine-.dif",

@@ -451,7 +451,7 @@ def test_automation_set_autochecks(site: Site) -> None:
             ),
             (
                 ("uptime", None),
-                None,
+                {},
                 {},
             ),
         ]

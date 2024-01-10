@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 CMAKE_VERSION=3.25.0
 DIR_NAME=cmake-${CMAKE_VERSION}-Linux-x86_64
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=2

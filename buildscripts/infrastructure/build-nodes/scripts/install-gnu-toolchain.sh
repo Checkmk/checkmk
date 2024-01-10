@@ -27,7 +27,7 @@ GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
 DIR_NAME=gcc-${GCC_VERSION}
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR="${TARGET_DIR}/src"
 
@@ -124,9 +124,9 @@ set_symlinks() {
     # our /usr/bin/as symlink. As an intermediate fix, we additionally install the link to /opt/bin.
     # As a follow-up, we should move everything to /opt/bin - but that needs separate testing.
     [ -d "${TARGET_DIR}/bin" ] || mkdir -p "${TARGET_DIR}/bin"
-    ln -sf "${PREFIX}/bin/"* ${TARGET_DIR}/bin
-    ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" ${TARGET_DIR}/bin/gcc
-    ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" ${TARGET_DIR}/bin/g++
+    ln -sf "${PREFIX}/bin/"* "${TARGET_DIR}"/bin
+    ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" "${TARGET_DIR}"/bin/gcc
+    ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" "${TARGET_DIR}"/bin/g++
 
     # Save distro executables under [name]-orig. It is used by some build steps
     # later that need to use the distro original compiler. For some platforms

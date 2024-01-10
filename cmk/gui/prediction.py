@@ -17,6 +17,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     estimate_levels,
     PredictionData,
+    PredictionInfo,
     PredictionParameters,
     PredictionQuerier,
 )
@@ -128,6 +129,26 @@ def page_graph() -> None:
         legend,
     )
 
+    _render_grid(selected_prediction_info.range[0], vertical_range)
+
+    _render_level_areas(selected_prediction_info, swapped)
+
+    _render_prediction(swapped)
+
+    _render_observed_data(
+        prediction_data_querier, selected_prediction_info, current_measurement, time.time()
+    )
+
+    html.footer()
+
+
+def _render_grid(x_start: float, y_range: tuple[float, float]) -> None:
+    vert_scala = _compute_vertical_scala(*y_range)
+    time_scala = [[x_start + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
+    _render_coordinates(vert_scala, time_scala)
+
+
+def _render_level_areas(selected_prediction_info: PredictionInfo, swapped: SwappedStats) -> None:
     if selected_prediction_info.params.levels_upper is not None:
         _render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
         _render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
@@ -135,16 +156,6 @@ def page_graph() -> None:
     if selected_prediction_info.params.levels_lower is not None:
         _render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
         _render_area(swapped.lower_crit, "#ff0000", 0.1)
-
-    vscala_low = vertical_range[0]
-    vscala_high = vertical_range[1]
-    vert_scala = _compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [
-        [selected_prediction_info.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)
-    ]
-    _render_coordinates(vert_scala, time_scala)
-
-    if selected_prediction_info.params.levels_lower is not None:
         _render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
         _render_curve(swapped.lower_warn, "#e0e000", square=True)
         _render_curve(swapped.lower_crit, "#f0b0a0", square=True)
@@ -153,12 +164,21 @@ def page_graph() -> None:
         _render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
         _render_curve(swapped.upper_warn, "#e0e000", square=True)
         _render_curve(swapped.upper_crit, "#f0b0b0", square=True)
+
+
+def _render_prediction(swapped: SwappedStats) -> None:
     _render_curve(swapped.average, "#000000")
     _render_curve(swapped.average, "#000000")  # repetition makes line bolder
 
-    # Try to get current RRD data and render it also
+
+def _render_observed_data(
+    prediction_data_querier: PredictionQuerier,
+    selected_prediction_info: PredictionInfo,
+    current_measurement: tuple[float, float] | None,
+    now: float,
+) -> None:
+    # Try to get current RRD data and render it as well
     from_time, until_time = selected_prediction_info.range
-    now = time.time()
     if from_time <= now <= until_time:
         try:
             response = get_rrd_data(
@@ -174,6 +194,7 @@ def page_graph() -> None:
                 raise
             raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
         if response is None:
+            # TODO: not sure this is the true reason for `None`.
             raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
         rrd_data = response.values
@@ -181,8 +202,6 @@ def page_graph() -> None:
         _render_curve(rrd_data, "#0000ff", 2)
         if current_measurement is not None:
             _render_point(*current_measurement, "#0000ff")
-
-    html.footer()
 
 
 def _prediction_querier_from_request(request: Request) -> PredictionQuerier:

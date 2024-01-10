@@ -215,7 +215,6 @@ def check_levels(  # pylint: disable=too-many-branches
     dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    factor: int | float = 1.0,
     scale: int | float = 1.0,
     statemarkers: bool = False,
     human_readable_func: Callable | None = None,
@@ -247,10 +246,6 @@ def check_levels(  # pylint: disable=too-many-branches
                 unit="/s",
                 human_readable_func=get_bytes_human_readable,
              results in 'X B/s'.
-    factor:  the levels are multiplied with this factor before applying
-             them to the value. This is being used for the CPU load check
-             currently. The levels here are "per CPU", so the number of
-             CPUs is used as factor.
     scale:   Scale of the levels in relation to "value" and the value in the RRDs.
              For example if the levels are specified in GB and the RRD store KB, then
              the scale is 1024*1024.
@@ -282,7 +277,7 @@ def check_levels(  # pylint: disable=too-many-branches
     def scale_value(v: None | int | float) -> None | int | float:
         if v is None:
             return None
-        return v * factor * scale
+        return v * scale
 
     infotext = f"{human_readable_func(value)}{unit_info}"
     if infoname:
@@ -308,7 +303,7 @@ def check_levels(  # pylint: disable=too-many-branches
         try:
             ref_value, levels = params["__get_predictive_levels__"](
                 dsname,
-                levels_factor=factor * scale,
+                levels_factor=scale,
             )
             if ref_value:
                 predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)

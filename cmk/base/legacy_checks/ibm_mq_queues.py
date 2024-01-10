@@ -173,9 +173,7 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
     if wato:
         levels += wato.get("upper", (None, None))
         levels += wato.get("lower", (None, None))
-    return check_levels(
-        int(cnt), metric, levels, factor=1, scale=1, human_readable_func=int, infoname=label
-    )
+    return check_levels(int(cnt), metric, levels, human_readable_func=int, infoname=label)
 
 
 def ibm_mq_get_qtime(qtime, label, key):

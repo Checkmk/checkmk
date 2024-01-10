@@ -47,6 +47,7 @@ import * as service_discovery from "service_discovery";
 import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as sla from "sla";
+import {render_stats_table} from "tracking_display";
 import * as transfer from "transfer";
 import {RequireConfirmation} from "types";
 import * as utils from "utils";
@@ -157,6 +158,7 @@ export const cmk_export = {
         dashboard: dashboard,
         page_menu: page_menu,
         figures: cmk_figures,
+        render_stats_table: render_stats_table,
         ntop: {
             host_details: ntop_host_details,
             alerts: ntop_alerts,

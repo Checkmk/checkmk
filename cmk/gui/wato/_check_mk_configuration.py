@@ -2239,7 +2239,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Hide internal folder names in WATO"),
+            title=_("Hide internal folder names in Setup"),
             label=_("hide folder names"),
             help=_(
                 "When enabled, then the internal names of Setup folder in the filesystem "
@@ -2342,7 +2342,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Use GIT version control for WATO"),
+            title=_("Use GIT version control for Setup"),
             label=_("enable GIT version control"),
             help=_(
                 "When enabled, all changes of configuration files are tracked with the "

@@ -33,7 +33,19 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
-graph_size = 2000, 700
+_GRAPH_SIZE = 2000, 700
+
+
+_VRANGES = [
+    ("n", 1024.0**-3),
+    ("u", 1024.0**-2),
+    ("m", 1024.0**-1),
+    ("", 1024.0**0),
+    ("K", 1024.0**1),
+    ("M", 1024.0**2),
+    ("G", 1024.0**3),
+    ("T", 1024.0**4),
+]
 
 
 @dataclass(frozen=True)
@@ -123,7 +135,7 @@ def page_graph() -> None:
 
     _create_graph(
         selected_prediction_info.name,
-        graph_size,
+        _GRAPH_SIZE,
         selected_prediction_info.range,
         vertical_range,
         legend,
@@ -215,23 +227,11 @@ def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
     )
 
 
-vranges = [
-    ("n", 1024.0**-3),
-    ("u", 1024.0**-2),
-    ("m", 1024.0**-1),
-    ("", 1024.0**0),
-    ("K", 1024.0**1),
-    ("M", 1024.0**2),
-    ("G", 1024.0**3),
-    ("T", 1024.0**4),
-]
-
-
 def _compute_vertical_scala(  # pylint: disable=too-many-branches
     low: float, high: float
 ) -> Sequence[tuple[float, str]]:
     m = max(abs(low), abs(high))
-    for letter, factor in vranges:
+    for letter, factor in _VRANGES:
         if m <= 99 * factor:
             break
     else:

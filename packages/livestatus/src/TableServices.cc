@@ -10,9 +10,11 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "livestatus/AttributeBitmaskColumn.h"
@@ -32,6 +34,7 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MapUtils.h"
+#include "livestatus/PerformanceData.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
@@ -117,6 +120,19 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<StringColumnPerfData<row_type>>(
         prefix + "perf_data", "Optional performance data of the last check",
         offsets, [](const row_type &row) { return row.perf_data(); }));
+    table->addColumn(std::make_unique<DictColumn<row_type>>(
+        prefix + "performance_data", "Optional performance data as a dict",
+        offsets, [](const row_type &row) {
+            auto d = PerformanceData{row.perf_data(), ""};
+            auto out = DictColumn<row_type>::value_type{};
+            out.reserve(d.size());
+            std::transform(d.begin(), d.end(), std::inserter(out, out.begin()),
+                           [](auto &&metric) {
+                               return std::make_pair(metric.name().string(),
+                                                     metric.value());
+                           });
+            return out;
+        }));
     table->addColumn(std::make_unique<StringColumn<row_type>>(
         prefix + "notification_period",
         "Time period in which problems of this object will be notified. If empty then notification will be always",

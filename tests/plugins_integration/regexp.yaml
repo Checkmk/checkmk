@@ -109,3 +109,6 @@
   plugin_output: >-2
     \[27\.00768\] AV age: ([0-9]+ (year|month|day|hour|minute|second)s? ?)+\(warn/crit at 1 day 0 hours/2 days 0 hours\)\(!!\),
     \[6\.00689\] IPS age: ([0-9]+ (year|month|day|hour|minute|second)s? ?)+\(warn/crit at 1 day 0 hours/2 days 0 hours\)\(!!\)
+'.*:Azure/App Registration Secret .* - .*':
+  plugin_output: >-2
+    Remaining time: [0-9]+ (year|day|hour)s? [0-9]+ (year|day|hour)s?

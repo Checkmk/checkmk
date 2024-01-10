@@ -24,8 +24,7 @@ class TestPredictionQuerier:
         querier = self._prediction_querier()
         expected_prediction_info = PredictionInfo(
             name=Timegroup("everyday"),
-            time=123,
-            range=(0, 200),
+            valid_interval=(0, 200),
             dsname=str(querier.metric_name),
             params=PredictionParameters(
                 period="day",
@@ -78,7 +77,7 @@ class TestPredictionQuerier:
                 ),
                 None,
             ],
-            data_twindow=[1],
+            start=1,
             step=2,
         )
         mock_livestatus.add_table(

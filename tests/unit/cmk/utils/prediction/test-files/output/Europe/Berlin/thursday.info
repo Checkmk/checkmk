@@ -1,8 +1,7 @@
 {
   "slice": 86400,
   "dsname": "load15",
-  "cf": "MAX",
-  "range": [
+  "valid_interval": [
     1543446000,
     1543532400
   ],
@@ -16,6 +15,5 @@
     ],
     "period": "wday",
     "horizon": 90
-  },
-  "time": 1543503360
+  }
 }

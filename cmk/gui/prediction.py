@@ -16,7 +16,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     estimate_levels,
-    PREDICTION_PERIODS,
     PredictionData,
     PredictionParameters,
     PredictionQuerier,
@@ -69,8 +68,7 @@ def page_graph() -> None:
         breadcrumb,
     )
 
-    # Get current value from perf_data via Livestatus
-    current_value = get_current_perfdata(
+    current_measurement = _get_current_perfdata_via_livestatus(
         prediction_data_querier.host_name,
         prediction_data_querier.service_name,
         prediction_data_querier.metric_name,
@@ -119,8 +117,8 @@ def page_graph() -> None:
         ("#ffff00", _("Warning area")),
         ("#ff0000", _("Critical area")),
     ]
-    if current_value is not None:
-        legend.append(("#0000ff", _("Current value: %.2f") % current_value))
+    if current_measurement is not None:
+        legend.append(("#0000ff", _("Current value: %.2f") % current_measurement[1]))
 
     _create_graph(
         selected_prediction_info.name,
@@ -181,11 +179,8 @@ def page_graph() -> None:
         rrd_data = response.values
 
         _render_curve(rrd_data, "#0000ff", 2)
-        if current_value is not None:
-            _group, rel_time = PREDICTION_PERIODS[selected_prediction_info.params.period].groupby(
-                int(now)
-            )
-            _render_point(from_time + rel_time, current_value, "#0000ff")
+        if current_measurement is not None:
+            _render_point(*current_measurement, "#0000ff")
 
     html.footer()
 
@@ -257,17 +252,20 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
     return vert_scala
 
 
-def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | None:
-    perf_data = sites.live().query_value(
-        "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-        "Columns: perf_data" % (lqencode(str(host)), lqencode(service))
+def _get_current_perfdata_via_livestatus(
+    host: HostName, service: str, dsname: str
+) -> tuple[float, float] | None:
+    time_int, metrics = sites.live().query_row(
+        "GET services\n"
+        f"Filter: host_name = {lqencode(str(host))}\n"
+        f"Filter: description = {lqencode(service)}\n"
+        "Columns: last_check performance_data"
     )
 
-    for part in perf_data.split():
-        name, rest = part.split("=")
-        if name == dsname:
-            return float(rest.split(";")[0])
-    return None
+    try:
+        return float(time_int), metrics[dsname]
+    except KeyError:
+        return None
 
 
 # Compute check levels from prediction data and check parameters

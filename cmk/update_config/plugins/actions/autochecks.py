@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import copy
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, NamedTuple, Self, TypeVar
 
 from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
@@ -136,10 +138,9 @@ class UpdateAutochecks(UpdateAction):
 
         for autocheck_file in Path(autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)
-            store = AutochecksStore(hostname)
 
             try:
-                autochecks = store.read()
+                autochecks = _AutochecksStoreV22(hostname).read()
             except MKGeneralException as exc:
                 if debug.enabled():
                     raise
@@ -147,7 +148,9 @@ class UpdateAutochecks(UpdateAction):
                 failed_hosts.append(hostname)
                 continue
 
-            store.write([_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks])
+            AutochecksStore(hostname).write(
+                [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
+            )
 
         if failed_hosts:
             msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"
@@ -164,9 +167,67 @@ update_action_registry.register(
 )
 
 
+class _AutocheckEntryV22(NamedTuple):
+    check_plugin_name: CheckPluginName
+    item: str | None
+    parameters: LegacyCheckParameters
+    service_labels: Mapping[str, str]
+
+    @staticmethod
+    def _parse_parameters(parameters: object) -> LegacyCheckParameters:
+        # Make sure it's a 'LegacyCheckParameters' (mainly done for mypy).
+        if parameters is None or isinstance(parameters, (dict, tuple, list, str, int, bool)):
+            return parameters
+        # I have no idea what else it could be (LegacyCheckParameters is quite pointless).
+        raise ValueError(f"Invalid autocheck: invalid parameters: {parameters!r}")
+
+    @classmethod
+    def load(cls, raw_dict: Mapping[str, Any]) -> Self:
+        return cls(
+            check_plugin_name=CheckPluginName(raw_dict["check_plugin_name"]),
+            item=None if (raw_item := raw_dict["item"]) is None else str(raw_item),
+            parameters=cls._parse_parameters(raw_dict["parameters"]),
+            service_labels={str(n): str(v) for n, v in raw_dict["service_labels"].items()},
+        )
+
+
+class _AutochecksSerializerV22:
+    @staticmethod
+    def serialize(entries: Sequence[_AutocheckEntryV22]) -> bytes:
+        raise NotImplementedError()
+
+    @staticmethod
+    def deserialize(raw: bytes) -> Sequence[_AutocheckEntryV22]:
+        """Deserialize "old" autocheck entries, where the parameters might not be a dict.
+
+        >>> _AutochecksSerializerV22.deserialize(
+        ...     b"[{'check_plugin_name': 'mounts', 'item': '/', 'parameters': ['errors=remount-ro', 'relatime', 'rw'], 'service_labels': {}},]"
+        ... )
+        [_AutocheckEntryV22(check_plugin_name=CheckPluginName('mounts'), item='/', parameters=['errors=remount-ro', 'relatime', 'rw'], service_labels={})]
+        """
+        return [_AutocheckEntryV22.load(d) for d in ast.literal_eval(raw.decode("utf-8"))]
+
+
+class _AutochecksStoreV22:
+    def __init__(self, host_name: HostName) -> None:
+        self._host_name = host_name
+        self._store = ObjectStore(
+            Path(autochecks_dir, f"{host_name}.mk"),
+            serializer=_AutochecksSerializerV22(),
+        )
+
+    def read(self) -> Sequence[_AutocheckEntryV22]:
+        try:
+            return self._store.read_obj(default=[])
+        except (ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
+            raise MKGeneralException(
+                f"Unable to parse autochecks of host {self._host_name}"
+            ) from exc
+
+
 def _fix_entry(
     logger: Logger,
-    entry: AutocheckEntry,
+    entry: _AutocheckEntryV22,
     all_rulesets: RulesetCollection,
     hostname: str,
 ) -> AutocheckEntry:

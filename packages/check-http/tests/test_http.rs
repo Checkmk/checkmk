@@ -71,6 +71,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             version: None,
             user_agent: "test_http".to_string(),
             timeout: Duration::from_secs(1),
+            ignore_proxy_env: false,
             onredirect: OnRedirect::Follow,
             max_redirs: 10,
             force_ip: None,

@@ -5,8 +5,7 @@ load("@python_modules//:requirements.bzl", "packages")
 
 def get_pip_options(module_name):
     return {
-        # * avoid installing BLAS libs - we don't need super fast numpy (yet)
-        # * disable compiler options which are not supported under all distros (e.g. sles)
+        # * avoid compiling with BLAS support - we don't need super fast numpy (yet)
         "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
     }.get(module_name, "")
 

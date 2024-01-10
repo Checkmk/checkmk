@@ -64,6 +64,12 @@ pub struct Cli {
     #[arg(short = 'j', long)]
     pub method: Option<Method>,
 
+    /// Ignore HTTP_PROXY and HTTPS_PROXY environment variables.
+    /// By default, these environment variables will be recognized and used as proxy setting.
+    /// Only relevant if no additional proxy options are set.
+    #[arg(long, default_value_t = false)]
+    pub ignore_proxy_env: bool,
+
     /// How to handle redirected pages. sticky is like follow but stick to the
     /// specified IP address. stickyport also ensures port stays the same.
     #[arg(short = 'f', long, default_value = "follow")]

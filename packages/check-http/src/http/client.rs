@@ -35,10 +35,17 @@ pub struct ClientConfig {
     pub min_tls_version: Option<TlsVersion>,
     pub max_tls_version: Option<TlsVersion>,
     pub collect_tls_info: bool,
+    pub ignore_proxy_env: bool,
 }
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
+
+    let client = if cfg.ignore_proxy_env {
+        client.no_proxy()
+    } else {
+        client
+    };
 
     let client = if let Some(version) = cfg.min_tls_version {
         match version {

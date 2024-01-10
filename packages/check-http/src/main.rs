@@ -35,6 +35,7 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             }),
             user_agent: args.user_agent.unwrap_or(DEFAULT_USER_AGENT.to_string()),
             timeout: args.timeout,
+            ignore_proxy_env: args.ignore_proxy_env,
             onredirect: match args.onredirect {
                 cli::OnRedirect::Ok => http::OnRedirect::Ok,
                 cli::OnRedirect::Warning => http::OnRedirect::Warning,

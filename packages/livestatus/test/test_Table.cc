@@ -264,13 +264,13 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
 
-    std::vector<std::string> metrics(const IHost & /* h */,
-                                     Logger * /*  l */) const override {
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IHost & /*h*/) const override {
         return {};
     }
 
-    std::vector<std::string> metrics(const IService & /* d */,
-                                     Logger * /*  l */) const override {
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IService & /*s*/) const override {
         return {};
     }
 

@@ -738,9 +738,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        offsets, [&core](const row_type &row) {
-            return core.metrics(row, core.loggerRRD());
-        }));
+        offsets, [&core](const row_type &row) { return core.metrics(row); }));
     table->addColumn(std::make_unique<IntColumn<row_type>>(
         prefix + "smartping_timeout",
         "Maximum expected time between two received packets in ms", offsets,

@@ -528,14 +528,12 @@ std::vector<std::string> toMetrics(const std::string &host_name,
 }
 }  // namespace
 
-std::vector<std::string> NebCore::metrics(const IHost &h,
-                                          Logger *logger) const {
-    return toMetrics(h.name(), dummy_service_description(), *paths(), logger);
+std::vector<std::string> NebCore::metrics(const IHost &h) const {
+    return toMetrics(h.name(), dummy_service_description(), *paths(), _logger);
 }
 
-std::vector<std::string> NebCore::metrics(const IService &s,
-                                          Logger *logger) const {
-    return toMetrics(s.host_name(), s.description(), *paths(), logger);
+std::vector<std::string> NebCore::metrics(const IService &s) const {
+    return toMetrics(s.host_name(), s.description(), *paths(), _logger);
 }
 
 namespace {

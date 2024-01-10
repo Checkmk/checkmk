@@ -30,6 +30,9 @@ EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
 logger = logging.getLogger("cmk.prediction")
 
 
+_ONE_DAY = 24 * 3600
+
+
 def _get_prediction(
     store: PredictionStore,
     timegroup: Timegroup,
@@ -46,9 +49,8 @@ def _get_prediction(
     if (last_info := store.get_info(timegroup)) is None:
         return None
 
-    period_info = PREDICTION_PERIODS[params.period]
     now = time.time()
-    if last_info.time + period_info.valid * period_info.slice < now:
+    if last_info.valid_interval[1] < now:
         logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return None
 
@@ -103,10 +105,10 @@ class PredictionUpdater:
                 params=self.params,
             )
         ) is None:
+            start_of_day = _start_of_day(now)
             info = PredictionInfo(
                 name=current_slice.group,
-                time=now,
-                range=current_slice.interval,
+                valid_interval=(start_of_day, start_of_day + _ONE_DAY),
                 dsname=dsname,
                 params=self.params,
             )
@@ -145,6 +147,12 @@ class PredictionUpdater:
             levels_upper=self.params.levels_upper,
             levels_upper_lower_bound=self.params.levels_upper_min,
         )
+
+
+def _start_of_day(timestamp: int) -> int:
+    t = time.localtime(timestamp)
+    sec_of_day = t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
+    return timestamp - sec_of_day
 
 
 def estimate_levels(

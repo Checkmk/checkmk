@@ -63,23 +63,18 @@ class DataStat(NamedTuple):
 
 class PredictionInfo(BaseModel, frozen=True):
     name: Timegroup
-    time: int
-    range: tuple[int, int]
+    valid_interval: tuple[int, int]
     dsname: str
     params: PredictionParameters
 
 
 class PredictionData(BaseModel, frozen=True):
     points: list[DataStat | None]
-    data_twindow: list[int]
+    start: int
     step: int
 
-    @property
-    def num_points(self) -> int:
-        return len(self.points)
-
     def predict(self, timestamp: int) -> DataStat | None:
-        unbound_index = (timestamp - self.data_twindow[0]) // self.step
+        unbound_index = (timestamp - self.start) // self.step
         # NOTE: A one hour prediction is valid for 24 hours, while the time range only covers one hour.
         # This is why we have to wrap larger indices back into the available list.
         # For consistenty we allow negative times as well.
@@ -137,7 +132,7 @@ def compute_prediction(
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
 ) -> PredictionData | None:
     time_windows = time_slices(
-        info.time, info.params.horizon * 86400, info.params.period, info.name
+        info.valid_interval[0], info.params.horizon * 86400, info.params.period, info.name
     )
 
     from_time = time_windows[0][0]
@@ -171,7 +166,7 @@ def _calculate_data_for_prediction(
 
     return PredictionData(
         points=_data_stats(slices),
-        data_twindow=[youngest_range.start, youngest_range.stop],
+        start=youngest_range.start,
         step=youngest_range.step,
     )
 

@@ -99,7 +99,7 @@ def page_graph() -> None:
     if not (
         available_predictions_sorted_by_start_time := sorted(
             prediction_data_querier.query_available_predictions(),
-            key=lambda pred_info: pred_info.range[0],
+            key=lambda pred_info: pred_info.valid_interval[0],
         )
     ):
         raise MKGeneralException(
@@ -137,12 +137,12 @@ def page_graph() -> None:
     _create_graph(
         selected_prediction_info.name,
         _GRAPH_SIZE,
-        selected_prediction_info.range,
+        selected_prediction_info.valid_interval,
         vertical_range,
         _make_legend(current_measurement),
     )
 
-    _render_grid(selected_prediction_info.range[0], vertical_range)
+    _render_grid(selected_prediction_info.valid_interval[0], vertical_range)
 
     _render_level_areas(selected_prediction_info, swapped)
 
@@ -204,7 +204,7 @@ def _render_observed_data(
     now: float,
 ) -> None:
     # Try to get current RRD data and render it as well
-    from_time, until_time = selected_prediction_info.range
+    from_time, until_time = selected_prediction_info.valid_interval
     if from_time <= now <= until_time:
         try:
             response = get_rrd_data(

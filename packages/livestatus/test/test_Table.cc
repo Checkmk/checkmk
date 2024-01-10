@@ -497,7 +497,7 @@ ColumnDefinitions contacts_columns() {
         {"can_submit_commands", ColumnType::int_},
         {"custom_variable_names", ColumnType::list},
         {"custom_variable_values", ColumnType::list},
-        {"custom_variables", ColumnType::dict},
+        {"custom_variables", ColumnType::dictstr},
         {"email", ColumnType::string},
         {"host_notification_period", ColumnType::string},
         {"host_notifications_enabled", ColumnType::int_},
@@ -506,9 +506,9 @@ ColumnDefinitions contacts_columns() {
         {"label_names", ColumnType::list},
         {"label_source_names", ColumnType::list},
         {"label_source_values", ColumnType::list},
-        {"label_sources", ColumnType::dict},
+        {"label_sources", ColumnType::dictstr},
         {"label_values", ColumnType::list},
-        {"labels", ColumnType::dict},
+        {"labels", ColumnType::dictstr},
         {"modified_attributes", ColumnType::int_},
         {"modified_attributes_list", ColumnType::list},
         {"name", ColumnType::string},
@@ -517,7 +517,7 @@ ColumnDefinitions contacts_columns() {
         {"service_notifications_enabled", ColumnType::int_},
         {"tag_names", ColumnType::list},
         {"tag_values", ColumnType::list},
-        {"tags", ColumnType::dict},
+        {"tags", ColumnType::dictstr},
     };
 }
 }  // namespace
@@ -764,7 +764,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"current_notification_number", ColumnType::int_},
         {"custom_variable_names", ColumnType::list},
         {"custom_variable_values", ColumnType::list},
-        {"custom_variables", ColumnType::dict},
+        {"custom_variables", ColumnType::dictstr},
         {"display_name", ColumnType::string},
         {"downtimes", ColumnType::list},
         {"downtimes_with_extra_info", ColumnType::list},
@@ -790,9 +790,9 @@ ColumnDefinitions hosts_and_services_columns() {
         {"label_names", ColumnType::list},
         {"label_source_names", ColumnType::list},
         {"label_source_values", ColumnType::list},
-        {"label_sources", ColumnType::dict},
+        {"label_sources", ColumnType::dictstr},
         {"label_values", ColumnType::list},
-        {"labels", ColumnType::dict},
+        {"labels", ColumnType::dictstr},
         {"last_check", ColumnType::time},
         {"last_hard_state", ColumnType::int_},
         {"last_hard_state_change", ColumnType::time},
@@ -820,7 +820,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"pending_flex_downtime", ColumnType::int_},
         {"percent_state_change", ColumnType::double_},
         {"perf_data", ColumnType::string},
-        {"performance_data", ColumnType::dict},
+        {"performance_data", ColumnType::dictstr},
         {"plugin_output", ColumnType::string},
         {"pnpgraph_present", ColumnType::int_},
         {"previous_hard_state", ColumnType::int_},
@@ -833,7 +833,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"state_type", ColumnType::int_},
         {"tag_names", ColumnType::list},
         {"tag_values", ColumnType::list},
-        {"tags", ColumnType::dict},
+        {"tags", ColumnType::dictstr},
     };
 }
 

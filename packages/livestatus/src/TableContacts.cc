@@ -104,7 +104,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         [](const row_type &row) {
             return mk::map_values(row.customVariables());
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets, [](const row_type &row) { return row.customVariables(); }));
 
@@ -114,7 +114,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
         [](const row_type &row) { return mk::map_values(row.tags()); }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         [](const row_type &row) { return row.tags(); }));
 
@@ -124,7 +124,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
         [](const row_type &row) { return mk::map_values(row.labels()); }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         [](const row_type &row) { return row.labels(); }));
 
@@ -138,7 +138,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         [](const row_type &row) {
             return mk::map_values(row.labelSources());
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         [](const row_type &row) { return row.labelSources(); }));
 

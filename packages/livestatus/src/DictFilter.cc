@@ -59,8 +59,10 @@ parse_result parse_unquoted(const std::string &str, size_t start) {
 }
 }  // namespace
 
-DictFilter::DictFilter(Kind kind, std::string columnName, function_type f,
-                       RelationalOperator relOp, const std::string &value)
+DictStrValueFilter::DictStrValueFilter(Kind kind, std::string columnName,
+                                       function_type f,
+                                       RelationalOperator relOp,
+                                       const std::string &value)
     : ColumnFilter{kind, std::move(columnName), relOp, value}
     , f_{std::move(f)} {
     std::string rest;
@@ -74,8 +76,9 @@ DictFilter::DictFilter(Kind kind, std::string columnName, function_type f,
     regExp_ = makeRegExpFor(oper(), ref_string_);
 }
 
-bool DictFilter::accepts(Row row, const User & /*user*/,
-                         std::chrono::seconds /*timezone_offset*/) const {
+bool DictStrValueFilter::accepts(
+    Row row, const User & /*user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
     auto cvm = f_(row);
     auto it = cvm.find(ref_varname_);
     auto act_string = it == cvm.end() ? "" : it->second;
@@ -105,11 +108,11 @@ bool DictFilter::accepts(Row row, const User & /*user*/,
     return false;  // unreachable
 }
 
-std::unique_ptr<Filter> DictFilter::copy() const {
-    return std::make_unique<DictFilter>(*this);
+std::unique_ptr<Filter> DictStrValueFilter::copy() const {
+    return std::make_unique<DictStrValueFilter>(*this);
 }
 
-std::unique_ptr<Filter> DictFilter::negate() const {
-    return std::make_unique<DictFilter>(
+std::unique_ptr<Filter> DictStrValueFilter::negate() const {
+    return std::make_unique<DictStrValueFilter>(
         kind(), columnName(), f_, negateRelationalOperator(oper()), value());
 }

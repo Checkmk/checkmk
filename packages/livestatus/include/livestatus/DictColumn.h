@@ -26,16 +26,18 @@ class RowRenderer;
 class User;
 
 template <typename T>
-class DictColumn : public Column {
+class DictStrValueColumn : public Column {
 public:
     using value_type = std::unordered_map<std::string, std::string>;
     using function_type = std::function<value_type(const T &)>;
 
-    DictColumn(const std::string &name, const std::string &description,
-               const ColumnOffsets &offsets, const function_type &f)
+    DictStrValueColumn(const std::string &name, const std::string &description,
+                       const ColumnOffsets &offsets, const function_type &f)
         : Column{name, description, offsets}, f_{f} {}
 
-    [[nodiscard]] ColumnType type() const override { return ColumnType::dict; }
+    [[nodiscard]] ColumnType type() const override {
+        return ColumnType::dictstr;
+    }
 
     void output(Row row, RowRenderer &r, const User & /*user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
@@ -48,7 +50,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
         const std::string &value) const override {
-        return std::make_unique<DictFilter>(
+        return std::make_unique<DictStrValueFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
     }

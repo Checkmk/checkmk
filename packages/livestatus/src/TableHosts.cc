@@ -153,11 +153,11 @@ void TableHosts::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<StringColumnPerfData<row_type>>(
         prefix + "perf_data", "Optional performance data of the last check",
         offsets, [](const row_type &row) { return row.perf_data(); }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "performance_data", "Optional performance data as a dict",
         offsets, [](const row_type &row) {
             auto d = PerformanceData{row.perf_data(), ""};
-            auto out = DictColumn<row_type>::value_type{};
+            auto out = DictStrValueColumn<row_type>::value_type{};
             out.reserve(d.size());
             std::transform(d.begin(), d.end(), std::inserter(out, out.begin()),
                            [](auto &&metric) {
@@ -476,7 +476,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
             return mk::map_values(
                 row.attributes(AttributeKind::custom_variables));
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         offsets, [](const row_type &row) {
             return row.attributes(AttributeKind::custom_variables);
@@ -491,7 +491,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         [](const row_type &row) {
             return mk::map_values(row.attributes(AttributeKind::tags));
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "tags", "A dictionary of the tags", offsets,
         [](const row_type &row) {
             return row.attributes(AttributeKind::tags);
@@ -506,7 +506,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         [](const row_type &row) {
             return mk::map_values(row.attributes(AttributeKind::labels));
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "labels", "A dictionary of the labels", offsets,
         [](const row_type &row) {
             return row.attributes(AttributeKind::labels);
@@ -524,7 +524,7 @@ void TableHosts::addColumns(Table *table, const ICore &core,
         [](const row_type &row) {
             return mk::map_values(row.attributes(AttributeKind::label_sources));
         }));
-    table->addColumn(std::make_unique<DictColumn<row_type>>(
+    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
         [](const row_type &row) {
             return row.attributes(AttributeKind::label_sources);

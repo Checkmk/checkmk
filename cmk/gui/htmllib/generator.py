@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from typing import Final, final, Literal
 
 from cmk.utils.exceptions import MKGeneralException
@@ -43,6 +44,14 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
+
+FinalJavaScript = typing.Callable[[], str] | str
+
+
+def maybecall(entry: FinalJavaScript) -> str:
+    if callable(entry):
+        return entry()
+    return entry
 
 
 class HTMLWriter:
@@ -87,7 +96,7 @@ class HTMLWriter:
         self.render_headfoot = True
         self.link_target: str | None = None
         self.browser_reload = 0.0
-        self._final_javascript: list[str] = []
+        self._final_javascript: list[FinalJavaScript] = []
 
     def write_text(self, text: HTMLContent) -> None:
         """Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped."""
@@ -144,11 +153,11 @@ class HTMLWriter:
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
         return render_element("script", HTML(code), **attrs)
 
-    def final_javascript(self, code: str) -> None:
+    def final_javascript(self, code: FinalJavaScript) -> None:
         self._final_javascript.append(code)
 
     def final_javascript_code(self) -> str:
-        return "\n".join(self._final_javascript)
+        return "\n".join(maybecall(entry) for entry in self._final_javascript)
 
     def write_final_javascript(self) -> None:
         if not self._final_javascript:

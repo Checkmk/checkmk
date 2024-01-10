@@ -116,9 +116,8 @@ def matches(password: Password, password_hash: PasswordHash) -> bool:
 
     If you can please use verify()"""
     try:
-        verify(password, password_hash)
-        return True
-    except (ValueError, PasswordInvalidError):
+        return _context.verify(password.raw, password_hash)
+    except passlib.exc.UnknownHashError:
         return False
 
 

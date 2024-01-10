@@ -115,3 +115,8 @@
 '.*:Systemtime netapp.*':
   plugin_output: >-2
     System time: [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}, Time difference: [0-9]+ (year|day|hour|second)s?
+'.*:Redis .* Persistence':
+  plugin_output: >-2
+    Last RDB save operation: successful \(Duration: [0-9]+ (second)s?\), Last AOF rewrite operation: successful,
+    Last successful RDB save: [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},
+    Number of changes since last dump: [0-9]+

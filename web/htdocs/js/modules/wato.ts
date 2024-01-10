@@ -354,6 +354,7 @@ export function toggle_test_notification_visibility(
         utils.add_class(source_element, "active");
     }
     toggle_test_notification_options(hide_options);
+    toggle_test_notification_submit(hide_options);
 }
 
 function toggle_test_notification_options(hide_options: boolean) {
@@ -385,6 +386,19 @@ function toggle_test_notification_options(hide_options: boolean) {
             utils.remove_class(service_choice_tr, "hidden");
             utils.remove_class(service_states_tr, "hidden");
             utils.add_class(host_states_tr, "hidden");
+        }
+    }
+}
+
+function toggle_test_notification_submit(hide_options: boolean) {
+    const submit_button = document.getElementById(
+        "_test_host_notifications"
+    ) as HTMLDivElement;
+    if (submit_button) {
+        if (hide_options) {
+            submit_button.setAttribute("name", "_test_host_notifications");
+        } else {
+            submit_button.setAttribute("name", "_test_service_notifications");
         }
     }
 }

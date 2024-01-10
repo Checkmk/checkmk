@@ -572,6 +572,9 @@ class ModeNotifications(ABCNotificationsMode):
                                     icon_name="analysis",
                                     item=PageMenuPopup(
                                         content=self._render_test_notifications(),
+                                        css_classes=["active"]
+                                        if self._test_notification_ongoing()
+                                        else [],
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -669,7 +672,7 @@ class ModeNotifications(ABCNotificationsMode):
                 self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_notification_display_options()
 
-        elif request.has_var("_test_notifications"):
+        elif self._test_notification_ongoing():
             if transactions.check_transaction():
                 return redirect(
                     mode_url(
@@ -695,6 +698,11 @@ class ModeNotifications(ABCNotificationsMode):
                 save_notification_rules,
             )
         return redirect(self.mode_url())
+
+    def _test_notification_ongoing(self) -> bool:
+        return request.has_var("_test_host_notifications") or request.has_var(
+            "_test_service_notifications"
+        )
 
     def _context_from_vars(self) -> dict[str, Any]:
         general_test_options = self._vs_general_test_options().from_html_vars("general_opts")
@@ -753,8 +761,10 @@ class ModeNotifications(ABCNotificationsMode):
         date = date_and_time_opts[0]
         time_ = date_and_time_opts[1]
         context["MICROTIME"] = str(
-            time.mktime(datetime.strptime(f"{date} {time_}", "%Y-%m-%d %H:%M").timetuple())
-            * 1000000.0
+            int(
+                time.mktime(datetime.strptime(f"{date} {time_}", "%Y-%m-%d %H:%M").timetuple())
+                * 1000000.0
+            )
         )
 
         plugin_output = general_test_options["plugin_output"]
@@ -1163,7 +1173,13 @@ class ModeNotifications(ABCNotificationsMode):
             elements=[
                 (
                     "hostname_choice",
-                    MonitoredHostname(title=_("Host"), strict="True"),
+                    MonitoredHostname(
+                        title=_("Host"),
+                        strict="True",
+                        help=_(
+                            "Host properties, such as labels or contact groups, are inherited.",
+                        ),
+                    ),
                 ),
                 (
                     "service_choice",
@@ -1231,7 +1247,7 @@ class ModeNotifications(ABCNotificationsMode):
                     TextInput(
                         title=_("Plugin output"),
                         placeholder=_("This is a notification test"),
-                        size=37,
+                        size=46,
                     ),
                 ),
             ],
@@ -1239,10 +1255,19 @@ class ModeNotifications(ABCNotificationsMode):
             validate=_validate_general_opts,
         )
 
+    def _vs_dispatched_option(self) -> Checkbox:
+        return Checkbox(
+            title=_("Dispatch notification"),
+            label=_(
+                "Send out notification according to notification rules (uncheck to avoid spam)"
+            ),
+            default_value=False,
+        )
+
     def _vs_advanced_test_options(self) -> Foldable:
         return Foldable(
             valuespec=Dictionary(
-                title=_("Advanced options"),
+                title=_("Advanced condition simulation"),
                 elements=[
                     (
                         "date_and_time",
@@ -1269,41 +1294,46 @@ class ModeNotifications(ABCNotificationsMode):
                         "notification_nr",
                         Integer(label="Notification number", default_value=1),
                     ),
-                    (
-                        "dispatch",
-                        Checkbox(
-                            label=_("Dispatch notifications"),
-                            default_value=True,
-                        ),
-                    ),
                 ],
                 optional_keys=[],
             )
         )
 
     def _render_test_notifications(self) -> HTML:
-        html.final_javascript(
-            'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
-        )
+        self._ensure_correct_default_test_options()
+
         with output_funnel.plugged():
             with html.form_context("test_notifications", method="POST"):
-                # TODO adjust info
-                html.show_message(
-                    _("Test if a given notification matches your notification rules.")
-                )
+                html.help(_("Test a self defined notification against your ruleset."))
                 self._vs_test_on_options()
                 self._vs_general_test_options().render_input_as_form("general_opts", {})
+                self._vs_dispatched_option().render_input("dispatch", False)
                 self._vs_advanced_test_options().render_input("advanced_opts", "")
                 html.hidden_fields()
 
             html.button(
-                varname="_test_notifications",
-                title=_("Test"),
+                varname="_test_host_notifications",
+                title=_("Test notifications"),
                 cssclass="hot",
                 form="form_test_notifications",
             )
+            html.jsbutton(
+                varname="_cancel_test_notifications",
+                text=_("Cancel"),
+                onclick="cmk.page_menu.close_active_dropdown()",
+            )
 
             return HTML(output_funnel.drain())
+
+    def _ensure_correct_default_test_options(self) -> None:
+        if request.has_var("_test_service_notifications"):
+            html.final_javascript(
+                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
+            )
+        else:
+            html.final_javascript(
+                'cmk.wato.toggle_test_notification_visibility("test_on_host", "test_on_service", true);'
+            )
 
 
 def _validate_general_opts(value, varprefix):
@@ -1312,6 +1342,12 @@ def _validate_general_opts(value, varprefix):
     if not value["hostname_choice"]:
         raise MKUserError(
             f"{varprefix}_p_hostname_choice", _("Please provide a hostname to test with.")
+        )
+
+    if request.has_var("_test_service_notifications"):
+        raise MKUserError(
+            f"{varprefix}_p_service_choice",
+            _("If you want to test service notifications, please provide a service to test with."),
         )
 
 

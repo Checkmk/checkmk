@@ -118,7 +118,7 @@ urllib3 = "~=1.26.15"  # needed by requests
 pyopenssl = "~=23.0"
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
-requests = "~=2.28"
+requests = "~=2.31"
 pykerberos = "==1.2.4"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
 markupsafe = "==2.1.2"  # needed by jinja2
@@ -193,7 +193,7 @@ grpcio = "~=1.53"
 google-api-python-client = "~=2.83"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.3.2"  # used by mkbench/dcd/liveproxyd
 black = {version = "==23.3.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
-meraki = "==1.30.0"  # used by special agent Cisco Meraki
+meraki = "==1.41.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "~=7.4"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.15.0"  # used for backups to Azure Blob Storage

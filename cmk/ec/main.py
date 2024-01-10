@@ -32,10 +32,9 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
-from typing import Any, assert_never, Literal
+from typing import Any, assert_never, Literal, TypedDict
 
 from setproctitle import setthreadtitle
-from typing_extensions import TypedDict
 
 import cmk.utils.daemon
 import cmk.utils.paths

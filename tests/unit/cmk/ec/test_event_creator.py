@@ -270,9 +270,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424)",
         ),
         pytest.param(
-            "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code".encode(
-                "utf-8"
-            ),
+            "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code".encode(),
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -288,9 +286,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with BOM",
         ),
         pytest.param(
-            '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code'.encode(
-                "utf-8"
-            ),
+            '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code'.encode(),
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -322,9 +318,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with mean structured data, no override",
         ),
         pytest.param(
-            r'<134>1 2016-06-02T12:49:05.5+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code'.encode(
-                "utf-8"
-            ),
+            r'<134>1 2016-06-02T12:49:05.5+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code'.encode(),
             {
                 "application": "weird Ƈ ƒ",
                 "core_host": None,

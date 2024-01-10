@@ -1305,6 +1305,10 @@ input.hidden_submit {
   text-decoration: underline;
 }
 
+.italic {
+  font-style: italic;
+}
+
 @mixin label-groups-mixin {
   td.vlof_buttons,
   td.vlof_content {

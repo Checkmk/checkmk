@@ -1566,3 +1566,45 @@ table.data.job_table td {
 .tagify.display[readonly] tag {
   padding: 2px 0;
 }
+
+div#saas_error_page {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 770px;
+  height: 605px;
+  margin: auto;
+  color: $font-color;
+  background: transparent;
+
+  div#error_container {
+    position: relative;
+    top: 187px;
+    left: 10px;
+    width: 450px;
+    height: auto;
+    margin: -30px auto 10px;
+    background: $navigation-bg-color;
+    border-radius: 8px;
+    padding: 2.5 * $spacing 4 * $spacing;
+    box-sizing: border-box;
+
+    h1 {
+      margin: 0 0 2 * $spacing;
+    }
+
+    div.error_message span {
+      display: block;
+    }
+
+    input.buttonlink {
+      margin: 0.5 * $spacing 0;
+    }
+
+    div.support_info {
+      margin-top: 2 * $spacing;
+    }
+  }
+}

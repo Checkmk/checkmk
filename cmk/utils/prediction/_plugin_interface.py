@@ -90,6 +90,13 @@ class PredictionUpdater:
         period_info = PREDICTION_PERIODS[self.params.period]
 
         current_slice = Slice.from_timestamp(now, period_info)
+        start_of_day = _start_of_day(now)
+        info = PredictionInfo(
+            name=current_slice.group,
+            valid_interval=(start_of_day, start_of_day + _ONE_DAY),
+            dsname=dsname,
+            params=self.params,
+        )
 
         prediction_store = PredictionStore(
             PREDICTION_DIR,
@@ -105,13 +112,6 @@ class PredictionUpdater:
                 params=self.params,
             )
         ) is None:
-            start_of_day = _start_of_day(now)
-            info = PredictionInfo(
-                name=current_slice.group,
-                valid_interval=(start_of_day, start_of_day + _ONE_DAY),
-                dsname=dsname,
-                params=self.params,
-            )
             logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
             prediction_store.remove_prediction(info.name)
 

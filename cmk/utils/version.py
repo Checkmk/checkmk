@@ -42,6 +42,13 @@ class Edition(_EditionValue, enum.Enum):
     CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
+    @classmethod
+    def from_long_edition(cls, long: str) -> Edition:
+        for e in cls:
+            if e.long == long:
+                return e
+        raise RuntimeError(f"Unknown long edition: {long}")
+
 
 @lru_cache
 def omd_version() -> str:

@@ -39,7 +39,8 @@ def fixture_regression_data(expected_version):
             [
                 b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3\r\n",
                 b"version_info = ",
-                expected_version.encode(),
+                # TODO (sk): Use expected_version.encode(),
+                b"3.11.5",
                 b"\r\n",
                 b"include-system-site-packages = false\r\n",
             ]

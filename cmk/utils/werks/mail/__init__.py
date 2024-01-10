@@ -274,10 +274,11 @@ def get_werk_commits(repo: Repo, branch_name: str, args: Args) -> Sequence[WerkC
     # first we have to check if there are notes at all, otherwise we might send
     # mails for all existing commits if we forgot to fetch the notes.
 
-    if not repo.git.notes(f"--ref={args.ref}", "list"):
+    if not repo.git.notes(f"--ref={args.ref}", "list") and not args.assume_no_notes_but:
         raise RuntimeError(
             f"Could not find any notes with ref={args.ref}. "
-            f"You may use --do-fetch-git-notes to fetch them from remote."
+            "You may use --do-fetch-git-notes to fetch them from remote. "
+            "Or use the --assume-no-notes-but option"
         )
 
     logger.info("notes sanity check passed")

@@ -90,6 +90,7 @@ from cmk.gui.watolib.host_attributes import (
     MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -1544,6 +1545,16 @@ class Folder(FolderProtocol):
         if may_use_redis():
             get_wato_redis_client(self.tree).save_folder_info(self)
 
+    def has_rules(self) -> bool:
+        return Path(self.rules_file_path()).exists()
+
+    def is_empty(self) -> bool:
+        return not (self.has_hosts() or self.has_subfolders() or self.has_rules())
+
+    def is_referenced(self) -> bool:
+        conditions = PredefinedConditionStore().filter_by_path(self.path())
+        return len(conditions) > 0
+
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
     # '-----------------------------------------------------------------------'
@@ -2162,11 +2173,11 @@ class Folder(FolderProtocol):
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
-        # 2. check if hosts have parents
         subfolder = self.subfolder(name)
         if subfolder is None:
             return
 
+        # 2. Check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
             raise MKUserError(

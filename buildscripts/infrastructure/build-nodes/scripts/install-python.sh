@@ -16,11 +16,11 @@ else
     PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
 fi
 
+TARGET_DIR="${TARGET_DIR:-/opt}"
 OPENSSL_VERSION=3.0.12
-OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
+OPENSSL_PATH="${TARGET_DIR}/openssl-${OPENSSL_VERSION}"
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
-TARGET_DIR="/opt"
 
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=10
@@ -59,4 +59,4 @@ if [ "$1" != "link-only" ]; then
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
 
-test_package "/opt/bin/python3 --version" "Python $(get_version "$SCRIPT_DIR" PYTHON_VERSION)"
+test_package "${TARGET_DIR}/bin/python3 --version" "Python $(get_version "$SCRIPT_DIR" PYTHON_VERSION)"

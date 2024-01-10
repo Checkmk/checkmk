@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 OPENSSL_VERSION=3.0.12
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 TARGET="" # for x64, use the default target
 
 # OpenSSL "config" seems to have problems with detecting 32bit architecture in some cases
@@ -30,7 +30,7 @@ build_package() {
     # Now build the package
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
-    ./config "${TARGET}" --libdir=lib --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
+    ./config "${TARGET}" --libdir=lib --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,"${TARGET_DIR}/${DIR_NAME}"/lib
     make -j6
     make install
 

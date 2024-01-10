@@ -14,8 +14,6 @@ from pathlib import Path
 import pytest
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 
-from tests.testlib.utils import current_base_branch_name
-
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
     # when pytest based tests are being run from inside the IDE
@@ -37,6 +35,7 @@ pytest.register_assert_rewrite(
 pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 import tests.testlib as testlib
+from tests.testlib.utils import current_base_branch_name
 
 collect_ignore = []
 

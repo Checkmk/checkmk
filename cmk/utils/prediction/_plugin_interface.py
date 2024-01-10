@@ -123,9 +123,9 @@ class PredictionUpdater:
 
         return data_for_pred
 
-    # levels_factor: this multiplies all absolute levels. Usage for example
-    # in the cpu.loads check the multiplies the levels by the number of CPU
-    # cores.
+    # levels_factor: this multiplies all absolute levels.
+    # Passed via `scale` argument of the legacy check_levels.
+    # Only remaining usages in mem plugin and diskstat include.
     def __call__(
         self,
         metric_name: str,

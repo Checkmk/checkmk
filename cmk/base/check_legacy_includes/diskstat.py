@@ -74,7 +74,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
             bytes_per_sec,
             dsname,
             levels,
-            scale=1048576,
+            scale=1024**2,
             statemarkers=True,
             human_readable_func=render.iobandwidth,
             infoname=what,

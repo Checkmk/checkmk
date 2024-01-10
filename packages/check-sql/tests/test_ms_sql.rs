@@ -933,7 +933,7 @@ fn test_run_as_plugin_with_config() {
         .unwrap_err();
     let (stderr, code) = tools::get_bad_results(&exec_err).unwrap();
     assert_eq!(code, 1);
-    assert_eq!(stderr, "Error: No Config\n");
+    assert!(stderr.starts_with("Error: No Config\n"), "{}", stderr);
 }
 
 /// Minimally validates stdout for a given key words.

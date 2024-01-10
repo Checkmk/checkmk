@@ -26,6 +26,7 @@ import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -370,6 +371,7 @@ class ModeRoleMatrix(WatoMode):
                 section.name,
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
+                limit=max(200, active_config.table_row_limit),
             ) as table:
                 permission_list = permission_registry.get_sorted_permissions(section)
 

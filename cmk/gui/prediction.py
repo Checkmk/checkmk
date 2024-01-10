@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import json
 import time
 from collections.abc import Sequence
@@ -34,6 +35,14 @@ from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 _GRAPH_SIZE = 2000, 700
+
+
+class Color(enum.StrEnum):
+    BLACK = "#000000"
+    WHITE = "#ffffff"
+    YELLOW = "#ffff00"
+    RED = "#ff0000"
+    BLUE = "#0000ff"
 
 
 _VRANGES = [
@@ -124,21 +133,13 @@ def page_graph() -> None:
 
     swapped = _swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
     vertical_range = _compute_vertical_range(swapped)
-    legend = [
-        ("#000000", _("Reference")),
-        ("#ffffff", _("OK area")),
-        ("#ffff00", _("Warning area")),
-        ("#ff0000", _("Critical area")),
-    ]
-    if current_measurement is not None:
-        legend.append(("#0000ff", _("Current value: %.2f") % current_measurement[1]))
 
     _create_graph(
         selected_prediction_info.name,
         _GRAPH_SIZE,
         selected_prediction_info.range,
         vertical_range,
-        legend,
+        _make_legend(current_measurement),
     )
 
     _render_grid(selected_prediction_info.range[0], vertical_range)
@@ -154,6 +155,23 @@ def page_graph() -> None:
     html.footer()
 
 
+def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:
+    return [
+        (Color.BLACK, _("Prediction")),
+        (Color.WHITE, _("OK area")),
+        (Color.YELLOW, _("Warning area")),
+        (Color.RED, _("Critical area")),
+        (
+            Color.BLUE,
+            (
+                _("Observed value")
+                if current_measurement is None
+                else _("Observed value: %.2f") % current_measurement[1]
+            ),
+        ),
+    ]
+
+
 def _render_grid(x_start: float, y_range: tuple[float, float]) -> None:
     vert_scala = _compute_vertical_scala(*y_range)
     time_scala = [[x_start + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
@@ -162,25 +180,21 @@ def _render_grid(x_start: float, y_range: tuple[float, float]) -> None:
 
 def _render_level_areas(selected_prediction_info: PredictionInfo, swapped: SwappedStats) -> None:
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(swapped.upper_warn, swapped.upper_crit, "#fff000", 0.4)
-        _render_area_reverse(swapped.upper_crit, "#ff0000", 0.1)
+        _render_dual_area(swapped.upper_warn, swapped.upper_crit, Color.YELLOW, 0.4)
+        _render_area_reverse(swapped.upper_crit, Color.RED, 0.1)
 
     if selected_prediction_info.params.levels_lower is not None:
-        _render_dual_area(swapped.lower_crit, swapped.lower_warn, "#fff000", 0.4)
-        _render_area(swapped.lower_crit, "#ff0000", 0.1)
-        _render_dual_area(swapped.average, swapped.lower_warn, "#ffffff", 0.5)
-        _render_curve(swapped.lower_warn, "#e0e000", square=True)
-        _render_curve(swapped.lower_crit, "#f0b0a0", square=True)
+        _render_dual_area(swapped.lower_crit, swapped.lower_warn, Color.YELLOW, 0.4)
+        _render_area(swapped.lower_crit, Color.RED, 0.1)
+        _render_dual_area(swapped.average, swapped.lower_warn, Color.WHITE, 0.5)
 
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(swapped.upper_warn, swapped.average, "#ffffff", 0.5)
-        _render_curve(swapped.upper_warn, "#e0e000", square=True)
-        _render_curve(swapped.upper_crit, "#f0b0b0", square=True)
+        _render_dual_area(swapped.upper_warn, swapped.average, Color.WHITE, 0.5)
 
 
 def _render_prediction(swapped: SwappedStats) -> None:
-    _render_curve(swapped.average, "#000000")
-    _render_curve(swapped.average, "#000000")  # repetition makes line bolder
+    _render_curve(swapped.average, Color.BLACK)
+    _render_curve(swapped.average, Color.BLACK)  # repetition makes line bolder
 
 
 def _render_observed_data(
@@ -211,9 +225,9 @@ def _render_observed_data(
 
         rrd_data = response.values
 
-        _render_curve(rrd_data, "#0000ff", 2)
+        _render_curve(rrd_data, Color.BLUE, 2)
         if current_measurement is not None:
-            _render_point(*current_measurement, "#0000ff")
+            _render_point(*current_measurement, Color.BLUE)
 
 
 def _prediction_querier_from_request(request: Request) -> PredictionQuerier:

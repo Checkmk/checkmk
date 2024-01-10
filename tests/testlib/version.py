@@ -203,8 +203,9 @@ def _read_os_release() -> dict[str, str] | None:
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls) -> "ABCPackageManager":
-        distro_name = get_omd_distro_name()
+    def factory(cls, distro_name: str | None = None) -> "ABCPackageManager":
+        if not distro_name:
+            distro_name = get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
 
         if distro_name.startswith("sles"):
@@ -212,6 +213,9 @@ class ABCPackageManager(abc.ABC):
 
         if distro_name.startswith("el"):
             return PackageManagerRHEL(distro_name)
+
+        if distro_name.startswith("cma"):
+            return PackageManagerCMA(distro_name)
 
         return PackageManagerDEB(distro_name)
 
@@ -223,7 +227,7 @@ class ABCPackageManager(abc.ABC):
         return Path("/etc/debian_version").exists()
 
     def install(self, version: str, edition: Edition) -> None:
-        package_name = self._package_name(edition, version)
+        package_name = self.package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
         packages_dir = Path(__file__).parent.parent.parent / "package_download"
         if (package_path := packages_dir / package_name).exists():
@@ -259,7 +263,7 @@ class ABCPackageManager(abc.ABC):
         package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
-    def _package_name(self, edition: Edition, version: str) -> str:
+    def package_name(self, edition: Edition, version: str) -> str:
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
@@ -320,7 +324,7 @@ def sha256_file(path: Path) -> str:
 
 
 class PackageManagerDEB(ABCPackageManager):
-    def _package_name(self, edition: Edition, version: str) -> str:
+    def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path: Path) -> None:
@@ -330,7 +334,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
-    def _package_name(self, edition: Edition, version: str) -> str:
+    def package_name(self, edition: Edition, version: str) -> str:
         return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
 
 
@@ -342,3 +346,34 @@ class PackageManagerSuSE(ABCPackageManagerRPM):
 class PackageManagerRHEL(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
         self._execute(["rpm", "-i", package_path])
+
+
+class PackageManagerCMA(PackageManagerDEB):
+    def package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.long}-{version}-{self.distro_name.split('-')[1]}-x86_64.cma"
+
+
+# TODO: Duplicated in cmk_dev.utils.distro_code
+def code_name(distro_name: str) -> str:
+    if code := {
+        "cma-3": "cma-3",
+        "cma-4": "cma-4",
+        "debian-10": "buster",
+        "debian-11": "bullseye",
+        "debian-12": "bookworm",
+        "ubuntu-20.04": "focal",
+        "ubuntu-22.04": "jammy",
+        "ubuntu-23.04": "lunar",
+        "ubuntu-23.10": "mantic",
+        "centos-7": "el7",
+        "centos-8": "el8",
+        "almalinux-9": "el9",
+        "sles-15sp1": "sles15sp1",
+        "sles-15sp2": "sles15sp2",
+        "sles-15sp3": "sles15sp3",
+        "sles-15sp4": "sles15sp4",
+        "sles-12sp5": "sles12sp5",
+        "sles-15sp5": "sles15sp5",
+    }.get(distro_name):
+        return code
+    raise RuntimeError(f"Unknown distro: {distro_name}")

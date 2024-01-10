@@ -44,6 +44,13 @@ class Edition(_EditionValue, enum.Enum):
     def from_version_string(cls, raw: str) -> Edition:
         return cls[raw.split(".")[-1].upper()]
 
+    @classmethod
+    def from_long_edition(cls, long: str) -> Edition:
+        for e in cls:
+            if e.long == long:
+                return e
+        raise RuntimeError(f"Unknown long edition: {long}")
+
 
 @cache
 def omd_version() -> str:

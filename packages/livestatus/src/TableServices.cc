@@ -537,9 +537,7 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<ListColumn<row_type>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
-        offsets, [&core](const row_type &row) {
-            return core.metrics(row, core.loggerRRD());
-        }));
+        offsets, [&core](const row_type &row) { return core.metrics(row); }));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<ListColumn<
                                 row_type, RRDDataMaker::value_type>>>(
         prefix + "rrddata",

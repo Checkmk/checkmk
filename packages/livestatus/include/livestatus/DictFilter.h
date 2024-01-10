@@ -20,14 +20,14 @@ enum class RelationalOperator;
 class Row;
 class User;
 
-class DictFilter : public ColumnFilter {
+class DictStrValueFilter : public ColumnFilter {
     // Elsewhere, `function_type` is a std::variant of functions but we
     // currently have a single element, so we skip that entirely.
     using function_type = std::function<Attributes(Row)>;
 
 public:
-    DictFilter(Kind kind, std::string columnName, function_type f,
-               RelationalOperator relOp, const std::string &value);
+    DictStrValueFilter(Kind kind, std::string columnName, function_type f,
+                       RelationalOperator relOp, const std::string &value);
     [[nodiscard]] bool accepts(
         Row row, const User &user,
         std::chrono::seconds timezone_offset) const override;

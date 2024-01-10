@@ -16,12 +16,14 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.openapi.test_openapi_rules import _create_rule
 
 from cmk.utils import paths, version
 from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 
 
 @pytest.mark.parametrize(
@@ -966,3 +968,117 @@ def test_move_root_folder(clients: ClientRegistry) -> None:
     resp = clients.Folder.move(folder_name="~", destination="/", expect_ok=False)
     resp.assert_status_code(400)
     assert resp.json["detail"] == "You can't move the root folder."
+
+
+def test_openapi_delete_folder_with_hosts(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.HostConfig.create(host_name="host1", folder="~new_folder")
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_subfolders(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.Folder.create(
+        parent="~new_folder",
+        folder_name="sub_folder",
+        title="sub_folder",
+    )
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+
+    _create_rule(clients, folder="~new_folder", value_raw="{'levels': (10.0, 5.0)}")
+    no_force_delete_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+    assert no_force_delete_result.status_code == 409
+
+
+def test_openapi_delete_folder_with_predefined_conditions(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+
+    clients.Folder.create(
+        parent="/new_folder",
+        folder_name="subfolder",
+        title="subfolder",
+    )
+
+    PredefinedConditionStore().save(
+        {
+            "condition_1": {
+                "title": "condition_1",
+                "comment": "",
+                "docu_url": "",
+                "conditions": {"host_folder": "new_folder"},
+                "owned_by": None,
+                "shared_with": [],
+            },
+            "condition_2": {
+                "title": "condition_2",
+                "comment": "",
+                "docu_url": "",
+                "conditions": {"host_folder": "new_folder/subfolder"},
+                "owned_by": None,
+                "shared_with": [],
+            },
+        },
+        True,
+    )
+
+    no_force_delete_subfolder_result = clients.Folder.delete(
+        folder_name="~new_folder~subfolder",
+        mode="abort_on_nonempty",
+        expect_ok=False,
+    )
+    no_force_delete_folder_result = clients.Folder.delete(
+        folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
+    )
+
+    clients.Folder.delete(folder_name="~new_folder~subfolder").assert_status_code(204)
+    clients.Folder.delete(folder_name="~new_folder").assert_status_code(204)
+
+    assert no_force_delete_subfolder_result.status_code == 409
+    assert no_force_delete_folder_result.status_code == 409
+
+
+def test_openapi_delete_folder_default_mode_recursive(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="new_folder",
+    )
+    clients.HostConfig.create(host_name="host1", folder="~new_folder")
+    no_force_delete_result = clients.Folder.delete(folder_name="~new_folder")
+
+    clients.Folder.get(folder_name="~new_folder", expect_ok=False).assert_status_code(404)
+    assert no_force_delete_result.status_code == 204

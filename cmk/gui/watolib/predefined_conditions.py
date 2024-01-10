@@ -41,6 +41,14 @@ class PredefinedConditionStore(WatoSimpleConfigFile[PredefinedConditionSpec]):
         user_groups = userdb.contactgroups_of_user(user.id)
         return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
 
+    def filter_by_path(self, path: str) -> dict[str, PredefinedConditionSpec]:
+        result = {}
+        for ident, condition in self.load_for_reading().items():
+            if condition["conditions"]["host_folder"] == path:
+                result[ident] = condition
+
+        return result
+
     def choices(self):
         return [
             (ident, entry["title"])

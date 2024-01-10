@@ -180,3 +180,24 @@ class BulkDeleteFolder(BaseSchema):
         required=True,
         example=["production", "secondproduction"],
     )
+
+
+class DeleteModeField(fields.String):
+    def __init__(
+        self,
+        required=False,
+        description="Delete policy: 'recursive': Deletes the folder and all the elements it contains. 'abort_on_nonempty': Deletes the folder only if it is not empty.",
+        example="abort_on_nonempty",
+        load_default="recursive",
+    ):
+        super().__init__(
+            required=required,
+            description=description,
+            enum=["recursive", "abort_on_nonempty"],
+            example=example,
+            load_default=load_default,
+        )
+
+    @classmethod
+    def field_name(cls) -> str:
+        return "delete_mode"

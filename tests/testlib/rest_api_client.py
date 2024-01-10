@@ -888,6 +888,9 @@ class HostConfigClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+DELETE_MODE = Literal["recursive", "abort_on_nonempty"]
+
+
 class FolderClient(RestApiClient):
     domain: API_DOMAIN = "folder_config"
 
@@ -995,10 +998,18 @@ class FolderClient(RestApiClient):
             headers=self._set_etag_header(folder_name, etag),
         )
 
-    def delete(self, folder_name: str) -> Response:
+    def delete(
+        self,
+        folder_name: str,
+        mode: DELETE_MODE | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        force_flag = f"?delete_mode={mode}" if mode is not None else ""
+
         return self.request(
             "delete",
-            url=f"/objects/{self.domain}/{folder_name}",
+            url=f"/objects/{self.domain}/{folder_name}{force_flag}",
+            expect_ok=expect_ok,
         )
 
     def _set_etag_header(

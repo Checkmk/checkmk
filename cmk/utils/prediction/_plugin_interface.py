@@ -13,7 +13,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import PREDICTION_PERIODS, Slice, Timegroup
+from ._grouping import PREDICTION_PERIODS, Slice
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
@@ -35,8 +35,7 @@ _ONE_DAY = 24 * 3600
 
 def _get_prediction(
     store: PredictionStore,
-    timegroup: Timegroup,
-    params: PredictionParameters,
+    required_prediction: PredictionInfo,
 ) -> PredictionData | None:
     """Return a valid prediction, if available
 
@@ -46,19 +45,14 @@ def _get_prediction(
     * no prediction for these parameters (time group) has been made yet
     * no prediction data file is found
     """
-    if (last_info := store.get_info(timegroup)) is None:
+    if (available_prediciton := store.get_info(required_prediction.name)) is None:
         return None
 
-    now = time.time()
-    if last_info.valid_interval[1] < now:
-        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
+    if available_prediciton != required_prediction:
+        logger.log(VERBOSE, "Prediction outdated or parameters have changed.")
         return None
 
-    if last_info.params != params:
-        logger.log(VERBOSE, "Prediction parameters have changed.")
-        return None
-
-    return store.get_data(timegroup)
+    return store.get_data(available_prediciton.name)
 
 
 class PredictionUpdater:
@@ -107,9 +101,8 @@ class PredictionUpdater:
 
         if (
             data_for_pred := _get_prediction(
-                store=prediction_store,
-                timegroup=current_slice.group,
-                params=self.params,
+                prediction_store,
+                info,
             )
         ) is None:
             logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)

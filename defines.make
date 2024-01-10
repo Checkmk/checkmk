@@ -86,6 +86,18 @@ PYTHON_VERSION_PATCH   := $(word 3,$(PY_ARRAY))
 PYTHON_MAJOR_MINOR     := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
 PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
+# We're separating the python version used in the windows agent modules as they are not directly connected.
+# However, we should keep them as close as possible.
+# TODO(sk): Bump to 3.12 as soon as windows nodes are ready
+PYTHON_VERSION_WINDOWS := 3.11.5
+
+# convenience stuff derived from PYTHON_VERSION_WINDOWS
+PY_ARRAY_WINDOWS		:= $(subst ., ,$(PYTHON_VERSION_WINDOWS))
+PYTHON_VERSION_WINDOWS_MAJOR	:= $(word 1,$(PY_ARRAY_WINDOWS))
+PYTHON_VERSION_WINDOWS_MINOR   := $(word 2,$(PY_ARRAY_WINDOWS))
+PYTHON_VERSION_WINDOWS_PATCH   := $(word 3,$(PY_ARRAY_WINDOWS))
+PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR := $(PYTHON_VERSION_WINDOWS_MAJOR).$(PYTHON_VERSION_WINDOWS_MINOR)
+
 AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
 
 # Needed for bootstrapping CI and development environments

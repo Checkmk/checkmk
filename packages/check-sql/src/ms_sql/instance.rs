@@ -642,7 +642,7 @@ impl SqlInstance {
 
     fn format_databases_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
         format!(
-            "{}{sep}{}{sep}{:?}{}\n",
+            "{}{sep}{}{sep}{}{}\n",
             self.name,
             d.replace(' ', "_"),
             e,
@@ -755,7 +755,7 @@ impl SqlInstance {
         run_query(client, query)
             .await
             .map(|rows| self.to_connections_entries(&rows, sep))
-            .unwrap_or_else(|e| format!("{}{sep}{:?}\n", self.name, e))
+            .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))
     }
 
     fn to_connections_entries(&self, rows: &[Vec<Row>], sep: char) -> String {
@@ -796,9 +796,9 @@ impl SqlInstance {
                             self.to_entries(rows, section.sep())
                         )
                     })
-                    .unwrap_or_else(|e| format!("{} {:?}\n", self.name, e))
+                    .unwrap_or_else(|e| format!("{} {}\n", self.name, e))
             }
-            Err(err) => format!("{} {:?}\n", self.name, err),
+            Err(err) => format!("{} {}\n", self.name, err),
         }
     }
 

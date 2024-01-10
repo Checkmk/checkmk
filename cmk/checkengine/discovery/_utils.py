@@ -14,7 +14,13 @@ from typing import Final, Generic, Literal, Protocol, Self, TypeVar
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
 DiscoveryVsSetting = dict[
-    Literal["add_new_services", "remove_vanished_services", "update_host_labels"], bool
+    Literal[
+        "add_new_services",
+        "remove_vanished_services",
+        "update_host_labels",
+        "update_changed_service_labels",
+    ],
+    bool,
 ]
 DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting]
 
@@ -55,14 +61,14 @@ class DiscoverySettings:
                 add_new_services=True,
                 remove_vanished_services=True,
                 update_changed_service_labels=True,
-                update_changed_service_parameters=True,
+                update_changed_service_parameters=False,
             )
 
         return cls(
             update_host_labels=mode[1].get("update_host_labels", False),
             add_new_services=mode[1].get("add_new_services", False),
             remove_vanished_services=mode[1].get("remove_vanished_services", False),
-            update_changed_service_labels=False,
+            update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
             update_changed_service_parameters=False,
         )
 

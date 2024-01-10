@@ -429,7 +429,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
-        assert_eq!(values.len(), 6);
+        assert_eq!(values.len(), 6, "wrong: {l}");
         assert_eq!(values[0], instance.name, "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());

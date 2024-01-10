@@ -1,0 +1,19 @@
+Title: folder_config: Prevent unintentional deletion of a non-empty folder
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1704965695
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Prior to this Werk, the REST API could delete non-empty folders without any further check. With this Werk, the endpoint now accepts the <strong>delete_method</strong> query parameter. The possible values are:
+- <strong>recursive</strong>: Deletes the folder and all the elements it contains.
+- <strong>abort_on_nonempty</strong>: Deletes the folder only if it is not empty
+
+If no delete_method is provided, <strong>recursive</strong> is asumed and the behaviour is the same as before this Werk.
+
+The enpoint will return a 409 status code when trying to delete a folder that contains hosts, rules, subfolders or is referenced by another object.
+
+Use example:
+<code>curl -X 'DELETE' 'http://example.com/my_site/check_mk/api/1.0/objects/folder_config/my_folder?delete_metod=abort_on_nonempty' -H 'accept: <em>/</em></code>

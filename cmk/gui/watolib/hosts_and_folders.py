@@ -79,6 +79,7 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -1652,6 +1653,16 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             for host in self._hosts.values():
                 host.drop_caches()
 
+    def has_rules(self) -> bool:
+        return Path(self.rules_file_path()).exists()
+
+    def is_empty(self) -> bool:
+        return not (self.has_hosts() or self.has_subfolders() or self.has_rules())
+
+    def is_referenced(self) -> bool:
+        conditions = PredefinedConditionStore().filter_by_path(self.path())
+        return len(conditions) > 0
+
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
     # '-----------------------------------------------------------------------'
@@ -2332,11 +2343,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_permission("write")
         self.need_unlocked_subfolders()
 
-        # 2. check if hosts have parents
         subfolder = self.subfolder(name)
         if subfolder is None:
             return
 
+        # 2. Check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
             raise MKUserError(

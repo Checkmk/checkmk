@@ -44,6 +44,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
+    DeleteModeField,
     MoveFolder,
     UpdateFolder,
 )
@@ -71,6 +72,8 @@ PATH_FOLDER_FIELD = {
         required=True,
     )
 }
+
+FORCE_PARAM = {DeleteModeField.field_name(): DeleteModeField()}
 
 RW_PERMISSIONS = permissions.AllPerm(
     [
@@ -249,9 +252,10 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     path_params=[PATH_FOLDER_FIELD],
+    query_params=[FORCE_PARAM],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[401],
+    additional_status_codes=[401, 409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
@@ -263,7 +267,16 @@ def delete(params: Mapping[str, Any]) -> Response:
             detail="Deleting the root folder is not permitted.",
             status=401,
         )
+
+    if (params["delete_mode"] != "recursive") and (not folder.is_empty() or folder.is_referenced()):
+        raise ProblemException(
+            title="Problem deleting folder.",
+            detail="Folder is not empty or is referenced by another object. Use the force parameter to delete it.",
+            status=409,
+        )
+
     parent.delete_subfolder(folder.name())
+
     return Response(status=204)
 
 

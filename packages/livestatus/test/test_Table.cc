@@ -820,6 +820,7 @@ ColumnDefinitions hosts_and_services_columns() {
         {"pending_flex_downtime", ColumnType::int_},
         {"percent_state_change", ColumnType::double_},
         {"perf_data", ColumnType::string},
+        {"performance_data", ColumnType::dict},
         {"plugin_output", ColumnType::string},
         {"pnpgraph_present", ColumnType::int_},
         {"previous_hard_state", ColumnType::int_},

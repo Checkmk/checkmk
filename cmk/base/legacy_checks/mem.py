@@ -289,6 +289,9 @@ def check_mem_windows(
             free = section["%sFree" % prefix]
         except KeyError:
             continue
+        # Metrics for total mem and pagefile are expected in MB
+        yield 0, "", [(metric_name.replace("used", "total"), total / _MB)]
+
         used = float(total - free)
 
         parsed_levels = _get_levels_type_and_value(levels)
@@ -302,12 +305,6 @@ def check_mem_windows(
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
-
-        # Metrics for total mem and pagefile are expected in MB
-        if prefix == "Mem":
-            perfdata.append(("mem_total", total / _MB))
-        elif prefix == "Page":
-            perfdata.append(("pagefile_total", total / _MB))
 
         # Do averaging, if configured, just for matching the levels
         if average is not None:

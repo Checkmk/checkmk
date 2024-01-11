@@ -39,6 +39,7 @@ _SECTION = {
                 "pagefile": (70.0, 90.0),
             },
             [
+                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.WARN,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB (warn/crit at 80.00%/90.00% used)",
@@ -55,10 +56,7 @@ _SECTION = {
                     levels=(80.00000000000001, 90.00000000000001),
                     boundaries=(0.0, None),
                 ),
-                Metric(
-                    "mem_total",
-                    131071.421875,
-                ),
+                Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.WARN,
                     summary="Commit charge: 75.43% - 111 GiB of 147 GiB (warn/crit at 70.00%/90.00% used)",
@@ -68,10 +66,6 @@ _SECTION = {
                     119057674240.0,
                     levels=(110487609344.0, 142055497728.0),
                     boundaries=(0.0, 157839441920.0),
-                ),
-                Metric(
-                    "pagefile_total",
-                    150527.421875,
                 ),
             ],
             id="normal levels",
@@ -83,6 +77,7 @@ _SECTION = {
                 "average": 10,
             },
             [
+                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.OK,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB, 10 min average: 81.51% (104 GiB)",
@@ -98,15 +93,12 @@ _SECTION = {
                     boundaries=(0.0, None),
                 ),
                 Metric(
-                    "mem_total",
-                    131071.421875,
-                ),
-                Metric(
                     "memory_avg",
                     106831.04296875,
                     levels=(129071.421875, 130071.421875),
                     boundaries=(0.0, 131071.421875),
                 ),
+                Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.WARN,
                     summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 10 min average: 75.43% (111 GiB)",
@@ -115,10 +107,6 @@ _SECTION = {
                     "pagefile_used",
                     119057674240.0,
                     boundaries=(0.0, 157839441920.0),
-                ),
-                Metric(
-                    "pagefile_total",
-                    150527.421875,
                 ),
                 Metric(
                     "pagefile_avg",
@@ -149,6 +137,7 @@ _SECTION = {
                 },
             },
             [
+                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.WARN,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB, RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
@@ -164,10 +153,6 @@ _SECTION = {
                     boundaries=(0.0, None),
                 ),
                 Metric(
-                    "mem_total",
-                    131071.421875,
-                ),
-                Metric(
                     "memory",
                     106831.04296875,
                     levels=(90000.0, 110000.0),
@@ -176,6 +161,7 @@ _SECTION = {
                     "predict_memory",
                     100000.0,
                 ),
+                Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
                     summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
@@ -184,10 +170,6 @@ _SECTION = {
                     "pagefile_used",
                     119057674240.0,
                     boundaries=(0.0, 157839441920.0),
-                ),
-                Metric(
-                    "pagefile_total",
-                    150527.421875,
                 ),
                 Metric(
                     "pagefile",
@@ -222,6 +204,7 @@ _SECTION = {
                 "average": 60,
             },
             [
+                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.WARN,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB, 60 min average: 81.51% (104 GiB), RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
@@ -237,10 +220,6 @@ _SECTION = {
                     boundaries=(0.0, None),
                 ),
                 Metric(
-                    "mem_total",
-                    131071.421875,
-                ),
-                Metric(
                     "memory_avg",
                     106831.04296875,
                     levels=(90000.0, 110000.0),
@@ -249,6 +228,7 @@ _SECTION = {
                     "predict_memory_avg",
                     100000.0,
                 ),
+                Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
                     summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
@@ -257,10 +237,6 @@ _SECTION = {
                     "pagefile_used",
                     119057674240.0,
                     boundaries=(0.0, 157839441920.0),
-                ),
-                Metric(
-                    "pagefile_total",
-                    150527.421875,
                 ),
                 Metric(
                     "pagefile_avg",

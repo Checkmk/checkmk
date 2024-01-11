@@ -10,18 +10,18 @@ def _parameter_form_prism_vm_tools():
     return form_specs.Dictionary(
         elements={
             "tools_install": form_specs.DictElement(
-                parameter_form=form_specs.DropdownChoice(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("Tools install state"),
                     elements=[
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="installed",
                             title=Localizable("installed"),
                         ),
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="not_installed",
                             title=Localizable("not installed"),
                         ),
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="ignored",
                             title=Localizable("ignored"),
                         ),
@@ -30,18 +30,18 @@ def _parameter_form_prism_vm_tools():
                 )
             ),
             "tools_enabled": form_specs.DictElement(
-                parameter_form=form_specs.DropdownChoice(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("VMTools activation state"),
                     elements=[
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="enabled",
                             title=Localizable("enabled"),
                         ),
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="disabled",
                             title=Localizable("not disabled"),
                         ),
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="ignored",
                             title=Localizable("ignored"),
                         ),

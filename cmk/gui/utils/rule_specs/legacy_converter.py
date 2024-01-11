@@ -497,7 +497,7 @@ def _convert_to_inner_legacy_valuespec(
                 else None,
             )
 
-        case ruleset_api_v1.form_specs.DropdownChoice():
+        case ruleset_api_v1.form_specs.SingleChoice():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.CascadingDropdown():
@@ -743,7 +743,7 @@ def _convert_to_legacy_host_state(
 
 
 def _convert_to_legacy_dropdown_choice(
-    to_convert: ruleset_api_v1.form_specs.DropdownChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.SingleChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (
@@ -825,7 +825,7 @@ def _convert_to_legacy_item_spec(
 ) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
     if isinstance(to_convert, ruleset_api_v1.form_specs.Text):
         return _convert_to_legacy_text_input(to_convert, localizer)
-    if isinstance(to_convert, ruleset_api_v1.form_specs.DropdownChoice):
+    if isinstance(to_convert, ruleset_api_v1.form_specs.SingleChoice):
         return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
     raise ValueError(to_convert)

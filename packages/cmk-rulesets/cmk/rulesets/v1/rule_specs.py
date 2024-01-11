@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Localizable
-from .form_specs import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, Text
+from .form_specs import Dictionary, FormSpec, ItemFormSpec, SingleChoice, Text
 
 
 class Topic(Enum):
@@ -93,7 +93,7 @@ class CheckParameterWithItem:
     create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, DropdownChoice))
+        assert isinstance(self.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
@@ -120,7 +120,7 @@ class EnforcedServiceWithItem:
     help_text: Localizable | None = None
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, DropdownChoice))
+        assert isinstance(self.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 

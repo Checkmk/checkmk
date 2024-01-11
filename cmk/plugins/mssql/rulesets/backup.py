@@ -14,14 +14,14 @@ def _form_spec_discovery_mssql_backup():
     return form_specs.Dictionary(
         elements={
             "mode": form_specs.DictElement(
-                parameter_form=form_specs.DropdownChoice(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("Backup modes"),
                     elements=[
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="summary",
                             title=Localizable("Create a service for each instance"),
                         ),
-                        form_specs.DropdownChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="per_type",
                             title=Localizable("Create a service for each instance and backup type"),
                         ),

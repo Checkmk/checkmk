@@ -24,7 +24,6 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
-from cmk.gui.cse.userdb.cognito.oauth2 import load_admin_panel_url
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -601,6 +600,8 @@ class SidebarRenderer:
         html.close_div()
 
     def _show_saas_link(self) -> None:
+        from cmk.gui.cse.userdb.cognito.oauth2 import load_admin_panel_url
+
         html.open_div(
             id_="saas",
             title=_("Go to the Saas Admin Panel"),

@@ -37,6 +37,7 @@ enum class ColumnType {
     string,
     list,
     time,
+    dictdouble,
     dictstr,
     blob,
     null

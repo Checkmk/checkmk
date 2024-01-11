@@ -51,6 +51,8 @@ TableColumns::TableColumns() {
                     return "time";
                 case ColumnType::dictstr:
                     return "dict";
+                case ColumnType::dictdouble:
+                    return "dictdouble";
                 case ColumnType::blob:
                     return "blob";
                 case ColumnType::null:

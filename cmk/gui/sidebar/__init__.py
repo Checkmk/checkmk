@@ -605,7 +605,7 @@ class SidebarRenderer:
         html.open_div(
             id_="saas",
             title=_("Go to the Saas Admin Panel"),
-            onclick=f"window.open('{load_admin_panel_url()}', '_blank')",
+            onclick=f"window.open({json.dumps(load_admin_panel_url())}, '_blank')",
         )
         html.icon("saas")
         if not user.get_attribute("nav_hide_icons_title"):

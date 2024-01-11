@@ -306,11 +306,11 @@ _METRIC_SPECS: Sequence[tuple[str, str, Callable, str]] = [
 ]
 
 
-def _get_levels(params, key, level_dir):
-    if key not in params or level_dir not in params:
+def _get_levels(params, key):
+    if key not in params:
         return None, None
 
-    level_type, levels = params[key][level_dir]
+    level_type, levels = params[key]
     if level_type == "no_levels":
         return None, None
     return levels
@@ -326,8 +326,8 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         if value is None:
             continue
 
-        levels_upper = _get_levels(params, key, "levels_upper")
-        levels_lower = _get_levels(params, key, "levels_lower")
+        levels_upper = _get_levels(params, f"{key}_upper")
+        levels_lower = _get_levels(params, f"{key}_lower")
 
         yield check_levels(
             value,

@@ -536,14 +536,23 @@ class PredictiveLevels:
     prefill_stddev_diff: tuple[float, float] | None = None
 
 
+class LevelDirection(enum.Enum):
+    """Specifies a type of bound the levels represents"""
+
+    UPPER = "upper"
+    LOWER = "lower"
+
+
 @dataclass(frozen=True)
 class Levels:
     """Specifies a form for configuring levels
 
     Args:
         form_spec: Specification for the form fields of the warning and critical levels
-        lower: Lower levels
-        upper: Upper levels
+        level_direction: Do the levels represent the lower or the upper bound. It's used
+            only to provide labels and error messages in the UI.
+        fixed: Specification for the fixed levels
+        predictive: Specification for the predictive levels
         title: Human readable title
         help_text: Description to help the user with the configuration
         unit: Unit of the value to apply levels on (only for display)
@@ -553,69 +562,57 @@ class Levels:
         **Type**:
           This is the type definition of
           the consumer model::
-            class LevelsConsumerModel(TypedDict):
-                levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels
-                levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels
+            _NoLevels | _FixedLevels | _PredictiveLevels
 
           where the tree possible types are defined
           as follows::
             _NoLevels = tuple[Literal["no_levels"], None]
 
-            _FixedLevels = tuple[Literal["fixed"], tuple[int | int] | tuple[float, float]]
+            _FixedLevels = tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
 
             _PredictiveLevels = tuple[Literal["predictive"], _PredictiveModel]
 
             class _PredictiveModel(TypedDict):
                 period: Literal["wday", "day", "hour", "minute"]
                 horizon: int
-                levels: tuple[
-                    Literal["absolute", "relative", "stddev"],
-                    tuple[int, int] | tuple[float, float],
-                ]
-                bound: tuple[int, int] | tuple[float, float]
-                __get_predictive_levels__: Callable | None
+                levels: tuple[Literal["absolute", "relative", "stddev"], tuple[float, float]]
+                bound: tuple[float, float] | None
+                __injected__: Mapping[str, object] | None
 
 
-          The configured value will be presented to consumers as a nested dictionary
-          with the two keys "levels_lower" and "levers_upper" always present.
+          The configured value will be presented to consumers as a 2-tuple consisting of
+          level type identifier and one of the 3 types: None, 2-tuple of floats or dictionary.
 
         **Example**:
             Levels used to configure no levels will look
             like this::
-                {
-                    "levels_lower": ("no_levels", None),
-                    "levels_upper": ("no_levels", None),
-                }
+                ("no_levels", None)
 
             Levels used to configure fixed lower levels might look
             like this::
-                {
-                    "levels_lower": ("fixed", (5.0, 1.0)),
-                    "levels_upper": ("no_levels", None),
-                }
+                ("fixed", (5.0, 1.0))
 
             Levels used to configure upper predictive levels might look
             like this::
-                {
-                    "levels_lower": ("no_levels", None),
-                    "levels_upper": (
-                        "predictive",
-                        {
-                            "period": "hour",
-                            "horizon": 90,
-                            "levels": ("stddev", (2.0, 4.0)),
-                            "bound": (23.0, 42.0),
-                            __get_predictive_levels__: None,
-                        },
-                    ),
-                }
-
+                (
+                    "predictive",
+                    {
+                        "period": "hour",
+                        "horizon": 90,
+                        "levels": ("stddev", (2.0, 4.0)),
+                        "bound": (23.0, 42.0),
+                        __injected__: None,
+                    },
+                )
 
     """
 
-    form_spec: type[Integer | Float | DataSize | Percentage]  # TODO: any numeric FormSpec
-    lower: tuple[FixedLevels, PredictiveLevels | None] | None
-    upper: tuple[FixedLevels, PredictiveLevels | None] | None
+    form_spec: type[
+        Integer | Float | DataSize | Percentage | TimeSpan
+    ]  # TODO: any numeric FormSpec
+    level_direction: LevelDirection
+    fixed: FixedLevels
+    predictive: PredictiveLevels | None
 
     title: Localizable | None = None
     help_text: Localizable | None = None

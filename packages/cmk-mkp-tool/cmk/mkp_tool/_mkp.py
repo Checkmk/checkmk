@@ -115,7 +115,7 @@ def manifest_template(
 def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
-    except (IOError, SyntaxError, TypeError, ValueError, ValidationError):
+    except (OSError, SyntaxError, TypeError, ValueError, ValidationError):
         _logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 

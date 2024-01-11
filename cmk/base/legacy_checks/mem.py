@@ -8,7 +8,7 @@
 
 import time
 from collections.abc import Mapping
-from typing import Any, Generator, Literal, NotRequired, TypedDict
+from typing import Generator, Literal, NotRequired, TypedDict
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
@@ -205,37 +205,45 @@ class _Params(TypedDict):
     pagefile: _Levels
 
 
-def _get_levels_type(levels: _Levels) -> _LevelsType | None:
+def _parse_levels(
+    levels: _Levels,
+) -> (
+    tuple[Literal["perc_used"], _PercUsed]
+    | tuple[Literal["abs_free"], _AbsFree]
+    | tuple[Literal["predictive"], _Predictive]
+    | None
+):
     if levels is None:
         return None
     if not isinstance(levels, tuple):
-        return "predictive"
+        return "predictive", levels
     if isinstance(levels[0], float):
-        return "perc_used"
-    return "abs_free"
+        return "perc_used", (float(levels[0]), float(levels[1]))
+    return "abs_free", (int(levels[0]), int(levels[1]))
 
 
 def _get_levels_type_and_value(
     levels_value: _Levels,
-) -> tuple[_LevelsType | None, Any | None]:  # TODO
-    levels_type = _get_levels_type(levels_value)
-    if levels_type is None or levels_type == "predictive":
-        return (
-            levels_type,
-            None,
-        )
+) -> (
+    tuple[Literal["perc_used"], _PercUsed]
+    | tuple[Literal["abs_free"], _AbsFree]
+    | tuple[Literal["predictive"], _Predictive]
+    | tuple[Literal["ignore"], tuple[None, None]]
+):
+    if (parsed_levels := _parse_levels(levels_value)) is None:
+        return "ignore", (None, None)
+
     return (
-        levels_type,
-        (
-            levels_type,
-            levels_value
-            if levels_type == "perc_used"
-            else (
+        parsed_levels
+        if parsed_levels[0] != "abs_free"
+        else (
+            "abs_free",
+            (
                 # absolute levels on free space come in MB, which cannot be changed easily
-                levels_value[0] * _MB,  # type: ignore  # FIXME
-                levels_value[1] * _MB,  # type: ignore  # FIXME
+                parsed_levels[1][0] * _MB,
+                parsed_levels[1][1] * _MB,
             ),
-        ),
+        )
     )
 
 
@@ -283,14 +291,14 @@ def check_mem_windows(
             continue
         used = float(total - free)
 
-        levels_type, levels_memory_element = _get_levels_type_and_value(levels)
+        parsed_levels = _get_levels_type_and_value(levels)
         average = params.get("average")
 
         state, infotext, perfdata = check_memory_element(
             title,
             used,
             total,
-            None if average is not None else levels_memory_element,
+            None if average is not None or parsed_levels[0] == "predictive" else parsed_levels,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
@@ -312,12 +320,12 @@ def check_mem_windows(
             )
             infotext += f", {infoadd}"
 
-            if levels_type != "predictive":
+            if parsed_levels[0] != "predictive":
                 state, _infotext, perfadd = check_memory_element(
                     title,
                     used,
                     total,
-                    levels_memory_element,
+                    parsed_levels,
                     metric_name=paramname + "_avg",
                 )
 
@@ -329,11 +337,11 @@ def check_mem_windows(
                     )
                 )
 
-        if levels_type == "predictive":
+        if parsed_levels[0] == "predictive":
             state, infoadd, perfadd = check_levels(
                 used / _MB,  # Current value stored in MB in RRDs
                 ("%s_avg" % paramname) if average else paramname,
-                levels,
+                parsed_levels[1],
                 unit="GiB",  # Levels are specified in GiB...
                 scale=1024,  # ... in WATO ValueSpec
                 infoname=title,

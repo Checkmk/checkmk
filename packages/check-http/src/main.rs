@@ -35,7 +35,6 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             }),
             user_agent: args.user_agent.unwrap_or(DEFAULT_USER_AGENT.to_string()),
             timeout: args.timeout,
-            ignore_proxy_env: args.ignore_proxy_env,
             onredirect: match args.onredirect {
                 cli::OnRedirect::Ok => http::OnRedirect::Ok,
                 cli::OnRedirect::Warning => http::OnRedirect::Warning,
@@ -57,6 +56,18 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 .or(args.tls_version.as_ref().map(map_tls_version)),
             max_tls_version: args.tls_version.as_ref().map(map_tls_version),
             collect_tls_info: args.certificate_levels.is_some(),
+            ignore_proxy_env: args.ignore_proxy_env,
+            proxy_url: args.proxy_url,
+            proxy_auth: if let (Some(proxy_user), Some(proxy_pw)) = (
+                args.proxy_user,
+                args.proxy_pw
+                    .proxy_pw_plain
+                    .or(args.proxy_pw.proxy_pw_pwstore),
+            ) {
+                Some((proxy_user, proxy_pw))
+            } else {
+                None
+            },
         },
         RequestConfig {
             url: args.url,

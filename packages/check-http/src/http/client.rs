@@ -5,7 +5,7 @@
 use reqwest::{
     redirect::{Action, Attempt, Policy},
     tls::Version as TlsVersion,
-    Client, Result as ReqwestResult, Version,
+    Client, Proxy, Result as ReqwestResult, Version,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
@@ -36,6 +36,8 @@ pub struct ClientConfig {
     pub max_tls_version: Option<TlsVersion>,
     pub collect_tls_info: bool,
     pub ignore_proxy_env: bool,
+    pub proxy_url: Option<String>,
+    pub proxy_auth: Option<(String, String)>,
 }
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
@@ -43,6 +45,12 @@ pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
 
     let client = if cfg.ignore_proxy_env {
         client.no_proxy()
+    } else {
+        client
+    };
+
+    let client = if let Some(proxy) = get_proxy(cfg.proxy_url, cfg.proxy_auth) {
+        client.proxy(proxy?)
     } else {
         client
     };
@@ -93,6 +101,21 @@ pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
         .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
         .tls_info(cfg.collect_tls_info)
         .build()
+}
+
+fn get_proxy(
+    proxy_url: Option<String>,
+    proxy_auth: Option<(String, String)>,
+) -> Option<ReqwestResult<Proxy>> {
+    let proxy_url = proxy_url?;
+
+    let proxy = Proxy::all(proxy_url);
+
+    if let Some((proxy_user, proxy_pw)) = proxy_auth {
+        Some(proxy.map(|p| p.basic_auth(&proxy_user, &proxy_pw)))
+    } else {
+        Some(proxy)
+    }
 }
 
 fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {

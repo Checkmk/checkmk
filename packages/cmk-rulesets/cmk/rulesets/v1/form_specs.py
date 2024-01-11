@@ -219,13 +219,13 @@ class InvalidElementValidator:
 
 
 @dataclass(frozen=True)
-class DropdownChoiceElement:
+class SingleChoiceElement:
     name: str
     title: Localizable
 
 
 @dataclass(frozen=True)
-class DropdownChoice:
+class SingleChoice:
     """Specification for a (single-)selection from multiple options
 
     Args:
@@ -244,7 +244,7 @@ class DropdownChoice:
                          validation fails. The return value of the function will not be used.
     """
 
-    elements: Sequence[DropdownChoiceElement]
+    elements: Sequence[SingleChoiceElement]
     no_elements_text: Localizable | None = None
 
     frozen: bool = False
@@ -785,7 +785,7 @@ class MultilineText:
     custom_validate: Callable[[str], object] | None = None
 
 
-ItemFormSpec = Text | DropdownChoice
+ItemFormSpec = Text | SingleChoice
 
 
 FormSpec = (
@@ -795,7 +795,7 @@ FormSpec = (
     | Percentage
     | Text
     | Tuple
-    | DropdownChoice
+    | SingleChoice
     | CascadingDropdown
     | Dictionary
     | ServiceState

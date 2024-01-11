@@ -7,8 +7,8 @@ from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
-    DropdownChoice,
-    DropdownChoiceElement,
+    SingleChoice,
+    SingleChoiceElement,
     Text,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
@@ -18,15 +18,15 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
     return Dictionary(
         elements={
             "sync_state": DictElement(
-                parameter_form=DropdownChoice(
+                parameter_form=SingleChoice(
                     title=Localizable("Target sync state"),
                     help_text=Localizable(
                         "Configure the target state of the protection domain sync state."
                     ),
                     elements=[
-                        DropdownChoiceElement(name="Enabled", title=Localizable("Sync enabled")),
-                        DropdownChoiceElement(name="Disabled", title=Localizable("Sync disabled")),
-                        DropdownChoiceElement(name="Synchronizing", title=Localizable("Syncing")),
+                        SingleChoiceElement(name="Enabled", title=Localizable("Sync enabled")),
+                        SingleChoiceElement(name="Disabled", title=Localizable("Sync disabled")),
+                        SingleChoiceElement(name="Synchronizing", title=Localizable("Syncing")),
                     ],
                     prefill_selection="Disabled",
                 )

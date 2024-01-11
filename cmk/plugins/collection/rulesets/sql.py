@@ -23,15 +23,15 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=True,
             ),
             "dbms": form_specs.DictElement(
-                parameter_form=form_specs.DropdownChoice(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("Type of Database"),
                     elements=[
-                        form_specs.DropdownChoiceElement("mysql", Localizable("MySQL")),
-                        form_specs.DropdownChoiceElement("postgres", Localizable("PostgreSQL")),
-                        form_specs.DropdownChoiceElement("mssql", Localizable("MSSQL")),
-                        form_specs.DropdownChoiceElement("oracle", Localizable("Oracle")),
-                        form_specs.DropdownChoiceElement("db2", Localizable("DB2")),
-                        form_specs.DropdownChoiceElement("sqlanywhere", Localizable("SQLAnywhere")),
+                        form_specs.SingleChoiceElement("mysql", Localizable("MySQL")),
+                        form_specs.SingleChoiceElement("postgres", Localizable("PostgreSQL")),
+                        form_specs.SingleChoiceElement("mssql", Localizable("MSSQL")),
+                        form_specs.SingleChoiceElement("oracle", Localizable("Oracle")),
+                        form_specs.SingleChoiceElement("db2", Localizable("DB2")),
+                        form_specs.SingleChoiceElement("sqlanywhere", Localizable("SQLAnywhere")),
                     ],
                     prefill_selection="postgres",
                 ),

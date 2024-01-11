@@ -58,6 +58,7 @@ from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
+from .history_sqlite import SQLiteHistory
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import (
@@ -239,6 +240,8 @@ def create_history(
             return FileHistory(settings, config, logger, event_columns, history_columns)
         case "mongodb":
             return MongoDBHistory(settings, config, logger, event_columns, history_columns)
+        case "sqlite":
+            return SQLiteHistory(settings, config, logger, event_columns, history_columns)
         case _ as default:
             assert_never(default)
 

@@ -9,7 +9,7 @@ use anyhow::Result;
 pub mod names {
     pub const INSTANCE: &str = "instance";
     pub const COUNTERS: &str = "counters";
-    pub const BLOCKED: &str = "blocked_sessions";
+    pub const BLOCKED_SESSIONS: &str = "blocked_sessions";
     pub const BACKUP: &str = "backup";
     pub const TRANSACTION_LOG: &str = "transactionlogs";
     pub const DATAFILES: &str = "datafiles";
@@ -29,7 +29,7 @@ pub mod names {
 const PIPE_SEP_SECTIONS: [&str; 8] = [
     names::INSTANCE,
     names::COUNTERS,
-    names::BLOCKED,
+    names::BLOCKED_SESSIONS,
     names::BACKUP,
     names::TRANSACTION_LOG,
     names::DATAFILES,
@@ -44,7 +44,7 @@ const DEFAULT_SYNC_SECTIONS: [&str; 9] = [
     names::INSTANCE,
     names::DATABASES,
     names::COUNTERS,
-    names::BLOCKED,
+    names::BLOCKED_SESSIONS,
     names::TRANSACTION_LOG,
     names::CLUSTERS,
     names::MIRRORING,

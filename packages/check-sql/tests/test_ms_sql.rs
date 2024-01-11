@@ -195,7 +195,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
-            && query::get_computer_name(c, sqls::QUERY_COMPUTER_NAME)
+            && query::obtain_computer_name(c)
                 .await
                 .unwrap()
                 .unwrap()
@@ -206,7 +206,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_blocked_sessions(i, c).await;
     validate_all_sessions_to_check_format(i, c).await;
     assert!(i
-        .generate_blocking_sessions_section(c, sqls::BAD_QUERY, '|',)
+        .generate_sessions_section(c, &sqls::Id::BadQuery, '|',)
         .await
         .contains(" error: "),);
     validate_table_spaces(i, c, e).await;
@@ -246,7 +246,7 @@ async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
     let blocked_sessions = &instance
-        .generate_blocking_sessions_section(client, &sqls::get_blocking_sessions_query(), '|')
+        .generate_sessions_section(client, &sqls::Id::BlockingSessions, '|')
         .await;
     assert_eq!(
         blocked_sessions,
@@ -256,7 +256,7 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) 
 
 async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
     let all_sessions = &instance
-        .generate_blocking_sessions_section(client, sqls::QUERY_WAITING_TASKS, '|')
+        .generate_sessions_section(client, &sqls::Id::WaitingTasks, '|')
         .await;
 
     let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
@@ -388,7 +388,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, sqls::QUERY_DATABASES, '|')
+        .generate_databases_section(client, &sqls::Id::Databases, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -420,7 +420,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, sqls::BAD_QUERY, '|')
+        .generate_databases_section(client, &sqls::Id::BadQuery, '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -444,7 +444,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_connections_section(client, sqls::QUERY_CONNECTIONS, ' ')
+        .generate_connections_section(client, &sqls::Id::Connections, ' ')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -466,7 +466,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
     let result = instance
-        .generate_connections_section(client, sqls::BAD_QUERY, ' ')
+        .generate_connections_section(client, &sqls::Id::BadQuery, ' ')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -506,7 +506,7 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
 
 async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, section: &Section) {
     let result = instance
-        .generate_query_section(endpoint, section, Some(sqls::BAD_QUERY))
+        .generate_query_section(endpoint, section, sqls::get_query(&sqls::Id::BadQuery).ok())
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -572,7 +572,7 @@ mssql:
             match c {
                 Ok(mut c) => assert!(
                     tools::run_get_version(&mut c).await.is_some()
-                        && query::get_computer_name(&mut c, sqls::QUERY_COMPUTER_NAME)
+                        && query::obtain_computer_name(&mut c)
                             .await
                             .unwrap()
                             .unwrap()
@@ -595,9 +595,7 @@ async fn test_get_computer_name() {
         let mut client = client::create_on_endpoint(&endpoint.make_ep())
             .await
             .unwrap();
-        let name = query::get_computer_name(&mut client, sqls::QUERY_COMPUTER_NAME)
-            .await
-            .unwrap();
+        let name = query::obtain_computer_name(&mut client).await.unwrap();
         assert!(name
             .clone()
             .unwrap()

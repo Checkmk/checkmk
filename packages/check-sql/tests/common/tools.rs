@@ -176,7 +176,9 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
 }
 
 pub async fn run_get_version(client: &mut Client) -> Option<String> {
-    let rows = query::run_query(client, "select @@VERSION").await.unwrap();
+    let rows = query::run_custom_query(client, "select @@VERSION")
+        .await
+        .unwrap();
     let row = &rows[0];
     row[0]
         .try_get::<&str, usize>(0)

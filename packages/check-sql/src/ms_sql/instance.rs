@@ -420,7 +420,7 @@ impl SqlInstance {
                     .await
             }
             names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                self.generate_query_section(endpoint, section, None).await
+                self.generate_unified_section(endpoint, section, None).await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
         }
@@ -775,7 +775,7 @@ impl SqlInstance {
     }
 
     /// NOTE: uses ' ' instead of '\t' in error messages
-    pub async fn generate_query_section(
+    pub async fn generate_unified_section(
         &self,
         endpoint: &Endpoint,
         section: &Section,

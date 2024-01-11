@@ -379,44 +379,28 @@ impl SqlInstance {
         let sep = section.sep();
         match section.name() {
             names::INSTANCE => {
-                self.generate_state_entry(true, section.sep())
-                    + &self.generate_details_entry(client, section.sep()).await
+                self.generate_state_entry(true, sep)
+                    + &self.generate_details_entry(client, sep).await
             }
             names::COUNTERS => {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
             }
+            names::BACKUP => self.generate_backup_section(client, sep).await,
             names::BLOCKED_SESSIONS => {
                 self.generate_sessions_section(client, &sqls::Id::BlockingSessions, sep)
-                    .await
-            }
-            names::TABLE_SPACES => {
-                let databases = self.generate_databases(client).await;
-                self.generate_table_spaces_section(endpoint, &databases, sep)
-                    .await
-            }
-            names::BACKUP => self.generate_backup_section(client, sep).await,
-            names::TRANSACTION_LOG => {
-                let databases = self.generate_databases(client).await;
-                self.generate_transaction_logs_section(endpoint, &databases, sep)
-                    .await
-            }
-            names::DATAFILES => {
-                let databases = self.generate_databases(client).await;
-                self.generate_datafiles_section(endpoint, &databases, sep)
                     .await
             }
             names::DATABASES => {
                 self.generate_databases_section(client, &sqls::Id::Databases, sep)
                     .await
             }
-            names::CLUSTERS => {
-                let databases = self.generate_databases(client).await;
-                self.generate_clusters_section(endpoint, &databases, sep)
-                    .await
-            }
             names::CONNECTIONS => {
                 self.generate_connections_section(client, &sqls::Id::Connections, sep)
+                    .await
+            }
+            names::TRANSACTION_LOG | names::TABLE_SPACES | names::DATAFILES | names::CLUSTERS => {
+                self.generate_database_indexed_section(client, endpoint, section)
                     .await
             }
             names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
@@ -560,6 +544,35 @@ impl SqlInstance {
                     .collect::<Vec<String>>()
                     .join("")
             }
+        }
+    }
+
+    pub async fn generate_database_indexed_section(
+        &self,
+        client: &mut Client,
+        endpoint: &Endpoint,
+        section: &Section,
+    ) -> String {
+        let sep = section.sep();
+        let databases = self.generate_databases(client).await;
+        match section.name() {
+            names::TRANSACTION_LOG => {
+                self.generate_transaction_logs_section(endpoint, &databases, sep)
+                    .await
+            }
+            names::TABLE_SPACES => {
+                self.generate_table_spaces_section(endpoint, &databases, sep)
+                    .await
+            }
+            names::DATAFILES => {
+                self.generate_datafiles_section(endpoint, &databases, sep)
+                    .await
+            }
+            names::CLUSTERS => {
+                self.generate_clusters_section(endpoint, &databases, sep)
+                    .await
+            }
+            _ => format!("{} not implemented\n", section.name()).to_string(),
         }
     }
 

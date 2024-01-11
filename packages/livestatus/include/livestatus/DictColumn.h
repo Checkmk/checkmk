@@ -70,4 +70,50 @@ private:
     function_type f_;
 };
 
+template <typename T>
+class DictDoubleValueColumn : public Column {
+public:
+    using value_type = std::unordered_map<std::string, double>;
+    using function_type = std::function<value_type(const T &)>;
+
+    DictDoubleValueColumn(const std::string &name,
+                          const std::string &description,
+                          const ColumnOffsets &offsets, const function_type &f)
+        : Column{name, description, offsets}, f_{f} {}
+
+    [[nodiscard]] ColumnType type() const override {
+        return ColumnType::dictdouble;
+    }
+
+    void output(Row row, RowRenderer &r, const User & /*user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        DictRenderer d(r);
+        for (const auto &it : getValue(row)) {
+            d.output(it.first, it.second);
+        }
+    }
+
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
+        Filter::Kind kind, RelationalOperator relOp,
+        const std::string &value) const override {
+        return std::make_unique<DictDoubleValueFilter>(
+            kind, this->name(), [this](Row row) { return this->getValue(row); },
+            relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
+        AggregationFactory /*factory*/) const override {
+        throw std::runtime_error("aggregating on dictionary column '" + name() +
+                                 "' not supported");
+    }
+
+    value_type getValue(Row row) const {
+        const T *data = columnData<T>(row);
+        return data == nullptr ? value_type{} : f_(*data);
+    };
+
+private:
+    function_type f_;
+};
+
 #endif

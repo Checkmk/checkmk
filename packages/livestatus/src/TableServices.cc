@@ -120,16 +120,16 @@ void TableServices::addColumns(Table *table, const ICore &core,
     table->addColumn(std::make_unique<StringColumnPerfData<row_type>>(
         prefix + "perf_data", "Optional performance data of the last check",
         offsets, [](const row_type &row) { return row.perf_data(); }));
-    table->addColumn(std::make_unique<DictStrValueColumn<row_type>>(
+    table->addColumn(std::make_unique<DictDoubleValueColumn<row_type>>(
         prefix + "performance_data", "Optional performance data as a dict",
         offsets, [](const row_type &row) {
             auto d = PerformanceData{row.perf_data(), ""};
-            auto out = DictStrValueColumn<row_type>::value_type{};
+            auto out = DictDoubleValueColumn<row_type>::value_type{};
             out.reserve(d.size());
             std::transform(d.begin(), d.end(), std::inserter(out, out.begin()),
                            [](auto &&metric) {
                                return std::make_pair(metric.name().string(),
-                                                     metric.value());
+                                                     metric.value_as_double());
                            });
             return out;
         }));

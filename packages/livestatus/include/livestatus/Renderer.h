@@ -321,6 +321,13 @@ public:
         renderer().output(value);
     }
 
+    void output(const std::string &key, double value) {
+        BeginEnd be(*this);
+        renderer().output(key);
+        renderer().separateDictKeyValue();
+        renderer().output(value);
+    }
+
 private:
     RowRenderer &_row;
     RowRenderer::BeginEnd _be;

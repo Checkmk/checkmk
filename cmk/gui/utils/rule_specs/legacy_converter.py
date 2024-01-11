@@ -904,18 +904,13 @@ def _convert_to_legacy_age(
     return legacy_valuespecs.Age(**converted_kwargs)
 
 
-class _LevelDirection(enum.Enum):
-    UPPER = "upper"
-    LOWER = "lower"
-
-
 def _get_fixed_level_titles(
-    level_direction: _LevelDirection, localizer: Callable[[str], str]
+    level_direction: ruleset_api_v1.form_specs.LevelDirection, localizer: Callable[[str], str]
 ) -> tuple[str, str]:
-    if level_direction is _LevelDirection.LOWER:
+    if level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
         warn_title = localizer("Warning below")
         crit_title = localizer("Critical below")
-    elif level_direction is _LevelDirection.UPPER:
+    elif level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
         warn_title = localizer("Warning at")
         crit_title = localizer("Critical at")
     else:
@@ -928,6 +923,7 @@ _TNumericSpec = (
     | ruleset_api_v1.form_specs.Float
     | ruleset_api_v1.form_specs.DataSize
     | ruleset_api_v1.form_specs.Percentage
+    | ruleset_api_v1.form_specs.TimeSpan
 )
 
 
@@ -941,6 +937,7 @@ def _get_legacy_level_spec(
     | legacy_valuespecs.Float
     | legacy_valuespecs.Filesize
     | legacy_valuespecs.Percentage
+    | legacy_valuespecs.Age
 ):
     if issubclass(form_spec, ruleset_api_v1.form_specs.Integer):
         return legacy_valuespecs.Integer(
@@ -963,6 +960,11 @@ def _get_legacy_level_spec(
     if issubclass(form_spec, ruleset_api_v1.form_specs.Percentage):
         return legacy_valuespecs.Percentage(title=title, unit="%", default_value=prefill)
 
+    if issubclass(form_spec, ruleset_api_v1.form_specs.TimeSpan):
+        return legacy_valuespecs.Age(
+            title=title, default_value=int(prefill) if isinstance(prefill, float) else prefill
+        )
+
     # TODO: allow all numeric specs
     raise NotImplementedError(form_spec)
 
@@ -970,7 +972,7 @@ def _get_legacy_level_spec(
 def _get_fixed_levels_choice_element(
     form_spec: type[_TNumericSpec],
     levels: ruleset_api_v1.form_specs.FixedLevels,
-    level_direction: _LevelDirection,
+    level_direction: ruleset_api_v1.form_specs.LevelDirection,
     unit: str,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
@@ -1006,7 +1008,8 @@ class _FixedLimitsInfo:
 
 
 def _get_level_computation_info(
-    valuespec: type[legacy_valuespecs.Integer | legacy_valuespecs.Float],
+    valuespec: type[legacy_valuespecs.Integer | legacy_valuespecs.Float]
+    | type[legacy_valuespecs.ValueSpec[int]],
     to_convert: ruleset_api_v1.form_specs.PredictiveLevels,
     unit: str,
     level_dir: str,
@@ -1064,7 +1067,9 @@ def _get_level_computation_info(
 
 def _get_level_computation_dropdown_choice(
     ident: str,
-    spec: type[legacy_valuespecs.Integer] | type[legacy_valuespecs.Float],
+    spec: type[legacy_valuespecs.Integer]
+    | type[legacy_valuespecs.Float]
+    | type[legacy_valuespecs.ValueSpec[int]],
     title: str,
     help_text: str,
     info: _WarnCritTupleInfo,
@@ -1096,7 +1101,9 @@ class _PredictiveLevelDefinition(enum.StrEnum):
 
 
 def _get_level_computation_dropdown(
-    valuespec: type[legacy_valuespecs.Integer] | type[legacy_valuespecs.Float],
+    valuespec: type[legacy_valuespecs.Integer]
+    | type[legacy_valuespecs.Float]
+    | type[legacy_valuespecs.ValueSpec[int]],
     abs_info: _WarnCritTupleInfo,
     rel_info: _WarnCritTupleInfo,
     stddev_info: _WarnCritTupleInfo,
@@ -1139,17 +1146,17 @@ def _get_level_computation_dropdown(
 def _get_predictive_levels_choice_element(
     form_spec: type[_TNumericSpec],
     to_convert: ruleset_api_v1.form_specs.PredictiveLevels,
-    level_direction: _LevelDirection,
+    level_direction: ruleset_api_v1.form_specs.LevelDirection,
     unit: str,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Dictionary:
     valuespec = type(_get_legacy_level_spec(form_spec, "", "", legacy_valuespecs.Sentinel()))
 
-    if level_direction is _LevelDirection.UPPER:
+    if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
         abs_info, rel_info, stddev_info, fixed_info = _get_level_computation_info(
             valuespec, to_convert, unit, "above", "least", "below", "low", localizer
         )
-    elif level_direction is _LevelDirection.LOWER:
+    elif level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
         abs_info, rel_info, stddev_info, fixed_info = _get_level_computation_info(
             valuespec, to_convert, unit, "below", "most", "above", "high", localizer
         )
@@ -1160,7 +1167,7 @@ def _get_predictive_levels_choice_element(
     # The backend uses this marker to inject a callback to get the prediction.
     # Its main purpose it to bind the host name and service description,
     # which are not known to the plugin.
-    predictive_callback_key = "__get_predictive_levels__"
+    injected_parameters_key = "__injected__"
 
     predictive_elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]] = [
         (
@@ -1209,13 +1216,13 @@ def _get_predictive_levels_choice_element(
                 ],
             ),
         ),
-        (predictive_callback_key, legacy_valuespecs.FixedValue(None)),
+        (injected_parameters_key, legacy_valuespecs.FixedValue(None)),
     ]
     return legacy_valuespecs.Dictionary(
         elements=predictive_elements,
         optional_keys=["bound"],
-        ignored_keys=[predictive_callback_key],
-        hidden_keys=[predictive_callback_key],
+        ignored_keys=[injected_parameters_key],
+        hidden_keys=[injected_parameters_key],
     )
 
 
@@ -1225,17 +1232,11 @@ class _LevelDynamicChoice(enum.StrEnum):
     PREDICTIVE = "predictive"
 
 
-def _get_level_dynamic(
-    form_spec: type[_TNumericSpec],
-    levels: tuple[
-        ruleset_api_v1.form_specs.FixedLevels, ruleset_api_v1.form_specs.PredictiveLevels | None
-    ]
-    | None,
-    level_direction: _LevelDirection,
-    unit: str,
-    localizer: Callable[[str], str],
+def _convert_to_legacy_levels(
+    to_convert: ruleset_api_v1.form_specs.Levels, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
-    default_value = _LevelDynamicChoice.NO_LEVELS.value
+    unit = "" if to_convert.unit is None else to_convert.unit.localize(localizer)
+
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
             _LevelDynamicChoice.NO_LEVELS.value,
@@ -1246,66 +1247,32 @@ def _get_level_dynamic(
                 totext=localizer("Do not impose levels, always be OK"),
             ),
         ),
+        (
+            _LevelDynamicChoice.FIXED.value,
+            localizer("Fixed levels"),
+            _get_fixed_levels_choice_element(
+                to_convert.form_spec, to_convert.fixed, to_convert.level_direction, unit, localizer
+            ),
+        ),
     ]
-
-    if levels is not None:
-        default_value = _LevelDynamicChoice.FIXED.value
+    if to_convert.predictive is not None:
         choices.append(
             (
-                _LevelDynamicChoice.FIXED.value,
-                localizer("Fixed levels"),
-                _get_fixed_levels_choice_element(
-                    form_spec, levels[0], level_direction, unit, localizer
+                _LevelDynamicChoice.PREDICTIVE.value,
+                localizer("Predictive levels (only on CMC)"),
+                _get_predictive_levels_choice_element(
+                    to_convert.form_spec,
+                    to_convert.predictive,
+                    to_convert.level_direction,
+                    unit,
+                    localizer,
                 ),
             )
         )
-        if (predictive_levels := levels[1]) is not None:
-            choices.append(
-                (
-                    _LevelDynamicChoice.PREDICTIVE.value,
-                    localizer("Predictive levels (only on CMC)"),
-                    _get_predictive_levels_choice_element(
-                        form_spec,
-                        predictive_levels,
-                        level_direction,
-                        unit,
-                        localizer,
-                    ),
-                )
-            )
     return legacy_valuespecs.CascadingDropdown(
-        choices=choices,
-        title=localizer("Upper levels")
-        if level_direction is _LevelDirection.UPPER
-        else localizer("Lower levels"),
-        default_value=default_value,
-    )
-
-
-def _convert_to_legacy_levels(
-    to_convert: ruleset_api_v1.form_specs.Levels, localizer: Callable[[str], str]
-) -> legacy_valuespecs.Dictionary:
-    unit = "" if to_convert.unit is None else to_convert.unit.localize(localizer)
-
-    elements = [
-        (
-            "levels_lower",
-            _get_level_dynamic(
-                to_convert.form_spec, to_convert.lower, _LevelDirection.LOWER, unit, localizer
-            ),
-        ),
-        (
-            "levels_upper",
-            _get_level_dynamic(
-                to_convert.form_spec, to_convert.upper, _LevelDirection.UPPER, unit, localizer
-            ),
-        ),
-    ]
-
-    return legacy_valuespecs.Dictionary(
         title=_localize_optional(to_convert.title, localizer),
-        elements=elements,
-        required_keys=["levels_lower", "levels_upper"],
+        choices=choices,
+        default_value=_LevelDynamicChoice.FIXED.value,
     )
 
 

@@ -12,6 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedLevels,
     Float,
     Integer,
+    LevelDirection,
     Levels,
     Migrate,
     Text,
@@ -19,43 +20,22 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
-def _migrate_lower_upper(
-    value: dict, lower_key: str, upper_key: str
-) -> Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]:
-    migrated = {"levels_lower": ("no_levels", None), "levels_upper": ("no_levels", None)}
-    if (lower_value := value.get(lower_key)) is not None:
-        migrated["levels_lower"] = lower_value
-    if (upper_Value := value.get(upper_key)) is not None:
-        migrated["levels_upper"] = upper_Value
-    return migrated
-
-
 def _migrate_levels(
     value: object,
-) -> Mapping[str, Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]]:
+) -> Mapping[str, tuple[str, tuple[int, int] | tuple[float, float] | None]]:
     if not isinstance(value, dict):
         raise TypeError(value)
-    migrated = value.copy()
-    if "gc_num_upper" in value:
-        migrated["gc_num"] = {
-            "levels_lower": ("no_levels", None),
-            "levels_upper": ("fixed", migrated.pop("gc_num_upper")),
-        }
-    if "gc_num_rate_lower" in value or "gc_num_rate_upper" in value:
-        migrated["gc_num_rate"] = _migrate_lower_upper(
-            value, "gc_num_rate_lower", "gc_num_rate_upper"
-        )
-    if "gc_bytes_reclaimed_upper" in value:
-        migrated["gc_bytes_reclaimed"] = {
-            "levels_lower": ("no_levels", None),
-            "levels_upper": ("fixed", migrated.pop("gc_bytes_reclaimed_upper")),
-        }
-    if "gc_bytes_reclaimed_rate_lower" in value or "gc_bytes_reclaimed_rate_upper" in value:
-        migrated["gc_bytes_reclaimed_rate"] = _migrate_lower_upper(
-            value, "gc_bytes_reclaimed_rate_lower", "gc_bytes_reclaimed_rate_upper"
-        )
-    if "runqueue_lower" in value or "runqueue_upper" in value:
-        migrated["runqueue"] = _migrate_lower_upper(value, "runqueue_lower", "runqueue_upper")
+
+    migrated = {}
+
+    for key, levels in value.items():
+        if not isinstance(levels, tuple):
+            raise TypeError(value)
+
+        if levels[0] not in ("no_levels", "fixed"):
+            migrated[key] = ("fixed", levels)
+        else:
+            migrated[key] = levels
 
     return migrated
 
@@ -63,46 +43,79 @@ def _migrate_levels(
 def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
     return Dictionary(
         elements={
-            "gc_num": DictElement(
+            "gc_num_upper": DictElement(
                 parameter_form=Levels(
                     form_spec=Integer,
-                    lower=None,
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for total number of GC runs"),
+                    level_direction=LevelDirection.UPPER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Upper level for total number of GC runs"),
                     unit=Localizable("runs"),
                 )
             ),
-            "gc_num_rate": DictElement(
+            "gc_num_rate_upper": DictElement(
                 parameter_form=Levels(
                     form_spec=Float,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for GC run rate"),
+                    level_direction=LevelDirection.UPPER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Upper level for GC run rate"),
                     unit=Localizable("1/s"),
                 )
             ),
-            "gc_bytes_reclaimed": DictElement(
+            "gc_num_rate_lower": DictElement(
+                parameter_form=Levels(
+                    form_spec=Float,
+                    level_direction=LevelDirection.LOWER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Lower level for GC run rate"),
+                    unit=Localizable("1/s"),
+                )
+            ),
+            "gc_bytes_reclaimed_upper": DictElement(
                 parameter_form=Levels(
                     form_spec=DataSize,
-                    lower=None,
-                    upper=(FixedLevels(), None),
+                    level_direction=LevelDirection.UPPER,
+                    fixed=FixedLevels(),
+                    predictive=None,
                     title=Localizable("Absolute levels for memory reclaimed by GC"),
                 )
             ),
-            "gc_bytes_reclaimed_rate": DictElement(
+            "gc_bytes_reclaimed_rate_upper": DictElement(
                 parameter_form=Levels(
                     form_spec=DataSize,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for rate of memory per second reclaimed by GC"),
+                    level_direction=LevelDirection.UPPER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Upper level for rate of memory reclaimed by GC"),
                 )
             ),
-            "runqueue": DictElement(
+            "gc_bytes_reclaimed_rate_lower": DictElement(
+                parameter_form=Levels(
+                    form_spec=DataSize,
+                    level_direction=LevelDirection.LOWER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Lower level for rate of memory reclaimed by GC"),
+                )
+            ),
+            "runqueue_upper": DictElement(
                 parameter_form=Levels(
                     form_spec=Integer,
-                    lower=(FixedLevels(), None),
-                    upper=(FixedLevels(), None),
-                    title=Localizable("Levels for runtime run queue"),
+                    level_direction=LevelDirection.UPPER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Upper level for runtime run queue"),
+                )
+            ),
+            "runqueue_lower": DictElement(
+                parameter_form=Levels(
+                    form_spec=Integer,
+                    level_direction=LevelDirection.LOWER,
+                    fixed=FixedLevels(),
+                    predictive=None,
+                    title=Localizable("Lower level for runtime run queue"),
                 )
             ),
         },

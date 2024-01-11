@@ -70,6 +70,19 @@ pub struct Cli {
     #[arg(long, default_value_t = false)]
     pub ignore_proxy_env: bool,
 
+    /// Proxy server URL.
+    /// E.g. https://my-proxy.com, socks5://10.1.1.0:8000
+    /// This will override both HTTP_PROXY and HTTPS_PROXY
+    #[arg(long)]
+    pub proxy_url: Option<String>,
+
+    /// User name for proxy server basic auth.
+    #[arg(long, requires = "ProxyPw")]
+    pub proxy_user: Option<String>,
+
+    #[command(flatten)]
+    pub proxy_pw: ProxyPw,
+
     /// How to handle redirected pages. sticky is like follow but stick to the
     /// specified IP address. stickyport also ensures port stays the same.
     #[arg(short = 'f', long, default_value = "follow")]
@@ -239,6 +252,18 @@ pub struct TokenKey {
     /// Key for token based authentication, provided as ID for password store lookup
     #[arg(long, requires = "token_header", value_parser=header_value_from_store)]
     pub token_key_pwstore: Option<HeaderValue>,
+}
+
+#[derive(Args, Debug)]
+#[group(multiple = false)]
+pub struct ProxyPw {
+    /// Plain password for proxy server Basic Auth
+    #[arg(long, requires = "proxy_user")]
+    pub proxy_pw_plain: Option<String>,
+
+    /// Password for proxy server Basic Auth, provided as ID for password store lookup
+    #[arg(long, requires = "proxy_user", value_parser=password_from_store)]
+    pub proxy_pw_pwstore: Option<String>,
 }
 
 fn header_value_from_store(value: &str) -> AnyhowResult<HeaderValue> {

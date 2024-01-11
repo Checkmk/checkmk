@@ -23,6 +23,7 @@ reqwest = { version = "*", features = [
     "json",
     "rustls-tls",
     "native-tls-alpn",
+    "socks"
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
 tokio = { version = "*", features = ["full"] }

@@ -25,8 +25,8 @@ Example:
     ...     pass
 
 """
-from typing import Generator as _Generator
-from typing import Iterable as _Iterable
+from collections.abc import Generator as _Generator
+from collections.abc import Iterable as _Iterable
 
 from ._checking_classes import CheckResult, DiscoveryResult
 from ._checking_classes import HostLabel as _HostLabel

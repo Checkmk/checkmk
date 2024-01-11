@@ -153,18 +153,18 @@ class SubscriptionDetails(NamedTuple):
     limit: SubscriptionDetailsLimit
 
     def for_report(self) -> RawSubscriptionDetails:
-        return {
-            "subscription_start": self.start,
-            "subscription_end": self.end,
-            "subscription_limit": self.limit.for_report(),
-        }
+        return RawSubscriptionDetails(
+            subscription_start=self.start,
+            subscription_end=self.end,
+            subscription_limit=self.limit.for_report(),
+        )
 
     def for_config(self) -> RawSubscriptionDetailsForConfig:
-        return {
-            "subscription_start": self.start,
-            "subscription_end": self.end,
-            "subscription_limit": self.limit.for_config(),
-        }
+        return RawSubscriptionDetailsForConfig(
+            subscription_start=self.start,
+            subscription_end=self.end,
+            subscription_limit=self.limit.for_config(),
+        )
 
     @classmethod
     def parse(cls, raw_subscription_details: object) -> SubscriptionDetails:
@@ -321,27 +321,27 @@ class LicenseUsageSample:
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
-        return {
-            "instance_id": None if self.instance_id is None else str(self.instance_id),
-            "site_hash": self.site_hash,
-            "version": self.version,
-            "edition": self.edition,
-            "platform": self.platform,
-            "is_cma": self.is_cma,
-            "sample_time": self.sample_time,
-            "timezone": self.timezone,
-            "num_hosts": self.num_hosts,
-            "num_hosts_cloud": self.num_hosts_cloud,
-            "num_hosts_shadow": self.num_hosts_shadow,
-            "num_hosts_excluded": self.num_hosts_excluded,
-            "num_services": self.num_services,
-            "num_services_cloud": self.num_services_cloud,
-            "num_services_shadow": self.num_services_shadow,
-            "num_services_excluded": self.num_services_excluded,
-            "num_synthetic_tests": self.num_synthetic_tests,
-            "num_synthetic_tests_excluded": self.num_synthetic_tests_excluded,
-            "extension_ntop": self.extension_ntop,
-        }
+        return RawLicenseUsageSample(
+            instance_id=None if self.instance_id is None else str(self.instance_id),
+            site_hash=self.site_hash,
+            version=self.version,
+            edition=self.edition,
+            platform=self.platform,
+            is_cma=self.is_cma,
+            sample_time=self.sample_time,
+            timezone=self.timezone,
+            num_hosts=self.num_hosts,
+            num_hosts_cloud=self.num_hosts_cloud,
+            num_hosts_shadow=self.num_hosts_shadow,
+            num_hosts_excluded=self.num_hosts_excluded,
+            num_services=self.num_services,
+            num_services_cloud=self.num_services_cloud,
+            num_services_shadow=self.num_services_shadow,
+            num_services_excluded=self.num_services_excluded,
+            num_synthetic_tests=self.num_synthetic_tests,
+            num_synthetic_tests_excluded=self.num_synthetic_tests_excluded,
+            extension_ntop=self.extension_ntop,
+        )
 
     @classmethod
     def get_parser(cls, protocol_version: str) -> LicenseUsageSampleParser:
@@ -676,16 +676,16 @@ class MonthlyServiceAverages:
     def get_aggregation(self) -> RawMonthlyServiceAggregation:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
-        return {
-            "daily_services": [d.for_report() for d in self._daily_services],
-            "monthly_service_averages": [a.for_report() for a in self._monthly_service_averages],
-            "last_service_report": self._get_last_service_report(),
-            "highest_service_report": self._get_highest_service_report(),
-            "subscription_exceeded_first": self._get_subscription_exceeded_first(),
-            "subscription_start": self._subscription_start,
-            "subscription_end": self._subscription_end,
-            "subscription_limit": self._subscription_limit_value,
-        }
+        return RawMonthlyServiceAggregation(
+            daily_services=[d.for_report() for d in self._daily_services],
+            monthly_service_averages=[a.for_report() for a in self._monthly_service_averages],
+            last_service_report=self._get_last_service_report(),
+            highest_service_report=self._get_highest_service_report(),
+            subscription_exceeded_first=self._get_subscription_exceeded_first(),
+            subscription_start=self._subscription_start,
+            subscription_end=self._subscription_end,
+            subscription_limit=self._subscription_limit_value,
+        )
 
     def _calculate_averages(self) -> None:
         if not self._daily_services:

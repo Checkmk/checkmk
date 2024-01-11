@@ -229,8 +229,8 @@ check_metrics["check_mk-jolokia_metrics_tp"] = {
 check_metrics["check_mk-mem_win"] = {
     "memory": {"name": "mem_used", "scale": MB, "deprecated": "2.0.0i1"},
     "pagefile": {"name": "pagefile_used", "scale": MB},
-    "memory_avg": {"scale": MB},
-    "pagefile_avg": {"scale": MB},
+    "memory_avg": {"name": "mem_used_avg", "scale": MB},
+    "pagefile_avg": {"name": "pagefile_used_avg", "scale": MB},
     "mem_total": {"auto_graph": False, "scale": MB},
     "pagefile_total": {"auto_graph": False, "scale": MB},
 }

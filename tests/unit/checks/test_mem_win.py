@@ -12,6 +12,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base.legacy_checks import mem
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -41,10 +42,10 @@ def _get_prediction(
     "params, expected_result",
     [
         pytest.param(
-            {
-                "memory": (80.0, 90.0),
-                "pagefile": (70.0, 90.0),
-            },
+            mem.Params(
+                memory=("perc_used", (80.0, 90.0)),
+                pagefile=("perc_used", (70.0, 90.0)),
+            ),
             [
                 Metric("mem_total", 131071.421875),
                 Result(
@@ -78,11 +79,11 @@ def _get_prediction(
             id="normal levels",
         ),
         pytest.param(
-            {
-                "memory": (2000, 1000),
-                "pagefile": (50000, 4000),
-                "average": 10,
-            },
+            mem.Params(
+                memory=("abs_free", (2097152000, 1048576000)),
+                pagefile=("abs_free", (52428800000, 4194304000)),
+                average=10,
+            ),
             [
                 Metric("mem_total", 131071.421875),
                 Result(
@@ -113,25 +114,31 @@ def _get_prediction(
             id="normal levels + averaging",
         ),
         pytest.param(
-            {
-                "memory": {
-                    "period": "minute",
-                    "horizon": 90,
-                    "levels_upper": ("relative", (10.0, 20.0)),
-                    "__get_predictive_levels__": _get_prediction,
-                },
-                "pagefile": {
-                    "period": "minute",
-                    "horizon": 90,
-                    "levels_upper": ("relative", (10.0, 20.0)),
-                    "__get_predictive_levels__": _get_prediction,
-                },
-            },
+            mem.Params(
+                memory=(
+                    "predictive",
+                    {
+                        "period": "minute",
+                        "horizon": 90,
+                        "levels_upper": ("relative", (10.0, 20.0)),
+                        "__get_predictive_levels__": _get_prediction,
+                    },
+                ),
+                pagefile=(
+                    "predictive",
+                    {
+                        "period": "minute",
+                        "horizon": 90,
+                        "levels_upper": ("relative", (10.0, 20.0)),
+                        "__get_predictive_levels__": _get_prediction,
+                    },
+                ),
+            ),
             [
                 Metric("mem_total", 131071.421875),
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104 GiB of 128 GiB, RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB, RAM: 104 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
                 ),
                 Metric("mem_used", 112020467712.0, boundaries=(0.0, 137438347264.0)),
                 Metric("mem_used_percent", 81.50597700132717, boundaries=(0.0, None)),
@@ -139,7 +146,7 @@ def _get_prediction(
                 Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 111 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
                 ),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),
                 Metric("predict_pagefile_used", _PREDICTED_VALUE),
@@ -147,26 +154,32 @@ def _get_prediction(
             id="predictive levels",
         ),
         pytest.param(
-            {
-                "memory": {
-                    "period": "minute",
-                    "horizon": 90,
-                    "levels_upper": ("relative", (10.0, 20.0)),
-                    "__get_predictive_levels__": _get_prediction,
-                },
-                "pagefile": {
-                    "period": "minute",
-                    "horizon": 90,
-                    "levels_upper": ("relative", (10.0, 20.0)),
-                    "__get_predictive_levels__": _get_prediction,
-                },
-                "average": 60,
-            },
+            mem.Params(
+                memory=(
+                    "predictive",
+                    {
+                        "period": "minute",
+                        "horizon": 90,
+                        "levels_upper": ("relative", (10.0, 20.0)),
+                        "__get_predictive_levels__": _get_prediction,
+                    },
+                ),
+                pagefile=(
+                    "predictive",
+                    {
+                        "period": "minute",
+                        "horizon": 90,
+                        "levels_upper": ("relative", (10.0, 20.0)),
+                        "__get_predictive_levels__": _get_prediction,
+                    },
+                ),
+                average=60,
+            ),
             [
                 Metric("mem_total", 131071.421875),
                 Result(
                     state=State.WARN,
-                    summary="RAM: 81.51% - 104 GiB of 128 GiB, 60 min average: 81.51% (104 GiB), RAM: 104.33 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="RAM: 81.51% - 104 GiB of 128 GiB, 60 min average: 81.51% (104 GiB), RAM: 104 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
                 ),
                 Metric("mem_used", 112020467712.0, boundaries=(0.0, 137438347264.0)),
                 Metric("mem_used_percent", 81.50597700132717, boundaries=(0.0, None)),
@@ -175,7 +188,7 @@ def _get_prediction(
                 Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 111 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
                 ),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),
                 Metric("pagefile_used_avg", 119057674240.0, boundaries=(0.0, 157839441920.0)),

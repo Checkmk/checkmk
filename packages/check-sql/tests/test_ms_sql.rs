@@ -73,6 +73,8 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
+    let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
+    log::info!("{:#?}", l.dir());
     let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
@@ -909,6 +911,10 @@ fn test_run_as_plugin_with_config() {
         update_config_in_dir(&dir, &content);
         let exec = tools::run_bin()
             .env("MK_CONFDIR", dir.path())
+            .arg("--log-dir")
+            .arg("c:\\temp\\xxx")
+            .arg("--temp-dir")
+            .arg("c:\\temp\\xxx")
             .timeout(std::time::Duration::from_secs(20))
             .unwrap();
         let (stdout, code) = tools::get_good_results(&exec).unwrap();

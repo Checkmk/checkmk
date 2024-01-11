@@ -1,13 +1,13 @@
 // Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
-
 use anyhow::Result;
 use assert_cmd::output::OutputError;
 use assert_cmd::Command;
 use check_sql::config::ms_sql::{Authentication, Connection, Endpoint};
 use check_sql::ms_sql::client::Client;
 use check_sql::ms_sql::query;
+use flexi_logger::{self, DeferredNow, FileSpec, LogSpecification, Record};
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Output;
@@ -184,4 +184,69 @@ pub async fn run_get_version(client: &mut Client) -> Option<String> {
         .try_get::<&str, usize>(0)
         .unwrap()
         .map(str::to_string)
+}
+
+#[allow(dead_code)]
+
+pub struct LogMe {
+    temp_dir: TempDir,
+    name: String,
+}
+
+#[allow(dead_code)]
+
+impl LogMe {
+    pub fn new(name: &str) -> Self {
+        let dir = create_temp_process_dir();
+        Self {
+            temp_dir: dir,
+            name: name.to_string(),
+        }
+    }
+
+    pub fn dir(&self) -> &Path {
+        self.temp_dir.path()
+    }
+
+    pub fn start(self, level: log::Level) -> Self {
+        self.apply_logging_parameters(level).unwrap();
+        self
+    }
+
+    fn make_log_file_spec(&self) -> FileSpec {
+        FileSpec::default()
+            .directory(self.dir().to_owned())
+            .suppress_timestamp()
+            .basename(&self.name)
+    }
+
+    fn apply_logging_parameters(&self, level: log::Level) -> Result<flexi_logger::LoggerHandle> {
+        let spec =
+            LogSpecification::parse(format!("{}, tiberius=warn", level.as_str().to_lowercase()))?;
+        let mut logger = flexi_logger::Logger::with(spec);
+
+        logger = logger.log_to_file(self.make_log_file_spec());
+
+        logger = logger
+            .duplicate_to_stderr(flexi_logger::Duplicate::None)
+            .duplicate_to_stdout(flexi_logger::Duplicate::None);
+
+        log::info!("Log level: {}", level.as_str());
+        Ok(logger.format(custom_format).start()?)
+    }
+}
+
+fn custom_format(
+    w: &mut dyn std::io::Write,
+    now: &mut DeferredNow,
+    record: &Record,
+) -> Result<(), std::io::Error> {
+    write!(
+        w,
+        "{} [{}] [{}]: {}",
+        now.format("%Y-%m-%d %H:%M:%S%.3f %:z"),
+        record.level(),
+        record.module_path().unwrap_or("<unnamed>"),
+        &record.args()
+    )
 }

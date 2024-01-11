@@ -6061,6 +6061,10 @@ msgstr "Analizați disponibilitatea acestei agregări"
 msgid "Analyse predictive monitoring for this service"
 msgstr "Analizați monitorizarea predictivă pentru acest serviciu"
 
+#, fuzzy
+msgid "Analysis: Test notifications"
+msgstr "ultima notificare"
+
 msgid "Analyze"
 msgstr "Analizați"
 
@@ -15160,6 +15164,10 @@ msgstr "Data & interval de timp"
 msgid "Date (YYYY-MM-DD)"
 msgstr "Data (AAAA-MM-DD)"
 
+#, fuzzy
+msgid "Date and time"
+msgstr "Ora de sfârșit a timpului de oprire"
+
 msgid "Date format"
 msgstr "Formatul datei"
 
@@ -17231,6 +17239,10 @@ msgstr "Etichete de gazdă descoperite ale gazdei"
 
 msgid "Disovered services of the host"
 msgstr "Serviciile descoperite ale gazdei"
+
+#, fuzzy
+msgid "Dispatch notifications"
+msgstr "Dezactivați notificările"
 
 msgid "Display"
 msgstr "Afișare"
@@ -20280,6 +20292,10 @@ msgstr "Creații de evenimente"
 
 msgid "Event database"
 msgstr "Baza de date a evenimentelor"
+
+#, fuzzy
+msgid "Event date and time"
+msgstr "Procent și timp"
 
 msgid "Event deleted because its livetime expired"
 msgstr "Eveniment șters deoarece timpul de viață a expirat"
@@ -42076,7 +42092,15 @@ msgid "Please provide a '.xml' file"
 msgstr "Vă rugăm să furnizați un fișier '.xml'."
 
 #, fuzzy
+msgid "Please provide a hostname to test with."
+msgstr "Vă rugăm să furnizați o gazdă și un port valid"
+
+#, fuzzy
 msgid "Please provide a relative Windows path"
+msgstr "Vă rugăm să furnizați un nume valid"
+
+#, fuzzy
+msgid "Please provide a service."
 msgstr "Vă rugăm să furnizați un nume valid"
 
 msgid "Please provide a valid host and port"
@@ -49607,6 +49631,10 @@ msgstr ""
 "Pagina de rezumat simplă a tuturor agregatelor BI care este utilizată ca "
 "serviciu web."
 
+#, fuzzy
+msgid "Simulate"
+msgstr "Modul de simulare"
+
 msgid "Simulate for site"
 msgstr "Simulare pentru site"
 
@@ -52186,6 +52214,10 @@ msgstr "Stare recunoscută"
 msgid "Status active checks"
 msgstr "Verificări active de stare"
 
+#, fuzzy
+msgid "Status change"
+msgstr "S-a schimbat"
+
 msgid "Status comments"
 msgstr "Observații privind statutul"
 
@@ -52973,7 +53005,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Synthetic services"
+msgid "Synthetic tests"
 msgstr "Servicii Systemd"
 
 msgid "Syslog Facility"
@@ -53608,7 +53640,19 @@ msgid "Test hostname before activation"
 msgstr "Testați numele de gazdă înainte de activare"
 
 #, fuzzy
+msgid "Test if a given notification matches your notification rules."
+msgstr "Creați o copie a acestei reguli de notificare"
+
+#, fuzzy
 msgid "Test notification"
+msgstr "ultima notificare"
+
+#, fuzzy
+msgid "Test notifications"
+msgstr "ultima notificare"
+
+#, fuzzy
+msgid "Test notifications on"
 msgstr "ultima notificare"
 
 msgid "Test runtime"
@@ -59422,6 +59466,10 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "Acesta este un șablon de față"
 
+#, fuzzy
+msgid "This is a notification test"
+msgstr "Rezultatul notificării finale"
+
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
@@ -59771,6 +59819,16 @@ msgstr "Acest nod nu se află în agregarea înghețată"
 
 msgid "This node is only in the frozen aggregation"
 msgstr "Acest nod se află doar în agregarea înghețată"
+
+#, fuzzy
+msgid ""
+"This notification does not match. See reasons in global notification rule "
+"list."
+msgstr "Notificările vor fi trimise în conformitate cu regulile de notificare"
+
+#, fuzzy
+msgid "This notification matches"
+msgstr "Notificarea utilizatorului"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Acest număr de controale noi este programat imediat"
@@ -77049,11 +77107,6 @@ msgstr ""
 # georgem ##############
 #~ msgid "freeze the following aggregation?"
 #~ msgstr "îngheață următoarea agregare?"
-
-#, fuzzy, python-format
-#~| msgid "User notification"
-#~ msgid "%s notifications"
-#~ msgstr "Notificarea utilizatorului"
 
 #~ msgid "Clear modified attributes"
 #~ msgstr "Ștergeți atributele modificate"

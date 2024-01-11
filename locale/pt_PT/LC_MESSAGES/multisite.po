@@ -6031,6 +6031,10 @@ msgstr "Analisar a disponibilidade desta agregação"
 msgid "Analyse predictive monitoring for this service"
 msgstr "Analisar o monitoramento preditivo para este serviço"
 
+#, fuzzy
+msgid "Analysis: Test notifications"
+msgstr "última notificação"
+
 msgid "Analyze"
 msgstr "Analisar"
 
@@ -15062,6 +15066,10 @@ msgstr "Faixa de data e hora"
 msgid "Date (YYYY-MM-DD)"
 msgstr "Data (AAAA-MM-DD)"
 
+#, fuzzy
+msgid "Date and time"
+msgstr "Tempo de paragem"
+
 msgid "Date format"
 msgstr "Formato da data"
 
@@ -17114,6 +17122,10 @@ msgstr "Etiquetas do anfitrião descobertas do anfitrião"
 
 msgid "Disovered services of the host"
 msgstr "Serviços do anfitrião"
+
+#, fuzzy
+msgid "Dispatch notifications"
+msgstr "Desactivar as notificações"
 
 msgid "Display"
 msgstr "Mostrar"
@@ -20140,6 +20152,10 @@ msgstr "Criações de eventos"
 
 msgid "Event database"
 msgstr "Base de dados de eventos"
+
+#, fuzzy
+msgid "Event date and time"
+msgstr "Porcentagem e tempo"
 
 msgid "Event deleted because its livetime expired"
 msgstr "Evento eliminado porque o seu tempo de vida expirou"
@@ -41777,7 +41793,15 @@ msgid "Please provide a '.xml' file"
 msgstr "Forneça um ficheiro '.xml'"
 
 #, fuzzy
+msgid "Please provide a hostname to test with."
+msgstr "Forneça um anfitrião e uma porta válidos"
+
+#, fuzzy
 msgid "Please provide a relative Windows path"
+msgstr "Por favor, forneça um nome válido"
+
+#, fuzzy
+msgid "Please provide a service."
 msgstr "Por favor, forneça um nome válido"
 
 msgid "Please provide a valid host and port"
@@ -49246,6 +49270,10 @@ msgstr ""
 "Página de resumo simples de todos os agregados de BI que são utilizados como "
 "serviços web."
 
+#, fuzzy
+msgid "Simulate"
+msgstr "Modo de simulação"
+
 msgid "Simulate for site"
 msgstr "Simular para o local"
 
@@ -51802,6 +51830,10 @@ msgstr "Status reconhecido"
 msgid "Status active checks"
 msgstr "Verificações de status ativas"
 
+#, fuzzy
+msgid "Status change"
+msgstr "Mudou"
+
 msgid "Status comments"
 msgstr "Comentários sobre o status"
 
@@ -52581,7 +52613,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Synthetic services"
+msgid "Synthetic tests"
 msgstr "Serviços de sistema"
 
 msgid "Syslog Facility"
@@ -53216,7 +53248,19 @@ msgid "Test hostname before activation"
 msgstr "Teste o nome da mangueira antes da ativação"
 
 #, fuzzy
+msgid "Test if a given notification matches your notification rules."
+msgstr "Criar uma cópia desta regra de notificação"
+
+#, fuzzy
 msgid "Test notification"
+msgstr "última notificação"
+
+#, fuzzy
+msgid "Test notifications"
+msgstr "última notificação"
+
+#, fuzzy
+msgid "Test notifications on"
 msgstr "última notificação"
 
 msgid "Test runtime"
@@ -58958,6 +59002,10 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "Este é um modelo de matéria frontal"
 
+#, fuzzy
+msgid "This is a notification test"
+msgstr "Resultado da notificação final"
+
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
@@ -59298,6 +59346,16 @@ msgstr "Este nó não está na agregação congelada"
 
 msgid "This node is only in the frozen aggregation"
 msgstr "Este nó está apenas na agregação congelada"
+
+#, fuzzy
+msgid ""
+"This notification does not match. See reasons in global notification rule "
+"list."
+msgstr "As notificações serão enviadas de acordo com as regras de notificação"
+
+#, fuzzy
+msgid "This notification matches"
+msgstr "Notificações do usuário"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Este número de novos cheques é agendado imediatamente"
@@ -76400,11 +76458,6 @@ msgstr ""
 
 #~ msgid "freeze the following aggregation?"
 #~ msgstr "congelar a seguinte agregação?"
-
-#, fuzzy, python-format
-#~| msgid "User notifications"
-#~ msgid "%s notifications"
-#~ msgstr "Notificações do usuário"
 
 #~ msgid "Clear modified attributes"
 #~ msgstr "Atributos claramente modificados"

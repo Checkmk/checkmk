@@ -6017,6 +6017,10 @@ msgstr "Analyseer de beschikbaarheid van deze aggregatie"
 msgid "Analyse predictive monitoring for this service"
 msgstr "Analyseer voorspellende monitoring voor deze dienst"
 
+#, fuzzy
+msgid "Analysis: Test notifications"
+msgstr "laatste mededeling"
+
 msgid "Analyze"
 msgstr "Analyseren"
 
@@ -15064,6 +15068,10 @@ msgstr "Datum & tijd bereik"
 msgid "Date (YYYY-MM-DD)"
 msgstr "Datum (JJJJ-MM-DD)"
 
+#, fuzzy
+msgid "Date and time"
+msgstr "Eindtijd downtime"
+
 msgid "Date format"
 msgstr "Datum formaat"
 
@@ -17129,6 +17137,10 @@ msgstr "Gevonden host labels van de host"
 
 msgid "Disovered services of the host"
 msgstr "Ontdekte diensten van de gastheer"
+
+#, fuzzy
+msgid "Dispatch notifications"
+msgstr "Meldingen uitschakelen"
 
 msgid "Display"
 msgstr "Weergave"
@@ -20151,6 +20163,10 @@ msgstr "Evenement creaties"
 
 msgid "Event database"
 msgstr "Gebeurtenisendatabase"
+
+#, fuzzy
+msgid "Event date and time"
+msgstr "Percentage en tijd"
 
 msgid "Event deleted because its livetime expired"
 msgstr "Gebeurtenis verwijderd omdat zijn levenstijd verstreken is"
@@ -41836,7 +41852,15 @@ msgid "Please provide a '.xml' file"
 msgstr "Zorg voor een '.xml' bestand"
 
 #, fuzzy
+msgid "Please provide a hostname to test with."
+msgstr "Geef een geldige host en poort"
+
+#, fuzzy
 msgid "Please provide a relative Windows path"
+msgstr "Geef een geldige naam"
+
+#, fuzzy
+msgid "Please provide a service."
 msgstr "Geef een geldige naam"
 
 msgid "Please provide a valid host and port"
@@ -49284,6 +49308,10 @@ msgstr ""
 "Eenvoudige overzichtspagina van alle BI-aggregaten die als webdienst wordt "
 "gebruikt."
 
+#, fuzzy
+msgid "Simulate"
+msgstr "Simulatiemodus"
+
 msgid "Simulate for site"
 msgstr "Simuleren voor site"
 
@@ -51832,6 +51860,10 @@ msgstr "Status erkend"
 msgid "Status active checks"
 msgstr "Status actieve controles"
 
+#, fuzzy
+msgid "Status change"
+msgstr "Is veranderd"
+
 msgid "Status comments"
 msgstr "Status opmerkingen"
 
@@ -52615,7 +52647,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Synthetic services"
+msgid "Synthetic tests"
 msgstr "Systemd diensten"
 
 msgid "Syslog Facility"
@@ -53254,7 +53286,19 @@ msgid "Test hostname before activation"
 msgstr "Test hostnaam vóór activering"
 
 #, fuzzy
+msgid "Test if a given notification matches your notification rules."
+msgstr "Maak een kopie van deze notificatieregel"
+
+#, fuzzy
 msgid "Test notification"
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Test notifications"
+msgstr "laatste mededeling"
+
+#, fuzzy
+msgid "Test notifications on"
 msgstr "laatste mededeling"
 
 #, fuzzy
@@ -59038,6 +59082,10 @@ msgid "This is a front matter Template"
 msgstr "Dit is een voorpagina Template"
 
 #, fuzzy
+msgid "This is a notification test"
+msgstr "Definitieve kennisgeving resultaat"
+
+#, fuzzy
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
@@ -59380,6 +59428,16 @@ msgstr "Dit knooppunt zit niet in de bevroren aggregatie"
 
 msgid "This node is only in the frozen aggregation"
 msgstr "Dit knooppunt zit alleen in de bevroren aggregatie"
+
+#, fuzzy
+msgid ""
+"This notification does not match. See reasons in global notification rule "
+"list."
+msgstr "Sorteervolgorde voor bulkmeldingen"
+
+#, fuzzy
+msgid "This notification matches"
+msgstr "Gebruikersmeldingen"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Dit aantal nieuwe controles is onmiddellijk gepland"
@@ -76569,11 +76627,6 @@ msgstr ""
 
 #~ msgid "freeze the following aggregation?"
 #~ msgstr "de volgende aggregatie bevriezen?"
-
-#, fuzzy, python-format
-#~| msgid "User notifications"
-#~ msgid "%s notifications"
-#~ msgstr "Gebruikersmeldingen"
 
 #~ msgid "Clear modified attributes"
 #~ msgstr "Wis gewijzigde attributen"

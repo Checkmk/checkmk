@@ -191,60 +191,17 @@ def inventory_mem_win(section):
         yield None, {}
 
 
-_PercUsed = tuple[float, float]
-_AbsFree = tuple[int, int]
-_Predictive = Mapping[str, object]
-# Note: `None` is implemented, und should be possible. It can't occur due to poor ruleset design currenty.
-_Levels = _PercUsed | _AbsFree | _Predictive | None
-_LevelsType = Literal["perc_used", "abs_free", "predictive"]
+_Levels = (
+    tuple[Literal["perc_used"], tuple[float, float]]
+    | tuple[Literal["abs_free"], tuple[int, int]]
+    | tuple[Literal["predictive"], Mapping[str, object]]
+)
 
 
-class _Params(TypedDict):
+class Params(TypedDict):
     average: NotRequired[int]
     memory: _Levels
     pagefile: _Levels
-
-
-def _parse_levels(
-    levels: _Levels,
-) -> (
-    tuple[Literal["perc_used"], _PercUsed]
-    | tuple[Literal["abs_free"], _AbsFree]
-    | tuple[Literal["predictive"], _Predictive]
-    | None
-):
-    if levels is None:
-        return None
-    if not isinstance(levels, tuple):
-        return "predictive", levels
-    if isinstance(levels[0], float):
-        return "perc_used", (float(levels[0]), float(levels[1]))
-    return "abs_free", (int(levels[0]), int(levels[1]))
-
-
-def _get_levels_type_and_value(
-    levels_value: _Levels,
-) -> (
-    tuple[Literal["perc_used"], _PercUsed]
-    | tuple[Literal["abs_free"], _AbsFree]
-    | tuple[Literal["predictive"], _Predictive]
-    | tuple[Literal["ignore"], tuple[None, None]]
-):
-    if (parsed_levels := _parse_levels(levels_value)) is None:
-        return "ignore", (None, None)
-
-    return (
-        parsed_levels
-        if parsed_levels[0] != "abs_free"
-        else (
-            "abs_free",
-            (
-                # absolute levels on free space come in MB, which cannot be changed easily
-                parsed_levels[1][0] * _MB,
-                parsed_levels[1][1] * _MB,
-            ),
-        )
-    )
 
 
 def _do_averaging(
@@ -276,7 +233,7 @@ def _do_averaging(
 
 
 def check_mem_windows(
-    _no_item: None, params: _Params, section: memory.SectionMem
+    _no_item: None, params: Params, section: memory.SectionMem
 ) -> Generator[tuple[int, str, list], None, None]:
     now = time.time()
 
@@ -294,14 +251,13 @@ def check_mem_windows(
 
         used = float(total - free)
 
-        parsed_levels = _get_levels_type_and_value(levels)
         average = params.get("average")
 
         state, infotext, perfdata = check_memory_element(
             title,
             used,
             total,
-            None if average is not None or parsed_levels[0] == "predictive" else parsed_levels,
+            None if average is not None or levels[0] == "predictive" else levels,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
@@ -321,19 +277,18 @@ def check_mem_windows(
                 title,
                 used_avg,
                 total,
-                parsed_levels if parsed_levels[0] != "predictive" else None,
+                levels if levels[0] != "predictive" else None,
                 metric_name=f"{metric_name}_avg",
             )
             perfdata += perfadd
 
-        if parsed_levels[0] == "predictive":
+        if levels[0] == "predictive":
             state, infoadd, perfadd = check_levels(
                 used,
                 metric_name,
-                parsed_levels[1],
-                unit="GiB",  # Levels are specified in GiB...
-                scale=1024**3,  # ... in WATO ValueSpec
+                levels[1],
                 infoname=title,
+                human_readable_func=render.bytes,
             )
             infotext += ", " + infoadd
             perfdata += perfadd[1:]
@@ -347,9 +302,9 @@ check_info["mem.win"] = LegacyCheckDefinition(
     discovery_function=inventory_mem_win,
     check_function=check_mem_windows,
     check_ruleset_name="memory_pagefile_win",
-    check_default_parameters=_Params(
-        memory=(80.0, 90.0),
-        pagefile=(80.0, 90.0),
+    check_default_parameters=Params(
+        memory=("perc_used", (80.0, 90.0)),
+        pagefile=("perc_used", (80.0, 90.0)),
     ),
 )
 

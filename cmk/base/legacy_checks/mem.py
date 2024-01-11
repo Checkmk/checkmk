@@ -267,29 +267,6 @@ def _do_averaging(
     )
 
 
-def _apply_predictive_levels(
-    params: _Params,
-    paramname: Literal["memory", "pagefile"],
-    title: str,
-    used: float,
-) -> tuple[int, str, list]:
-    if "average" in params:
-        titleinfo = title
-        dsname = "%s_avg" % paramname
-    else:
-        titleinfo = title
-        dsname = paramname
-
-    return check_levels(
-        used / _MB,  # Current value stored in MB in RRDs
-        dsname,
-        params[paramname],
-        unit="GiB",  # Levels are specified in GiB...
-        scale=1024,  # ... in WATO ValueSpec
-        infoname=titleinfo,
-    )
-
-
 def check_mem_windows(
     _no_item: None, params: _Params, section: memory.SectionMem
 ) -> Generator[tuple[int, str, list], None, None]:
@@ -353,11 +330,13 @@ def check_mem_windows(
                 )
 
         if levels_type == "predictive":
-            state, infoadd, perfadd = _apply_predictive_levels(
-                params,
-                paramname,
-                title,
-                used,
+            state, infoadd, perfadd = check_levels(
+                used / _MB,  # Current value stored in MB in RRDs
+                ("%s_avg" % paramname) if average else paramname,
+                levels,
+                unit="GiB",  # Levels are specified in GiB...
+                scale=1024,  # ... in WATO ValueSpec
+                infoname=title,
             )
             if infoadd:
                 infotext += ", " + infoadd

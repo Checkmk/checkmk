@@ -125,6 +125,8 @@ ParsedQuery::ParsedQuery(
                 parseWaitTimeoutLine(line);
             } else if (header == "Localtime"sv) {
                 parseLocaltimeLine(line);
+            } else if (header == "OrderBy"sv) {
+                parseOrderBy(line, make_column);
             } else {
                 throw std::runtime_error("undefined request header");
             }
@@ -480,4 +482,28 @@ void ParsedQuery::parseLocaltimeLine(std::string_view line) {
             "timezone difference greater than or equal to 24 hours"};
     }
     timezone_offset = offset;
+}
+
+void ParsedQuery::parseOrderBy(std::string_view line,
+                               const ColumnCreator &make_column) {
+    auto column = mk::next_argument(line);
+    mk::skip_whitespace(line);
+    auto ascending = [line]() {
+        if (line.empty() || line == "asc"sv) {
+            return true;
+        }
+        if (line == "desc"sv) {
+            return false;
+        }
+        throw std::runtime_error("expected 'asc' or 'desc'");
+    };
+    auto dot = column.find('.');
+    order_by.push_back(
+        dot == std::string_view::npos
+            ? OrderBy{.column = make_column(column),
+                      .key = {},
+                      .ascending = ascending()}
+            : OrderBy{.column = make_column(column.substr(0, dot)),
+                      .key = column.substr(dot + 1),
+                      .ascending = ascending()});
 }

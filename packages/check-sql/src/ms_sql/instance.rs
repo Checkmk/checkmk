@@ -11,7 +11,9 @@ use crate::config::{
     CheckConfig,
 };
 use crate::emit;
-use crate::ms_sql::query::{get_computer_name, run_query, Answer, Column};
+use crate::ms_sql::query::{
+    obtain_computer_name, run_custom_query, run_known_query, Answer, Column,
+};
 use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::utils;
@@ -384,13 +386,9 @@ impl SqlInstance {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
             }
-            names::BLOCKED => {
-                self.generate_blocking_sessions_section(
-                    client,
-                    &sqls::get_blocking_sessions_query(),
-                    sep,
-                )
-                .await
+            names::BLOCKED_SESSIONS => {
+                self.generate_sessions_section(client, &sqls::Id::BlockingSessions, sep)
+                    .await
             }
             names::TABLE_SPACES => {
                 let databases = self.generate_databases(client).await;
@@ -409,7 +407,7 @@ impl SqlInstance {
                     .await
             }
             names::DATABASES => {
-                self.generate_databases_section(client, sqls::QUERY_DATABASES, sep)
+                self.generate_databases_section(client, &sqls::Id::Databases, sep)
                     .await
             }
             names::CLUSTERS => {
@@ -418,7 +416,7 @@ impl SqlInstance {
                     .await
             }
             names::CONNECTIONS => {
-                self.generate_connections_section(client, sqls::QUERY_CONNECTIONS, sep)
+                self.generate_connections_section(client, &sqls::Id::Connections, sep)
                     .await
             }
             names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
@@ -467,7 +465,7 @@ impl SqlInstance {
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_query(client, sqls::QUERY_COUNTERS)
+        let x = run_known_query(client, &sqls::Id::Counters)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_counters_rows(&rows, sep));
@@ -486,13 +484,13 @@ impl SqlInstance {
         Ok(z.join(""))
     }
 
-    pub async fn generate_blocking_sessions_section(
+    pub async fn generate_sessions_section(
         &self,
         client: &mut Client,
-        query: &str,
+        id: &sqls::Id,
         sep: char,
     ) -> String {
-        match run_query(client, query).await {
+        match run_known_query(client, id).await {
             Ok(rows) => {
                 if rows.is_empty() || rows[0].is_empty() {
                     log::info!("No blocking sessions");
@@ -526,7 +524,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, sqls::QUERY_SPACE_USED)
+                    result += &run_known_query(&mut c, &sqls::Id::SpaceUsed)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
                         .unwrap_or_else(|e| format_error(d, &e));
@@ -542,7 +540,7 @@ impl SqlInstance {
     pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
         let databases = self.generate_databases(client).await;
 
-        let result = run_query(client, sqls::QUERY_BACKUP)
+        let result = run_known_query(client, &sqls::Id::Backup)
             .await
             .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
@@ -575,7 +573,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, sqls::QUERY_TRANSACTION_LOGS)
+                    result += &run_known_query(&mut c, &sqls::Id::TransactionLogs)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -608,7 +606,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_query(&mut c, sqls::QUERY_DATAFILES)
+                    result += &run_known_query(&mut c, &sqls::Id::Datafiles)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -624,11 +622,11 @@ impl SqlInstance {
     pub async fn generate_databases_section(
         &self,
         client: &mut Client,
-        query: &str,
+        id: &sqls::Id,
         sep: char,
     ) -> String {
         let databases = self.generate_databases(client).await;
-        run_query(client, query)
+        run_known_query(client, id)
             .await
             .map(|rows| to_databases_entries(&self.name, &rows, sep))
             .unwrap_or_else(|e| {
@@ -652,7 +650,7 @@ impl SqlInstance {
 
     /// doesn't return error - the same behavior as plugin
     pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
-        let result = run_query(client, sqls::QUERY_DATABASE_NAMES)
+        let result = run_known_query(client, &sqls::Id::DatabaseNames)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));
@@ -717,14 +715,14 @@ impl SqlInstance {
     }
 
     async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
-        let rows = &run_query(client, sqls::QUERY_IS_CLUSTERED)
+        let rows = &run_known_query(client, &sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
     async fn get_database_cluster_nodes(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_query(client, sqls::QUERY_CLUSTER_NODES).await?;
+        let rows = &run_known_query(client, &sqls::Id::ClusterNodes).await?;
         if !rows.is_empty() && !rows[0].is_empty() {
             return Ok(rows[0]
                 .iter()
@@ -736,7 +734,7 @@ impl SqlInstance {
     }
 
     async fn get_database_cluster_active_node(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_query(client, sqls::QUERY_CLUSTER_ACTIVE_NODES).await?;
+        let rows = &run_known_query(client, &sqls::Id::ClusterActiveNodes).await?;
         if !rows.is_empty() && !rows[0].is_empty() {
             return Ok(rows[0]
                 .last() // as in legacy plugin
@@ -749,10 +747,10 @@ impl SqlInstance {
     pub async fn generate_connections_section(
         &self,
         client: &mut Client,
-        query: &str,
+        id: &sqls::Id,
         sep: char,
     ) -> String {
-        run_query(client, query)
+        run_known_query(client, id)
             .await
             .map(|rows| self.to_connections_entries(&rows, sep))
             .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))
@@ -785,8 +783,8 @@ impl SqlInstance {
     ) -> String {
         match self.create_client(endpoint, section.main_db()).await {
             Ok(mut c) => {
-                let q = section.query_selector(query).unwrap_or_default();
-                run_query(&mut c, q)
+                let q = query.unwrap_or_else(|| section.select_query().unwrap_or_default());
+                run_custom_query(&mut c, q)
                     .await
                     .and_then(|r| section.validate_rows(r))
                     .map(|rows| {
@@ -833,22 +831,22 @@ impl SqlInstance {
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let result = run_query(client, sqls::QUERY_UTC)
-            .await
-            .and_then(validate_rows)
-            .and_then(|rows| self.process_utc_rows(&rows, sep));
+        let result = match run_known_query(client, &sqls::Id::Utc).await {
+            Ok(r) => validate_rows(r).and_then(|rows| self.process_utc_rows(&rows, sep)),
+            Err(e) => Err(e),
+        };
         match result {
-            Ok(result) => result,
-            Err(err) => {
-                log::error!("Failed to get UTC: {}", err);
-                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+            Ok(value) => value,
+            Err(e) => {
+                log::error!("Failed to get UTC time: {e}\n");
+                e.to_string()
             }
         }
     }
 
     fn process_utc_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
         let row = &rows[0];
-        let utc = row[0].get_value_by_name(sqls::QUERY_UTC_TIME_PARAM);
+        let utc = row[0].get_value_by_name(sqls::UTC_DATE_FIELD);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
@@ -960,12 +958,9 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
 
 impl SqlInstanceProperties {
     pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
-        let r = run_query(client, sqls::QUERY_INSTANCE_PROPERTIES).await?;
+        let r = run_known_query(client, &sqls::Id::InstanceProperties).await?;
         if r.is_empty() {
-            anyhow::bail!(
-                "Empty answer from server on query {}",
-                sqls::QUERY_INSTANCE_PROPERTIES
-            );
+            anyhow::bail!("Empty answer from server on query instance_properties");
         }
         Ok(Self::from(&r[0]))
     }
@@ -1639,11 +1634,9 @@ async fn exec_win_registry_sql_instances_query(
     endpoint: &Endpoint,
     query: &str,
 ) -> Result<Vec<SqlInstanceBuilder>> {
-    let answers = run_query(client, query).await?;
+    let answers = run_custom_query(client, query).await?;
     if let Some(rows) = answers.get(0) {
-        let computer_name = get_computer_name(client, sqls::QUERY_COMPUTER_NAME)
-            .await
-            .unwrap_or_default();
+        let computer_name = obtain_computer_name(client).await.unwrap_or_default();
         let instances = to_sql_instance(rows, endpoint, computer_name);
         log::info!("Instances found {}", instances.len());
         Ok(instances)

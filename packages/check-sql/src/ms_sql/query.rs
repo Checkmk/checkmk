@@ -2,7 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client::Client;
+use super::sqls::get_query;
+use super::{client::Client, sqls};
 
 use anyhow::Result;
 use std::time::Instant;
@@ -83,42 +84,59 @@ impl<'a> Column<'a> for Row {
     }
 }
 
+/// Runs predefined query
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
-pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
-    if query.is_empty() {
-        log::error!("Empty query");
-        anyhow::bail!("Empty query");
-    }
+pub async fn run_known_query(client: &mut Client, id: &sqls::Id) -> Result<Vec<Answer>> {
     let start = Instant::now();
-    let result = _run_query(client, query).await;
-    log_query(start, &result, query);
+    let result = _run_known_query(client, id).await;
+    log_query(start, &result, format!("{id:?}").as_str());
     result
 }
 
-fn log_query(start: Instant, result: &Result<Vec<Answer>>, query: &str) {
+/// Runs any query
+/// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
+pub async fn run_custom_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
+    if query.is_empty() {
+        anyhow::bail!("Empty custom query");
+    }
+    let start = Instant::now();
+    let result = exec_sql(client, query).await;
+    log_query(start, &result, &make_short_query(query));
+    result
+}
+
+fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_name: &str) {
     let total = (Instant::now() - start).as_millis();
-    let q = short_query(query);
     match result {
-        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{q}`"),
-        Err(err) => log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{q}`",),
+        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{query_name}`"),
+        Err(err) => {
+            log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{query_name}`",)
+        }
     }
 }
 
-async fn _run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
-    log::debug!("Query to run: `{}`", short_query(query));
+async fn _run_known_query(client: &mut Client, id: &sqls::Id) -> Result<Vec<Answer>> {
+    log::debug!("Query name: `{:?}`", id);
+    let query = get_query(id)?;
+    exec_sql(client, query).await
+}
+
+async fn exec_sql(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
+    log::debug!("Query to run short: `{}`", make_short_query(query));
+    log::trace!("Query to run: `{}`", query);
     let stream = Query::new(query).query(client).await?;
     let rows: Vec<Answer> = stream.into_results().await?;
     Ok(rows)
 }
 
-fn short_query(query: &str) -> String {
+fn make_short_query(query: &str) -> String {
     query.to_owned()[0..std::cmp::max(16, query.len() - 1)].to_string()
 }
 
-pub async fn get_computer_name(client: &mut Client, query: &str) -> Result<Option<String>> {
-    let rows = run_query(client, query).await?;
+pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<String>> {
+    let rows = run_known_query(client, &sqls::Id::ComputerName).await?;
     if rows.is_empty() || rows[0].is_empty() {
-        log::warn!("Computer name not found with query {query}");
+        log::warn!("Computer name not found with query computer_name");
         return Ok(None);
     }
     let row = &rows[0];

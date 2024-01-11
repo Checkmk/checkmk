@@ -100,17 +100,22 @@ impl Section {
         }
     }
 
-    pub fn query_selector<'a>(&'a self, custom_query: Option<&'a str>) -> Option<&str> {
-        if custom_query.is_some() {
-            custom_query
-        } else {
-            match self.name.as_ref() {
-                section::names::JOBS => Some(sqls::QUERY_JOBS),
-                section::names::MIRRORING => Some(sqls::QUERY_MIRRORING),
-                section::names::AVAILABILITY_GROUPS => Some(sqls::QUERY_AVAILABILITY_GROUP),
-                _ => None,
-            }
+    pub fn select_query(&self) -> Option<&str> {
+        match self.name.as_ref() {
+            section::names::JOBS => Self::get_query(&sqls::Id::Jobs),
+            section::names::MIRRORING => Self::get_query(&sqls::Id::Mirroring),
+            section::names::AVAILABILITY_GROUPS => Self::get_query(&sqls::Id::AvailabilityGroups),
+            _ => None,
         }
+    }
+
+    fn get_query(id: &sqls::Id) -> Option<&str> {
+        sqls::get_query(id)
+            .map_err(|e| {
+                log::error!("{e}");
+                e
+            })
+            .ok()
     }
 
     pub fn main_db(&self) -> Option<String> {

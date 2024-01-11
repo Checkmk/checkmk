@@ -26,7 +26,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = []  # type: ignore
+    # TODO: dumps containing dynamic data to regex
+    SKIPPED_DUMPS = [
+        "agent-2.2.0p14-windows-veeam-backup",
+        "agent-2.2.0p14-windows-dhcp",
+        "agent-2.2.0p14-windows-mssql",
+    ]
 
 
 @dataclass

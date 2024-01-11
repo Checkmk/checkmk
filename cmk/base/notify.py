@@ -846,10 +846,6 @@ def rbn_match_rule(
     context: EventContext,
     analyse: bool = False,
 ) -> str | None:
-    if analyse:
-        if (result := rbn_match_timeperiod(rule, context)) is not None:
-            return result
-
     return events.apply_matchers(
         [
             rbn_match_rule_disabled,
@@ -862,6 +858,7 @@ def rbn_match_rule(
             rbn_match_hostlabels,
             rbn_match_servicelabels,
             rbn_match_event_console,
+            rbn_match_timeperiod,
         ],
         rule,
         context,
@@ -869,7 +866,12 @@ def rbn_match_rule(
     )
 
 
-def rbn_match_timeperiod(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_timeperiod(rule: EventRule, context: EventContext, analyse: bool) -> str | None:
+    # This test is only done on notification tests, otherwise
+    # events.event_match_timeperiod() is used
+    if not analyse:
+        return None
+
     if (timeperiod_name := rule.get("match_timeperiod")) is None:
         return None
 

@@ -165,8 +165,8 @@ def check_mysql_iostat(item, params, parsed):
         time.time(),
         "innodb_io" + item,
         params,
-        read_value=int(data["Innodb_data_read"]) // 512,
-        write_value=int(data["Innodb_data_written"]) // 512,
+        read_value=int(data["Innodb_data_read"]),
+        write_value=int(data["Innodb_data_written"]),
     )
 
 
@@ -187,39 +187,37 @@ def check_diskstat_line(
     infos: MutableSequence[str] = []
     status: int = 0
 
-    for what, ctr in [("read", read_value), ("write", write_value)]:
-        countername = f"diskstat.{item}.{what}"
-
+    for metric_name, value in (("read", read_value), ("write", write_value)):
         # unpack levels now, need also for perfdata
-        levels = params.get(what)
+        levels = params.get(metric_name)
         if isinstance(levels, tuple):
             warn, crit = levels
         else:
             warn, crit = None, None
 
-        per_sec = get_rate(get_value_store(), countername, this_time, int(ctr), raise_overflow=True)
-        # compute IO rate in bytes/sec
-        bytes_per_sec = per_sec * 512
-
-        dsname = what
+        bytes_per_sec = get_rate(
+            get_value_store(), metric_name, this_time, value, raise_overflow=True
+        )
 
         # compute average of the rate over ___ minutes
         if average_range is not None:
-            perfdata.append((dsname, bytes_per_sec, warn, crit))
+            perfdata.append((metric_name, bytes_per_sec, warn, crit))
             bytes_per_sec = get_average(
-                value_store, f"{countername}.avg", this_time, bytes_per_sec, average_range
+                value_store, f"{metric_name}.avg", this_time, bytes_per_sec, average_range
             )
-            dsname += ".avg"
+            metric_name_suffix = ".avg"
+        else:
+            metric_name_suffix = ""
 
         # check levels
         state, text, extraperf = check_levels(
             bytes_per_sec,
-            dsname,
+            metric_name + metric_name_suffix,
             levels,
             scale=1024**2,
             statemarkers=True,
             human_readable_func=render.iobandwidth,
-            infoname=what,
+            infoname=metric_name.capitalize(),
         )
         if text:
             infos.append(text)

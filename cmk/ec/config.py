@@ -317,7 +317,7 @@ class SNMPCredential(SNMPCredentialBase, total=False):
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
-    archive_mode: Literal["file", "mongodb"]
+    archive_mode: Literal["file", "mongodb", "sqlite"]
     archive_orphans: bool
     debug_rules: bool
     event_limit: EventLimits

@@ -6,7 +6,6 @@
 #include "livestatus/DictFilter.h"
 
 #include <algorithm>
-#include <compare>
 #include <cstddef>
 #include <tuple>
 #include <unordered_map>
@@ -14,6 +13,7 @@
 
 #include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringFilter.h"
 #include "livestatus/opids.h"
 
 namespace {
@@ -76,36 +76,20 @@ DictStrValueFilter::DictStrValueFilter(Kind kind, std::string columnName,
     regExp_ = makeRegExpFor(oper(), ref_string_);
 }
 
-bool DictStrValueFilter::accepts(
-    Row row, const User & /*user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    auto cvm = f_(row);
-    auto it = cvm.find(ref_varname_);
-    auto act_string = it == cvm.end() ? "" : it->second;
-    switch (oper()) {
-        case RelationalOperator::equal:
-        case RelationalOperator::equal_icase:
-            return regExp_->match(act_string);
-        case RelationalOperator::not_equal:
-        case RelationalOperator::not_equal_icase:
-            return !regExp_->match(act_string);
-        case RelationalOperator::matches:
-        case RelationalOperator::matches_icase:
-            return regExp_->search(act_string);
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::doesnt_match_icase:
-            return !regExp_->search(act_string);
-            // FIXME: The cases below are nonsense for UTF-8...
-        case RelationalOperator::less:
-            return act_string < ref_string_;
-        case RelationalOperator::greater_or_equal:
-            return act_string >= ref_string_;
-        case RelationalOperator::greater:
-            return act_string > ref_string_;
-        case RelationalOperator::less_or_equal:
-            return act_string <= ref_string_;
-    }
-    return false;  // unreachable
+bool DictStrValueFilter::accepts(Row row, const User &user,
+                                 std::chrono::seconds timezone_offset) const {
+    auto filter = StringFilter{
+        kind(),
+        columnName(),
+        [this](Row row) {
+            auto cvm = f_(row);
+            auto it = cvm.find(ref_varname_);
+            return it == cvm.end() ? "" : it->second;
+        },
+        oper(),
+        ref_string_,
+    };
+    return filter.accepts(row, user, timezone_offset);
 }
 
 std::unique_ptr<Filter> DictStrValueFilter::copy() const {

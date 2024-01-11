@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-01-10 02:23+0000\n"
+"PO-Revision-Date: 2024-01-10 19:53+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -5986,6 +5986,10 @@ msgstr "Verfügbarkeit dieser Aggregation analysieren"
 msgid "Analyse predictive monitoring for this service"
 msgstr "Prognose für diesen Service analysieren"
 
+#, fuzzy
+msgid "Analysis: Test notifications"
+msgstr "Benachrichtigung testen"
+
 msgid "Analyze"
 msgstr "Analyse"
 
@@ -8057,7 +8061,8 @@ msgid "Buckets only: Levels for disk queue drain rate"
 msgstr "Nur für Buckets: Level für die Abbaurate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for disk queue fill rate"
-msgstr "Nur für Buckets: Level für die Auffüllrate der Festplattenwarteschlange"
+msgstr ""
+"Nur für Buckets: Level für die Auffüllrate der Festplattenwarteschlange"
 
 msgid "Buckets only: Levels for length of disk write queue"
 msgstr "Nur für Buckets: Level für die Länge der Festplattenwarteschlange"
@@ -14967,6 +14972,10 @@ msgstr "Datums- & Zeitraum"
 msgid "Date (YYYY-MM-DD)"
 msgstr "Datum (JJJJ-MM-DD)"
 
+#, fuzzy
+msgid "Date and time"
+msgstr "Wartungszeit (Ende)"
+
 msgid "Date format"
 msgstr "Datumsformat"
 
@@ -15344,16 +15353,19 @@ msgid "Define lower levels for free pods (clusters and nodes only)"
 msgstr "Untere Level für freie Pods definieren (nur Cluster und Nodes)"
 
 msgid "Define lower levels for number of running containers"
-msgstr "Definieren Sie die unteren Level für die Anzahl der laufenden Container"
+msgstr ""
+"Definieren Sie die unteren Level für die Anzahl der laufenden Container"
 
 msgid "Define lower levels for number of terminated containers"
-msgstr "Definieren Sie die unteren Level der Anzahl der abgebrochenen Container"
+msgstr ""
+"Definieren Sie die unteren Level der Anzahl der abgebrochenen Container"
 
 msgid "Define lower levels for number of total containers"
 msgstr "Definieren Sie die unteren Level für die Gesamtzahl der Container"
 
 msgid "Define lower levels for number of waiting containers"
-msgstr "Definieren Sie die unteren Level für die Anzahl der wartenden Container"
+msgstr ""
+"Definieren Sie die unteren Level für die Anzahl der wartenden Container"
 
 msgid "Define name of NetBIOS server"
 msgstr "Name des NetBIOS-Servers festlegen"
@@ -17017,6 +17029,10 @@ msgstr "Entdeckte Host-Labels des Hosts"
 
 msgid "Disovered services of the host"
 msgstr "Erkannte Services des Hosts"
+
+#, fuzzy
+msgid "Dispatch notifications"
+msgstr "Benachrichtigungen deaktivieren"
 
 msgid "Display"
 msgstr "Anzeige"
@@ -20045,6 +20061,10 @@ msgstr "Ereignisserzeugung"
 
 msgid "Event database"
 msgstr "Event-Datenbank"
+
+#, fuzzy
+msgid "Event date and time"
+msgstr "Prozent und Zeit"
 
 msgid "Event deleted because its livetime expired"
 msgstr "Ereignis gelöscht da Lebenszeit abgelaufen"
@@ -41588,8 +41608,16 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Bitte stellen Sie eine '.xml'-Datei zur Verfügung"
 
+#, fuzzy
+msgid "Please provide a hostname to test with."
+msgstr "Bitte geben Sie einen gültigen Host und Port an"
+
 msgid "Please provide a relative Windows path"
 msgstr "Bitte geben Sie einen relativen Windows-Pfad an"
+
+#, fuzzy
+msgid "Please provide a service."
+msgstr "Bitte geben Sie einen gültigen Namen an"
 
 msgid "Please provide a valid host and port"
 msgstr "Bitte geben Sie einen gültigen Host und Port an"
@@ -43680,7 +43708,7 @@ msgid "Reference"
 msgstr "Referenz"
 
 msgid "Reference size for magic factor"
-msgstr "Referenzwert für Magic Faktor"
+msgstr "Referenzwert für Magic Factor"
 
 msgid "Referer"
 msgstr "Verweiser"
@@ -48984,6 +49012,10 @@ msgstr ""
 "Einfache Übersichtsseite, die alle BI-Aggregate anzeigt und als Webservice "
 "verwendet werden kann."
 
+#, fuzzy
+msgid "Simulate"
+msgstr "Simulationsmodus"
+
 msgid "Simulate for site"
 msgstr "Für Instanz simulieren"
 
@@ -49576,8 +49608,8 @@ msgid ""
 "Some devices send texts in non-ASCII characters. Checkmk always assumes "
 "UTF-8 encoding. You can declare other encodings here"
 msgstr ""
-"Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer UTF-"
-"8 Kodierung. Andere Kodierungen können Sie hier einstellen"
+"Einige Hosts senden Text mit nicht-ASCII Zeichen. Checkmk erwartet immer "
+"UTF-8 Kodierung. Andere Kodierungen können Sie hier einstellen"
 
 msgid ""
 "Some firewalls are not capable of dealing with a few thousand PING packets "
@@ -50471,8 +50503,8 @@ msgstr ""
 "Geben Sie die oberen Level für die Anzahl der Aufrufe pro Sekunde an, die "
 "bei nicht bereitgestellter Gleichzeitigkeit (Spillover-Aufrufe) ausgeführt "
 "werden, wenn die gesamte bereitgestellte Gleichzeitigkeit genutzt wird. Der "
-"Standardwert ist CRIT für mehr als einen Spillover-Aufruf pro Stunde (ca. 1."
-"0/3600)."
+"Standardwert ist CRIT für mehr als einen Spillover-Aufruf pro Stunde (ca. "
+"1.0/3600)."
 
 msgid ""
 "Specify the upper levels for the number of invocations per second that "
@@ -50524,9 +50556,9 @@ msgstr ""
 "jeweiligen Service werden die Level für den Metrikwert nur dann angewendet, "
 "wenn die Metrikbezeichnung mit der in der benutzerdefinierten Prometheus-"
 "Service-Definition angegebenen Bezeichnung übereinstimmt. Level für den "
-"benutzerdefinierten Prometheus-Check können an zwei Stellen definiert werden:"
-" in der Prometheus Datasource-Regel und hier. Der Regelsatz hier hat immer "
-"Vorrang vor den in der Datasource-Regel definierten Level."
+"benutzerdefinierten Prometheus-Check können an zwei Stellen definiert "
+"werden: in der Prometheus Datasource-Regel und hier. Der Regelsatz hier hat "
+"immer Vorrang vor den in der Datasource-Regel definierten Level."
 
 msgid ""
 "Specify upper and/or lower levels for the queried PromQL value. This option "
@@ -51529,6 +51561,10 @@ msgstr "Status quittiert"
 msgid "Status active checks"
 msgstr "Status aktive Checks"
 
+#, fuzzy
+msgid "Status change"
+msgstr "Hat sich geändert"
+
 msgid "Status comments"
 msgstr "Status Kommentare"
 
@@ -52298,7 +52334,8 @@ msgid ""
 "subscription). You are currently monitoring %d %s on this site."
 msgstr ""
 
-msgid "Synthetic services"
+#, fuzzy
+msgid "Synthetic tests"
 msgstr "Synthetische Services"
 
 msgid "Syslog Facility"
@@ -52927,7 +52964,19 @@ msgstr "Test-Ereignis generiert und zur Event Console geschickt."
 msgid "Test hostname before activation"
 msgstr "Hostname vor der Aktivierung testen"
 
+#, fuzzy
+msgid "Test if a given notification matches your notification rules."
+msgstr "Eine Kopie dieser Alarmierungsregel erstellen"
+
 msgid "Test notification"
+msgstr "Benachrichtigung testen"
+
+#, fuzzy
+msgid "Test notifications"
+msgstr "Benachrichtigung testen"
+
+#, fuzzy
+msgid "Test notifications on"
 msgstr "Benachrichtigung testen"
 
 msgid "Test runtime"
@@ -57975,7 +58024,8 @@ msgstr ""
 "mehr geändert werden."
 
 msgid "This Ruleset sets the threshold limits for battery sensors"
-msgstr "Dieser Regelsatz definiert die Schwellwert-Grenzen für Batteriesensoren"
+msgstr ""
+"Dieser Regelsatz definiert die Schwellwert-Grenzen für Batteriesensoren"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
@@ -58196,7 +58246,6 @@ msgstr "Dieser Sicherungs-Job existiert nicht."
 msgid "This backup target does not exist."
 msgstr "Dieses Sicherungsziel existiert nicht."
 
-#, fuzzy
 msgid ""
 "This boolean variable allows you to bring Checkmk into a dry run mode. No "
 "hosts will be contacted, no DNS lookups will take place and data is read "
@@ -58680,18 +58729,21 @@ msgstr ""
 "von sofort eingeplanten Checks hinausgehen. Hinweis: Die maximale "
 "Verzögerung ist das fünffache normale Checkintervall"
 
-#, fuzzy
 msgid ""
 "This interval is applied to all new non-Checkmk active checks that go beyond "
 "the number of immediately scheduled checks. Note: the maximum delay is five "
 "times the normal check interval"
 msgstr ""
-"Dieses Intervall wird für alle neuen Nicht-Checkmk-Checks verwendet, welche "
+"Dieses Intervall wird für alle neuen Nicht-Check_MK-Checks verwendet, welche "
 "über die Anzahl der sofort eingeplanten Checks hinausgehen. Hinweis: Das "
 "Maximum ist das fünffache normale Checkintervall"
 
 msgid "This is a front matter Template"
 msgstr "Das ist eine Titelei Vorlage"
+
+#, fuzzy
+msgid "This is a notification test"
+msgstr "Endgültiges Alarm-Ergebnis"
 
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
@@ -59038,6 +59090,17 @@ msgstr "Dieser Knoten befindet sich nicht in der eingefrorenen Aggregation"
 msgid "This node is only in the frozen aggregation"
 msgstr "Dieser Knoten befindet sich nur in der eingefrorenen Aggregation"
 
+#, fuzzy
+msgid ""
+"This notification does not match. See reasons in global notification rule "
+"list."
+msgstr ""
+"Benachrichtigung wird entsprechend den Benachrichtigungsregeln verschickt"
+
+#, fuzzy
+msgid "This notification matches"
+msgstr "%s Benachrichtigungen"
+
 msgid "This number of new checks is scheduled immediately"
 msgstr "Diese Anzahl von Checks wird sofort ausgeführt"
 
@@ -59238,7 +59301,6 @@ msgstr ""
 "Hosts und Services aufbaut. Das beschleunigt Anfragen in großen Installation "
 "dramatisch."
 
-#, fuzzy
 msgid ""
 "This option enables the Event Console - The event processing and "
 "classification daemon of Checkmk. You can also configure whether or not the "
@@ -60302,7 +60364,6 @@ msgstr ""
 msgid "This rule allows you to override netapp warnings"
 msgstr "Diese Regel erlaubt das Überschreiben von NetApp Warnungen"
 
-#, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
@@ -61704,7 +61765,6 @@ msgstr ""
 "Mit dieser Einstellung legen Sie den TCP Port für Verbindungen zum Agenten "
 "pro Host fest. "
 
-#, fuzzy
 msgid ""
 "This variable allows you to configure the numbr of OIDs Checkmk should "
 "request at once. This rule only applies to SNMP hosts that are configured to "
@@ -62202,7 +62262,6 @@ msgstr "Zeitraum für Temperatur-Trendberechnung"
 msgid "Time range from report context"
 msgstr "Zeitraum aus Berichtskontext"
 
-#, fuzzy
 msgid "Time range synchronization"
 msgstr "Zeitraumsynchronisation"
 
@@ -66601,7 +66660,8 @@ msgid "Upper levels on percentage of %s requests"
 msgstr "Obergrenze bei Prozentsatz der %s-Anfragen"
 
 msgid "Upper levels on suite runtime relative to overall timeout"
-msgstr "Obere Level für die Laufzeit der Suite im Verhältnis zum Gesamt-Timeout"
+msgstr ""
+"Obere Level für die Laufzeit der Suite im Verhältnis zum Gesamt-Timeout"
 
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Obergrenze auf dem ältesten Replikationssteckplatz verzögern"
@@ -66901,7 +66961,6 @@ msgstr "Beliebige Netzwerkadresse verwenden"
 msgid "Use attribute value"
 msgstr "Attributwert verwenden"
 
-#, fuzzy
 msgid "Use authenticator app"
 msgstr "Authenticator-App nutzen"
 
@@ -68532,11 +68591,9 @@ msgstr "Index der virtuellen Domäne"
 msgid "Virtual host"
 msgstr "Virtueller Host"
 
-#, fuzzy
 msgid "Virtual host tree"
 msgstr "Virtueller Hostbaum"
 
-#, fuzzy
 msgid "Virtual host trees"
 msgstr "Virtuelle Hostbäume"
 
@@ -68866,7 +68923,8 @@ msgstr "Warnung wenn Seite älter als"
 msgid ""
 "Warn/Crit levels for various Skype for Business (formerly known as Lync) "
 "metrics"
-msgstr "warn/crit Level für diverse Skype for Business (vormals Lync) Messwerte"
+msgstr ""
+"warn/crit Level für diverse Skype for Business (vormals Lync) Messwerte"
 
 msgid "Warning"
 msgstr "Warnung"
@@ -69885,7 +69943,6 @@ msgstr ""
 "berechnet, <b>bevor</b> diese mit den Level verglichen werden. Wird diese "
 "auf Null gesetzt, wird die Durchschnittsbildung deaktiviert."
 
-#, fuzzy
 msgid ""
 "When this option is active you will not get <b>any</b> alerts or other "
 "notifications via email, SMS or similar. This overrides all other "
@@ -70672,13 +70729,12 @@ msgstr ""
 "ist)</li><li>$SERVICEDESC_URL_ENCODED$: Wie oben, allerdings URL-codiert</"
 "li><li>$USER_ID$: Die Benutzer-ID des aktuell aktiven Benutzers</li></ul>"
 
-#, fuzzy
 msgid ""
 "With this setting, the special agent will also contact the Checkmk agent on "
 "the same system at the specified port."
 msgstr ""
 "Mit dieser Option kontaktiert der Special-Agent zusätzlich den Checkmk-Agent "
-"am konfigurierten Port."
+"auf dem gleichen System am konfigurierten Port."
 
 msgid ""
 "Within this ruleset service descriptions can be translated similar to the "
@@ -71009,7 +71065,6 @@ msgstr "Es gibt bereits ein Element mit der ID <b>%s</b>"
 msgid "You are analysing this notification"
 msgstr "Sie analysieren diesen Alarm"
 
-#, fuzzy
 msgid ""
 "You are currently not using the Checkmk Micro Core, but this snapshot uses "
 "the Checkmk Micro Core. If you need to migrate your data, you could consider "
@@ -71020,17 +71075,16 @@ msgstr ""
 "könnten Sie den Kern ändern, den Snapshot wiederherstellen und den Kern dann "
 "wieder ändern."
 
-#, fuzzy
 msgid ""
 "You are currently using the Checkmk Micro Core, but this snapshot does not "
 "use the Checkmk Micro Core. If you need to migrate your data, you could "
 "consider changing the core, restoring the snapshot and changing the core "
 "back again."
 msgstr ""
-"Sie verwenden derzeit nicht den Checkmk Micro Core, aber dieser Snapshot "
-"verwendet den Checkmk Micro Core. Wenn Sie Ihre Daten migrieren müssen, "
-"könnten Sie den Kern ändern, den Snapshot wiederherstellen und den Kern dann "
-"wieder ändern."
+"Sie verwenden derzeit den Checkmk Micro Core, aber dieser Snapshot verwendet "
+"nicht den Checkmk Micro Core. Wenn Sie Ihre Daten migrieren müssen, könnten "
+"Sie den Kern ändern, den Snapshot wiederherstellen und den Kern dann wieder "
+"ändern."
 
 #, python-format
 msgid ""
@@ -71137,15 +71191,14 @@ msgstr "Bevor Sie weitermachen können, müssen Sie Ihr Passwort ändern."
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Sie versuchen eine nicht mehr vorhandene Regel zu editieren."
 
-#, fuzzy
 msgid ""
 "You are trying to use Checkmk together with a threaded Apache "
 "multiprocessing module (MPM). Checkmk is only working with the prefork "
 "module. Please change the MPM module to make Checkmk work."
 msgstr ""
-"Sie versuchen gerade Checkmk zusammen mit Threaded-MPM (Apache Multi-"
-"Processing-Modul). Checkmk funktioniert aber nur mit dem Prefork-Modul. "
-"Bitte ändern Sie das MPM-Modul, damit Checkmk läuft."
+"Sie versuchen gerade Checkmk zusammen mit einem Threaded-Apache Multi-"
+"Processing-Modul (MPM) zu verwenden. Checkmk funktioniert nur mit dem "
+"Prefork-Modul. Bitte ändern Sie das MPM-Modul, damit Checkmk läuft."
 
 #, python-format
 msgid ""
@@ -72814,9 +72867,10 @@ msgstr "Ihre Eingabe entspricht nicht dem erforderlichen Format '%s'."
 msgid "Your input does not match the required format."
 msgstr "Ihre Eingabe entspricht nicht dem vorgeschriebenen Format."
 
-#, fuzzy
 msgid "Your input does not match the required port range 0-65535."
-msgstr "Ihre Eingabe entspricht nicht dem vorgeschriebenen Format."
+msgstr ""
+"Ihre Eingabe stimmt nicht mit dem erforderlichen Port-Bereich 0-65535 "
+"überein."
 
 #, python-format
 msgid ""
@@ -73199,9 +73253,8 @@ msgstr "Authentifizierung und Verschlüsselung"
 msgid "authentication but no privacy"
 msgstr "Authentifizierung, aber keine Privacy"
 
-#, fuzzy
 msgid "authenticator app"
-msgstr "Authenticator-App hinzufügen"
+msgstr "Authenticator-App"
 
 msgid "auto"
 msgstr "automatisch"
@@ -74295,9 +74348,8 @@ msgstr "nicht ausgeführt"
 msgid "not available"
 msgstr "nicht verfügbar"
 
-#, fuzzy
 msgid "not disabled"
-msgstr "Sync deaktiviert"
+msgstr "nicht deaktiviert"
 
 msgid "not installed"
 msgstr "nicht installiert"
@@ -74323,7 +74375,6 @@ msgstr "ntopng Benutzer mit Administrator Rechten"
 msgid "ntopng Username"
 msgstr "ntopng Benutzername"
 
-#, fuzzy
 msgid "ntopng connection parameters (chargeable add-on)"
 msgstr "ntopng Verbindungsparameter (kostenpflichtiges Add-on)"
 
@@ -74697,7 +74748,6 @@ msgstr "Sekunden pro Sekunde"
 msgid "secs"
 msgstr "Sek."
 
-#, fuzzy
 msgid "security token"
 msgstr "Sicherheits-Token"
 
@@ -75673,10 +75723,6 @@ msgstr "Ω"
 
 #~ msgid "freeze the following aggregation?"
 #~ msgstr "Diese Aggregation einfrieren?"
-
-#, python-format
-#~ msgid "%s notifications"
-#~ msgstr "%s Benachrichtigungen"
 
 #~ msgid "Clear modified attributes"
 #~ msgstr "Lösche modifizierte Attribute"

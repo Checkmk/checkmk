@@ -5856,6 +5856,10 @@ msgstr "この集計の可用性を分析する"
 msgid "Analyse predictive monitoring for this service"
 msgstr "このサービスの予測監視を分析する"
 
+#, fuzzy
+msgid "Analysis: Test notifications"
+msgstr "最終通知"
+
 msgid "Analyze"
 msgstr "分析する"
 
@@ -14688,6 +14692,10 @@ msgstr "日付と時刻の範囲"
 msgid "Date (YYYY-MM-DD)"
 msgstr "日付(YYYY-MM-DD)"
 
+#, fuzzy
+msgid "Date and time"
+msgstr "ダウンタイム終了時間"
+
 msgid "Date format"
 msgstr "日付形式"
 
@@ -16713,6 +16721,10 @@ msgstr "ホストのDisoveredホストラベル"
 
 msgid "Disovered services of the host"
 msgstr "ホストのサービスを発見"
+
+#, fuzzy
+msgid "Dispatch notifications"
+msgstr "通知を無効にする"
 
 msgid "Display"
 msgstr "表示"
@@ -19690,6 +19702,10 @@ msgstr "イベントの作成"
 
 msgid "Event database"
 msgstr "イベントデータベース"
+
+#, fuzzy
+msgid "Event date and time"
+msgstr "パーセントと時間"
 
 msgid "Event deleted because its livetime expired"
 msgstr "ライブタイムが期限切れになったため、イベントが削除されました"
@@ -40897,7 +40913,15 @@ msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
 #, fuzzy
+msgid "Please provide a hostname to test with."
+msgstr "有効なホストとポートを入力してください"
+
+#, fuzzy
 msgid "Please provide a relative Windows path"
+msgstr "有効な名前を入力してください"
+
+#, fuzzy
+msgid "Please provide a service."
 msgstr "有効な名前を入力してください"
 
 msgid "Please provide a valid host and port"
@@ -48231,6 +48255,10 @@ msgid ""
 "Simple summary page of all BI aggregates that is used as a web services."
 msgstr "Webサービスとして使用されるすべてのBIアグリゲートの単純な要約ページ。"
 
+#, fuzzy
+msgid "Simulate"
+msgstr "シミュレーションモード"
+
 msgid "Simulate for site"
 msgstr "サイトのシミュレーション"
 
@@ -50702,6 +50730,10 @@ msgstr "承認ステータス"
 msgid "Status active checks"
 msgstr "ステータスアクティブチェック"
 
+#, fuzzy
+msgid "Status change"
+msgstr "変更されました"
+
 msgid "Status comments"
 msgstr "ステータスコメント"
 
@@ -51472,7 +51504,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Synthetic services"
+msgid "Synthetic tests"
 msgstr "Systemdサービス"
 
 msgid "Syslog Facility"
@@ -52091,7 +52123,19 @@ msgid "Test hostname before activation"
 msgstr "アクティベーション前にホスト名をテストする"
 
 #, fuzzy
+msgid "Test if a given notification matches your notification rules."
+msgstr "この通知ルールのコピーを作成します"
+
+#, fuzzy
 msgid "Test notification"
+msgstr "最終通知"
+
+#, fuzzy
+msgid "Test notifications"
+msgstr "最終通知"
+
+#, fuzzy
+msgid "Test notifications on"
 msgstr "最終通知"
 
 msgid "Test runtime"
@@ -57556,6 +57600,10 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "これはフロントマターテンプレートです"
 
+#, fuzzy
+msgid "This is a notification test"
+msgstr "最終通知結果"
+
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
@@ -57877,6 +57925,16 @@ msgstr "このノードは凍結したアグリゲーションに含まれない
 
 msgid "This node is only in the frozen aggregation"
 msgstr "このノードは凍結したアグリゲーションにのみ含まれる"
+
+#, fuzzy
+msgid ""
+"This notification does not match. See reasons in global notification rule "
+"list."
+msgstr "通知は、通知ルールに従って送信されます"
+
+#, fuzzy
+msgid "This notification matches"
+msgstr "ユーザー通知"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "この数の新しいチェックはすぐにスケジュールされます"
@@ -74511,11 +74569,6 @@ msgstr "Ω"
 
 #~ msgid "freeze the following aggregation?"
 #~ msgstr "次のアグリゲーションを凍結しますか?"
-
-#, fuzzy, python-format
-#~| msgid "User notifications"
-#~ msgid "%s notifications"
-#~ msgstr "ユーザー通知"
 
 #~ msgid "Clear modified attributes"
 #~ msgstr "変更された属性をクリアする"

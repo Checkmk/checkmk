@@ -2,11 +2,12 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self, section};
+use crate::config::{self, section, section::names};
 use crate::emit::header;
 use crate::ms_sql::sqls;
 use crate::utils;
 use anyhow::Result;
+use std::collections::HashMap;
 
 use tiberius::Row;
 
@@ -102,9 +103,12 @@ impl Section {
 
     pub fn select_query(&self) -> Option<&str> {
         match self.name.as_ref() {
-            section::names::JOBS => Self::get_query(&sqls::Id::Jobs),
-            section::names::MIRRORING => Self::get_query(&sqls::Id::Mirroring),
-            section::names::AVAILABILITY_GROUPS => Self::get_query(&sqls::Id::AvailabilityGroups),
+            section::names::JOBS
+            | section::names::MIRRORING
+            | section::names::AVAILABILITY_GROUPS => get_sql_ids(&self.name)
+                .unwrap_or_default()
+                .first()
+                .and_then(Self::get_query),
             _ => None,
         }
     }
@@ -143,6 +147,36 @@ impl Section {
     }
 }
 
+lazy_static::lazy_static! {
+    static ref SECTION_MAP: HashMap<&'static str, &'static[sqls::Id]> = HashMap::from([
+        (names::INSTANCE, [sqls::Id::InstanceProperties].as_slice()),
+        (names::COUNTERS, [sqls::Id::Utc, sqls::Id::Counters].as_slice()),
+        (names::BACKUP, [sqls::Id::Backup].as_slice()),
+        (names::BLOCKED_SESSIONS, [sqls::Id::BlockingSessions].as_slice()),
+        (names::DATABASES, [sqls::Id::Databases].as_slice()),
+        (names::CONNECTIONS, [sqls::Id::Connections].as_slice()),
+
+        (names::TRANSACTION_LOG, [sqls::Id::TransactionLogs].as_slice()),
+        (names::DATAFILES, [sqls::Id::Datafiles].as_slice()),
+        (names::TABLE_SPACES, [sqls::Id::SpaceUsed].as_slice()),
+        (names::CLUSTERS, [sqls::Id::ClusterActiveNodes, sqls::Id::ClusterNodes].as_slice()),
+
+        (names::JOBS, [sqls::Id::Jobs].as_slice()),
+        (names::MIRRORING, [sqls::Id::Mirroring].as_slice()),
+        (names::AVAILABILITY_GROUPS, [sqls::Id::AvailabilityGroups].as_slice()),
+    ]);
+}
+
+pub fn get_sql_ids<T: AsRef<str>>(section_name: T) -> Result<&'static [sqls::Id]> {
+    SECTION_MAP
+        .get(section_name.as_ref())
+        .copied()
+        .ok_or(anyhow::anyhow!(
+            "Query for {:?} not found",
+            section_name.as_ref()
+        ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,8 +201,61 @@ mod tests {
     }
 
     #[test]
+    fn test_section_select_query() {
+        let mk_section =
+            |name: &str| Section::new(&config::section::SectionBuilder::new(name).build(), 100);
+        let test_set: &[(&str, Option<&str>)] = &[
+            (names::INSTANCE, None),
+            (names::DATABASES, None),
+            (names::COUNTERS, None),
+            (names::BLOCKED_SESSIONS, None),
+            (names::TRANSACTION_LOG, None),
+            (names::CLUSTERS, None),
+            (
+                names::MIRRORING,
+                Some(sqls::get_query(&sqls::Id::Mirroring).unwrap()),
+            ),
+            (
+                names::AVAILABILITY_GROUPS,
+                Some(sqls::get_query(&sqls::Id::AvailabilityGroups).unwrap()),
+            ),
+            (names::CONNECTIONS, None),
+            (names::TABLE_SPACES, None),
+            (names::DATAFILES, None),
+            (names::BACKUP, None),
+            (names::JOBS, Some(sqls::get_query(&sqls::Id::Jobs).unwrap())),
+        ];
+        for (name, ids) in test_set {
+            assert_eq!(mk_section(name).select_query(), *ids);
+        }
+    }
+
+    #[test]
     fn test_work_sections() {
         let config = Config::default();
         assert_eq!(config.all_sections().len(), 13);
+    }
+
+    /// We test only few parameters
+    #[test]
+    fn test_get_ids() {
+        assert_eq!(get_sql_ids(names::JOBS).unwrap(), [sqls::Id::Jobs]);
+        assert_eq!(
+            get_sql_ids(section::names::MIRRORING).unwrap(),
+            [sqls::Id::Mirroring]
+        );
+        assert_eq!(
+            get_sql_ids(names::AVAILABILITY_GROUPS).unwrap(),
+            [sqls::Id::AvailabilityGroups]
+        );
+        assert_eq!(
+            get_sql_ids(names::COUNTERS).unwrap(),
+            [sqls::Id::Utc, sqls::Id::Counters]
+        );
+        assert_eq!(
+            get_sql_ids(names::CONNECTIONS).unwrap(),
+            [sqls::Id::Connections]
+        );
+        assert!(get_sql_ids("").is_err());
     }
 }

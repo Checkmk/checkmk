@@ -889,6 +889,8 @@ def event_match_timeperiod(
     _context: EventContext,
     analyse: bool,
 ) -> str | None:
+    # don't test on notification tests, in that case this is done within
+    # notify.rbn_match_timeperiod
     if analyse:
         return None
 

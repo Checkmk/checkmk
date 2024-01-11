@@ -1317,11 +1317,7 @@ class ModeNotifications(ABCNotificationsMode):
                 cssclass="hot",
                 form="form_test_notifications",
             )
-            html.jsbutton(
-                varname="_cancel_test_notifications",
-                text=_("Cancel"),
-                onclick="cmk.page_menu.close_active_dropdown()",
-            )
+            html.buttonlink(makeuri(request, []), _("Cancel"))
 
             return HTML(output_funnel.drain())
 
@@ -1337,14 +1333,12 @@ class ModeNotifications(ABCNotificationsMode):
 
 
 def _validate_general_opts(value, varprefix):
-    # TODO also validate service_choice, this can currently be an empty str and
-    # will result in a host notification
     if not value["hostname_choice"]:
         raise MKUserError(
             f"{varprefix}_p_hostname_choice", _("Please provide a hostname to test with.")
         )
 
-    if request.has_var("_test_service_notifications"):
+    if request.has_var("_test_service_notifications") and not value["service_choice"]:
         raise MKUserError(
             f"{varprefix}_p_service_choice",
             _("If you want to test service notifications, please provide a service to test with."),

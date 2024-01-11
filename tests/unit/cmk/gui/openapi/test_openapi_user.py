@@ -1235,8 +1235,29 @@ def test_delete_and_edit_user_when_client_user_has_permission_to_do_so(
     clients.User.delete(username="user1")
 
 
+@managedtest
 def test_get_unknown_user(clients: ClientRegistry) -> None:
     clients.User.get(
         username="userA",
         expect_ok=False,
     ).assert_status_code(404)
+
+
+@managedtest
+def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="group_one", alias="Group")
+    resp = clients.User.create(
+        username="user",
+        fullname="user",
+        contactgroups=["group_non_existent"],
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+    resp = clients.User.create(
+        username="user",
+        fullname="user",
+        customer="provider",
+        contactgroups=["group_one"],
+    )
+    assert resp.json["extensions"]["contactgroups"] == ["group_one"]

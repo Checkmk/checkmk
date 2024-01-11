@@ -351,7 +351,6 @@ def test_openapi_get_host_services_with_guest_user(
     clients.User.create(
         username="guest_user1",
         fullname="guest_user1_alias",
-        contactgroups=["all"],
         customer="provider",
         auth_option={"auth_type": "password", "password": "supersecretish"},
         roles=["guest"],

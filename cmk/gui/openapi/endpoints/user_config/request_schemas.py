@@ -11,7 +11,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKInternalError
-from cmk.gui.fields.definitions import Username, UserRoleID
+from cmk.gui.fields.definitions import GroupField, Username, UserRoleID
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.userdb import user_attribute_registry
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -311,10 +311,11 @@ class CreateUser(CustomUserAttributes):
         load_default=["all"],
     )
     contactgroups = fields.List(
-        fields.String(
-            description="Assign the user to one or multiple contact groups",
-            required=True,
+        GroupField(
+            group_type="contact",
             example="all",
+            required=True,
+            should_exist=True,
         ),
         required=False,
         load_default=list,
@@ -457,10 +458,11 @@ class UpdateUser(CustomUserAttributes):
         required=False,
     )
     contactgroups = fields.List(
-        fields.String(
-            description="Assign the user to one or multiple contact groups",
+        GroupField(
+            group_type="contact",
             required=True,
             example="all",
+            should_exist=True,
         ),
         required=False,
         description="Assign the user to one or multiple contact groups. If no contact group is "

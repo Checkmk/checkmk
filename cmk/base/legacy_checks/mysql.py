@@ -189,7 +189,7 @@ def check_diskstat_line(
 
     for metric_name, value in (("read", read_value), ("write", write_value)):
         # unpack levels now, need also for perfdata
-        levels = params.get(metric_name)
+        levels = params.get(f"{metric_name}_bytes")
         if isinstance(levels, tuple):
             warn, crit = levels
         else:
@@ -214,7 +214,6 @@ def check_diskstat_line(
             bytes_per_sec,
             metric_name + metric_name_suffix,
             levels,
-            scale=1024**2,
             statemarkers=True,
             human_readable_func=render.iobandwidth,
             infoname=metric_name.capitalize(),

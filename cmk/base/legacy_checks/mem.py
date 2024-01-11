@@ -7,13 +7,15 @@
 # mypy: disable-error-code="arg-type"
 
 import time
+from collections.abc import Mapping
+from typing import Any, Generator, Literal, NotRequired, TypedDict
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info
 
-import cmk.plugins.lib.memory as memory
 from cmk.agent_based.v2 import get_average, get_value_store, render
+from cmk.plugins.lib import memory
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -189,7 +191,21 @@ def inventory_mem_win(section):
         yield None, {}
 
 
-def _get_levels_type(levels):
+_PercUsed = tuple[float, float]
+_AbsFree = tuple[int, int]
+_Predictive = Mapping[str, object]
+# Note: `None` is implemented, und should be possible. It can't occur due to poor ruleset design currenty.
+_Levels = _PercUsed | _AbsFree | _Predictive | None
+_LevelsType = Literal["perc_used", "abs_free", "predictive"]
+
+
+class _Params(TypedDict):
+    average: NotRequired[int]
+    memory: _Levels
+    pagefile: _Levels
+
+
+def _get_levels_type(levels: _Levels) -> _LevelsType | None:
     if levels is None:
         return None
     if not isinstance(levels, tuple):
@@ -199,7 +215,9 @@ def _get_levels_type(levels):
     return "abs_free"
 
 
-def _get_levels_type_and_value(levels_value):
+def _get_levels_type_and_value(
+    levels_value: _Levels,
+) -> tuple[_LevelsType | None, Any | None]:  # TODO
     levels_type = _get_levels_type(levels_value)
     if levels_type is None or levels_type == "predictive":
         return (
@@ -214,20 +232,20 @@ def _get_levels_type_and_value(levels_value):
             if levels_type == "perc_used"
             else (
                 # absolute levels on free space come in MB, which cannot be changed easily
-                levels_value[0] * _MB,
-                levels_value[1] * _MB,
+                levels_value[0] * _MB,  # type: ignore  # FIXME
+                levels_value[1] * _MB,  # type: ignore  # FIXME
             ),
         ),
     )
 
 
 def _do_averaging(
-    timestamp,
-    average_horizon_min,
-    paramname,
-    used,
-    total,
-):
+    timestamp: float,
+    average_horizon_min: float,
+    paramname: Literal["memory", "pagefile"],
+    used: float,
+    total: float,
+) -> tuple[float, str]:
     used_avg = (
         get_average(
             get_value_store(),
@@ -250,11 +268,11 @@ def _do_averaging(
 
 
 def _apply_predictive_levels(
-    params,
-    paramname,
-    title,
-    used,
-):
+    params: _Params,
+    paramname: Literal["memory", "pagefile"],
+    title: str,
+    used: float,
+) -> tuple[int, str, list]:
     if "average" in params:
         titleinfo = title
         dsname = "%s_avg" % paramname
@@ -272,27 +290,30 @@ def _apply_predictive_levels(
     )
 
 
-def check_mem_windows(_no_item, params, section):
+def check_mem_windows(
+    _no_item: None, params: _Params, section: memory.SectionMem
+) -> Generator[tuple[int, str, list], None, None]:
     now = time.time()
 
-    for title, prefix, paramname, metric_name in [
-        ("RAM", "Mem", "memory", "mem_used"),
-        ("Commit charge", "Page", "pagefile", "pagefile_used"),
-    ]:
-        total = section.get("%sTotal" % prefix)
-        free = section.get("%sFree" % prefix)
-        if None in (total, free):
+    for title, prefix, paramname, metric_name, levels in (
+        ("RAM", "Mem", "memory", "mem_used", params["memory"]),
+        ("Commit charge", "Page", "pagefile", "pagefile_used", params["pagefile"]),
+    ):
+        try:
+            total = section["%sTotal" % prefix]
+            free = section["%sFree" % prefix]
+        except KeyError:
             continue
-        used = total - free
+        used = float(total - free)
 
-        levels_type, levels_memory_element = _get_levels_type_and_value(params.get(paramname))
-        do_averaging = "average" in params
+        levels_type, levels_memory_element = _get_levels_type_and_value(levels)
+        average = params.get("average")
 
         state, infotext, perfdata = check_memory_element(
             title,
             used,
             total,
-            None if do_averaging else levels_memory_element,
+            None if average is not None else levels_memory_element,
             metric_name=metric_name,
             create_percent_metric=title == "RAM",
         )
@@ -304,10 +325,10 @@ def check_mem_windows(_no_item, params, section):
             perfdata.append(("pagefile_total", total / _MB))
 
         # Do averaging, if configured, just for matching the levels
-        if do_averaging:
+        if average is not None:
             used, infoadd = _do_averaging(
                 now,
-                params["average"],
+                average,
                 paramname,
                 used,
                 total,
@@ -351,10 +372,10 @@ check_info["mem.win"] = LegacyCheckDefinition(
     discovery_function=inventory_mem_win,
     check_function=check_mem_windows,
     check_ruleset_name="memory_pagefile_win",
-    check_default_parameters={
-        "memory": (80.0, 90.0),
-        "pagefile": (80.0, 90.0),
-    },
+    check_default_parameters=_Params(
+        memory=(80.0, 90.0),
+        pagefile=(80.0, 90.0),
+    ),
 )
 
 # .

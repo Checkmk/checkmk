@@ -191,7 +191,7 @@ def test_calculate_data_for_prediction(
         if (response := _load_fake_rrd_response(start, end))
     ]
 
-    data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
+    data_for_pred = _prediction._calculate_data_for_prediction(raw_slices[0][0], raw_slices)
 
     expected_reference = _prediction.PredictionData.model_validate_json(
         (

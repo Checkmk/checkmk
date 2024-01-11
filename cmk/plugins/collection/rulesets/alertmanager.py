@@ -17,7 +17,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     Migrate,
     ServiceState,
-    TextInput,
+    Text,
 )
 from cmk.rulesets.v1.rule_specs import (
     CheckParameterWithItem,
@@ -81,7 +81,7 @@ def _discovery_parameters_form_alertmanager():
                                     ),
                                     "no_group_services": DictElement(
                                         parameter_form=List(
-                                            parameter_form=TextInput(),
+                                            parameter_form=Text(),
                                             title=Localizable(
                                                 "Don't create a group service for the following groups"
                                             ),
@@ -137,7 +137,7 @@ def form_alert_remapping():
             elements={
                 "rule_names": DictElement(
                     parameter_form=List(
-                        parameter_form=TextInput(),
+                        parameter_form=Text(),
                         title=Localizable("Alert rule names"),
                         help_text=Localizable("A list of rule names as defined in Alertmanager."),
                     ),
@@ -204,7 +204,7 @@ def _check_parameters_form_alertmanager():
 rule_spec_alertmanager_rule_state = CheckParameterWithItem(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(
+    item_form=Text(
         title=Localizable("Name of Alert rules/Alert rule groups"),
         custom_validate=validators.DisallowEmpty(),
     ),

@@ -470,7 +470,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Percentage():
             return _convert_to_legacy_percentage(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.TextInput():
+        case ruleset_api_v1.form_specs.Text():
             return _convert_to_legacy_text_input(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Tuple():
@@ -668,7 +668,7 @@ def _convert_to_legacy_percentage(
 
 
 def _convert_to_legacy_text_input(
-    to_convert: ruleset_api_v1.form_specs.TextInput, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Text, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -823,7 +823,7 @@ def _convert_to_legacy_cascading_dropdown(
 def _convert_to_legacy_item_spec(
     to_convert: ruleset_api_v1.form_specs.ItemFormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
-    if isinstance(to_convert, ruleset_api_v1.form_specs.TextInput):
+    if isinstance(to_convert, ruleset_api_v1.form_specs.Text):
         return _convert_to_legacy_text_input(to_convert, localizer)
     if isinstance(to_convert, ruleset_api_v1.form_specs.DropdownChoice):
         return _convert_to_legacy_dropdown_choice(to_convert, localizer)

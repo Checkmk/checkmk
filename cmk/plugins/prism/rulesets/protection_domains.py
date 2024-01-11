@@ -9,7 +9,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     DropdownChoice,
     DropdownChoiceElement,
-    TextInput,
+    Text,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
@@ -39,6 +39,6 @@ rule_spec_prims_protection_domains = CheckParameterWithItem(
     name="prism_protection_domains",
     title=Localizable("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,
-    item_form=TextInput(title=Localizable("Protection Domain")),
+    item_form=Text(title=Localizable("Protection Domain")),
     parameter_form=_parameter_form_prism_protection_domains,
 )

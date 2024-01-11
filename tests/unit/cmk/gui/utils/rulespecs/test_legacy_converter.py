@@ -239,12 +239,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Percentage",
         ),
         pytest.param(
-            api_v1.form_specs.TextInput(),
+            api_v1.form_specs.Text(),
             legacy_valuespecs.TextInput(),
             id="minimal TextInput",
         ),
         pytest.param(
-            api_v1.form_specs.TextInput(
+            api_v1.form_specs.Text(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
                 input_hint="firstname",
@@ -270,8 +270,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.Tuple(
                 elements=[
-                    api_v1.form_specs.TextInput(title=api_v1.Localizable("child title 1")),
-                    api_v1.form_specs.TextInput(title=api_v1.Localizable("child title 2")),
+                    api_v1.form_specs.Text(title=api_v1.Localizable("child title 1")),
+                    api_v1.form_specs.Text(title=api_v1.Localizable("child title 2")),
                 ],
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
@@ -340,7 +340,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.TextInput(),
+                        parameter_form=api_v1.form_specs.Text(),
                     )
                 ],
                 prefill_selection=None,
@@ -357,7 +357,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.TextInput(
+                        parameter_form=api_v1.form_specs.Text(
                             title=api_v1.Localizable("Spec title")
                         ),
                     )
@@ -378,7 +378,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.CascadingDropdownElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.TextInput(),
+                        parameter_form=api_v1.form_specs.Text(),
                     )
                 ],
                 title=api_v1.Localizable("parent title"),
@@ -404,7 +404,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.List(
                 parameter_form=api_v1.form_specs.Tuple(
                     elements=[
-                        api_v1.form_specs.TextInput(),
+                        api_v1.form_specs.Text(),
                         api_v1.form_specs.Integer(unit=api_v1.Localizable("km")),
                     ]
                 ),
@@ -858,7 +858,7 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
+                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
                     api_v1.form_specs.Dictionary,
                     elements={
@@ -922,7 +922,7 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
+                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
                     api_v1.form_specs.Dictionary,
                     elements={
@@ -954,7 +954,7 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.TextInput(title=api_v1.Localizable("item title")),
+                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=None,
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1021,7 +1021,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1043,7 +1043,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1065,7 +1065,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1087,7 +1087,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1109,7 +1109,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1131,7 +1131,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ServiceRulespec(
@@ -1150,7 +1150,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1168,7 +1168,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1190,7 +1190,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1208,7 +1208,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1230,7 +1230,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1248,7 +1248,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.VIRTUALIZATION,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ServiceRulespec(
@@ -1267,7 +1267,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.SERVER_HARDWARE,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1289,7 +1289,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.CLOUD,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.TextInput),
+                parameter_form=partial(api_v1.form_specs.Text),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1390,7 +1390,7 @@ def test_generated_rulespec_group_single_registration():
 )
 def test_convert_validation(input_value: str) -> None:
     converted_spec = _convert_to_legacy_valuespec(
-        api_v1.form_specs.TextInput(custom_validate=_v1_custom_text_validate), _
+        api_v1.form_specs.Text(custom_validate=_v1_custom_text_validate), _
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -1436,7 +1436,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.validators.ValidationError(api_v1.Localizable("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.List(
-        parameter_form=api_v1.form_specs.Tuple(elements=[api_v1.form_specs.TextInput()]),
+        parameter_form=api_v1.form_specs.Tuple(elements=[api_v1.form_specs.Text()]),
         custom_validate=_v1_custom_list_validate,
     )
 
@@ -1508,7 +1508,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                     api_v1.form_specs.CascadingDropdownElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.TextInput(
+                        parameter_form=api_v1.form_specs.Text(
                             transform=api_v1.form_specs.Migrate(model_to_form=lambda x: f"{x}_new")
                         ),
                     )
@@ -1604,7 +1604,7 @@ def test_migrate(
                     api_v1.form_specs.CascadingDropdownElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.TextInput(
+                        parameter_form=api_v1.form_specs.Text(
                             transform=api_v1.form_specs.Transform(
                                 model_to_form=lambda x: f"{x}_new",
                                 form_to_model=lambda x: f"{x.removesuffix('_new')}",
@@ -1645,7 +1645,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.Float(),
         api_v1.form_specs.DataSize(),
         api_v1.form_specs.Percentage(),
-        api_v1.form_specs.TextInput(),
+        api_v1.form_specs.Text(),
         api_v1.form_specs.Tuple(elements=[]),
         api_v1.form_specs.Dictionary(elements={}),
         api_v1.form_specs.DropdownChoice(elements=[]),
@@ -1669,7 +1669,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
 def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
     match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.TextInput() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.DropdownChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
             try:
                 _ = form_spec.transform
             except AttributeError:

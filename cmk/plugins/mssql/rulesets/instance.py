@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, ServiceState, TextInput
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, ServiceState, Text
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
@@ -24,6 +24,6 @@ rule_spec_mssql_instance = CheckParameterWithItem(
     name="mssql_instance",
     title=Localizable("MSSQL Instance"),
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(title=Localizable("Instance identifier")),
+    item_form=Text(title=Localizable("Instance identifier")),
     parameter_form=_parameter_form_mssql_instance,
 )

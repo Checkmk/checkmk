@@ -5,14 +5,7 @@
 
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
-    DictElement,
-    Dictionary,
-    Integer,
-    List,
-    ServiceState,
-    TextInput,
-)
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Integer, List, ServiceState, Text
 from cmk.rulesets.v1.rule_specs import CheckParameterWithoutItem, Topic
 
 
@@ -25,7 +18,7 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                         elements={
                             "vm_names": DictElement(
                                 parameter_form=List(
-                                    parameter_form=TextInput(), title=Localizable("VMs")
+                                    parameter_form=Text(), title=Localizable("VMs")
                                 ),
                                 required=True,
                             ),

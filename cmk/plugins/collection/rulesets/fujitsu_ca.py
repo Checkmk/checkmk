@@ -11,7 +11,7 @@ def _form_inventory_fujitsu_ca_ports() -> form_specs.Dictionary:
         elements={
             "indices": form_specs.DictElement(
                 form_specs.List(
-                    title=Localizable("CA port indices"), parameter_form=form_specs.TextInput()
+                    title=Localizable("CA port indices"), parameter_form=form_specs.Text()
                 )
             ),
             "modes": form_specs.DictElement(

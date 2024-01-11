@@ -15,8 +15,8 @@ def _parameter_form_mssql_backup_per_type():
     )
 
 
-def _item_spec() -> form_specs.TextInput:
-    return form_specs.TextInput(
+def _item_spec() -> form_specs.Text:
+    return form_specs.Text(
         title=Localizable("Instance, tablespace & backup type"),
         help_text=Localizable(
             "The MSSQL instance name, the tablespace name and the backup type, each separated "

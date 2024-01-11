@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     Levels,
     Migrate,
-    TextInput,
+    Text,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
@@ -113,7 +113,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
 rule_spec_rabbitmq_nodes_gc = CheckParameterWithItem(
     name="rabbitmq_nodes_gc",
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(title=Localizable("Node name")),
+    item_form=Text(title=Localizable("Node name")),
     parameter_form=_parameter_form_rabbitmq_nodes_gc,
     title=Localizable("RabbitMQ nodes GC"),
 )

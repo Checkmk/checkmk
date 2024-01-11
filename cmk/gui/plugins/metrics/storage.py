@@ -301,13 +301,13 @@ metric_info["mem_total"] = {
     "unit": "bytes",
 }
 
-metric_info["memory_avg"] = {
+metric_info["mem_used_avg"] = {
     "title": _("Memory Average"),
     "color": "#80ff40",
     "unit": "bytes",
 }
 
-metric_info["pagefile_avg"] = {
+metric_info["pagefile_used_avg"] = {
     "title": _("Commit Charge Average"),
     "color": "#408f20",
     "unit": "bytes",

@@ -24,10 +24,10 @@ def _migrate_alternative_to_dropdown(
 # TODO: migrate to form_specs.Levels after check_levels function has been implemented
 def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
     return form_specs.DictElement(
-        parameter_form=form_specs.CascadingDropdown(
+        parameter_form=form_specs.CascadingSingleChoice(
             title=title,
             elements=[
-                form_specs.CascadingDropdownElement(
+                form_specs.CascadingSingleChoiceElement(
                     name="levels",
                     title=Localizable("Set levels"),
                     parameter_form=form_specs.Tuple(
@@ -38,7 +38,7 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
                         ],
                     ),
                 ),
-                form_specs.CascadingDropdownElement(
+                form_specs.CascadingSingleChoiceElement(
                     name="no_levels",
                     title=Localizable("No levels"),
                     parameter_form=form_specs.Tuple(

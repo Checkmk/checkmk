@@ -263,14 +263,14 @@ class SingleChoice:
 
 
 @dataclass(frozen=True)
-class CascadingDropdownElement:
+class CascadingSingleChoiceElement:
     name: str
     title: Localizable
     parameter_form: "FormSpec"
 
 
 @dataclass(frozen=True)
-class CascadingDropdown:
+class CascadingSingleChoice:
     """Specification for a single-selection from multiple options. Selection is another spec
 
     Args:
@@ -279,7 +279,7 @@ class CascadingDropdown:
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
         prefill_selection: Pre-selected choice. If not set, the user is required to make a selection
-        transform: Tranformations to appy.
+        transform: Transformations to apply.
 
     Consumer model:
         **Type**: ``tuple[str, object]``
@@ -287,11 +287,11 @@ class CascadingDropdown:
         The configured value will be presented as a 2-tuple consisting of the name of the choice and
         the consumer model of the selected form specification.
 
-        **Example**: A CascadingDropdown with a selcted :class:`Dictionary` form specification would
-        result in ``("my_value", {...})``
+        **Example**: A CascadingSingleChoice with a selected :class:`Dictionary` form specification
+       would result in ``("my_value", {...})``
     """
 
-    elements: Sequence[CascadingDropdownElement]
+    elements: Sequence[CascadingSingleChoiceElement]
 
     title: Localizable | None = None
     help_text: Localizable | None = None
@@ -436,7 +436,7 @@ class FixedValue:
     """
     Specifies a fixed non-editable value
 
-    Can be used in a CascadingDropdown and Dictionary to represent a fixed value option.
+    Can be used in a CascadingSingleChoice and Dictionary to represent a fixed value option.
 
     Args:
         value: Atomic value produced by the form spec
@@ -796,7 +796,7 @@ FormSpec = (
     | Text
     | Tuple
     | SingleChoice
-    | CascadingDropdown
+    | CascadingSingleChoice
     | Dictionary
     | ServiceState
     | HostState

@@ -8,8 +8,8 @@ from enum import StrEnum
 
 from cmk.rulesets.v1 import Localizable, validators
 from cmk.rulesets.v1.form_specs import (
-    CascadingDropdown,
-    CascadingDropdownElement,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
     FixedValue,
@@ -57,10 +57,10 @@ def _discovery_parameters_form_alertmanager():
         title=Localizable("Alertmanager discovery"),
         elements={
             "group_services": DictElement(
-                parameter_form=CascadingDropdown(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Service creation"),
                     elements=[
-                        CascadingDropdownElement(
+                        CascadingSingleChoiceElement(
                             name=ServiceNumber.MULTIPLE,
                             title=Localizable("Create services for alert rule groups"),
                             parameter_form=Dictionary(
@@ -91,7 +91,7 @@ def _discovery_parameters_form_alertmanager():
                                 },
                             ),
                         ),
-                        CascadingDropdownElement(
+                        CascadingSingleChoiceElement(
                             name=ServiceNumber.ONE,
                             title=Localizable("Create one service per alert rule"),
                             parameter_form=FixedValue(value=None),

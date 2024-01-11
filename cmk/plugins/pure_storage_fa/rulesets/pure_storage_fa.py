@@ -6,8 +6,8 @@ from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import (
-    CascadingDropdown,
-    CascadingDropdownElement,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
     FixedValue,
@@ -57,20 +57,20 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                 required=True,
             ),
             "ssl": DictElement(
-                parameter_form=CascadingDropdown(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("SSL certificate checking"),
                     elements=[
-                        CascadingDropdownElement(
+                        CascadingSingleChoiceElement(
                             name="deactivated",
                             title=Localizable("Deactivated"),
                             parameter_form=FixedValue(value=None),
                         ),
-                        CascadingDropdownElement(
+                        CascadingSingleChoiceElement(
                             name="hostname",
                             title=Localizable("Use hostname"),
                             parameter_form=FixedValue(value=None),
                         ),
-                        CascadingDropdownElement(
+                        CascadingSingleChoiceElement(
                             name="custom_hostname",
                             title=Localizable("Use other hostname"),
                             parameter_form=Text(

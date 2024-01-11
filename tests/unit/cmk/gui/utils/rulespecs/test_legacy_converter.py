@@ -330,14 +330,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="DropdownChoice",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(elements=[], prefill_selection=None),
+            api_v1.form_specs.CascadingSingleChoice(elements=[], prefill_selection=None),
             legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title=""),
             id="minimal CascadingDropdown",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(
+            api_v1.form_specs.CascadingSingleChoice(
                 elements=[
-                    api_v1.form_specs.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingSingleChoiceElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.Text(),
@@ -352,9 +352,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown no valuespec title",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(
+            api_v1.form_specs.CascadingSingleChoice(
                 elements=[
-                    api_v1.form_specs.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingSingleChoiceElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.Text(
@@ -373,9 +373,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown valuespec title",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(
+            api_v1.form_specs.CascadingSingleChoice(
                 elements=[
-                    api_v1.form_specs.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingSingleChoiceElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.Text(),
@@ -1503,9 +1503,9 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             id="migrate top level element",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(
+            api_v1.form_specs.CascadingSingleChoice(
                 elements=[
-                    api_v1.form_specs.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingSingleChoiceElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.Text(
@@ -1599,9 +1599,9 @@ def test_migrate(
             id="transform top level element",
         ),
         pytest.param(
-            api_v1.form_specs.CascadingDropdown(
+            api_v1.form_specs.CascadingSingleChoice(
                 elements=[
-                    api_v1.form_specs.CascadingDropdownElement(
+                    api_v1.form_specs.CascadingSingleChoiceElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.Text(
@@ -1649,7 +1649,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.Tuple(elements=[]),
         api_v1.form_specs.Dictionary(elements={}),
         api_v1.form_specs.SingleChoice(elements=[]),
-        api_v1.form_specs.CascadingDropdown(elements=[]),
+        api_v1.form_specs.CascadingSingleChoice(elements=[]),
         api_v1.form_specs.ServiceState(),
         api_v1.form_specs.HostState(),
         api_v1.form_specs.List(parameter_form=api_v1.form_specs.Integer()),
@@ -1669,7 +1669,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
 def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
     match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.SingleChoice() | api_v1.form_specs.CascadingDropdown() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.SingleChoice() | api_v1.form_specs.CascadingSingleChoice() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
             try:
                 _ = form_spec.transform
             except AttributeError:

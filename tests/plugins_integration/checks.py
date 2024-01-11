@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class SkippedDumps:
     # TODO: dumps containing dynamic data to regex
     SKIPPED_DUMPS = [
-        "agent-2.2.0p14-windows-dhcp",
         "agent-2.2.0p14-windows-mssql",
     ]
 

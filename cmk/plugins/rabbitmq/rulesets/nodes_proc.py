@@ -5,8 +5,8 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import (
-    CascadingDropdown,
-    CascadingDropdownElement,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
     Integer,
@@ -18,7 +18,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
-    fd_perc = CascadingDropdownElement(
+    fd_perc = CascadingSingleChoiceElement(
         name="fd_perc",
         title=Localizable("Percentual levels for used processes"),
         parameter_form=Tuple(
@@ -29,7 +29,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
             ],
         ),
     )
-    fd_abs = CascadingDropdownElement(
+    fd_abs = CascadingSingleChoiceElement(
         name="fd_abs",
         title=Localizable("Absolute levels for total number of used processes"),
         parameter_form=Tuple(
@@ -44,7 +44,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     return Dictionary(
         elements={
             "levels": DictElement(
-                parameter_form=CascadingDropdown(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
                     prefill_selection="fd_perc",

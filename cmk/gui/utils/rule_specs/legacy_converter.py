@@ -500,7 +500,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.SingleChoice():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.CascadingDropdown():
+        case ruleset_api_v1.form_specs.CascadingSingleChoice():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.ServiceState():
@@ -795,7 +795,7 @@ def _convert_to_legacy_dropdown_choice(
 
 
 def _convert_to_legacy_cascading_dropdown(
-    to_convert: ruleset_api_v1.form_specs.CascadingDropdown, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     legacy_choices = [
         (

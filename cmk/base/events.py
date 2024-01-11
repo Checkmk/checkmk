@@ -36,7 +36,7 @@ ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-Matcher = Callable[[EventRule, EventContext], str | None]
+Matcher = Callable[[EventRule, EventContext, bool], str | None]
 
 logger = logging.getLogger("cmk.base.events")
 
@@ -459,16 +459,16 @@ def get_readable_rel_date(timestamp: Any) -> str:
 # While the rest of the world increasingly embraces lambdas and folds, the
 # Python world moves backwards in time. :-P So let's introduce this helper...
 def apply_matchers(
-    matchers: Iterable[Matcher], rule: EventRule, context: EventContext
+    matchers: Iterable[Matcher], rule: EventRule, context: EventContext, analyse: bool
 ) -> str | None:
     for matcher in matchers:
-        result = matcher(rule, context)
+        result = matcher(rule, context, analyse)
         if result is not None:
             return result
     return None
 
 
-def event_match_rule(rule: EventRule, context: EventContext) -> str | None:
+def event_match_rule(rule: EventRule, context: EventContext, analyse: bool = False) -> str | None:
     return apply_matchers(
         [
             event_match_site,
@@ -492,10 +492,15 @@ def event_match_rule(rule: EventRule, context: EventContext) -> str | None:
         ],
         rule,
         context,
+        analyse,
     )
 
 
-def event_match_site(rule: EventRule, context: EventContext) -> str | None:
+def event_match_site(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_site" not in rule:
         return None
 
@@ -512,7 +517,11 @@ def event_match_site(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
+def event_match_folder(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
         mustpath = mustfolder.split("/")
@@ -539,7 +548,11 @@ def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hosttags(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     required = rule.get("match_hosttags")
     if required:
         tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
@@ -551,11 +564,19 @@ def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicegroups_fixed(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicegroups_regex(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=True)
 
 
@@ -628,11 +649,19 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
     return None
 
 
-def event_match_exclude_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_servicegroups_fixed(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_exclude_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_servicegroups_regex(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=True)
 
 
@@ -674,7 +703,11 @@ def _event_match_exclude_servicegroups(
     return None
 
 
-def event_match_contacts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_contacts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_contacts" not in rule:
         return None
 
@@ -694,7 +727,11 @@ def event_match_contacts(rule: EventRule, context: EventContext) -> str | None:
     )
 
 
-def event_match_contactgroups(rule: EventRule, context: EventContext) -> str | None:
+def event_match_contactgroups(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
         return None
@@ -721,7 +758,7 @@ def event_match_contactgroups(rule: EventRule, context: EventContext) -> str | N
     )
 
 
-def event_match_hostgroups(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hostgroups(rule: EventRule, context: EventContext, _analyse: bool) -> str | None:
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -746,7 +783,11 @@ def event_match_hostgroups(rule: EventRule, context: EventContext) -> str | None
     return None
 
 
-def event_match_hosts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_hosts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
         if context["HOSTNAME"] not in hostlist:
@@ -757,13 +798,21 @@ def event_match_hosts(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_exclude_hosts(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_hosts(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
     return None
 
 
-def event_match_services(rule: EventRule, context: EventContext) -> str | None:
+def event_match_services(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of services, but this is a host notification."
@@ -777,7 +826,11 @@ def event_match_services(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_exclude_services(rule: EventRule, context: EventContext) -> str | None:
+def event_match_exclude_services(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if context["WHAT"] != "SERVICE":
         return None
     excludelist = rule.get("match_exclude_services", [])
@@ -790,7 +843,11 @@ def event_match_exclude_services(rule: EventRule, context: EventContext) -> str 
     return None
 
 
-def event_match_plugin_output(rule: EventRule, context: EventContext) -> str | None:
+def event_match_plugin_output(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
 
@@ -806,7 +863,11 @@ def event_match_plugin_output(rule: EventRule, context: EventContext) -> str | N
     return None
 
 
-def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
+def event_match_checktype(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of Check_MK plugins, but this is a host notification."
@@ -823,7 +884,14 @@ def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | None:
+def event_match_timeperiod(
+    rule: EventRule,
+    _context: EventContext,
+    analyse: bool,
+) -> str | None:
+    if analyse:
+        return None
+
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
         if timeperiod != "24X7" and not check_timeperiod(timeperiod):
@@ -831,7 +899,11 @@ def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | Non
     return None
 
 
-def event_match_servicelevel(rule: EventRule, context: EventContext) -> str | None:
+def event_match_servicelevel(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
         if context["WHAT"] == "SERVICE" and context.get("SVC_SL", "").isdigit():

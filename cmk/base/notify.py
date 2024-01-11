@@ -862,10 +862,10 @@ def rbn_match_rule(
             rbn_match_hostlabels,
             rbn_match_servicelabels,
             rbn_match_event_console,
-            rbn_match_event_console,
         ],
         rule,
         context,
+        analyse,
     )
 
 
@@ -894,11 +894,19 @@ def rbn_match_timeperiod(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def rbn_match_rule_disabled(rule: EventRule, _context: EventContext) -> str | None:
+def rbn_match_rule_disabled(
+    rule: EventRule,
+    _context: EventContext,
+    _analyse: bool,
+) -> str | None:
     return "This rule is disabled" if rule.get("disabled") else None
 
 
-def rbn_match_escalation(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_escalation(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_escalation" in rule:
         from_number, to_number = rule["match_escalation"]
         if context["WHAT"] == "HOST":
@@ -914,7 +922,11 @@ def rbn_match_escalation(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def rbn_match_escalation_throtte(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_escalation_throtte(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_escalation_throttle" in rule:
         # We do not want to suppress recovery notifications.
         if (context["WHAT"] == "HOST" and context.get("HOSTSTATE", "UP") == "UP") or (
@@ -936,7 +948,11 @@ def rbn_match_escalation_throtte(rule: EventRule, context: EventContext) -> str 
     return None
 
 
-def rbn_match_host_event(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_host_event(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
             if "match_service_event" not in rule:
@@ -951,7 +967,11 @@ def rbn_match_host_event(rule: EventRule, context: EventContext) -> str | None:
     return None
 
 
-def rbn_match_service_event(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_service_event(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_service_event" in rule:
         if context["WHAT"] != "SERVICE":
             if "match_host_event" not in rule:
@@ -1116,7 +1136,11 @@ def rbn_match_contact_groups(
     return None
 
 
-def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_notification_comment(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_notification_comment" in rule:
         r = regex(rule["match_notification_comment"])
         notification_comment = context.get("NOTIFICATIONCOMMENT", "")
@@ -1127,14 +1151,22 @@ def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> st
     return None
 
 
-def rbn_match_hostlabels(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_hostlabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_hostlabels" in rule:
         return _rbn_handle_labels(rule, context, "host")
 
     return None
 
 
-def rbn_match_servicelabels(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_servicelabels(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_servicelabels" in rule:
         return _rbn_handle_labels(rule, context, "service")
 
@@ -1161,7 +1193,11 @@ def _rbn_handle_labels(
     return None
 
 
-def rbn_match_event_console(rule: EventRule, context: EventContext) -> str | None:
+def rbn_match_event_console(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+) -> str | None:
     if "match_ec" in rule:
         match_ec = rule["match_ec"]
         is_ec_notification = "EC_ID" in context

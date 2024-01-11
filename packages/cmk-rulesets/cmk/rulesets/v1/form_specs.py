@@ -168,7 +168,7 @@ class Percentage:
 
 
 @dataclass(frozen=True)
-class TextInput:
+class Text:
     """
     Args:
         title: Human readable title
@@ -785,7 +785,7 @@ class MultilineText:
     custom_validate: Callable[[str], object] | None = None
 
 
-ItemFormSpec = TextInput | DropdownChoice
+ItemFormSpec = Text | DropdownChoice
 
 
 FormSpec = (
@@ -793,7 +793,7 @@ FormSpec = (
     | Float
     | DataSize
     | Percentage
-    | TextInput
+    | Text
     | Tuple
     | DropdownChoice
     | CascadingDropdown

@@ -10,7 +10,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     DisplayUnits,
     Integer,
-    TextInput,
+    Text,
     TimeSpan,
     Tuple,
 )
@@ -36,7 +36,7 @@ def _parameter_form_wlan_controllers_clients():
 rule_spec_cisco_prime_wlan_controller_clients = CheckParameterWithItem(
     name="cisco_prime_wlan_controller_clients",
     topic=Topic.OPERATING_SYSTEM,
-    item_form=TextInput(title=Localizable("Clients")),
+    item_form=Text(title=Localizable("Clients")),
     parameter_form=_parameter_form_wlan_controllers_clients,
     title=Localizable("Cisco Prime WLAN Controller Clients"),
 )
@@ -61,7 +61,7 @@ def _parameter_form_wlan_controllers_access_points():
 rule_spec_cisco_prime_wlan_controller_access_points = CheckParameterWithItem(
     name="cisco_prime_wlan_controller_access_points",
     topic=Topic.OPERATING_SYSTEM,
-    item_form=TextInput(title=Localizable("Access points")),
+    item_form=Text(title=Localizable("Access points")),
     parameter_form=_parameter_form_wlan_controllers_access_points,
     title=Localizable("Cisco Prime WLAN Controller Access Points"),
 )
@@ -102,7 +102,7 @@ def _parameter_form_wlan_controllers_last_backup():
 rule_spec_cisco_prime_wlan_controller_last_backup = CheckParameterWithItem(
     name="cisco_prime_wlan_controller_last_backup",
     topic=Topic.OPERATING_SYSTEM,
-    item_form=TextInput(title=Localizable("Last backup")),
+    item_form=Text(title=Localizable("Last backup")),
     parameter_form=_parameter_form_wlan_controllers_last_backup,
     title=Localizable("Cisco Prime WLAN Controller Last Backup"),
 )

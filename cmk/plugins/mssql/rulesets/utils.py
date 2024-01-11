@@ -56,8 +56,8 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
     )
 
 
-def mssql_item_spec_instance_tablespace() -> form_specs.TextInput:
-    return form_specs.TextInput(
+def mssql_item_spec_instance_tablespace() -> form_specs.Text:
+    return form_specs.Text(
         title=Localizable("Instance & tablespace name"),
         help_text=Localizable(
             "The MSSQL instance name and the tablespace name separated by a space."

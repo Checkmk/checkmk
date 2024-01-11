@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Integer,
     Percentage,
-    TextInput,
+    Text,
     Tuple,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
@@ -57,7 +57,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
 rule_spec_rabbitmq_nodes_proc = CheckParameterWithItem(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
-    item_form=TextInput(title=Localizable("Node name")),
+    item_form=Text(title=Localizable("Node name")),
     parameter_form=_parameter_form_rabbitmq_nodes_proc,
     title=Localizable("RabbitMQ nodes processes"),
 )

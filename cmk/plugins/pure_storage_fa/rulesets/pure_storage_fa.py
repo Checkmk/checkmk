@@ -13,7 +13,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Integer,
     Migrate,
-    TextInput,
+    Text,
 )
 from cmk.rulesets.v1.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
@@ -73,7 +73,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                         CascadingDropdownElement(
                             name="custom_hostname",
                             title=Localizable("Use other hostname"),
-                            parameter_form=TextInput(
+                            parameter_form=Text(
                                 help_text=Localizable(
                                     "Use a custom name for the SSL certificate validation"
                                 ),

@@ -50,13 +50,6 @@ std::tuple<std::string, std::string> splitCompositeKey2(
                             mk::rstrip(composite_key.substr(semicolon + 1)));
 }
 
-std::tuple<std::string, std::string, std::string> splitCompositeKey3(
-    const std::string &composite_key) {
-    const auto &[part1, rest] = splitCompositeKey2(composite_key);
-    const auto &[part2, part3] = splitCompositeKey2(rest);
-    return {part1, part2, part3};
-}
-
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator) {
     std::string result;
@@ -79,10 +72,6 @@ std::string lstrip(const std::string &str, const std::string &chars) {
 std::string rstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_last_not_of(chars);
     return pos == std::string::npos ? "" : str.substr(0, pos + 1);
-}
-
-std::string strip(const std::string &str, const std::string &chars) {
-    return rstrip(lstrip(str, chars), chars);
 }
 
 std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp) {

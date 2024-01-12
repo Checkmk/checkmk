@@ -83,6 +83,9 @@ def _parameter_valuespec() -> Dictionary:
                 ),
             ),
         ],
+        ignored_keys=[
+            "suite_id",  # discovered
+        ],
     )
 
 

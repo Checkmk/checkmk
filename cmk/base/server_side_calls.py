@@ -174,7 +174,9 @@ def get_host_config(host_name: HostName, config_cache: base_config.ConfigCache) 
     resolved_ip_family = base_config.resolve_address_family(config_cache, host_name, ip_family)
 
     customer = (
-        base_config.current_customer if cmk_version.edition() is cmk_version.Edition.CME else None
+        getattr(base_config, "current_customer", None)
+        if cmk_version.edition() is cmk_version.Edition.CME
+        else None
     )
 
     return HostConfig(

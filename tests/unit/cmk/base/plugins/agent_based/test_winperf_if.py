@@ -4070,6 +4070,7 @@ def test_inventory_winperf_if() -> None:
                     "alias": "QLogic 1 10GbE Server Adapter 2",
                 },
                 inventory_columns={
+                    "name": "",
                     "speed": 10000000000,
                     "phys_address": "",
                     "oper_status": 1,
@@ -4086,6 +4087,7 @@ def test_inventory_winperf_if() -> None:
                     "alias": "Ethernet 2",
                 },
                 inventory_columns={
+                    "name": "",
                     "speed": 10000000000,
                     "phys_address": "5C:F3:FC:37:2A:30",
                     "oper_status": 1,
@@ -4102,6 +4104,7 @@ def test_inventory_winperf_if() -> None:
                     "alias": "Local Area Connection 2",
                 },
                 inventory_columns={
+                    "name": "",
                     "speed": 9728000,
                     "phys_address": "42:F2:E9:21:BE:D1",
                     "oper_status": 1,
@@ -4118,6 +4121,7 @@ def test_inventory_winperf_if() -> None:
                     "alias": "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
                 },
                 inventory_columns={
+                    "name": "",
                     "speed": 100000,
                     "phys_address": "",
                     "oper_status": 1,

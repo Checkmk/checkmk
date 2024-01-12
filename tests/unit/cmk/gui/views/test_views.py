@@ -1364,6 +1364,10 @@ def test_registered_sorters() -> None:
             "columns": ["invinterface_description"],
             "title": "Inventory: Description",
         },
+        "invinterface_name": {
+            "columns": ["invinterface_name"],
+            "title": "Inventory: Name",
+        },
         "invinterface_index": {"columns": ["invinterface_index"], "title": "Inventory: Index"},
         "invinterface_last_change": {
             "columns": ["invinterface_last_change"],
@@ -2149,6 +2153,7 @@ def test_registered_display_hints() -> None:
         ".networking.interfaces:*.description",
         ".networking.interfaces:*.index",
         ".networking.interfaces:*.last_change",
+        ".networking.interfaces:*.name",
         ".networking.interfaces:*.oper_status",
         ".networking.interfaces:*.phys_address",
         ".networking.interfaces:*.port_type",

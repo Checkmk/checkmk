@@ -18,6 +18,7 @@ class Interface:
     index: str
     descr: str
     alias: str
+    name: str
     type: str
     speed: int
     oper_status: int
@@ -108,6 +109,7 @@ def inventorize_interfaces(
                 "alias": interface.alias,
             },
             inventory_columns={
+                "name": interface.name,
                 "speed": interface.speed,
                 "phys_address": interface.phys_address,
                 "oper_status": interface.oper_status,

@@ -647,6 +647,7 @@ def inventory_winperf_if(
                 speed=int(interface.attributes.speed),
                 oper_status=int(interface.attributes.oper_status[0]),
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
+                name="",
             )
             for interface in sorted(
                 ifaces,

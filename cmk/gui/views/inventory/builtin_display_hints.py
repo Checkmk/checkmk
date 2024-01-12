@@ -1669,6 +1669,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Network interfaces"),
             "keyorder": [
                 "index",
+                "name",
                 "description",
                 "alias",
                 "oper_status",
@@ -1689,6 +1690,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "paint": "number",
             "filter": FilterInvtableIDRange,
         },
+        ".networking.interfaces:*.name": {"title": _l("name")},
         ".networking.interfaces:*.description": {"title": _l("Description")},
         ".networking.interfaces:*.alias": {"title": _l("Alias")},
         ".networking.interfaces:*.oper_status": {

@@ -40,34 +40,30 @@ def test_prediction_updater_serializable() -> None:
 
 
 @pytest.mark.parametrize(
-    "reference_value, reference_deviation, params, levels_factor, result",
+    "reference_value, reference_deviation, params, result",
     [
         (
             5,
             2,
             {"levels_lower": ("absolute", (2, 4))},
-            1,
             (None, None, 3, 1),
         ),
         (
             0,
             2,
             {"levels_upper": ("absolute", (2, 4))},
-            1,
             (2, 4, None, None),
         ),
         (
             0,
             2,
             {"levels_upper": ("relative", (2, 4))},
-            1,
             (None, None, None, None),
         ),
         (
             0,
             2,
             {"levels_upper": ("stdev", (2, 4))},
-            1,
             (4, 8, None, None),
         ),
         (
@@ -77,7 +73,6 @@ def test_prediction_updater_serializable() -> None:
                 "levels_upper": ("stdev", (2, 4)),
                 "levels_lower": ("stdev", (3, 5)),
             },
-            1,
             (19, 23, 9, 5),
         ),
         (
@@ -87,7 +82,6 @@ def test_prediction_updater_serializable() -> None:
                 "levels_upper": ("relative", (20, 40)),
                 "levels_upper_min": (2, 4),
             },
-            1,
             (2.4, 4, None, None),
         ),
     ],
@@ -96,7 +90,6 @@ def test_estimate_levels(
     reference_value: float,
     reference_deviation: float,
     params: Mapping,
-    levels_factor: float,
     result: _plugin_interface.EstimatedLevels,
 ) -> None:
     assert (
@@ -106,7 +99,6 @@ def test_estimate_levels(
             levels_lower=params.get("levels_lower"),
             levels_upper=params.get("levels_upper"),
             levels_upper_lower_bound=params.get("levels_upper_min"),
-            levels_factor=levels_factor,
         )
         == result
     )

@@ -31,9 +31,7 @@ _SECTION = {
 _PREDICTED_VALUE = 104857600000
 
 
-def _get_prediction(
-    metric: str, levels_factor: float
-) -> tuple[float, tuple[float, float, None, None]]:
+def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]]:
     return _PREDICTED_VALUE, (int(_PREDICTED_VALUE * 0.9), int(_PREDICTED_VALUE * 1.1), None, None)
 
 

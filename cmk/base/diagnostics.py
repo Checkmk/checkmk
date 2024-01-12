@@ -18,6 +18,7 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
+from contextlib import suppress
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -814,6 +815,14 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
             with Path(filepath).open("rb") as source:
                 json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
                 store.save_text_to_file(tmp_filepath, json_data)
+        # We 'encrypt' only license thingies at the moment, so there is currently no need to
+        # sanitize encrypted files
+        elif str(rel_filepath) == "multisite.d/sites.mk":
+            sites = store.load_from_mk_file(filepath, "sites", {})
+            for detail in sites.values():
+                with suppress(KeyError):
+                    detail["secret"] = "redacted"
+            store.save_to_mk_file(tmp_filepath, "sites", sites)
         else:
             shutil.copy(str(filepath), str(tmp_filepath))
 

@@ -98,6 +98,7 @@ from ..v1 import (
 from ..v1._detection import SNMPDetectSpecification  # sorry
 from ..v1.register import RuleSetType
 from . import clusterize, render, type_defs
+from ._check_levels import check_levels
 from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
 __all__ = [
@@ -124,6 +125,7 @@ __all__ = [
     "not_matches",
     "not_startswith",
     "Attributes",
+    "check_levels",
     "check_levels_fixed",
     "check_levels_predictive",
     "clusterize",

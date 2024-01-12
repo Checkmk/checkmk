@@ -2242,13 +2242,22 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "sort_index": 100,
                 "owner": UserId.builtin(),
             },
+            "synthetic_monitoring": {
+                "name": "synthetic_monitoring",
+                "title": _("Synthetic Monitoring"),
+                "icon_name": "topic_synthetic_monitoring",
+                "description": "",
+                "public": True,
+                "sort_index": 105,
+                "owner": UserId.builtin(),
+            },
             "my_workplace": {
                 "name": "my_workplace",
                 "title": _("Workplace"),
                 "icon_name": "topic_my_workplace",
                 "description": "",
                 "public": True,
-                "sort_index": 105,
+                "sort_index": 110,
                 "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
@@ -2258,7 +2267,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "icon_name": "topic_other",
                 "description": "",
                 "public": True,
-                "sort_index": 110,
+                "sort_index": 115,
                 "owner": UserId.builtin(),
             },
         }

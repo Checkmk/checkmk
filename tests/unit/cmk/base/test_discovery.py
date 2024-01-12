@@ -1401,7 +1401,6 @@ _expected_services: dict = {
 _expected_host_labels = [
     HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
     HostLabel("cmk/os_type", "linux", SectionName("check_mk")),
-    HostLabel("cmk/os_platform", "linux", SectionName("check_mk")),
 ]
 
 

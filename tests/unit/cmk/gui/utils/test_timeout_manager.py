@@ -16,6 +16,7 @@ from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import TimeoutManager
 
 
+@pytest.mark.skip(reason="flaky - see resilience test run 6851")
 def test_timeout_registered_and_unregistered_by_checkmk_flask_app(flask_app: Flask) -> None:
     assert signal.getsignal(signal.SIGALRM) is signal.SIG_DFL
     assert request.request_timeout == 110

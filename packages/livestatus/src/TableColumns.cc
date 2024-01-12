@@ -17,11 +17,6 @@ using row_type = Column;
 
 using namespace std::string_literals;
 
-namespace {
-constexpr const char *typenames[8] = {"int",  "float", "string", "list",
-                                      "time", "dict",  "blob",   "null"};
-}
-
 TableColumns::TableColumns() {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<row_type>>(
@@ -43,7 +38,25 @@ TableColumns::TableColumns() {
     addColumn(std::make_unique<StringColumn<row_type>>(
         "type", "The data type of the column (int, float, string, list)",
         offsets, [](const row_type &row) {
-            return typenames[static_cast<int>(row.type())];
+            switch (row.type()) {
+                case ColumnType::int_:
+                    return "int";
+                case ColumnType::double_:
+                    return "float";
+                case ColumnType::string:
+                    return "string";
+                case ColumnType::list:
+                    return "list";
+                case ColumnType::time:
+                    return "time";
+                case ColumnType::dictstr:
+                    return "dict";
+                case ColumnType::blob:
+                    return "blob";
+                case ColumnType::null:
+                    return "null";
+            }
+            return "";  // unreachable
         }));
 }
 

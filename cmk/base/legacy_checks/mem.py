@@ -308,7 +308,7 @@ def check_mem_windows(
 
         # Do averaging, if configured, just for matching the levels
         if average is not None:
-            used, infoadd = _do_averaging(
+            used_avg, infoadd = _do_averaging(
                 now,
                 average,
                 paramname,
@@ -320,7 +320,7 @@ def check_mem_windows(
             if parsed_levels[0] != "predictive":
                 state, _infotext, perfadd = check_memory_element(
                     title,
-                    used,
+                    used_avg,
                     total,
                     parsed_levels,
                     metric_name=paramname + "_avg",
@@ -336,7 +336,7 @@ def check_mem_windows(
 
         if parsed_levels[0] == "predictive":
             state, infoadd, perfadd = check_levels(
-                used / _MB,  # Current value stored in MB in RRDs
+                used_avg / _MB if average else used / _MB,  # Current value stored in MB in RRDs
                 ("%s_avg" % paramname) if average else paramname,
                 parsed_levels[1],
                 unit="GiB",  # Levels are specified in GiB...

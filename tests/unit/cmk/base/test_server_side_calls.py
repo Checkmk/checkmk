@@ -971,7 +971,6 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(base_config, "ipv6addresses", {"host_name": HostAddress("::1")})
     monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
     monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
-    monkeypatch.setattr(base_config, "current_customer", "customer")
     monkeypatch.setattr(base_config, "ip_address_of", lambda *args: HostAddress("::1"))
     monkeypatch.setattr(
         base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}

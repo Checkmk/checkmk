@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
-from typing import Final, NamedTuple, Protocol
+from typing import Final, Protocol
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -83,21 +83,22 @@ class SubscriptionDetailsLimitType(Enum):
                 ) from None
 
 
-class SubscriptionDetailsLimit(NamedTuple):
-    limit_type: SubscriptionDetailsLimitType
-    limit_value: int
+@dataclass(frozen=True)
+class SubscriptionDetailsLimit:
+    type_: SubscriptionDetailsLimitType
+    value: int
 
     def for_report(self) -> tuple[str, int]:
-        return (self.limit_type.name, self.limit_value)
+        return (self.type_.name, self.value)
 
     def for_config(self) -> str | tuple[str, int]:
-        match self.limit_type:
+        match self.type_:
             case SubscriptionDetailsLimitType.fixed:
-                return str(self.limit_value)
+                return str(self.value)
             case SubscriptionDetailsLimitType.unlimited:
                 return "2000000+"
             case SubscriptionDetailsLimitType.custom:
-                return ("custom", self.limit_value)
+                return ("custom", self.value)
         raise SubscriptionDetailsError()
 
     @classmethod
@@ -111,26 +112,24 @@ class SubscriptionDetailsLimit(NamedTuple):
         raise SubscriptionDetailsError()
 
     @classmethod
-    def _parse(
-        cls, raw_limit_type: str, raw_limit_value: str | int | float
-    ) -> SubscriptionDetailsLimit:
-        if raw_limit_type in ["2000000+", "unlimited"] or int(raw_limit_value) == -1:
+    def _parse(cls, raw_type: str, raw_value: str | int | float) -> SubscriptionDetailsLimit:
+        if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
             return SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
+                type_=SubscriptionDetailsLimitType.unlimited,
                 # '-1' means unlimited. This value is also used in Django DB
                 # where we have no appropriate 'float("inf")' DB field.
-                limit_value=-1,
+                value=-1,
             )
 
-        if str(raw_limit_value) in _SUBSCRIPTION_LIMITS_FIXED:
+        if str(raw_value) in _SUBSCRIPTION_LIMITS_FIXED:
             return SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=int(raw_limit_value),
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=int(raw_value),
             )
 
         return SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=int(raw_limit_value),
+            type_=SubscriptionDetailsLimitType.custom,
+            value=int(raw_value),
         )
 
 
@@ -146,10 +145,10 @@ class RawSubscriptionDetailsForConfig(TypedDict):
     subscription_limit: str | tuple[str, int]
 
 
-class SubscriptionDetails(NamedTuple):
+@dataclass(frozen=True)
+class SubscriptionDetails:
     start: int
     end: int
-    # TODO we may add more limits
     limit: SubscriptionDetailsLimit
 
     def for_report(self) -> RawSubscriptionDetails:
@@ -646,7 +645,7 @@ class MonthlyServiceAverages:
         )
         self._subscription_end = None if subscription_details is None else subscription_details.end
         self._subscription_limit_value = (
-            None if subscription_details is None else subscription_details.limit.limit_value
+            None if subscription_details is None else subscription_details.limit.value
         )
 
         self._daily_services = self._calculate_daily_services(short_samples)

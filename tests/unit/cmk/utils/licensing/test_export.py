@@ -40,8 +40,8 @@ def test_subscription_details_empty_source() -> None:
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=3,
+            type_=SubscriptionDetailsLimitType.custom,
+            value=3,
         ),
     )
 
@@ -65,8 +65,8 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=3,
+            type_=SubscriptionDetailsLimitType.custom,
+            value=3,
         ),
     )
 
@@ -77,71 +77,71 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
         (
             ["fixed", 3000],
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             ("unlimited", -1),
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             ("custom", 3),
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             "2000000+",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             "3000",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             3000,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=3000,
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=3000,
             ),
         ),
         (
             "3",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             3,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.custom,
-                limit_value=3,
+                type_=SubscriptionDetailsLimitType.custom,
+                value=3,
             ),
         ),
         (
             "-1",
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
         (
             -1,
             SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
-                limit_value=-1,
+                type_=SubscriptionDetailsLimitType.unlimited,
+                value=-1,
             ),
         ),
     ],
@@ -171,8 +171,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.fixed,
-                    limit_value=3000,
+                    type_=SubscriptionDetailsLimitType.fixed,
+                    value=3000,
                 ),
             ),
             {
@@ -186,8 +186,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.unlimited,
-                    limit_value=-1,
+                    type_=SubscriptionDetailsLimitType.unlimited,
+                    value=-1,
                 ),
             ),
             {
@@ -201,8 +201,8 @@ def test_subscription_details_limit(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.custom,
-                    limit_value=3,
+                    type_=SubscriptionDetailsLimitType.custom,
+                    value=3,
                 ),
             ),
             {
@@ -227,8 +227,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.fixed,
-                    limit_value=3000,
+                    type_=SubscriptionDetailsLimitType.fixed,
+                    value=3000,
                 ),
             ),
             {
@@ -242,8 +242,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.unlimited,
-                    limit_value=-1,
+                    type_=SubscriptionDetailsLimitType.unlimited,
+                    value=-1,
                 ),
             ),
             {
@@ -257,8 +257,8 @@ def test_subscription_details_for_report(
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
-                    limit_type=SubscriptionDetailsLimitType.custom,
-                    limit_value=3,
+                    type_=SubscriptionDetailsLimitType.custom,
+                    value=3,
                 ),
             ),
             {

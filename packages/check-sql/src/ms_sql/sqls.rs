@@ -30,6 +30,7 @@ pub enum Id {
     WaitingTasks,
     BlockingSessions,
     Counters,
+    Clusters,
 }
 
 mod query {
@@ -285,6 +286,7 @@ pub fn _get_blocking_sessions_query() -> String {
 lazy_static::lazy_static! {
     static ref BLOCKING_SESSIONS: String = format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string();
     static ref COUNTERS: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES  ).to_string();
+    static ref CLUSTERS: String = format!("{};{};", query::CLUSTER_NODES, query::CLUSTER_ACTIVE_NODES  ).to_string();
     static ref QUERY_MAP: HashMap<Id, &'static str> = HashMap::from([
         (Id::ComputerName, query::COMPUTER_NAME),
         (Id::Mirroring, query::MIRRORING),
@@ -307,6 +309,7 @@ lazy_static::lazy_static! {
         (Id::WaitingTasks, query::WAITING_TASKS), // used only in tests now
         (Id::BlockingSessions, BLOCKING_SESSIONS.as_str()),
         (Id::Counters, COUNTERS.as_str()),
+        (Id::Clusters, CLUSTERS.as_str()),
     ]);
 }
 

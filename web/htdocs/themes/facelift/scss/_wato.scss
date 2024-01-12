@@ -839,6 +839,10 @@ div.filter_buttons {
 
 .wato table.activation {
   td.details {
+    div.warning {
+      background: $color-state-1-background;
+    }
+
     div.warning,
     div.error {
       margin: 2px 0;

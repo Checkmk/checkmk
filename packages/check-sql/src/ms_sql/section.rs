@@ -105,14 +105,21 @@ impl Section {
         match self.name.as_ref() {
             section::names::JOBS
             | section::names::MIRRORING
-            | section::names::AVAILABILITY_GROUPS => {
-                get_sql_id(&self.name).and_then(Self::find_query)
-            }
+            | section::names::AVAILABILITY_GROUPS => self.find_query(),
             _ => None,
         }
     }
 
-    fn find_query(id: sqls::Id) -> Option<&'static str> {
+    fn find_query(&self) -> Option<&'static str> {
+        self.find_custom_query()
+            .or_else(|| get_sql_id(&self.name).and_then(Self::find_known_query))
+    }
+
+    fn find_custom_query(&self) -> Option<&'static str> {
+        None
+    }
+
+    fn find_known_query(id: sqls::Id) -> Option<&'static str> {
         sqls::find_known_query(id)
             .map_err(|e| {
                 log::error!("{e}");

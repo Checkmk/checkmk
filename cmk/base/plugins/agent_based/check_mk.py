@@ -64,7 +64,7 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
         yield HostLabel("cmk/os_family", agentos)
         yield HostLabel("cmk/os_type", agentos)
 
-    if (platform := section.get("osplatform", agentos)) is not None:
+    if (platform := section.get("osplatform", agentos)) is not None and platform != "linux":
         yield HostLabel("cmk/os_platform", platform)
 
     if (os_name := section.get("osname")) is not None:

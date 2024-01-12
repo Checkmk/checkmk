@@ -343,8 +343,7 @@ def check_mem_windows(
                 scale=1024,  # ... in WATO ValueSpec
                 infoname=title,
             )
-            if infoadd:
-                infotext += ", " + infoadd
+            infotext += ", " + infoadd
             perfdata += perfadd
 
         yield state, infotext, perfdata

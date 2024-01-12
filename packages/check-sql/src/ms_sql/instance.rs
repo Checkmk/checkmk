@@ -446,7 +446,7 @@ impl SqlInstance {
     }
 
     pub async fn generate_counters_section(&self, client: &mut Client, sep: char) -> String {
-        let x = run_known_query(client, &sqls::Id::Counters)
+        let x = run_known_query(client, sqls::Id::Counters)
             .await
             .and_then(validate_rows_has_two_blocks)
             .and_then(|rows| {
@@ -463,7 +463,7 @@ impl SqlInstance {
     }
 
     pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_known_query(client, &sqls::Id::CounterEntries)
+        let x = run_known_query(client, sqls::Id::CounterEntries)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_counters_rows(&rows[0], sep));
@@ -521,7 +521,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::SpaceUsed)
+                    result += &run_known_query(&mut c, sqls::Id::SpaceUsed)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
                         .unwrap_or_else(|e| format_error(d, &e));
@@ -537,7 +537,7 @@ impl SqlInstance {
     pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
         let databases = self.generate_databases(client).await;
 
-        let result = run_known_query(client, &sqls::Id::Backup)
+        let result = run_known_query(client, sqls::Id::Backup)
             .await
             .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
@@ -599,7 +599,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::TransactionLogs)
+                    result += &run_known_query(&mut c, sqls::Id::TransactionLogs)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -632,7 +632,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::Datafiles)
+                    result += &run_known_query(&mut c, sqls::Id::Datafiles)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -676,7 +676,7 @@ impl SqlInstance {
 
     /// doesn't return error - the same behavior as plugin
     pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
-        let result = run_known_query(client, &sqls::Id::DatabaseNames)
+        let result = run_known_query(client, sqls::Id::DatabaseNames)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));
@@ -740,14 +740,14 @@ impl SqlInstance {
     }
 
     async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
-        let rows = &run_known_query(client, &sqls::Id::IsClustered)
+        let rows = &run_known_query(client, sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
     async fn get_cluster_nodes(&self, client: &mut Client) -> Result<(String, String)> {
-        let rows = &run_known_query(client, &sqls::Id::Clusters).await?;
+        let rows = &run_known_query(client, sqls::Id::Clusters).await?;
         if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
             return Ok((
                 rows[0]
@@ -963,7 +963,7 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
 
 impl SqlInstanceProperties {
     pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
-        let r = run_known_query(client, &sqls::Id::InstanceProperties).await?;
+        let r = run_known_query(client, sqls::Id::InstanceProperties).await?;
         if r.is_empty() {
             anyhow::bail!("Empty answer from server on query instance_properties");
         }

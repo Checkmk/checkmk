@@ -506,7 +506,11 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
 
 async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, section: &Section) {
     let result = instance
-        .generate_unified_section(endpoint, section, sqls::get_query(&sqls::Id::BadQuery).ok())
+        .generate_unified_section(
+            endpoint,
+            section,
+            sqls::find_known_query(sqls::Id::BadQuery).ok(),
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();

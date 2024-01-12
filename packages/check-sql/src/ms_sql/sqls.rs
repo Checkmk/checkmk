@@ -3,11 +3,12 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 pub const UTC_DATE_FIELD: &str = "utc_date";
 
-#[derive(Hash, PartialEq, Eq, Debug)]
+#[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Id {
     ComputerName,
     Mirroring,
@@ -313,9 +314,12 @@ lazy_static::lazy_static! {
     ]);
 }
 
-pub fn get_query(query_id: &Id) -> Result<&'static str> {
+pub fn find_known_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
     QUERY_MAP
-        .get(query_id)
+        .get(query_id.borrow())
         .copied()
-        .ok_or(anyhow::anyhow!("Query for {:?} not found", query_id))
+        .ok_or(anyhow::anyhow!(
+            "Query for {:?} not found",
+            query_id.borrow()
+        ))
 }

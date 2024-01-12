@@ -20,7 +20,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     UnaryExpression,
 )
 
-LivestatusType = Literal["string", "int", "float", "list", "dict", "time", "blob"]
+LivestatusType = Literal["string", "int", "float", "list", "dict", "dictdouble", "time", "blob"]
 ExpressionDict = dict[str, Any]
 
 

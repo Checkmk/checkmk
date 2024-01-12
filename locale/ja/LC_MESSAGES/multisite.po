@@ -11340,6 +11340,10 @@ msgstr "コードサイズ(パーセント)"
 msgid "Codec that should be used to decode the matching files"
 msgstr "一致するファイルをデコードするために使用する必要があるコーデック"
 
+#, fuzzy
+msgid "Codes copied"
+msgstr "コードサイズ"
+
 msgid "Cold HDD space"
 msgstr "コールドHDDスペース"
 
@@ -12777,6 +12781,10 @@ msgstr "コピー"
 
 msgid "Copy all event rules from the central site"
 msgstr "セントラルサイトからすべてのイベントルールをコピーする"
+
+#, fuzzy
+msgid "Copy codes"
+msgstr "バックアップコード"
 
 msgid "Copy existing view"
 msgstr "既存のビューをコピーする"
@@ -18135,6 +18143,12 @@ msgstr ""
 
 msgid "Each attribute may be specified only once."
 msgstr "各属性は1回だけ指定できます。"
+
+msgid ""
+"Each code may be used only once. Download and store these backup codes in a "
+"safe place. If you lose access to your authentication device and backup "
+"codes, you'll have to contact your Checkmk admin to recover your account."
+msgstr ""
 
 msgid "Each label is allowed to be used once."
 msgstr "各ラベルは1回のみ使用可能です。"
@@ -24284,7 +24298,8 @@ msgstr "レポートに非表示"
 msgid "Hide infotext"
 msgstr "情報テキストを非表示"
 
-msgid "Hide internal folder names in WATO"
+#, fuzzy
+msgid "Hide internal folder names in Setup"
 msgstr "WATOで内部フォルダ名を非表示にする"
 
 msgid "Hide names of configuration variables"
@@ -43050,6 +43065,10 @@ msgstr ""
 msgid "Regenerate backup codes"
 msgstr "バックアップコードを再作成する"
 
+#, fuzzy
+msgid "Regenerate codes"
+msgstr "バックアップコードを再作成する"
+
 msgid "Regex"
 msgstr "正規表現"
 
@@ -53991,14 +54010,6 @@ msgstr "フォルダで許可されている連絡先グループは<b>%s </b>�
 msgid "The following %s could not be found: %s"
 msgstr "次の%sが見つかりませんでした: %s"
 
-#, python-format
-msgid ""
-"The following backup codes have been generated: <ul>%s</ul> These codes are "
-"displayed only now. Save them securely."
-msgstr ""
-"以下のバックアップコードが生成されました。:<ul>%s</ul> これらのコードは1度だ"
-"け表示されます。必ず保存してください。"
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -56570,6 +56581,10 @@ msgid ""
 msgstr ""
 "これらのバックアップターゲットはここでは編集できません。デバイスのバックアッ"
 "プ管理を開く必要があります。"
+
+#, fuzzy
+msgid "These codes are only displayed now."
+msgstr "これらのノードは、凍結されたアグリゲーションにのみ含まれる"
 
 msgid "These contact groups are also used in the monitoring configuration."
 msgstr "これらの連絡先グループは、監視構成でも使用されます。"
@@ -65958,7 +65973,8 @@ msgstr "DNSを使用してIPアドレスをホスト名に変換します"
 msgid "Use FreeIPMI"
 msgstr "FreeIPMIを使用する"
 
-msgid "Use GIT version control for WATO"
+#, fuzzy
+msgid "Use GIT version control for Setup"
 msgstr "WATOに対するGITバージョン管理を使用する"
 
 msgid "Use Hard States"
@@ -74030,6 +74046,14 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr "Ω"
+
+#, python-format
+#~ msgid ""
+#~ "The following backup codes have been generated: <ul>%s</ul> These codes "
+#~ "are displayed only now. Save them securely."
+#~ msgstr ""
+#~ "以下のバックアップコードが生成されました。:<ul>%s</ul> これらのコードは1度"
+#~ "だけ表示されます。必ず保存してください。"
 
 #~ msgid "Validate OTP"
 #~ msgstr "OTPの検証"

@@ -77,6 +77,16 @@ std::vector<std::string> split_list(const std::string &str);
 }  // namespace ec
 
 bool is_utf8(std::string_view s);
+
+// -----------------------------------------------------------------------------
+// We basically use a std::string_view argument like a stream below.
+
+void skip_whitespace(std::string_view &str);
+
+// An argument starts with the first non-whitespace character and extends up to
+// the next whitespace character. Optionally, the argument can be in single
+// quotes, where 2 consecutive quotes are treated as a verbatim quote.
+std::string next_argument(std::string_view &str);
 }  // namespace mk
 
 template <size_t N>

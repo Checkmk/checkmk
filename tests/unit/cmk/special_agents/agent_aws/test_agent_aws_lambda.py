@@ -280,6 +280,7 @@ def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
                 "results": [[]],
                 "statistics": {"recordsMatched": 2.0, "recordsScanned": 6.0, "bytesScanned": 710.0},
                 "status": "Running",
+                "encryptionKey": "I made this up to make mypy happy",
                 "ResponseMetadata": {
                     "RequestId": "0bb17f7e-1230-474a-a9dc-93d583a6a01a",
                     "HostId": "I made this up to make mypy happy",

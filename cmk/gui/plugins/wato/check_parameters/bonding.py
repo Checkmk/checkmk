@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, DropdownChoice, MonitoringState, TextInput
 
 
 def get_common_elements() -> list:
@@ -42,27 +42,18 @@ def _parameter_valuespec_lnx_bonding():
         elements=[
             *get_common_elements(),
             (
-                "expected_bonding_mode_and_state",
-                Tuple(
-                    title=_("Expected bonding mode"),
+                "bonding_mode_states",
+                Dictionary(
+                    title=_("State for specific bonding modes"),
+                    optional_keys=[],
                     elements=[
-                        DropdownChoice(
-                            title=_("Mode"),
-                            choices=[
-                                ("balance-rr", _("balance-rr")),
-                                ("active-backup", _("active-backup")),
-                                ("balance-xor", _("balance-xor")),
-                                ("broadcast", _("broadcast")),
-                                ("802.3ad", _("802.3ad")),
-                                ("balance-tlb", _("balance-tlb")),
-                                ("balance-alb", _("balance-alb")),
-                            ],
-                            default_value="balance-rr",
-                        ),
-                        MonitoringState(
-                            title=_("State if not as expected"),
-                            default_value=2,
-                        ),
+                        ("mode_0", MonitoringState(title=_("balance-rr"), default_value=0)),
+                        ("mode_1", MonitoringState(title=_("active-backup"), default_value=0)),
+                        ("mode_2", MonitoringState(title=_("balance-xor"), default_value=0)),
+                        ("mode_3", MonitoringState(title=_("broadcast"), default_value=0)),
+                        ("mode_4", MonitoringState(title=_("802.3ad"), default_value=0)),
+                        ("mode_5", MonitoringState(title=_("balance-tlb"), default_value=0)),
+                        ("mode_6", MonitoringState(title=_("balance-alb"), default_value=0)),
                     ],
                     help=_(
                         "Specify the monitoring state when the bonding mode is not as expected."

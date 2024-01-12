@@ -59,7 +59,7 @@ impl Section {
         self.cache_age
             .map(|age| {
                 format!(
-                    ":cached({}:{})",
+                    ":cached({},{})",
                     utils::get_utc_now().unwrap_or_default(),
                     age
                 )

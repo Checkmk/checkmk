@@ -11743,6 +11743,10 @@ msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Códec que debe utilizarse para descodificar los archivos correspondientes"
 
+#, fuzzy
+msgid "Codes copied"
+msgstr "Código Tamaño"
+
 msgid "Cold HDD space"
 msgstr "Espacio de disco duro frío"
 
@@ -13246,6 +13250,10 @@ msgstr "Copia"
 
 msgid "Copy all event rules from the central site"
 msgstr "Copiar todas las reglas de eventos del sitio central"
+
+#, fuzzy
+msgid "Copy codes"
+msgstr "Modos de copia de seguridad"
 
 msgid "Copy existing view"
 msgstr "Copiar la vista existente"
@@ -18735,6 +18743,12 @@ msgstr ""
 
 msgid "Each attribute may be specified only once."
 msgstr "Cada atributo sólo puede especificarse una vez."
+
+msgid ""
+"Each code may be used only once. Download and store these backup codes in a "
+"safe place. If you lose access to your authentication device and backup "
+"codes, you'll have to contact your Checkmk admin to recover your account."
+msgstr ""
 
 msgid "Each label is allowed to be used once."
 msgstr "Cada etiqueta se puede utilizar una vez."
@@ -25052,7 +25066,8 @@ msgstr "Ocultar en el informe"
 msgid "Hide infotext"
 msgstr "Ocultar infotexto"
 
-msgid "Hide internal folder names in WATO"
+#, fuzzy
+msgid "Hide internal folder names in Setup"
 msgstr "Ocultar los nombres de las carpetas internas en WATO"
 
 msgid "Hide names of configuration variables"
@@ -44393,6 +44408,10 @@ msgstr ""
 msgid "Regenerate backup codes"
 msgstr "Regenerar los códigos de seguridad"
 
+#, fuzzy
+msgid "Regenerate codes"
+msgstr "Regenerar los códigos de seguridad"
+
 msgid "Regex"
 msgstr "Regex"
 
@@ -55775,14 +55794,6 @@ msgstr "Los grupos de contactos permitidos de la carpeta son <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "No se ha podido encontrar el siguiente %s: %s"
 
-#, python-format
-msgid ""
-"The following backup codes have been generated: <ul>%s</ul> These codes are "
-"displayed only now. Save them securely."
-msgstr ""
-"Se han generado los siguientes códigos de copia de seguridad: <ul>%s</ul> "
-"Estos códigos sólo se muestran ahora. Guárdelos de forma segura."
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -58487,6 +58498,10 @@ msgid ""
 msgstr ""
 "Estos objetivos de copia de seguridad no se pueden editar aquí. Es necesario "
 "abrir la gestión de la copia de seguridad del dispositivo."
+
+#, fuzzy
+msgid "These codes are only displayed now."
+msgstr "Estos nodos sólo están en la agregación congelada"
 
 msgid "These contact groups are also used in the monitoring configuration."
 msgstr ""
@@ -68237,7 +68252,8 @@ msgstr "Utilizar el DNS para convertir las direcciones IP en nombres de host"
 msgid "Use FreeIPMI"
 msgstr "Utilice FreeIPMI"
 
-msgid "Use GIT version control for WATO"
+#, fuzzy
+msgid "Use GIT version control for Setup"
 msgstr "Utilizar el control de versiones GIT para WATO"
 
 msgid "Use Hard States"
@@ -76644,6 +76660,14 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 msgid "Ω"
 msgstr "Ω"
+
+#, python-format
+#~ msgid ""
+#~ "The following backup codes have been generated: <ul>%s</ul> These codes "
+#~ "are displayed only now. Save them securely."
+#~ msgstr ""
+#~ "Se han generado los siguientes códigos de copia de seguridad: <ul>%s</ul> "
+#~ "Estos códigos sólo se muestran ahora. Guárdelos de forma segura."
 
 #, fuzzy
 #~| msgid "Set maximum age"

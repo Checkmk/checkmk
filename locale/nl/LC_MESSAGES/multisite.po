@@ -11639,6 +11639,10 @@ msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Codec die moet worden gebruikt om de overeenkomende bestanden te decoderen"
 
+#, fuzzy
+msgid "Codes copied"
+msgstr "Code Grootte"
+
 msgid "Cold HDD space"
 msgstr "Koude HDD ruimte"
 
@@ -13135,6 +13139,10 @@ msgstr "Kopie"
 
 msgid "Copy all event rules from the central site"
 msgstr "Kopieer alle gebeurtenisregels van de centrale site"
+
+#, fuzzy
+msgid "Copy codes"
+msgstr "Back-up codes"
 
 msgid "Copy existing view"
 msgstr "Bestaand uitzicht kopiëren"
@@ -18570,6 +18578,12 @@ msgstr ""
 
 msgid "Each attribute may be specified only once."
 msgstr "Elk kenmerk mag slechts eenmaal worden gespecificeerd."
+
+msgid ""
+"Each code may be used only once. Download and store these backup codes in a "
+"safe place. If you lose access to your authentication device and backup "
+"codes, you'll have to contact your Checkmk admin to recover your account."
+msgstr ""
 
 msgid "Each label is allowed to be used once."
 msgstr "Elk etiket mag slechts één keer worden gebruikt."
@@ -24829,7 +24843,8 @@ msgstr "Verbergen in rapport"
 msgid "Hide infotext"
 msgstr "Verberg infotekst"
 
-msgid "Hide internal folder names in WATO"
+#, fuzzy
+msgid "Hide internal folder names in Setup"
 msgstr "Interne mapnamen in WATO verbergen"
 
 msgid "Hide names of configuration variables"
@@ -44023,6 +44038,10 @@ msgstr ""
 msgid "Regenerate backup codes"
 msgstr "Back-upcodes opnieuw genereren"
 
+#, fuzzy
+msgid "Regenerate codes"
+msgstr "Back-upcodes opnieuw genereren"
+
 msgid "Regex"
 msgstr "Regex"
 
@@ -55284,14 +55303,6 @@ msgstr "De toegestane contactgroepen van de map zijn <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "De volgende %s kon niet worden gevonden: %s"
 
-#, python-format
-msgid ""
-"The following backup codes have been generated: <ul>%s</ul> These codes are "
-"displayed only now. Save them securely."
-msgstr ""
-"De volgende back-upcodes zijn gegenereerd: <ul>%s</ul> Deze codes worden nu "
-"pas weergegeven. Sla ze veilig op."
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -57994,6 +58005,10 @@ msgid ""
 msgstr ""
 "Deze back-updoelen kunnen hier niet worden bewerkt. U moet het apparaat back-"
 "upbeheer openen."
+
+#, fuzzy
+msgid "These codes are only displayed now."
+msgstr "Deze knooppunten zitten alleen in de bevroren aggregatie"
 
 msgid "These contact groups are also used in the monitoring configuration."
 msgstr "Deze contactgroepen worden ook gebruikt in de bewakingsconfiguratie."
@@ -67666,7 +67681,8 @@ msgstr "Gebruik DNS om IP adressen om te zetten in hostnamen"
 msgid "Use FreeIPMI"
 msgstr "Gebruik FreeIPMI"
 
-msgid "Use GIT version control for WATO"
+#, fuzzy
+msgid "Use GIT version control for Setup"
 msgstr "Gebruik GIT versiebeheer voor WATO"
 
 msgid "Use Hard States"
@@ -76040,6 +76056,14 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#, python-format
+#~ msgid ""
+#~ "The following backup codes have been generated: <ul>%s</ul> These codes "
+#~ "are displayed only now. Save them securely."
+#~ msgstr ""
+#~ "De volgende back-upcodes zijn gegenereerd: <ul>%s</ul> Deze codes worden "
+#~ "nu pas weergegeven. Sla ze veilig op."
 
 #, fuzzy
 #~| msgid "Set maximum age"

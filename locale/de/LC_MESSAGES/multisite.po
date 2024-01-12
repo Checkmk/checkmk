@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-01-10 19:53+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
@@ -11559,6 +11559,10 @@ msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Codec, der zum Dekodieren der betreffenden Dateien verwendet werden soll"
 
+#, fuzzy
+msgid "Codes copied"
+msgstr "Code-Größe"
+
 msgid "Cold HDD space"
 msgstr "Unvorbereiteter Festplattenspeicher"
 
@@ -13042,6 +13046,10 @@ msgstr "Kopieren"
 
 msgid "Copy all event rules from the central site"
 msgstr "Kopiere alle Ereignisregeln von der Zentralinstanz"
+
+#, fuzzy
+msgid "Copy codes"
+msgstr "Backup-Codes"
 
 msgid "Copy existing view"
 msgstr "Vorhandene Ansicht kopieren"
@@ -18464,6 +18472,12 @@ msgstr ""
 
 msgid "Each attribute may be specified only once."
 msgstr "Jedes Attribut darf nur einmal angegeben werden."
+
+msgid ""
+"Each code may be used only once. Download and store these backup codes in a "
+"safe place. If you lose access to your authentication device and backup "
+"codes, you'll have to contact your Checkmk admin to recover your account."
+msgstr ""
 
 msgid "Each label is allowed to be used once."
 msgstr "Jedes Label darf einmal verwendet werden."
@@ -24717,7 +24731,8 @@ msgstr "Im Report verbergen"
 msgid "Hide infotext"
 msgstr "Infotext verstecken"
 
-msgid "Hide internal folder names in WATO"
+#, fuzzy
+msgid "Hide internal folder names in Setup"
 msgstr "Interne Ordnernamen in WATO verstecken"
 
 msgid "Hide names of configuration variables"
@@ -43773,6 +43788,10 @@ msgstr ""
 msgid "Regenerate backup codes"
 msgstr "Backup-Codes neu erzeugen"
 
+#, fuzzy
+msgid "Regenerate codes"
+msgstr "Backup-Codes neu erzeugen"
+
 msgid "Regex"
 msgstr "Regex"
 
@@ -54948,14 +54967,6 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
 
-#, python-format
-msgid ""
-"The following backup codes have been generated: <ul>%s</ul> These codes are "
-"displayed only now. Save them securely."
-msgstr ""
-"Die folgenden Backup-Codes wurden generiert: <ul>%s</ul> Diese Codes werden "
-"nur jetzt angezeigt. Speichern Sie sie sicher."
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -57659,6 +57670,10 @@ msgid ""
 msgstr ""
 "Diese Sicherungsziele können hier nicht editiert werden. Sie können diese in "
 "der globalen Konfiguration Ihres Geräts verwalten."
+
+#, fuzzy
+msgid "These codes are only displayed now."
+msgstr "Diese Knoten sind nur in der eingefrorenen Aggregation"
 
 msgid "These contact groups are also used in the monitoring configuration."
 msgstr ""
@@ -66822,7 +66837,8 @@ msgstr "Mit DNS IP-Adressen in Hostnamen konvertieren"
 msgid "Use FreeIPMI"
 msgstr "FreeIPMI verwenden"
 
-msgid "Use GIT version control for WATO"
+#, fuzzy
+msgid "Use GIT version control for Setup"
 msgstr "Benutze GIT Versionskontrolle für WATO"
 
 msgid "Use Hard States"
@@ -75154,6 +75170,14 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#, python-format
+#~ msgid ""
+#~ "The following backup codes have been generated: <ul>%s</ul> These codes "
+#~ "are displayed only now. Save them securely."
+#~ msgstr ""
+#~ "Die folgenden Backup-Codes wurden generiert: <ul>%s</ul> Diese Codes "
+#~ "werden nur jetzt angezeigt. Speichern Sie sie sicher."
 
 #~ msgid "Validate OTP"
 #~ msgstr "OTP validieren"

@@ -768,30 +768,35 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
+    def _copy(self, rel_filepath: str, tmp_dump_folder: Path) -> Optional[Path]:
+        checkmk_files_map = self._checkmk_files_map
+        filepath = checkmk_files_map.get(rel_filepath)
+        if filepath is None or not filepath.exists():
+            return None
+
+        # Respect file path (2), otherwise the paths of same named files are forgotten (1).
+        # We want to pack a folder hierarchy.
+
+        filename = Path(filepath).name
+        subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
+
+        # Create relative path in tmp tree
+        tmp_folder = tmp_dump_folder.joinpath(subfolder)
+        tmp_folder.mkdir(parents=True, exist_ok=True)
+
+        return Path(shutil.copy(str(filepath), str(tmp_folder.joinpath(filename))))
+
     def add_or_get_files(
         self, tmp_dump_folder: Path, collectors: Collectors
     ) -> DiagnosticsElementFilepaths:
-        checkmk_files_map = self._checkmk_files_map
         unknown_files = []
         for rel_filepath in self.rel_checkmk_files:
-            filepath = checkmk_files_map.get(rel_filepath)
-            if filepath is None or not filepath.exists():
+            tmp_filepath = self._copy(rel_filepath, tmp_dump_folder)
+            if tmp_filepath is None:
                 unknown_files.append(rel_filepath)
                 continue
 
-            # Respect file path (2), otherwise the paths of same named files are forgotten (1).
-            # We want to pack a folder hierarchy.
-
-            filename = Path(filepath).name
-            subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
-
-            # Create relative path in tmp tree
-            tmp_folder = tmp_dump_folder.joinpath(subfolder)
-            tmp_folder.mkdir(parents=True, exist_ok=True)
-
-            tmp_filepath = shutil.copy(str(filepath), str(tmp_folder.joinpath(filename)))
-
-            yield Path(tmp_filepath)
+            yield tmp_filepath
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))

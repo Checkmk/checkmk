@@ -1,0 +1,12 @@
+Title: Checkmk now redacts site secrets during support diagnostics generation
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1705564261
+Edition: cee
+Level: 1
+Version: 2.1.0p39
+
+Prior to this werk, generating a support diagnostic for deployments with distributed monitoring of multiple Checkmk instances would expose site secrets within the "etc/check_mk/multisite.d/sites.mk" file.
+
+All site secrets are now replaced with "redacted" during the generation process of support diagnostics <i>(Setup &gt; Maintenance &gt; Support diagnostics)</i> where <i>Checkmk Configuration files</i> have been selected with at least low sensitivity or the <i>sites.mk</i> file has been selected individually.

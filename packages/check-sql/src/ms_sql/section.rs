@@ -105,16 +105,15 @@ impl Section {
         match self.name.as_ref() {
             section::names::JOBS
             | section::names::MIRRORING
-            | section::names::AVAILABILITY_GROUPS => get_sql_ids(&self.name)
-                .unwrap_or_default()
-                .first()
-                .and_then(Self::get_query),
+            | section::names::AVAILABILITY_GROUPS => {
+                get_sql_id(&self.name).and_then(Self::find_query)
+            }
             _ => None,
         }
     }
 
-    fn get_query(id: &sqls::Id) -> Option<&str> {
-        sqls::get_query(id)
+    fn find_query(id: sqls::Id) -> Option<&'static str> {
+        sqls::find_known_query(id)
             .map_err(|e| {
                 log::error!("{e}");
                 e
@@ -148,33 +147,27 @@ impl Section {
 }
 
 lazy_static::lazy_static! {
-    static ref SECTION_MAP: HashMap<&'static str, &'static[sqls::Id]> = HashMap::from([
-        (names::INSTANCE, [sqls::Id::InstanceProperties].as_slice()),
-        (names::COUNTERS, [sqls::Id::Counters].as_slice()),
-        (names::BACKUP, [sqls::Id::Backup].as_slice()),
-        (names::BLOCKED_SESSIONS, [sqls::Id::BlockingSessions].as_slice()),
-        (names::DATABASES, [sqls::Id::Databases].as_slice()),
-        (names::CONNECTIONS, [sqls::Id::Connections].as_slice()),
+    static ref SECTION_MAP: HashMap<&'static str, sqls::Id> = HashMap::from([
+        (names::INSTANCE, sqls::Id::InstanceProperties),
+        (names::COUNTERS, sqls::Id::Counters),
+        (names::BACKUP, sqls::Id::Backup),
+        (names::BLOCKED_SESSIONS, sqls::Id::BlockingSessions),
+        (names::DATABASES, sqls::Id::Databases),
+        (names::CONNECTIONS, sqls::Id::Connections),
 
-        (names::TRANSACTION_LOG, [sqls::Id::TransactionLogs].as_slice()),
-        (names::DATAFILES, [sqls::Id::Datafiles].as_slice()),
-        (names::TABLE_SPACES, [sqls::Id::SpaceUsed].as_slice()),
-        (names::CLUSTERS, [sqls::Id::ClusterActiveNodes, sqls::Id::ClusterNodes].as_slice()),
+        (names::TRANSACTION_LOG, sqls::Id::TransactionLogs),
+        (names::DATAFILES, sqls::Id::Datafiles),
+        (names::TABLE_SPACES, sqls::Id::SpaceUsed),
+        (names::CLUSTERS, sqls::Id::Clusters),
 
-        (names::JOBS, [sqls::Id::Jobs].as_slice()),
-        (names::MIRRORING, [sqls::Id::Mirroring].as_slice()),
-        (names::AVAILABILITY_GROUPS, [sqls::Id::AvailabilityGroups].as_slice()),
+        (names::JOBS, sqls::Id::Jobs),
+        (names::MIRRORING, sqls::Id::Mirroring),
+        (names::AVAILABILITY_GROUPS, sqls::Id::AvailabilityGroups),
     ]);
 }
 
-pub fn get_sql_ids<T: AsRef<str>>(section_name: T) -> Result<&'static [sqls::Id]> {
-    SECTION_MAP
-        .get(section_name.as_ref())
-        .copied()
-        .ok_or(anyhow::anyhow!(
-            "Query for {:?} not found",
-            section_name.as_ref()
-        ))
+pub fn get_sql_id<T: AsRef<str>>(section_name: T) -> Option<sqls::Id> {
+    SECTION_MAP.get(section_name.as_ref()).copied()
 }
 
 #[cfg(test)]
@@ -213,17 +206,20 @@ mod tests {
             (names::CLUSTERS, None),
             (
                 names::MIRRORING,
-                Some(sqls::get_query(&sqls::Id::Mirroring).unwrap()),
+                Some(sqls::find_known_query(sqls::Id::Mirroring).unwrap()),
             ),
             (
                 names::AVAILABILITY_GROUPS,
-                Some(sqls::get_query(&sqls::Id::AvailabilityGroups).unwrap()),
+                Some(sqls::find_known_query(sqls::Id::AvailabilityGroups).unwrap()),
             ),
             (names::CONNECTIONS, None),
             (names::TABLE_SPACES, None),
             (names::DATAFILES, None),
             (names::BACKUP, None),
-            (names::JOBS, Some(sqls::get_query(&sqls::Id::Jobs).unwrap())),
+            (
+                names::JOBS,
+                Some(sqls::find_known_query(sqls::Id::Jobs).unwrap()),
+            ),
         ];
         for (name, ids) in test_set {
             assert_eq!(mk_section(name).select_query(), *ids);
@@ -239,20 +235,21 @@ mod tests {
     /// We test only few parameters
     #[test]
     fn test_get_ids() {
-        assert_eq!(get_sql_ids(names::JOBS).unwrap(), [sqls::Id::Jobs]);
+        assert_eq!(get_sql_id(names::JOBS).unwrap(), sqls::Id::Jobs);
         assert_eq!(
-            get_sql_ids(section::names::MIRRORING).unwrap(),
-            [sqls::Id::Mirroring]
+            get_sql_id(section::names::MIRRORING).unwrap(),
+            sqls::Id::Mirroring
         );
         assert_eq!(
-            get_sql_ids(names::AVAILABILITY_GROUPS).unwrap(),
-            [sqls::Id::AvailabilityGroups]
+            get_sql_id(names::AVAILABILITY_GROUPS).unwrap(),
+            sqls::Id::AvailabilityGroups
         );
-        assert_eq!(get_sql_ids(names::COUNTERS).unwrap(), [sqls::Id::Counters]);
+        assert_eq!(get_sql_id(names::COUNTERS).unwrap(), sqls::Id::Counters);
+        assert_eq!(get_sql_id(names::CLUSTERS).unwrap(), sqls::Id::Clusters);
         assert_eq!(
-            get_sql_ids(names::CONNECTIONS).unwrap(),
-            [sqls::Id::Connections]
+            get_sql_id(names::CONNECTIONS).unwrap(),
+            sqls::Id::Connections
         );
-        assert!(get_sql_ids("").is_err());
+        assert!(get_sql_id("").is_none());
     }
 }

@@ -382,10 +382,7 @@ impl SqlInstance {
                 self.generate_state_entry(true, sep)
                     + &self.generate_details_entry(client, sep).await
             }
-            names::COUNTERS => {
-                self.generate_utc_entry(client, sep).await
-                    + &self.generate_counters_entry(client, sep).await
-            }
+            names::COUNTERS => self.generate_counters_section(client, sep).await,
             names::BACKUP => self.generate_backup_section(client, sep).await,
             names::BLOCKED_SESSIONS => {
                 self.generate_sessions_section(client, &sqls::Id::BlockingSessions, sep)
@@ -448,11 +445,14 @@ impl SqlInstance {
         format!("{};{};{}.mssql", self.hostname(), self.name, name)
     }
 
-    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_counters_section(&self, client: &mut Client, sep: char) -> String {
         let x = run_known_query(client, &sqls::Id::Counters)
             .await
-            .and_then(validate_rows)
-            .and_then(|rows| self.process_counters_rows(&rows, sep));
+            .and_then(validate_rows_has_two_blocks)
+            .and_then(|rows| {
+                Ok(self.process_utc_rows(&rows[0], sep)?
+                    + &self.process_counters_rows(&rows[1], sep)?)
+            });
         match x {
             Ok(result) => result,
             Err(err) => {
@@ -462,8 +462,21 @@ impl SqlInstance {
         }
     }
 
-    fn process_counters_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
-        let rows = &rows[0];
+    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+        let x = run_known_query(client, &sqls::Id::CounterEntries)
+            .await
+            .and_then(validate_rows)
+            .and_then(|rows| self.process_counters_rows(&rows[0], sep));
+        match x {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get counters: {}", err);
+                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+            }
+        }
+    }
+
+    fn process_counters_rows(&self, rows: &[Row], sep: char) -> Result<String> {
         let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
         Ok(z.join(""))
     }
@@ -843,23 +856,8 @@ impl SqlInstance {
             .join("")
     }
 
-    async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let result = match run_known_query(client, &sqls::Id::Utc).await {
-            Ok(r) => validate_rows(r).and_then(|rows| self.process_utc_rows(&rows, sep)),
-            Err(e) => Err(e),
-        };
-        match result {
-            Ok(value) => value,
-            Err(e) => {
-                log::error!("Failed to get UTC time: {e}\n");
-                e.to_string()
-            }
-        }
-    }
-
-    fn process_utc_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
-        let row = &rows[0];
-        let utc = row[0].get_value_by_name(sqls::UTC_DATE_FIELD);
+    fn process_utc_rows(&self, rows: &[Row], sep: char) -> Result<String> {
+        let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
@@ -982,6 +980,14 @@ impl SqlInstanceProperties {
 fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     if rows.is_empty() || rows[0].is_empty() {
         Err(anyhow::anyhow!("No output from query"))
+    } else {
+        Ok(rows)
+    }
+}
+
+fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+    if rows.len() != 2 || rows[0].is_empty() || rows[1].is_empty() {
+        Err(anyhow::anyhow!("Output from query is invalid"))
     } else {
         Ok(rows)
     }

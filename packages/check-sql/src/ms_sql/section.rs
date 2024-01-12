@@ -150,7 +150,7 @@ impl Section {
 lazy_static::lazy_static! {
     static ref SECTION_MAP: HashMap<&'static str, &'static[sqls::Id]> = HashMap::from([
         (names::INSTANCE, [sqls::Id::InstanceProperties].as_slice()),
-        (names::COUNTERS, [sqls::Id::Utc, sqls::Id::Counters].as_slice()),
+        (names::COUNTERS, [sqls::Id::Counters].as_slice()),
         (names::BACKUP, [sqls::Id::Backup].as_slice()),
         (names::BLOCKED_SESSIONS, [sqls::Id::BlockingSessions].as_slice()),
         (names::DATABASES, [sqls::Id::Databases].as_slice()),
@@ -248,10 +248,7 @@ mod tests {
             get_sql_ids(names::AVAILABILITY_GROUPS).unwrap(),
             [sqls::Id::AvailabilityGroups]
         );
-        assert_eq!(
-            get_sql_ids(names::COUNTERS).unwrap(),
-            [sqls::Id::Utc, sqls::Id::Counters]
-        );
+        assert_eq!(get_sql_ids(names::COUNTERS).unwrap(), [sqls::Id::Counters]);
         assert_eq!(
             get_sql_ids(names::CONNECTIONS).unwrap(),
             [sqls::Id::Connections]

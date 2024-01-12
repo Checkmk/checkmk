@@ -934,6 +934,13 @@ class Eventconsoleevents(Table):
     )
     """Optional performance data of the last check"""
 
+    host_performance_data = Column(
+        'host_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     host_plugin_output = Column(
         'host_plugin_output',
         col_type='string',

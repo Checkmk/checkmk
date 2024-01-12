@@ -729,8 +729,7 @@ impl SqlInstance {
         if !self.is_database_clustered(client).await? {
             return Ok(None);
         }
-        let nodes = self.get_database_cluster_nodes(client).await?;
-        let active_node = self.get_database_cluster_active_node(client).await?;
+        let (nodes, active_node) = self.get_cluster_nodes(client).await?;
         Ok(Some(format!(
             "{}{sep}{}{sep}{}{sep}{}",
             self.name,
@@ -747,27 +746,22 @@ impl SqlInstance {
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
-    async fn get_database_cluster_nodes(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_known_query(client, &sqls::Id::ClusterNodes).await?;
-        if !rows.is_empty() && !rows[0].is_empty() {
-            return Ok(rows[0]
-                .iter()
-                .map(|r| r.get_value_by_name("nodename"))
-                .collect::<Vec<String>>()
-                .join(","));
+    async fn get_cluster_nodes(&self, client: &mut Client) -> Result<(String, String)> {
+        let rows = &run_known_query(client, &sqls::Id::Clusters).await?;
+        if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
+            return Ok((
+                rows[0]
+                    .iter()
+                    .map(|r| r.get_value_by_name("nodename"))
+                    .collect::<Vec<String>>()
+                    .join(","),
+                rows[1]
+                    .last() // as in legacy plugin
+                    .expect("impossible")
+                    .get_value_by_name("active_node"),
+            ));
         }
-        Ok("".to_string())
-    }
-
-    async fn get_database_cluster_active_node(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_known_query(client, &sqls::Id::ClusterActiveNodes).await?;
-        if !rows.is_empty() && !rows[0].is_empty() {
-            return Ok(rows[0]
-                .last() // as in legacy plugin
-                .expect("impossible")
-                .get_value_by_name("active_node"));
-        }
-        Ok("-".to_string())
+        Ok((String::default(), String::default()))
     }
 
     pub async fn generate_connections_section(

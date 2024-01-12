@@ -20205,7 +20205,7 @@ checks = {
                 (0, "HTTP 5xx/sec: 0.00", [("http_5xx", 0.0, 1.0, 2.0, None, None)]),
                 (
                     2,
-                    "Requests rejected: 42 (warn/crit at 1.0/2.0)",
+                    "Requests rejected: 42 (warn/crit at 1/2)",
                     [("asp_requests_rejected", 42.0, 1, 2, None, None)],
                 ),
                 (

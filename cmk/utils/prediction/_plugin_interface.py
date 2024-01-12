@@ -131,7 +131,6 @@ class PredictionUpdater:
     def __call__(
         self,
         metric_name: str,
-        levels_factor: float = 1.0,
     ) -> tuple[float | None, EstimatedLevels]:
         now = int(time.time())
         if (prediction := self._get_updated_prediction(metric_name, now)) is None or (
@@ -145,7 +144,6 @@ class PredictionUpdater:
             levels_lower=self.params.levels_lower,
             levels_upper=self.params.levels_upper,
             levels_upper_lower_bound=self.params.levels_upper_min,
-            levels_factor=levels_factor,
         )
 
 
@@ -156,7 +154,6 @@ def estimate_levels(
     levels_lower: LevelsSpec | None,
     levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
-    levels_factor: float,
 ) -> EstimatedLevels:
     estimated_upper_warn, estimated_upper_crit = (
         _get_levels_from_params(
@@ -164,7 +161,6 @@ def estimate_levels(
             sig=1,
             reference=reference_value,
             stdev=stdev,
-            levels_factor=levels_factor,
         )
         if levels_upper
         else (None, None)
@@ -176,7 +172,6 @@ def estimate_levels(
             sig=-1,
             reference=reference_value,
             stdev=stdev,
-            levels_factor=levels_factor,
         )
         if levels_lower
         else (None, None)
@@ -203,13 +198,12 @@ def _get_levels_from_params(
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,
-    levels_factor: float,
 ) -> tuple[float, float] | tuple[None, None]:
     levels_type, (warn, crit) = levels
 
     match levels_type:
         case "absolute":
-            reference_deviation = levels_factor
+            reference_deviation = 1.0
         case "relative" if reference == 0:
             return (None, None)
         case "relative":

@@ -285,7 +285,6 @@ def _swap_and_compute_levels(tg_data: PredictionData, params: PredictionParamete
                 levels_lower=params.levels_lower,
                 levels_upper=params.levels_upper,
                 levels_upper_lower_bound=params.levels_upper_min,
-                levels_factor=1.0,
             )
             swapped.upper_warn.append(upper_0 or 0)
             swapped.upper_crit.append(upper_1 or 0)

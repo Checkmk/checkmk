@@ -90,15 +90,6 @@ def test_check_levels(  # type: ignore[no-untyped-def]
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
 
-def test_legacy_check_levels_scale() -> None:
-    """`scale` will be removed soon, but to briefly see what it does"""
-    assert check_api.check_levels(2, "my_metric", (1, 3), scale=10, boundaries=(0, 100)) == (
-        0,
-        "0.20",
-        [("my_metric", 2, 10, 30, 0, 1000)],
-    )
-
-
 def test_http_proxy(mocker: Mock) -> None:
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))

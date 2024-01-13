@@ -7,7 +7,6 @@ from livestatus import LocalConnection
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection, SiteName
-from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import DataStat, PredictionData
 from cmk.utils.prediction._query import PredictionQuerier
 from cmk.utils.servicename import ServiceName
@@ -17,10 +16,11 @@ from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParamet
 
 class TestPredictionQuerier:
     def test_query_available_predictions(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        metric = "metric"
         querier = self._prediction_querier()
         expected_prediction_info = PredictionInfo(
             valid_interval=(0, 200),
-            metric=str(querier.metric_name),
+            metric=metric,
             params=PredictionParameters(
                 period="day",
                 horizon=20,
@@ -33,13 +33,13 @@ class TestPredictionQuerier:
                     "host_name": str(querier.host_name),
                     "description": str(querier.service_name),
                     "prediction_files": [
-                        f"{querier.metric_name}/everyday.info",
-                        f"{querier.metric_name}/everyday",
-                        f"{querier.metric_name}/strange.info",
+                        f"{metric}/everyday.info",
+                        f"{metric}/everyday",
+                        f"{metric}/strange.info",
                         "other_metric/everyday.info",
                         "other_metric/everyday",
                     ],
-                    f"prediction_file:file:{querier.metric_name}/everyday.info": expected_prediction_info.model_dump_json().encode(),
+                    f"prediction_file:file:{metric}/everyday.info": expected_prediction_info.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),
@@ -53,18 +53,19 @@ class TestPredictionQuerier:
         )
         mock_livestatus.expect_query(
             "GET services\n"
-            f"Columns: prediction_file:file:{querier.metric_name}/everyday.info\n"
+            f"Columns: prediction_file:file:{metric}/everyday.info\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
             "ColumnHeaders: off"
         )
-        assert list(querier.query_available_predictions()) == [expected_prediction_info]
+        assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
 
     def test_query_prediction_data(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        metric = "metric"
         querier = self._prediction_querier()
         prediciton_info = PredictionInfo(
             valid_interval=(1234, 5678),
-            metric="some_metric",
+            metric=metric,
             params=PredictionParameters(period="day", horizon=0),
         )
         expected_prediction_data = PredictionData(
@@ -86,14 +87,14 @@ class TestPredictionQuerier:
                 {
                     "host_name": str(querier.host_name),
                     "description": str(querier.service_name),
-                    f"prediction_file:file:{querier.metric_name}/day-1234": expected_prediction_data.model_dump_json().encode(),
+                    f"prediction_file:file:{metric}/day-1234": expected_prediction_data.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),
         )
         mock_livestatus.expect_query(
             "GET services\n"
-            f"Columns: prediction_file:file:{querier.metric_name}/day-1234\n"
+            f"Columns: prediction_file:file:{metric}/day-1234\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
             "ColumnHeaders: off"
@@ -106,5 +107,4 @@ class TestPredictionQuerier:
             livestatus_connection=LocalConnection(),
             host_name=HostName("host"),
             service_name=ServiceName("service"),
-            metric_name=MetricName("metric"),
         )

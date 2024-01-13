@@ -11,13 +11,12 @@ from livestatus import SingleSiteConnection
 
 from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
-from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
-from ._prediction import PredictionData
+from ._prediction import PredictionData, PredictionStore
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -25,11 +24,10 @@ class PredictionQuerier:
     livestatus_connection: SingleSiteConnection
     host_name: HostName
     service_name: ServiceName
-    metric_name: MetricName
 
-    def query_available_predictions(self) -> Iterator[PredictionInfo]:
+    def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
         available_prediction_files = frozenset(
-            self._filter_prediction_files_by_metric(self._query_prediction_files())
+            self._filter_prediction_files_by_metric(metric, self._query_prediction_files())
         )
         yield from (
             PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
@@ -39,19 +37,21 @@ class PredictionQuerier:
         )
 
     def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
-        rel_filename = Path(
-            pnp_cleanup(self.metric_name), f"{meta.params.period}-{meta.valid_interval[0]}"
+        rel_filename = PredictionStore.relative_basename(
+            meta.metric, meta.params.period, meta.valid_interval[0]
         ).with_suffix(DATA_FILE_SUFFIX)
         return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
 
+    # TODO: I think this belongs to the store.
+    @staticmethod
     def _filter_prediction_files_by_metric(
-        self, prediction_files: Iterable[Path]
+        metric: str, prediction_files: Iterable[Path]
     ) -> Iterator[Path]:
-        metric_dir = Path(pnp_cleanup(self.metric_name))
+        metric_dir = pnp_cleanup(metric)
         yield from (
             prediction_file
             for prediction_file in prediction_files
-            if metric_dir in prediction_file.parents
+            if metric_dir in prediction_file.parts
         )
 
     def _query_prediction_files(self) -> Iterator[Path]:

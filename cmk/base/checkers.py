@@ -26,7 +26,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.prediction import PredictionUpdater
+from cmk.utils.prediction import PREDICTION_DIR, PredictionStore, PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -778,10 +778,14 @@ def _inject_prediction_callback_recursively(
         case dict():
             if "__get_predictive_levels__" in params:
                 params["__get_predictive_levels__"] = PredictionUpdater(
-                    host_name,
-                    service_name,
                     PredictionParameters.model_validate(params),
-                    partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
+                    partial(
+                        livestatus.get_rrd_data,
+                        livestatus.LocalConnection(),
+                        host_name,
+                        service_name,
+                    ),
+                    PredictionStore(PREDICTION_DIR, host_name, service_name),
                 )
                 return params
             return dict(

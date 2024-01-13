@@ -142,7 +142,7 @@ def page_graph() -> None:
         _make_legend(current_measurement),
     )
 
-    _render_grid(selected_prediction_info.valid_interval[0], vertical_range)
+    _render_grid(selected_prediction_info.valid_interval, vertical_range)
 
     _render_level_areas(selected_prediction_info, swapped)
 
@@ -172,10 +172,13 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
     ]
 
 
-def _render_grid(x_start: float, y_range: tuple[float, float]) -> None:
-    vert_scala = _compute_vertical_scala(*y_range)
-    time_scala = [[x_start + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
-    _render_coordinates(vert_scala, time_scala)
+def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None:
+    x_scala = [
+        (i + x_range[0], f"{i//3600:02}:{i%3600:02}")
+        for i in range(0, x_range[1] - x_range[0] + 1, 7200)
+    ]
+    y_scala = _compute_vertical_scala(*y_range)
+    _render_coordinates(y_scala, x_scala)
 
 
 def _render_level_areas(selected_prediction_info: PredictionInfo, swapped: SwappedStats) -> None:
@@ -258,25 +261,16 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
     else:
         step = factor
 
-    vert_scala = []
-    v = 0.0
-    while v <= max(0, high):
-        vert_scala.append((v, f"{v / factor:.1f}{letter}"))
-        v += step
-
-    v = -factor
-    while v >= min(0, low):
-        vert_scala = [(v, f"{v / factor:.1f}{letter}")] + vert_scala
-        v -= step
+    v_scala_values = [
+        i * step for i in range(min(0, int(low / step)), max(0, int(high / step)) + 1)
+    ]
+    v_scale_labels = [f"{v / factor:.1f}{letter}" for v in v_scala_values]
 
     # Remove trailing ".0", if that is present for *all* entries
-    for entry in vert_scala:
-        if not entry[1].endswith(".0"):
-            break
-    else:
-        vert_scala = [(e[0], e[1][:-2]) for e in vert_scala]
+    if all(e.endswith(".0") for e in v_scale_labels):
+        v_scale_labels = [e[:-2] for e in v_scale_labels]
 
-    return vert_scala
+    return list(zip(v_scala_values, v_scale_labels))
 
 
 def _get_oom(low: float, high: float) -> tuple[str, float]:

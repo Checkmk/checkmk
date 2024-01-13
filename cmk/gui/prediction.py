@@ -45,7 +45,7 @@ class Color(enum.StrEnum):
     BLUE = "#0000ff"
 
 
-_VRANGES = [
+_VRANGES = (
     ("n", 1024.0**-3),
     ("u", 1024.0**-2),
     ("m", 1024.0**-1),
@@ -54,7 +54,7 @@ _VRANGES = [
     ("M", 1024.0**2),
     ("G", 1024.0**3),
     ("T", 1024.0**4),
-]
+)
 
 
 @dataclass(frozen=True)
@@ -244,15 +244,8 @@ def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
 def _compute_vertical_scala(  # pylint: disable=too-many-branches
     low: float, high: float
 ) -> Sequence[tuple[float, str]]:
-    m = max(abs(low), abs(high))
-    for letter, factor in _VRANGES:
-        if m <= 99 * factor:
-            break
-    else:
-        letter = "P"
-        factor = 1024.0**5
+    letter, factor = _get_oom(low, high)
 
-    v = 0.0
     steps = (max(0, high) - min(0, low)) / factor
     if steps < 3:
         step = 0.2 * factor
@@ -266,6 +259,7 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
         step = factor
 
     vert_scala = []
+    v = 0.0
     while v <= max(0, high):
         vert_scala.append((v, f"{v / factor:.1f}{letter}"))
         v += step
@@ -283,6 +277,14 @@ def _compute_vertical_scala(  # pylint: disable=too-many-branches
         vert_scala = [(e[0], e[1][:-2]) for e in vert_scala]
 
     return vert_scala
+
+
+def _get_oom(low: float, high: float) -> tuple[str, float]:
+    m = max(abs(low), abs(high))
+    for letter, factor in _VRANGES:
+        if m <= 99 * factor:
+            return letter, factor
+    return "P", 1024.0**5
 
 
 def _get_current_perfdata_via_livestatus(

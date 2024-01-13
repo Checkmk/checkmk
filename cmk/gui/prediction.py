@@ -38,11 +38,11 @@ _GRAPH_SIZE = 2000, 700
 
 
 class Color(enum.StrEnum):
-    BLACK = "#000000"
-    WHITE = "#ffffff"
-    YELLOW = "#ffff00"
-    RED = "#ff0000"
-    BLUE = "#0000ff"
+    PREDICTION = "#000000"
+    OK_AREA = "#ffffff"
+    WARN_AREA = "#ffff00"
+    CRIT_AREA = "#ff0000"
+    OBSERVED = "#0000ff"
 
 
 _VRANGES = (
@@ -58,7 +58,7 @@ _VRANGES = (
 
 
 @dataclass(frozen=True)
-class SwappedStats:
+class PredictionCurves:
     average: list[float | None] = field(default_factory=list)
     min_: list[float | None] = field(default_factory=list)
     max_: list[float | None] = field(default_factory=list)
@@ -131,8 +131,8 @@ def page_graph() -> None:
         )
         html.hidden_fields()
 
-    swapped = _swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
-    vertical_range = _compute_vertical_range(swapped)
+    curves = _make_prediction_curves(selected_prediction_data, selected_prediction_info.params)
+    vertical_range = _compute_vertical_range(curves)
 
     _create_graph(
         selected_prediction_info.name,
@@ -144,9 +144,9 @@ def page_graph() -> None:
 
     _render_grid(selected_prediction_info.valid_interval, vertical_range)
 
-    _render_level_areas(selected_prediction_info, swapped)
+    _render_level_areas(selected_prediction_info, curves)
 
-    _render_prediction(swapped)
+    _render_prediction(curves)
 
     _render_observed_data(
         prediction_data_querier, selected_prediction_info, current_measurement, time.time()
@@ -157,12 +157,12 @@ def page_graph() -> None:
 
 def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:
     return [
-        (Color.BLACK, _("Prediction")),
-        (Color.WHITE, _("OK area")),
-        (Color.YELLOW, _("Warning area")),
-        (Color.RED, _("Critical area")),
+        (Color.PREDICTION, _("Prediction")),
+        (Color.OK_AREA, _("OK area")),
+        (Color.WARN_AREA, _("Warning area")),
+        (Color.CRIT_AREA, _("Critical area")),
         (
-            Color.BLUE,
+            Color.OBSERVED,
             (
                 _("Observed value")
                 if current_measurement is None
@@ -181,23 +181,23 @@ def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None
     _render_coordinates(y_scala, x_scala)
 
 
-def _render_level_areas(selected_prediction_info: PredictionInfo, swapped: SwappedStats) -> None:
+def _render_level_areas(selected_prediction_info: PredictionInfo, curves: PredictionCurves) -> None:
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(swapped.upper_warn, swapped.upper_crit, Color.YELLOW, 0.4)
-        _render_area_reverse(swapped.upper_crit, Color.RED, 0.1)
+        _render_dual_area(curves.upper_warn, curves.upper_crit, Color.WARN_AREA, 0.4)
+        _render_area_reverse(curves.upper_crit, Color.CRIT_AREA, 0.1)
 
     if selected_prediction_info.params.levels_lower is not None:
-        _render_dual_area(swapped.lower_crit, swapped.lower_warn, Color.YELLOW, 0.4)
-        _render_area(swapped.lower_crit, Color.RED, 0.1)
-        _render_dual_area(swapped.average, swapped.lower_warn, Color.WHITE, 0.5)
+        _render_dual_area(curves.lower_crit, curves.lower_warn, Color.WARN_AREA, 0.4)
+        _render_area(curves.lower_crit, Color.CRIT_AREA, 0.1)
+        _render_dual_area(curves.average, curves.lower_warn, Color.OK_AREA, 0.5)
 
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(swapped.upper_warn, swapped.average, Color.WHITE, 0.5)
+        _render_dual_area(curves.upper_warn, curves.average, Color.OK_AREA, 0.5)
 
 
-def _render_prediction(swapped: SwappedStats) -> None:
-    _render_curve(swapped.average, Color.BLACK)
-    _render_curve(swapped.average, Color.BLACK)  # repetition makes line bolder
+def _render_prediction(curves: PredictionCurves) -> None:
+    _render_curve(curves.average, Color.PREDICTION)
+    _render_curve(curves.average, Color.PREDICTION)  # repetition makes line bolder
 
 
 def _render_observed_data(
@@ -228,9 +228,9 @@ def _render_observed_data(
 
         rrd_data = response.values
 
-        _render_curve(rrd_data, Color.BLUE, 2)
+        _render_curve(rrd_data, Color.OBSERVED, 2)
         if current_measurement is not None:
-            _render_point(*current_measurement, Color.BLUE)
+            _render_point(*current_measurement, Color.OBSERVED)
 
 
 def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
@@ -297,50 +297,51 @@ def _get_current_perfdata_via_livestatus(
         return None
 
 
-# Compute check levels from prediction data and check parameters
-def _swap_and_compute_levels(tg_data: PredictionData, params: PredictionParameters) -> SwappedStats:
-    swapped = SwappedStats()
-    for step in tg_data.points:
-        if step is not None:
-            swapped.average.append(step.average)
-            swapped.min_.append(step.min_)
-            swapped.max_.append(step.max_)
-            swapped.stdev.append(step.stdev)
+def _make_prediction_curves(
+    tg_data: PredictionData, params: PredictionParameters
+) -> PredictionCurves:
+    curves = PredictionCurves()
+    for predicted in tg_data.points:
+        if predicted is not None:
+            curves.average.append(predicted.average)
+            curves.min_.append(predicted.min_)
+            curves.max_.append(predicted.max_)
+            curves.stdev.append(predicted.stdev)
             upper_0, upper_1, lower_0, lower_1 = estimate_levels(
-                reference_value=step.average,
-                stdev=step.stdev,
+                reference_value=predicted.average,
+                stdev=predicted.stdev,
                 levels_lower=params.levels_lower,
                 levels_upper=params.levels_upper,
                 levels_upper_lower_bound=params.levels_upper_min,
             )
-            swapped.upper_warn.append(upper_0 or 0)
-            swapped.upper_crit.append(upper_1 or 0)
-            swapped.lower_warn.append(lower_0 or 0)
-            swapped.lower_crit.append(lower_1 or 0)
+            curves.upper_warn.append(upper_0 or 0)
+            curves.upper_crit.append(upper_1 or 0)
+            curves.lower_warn.append(lower_0 or 0)
+            curves.lower_crit.append(lower_1 or 0)
         else:
-            swapped.average.append(None)
-            swapped.min_.append(None)
-            swapped.max_.append(None)
-            swapped.stdev.append(None)
-            swapped.upper_warn.append(0)
-            swapped.upper_crit.append(0)
-            swapped.lower_warn.append(0)
-            swapped.lower_crit.append(0)
+            curves.average.append(None)
+            curves.min_.append(None)
+            curves.max_.append(None)
+            curves.stdev.append(None)
+            curves.upper_warn.append(0)
+            curves.upper_crit.append(0)
+            curves.lower_warn.append(0)
+            curves.lower_crit.append(0)
 
-    return swapped
+    return curves
 
 
-def _compute_vertical_range(swapped: SwappedStats) -> tuple[float, float]:
+def _compute_vertical_range(curves: PredictionCurves) -> tuple[float, float]:
     points = (
-        swapped.average
-        + swapped.min_
-        + swapped.max_
-        + swapped.min_
-        + swapped.stdev
-        + swapped.upper_warn
-        + swapped.upper_crit
-        + swapped.lower_warn
-        + swapped.lower_crit
+        curves.average
+        + curves.min_
+        + curves.max_
+        + curves.min_
+        + curves.stdev
+        + curves.upper_warn
+        + curves.upper_crit
+        + curves.lower_warn
+        + curves.lower_crit
     )
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 

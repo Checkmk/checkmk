@@ -74,47 +74,52 @@ class PredictionStore:
         basedir: Path,
         host_name: HostName,
         service_description: ServiceName,
-        dsname: str,
     ) -> None:
-        self._dir = basedir / host_name / pnp_cleanup(service_description) / pnp_cleanup(dsname)
+        self._dir = basedir / host_name / pnp_cleanup(service_description)
 
-    def _data_file(self, period: str, valid_from: int) -> Path:
-        return (self._dir / f"{period}-{valid_from}").with_suffix(DATA_FILE_SUFFIX)
+    @staticmethod
+    def relative_basename(metric: str, period: str, valid_from: int) -> Path:
+        return Path(pnp_cleanup(metric), f"{period}-{valid_from}")
 
-    def _info_file(self, period: str, valid_from: int) -> Path:
-        return (self._dir / f"{period}-{valid_from}").with_suffix(INFO_FILE_SUFFIX)
+    def _base_file(self, metric: str, period: str, valid_from: int) -> Path:
+        return self._dir / self.relative_basename(metric, period, valid_from)
+
+    def _info_file(self, metric: str, period: str, valid_from: int) -> Path:
+        return self._base_file(metric, period, valid_from).with_suffix(INFO_FILE_SUFFIX)
+
+    def _data_file(self, metric: str, period: str, valid_from: int) -> Path:
+        return self._base_file(metric, period, valid_from).with_suffix(DATA_FILE_SUFFIX)
 
     def save_prediction(
         self,
-        info: PredictionInfo,
+        meta: PredictionInfo,
         data: PredictionData,
     ) -> None:
-        self._dir.mkdir(exist_ok=True, parents=True)
-        self._info_file(info.params.period, info.valid_interval[0]).write_text(
-            info.model_dump_json()
-        )
-        self._data_file(info.params.period, info.valid_interval[0]).write_text(
+        info_file = self._info_file(meta.metric, meta.params.period, meta.valid_interval[0])
+        info_file.parent.mkdir(exist_ok=True, parents=True)
+        info_file.write_text(meta.model_dump_json())
+        self._data_file(meta.metric, meta.params.period, meta.valid_interval[0]).write_text(
             data.model_dump_json()
         )
 
-    def remove_prediction(self, period: str, valid_from: int) -> None:
-        self._data_file(period, valid_from).unlink(missing_ok=True)
-        self._info_file(period, valid_from).unlink(missing_ok=True)
+    def remove_prediction(self, metric: str, period: str, valid_from: int) -> None:
+        self._data_file(metric, period, valid_from).unlink(missing_ok=True)
+        self._info_file(metric, period, valid_from).unlink(missing_ok=True)
 
-    def get_info(self, period: str, valid_from: int) -> PredictionInfo | None:
-        file_path = self._info_file(period, valid_from)
+    def get_info(self, metric: str, period: str, valid_from: int) -> PredictionInfo | None:
+        file_path = self._info_file(metric, period, valid_from)
         try:
             return PredictionInfo.model_validate_json(file_path.read_text())
-        except FileNotFoundError:
-            logger.log(VERBOSE, "No prediction info for %s/%s available.", period, valid_from)
+        except FileNotFoundError as exc:
+            logger.log(VERBOSE, "No prediction meta data: %s", exc)
         return None
 
-    def get_data(self, period: str, valid_from: int) -> PredictionData | None:
-        file_path = self._data_file(period, valid_from)
+    def get_data(self, meta: PredictionInfo) -> PredictionData | None:
+        file_path = self._data_file(meta.metric, meta.params.period, meta.valid_interval[0])
         try:
             return PredictionData.model_validate_json(file_path.read_text())
-        except FileNotFoundError:
-            logger.log(VERBOSE, "No prediction for %s/%s available.", period, valid_from)
+        except FileNotFoundError as exc:
+            logger.log(VERBOSE, "No prediction: %s", exc)
         return None
 
 

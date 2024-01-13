@@ -21,7 +21,6 @@ from cmk.utils.servicename import ServiceName
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
@@ -70,31 +69,27 @@ def register(page_registry: PageRegistry) -> None:
 
 
 def page_graph() -> None:
-    prediction_data_querier = _prediction_querier_from_request(request_)
-    breadcrumb = make_service_breadcrumb(
-        prediction_data_querier.host_name,
-        prediction_data_querier.service_name,
-    )
+    host_name = HostName(request_.get_str_input_mandatory("host"))
+    service_name = ServiceName(request_.get_str_input_mandatory("service"))
+    metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
+
+    breadcrumb = make_service_breadcrumb(host_name, service_name)
     make_header(
         html,
-        _("Prediction for %s - %s - %s")
-        % (
-            prediction_data_querier.host_name,
-            prediction_data_querier.service_name,
-            prediction_data_querier.metric_name,
-        ),
+        _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),
         breadcrumb,
     )
 
-    current_measurement = _get_current_perfdata_via_livestatus(
-        prediction_data_querier.host_name,
-        prediction_data_querier.service_name,
-        prediction_data_querier.metric_name,
+    prediction_data_querier = PredictionQuerier(
+        livestatus_connection=live().get_connection(
+            SiteId(request_.get_str_input_mandatory("site"))
+        ),
+        host_name=host_name,
+        service_name=service_name,
     )
-
     if not (
         available_predictions_sorted_by_start_time := sorted(
-            prediction_data_querier.query_available_predictions(),
+            prediction_data_querier.query_available_predictions(metric_name),
             key=lambda pred_info: pred_info.valid_interval[0],
         )
     ):
@@ -129,6 +124,8 @@ def page_graph() -> None:
 
     curves = _make_prediction_curves(selected_prediction_data, selected_prediction_info.params)
     vertical_range = _compute_vertical_range(curves)
+
+    current_measurement = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)
 
     _create_graph(
         selected_prediction_info,
@@ -176,7 +173,7 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
         (Color.CRIT_AREA, _("Critical area")),
         (
             Color.OBSERVED,
-            _("Observed value: %s")
+            _("Measurement: %s")
             % ("N/A" if current_measurement is None else "%.2f" % current_measurement[1]),
         ),
     ]
@@ -224,7 +221,7 @@ def _render_observed_data(
                 prediction_data_querier.livestatus_connection,
                 prediction_data_querier.host_name,
                 prediction_data_querier.service_name,
-                f"{prediction_data_querier.metric_name}.max",
+                f"{selected_prediction_info.metric}.max",
                 from_time,
                 until_time,
             )
@@ -241,17 +238,6 @@ def _render_observed_data(
         _render_curve(rrd_data, Color.OBSERVED, 2)
         if current_measurement is not None:
             _render_point(*current_measurement, Color.OBSERVED)
-
-
-def _prediction_querier_from_request(request: Request) -> PredictionQuerier:
-    return PredictionQuerier(
-        livestatus_connection=live().get_connection(
-            SiteId(request.get_str_input_mandatory("site"))
-        ),
-        host_name=HostName(request.get_str_input_mandatory("host")),
-        service_name=ServiceName(request.get_str_input_mandatory("service")),
-        metric_name=MetricName(request.get_str_input_mandatory("dsname")),
-    )
 
 
 def _compute_vertical_scala(  # pylint: disable=too-many-branches

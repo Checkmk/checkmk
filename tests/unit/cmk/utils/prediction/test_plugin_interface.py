@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import _plugin_interface
+from cmk.utils.prediction import _plugin_interface, PREDICTION_DIR, PredictionStore
 
 
 def test_prediction_updater_serializable() -> None:
@@ -30,10 +30,9 @@ def test_prediction_updater_serializable() -> None:
     _ = ast.literal_eval(
         repr(
             _plugin_interface.PredictionUpdater(
-                HostName("myhost"),
-                "My service description",
                 None,  # type: ignore[arg-type]  # keep the test simple.
                 unserializable_callback,
+                PredictionStore(PREDICTION_DIR, HostName("myhost"), "My service description"),
             )
         )
     )

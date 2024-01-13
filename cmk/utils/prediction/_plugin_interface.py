@@ -9,13 +9,10 @@ import time
 from collections.abc import Callable
 from typing import assert_never, Final, Literal
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.servicename import ServiceName
 
 from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 
-from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
     LevelsSpec,
@@ -30,6 +27,7 @@ logger = logging.getLogger("cmk.prediction")
 
 
 def _get_prediction(
+    metric: str,
     store: PredictionStore,
     required_prediction: PredictionInfo,
 ) -> PredictionData | None:
@@ -43,7 +41,7 @@ def _get_prediction(
     """
     if (
         available_prediciton := store.get_info(
-            required_prediction.params.period, required_prediction.valid_interval[0]
+            metric, required_prediction.params.period, required_prediction.valid_interval[0]
         )
     ) is None:
         return None
@@ -52,54 +50,41 @@ def _get_prediction(
         logger.log(VERBOSE, "Prediction outdated or parameters have changed.")
         return None
 
-    return store.get_data(
-        available_prediciton.params.period, available_prediciton.valid_interval[0]
-    )
+    return store.get_data(available_prediciton)
 
 
 class PredictionUpdater:
     def __init__(
         self,
-        host_name: HostName,
-        service_description: ServiceName,
         params: PredictionParameters,
-        partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord | None],
+        partial_get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+        store: PredictionStore,
     ) -> None:
-        self.host_name: Final = host_name
-        self.service_description: Final = service_description
         self.params: Final = params
         self.partial_get_recorded_data: Final = partial_get_recorded_data
+        self.store: Final = store
 
     def __repr__(self) -> str:
         return repr(f"{self.__class__.__name__}Sentinel")
 
     def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord | None:
-        return self.partial_get_recorded_data(
-            self.host_name, self.service_description, metric_name, start, end
-        )
+        return self.partial_get_recorded_data(metric_name, start, end)
 
     def _get_updated_prediction(
         self,
-        dsname: str,
+        metric: str,
         now: int,
     ) -> PredictionData | None:
-        prediction_store = PredictionStore(
-            PREDICTION_DIR,
-            self.host_name,
-            self.service_description,
-            dsname,
-        )
+        info = PredictionInfo.make(metric, self.params, now)
 
-        info = PredictionInfo.make(dsname, self.params, now)
-
-        if (data_for_pred := _get_prediction(prediction_store, info)) is None:
+        if (data_for_pred := _get_prediction(metric, self.store, info)) is None:
             logger.log(
                 VERBOSE,
                 "Calculating prediction data for %s/%s",
                 info.params.period,
                 info.valid_interval[0],
             )
-            prediction_store.remove_prediction(info.params.period, info.valid_interval[0])
+            self.store.remove_prediction(info.metric, info.params.period, info.valid_interval[0])
 
             if (
                 data_for_pred := compute_prediction(
@@ -109,7 +94,7 @@ class PredictionUpdater:
             ) is None:
                 return None
 
-            prediction_store.save_prediction(info, data_for_pred)
+            self.store.save_prediction(info, data_for_pred)
 
         return data_for_pred
 

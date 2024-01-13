@@ -7,7 +7,7 @@
 from ._grouping import PREDICTION_PERIODS, Timegroup, timezone_at
 from ._paths import PREDICTION_DIR
 from ._plugin_interface import estimate_levels, PredictionUpdater
-from ._prediction import DataStat, PredictionData
+from ._prediction import DataStat, PredictionData, PredictionStore
 from ._query import PredictionQuerier
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "estimate_levels",
     "PredictionData",
     "PredictionQuerier",
+    "PredictionStore",
     "PredictionUpdater",
     "PREDICTION_DIR",
     "Timegroup",

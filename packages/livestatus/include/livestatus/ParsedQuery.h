@@ -25,6 +25,12 @@
 
 class Column;
 
+struct OrderBy {
+    std::shared_ptr<Column> column;
+    std::optional<std::string> key;  // only for DictColumn
+    bool ascending;
+};
+
 class ParsedQuery {
 public:
     using ColumnCreator =
@@ -56,6 +62,7 @@ public:
     Triggers::Kind wait_trigger{Triggers::Kind::all};
     std::optional<std::string> wait_object;
     std::chrono::seconds timezone_offset{0};
+    std::vector<OrderBy> order_by;
 
 private:
     using FilterStack = Filters;
@@ -88,6 +95,7 @@ private:
     void parseWaitTriggerLine(std::string_view line);
     void parseWaitObjectLine(std::string_view line);
     void parseLocaltimeLine(std::string_view line);
+    void parseOrderBy(std::string_view line, const ColumnCreator &make_column);
 };
 
 #endif  // ParsedQuery_h

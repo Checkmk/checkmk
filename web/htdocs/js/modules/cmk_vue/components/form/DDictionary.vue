@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+import {onMounted, ref, onBeforeMount} from "vue";
 import {IComponent, VueComponentSpec} from "cmk_vue/types";
 import DForm from "./DForm.vue";
+import {clicked_checkbox_label} from "cmk_vue/utils";
 
-interface VueDictionaryKeySpec {
+const emit = defineEmits<{
+    (e: "update-value", value: any): void;
+}>();
+
+interface VueDictionaryElement {
     name: string;
-    optional: boolean;
+    required: boolean;
+    is_active: boolean;
+    component: VueComponentSpec;
 }
 
 interface VueDictionaryComponentSpec extends VueComponentSpec {
     config: {
-        elements: {
-            key_spec: VueDictionaryKeySpec;
-            is_active: boolean;
-            component: VueComponentSpec;
-        }[];
+        elements: VueDictionaryElement[];
     };
 }
 
@@ -22,72 +25,80 @@ const props = defineProps<{
     component: VueDictionaryComponentSpec;
 }>();
 
-const formElements = ref<{[index: string]: IComponent}>({});
-const formElementActive: {[index: string]: any} = ref({});
+let component_value: {[name: string]: any} = {};
+const element_components = ref<{[index: string]: IComponent}>({});
+const element_active: {[index: string]: any} = ref({});
 
-onMounted(() => {
+onBeforeMount(() => {
+    component_value = {};
     props.component.config.elements.forEach(element => {
-        if (element.is_active || !element.key_spec.optional)
-            formElementActive.value[element.key_spec.name] = true;
+        if (element.is_active)
+            component_value[element.name] = element.component.config.value;
     });
 });
-
-function collect(): any {
-    let result: {[index: string]: any} = {};
-    for (let element of get_elements_from_props()) {
-        const component = formElements.value[element.key_spec.name];
-        if (component == undefined) continue;
-        result[element.key_spec.name] = component.collect();
-    }
-    return result;
-}
-
-function debug_info(): void {
-    console.log(
-        "Dictionary with ",
-        Object.keys(props.component.config.elements).length,
-        "keys"
-    );
-}
-
-defineExpose({
-    collect,
-    debug_info,
+onMounted(() => {
+    props.component.config.elements.forEach(element => {
+        if (element.is_active || element.required)
+            element_active.value[element.name] = true;
+    });
+    emit("update-value", component_value);
 });
-
-function get_elements_from_props(): {
-    key_spec: VueDictionaryKeySpec;
-    component: VueComponentSpec;
-}[] {
+function get_elements_from_props(): VueDictionaryElement[] {
     return props.component.config.elements;
 }
+
+function update_key(key: string, new_value: any) {
+    component_value[key] = new_value;
+    emit("update-value", component_value);
+}
+
+function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
+    let target = event.target;
+    if (!target) return;
+    clicked_checkbox_label(target as HTMLLabelElement);
+    component_value[key] = undefined;
+    emit("update-value", component_value);
+}
 </script>
+
 <template>
     <table class="dictionary">
         <tbody>
             <tr
                 v-for="element in get_elements_from_props()"
-                v-bind:key="element.key_spec.name"
+                v-bind:key="element.name"
             >
                 <td class="dictleft">
-                    <span>
+                    <span class="checkbox">
                         <input
                             type="checkbox"
-                            class="vue_checkbox"
-                            v-model="formElementActive[element.key_spec.name]"
-                            v-if="element.key_spec.optional"
+                            v-model="element_active[element.name]"
+                            v-if="!element.required"
                         />
-                        <label>{{ element.component.title }}</label>
+                        <label
+                            :onclick="
+                                event =>
+                                    clicked_dictionary_checkbox_label(
+                                        event,
+                                        element.name
+                                    )
+                            "
+                        >
+                            {{ element.component.title }}
+                        </label>
                     </span>
                     <br />
                     <div class="dictelement indent">
                         <DForm
-                            v-if="formElementActive[element.key_spec.name]"
+                            v-if="element_active[element.name]"
                             :component="element.component"
                             :ref="
                                 el => {
-                                    formElements[element.key_spec.name] = el;
+                                    element_components[element.name] = el;
                                 }
+                            "
+                            @update-value="
+                                new_value => update_key(element.name, new_value)
                             "
                         />
                     </div>

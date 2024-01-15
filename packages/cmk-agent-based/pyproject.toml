@@ -46,7 +46,7 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,fixme"
+disable = "missing-docstring"
 
 [tool.pytest.ini_options]
 pythonpath = [ "." ]

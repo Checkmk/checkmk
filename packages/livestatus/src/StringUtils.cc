@@ -12,6 +12,7 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>
 
 #include "livestatus/OStreamStateSaver.h"
 
@@ -239,6 +240,38 @@ bool is_utf8(std::string_view s) {
         }
     }
     return true;
+}
+
+void skip_whitespace(std::string_view &str) {
+    str.remove_prefix(
+        std::min(str.size(), str.find_first_not_of(mk::whitespace)));
+}
+
+std::string next_argument(std::string_view &str) {
+    skip_whitespace(str);
+    if (str.empty()) {
+        throw std::runtime_error("missing argument");
+    }
+    constexpr auto quote = '\'';
+    if (!str.starts_with(quote)) {
+        std::string result{str.substr(0, str.find_first_of(mk::whitespace))};
+        str.remove_prefix(result.size());
+        return result;
+    }
+    std::string result;
+    while (true) {
+        str.remove_prefix(1);
+        auto pos = str.find(quote);
+        if (pos == std::string_view::npos) {
+            throw std::runtime_error("missing closing quote");
+        }
+        result += str.substr(0, pos);
+        str.remove_prefix(pos + 1);
+        if (!str.starts_with(quote)) {
+            return result;
+        }
+        result += quote;
+    }
 }
 
 }  // namespace mk

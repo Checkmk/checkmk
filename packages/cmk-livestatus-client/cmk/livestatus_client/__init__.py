@@ -1446,7 +1446,7 @@ def get_rrd_data(
     fromtime: int,
     untiltime: int,
     max_entries: int = 400,
-) -> RRDResponse:
+) -> RRDResponse | None:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -1483,8 +1483,7 @@ def get_rrd_data(
     return (
         # According to a comment in RRDColumn.cc we should have `raw_step >= step` (which is 1)
         # However, it is zero for empty responses (non existing metrics, for instance).
-        # Not sure if we shouldn't rather raise.
-        RRDResponse(range(0), [])
+        None
         if (step := int(raw_step)) == 0
         else RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )

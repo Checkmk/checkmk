@@ -21,3 +21,27 @@ export interface IComponent {
     collect: () => any;
     debug_info: () => void;
 }
+
+export interface TableCellContent {
+    type: "text" | "html" | "href" | "checkbox" | "button";
+    content?: string;
+}
+
+export interface TableCell {
+    type: "cell";
+    attributes: Record<string, any>;
+    content: TableCellContent[];
+}
+export interface TableRow {
+    columns: TableCell[];
+    attributes: Record<string, any>;
+    classes: string[];
+    key: string;
+}
+
+export interface VueTableSpec {
+    rows: TableRow[];
+    headers: string[];
+    attributes: Record<string, any>;
+    classes: string[];
+}

@@ -77,6 +77,9 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             min_tls_version: None,
             max_tls_version: None,
             collect_tls_info: false,
+            ignore_proxy_env: false,
+            proxy_url: None,
+            proxy_auth: None,
         },
         RequestConfig {
             url: format!("http://{}:{}", LOCALHOST_DNS, port),

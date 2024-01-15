@@ -801,6 +801,13 @@ class Downtimes(Table):
     )
     """Optional performance data of the last check"""
 
+    host_performance_data = Column(
+        'host_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     host_plugin_output = Column(
         'host_plugin_output',
         col_type='string',
@@ -1655,6 +1662,13 @@ class Downtimes(Table):
     )
     """Optional performance data of the last check"""
 
+    service_performance_data = Column(
+        'service_performance_data',
+        col_type='dictdouble',
+        description='Optional performance data as a dict',
+    )
+    """Optional performance data as a dict"""
+
     service_plugin_output = Column(
         'service_plugin_output',
         col_type='string',
@@ -1668,6 +1682,13 @@ class Downtimes(Table):
         description='Whether there is a PNP4Nagios graph present for this object (-1/0/1)',
     )
     """Whether there is a PNP4Nagios graph present for this object (-1/0/1)"""
+
+    service_prediction_files = Column(
+        'service_prediction_files',
+        col_type='list',
+        description='List currently available predictions',
+    )
+    """List currently available predictions"""
 
     service_previous_hard_state = Column(
         'service_previous_hard_state',

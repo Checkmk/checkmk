@@ -2,6 +2,10 @@
 import {ref} from "vue";
 import {IComponent, VueComponentSpec} from "cmk_vue/types";
 import DForm from "./DForm.vue";
+
+const emit = defineEmits<{
+    (e: "update-value", value: any): void;
+}>();
 interface VueListComponentSpec extends VueComponentSpec {
     config: {
         elements: VueComponentSpec[];

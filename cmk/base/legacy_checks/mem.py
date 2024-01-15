@@ -289,6 +289,9 @@ def check_mem_windows(
             free = section["%sFree" % prefix]
         except KeyError:
             continue
+        # Metrics for total mem and pagefile are expected in MB
+        yield 0, "", [(metric_name.replace("used", "total"), total / _MB)]
+
         used = float(total - free)
 
         parsed_levels = _get_levels_type_and_value(levels)
@@ -303,15 +306,9 @@ def check_mem_windows(
             create_percent_metric=title == "RAM",
         )
 
-        # Metrics for total mem and pagefile are expected in MB
-        if prefix == "Mem":
-            perfdata.append(("mem_total", total / _MB))
-        elif prefix == "Page":
-            perfdata.append(("pagefile_total", total / _MB))
-
         # Do averaging, if configured, just for matching the levels
         if average is not None:
-            used, infoadd = _do_averaging(
+            used_avg, infoadd = _do_averaging(
                 now,
                 average,
                 paramname,
@@ -320,35 +317,26 @@ def check_mem_windows(
             )
             infotext += f", {infoadd}"
 
-            if parsed_levels[0] != "predictive":
-                state, _infotext, perfadd = check_memory_element(
-                    title,
-                    used,
-                    total,
-                    parsed_levels,
-                    metric_name=paramname + "_avg",
-                )
-
-                perfdata.append(
-                    (
-                        (averaged_metric := perfadd[0])[0],
-                        # the averaged metrics are expected to be in MB
-                        *(v / _MB if v is not None else None for v in averaged_metric[1:]),
-                    )
-                )
+            state, _infotext, perfadd = check_memory_element(
+                title,
+                used_avg,
+                total,
+                parsed_levels if parsed_levels[0] != "predictive" else None,
+                metric_name=f"{metric_name}_avg",
+            )
+            perfdata += perfadd
 
         if parsed_levels[0] == "predictive":
             state, infoadd, perfadd = check_levels(
-                used / _MB,  # Current value stored in MB in RRDs
-                ("%s_avg" % paramname) if average else paramname,
+                used,
+                metric_name,
                 parsed_levels[1],
                 unit="GiB",  # Levels are specified in GiB...
-                scale=1024,  # ... in WATO ValueSpec
+                scale=1024**3,  # ... in WATO ValueSpec
                 infoname=title,
             )
-            if infoadd:
-                infotext += ", " + infoadd
-            perfdata += perfadd
+            infotext += ", " + infoadd
+            perfdata += perfadd[1:]
 
         yield state, infotext, perfdata
 

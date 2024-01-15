@@ -38,7 +38,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html, use_vue_rendering
+from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -62,7 +62,11 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri, makeuri_contextless
-from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, render_vue
+from cmk.gui.validation.visitors.vue_formspec_visitor import (
+    parse_and_validate_form_spec,
+    render_form_spec,
+)
+from cmk.gui.validation.visitors.vue_lib import form_spec_registry
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -118,6 +122,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
+
+from cmk.rulesets.v1.form_specs import FormSpec
 
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition
@@ -1905,17 +1911,41 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(self._get_rule_conditions_from_vars())
 
         # VALUE
-        if use_vue_rendering() and request.has_var(self._vue_field_id()):
-            value = parse_and_validate_vue(self._ruleset.valuespec(), self._vue_field_id())
-            # For testing, validate this datatype/value again within legacy valuespec
-            # This should not throw any errors
-            self._ruleset.valuespec().validate_datatype(value, "ve")
-            self._ruleset.valuespec().validate_value(value, "ve")
-        else:
-            value = self._ruleset.valuespec().from_html_vars("ve")
-            self._ruleset.valuespec().validate_value(value, "ve")
+        render_mode, registered_form_spec = self._get_render_mode()
+        match render_mode:
+            case ExperimentalRenderMode.FRONTEND | ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                assert registered_form_spec is not None
+                value = parse_and_validate_form_spec(
+                    registered_form_spec,
+                    self._vue_field_id(),
+                )
+                # For testing, validate this datatype/value again within legacy valuespec
+                # This should not throw any errors
+                self._ruleset.valuespec().validate_datatype(value, "ve")
+                self._ruleset.valuespec().validate_value(value, "ve")
+            case ExperimentalRenderMode.BACKEND:
+                value = self._ruleset.valuespec().from_html_vars("ve")
+                self._ruleset.valuespec().validate_value(value, "ve")
 
         self._rule.value = value
+
+    def _get_render_mode(
+        self,
+    ) -> tuple[ExperimentalRenderMode, FormSpec | None]:
+        # NOTE: This code is non-productive and only supports rules within the
+        # checkgroup_parameters group
+        configured_mode = get_render_mode()
+        if configured_mode == ExperimentalRenderMode.BACKEND:
+            return configured_mode, None
+
+        if (
+            form_spec := form_spec_registry.get(
+                self._ruleset.name.removeprefix("checkgroup_parameters:")
+            )
+        ) is not None:
+            assert form_spec.rule_spec.parameter_form is not None
+            return configured_mode, form_spec.rule_spec.parameter_form()
+        return ExperimentalRenderMode.BACKEND, None
 
     def _get_condition_type_from_vars(self) -> str | None:
         condition_type = self._vs_condition_type().from_html_vars("condition_type")
@@ -1988,13 +2018,31 @@ class ABCEditRuleMode(WatoMode):
         forms.section()
         html.prevent_password_auto_completion()
         try:
-            if use_vue_rendering():
-                forms.section(_("Current setting as VUE"))
-                render_vue(self._ruleset.valuespec(), self._vue_field_id(), self._rule.value)
-                forms.section(_("Legacy valuespec (input data is ignored"))
-
-            valuespec.validate_datatype(self._rule.value, "ve")
-            valuespec.render_input("ve", self._rule.value)
+            # Experimental rendering: Only render form_spec if they are in the form_spec_registry
+            render_mode, registered_form_spec = self._get_render_mode()
+            match render_mode:
+                case ExperimentalRenderMode.BACKEND:
+                    valuespec.validate_datatype(self._rule.value, "ve")
+                    valuespec.render_input("ve", self._rule.value)
+                case ExperimentalRenderMode.FRONTEND:
+                    forms.section("Current setting as VUE")
+                    assert registered_form_spec is not None
+                    render_form_spec(
+                        registered_form_spec,
+                        self._vue_field_id(),
+                        self._rule.value,
+                    )
+                case ExperimentalRenderMode.BACKEND_AND_FRONTEND:
+                    forms.section("Current setting as VUE")
+                    assert registered_form_spec is not None
+                    render_form_spec(
+                        registered_form_spec,
+                        self._vue_field_id(),
+                        self._rule.value,
+                    )
+                    forms.section("Backend rendered (read only)")
+                    valuespec.validate_datatype(self._rule.value, "ve")
+                    valuespec.render_input("ve", self._rule.value)
         except Exception as e:
             if active_config.debug:
                 raise

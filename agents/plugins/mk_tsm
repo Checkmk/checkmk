@@ -72,7 +72,7 @@ get_dsmserv_processes() {
 
 export_extracted_env() {
     while read -r name value; do
-        export "${name}"="${value}"
+        [ -n "$name" ] && export "${name}"="${value}"
     done <<<"$(printf "%s\n" "${1}" | tr ' ' '\n' | sed -n '/^DSMSERV_/s/=/ /p')"
 }
 

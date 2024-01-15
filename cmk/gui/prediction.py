@@ -6,7 +6,7 @@
 import enum
 import json
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass, field
 
 from livestatus import get_rrd_data, lqencode, MKLivestatusNotFoundError, SiteId
@@ -344,19 +344,20 @@ def _compute_vertical_range(curves: PredictionCurves) -> tuple[float, float]:
 
 
 def _create_graph(
-    name: str,
+    id_: Hashable,
     size: tuple[int, int],
     x_range: tuple[float, float],
     y_range: tuple[float, float],
     legend: Iterable[tuple[str, str]],
 ) -> None:
+    canvas_id = f"content_{hash(id_)}"
     html.open_table(class_="prediction")
     html.open_tr()
     html.open_td()
     html.canvas(
         "",
         class_="prediction",
-        id_=f"content_{name}",
+        id_=canvas_id,
         style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
         width=str(size[0]),
         height=str(size[1]),
@@ -372,7 +373,7 @@ def _create_graph(
     html.close_tr()
     html.close_table()
     html.javascript(
-        f'cmk.prediction.create_graph("content_{name}", {x_range[0]:.4f}, {x_range[1]:.4f}, {y_range[0]:.4f}, {y_range[1]:.4f});'
+        f'cmk.prediction.create_graph("{canvas_id}", {x_range[0]:.4f}, {x_range[1]:.4f}, {y_range[0]:.4f}, {y_range[1]:.4f});'
     )
 
 

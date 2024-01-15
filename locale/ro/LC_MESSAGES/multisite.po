@@ -4337,6 +4337,10 @@ msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
 #, fuzzy
+msgid "Advanced condition simulation"
+msgstr "Opțiuni disponibile"
+
+#, fuzzy
 msgid "Advanced options"
 msgstr "Opțiuni disponibile"
 
@@ -5971,6 +5975,10 @@ msgstr "Un pseudonim sau o descriere a acestui grup."
 msgid "An empty value is not allowed here."
 msgstr "Aici nu este permisă o valoare goală."
 
+#, fuzzy
+msgid "An error occurred during SaaS authentication: "
+msgstr "A apărut o eroare în timpul ultimei actualizări"
+
 msgid "An error occurred during the last update"
 msgstr "A apărut o eroare în timpul ultimei actualizări"
 
@@ -6835,6 +6843,10 @@ msgstr "Eșecuri de autentificare"
 #, fuzzy
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Mod de autentificare"
+
+#, fuzzy
+msgid "Authentication error"
+msgstr "Erori ale sistemului de autentificare"
 
 msgid "Authentication failed"
 msgstr "Autentificarea a eșuat"
@@ -10182,6 +10194,17 @@ msgstr ""
 "Proprietăți modificate ale regulii #%d din setul de reguli \"%s\" în dosarul "
 "\"%s\""
 
+#, fuzzy
+msgid "Changed service: "
+msgid_plural "Changed services: "
+msgstr[0] "Serviciu dispărut: "
+msgstr[1] ""
+msgstr[2] "Servicii dispărute: "
+
+#, fuzzy
+msgid "Changed services"
+msgstr "Gestionați serviciile"
+
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
 msgstr ""
@@ -10848,6 +10871,10 @@ msgstr ""
 
 msgid "Checkmk versions"
 msgstr "Versiuni Checkmk"
+
+#, fuzzy
+msgid "Checkmk virt1 Appliance"
+msgstr "Checkmk agent plugins"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -11721,6 +11748,9 @@ msgstr "Cod Dimensiune"
 msgid "Code Size in percent"
 msgstr "Dimensiunea codului în procente"
 
+msgid "Code verifier not found. Cache value is None."
+msgstr ""
+
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Codecul care trebuie utilizat pentru a decoda fișierele corespunzătoare"
@@ -11842,6 +11872,9 @@ msgstr "Coloane care să corespundă"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
+
+msgid "Combinations of suite application names and tags must be unique."
+msgstr ""
 
 msgid "Combined graph"
 msgstr "Graficul combinat"
@@ -13419,6 +13452,10 @@ msgstr ""
 "Nu s-a putut reîncărca Livestatus Proxy: %s. Consultați web.log și "
 "liveproxyd.log pentru informații suplimentare."
 
+#, fuzzy, python-format
+msgid "Could not retrieve identity token. (%s)"
+msgstr "Nu s-a putut determina tema actuală."
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Nu s-a putut salva modificările: %s"
@@ -14210,10 +14247,6 @@ msgid "Current replication mode"
 msgstr "Modul de replicare curent"
 
 msgid "Current setting"
-msgstr "Setare curentă"
-
-#, fuzzy
-msgid "Current setting as VUE"
 msgstr "Setare curentă"
 
 msgid "Current size"
@@ -17083,9 +17116,6 @@ msgstr "Etichete gazdă descoperite"
 msgid "Discovered host labels (%s)"
 msgstr "Etichete gazdă descoperite (%s)"
 
-msgid "Discovered labels"
-msgstr "Etichete descoperite"
-
 msgid "Discovered process name"
 msgstr "Numele procesului descoperit"
 
@@ -17249,7 +17279,7 @@ msgid "Disovered services of the host"
 msgstr "Serviciile descoperite ale gazdei"
 
 #, fuzzy
-msgid "Dispatch notifications"
+msgid "Dispatch notification"
 msgstr "Dezactivați notificările"
 
 msgid "Display"
@@ -18769,6 +18799,9 @@ msgid ""
 msgstr ""
 "Fiecare condiție predefinită este deținută de un grup de utilizatori care "
 "pot edita, șterge și utiliza condițiile predefinite existente."
+
+msgid "Each service monitors on Robot Framework tests.\n"
+msgstr ""
 
 msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
@@ -25614,6 +25647,9 @@ msgstr "Proprietăți gazdă"
 msgid "Host properties of: %s"
 msgstr "Proprietăți de gazdă ale: %s"
 
+msgid "Host properties, such as labels or contact groups, are inherited."
+msgstr ""
+
 msgid "Host registration"
 msgstr "Înregistrare gazdă"
 
@@ -27090,6 +27126,12 @@ msgstr ""
 "formularului, pentru a permite verificării să identifice elementul de "
 "formular corect."
 
+#, fuzzy
+msgid "If this error persists, please contact the Checkmk support team."
+msgstr ""
+"Dacă doriți să utilizați Checkmk fără restricții, vă rugăm să contactați "
+"serviciul de asistență Checkmk."
+
 msgid ""
 "If this is active, the check will automatically go into downtime whenever "
 "the aggregation does. This downtime is also cleaned up automatically when "
@@ -28115,6 +28157,11 @@ msgstr ""
 "implicite, nu toate plugin-urile agentului livrat vor continua să "
 "funcționeze!<br><br>Specificați extensiile în minuscule și fără punct "
 "înainte."
+
+msgid ""
+"If you want to test service notifications, please provide a service to test "
+"with."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -31165,12 +31212,6 @@ msgstr "Plugin-uri de inventar vechi"
 
 msgid "Legacy run"
 msgstr "Rularea moștenirii"
-
-msgid "Legacy valuespec (input data is ignored"
-msgstr ""
-
-msgid "Legacy valuespec (input data is ignored)"
-msgstr ""
 
 msgid "Legal"
 msgstr "Legal"
@@ -36987,6 +37028,9 @@ msgstr "Niciodată executat"
 msgid "Never install Python with the agent"
 msgstr "Nu instalați niciodată Python cu agentul"
 
+msgid "Never logged in"
+msgstr "Niciodată conectat"
+
 msgid "Never remove files newer than"
 msgstr "Nu eliminați niciodată fișiere mai noi decât"
 
@@ -37083,6 +37127,10 @@ msgstr "Cea mai nouă vârstă a fișierului de mai jos"
 
 msgid "Newest first"
 msgstr "Cel mai nou mai întâi"
+
+#, fuzzy
+msgid "Newly discovered"
+msgstr "Descoperirea NTP"
 
 msgid "Next Run"
 msgstr "Următoarea cursă"
@@ -42837,6 +42885,10 @@ msgstr ""
 msgid "Preview this report"
 msgstr "Previzualizați acest raport"
 
+#, fuzzy
+msgid "Previously discovered"
+msgstr "Descoperirea procesului"
+
 msgid "PrimSeq erros"
 msgstr "Erori PrimSeq"
 
@@ -44946,6 +44998,9 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
 
+msgid "Rendering mode for valuespecs and tables"
+msgstr ""
+
 #, fuzzy
 msgid "Repeat"
 msgstr "repetați:"
@@ -45766,6 +45821,10 @@ msgstr "Reîncercare"
 msgid "Retry Count"
 msgstr "Numărătoarea de reîncercări"
 
+#, fuzzy
+msgid "Retry authentication"
+msgstr "Test de autentificare"
+
 msgid "Retry check interval"
 msgstr "Intervalul de verificare a reîncercării"
 
@@ -45864,6 +45923,10 @@ msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
+
+#, fuzzy
+msgid "Robotmk Dashboard"
+msgstr "Tablou de bord cu probleme"
 
 #, fuzzy
 msgid "Robotmk Scheduler (Windows)"
@@ -47658,6 +47721,11 @@ msgstr "Trimiteți notificări către Consola de evenimente"
 msgid "Send notifications to remote Event Console"
 msgstr "Trimiteți notificări către consola de evenimente la distanță"
 
+#, fuzzy
+msgid ""
+"Send out notification according to notification rules (uncheck to avoid spam)"
+msgstr "Notificările vor fi trimise în conformitate cu regulile de notificare"
+
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -47752,6 +47820,10 @@ msgstr "Separator"
 
 msgid "September"
 msgstr "Septembrie"
+
+#, fuzzy
+msgid "Sequential suite groups"
+msgstr "Mai multe grupuri gazdă"
 
 msgid "Serial"
 msgstr "Serial"
@@ -52738,10 +52810,6 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
-msgid "Suite IDs are not unique"
-msgstr "ID-urile cererilor nu sunt egale"
-
-#, fuzzy
 msgid "Suite runtime"
 msgstr "Numele sitului"
 
@@ -53017,10 +53085,18 @@ msgstr "Sincronizare"
 msgid "Synology Updates"
 msgstr "Actualizări Synology"
 
+#, fuzzy
+msgid "Synthetic Monitoring"
+msgstr "Căutare în Monitorizare"
+
 #, python-format
 msgid ""
 "Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
 "subscription). You are currently monitoring %d %s on this site."
+msgstr ""
+
+#, python-format
+msgid "Synthetic monitoring (licensed tests: %s)"
 msgstr ""
 
 #, fuzzy
@@ -53646,6 +53722,10 @@ msgstr "Tern"
 msgid "Test"
 msgstr "Test"
 
+#, fuzzy
+msgid "Test a self defined notification against your ruleset."
+msgstr "Creați o copie a acestei reguli de notificare"
+
 msgid "Test authentication"
 msgstr "Test de autentificare"
 
@@ -53657,10 +53737,6 @@ msgstr "Eveniment de testare generat și trimis către Consola de evenimente."
 
 msgid "Test hostname before activation"
 msgstr "Testați numele de gazdă înainte de activare"
-
-#, fuzzy
-msgid "Test if a given notification matches your notification rules."
-msgstr "Creați o copie a acestei reguli de notificare"
 
 #, fuzzy
 msgid "Test notification"
@@ -53692,8 +53768,9 @@ msgstr "Grupuri de text din expresia regulată, separate prin spații"
 msgid "Text is not valid XML"
 msgstr "Textul nu este un XML valid"
 
-msgid "Text logfiles (Linux, Solaris, Windows)"
-msgstr "Fișiere de jurnal text (Linux, Solaris, Windows)"
+#, fuzzy
+msgid "Text logfiles (Windows, Linux, Solaris, AIX)"
+msgstr "Windows, Linux, Solaris, AIX"
 
 msgid "Text of forwarded events"
 msgstr "Textul evenimentelor transmise"
@@ -54700,11 +54777,11 @@ msgstr ""
 "intervalul de verificare al serviciului Checkmk al acestei gazde, dacă ați "
 "modificat intervalul de verificare."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The agent will update itself only with packages that are signed by one of "
 "these keys. You need to specify at least one key. Keys are being create <a "
-"href='%s'>here</a>."
+"href='%s' target='_blank'>here</a>."
 msgstr ""
 "Agentul se va actualiza numai cu pachete care sunt semnate de una dintre "
 "aceste chei. Trebuie să specificați cel puțin o cheie. Cheile se creează <a "
@@ -58588,9 +58665,18 @@ msgstr ""
 "cu adevărat relevante pentru monitorizare, atunci ar trebui să le eliminați "
 "pentru a evita serviciile necunoscute în monitorizare."
 
+#, fuzzy
 msgid ""
-"These services had been found by a discovery and are currently configured to "
-"be monitored."
+"These services have been discovered and a change from the currently "
+"monitored state has been detected."
+msgstr ""
+"Aceste servicii au fost găsite printr-o descoperire și sunt în prezent "
+"configurate pentru a fi monitorizate."
+
+#, fuzzy
+msgid ""
+"These services have been found by the discovery and are currently being "
+"monitored. No changes have been made to these services."
 msgstr ""
 "Aceste servicii au fost găsite printr-o descoperire și sunt în prezent "
 "configurate pentru a fi monitorizate."
@@ -66507,6 +66593,10 @@ msgstr "Necunoscut Servicii ale site-ului"
 msgid "UNKNOWN Services of host"
 msgstr "Necunoscut Servicii ale gazdei"
 
+#, python-brace-format
+msgid "UNKNOWN custom_form_spec {custom_form_spec}"
+msgstr ""
+
 msgid "UNKNOWN services"
 msgstr "Servicii NECUNOSCUTE"
 
@@ -67035,10 +67125,6 @@ msgstr ""
 "ID unic de client utilizat pentru broker. Va fi generat în mod aleatoriu "
 "atunci când nu este setat."
 
-#, fuzzy
-msgid "Unique suite ID"
-msgstr "licente nefolosite"
-
 msgid "Unit"
 msgstr "Unitatea"
 
@@ -67100,6 +67186,10 @@ msgstr "Tip metric necunoscut %s"
 
 msgid "Unknown paths"
 msgstr "Trasee necunoscute"
+
+#, fuzzy, python-format
+msgid "Unknown rendering mode %s"
+msgstr "Tip metric necunoscut %s"
 
 #, python-format
 msgid "Unknown site %s"
@@ -68938,9 +69028,6 @@ msgstr "Utilizați numele volumului și punctul de montare"
 
 msgid "Use volume name as mountpoint"
 msgstr "Utilizați numele volumului ca punct de montare"
-
-msgid "Use vue rendering"
-msgstr "Utilizați randarea vue"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -73784,10 +73871,10 @@ msgstr ""
 "la distanță, nu uitați să adăugați și site-ul de monitorizare local, dacă "
 "doriți să afișați datele acestuia."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"necessary."
+"You have not created any agent <a href='%s' target='_blank'>signature keys</"
+"a> yet. This is necessary."
 msgstr ""
 "Nu ați creat încă nicio cheie de semnătură a agentului <a href='%s'></a>. "
 "Acest lucru este necesar."
@@ -76558,6 +76645,29 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 msgid "Ω"
 msgstr ""
 
+#, fuzzy
+#~| msgid "Current setting"
+#~ msgid "Current setting as VUE"
+#~ msgstr "Setare curentă"
+
+#~ msgid "Use vue rendering"
+#~ msgstr "Utilizați randarea vue"
+
+#~ msgid "Discovered labels"
+#~ msgstr "Etichete descoperite"
+
+#, fuzzy
+#~| msgid "Request IDs are not equal"
+#~ msgid "Suite IDs are not unique"
+#~ msgstr "ID-urile cererilor nu sunt egale"
+
+#~ msgid "Text logfiles (Linux, Solaris, Windows)"
+#~ msgstr "Fișiere de jurnal text (Linux, Solaris, Windows)"
+
+#, fuzzy
+#~ msgid "Unique suite ID"
+#~ msgstr "licente nefolosite"
+
 #, python-format
 #~ msgid ""
 #~ "The following backup codes have been generated: <ul>%s</ul> These codes "
@@ -76816,9 +76926,6 @@ msgstr ""
 
 #~ msgid "Add label condition"
 #~ msgstr "Adăugați o condiție de etichetare"
-
-#~ msgid "Never logged in"
-#~ msgstr "Niciodată conectat"
 
 #~ msgid ""
 #~ "Overall state of all hosts known by Ntop, with counts of services in the "

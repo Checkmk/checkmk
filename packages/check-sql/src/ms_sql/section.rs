@@ -5,9 +5,11 @@
 use crate::config::{self, section, section::names};
 use crate::emit::header;
 use crate::ms_sql::sqls;
-use crate::utils;
+use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::path::PathBuf;
 
 use tiberius::Row;
 
@@ -101,22 +103,35 @@ impl Section {
         }
     }
 
-    pub fn select_query(&self) -> Option<&str> {
+    pub fn select_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
         match self.name.as_ref() {
             section::names::JOBS
             | section::names::MIRRORING
-            | section::names::AVAILABILITY_GROUPS => self.find_query(),
+            | section::names::AVAILABILITY_GROUPS => self.find_query(sql_dir),
             _ => None,
         }
     }
 
-    fn find_query(&self) -> Option<&'static str> {
-        self.find_custom_query()
-            .or_else(|| get_sql_id(&self.name).and_then(Self::find_known_query))
+    fn find_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
+        self.find_provided_query(sql_dir).or_else(|| {
+            get_sql_id(&self.name)
+                .and_then(Self::find_known_query)
+                .map(|s| s.to_owned())
+        })
     }
 
-    fn find_custom_query(&self) -> Option<&'static str> {
-        None
+    fn find_provided_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
+        if let Some(dir) = sql_dir {
+            let f = dir.join(self.name.to_lowercase().to_owned() + constants::SQL_QUERY_EXTENSION);
+            read_to_string(&f)
+                .map_err(|e| {
+                    log::error!("Can't read file {:?} {}", &f, &e);
+                    e
+                })
+                .ok()
+        } else {
+            None
+        }
     }
 
     fn find_known_query(id: sqls::Id) -> Option<&'static str> {
@@ -182,6 +197,7 @@ mod tests {
     use super::*;
     use crate::config::ms_sql::Config;
     use crate::config::section;
+    use crate::ms_sql::custom;
 
     #[test]
     fn test_section_header() {
@@ -229,7 +245,12 @@ mod tests {
             ),
         ];
         for (name, ids) in test_set {
-            assert_eq!(mk_section(name).select_query(), *ids);
+            assert_eq!(
+                mk_section(name)
+                    .select_query(custom::get_sql_dir())
+                    .as_deref(),
+                *ids
+            );
         }
     }
 

@@ -13,6 +13,8 @@ pub mod log {
     pub const FILE_MAX_COUNT: usize = 5;
 }
 
+pub const SQL_QUERY_EXTENSION: &str = ".sql";
+
 pub mod environment {
     pub const CONFIG_NAME: &str = "check-sql.yml";
     pub const CONFIG_DIR_ENV_VAR: &str = "MK_CONFDIR";
@@ -24,12 +26,17 @@ lazy_static! {
     pub static ref DEFAULT_CONFIG_FILE: PathBuf =
         Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, "."))
             .join(environment::CONFIG_NAME);
+    pub static ref CONFIG_DIR: PathBuf = Path::new(&get_conf_dir()).to_owned();
     pub static ref ENV_LOG_DIR: Option<PathBuf> = std::env::var(environment::LOG_DIR_ENV_VAR)
         .ok()
         .map(PathBuf::from);
     pub static ref ENV_TEMP_DIR: Option<PathBuf> = std::env::var(environment::TEMP_DIR_ENV_VAR)
         .ok()
         .map(PathBuf::from);
+}
+
+fn get_conf_dir() -> PathBuf {
+    Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).to_owned()
 }
 
 fn get_env_value(var: &str, on_lack: &str) -> String {

@@ -41,6 +41,7 @@ PACKAGES := \
     stunnel \
     nagios \
     monitoring-plugins \
+    check-cert \
     nagvis \
     nrpe \
     omd \

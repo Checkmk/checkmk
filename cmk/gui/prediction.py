@@ -6,7 +6,7 @@
 import enum
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
 from livestatus import get_rrd_data, lqencode, MKLivestatusNotFoundError, SiteId
@@ -343,30 +343,36 @@ def _compute_vertical_range(curves: PredictionCurves) -> tuple[float, float]:
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 
 
-def _create_graph(name, size, bounds, v_range, legend):
+def _create_graph(
+    name: str,
+    size: tuple[int, int],
+    x_range: tuple[float, float],
+    y_range: tuple[float, float],
+    legend: Iterable[tuple[str, str]],
+) -> None:
     html.open_table(class_="prediction")
     html.open_tr()
     html.open_td()
     html.canvas(
         "",
         class_="prediction",
-        id_="content_%s" % name,
-        style="width: %dpx; height: %dpx;" % (int(size[0] / 2.0), int(size[1] / 2.0)),
-        width=size[0],
-        height=size[1],
+        id_=f"content_{name}",
+        style=f"width: {size[0]//2}px; height: {size[1]//2}px;",
+        width=str(size[0]),
+        height=str(size[1]),
     )
     html.close_td()
     html.close_tr()
     html.open_tr()
     html.open_td(class_="legend")
     for color, title in legend:
-        html.div("", class_="color", style="background-color: %s" % color)
+        html.div("", class_="color", style=f"background-color: {color}")
         html.div(title, class_="entry")
     html.close_td()
     html.close_tr()
     html.close_table()
     html.javascript(
-        f'cmk.prediction.create_graph("content_{name}", {bounds[0]:.4f}, {bounds[1]:.4f}, {v_range[0]:.4f}, {v_range[1]:.4f});'
+        f'cmk.prediction.create_graph("content_{name}", {x_range[0]:.4f}, {x_range[1]:.4f}, {y_range[0]:.4f}, {y_range[1]:.4f});'
     )
 
 

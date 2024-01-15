@@ -110,7 +110,7 @@ def page_graph() -> None:
         (
             prediction_info
             for prediction_info in available_predictions_sorted_by_start_time
-            if prediction_info.name == request_.var("timegroup")
+            if _make_prediciton_id(prediction_info) == request_.var("prediction_selection")
         ),
         available_predictions_sorted_by_start_time[0],
     )
@@ -121,12 +121,12 @@ def page_graph() -> None:
     with html.form_context("prediction"):
         html.write_text(_("Show prediction for "))
         html.dropdown(
-            "timegroup",
+            "prediction_selection",
             (
-                (prediction_info.name, prediction_info.name.title())
+                (_make_prediciton_id(prediction_info), _make_prediction_title(prediction_info))
                 for prediction_info in available_predictions_sorted_by_start_time
             ),
-            deflt=selected_prediction_info.name,
+            deflt=_make_prediciton_id(selected_prediction_info),
             onchange="document.prediction.submit();",
         )
         html.hidden_fields()
@@ -153,6 +153,23 @@ def page_graph() -> None:
     )
 
     html.footer()
+
+
+def _make_prediciton_id(meta: PredictionInfo) -> str:
+    return str(hash(meta))
+
+
+def _make_prediction_title(meta: PredictionInfo) -> str:
+    date_str = time.strftime("%Y-%m-%d", time.localtime(meta.valid_interval[0]))
+    match meta.params.period:
+        case "wday":
+            return "%s (%s)" % (date_str, _("day of the week"))
+        case "day":
+            return "%s (%s)" % (date_str, _("day of the month"))
+        case "hour":
+            return "%s (%s)" % (date_str, _("hour of the day"))
+        case "minute":
+            return "%s (%s)" % (date_str, _("minute of the hour"))
 
 
 def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:

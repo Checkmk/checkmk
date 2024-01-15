@@ -33,6 +33,25 @@ fn expected_instances() -> Vec<String> {
         .collect()
 }
 
+#[test]
+fn test_section_select_query() {
+    let work_dir = tools::create_temp_process_dir();
+    let custom_sql_path = work_dir.path().join("mssql");
+    std::fs::create_dir_all(&custom_sql_path).unwrap();
+    for name in [names::JOBS, names::AVAILABILITY_GROUPS, names::MIRRORING] {
+        tools::create_file_with_content(&custom_sql_path, &(name.to_owned() + ".sql"), "Bu!");
+    }
+    let mk_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), 100);
+    for name in [names::JOBS, names::AVAILABILITY_GROUPS, names::MIRRORING] {
+        assert_eq!(
+            mk_section(name)
+                .select_query(Some(custom_sql_path.to_owned()))
+                .unwrap(),
+            "Bu!"
+        );
+    }
+}
+
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {

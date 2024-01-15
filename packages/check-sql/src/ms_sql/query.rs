@@ -99,13 +99,14 @@ pub async fn run_known_query<T: Borrow<sqls::Id>>(
 
 /// Runs any query
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
-pub async fn run_custom_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
+pub async fn run_custom_query<T: AsRef<str>>(client: &mut Client, query: T) -> Result<Vec<Answer>> {
+    let query = query.as_ref();
     if query.is_empty() {
         anyhow::bail!("Empty custom query");
     }
     let start = Instant::now();
     let result = exec_sql(client, query).await;
-    log_query(start, &result, &make_short_query(query));
+    log_query(start, &result, make_short_query(query));
     result
 }
 
@@ -133,8 +134,10 @@ async fn exec_sql(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
     Ok(rows)
 }
 
-fn make_short_query(query: &str) -> String {
-    query.to_owned()[0..std::cmp::max(16, query.len() - 1)].to_string()
+fn make_short_query(query: &str) -> &str {
+    query
+        .get(0..std::cmp::max(16, query.len() - 1))
+        .unwrap_or_default()
 }
 
 pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<String>> {

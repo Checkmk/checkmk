@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::client::{self, Client};
+use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
 use crate::config::{
     self,
@@ -803,7 +804,9 @@ impl SqlInstance {
     ) -> String {
         match self.create_client(endpoint, section.main_db()).await {
             Ok(mut c) => {
-                let q = query.unwrap_or_else(|| section.select_query().unwrap_or_default());
+                let q = query
+                    .map(|q| q.to_owned())
+                    .unwrap_or_else(|| section.select_query(get_sql_dir()).unwrap_or_default());
                 run_custom_query(&mut c, q)
                     .await
                     .and_then(|r| section.validate_rows(r))

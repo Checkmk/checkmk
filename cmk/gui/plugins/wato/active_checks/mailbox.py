@@ -133,17 +133,12 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                 Alternative(
                     title=f"{protocol} server",
                     elements=[
-                        FixedValue(
-                            value="$HOSTADDRESS$",
-                            title=_(
-                                "Use the address of the host for which the service is generated"
+                        TextInput(
+                            title=("Unvalidated string (for use with makros)"),
+                            help=_(
+                                "Use a makro as (part of) server name. "
+                                "Macros must be in capital letters and start and end with '$'."
                             ),
-                            totext="",
-                        ),
-                        FixedValue(
-                            value="$HOSTNAME$",
-                            title=_("Use the name of the host for which the service is generated"),
-                            totext="",
                         ),
                         HostAddress(
                             title=f"{protocol} server",

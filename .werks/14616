@@ -1,0 +1,10 @@
+Title: ucd_disk: fs_size, fs_used and fs_free have wrongly scaled values in performance graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705324957
+Edition: cre
+Level: 1
+Version: 2.2.0p19
+
+For <code>ucd_disk</code> a performance value translation had been missing, fixed by this change.

@@ -9,7 +9,6 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -26,16 +25,40 @@ def _item_spec() -> TextInput:
     return TextInput(title=_("Test"))
 
 
+def _runtime_vs(title: str) -> Alternative:
+    return Alternative(
+        title=title,
+        elements=[
+            FixedValue(
+                value=None,
+                title=_("No Levels"),
+                totext=_("Do not impose levels, always be OK"),
+            ),
+            Tuple(
+                title=_("Fixed Levels"),
+                elements=(
+                    Age(
+                        title=_("Warning at"),
+                        default_value=0,
+                        display=["minutes", "seconds"],
+                    ),
+                    Age(
+                        title=_("Critical at"),
+                        default_value=0,
+                        display=["minutes", "seconds"],
+                    ),
+                ),
+            ),
+        ],
+    )
+
+
 def _parameter_valuespec() -> Dictionary:
     return Dictionary(
         elements=[
             (
                 "test_runtime",
-                SimpleLevels(
-                    Age,
-                    title=_("Maximum runtime of a test run"),
-                    default_levels=(0, 0),
-                ),
+                _runtime_vs(_("Maximum runtime of a test run")),
             ),
             (
                 "runtime_thresholds_keywords",
@@ -50,31 +73,7 @@ def _parameter_valuespec() -> Dictionary:
                                 allow_empty=False,
                                 mode="complete",
                             ),
-                            Alternative(
-                                title=_("Maximum runtime of a keyword run"),
-                                elements=[
-                                    FixedValue(
-                                        value=None,
-                                        title=_("No Levels"),
-                                        totext=_("Do not impose levels, always be OK"),
-                                    ),
-                                    Tuple(
-                                        title=_("Fixed Levels"),
-                                        elements=(
-                                            Age(
-                                                title=_("Warning at"),
-                                                default_value=0,
-                                                display=["minutes", "seconds"],
-                                            ),
-                                            Age(
-                                                title=_("Critical at"),
-                                                default_value=0,
-                                                display=["minutes", "seconds"],
-                                            ),
-                                        ),
-                                    ),
-                                ],
-                            ),
+                            _runtime_vs(_("Maximum runtime of a keyword run")),
                         ],
                     ),
                     add_label=_("Add new threshold"),

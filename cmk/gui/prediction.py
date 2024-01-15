@@ -163,11 +163,8 @@ def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tu
         (Color.CRIT_AREA, _("Critical area")),
         (
             Color.OBSERVED,
-            (
-                _("Observed value")
-                if current_measurement is None
-                else _("Observed value: %.2f") % current_measurement[1]
-            ),
+            _("Observed value: %s")
+            % ("N/A" if current_measurement is None else "%.2f" % current_measurement[1]),
         ),
     ]
 

@@ -516,6 +516,112 @@ class Age(ValueSpec[int]):
         return self._bounds.transform_value(value)
 
 
+class TimeSpan(ValueSpec[float]):
+    """Time in float seconds"""
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        label: str | None = None,
+        footer: str | None = None,
+        minvalue: float | None = None,
+        maxvalue: float | None = None,
+        display: Container[Literal["days", "hours", "minutes", "seconds", "milliseconds"]]
+        | None = None,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[float] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[float] | None = None,
+        cssclass: str | None = None,
+    ):
+        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        self._label = label
+        self._footer = footer
+        self._bounds = Bounds[float](minvalue, maxvalue)
+        self._display = (
+            display
+            if display is not None
+            else ["days", "hours", "minutes", "seconds", "milliseconds"]
+        )
+        self._cssclass = [] if cssclass is None else [cssclass]
+
+    def canonical_value(self) -> float:
+        return self._bounds.lower(0)
+
+    def render_input(self, varprefix: str, value: float) -> None:
+        days, rest = divmod(value, 60 * 60 * 24)
+        hours, rest = divmod(rest, 60 * 60)
+        minutes, seconds = divmod(rest, 60)
+        seconds_whole, seconds_frac = divmod(seconds, 1)
+
+        html.open_div(class_=["vs_age"] + self._cssclass)
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
+
+        takeover = 0.0
+        for uid, title, val, tkovr_fac in [
+            ("days", _("days"), int(days), 24),
+            ("hours", _("hours"), int(hours), 60),
+            ("minutes", _("mins"), int(minutes), 60),
+            ("seconds", _("s"), int(seconds_whole), 1),
+            ("milliseconds", _("ms"), seconds_frac * 1000, 0.001),
+        ]:
+            if uid in self._display:
+                val += takeover
+                takeover = 0
+                html.text_input(
+                    varprefix + "_" + uid, default_value=str(round(val)), size=4, cssclass="number"
+                )
+                html.write_text(" %s " % title)
+            else:
+                takeover = (takeover + val) * tkovr_fac
+
+        if self._footer:
+            html.span(self._footer, class_=["vs_floating_text", "vs_age_footer"])
+
+        html.close_div()
+
+    def from_html_vars(self, varprefix: str) -> float:
+        # TODO: Validate for correct numbers!
+        return (
+            request.get_integer_input_mandatory(varprefix + "_days", 0) * 3600 * 24
+            + request.get_integer_input_mandatory(varprefix + "_hours", 0) * 3600
+            + request.get_integer_input_mandatory(varprefix + "_minutes", 0) * 60
+            + request.get_integer_input_mandatory(varprefix + "_seconds", 0)
+            + request.get_integer_input_mandatory(varprefix + "_milliseconds", 0) / 1000.0
+        )
+
+    def mask(self, value: float) -> float:
+        return value
+
+    def value_to_html(self, value: float) -> ValueSpecText:
+        if value == 0:
+            return _("no time (zero)")
+        _whole_seconds, frac = divmod(value, 1.0)
+        return SecondsRenderer.detailed_str(int(value)) + (
+            f" {round(frac * 1000)} ms" if frac else ""
+        )
+
+    def value_to_json(self, value: float) -> JSONValue:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> float:
+        return json_value
+
+    def validate_datatype(self, value: float, varprefix: str) -> None:
+        if not isinstance(value, float):
+            raise MKUserError(
+                varprefix,
+                _("The value %r has type %s, but must be of type float")
+                % (value, _type_name(value)),
+            )
+
+    def _validate_value(self, value: float, varprefix: str) -> None:
+        self._bounds.validate_value(value, varprefix)
+
+    def transform_value(self, value: float) -> float:
+        return self._bounds.transform_value(value)
+
+
 class NumericRenderer:
     def __init__(
         self,

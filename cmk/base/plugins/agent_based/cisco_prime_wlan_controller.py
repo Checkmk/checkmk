@@ -246,5 +246,7 @@ register.check_plugin(
     discovery_function=discovery_wlan_controller,
     check_function=check_wlan_controller_last_backup,
     check_ruleset_name="cisco_prime_wlan_controller_last_backup",
-    check_default_parameters={"last_backup": (7 * DAY_IN_SECONDS, 30 * DAY_IN_SECONDS)},
+    check_default_parameters={
+        "last_backup": (7.0 * DAY_IN_SECONDS, 30.0 * DAY_IN_SECONDS),
+    },
 )

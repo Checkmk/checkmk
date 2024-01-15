@@ -516,7 +516,7 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_fixed_value(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.TimeSpan():
-            return _convert_to_legacy_age(to_convert, localizer)
+            return _convert_to_legacy_time_span(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Levels():
             return _convert_to_legacy_levels(to_convert, localizer)
@@ -889,9 +889,9 @@ def _convert_to_legacy_fixed_value(
     )
 
 
-def _convert_to_legacy_age(
+def _convert_to_legacy_time_span(
     to_convert: ruleset_api_v1.form_specs.TimeSpan, localizer: Callable[[str], str]
-) -> legacy_valuespecs.Age:
+) -> legacy_valuespecs.TimeSpan:
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -909,7 +909,7 @@ def _convert_to_legacy_age(
             to_convert.custom_validate, localizer
         )
 
-    return legacy_valuespecs.Age(**converted_kwargs)
+    return legacy_valuespecs.TimeSpan(**converted_kwargs)
 
 
 def _get_fixed_level_titles(

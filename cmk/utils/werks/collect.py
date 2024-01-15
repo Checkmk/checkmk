@@ -156,7 +156,7 @@ def _get_branches(
         if not re.match(c.branch_regex, branch_name):
             logger.info("ignoring branch %s (does not match regex)", branch_name)
             continue
-        yield branch_name, r.commit(branch_name)
+        yield branch_name, ref
 
 
 def main(

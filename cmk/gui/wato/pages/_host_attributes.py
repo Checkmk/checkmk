@@ -9,15 +9,18 @@ from typing import cast, Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import forms
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML as HTML
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
@@ -84,6 +87,25 @@ def configure_attributes(  # pylint: disable=too-many-branches
             show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
             show_more_mode=show_more_mode,
         )
+
+        if topic_id == "management_board":
+            message = _(
+                "<b>This feature will be deprecated in a future version of Checkmk.</b>"
+                "<br>Please do not configure management boards in here anymore."
+                "Monitor the management boards via a dedicated host using <a href='%s'>IPMI</a>"
+                " or SNMP.<br><a href='%s' target='_blank'>Read more about management boards.</a>"
+            ) % (
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_ruleset"),
+                        ("varname", RuleGroup.SpecialAgents("ipmi_sensors")),
+                    ],
+                    filename="wato.py",
+                ),
+                "https://checkmk.com/blog/monitoring-management-boards",
+            )
+            forms.warning_message(message)
 
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:

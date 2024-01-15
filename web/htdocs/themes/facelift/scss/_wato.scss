@@ -197,6 +197,24 @@ div#service_container {
   }
 }
 
+div.warning_container {
+  margin: $spacing 0;
+  display: inline-flex;
+  border-radius: $theme-border-radius $spacing $spacing $theme-border-radius;
+  align-items: center;
+  background: $color-state-1-background;
+  div.content {
+    margin: 0;
+    background-color: $headline-color;
+    border-radius: 0 $theme-border-radius $theme-border-radius 0;
+  }
+  &::before {
+    display: inline-block;
+    padding: 5px;
+    content: url("images/icon_problem.svg");
+  }
+}
+
 div#datasources_container {
   @include message-container-mixin;
 

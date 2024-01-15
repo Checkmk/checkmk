@@ -15,13 +15,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import (
-    estimate_levels,
-    PredictionData,
-    PredictionInfo,
-    PredictionParameters,
-    PredictionQuerier,
-)
+from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
@@ -33,6 +27,8 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
+
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 
 _GRAPH_SIZE = 2000, 700
 
@@ -115,7 +111,7 @@ def page_graph() -> None:
         available_predictions_sorted_by_start_time[0],
     )
     selected_prediction_data = prediction_data_querier.query_prediction_data(
-        selected_prediction_info.name
+        selected_prediction_info
     )
 
     with html.form_context("prediction"):
@@ -135,7 +131,7 @@ def page_graph() -> None:
     vertical_range = _compute_vertical_range(curves)
 
     _create_graph(
-        selected_prediction_info.name,
+        selected_prediction_info,
         _GRAPH_SIZE,
         selected_prediction_info.valid_interval,
         vertical_range,

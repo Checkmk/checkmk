@@ -13,24 +13,20 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import PREDICTION_PERIODS, Slice
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
+
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
     LevelsSpec,
     MetricRecord,
     PredictionData,
-    PredictionInfo,
-    PredictionParameters,
     PredictionStore,
 )
 
 EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
 
 logger = logging.getLogger("cmk.prediction")
-
-
-_ONE_DAY = 24 * 3600
 
 
 def _get_prediction(
@@ -45,14 +41,20 @@ def _get_prediction(
     * no prediction for these parameters (time group) has been made yet
     * no prediction data file is found
     """
-    if (available_prediciton := store.get_info(required_prediction.name)) is None:
+    if (
+        available_prediciton := store.get_info(
+            required_prediction.params.period, required_prediction.valid_interval[0]
+        )
+    ) is None:
         return None
 
     if available_prediciton != required_prediction:
         logger.log(VERBOSE, "Prediction outdated or parameters have changed.")
         return None
 
-    return store.get_data(available_prediciton.name)
+    return store.get_data(
+        available_prediciton.params.period, available_prediciton.valid_interval[0]
+    )
 
 
 class PredictionUpdater:
@@ -81,17 +83,6 @@ class PredictionUpdater:
         dsname: str,
         now: int,
     ) -> PredictionData | None:
-        period_info = PREDICTION_PERIODS[self.params.period]
-
-        current_slice = Slice.from_timestamp(now, period_info)
-        start_of_day = _start_of_day(now)
-        info = PredictionInfo(
-            name=current_slice.group,
-            valid_interval=(start_of_day, start_of_day + _ONE_DAY),
-            dsname=dsname,
-            params=self.params,
-        )
-
         prediction_store = PredictionStore(
             PREDICTION_DIR,
             self.host_name,
@@ -99,14 +90,16 @@ class PredictionUpdater:
             dsname,
         )
 
-        if (
-            data_for_pred := _get_prediction(
-                prediction_store,
-                info,
+        info = PredictionInfo.make(dsname, self.params, now)
+
+        if (data_for_pred := _get_prediction(prediction_store, info)) is None:
+            logger.log(
+                VERBOSE,
+                "Calculating prediction data for %s/%s",
+                info.params.period,
+                info.valid_interval[0],
             )
-        ) is None:
-            logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
-            prediction_store.remove_prediction(info.name)
+            prediction_store.remove_prediction(info.params.period, info.valid_interval[0])
 
             if (
                 data_for_pred := compute_prediction(
@@ -140,12 +133,6 @@ class PredictionUpdater:
             levels_upper=self.params.levels_upper,
             levels_upper_lower_bound=self.params.levels_upper_min,
         )
-
-
-def _start_of_day(timestamp: int) -> int:
-    t = time.localtime(timestamp)
-    sec_of_day = t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
-    return timestamp - sec_of_day
 
 
 def estimate_levels(

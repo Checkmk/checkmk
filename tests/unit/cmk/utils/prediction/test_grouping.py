@@ -9,7 +9,9 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import _grouping, PredictionParameters
+from cmk.utils.prediction import _grouping
+
+from cmk.agent_based.prediction_backend import PredictionParameters
 
 
 @pytest.mark.parametrize(
@@ -170,11 +172,11 @@ def test_time_slices(
     windows_expected: list[tuple[int, int]],
 ) -> None:
     period_info = _grouping.PREDICTION_PERIODS[params.period]
+
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
-        timegroup = period_info.groupby(now)[0]
 
-        time_windows = _grouping.time_slices(now, params.horizon * 86400, params.period, timegroup)
+        time_windows = _grouping.time_slices(now, params.horizon * 86400, params.period)
 
     assert time_windows == windows_expected

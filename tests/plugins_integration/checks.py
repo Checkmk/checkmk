@@ -36,7 +36,8 @@ class SkippedDumps:
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore
+    # TODO: checks output containing dynamic data to regex
+    SKIPPED_CHECKS = ["agent-2.2.0p12-redis-6.10.16:Redis 127.0.0.1:6379 Server Info"]
 
 
 class CheckModes(IntEnum):

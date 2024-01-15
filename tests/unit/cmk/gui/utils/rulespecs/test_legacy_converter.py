@@ -29,6 +29,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.wato import pages as legacy_page_groups
@@ -194,7 +195,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.DataSize(),
-            legacy_valuespecs.Filesize(),
+            LegacyDataSize(),
             id="minimal DataSize",
         ),
         pytest.param(
@@ -202,13 +203,21 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
+                displayed_units=api_v1.form_specs.SI_BINARY_UNIT,
                 prefill_value=-1,
                 custom_validate=lambda x: None,
             ),
-            legacy_valuespecs.Filesize(
+            LegacyDataSize(
                 title=_("title"),
                 help=_("help"),
                 label=_("label"),
+                units=[
+                    LegacyBinaryUnit.Byte,
+                    LegacyBinaryUnit.KB,
+                    LegacyBinaryUnit.MB,
+                    LegacyBinaryUnit.GB,
+                    LegacyBinaryUnit.TB,
+                ],
                 default_value=-1,
                 validate=lambda x, y: None,
             ),
@@ -461,10 +470,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("age label"),
                 help_text=api_v1.Localizable("help text"),
                 displayed_units=[
-                    api_v1.form_specs.DisplayUnits.DAYS,
-                    api_v1.form_specs.DisplayUnits.HOURS,
-                    api_v1.form_specs.DisplayUnits.MINUTES,
-                    api_v1.form_specs.DisplayUnits.SECONDS,
+                    api_v1.form_specs.TimeUnit.DAYS,
+                    api_v1.form_specs.TimeUnit.HOURS,
+                    api_v1.form_specs.TimeUnit.MINUTES,
+                    api_v1.form_specs.TimeUnit.SECONDS,
                 ],
                 prefill_value=100,
             ),

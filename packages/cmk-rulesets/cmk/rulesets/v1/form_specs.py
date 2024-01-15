@@ -110,6 +110,43 @@ class Float:
     custom_validate: Callable[[float], object] | None = None
 
 
+class BinaryUnit(enum.Enum):
+    BYTE = "Byte"
+    KILOBYTE = "KB"
+    MEGABYTE = "MB"
+    GIGABYTE = "GB"
+    TERABYTE = "TB"
+    PETABYTE = "PB"
+    EXABYTE = "EB"
+    ZETTABYTE = "ZB"
+    YOTTABYTES = "YB"
+    KIBIBYTE = "KiB"
+    MEBIBYTE = "MiB"
+    GIBIBYTE = "GiB"
+    TEBIBYTE = "TiB"
+    PEBIBYTE = "PiB"
+    EXBIBYTE = "EiB"
+    ZEBIBYTE = "ZiB"
+    YOBIBYTE = "YiB"
+
+
+SI_BINARY_UNIT = (
+    BinaryUnit.BYTE,
+    BinaryUnit.KILOBYTE,
+    BinaryUnit.MEGABYTE,
+    BinaryUnit.GIGABYTE,
+    BinaryUnit.TERABYTE,
+)
+
+IEC_BINARY_UNIT = (
+    BinaryUnit.BYTE,
+    BinaryUnit.KIBIBYTE,
+    BinaryUnit.MEBIBYTE,
+    BinaryUnit.GIBIBYTE,
+    BinaryUnit.TEBIBYTE,
+)
+
+
 @dataclass(frozen=True)
 class DataSize:
     """Specifies an input field for data storage capacity
@@ -118,6 +155,7 @@ class DataSize:
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
+        displayed_units: Units that can be selected in the UI
         prefill_value: Value in bytes to pre-populate the form field with. If None, the backend will
                        decide whether to leave the field empty or to prefill it with a canonical
                        value.
@@ -131,6 +169,7 @@ class DataSize:
     title: Localizable | None = None
     help_text: Localizable | None = None
     label: Localizable | None = None
+    displayed_units: Sequence[BinaryUnit] | None = None
     prefill_value: int | None = None
 
     transform: Transform[int] | Migrate[int] | None = None
@@ -476,7 +515,7 @@ class FixedValue:
             raise ValueError("FixedValue value is not serializable.") from exc
 
 
-class DisplayUnits(enum.Enum):
+class TimeUnit(enum.Enum):
     SECONDS = "seconds"
     MINUTES = "minutes"
     HOURS = "hours"
@@ -504,7 +543,7 @@ class TimeSpan:
     title: Localizable | None = None
     help_text: Localizable | None = None
     label: Localizable | None = None
-    displayed_units: Sequence[DisplayUnits] | None = None
+    displayed_units: Sequence[TimeUnit] | None = None
     prefill_value: int | None = None
     transform: Transform[Sequence[int]] | Migrate[Sequence[int]] | None = None
     custom_validate: Callable[[int], object] | None = None

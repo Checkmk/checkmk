@@ -669,6 +669,92 @@ class Filesize(Integer):
         return json_value
 
 
+class LegacyBinaryUnit(Enum):
+    Byte = 1
+    KB = 1000
+    MB = 1000**2
+    GB = 1000**3
+    TB = 1000**4
+    PB = 1000**5
+    EB = 1000**6
+    ZB = 1000**7
+    YB = 1000**8
+    KiB = 1024
+    MiB = 1024**2
+    GiB = 1024**3
+    TiB = 1024**4
+    PiB = 1024**5
+    EiB = 1024**6
+    ZiB = 1024**7
+    YiB = 1000**8
+
+
+class LegacyDataSize(Integer):
+    """A variant of the Filesize valuespec that allows the configuration of the selectable units"""
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        units: Sequence[LegacyBinaryUnit] | None = None,
+        label: str | None = None,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[int] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[int] | None = None,
+    ):
+        super().__init__(
+            title=title, help=help, label=label, default_value=default_value, validate=validate
+        )
+        self._units = (
+            units
+            if units is not None
+            else [
+                LegacyBinaryUnit.Byte,
+                LegacyBinaryUnit.KB,
+                LegacyBinaryUnit.MB,
+                LegacyBinaryUnit.GB,
+                LegacyBinaryUnit.TB,
+                LegacyBinaryUnit.KiB,
+                LegacyBinaryUnit.MiB,
+                LegacyBinaryUnit.GiB,
+                LegacyBinaryUnit.TiB,
+            ]
+        )
+
+    def scale_value(self, value: int) -> tuple[LegacyBinaryUnit, int]:
+        sorted_units = sorted(self._units, key=lambda x: x.value)
+        for unit in reversed(sorted_units):
+            if value == 0:
+                return sorted_units[0], value
+            if value % unit.value == 0:
+                return unit, int(value / unit.value)
+        raise ValueError("Invalid value: %r" % value)
+
+    def render_input(self, varprefix: str, value: int | None) -> None:
+        # The value type is only Optional to be compatible with the base class
+        assert value is not None
+        selected_unit, scaled_value = self.scale_value(value)
+        self._renderer.text_input(varprefix + "_size", str(scaled_value))
+        html.nbsp()
+        choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
+        html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
+
+    def from_html_vars(self, varprefix: str) -> int:
+        return int(
+            request.get_float_input_mandatory(varprefix + "_size")
+            * (request.get_integer_input_mandatory(varprefix + "_unit"))
+        )
+
+    def value_to_html(self, value: int) -> ValueSpecText:
+        selected_unit, scaled_value = self.scale_value(value)
+        return f"{scaled_value} {selected_unit.name}"
+
+    def value_to_json(self, value: int) -> JSONValue:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> int:
+        return json_value
+
+
 class TextInput(ValueSpec[str]):
     """Editor for a line of text"""
 

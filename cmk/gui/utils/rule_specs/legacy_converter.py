@@ -465,7 +465,7 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_float(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.DataSize():
-            return _convert_to_legacy_filesize(to_convert, localizer)
+            return _convert_to_legacy_datasize(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Percentage():
             return _convert_to_legacy_percentage(to_convert, localizer)
@@ -624,9 +624,9 @@ def _convert_to_legacy_float(
     return legacy_valuespecs.Float(**converted_kwargs)
 
 
-def _convert_to_legacy_filesize(
+def _convert_to_legacy_datasize(
     to_convert: ruleset_api_v1.form_specs.DataSize, localizer: Callable[[str], str]
-) -> legacy_valuespecs.Filesize:
+) -> legacy_valuespecs.LegacyDataSize:
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -641,7 +641,12 @@ def _convert_to_legacy_filesize(
             to_convert.custom_validate, localizer
         )
 
-    return legacy_valuespecs.Filesize(**converted_kwargs)
+    if to_convert.displayed_units is not None:
+        converted_kwargs["units"] = [
+            legacy_valuespecs.LegacyBinaryUnit[unit.value] for unit in to_convert.displayed_units
+        ]
+
+    return legacy_valuespecs.LegacyDataSize(**converted_kwargs)
 
 
 def _convert_to_legacy_percentage(
@@ -955,7 +960,7 @@ def _get_legacy_level_spec(
             default_value=prefill,
         )
     if issubclass(form_spec, ruleset_api_v1.form_specs.DataSize):
-        return legacy_valuespecs.Filesize(
+        return legacy_valuespecs.LegacyDataSize(
             title=title,
             default_value=int(prefill) if isinstance(prefill, float) else prefill,
         )

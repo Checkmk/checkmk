@@ -22,12 +22,22 @@ def inventory_ucd_disk(info):
 
 
 def check_ucd_disk(item, params, info):
-    for disk_path, disk_total_str, disk_avail_str in info:
+    """Provided elements are
+    2: dskPath
+    6: dskTotal (kb)
+    7: dskAvail (kb)
+    see https://oidref.com/1.3.6.1.4.1.2021.9.1
+    """
+    for disk_path, disk_total_kb_str, disk_avail_kb_str in info:
         if disk_path == item:
-            disk_total_mb = float(disk_total_str) / 1024
-            disk_avail_mb = float(disk_avail_str) / 1024
             return df_check_filesystem_single(
-                item, disk_total_mb, disk_avail_mb, 0, None, None, params
+                mountpoint=item,
+                size_mb=float(disk_total_kb_str) / 1024,
+                avail_mb=float(disk_avail_kb_str) / 1024,
+                reserved_mb=0,
+                inodes_total=None,
+                inodes_avail=None,
+                params=params,
             )
     return None
 

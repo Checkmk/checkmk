@@ -7,8 +7,9 @@ from logging import Logger
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.prediction import PredictionData, PredictionInfo
+from cmk.utils.prediction import PredictionData
 
+from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 

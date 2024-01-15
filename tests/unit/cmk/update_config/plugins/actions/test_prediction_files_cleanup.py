@@ -5,14 +5,9 @@
 
 from pathlib import Path
 
-from cmk.utils.prediction import (
-    DataStat,
-    PredictionData,
-    PredictionInfo,
-    PredictionParameters,
-    Timegroup,
-)
+from cmk.utils.prediction import DataStat, PredictionData
 
+from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
 from cmk.update_config.plugins.actions.prediction_files_cleanup import RemoveUnreadablePredictions
 
 
@@ -22,9 +17,8 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
 
     info_file.write_text(
         PredictionInfo(
-            name=Timegroup("everyhour"),
             valid_interval=(23, 42),
-            dsname="kuchen_count",
+            metric="kuchen_count",
             params=PredictionParameters(horizon=3, period="wday"),
         ).model_dump_json(),
     )

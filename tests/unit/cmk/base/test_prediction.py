@@ -36,7 +36,7 @@ def test_group_by(
 
 
 @pytest.mark.parametrize(
-    "utcdate, timezone, horizon, period_name, timegroup, result",
+    "utcdate, timezone, horizon, period_name, result",
     [
         # North Summertime
         # days after each other, start is previous day end
@@ -45,7 +45,6 @@ def test_group_by(
             "UTC",
             86400 * 3,
             "hour",
-            "everyday",
             [(1531008000, 1531094400), (1530921600, 1531008000), (1530835200, 1530921600)],
         ),
         # Same but 2hrs back on timestamp
@@ -54,7 +53,6 @@ def test_group_by(
             "Europe/Berlin",
             86400 * 2,
             "hour",
-            "everyday",
             [(1531000800, 1531087200), (1530914400, 1531000800)],
         ),
         # North Winter time shift
@@ -63,7 +61,6 @@ def test_group_by(
             "America/New_York",
             86400 * 2,
             "hour",
-            "everyday",
             [(1530936000, 1531022400), (1530849600, 1530936000)],
         ),
         # days after each other, start is previous day end
@@ -72,7 +69,6 @@ def test_group_by(
             "UTC",
             86400 * 2,
             "hour",
-            "everyday",
             [(1540684800, 1540771200), (1540598400, 1540684800)],
         ),
         # After change: missing 1hr between current and previous day, current has 1hr to UTC, previous 2hrs
@@ -81,7 +77,6 @@ def test_group_by(
             "Europe/Berlin",
             86400 * 2,
             "hour",
-            "everyday",
             [(1540681200, 1540767600), (1540591200, 1540677600)],
         ),
         # Before change: Sequential days, 2hrs to UTC, missing end of day hour
@@ -90,7 +85,6 @@ def test_group_by(
             "Europe/Berlin",
             86400 * 2,
             "hour",
-            "everyday",
             [(1540677600, 1540764000), (1540591200, 1540677600)],
         ),
         # After change: missing 1hr between current and previous day
@@ -99,7 +93,6 @@ def test_group_by(
             "America/New_York",
             86400 * 2,
             "hour",
-            "everyday",
             [(1541307600, 1541394000), (1541217600, 1541304000)],
         ),
         # Before change: Sequential days, missing end of day hour
@@ -108,7 +101,6 @@ def test_group_by(
             "America/New_York",
             86400 * 2,
             "hour",
-            "everyday",
             [(1541304000, 1541390400), (1541217600, 1541304000)],
         ),
         # North into summer, a week distance is ~6.95 days not 7, jumping an hour
@@ -117,7 +109,6 @@ def test_group_by(
             "Europe/Berlin",
             86400 * 12,
             "wday",
-            "tuesday",
             [(1554156000, 1554242400), (1553554800, 1553641200)],
         ),
     ],
@@ -127,7 +118,6 @@ def test_time_slices(
     timezone: str,
     horizon: int,
     period_name: _grouping.PeriodName,
-    timegroup: _grouping.Timegroup,
     result: Sequence[tuple[Timestamp, Timestamp]],
 ) -> None:
     """Find period slices for predictive levels
@@ -139,7 +129,7 @@ def test_time_slices(
         timestamp = time.time()
         print(timestamp)
 
-        slices = _grouping.time_slices(int(timestamp), horizon, period_name, timegroup)
+        slices = _grouping.time_slices(int(timestamp), horizon, period_name)
         pprint([("ontz", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     pprint([("sys", x, time.ctime(x), time.ctime(y)) for x, y in slices])
     assert slices == result

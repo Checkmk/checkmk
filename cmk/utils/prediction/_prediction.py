@@ -16,7 +16,9 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import PeriodName, time_slices, Timegroup
+from cmk.agent_based.prediction_backend import PredictionInfo
+
+from ._grouping import time_slices
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
 
 logger = logging.getLogger("cmk.prediction")
@@ -35,14 +37,6 @@ class MetricRecord(Protocol):
         ...
 
 
-class PredictionParameters(BaseModel, frozen=True):
-    period: PeriodName
-    horizon: int
-    levels_upper: LevelsSpec | None = None
-    levels_upper_min: tuple[float, float] | None = None
-    levels_lower: LevelsSpec | None = None
-
-
 class DataStat(NamedTuple):
     average: float
     min_: float
@@ -59,13 +53,6 @@ class DataStat(NamedTuple):
             max_=max(values),
             stdev=_std_dev(values, average),
         )
-
-
-class PredictionInfo(BaseModel, frozen=True):
-    name: Timegroup
-    valid_interval: tuple[int, int]
-    dsname: str
-    params: PredictionParameters
 
 
 class PredictionData(BaseModel, frozen=True):
@@ -91,11 +78,11 @@ class PredictionStore:
     ) -> None:
         self._dir = basedir / host_name / pnp_cleanup(service_description) / pnp_cleanup(dsname)
 
-    def _data_file(self, timegroup: Timegroup) -> Path:
-        return self._dir / Path(timegroup).with_suffix(DATA_FILE_SUFFIX)
+    def _data_file(self, period: str, valid_from: int) -> Path:
+        return (self._dir / f"{period}-{valid_from}").with_suffix(DATA_FILE_SUFFIX)
 
-    def _info_file(self, timegroup: Timegroup) -> Path:
-        return self._dir / Path(timegroup).with_suffix(INFO_FILE_SUFFIX)
+    def _info_file(self, period: str, valid_from: int) -> Path:
+        return (self._dir / f"{period}-{valid_from}").with_suffix(INFO_FILE_SUFFIX)
 
     def save_prediction(
         self,
@@ -103,27 +90,31 @@ class PredictionStore:
         data: PredictionData,
     ) -> None:
         self._dir.mkdir(exist_ok=True, parents=True)
-        self._info_file(info.name).write_text(info.model_dump_json())
-        self._data_file(info.name).write_text(data.model_dump_json())
+        self._info_file(info.params.period, info.valid_interval[0]).write_text(
+            info.model_dump_json()
+        )
+        self._data_file(info.params.period, info.valid_interval[0]).write_text(
+            data.model_dump_json()
+        )
 
-    def remove_prediction(self, timegroup: Timegroup) -> None:
-        self._data_file(timegroup).unlink(missing_ok=True)
-        self._info_file(timegroup).unlink(missing_ok=True)
+    def remove_prediction(self, period: str, valid_from: int) -> None:
+        self._data_file(period, valid_from).unlink(missing_ok=True)
+        self._info_file(period, valid_from).unlink(missing_ok=True)
 
-    def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
-        file_path = self._info_file(timegroup)
+    def get_info(self, period: str, valid_from: int) -> PredictionInfo | None:
+        file_path = self._info_file(period, valid_from)
         try:
             return PredictionInfo.model_validate_json(file_path.read_text())
         except FileNotFoundError:
-            logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
+            logger.log(VERBOSE, "No prediction info for %s/%s available.", period, valid_from)
         return None
 
-    def get_data(self, timegroup: Timegroup) -> PredictionData | None:
-        file_path = self._data_file(timegroup)
+    def get_data(self, period: str, valid_from: int) -> PredictionData | None:
+        file_path = self._data_file(period, valid_from)
         try:
             return PredictionData.model_validate_json(file_path.read_text())
         except FileNotFoundError:
-            logger.log(VERBOSE, "No prediction for group %s available.", timegroup)
+            logger.log(VERBOSE, "No prediction for %s/%s available.", period, valid_from)
         return None
 
 
@@ -132,7 +123,7 @@ def compute_prediction(
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
 ) -> PredictionData | None:
     time_windows = time_slices(
-        info.valid_interval[0], info.params.horizon * 86400, info.params.period, info.name
+        info.valid_interval[0], info.params.horizon * 86400, info.params.period
     )
 
     from_time = time_windows[0][0]
@@ -143,7 +134,7 @@ def compute_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (response := get_recorded_data(f"{info.dsname}.max", start, end))
+        if (response := get_recorded_data(f"{info.metric}.max", start, end))
     ]
 
     return _calculate_data_for_prediction(raw_slices[0][0], raw_slices) if raw_slices else None

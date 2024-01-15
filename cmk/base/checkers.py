@@ -26,7 +26,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.prediction import PredictionParameters, PredictionUpdater
+from cmk.utils.prediction import PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -76,6 +76,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
+from cmk.agent_based.prediction_backend import PredictionParameters
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State

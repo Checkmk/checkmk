@@ -14,9 +14,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import Timegroup
+from cmk.agent_based.prediction_backend import PredictionInfo
+
 from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
-from ._prediction import PredictionData, PredictionInfo
+from ._prediction import PredictionData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,12 +38,11 @@ class PredictionQuerier:
             and prediction_file.with_suffix(DATA_FILE_SUFFIX) in available_prediction_files
         )
 
-    def query_prediction_data(self, time_group: Timegroup) -> PredictionData:
-        return PredictionData.model_validate_json(
-            self._query_prediction_file_content(
-                Path(pnp_cleanup(self.metric_name), time_group),
-            )
-        )
+    def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
+        rel_filename = Path(
+            pnp_cleanup(self.metric_name), f"{meta.params.period}-{meta.valid_interval[0]}"
+        ).with_suffix(DATA_FILE_SUFFIX)
+        return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
 
     def _filter_prediction_files_by_metric(
         self, prediction_files: Iterable[Path]

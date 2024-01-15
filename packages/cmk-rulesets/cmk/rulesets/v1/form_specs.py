@@ -278,7 +278,8 @@ class CascadingSingleChoice:
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
-        prefill_selection: Pre-selected choice. If not set, the user is required to make a selection
+        prefill_selection: Name of pre-selected choice. If not set, the user is required to make a
+                           selection
         transform: Transformations to apply.
 
     Consumer model:
@@ -299,7 +300,7 @@ class CascadingSingleChoice:
 
     prefill_selection: str | None = None
 
-    transform: Transform[object] | Migrate[object] | None = None
+    transform: Transform[tuple[str, object]] | Migrate[tuple[str, object]] | None = None
 
     def __post_init__(self) -> None:
         avail_idents = [elem.name for elem in self.elements]

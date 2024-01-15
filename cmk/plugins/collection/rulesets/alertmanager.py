@@ -34,10 +34,7 @@ class ServiceNumber(StrEnum):
 
 
 # introduced in version 2.3
-def migrate_dropdown_ident(raw_value: object) -> tuple[str, object] | None:
-    if raw_value is None:
-        return raw_value
-
+def migrate_dropdown_ident(raw_value: object) -> tuple[str, object]:
     if not isinstance(raw_value, tuple):
         raise TypeError("Invalid type. group_services should be a tuple.")
 

@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
-from typing import Final, NamedTuple, Protocol
+from typing import Final, Protocol
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -83,21 +83,22 @@ class SubscriptionDetailsLimitType(Enum):
                 ) from None
 
 
-class SubscriptionDetailsLimit(NamedTuple):
-    limit_type: SubscriptionDetailsLimitType
-    limit_value: int
+@dataclass(frozen=True)
+class SubscriptionDetailsLimit:
+    type_: SubscriptionDetailsLimitType
+    value: int
 
     def for_report(self) -> tuple[str, int]:
-        return (self.limit_type.name, self.limit_value)
+        return (self.type_.name, self.value)
 
     def for_config(self) -> str | tuple[str, int]:
-        match self.limit_type:
+        match self.type_:
             case SubscriptionDetailsLimitType.fixed:
-                return str(self.limit_value)
+                return str(self.value)
             case SubscriptionDetailsLimitType.unlimited:
                 return "2000000+"
             case SubscriptionDetailsLimitType.custom:
-                return ("custom", self.limit_value)
+                return ("custom", self.value)
         raise SubscriptionDetailsError()
 
     @classmethod
@@ -111,26 +112,24 @@ class SubscriptionDetailsLimit(NamedTuple):
         raise SubscriptionDetailsError()
 
     @classmethod
-    def _parse(
-        cls, raw_limit_type: str, raw_limit_value: str | int | float
-    ) -> SubscriptionDetailsLimit:
-        if raw_limit_type in ["2000000+", "unlimited"] or int(raw_limit_value) == -1:
+    def _parse(cls, raw_type: str, raw_value: str | int | float) -> SubscriptionDetailsLimit:
+        if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
             return SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.unlimited,
+                type_=SubscriptionDetailsLimitType.unlimited,
                 # '-1' means unlimited. This value is also used in Django DB
                 # where we have no appropriate 'float("inf")' DB field.
-                limit_value=-1,
+                value=-1,
             )
 
-        if str(raw_limit_value) in _SUBSCRIPTION_LIMITS_FIXED:
+        if str(raw_value) in _SUBSCRIPTION_LIMITS_FIXED:
             return SubscriptionDetailsLimit(
-                limit_type=SubscriptionDetailsLimitType.fixed,
-                limit_value=int(raw_limit_value),
+                type_=SubscriptionDetailsLimitType.fixed,
+                value=int(raw_value),
             )
 
         return SubscriptionDetailsLimit(
-            limit_type=SubscriptionDetailsLimitType.custom,
-            limit_value=int(raw_limit_value),
+            type_=SubscriptionDetailsLimitType.custom,
+            value=int(raw_value),
         )
 
 
@@ -146,25 +145,25 @@ class RawSubscriptionDetailsForConfig(TypedDict):
     subscription_limit: str | tuple[str, int]
 
 
-class SubscriptionDetails(NamedTuple):
+@dataclass(frozen=True)
+class SubscriptionDetails:
     start: int
     end: int
-    # TODO we may add more limits
     limit: SubscriptionDetailsLimit
 
     def for_report(self) -> RawSubscriptionDetails:
-        return {
-            "subscription_start": self.start,
-            "subscription_end": self.end,
-            "subscription_limit": self.limit.for_report(),
-        }
+        return RawSubscriptionDetails(
+            subscription_start=self.start,
+            subscription_end=self.end,
+            subscription_limit=self.limit.for_report(),
+        )
 
     def for_config(self) -> RawSubscriptionDetailsForConfig:
-        return {
-            "subscription_start": self.start,
-            "subscription_end": self.end,
-            "subscription_limit": self.limit.for_config(),
-        }
+        return RawSubscriptionDetailsForConfig(
+            subscription_start=self.start,
+            subscription_end=self.end,
+            subscription_limit=self.limit.for_config(),
+        )
 
     @classmethod
     def parse(cls, raw_subscription_details: object) -> SubscriptionDetails:
@@ -321,27 +320,27 @@ class LicenseUsageSample:
     extension_ntop: bool
 
     def for_report(self) -> RawLicenseUsageSample:
-        return {
-            "instance_id": None if self.instance_id is None else str(self.instance_id),
-            "site_hash": self.site_hash,
-            "version": self.version,
-            "edition": self.edition,
-            "platform": self.platform,
-            "is_cma": self.is_cma,
-            "sample_time": self.sample_time,
-            "timezone": self.timezone,
-            "num_hosts": self.num_hosts,
-            "num_hosts_cloud": self.num_hosts_cloud,
-            "num_hosts_shadow": self.num_hosts_shadow,
-            "num_hosts_excluded": self.num_hosts_excluded,
-            "num_services": self.num_services,
-            "num_services_cloud": self.num_services_cloud,
-            "num_services_shadow": self.num_services_shadow,
-            "num_services_excluded": self.num_services_excluded,
-            "num_synthetic_tests": self.num_synthetic_tests,
-            "num_synthetic_tests_excluded": self.num_synthetic_tests_excluded,
-            "extension_ntop": self.extension_ntop,
-        }
+        return RawLicenseUsageSample(
+            instance_id=None if self.instance_id is None else str(self.instance_id),
+            site_hash=self.site_hash,
+            version=self.version,
+            edition=self.edition,
+            platform=self.platform,
+            is_cma=self.is_cma,
+            sample_time=self.sample_time,
+            timezone=self.timezone,
+            num_hosts=self.num_hosts,
+            num_hosts_cloud=self.num_hosts_cloud,
+            num_hosts_shadow=self.num_hosts_shadow,
+            num_hosts_excluded=self.num_hosts_excluded,
+            num_services=self.num_services,
+            num_services_cloud=self.num_services_cloud,
+            num_services_shadow=self.num_services_shadow,
+            num_services_excluded=self.num_services_excluded,
+            num_synthetic_tests=self.num_synthetic_tests,
+            num_synthetic_tests_excluded=self.num_synthetic_tests_excluded,
+            extension_ntop=self.extension_ntop,
+        )
 
     @classmethod
     def get_parser(cls, protocol_version: str) -> LicenseUsageSampleParser:
@@ -646,7 +645,7 @@ class MonthlyServiceAverages:
         )
         self._subscription_end = None if subscription_details is None else subscription_details.end
         self._subscription_limit_value = (
-            None if subscription_details is None else subscription_details.limit.limit_value
+            None if subscription_details is None else subscription_details.limit.value
         )
 
         self._daily_services = self._calculate_daily_services(short_samples)
@@ -676,16 +675,16 @@ class MonthlyServiceAverages:
     def get_aggregation(self) -> RawMonthlyServiceAggregation:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
-        return {
-            "daily_services": [d.for_report() for d in self._daily_services],
-            "monthly_service_averages": [a.for_report() for a in self._monthly_service_averages],
-            "last_service_report": self._get_last_service_report(),
-            "highest_service_report": self._get_highest_service_report(),
-            "subscription_exceeded_first": self._get_subscription_exceeded_first(),
-            "subscription_start": self._subscription_start,
-            "subscription_end": self._subscription_end,
-            "subscription_limit": self._subscription_limit_value,
-        }
+        return RawMonthlyServiceAggregation(
+            daily_services=[d.for_report() for d in self._daily_services],
+            monthly_service_averages=[a.for_report() for a in self._monthly_service_averages],
+            last_service_report=self._get_last_service_report(),
+            highest_service_report=self._get_highest_service_report(),
+            subscription_exceeded_first=self._get_subscription_exceeded_first(),
+            subscription_start=self._subscription_start,
+            subscription_end=self._subscription_end,
+            subscription_limit=self._subscription_limit_value,
+        )
 
     def _calculate_averages(self) -> None:
         if not self._daily_services:

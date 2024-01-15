@@ -1001,8 +1001,31 @@ class DiscoveryPageRenderer:
             table.cell(_("Previously discovered"))
             self._show_discovered_labels(entry.old_labels)
             if entry.check_source == "changed":
+                unchanged_labels = {
+                    label: value
+                    for label, value in entry.new_labels.items()
+                    if label in entry.old_labels and value == entry.old_labels[label]
+                }
+                changed_labels = {
+                    label: value
+                    for label, value in entry.new_labels.items()
+                    if label in entry.old_labels and value != entry.old_labels[label]
+                }
+                added_labels = {
+                    label: value
+                    for label, value in entry.new_labels.items()
+                    if label not in entry.old_labels
+                }
+                removed_labels = {
+                    label: value
+                    for label, value in entry.old_labels.items()
+                    if label not in entry.new_labels
+                }
                 table.cell(_("Newly discovered"))
-                self._show_discovered_labels(entry.new_labels)
+                self._show_discovered_labels(unchanged_labels)
+                self._show_discovered_labels(changed_labels, label_type="changed")
+                self._show_discovered_labels(added_labels, label_type="added")
+                self._show_discovered_labels(removed_labels, label_type="removed")
 
         if self._options.show_plugin_names:
             table.cell(
@@ -1079,12 +1102,14 @@ class DiscoveryPageRenderer:
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text(paramtext)
 
-    def _show_discovered_labels(self, service_labels: Labels) -> None:
+    def _show_discovered_labels(
+        self, service_labels: Labels, label_type: str = "discovered"
+    ) -> None:
         label_code = render_labels(
             service_labels,
             "service",
             with_links=False,
-            label_sources={k: "discovered" for k in service_labels.keys()},
+            label_sources={k: label_type for k in service_labels.keys()},
         )
         html.write_html(label_code)
 

@@ -1520,10 +1520,59 @@ table.data.job_table td {
       background: rgba($tag-discovered-color, $tag-discovered-opacity);
     }
 
+    &.changed > div {
+      background: rgba($tag-changed-color, $tag-discovered-opacity);
+      ::before {
+        background: rgba($tag-changed-color-light, $tag-discovered-opacity);
+        content: url("images/icon_service_label_update.svg");
+      }
+    }
+
+    &.added > div {
+      background: rgba($tag-added-color, $tag-discovered-opacity);
+      ::before {
+        background: rgba($tag-added-color-light, $tag-discovered-opacity);
+        content: url("images/icon_service_label_add.svg");
+      }
+    }
+
+    &.removed > div {
+      background: rgba($tag-removed-color, $tag-discovered-opacity);
+      span {
+        text-decoration: line-through;
+      }
+      ::before {
+        background: rgba($tag-removed-color-light, $tag-discovered-opacity);
+        content: url("images/icon_service_label_remove.svg");
+      }
+    }
+
     &.ruleset > div {
       background: rgba($tag-ruleset-color, $tag-opacity);
     }
 
+    &.changed,
+    &.removed,
+    &.added {
+      div {
+        padding: 0 5px 0 0;
+      }
+      ::before {
+        display: inline-block;
+        border-radius: 4px 0 0 4px;
+        padding: 5px 5px 1.5px 5px;
+        margin-right: 4px;
+      }
+    }
+
+    div span.tagify__tag-text {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    &.changed,
+    &.removed,
+    &.added,
     &.explicit,
     &.ruleset {
       > div span.tagify__tag-text {

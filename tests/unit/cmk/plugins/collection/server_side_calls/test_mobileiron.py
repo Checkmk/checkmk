@@ -11,16 +11,21 @@ from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mo
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
+    NetworkAddressConfig,
     PlainTextSecret,
+    ResolvedIPAddressFamily,
     Secret,
     StoredSecret,
 )
 
 HOST_CONFIG = HostConfig(
     name="mobileironhostname",
-    address="11.211.3.32",
+    resolved_address="11.211.3.32",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 

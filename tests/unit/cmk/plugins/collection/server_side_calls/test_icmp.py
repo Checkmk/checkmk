@@ -8,21 +8,28 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.icmp import active_check_icmp
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+)
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    address="0.0.0.1",
+    resolved_address="0.0.0.1",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPV4,
-    ipv4address="0.0.0.2",
-    ipv6address="fe80::240",
-    additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
-    additional_ipv6addresses=[
-        "fe80::241",
-        "fe80::242",
-        "fe80::243",
-    ],
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+        ipv4_address="0.0.0.2",
+        ipv6_address="fe80::240",
+        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+        additional_ipv6_addresses=[
+            "fe80::241",
+            "fe80::242",
+            "fe80::243",
+        ],
+    ),
 )
 
 

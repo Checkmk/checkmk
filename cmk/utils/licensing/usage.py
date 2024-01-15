@@ -52,7 +52,7 @@ CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
 _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
-_SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
+SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
 
 
 class DoCreateSample(Protocol):
@@ -295,14 +295,14 @@ def _get_synthetic_monitoring_counter() -> HostsOrServicesSyntheticCounter:
             "\nStats: check_type != 2"
             f"\nStats: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             f"\nStats: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
-            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
             "\nStatsAnd: 5"
             f"\nStats: host_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             f"\nStats: service_labels = '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
             "\nStatsOr: 2"
             "\nStats: host_check_type != 2"
             "\nStats: check_type != 2"
-            f"\nStats: check_command = check_mk-{_SYNTHETIC_MON_CHECK_NAME}"
+            f"\nStats: check_command = check_mk-{SYNTHETIC_MON_CHECK_NAME}"
             "\nStatsAnd: 4"
         )
     )

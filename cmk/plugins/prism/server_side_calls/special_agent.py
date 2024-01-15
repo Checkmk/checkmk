@@ -19,12 +19,12 @@ from cmk.server_side_calls.v1 import (
 def generate_prism_command(
     params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    if not host_config.address:
+    if not host_config.resolved_address:
         raise ValueError("No IP address available")
 
     args: list[str | Secret] = [
         "--server",
-        host_config.address,
+        host_config.resolved_address,
         "--username",
         str(params["username"]),
         "--password",

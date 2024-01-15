@@ -11725,6 +11725,10 @@ msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Codecul care trebuie utilizat pentru a decoda fișierele corespunzătoare"
 
+#, fuzzy
+msgid "Codes copied"
+msgstr "Cod Dimensiune"
+
 msgid "Cold HDD space"
 msgstr "Spațiu HDD rece"
 
@@ -13219,6 +13223,10 @@ msgstr "Copiați"
 
 msgid "Copy all event rules from the central site"
 msgstr "Copiați toate regulile de eveniment de pe site-ul central"
+
+#, fuzzy
+msgid "Copy codes"
+msgstr "Coduri de rezervă"
 
 msgid "Copy existing view"
 msgstr "Copierea vizualizării existente"
@@ -18687,6 +18695,12 @@ msgstr ""
 
 msgid "Each attribute may be specified only once."
 msgstr "Fiecare atribut poate fi specificat o singură dată."
+
+msgid ""
+"Each code may be used only once. Download and store these backup codes in a "
+"safe place. If you lose access to your authentication device and backup "
+"codes, you'll have to contact your Checkmk admin to recover your account."
+msgstr ""
 
 msgid "Each label is allowed to be used once."
 msgstr "Fiecare etichetă poate fi utilizată o singură dată."
@@ -24989,7 +25003,8 @@ msgstr "Ascundeți în raport"
 msgid "Hide infotext"
 msgstr "Ascundeți infotextul"
 
-msgid "Hide internal folder names in WATO"
+#, fuzzy
+msgid "Hide internal folder names in Setup"
 msgstr "Ascundeți numele dosarelor interne în WATO"
 
 msgid "Hide names of configuration variables"
@@ -44273,6 +44288,10 @@ msgstr ""
 msgid "Regenerate backup codes"
 msgstr "Regenerarea codurilor de rezervă"
 
+#, fuzzy
+msgid "Regenerate codes"
+msgstr "Regenerarea codurilor de rezervă"
+
 msgid "Regex"
 msgstr "Regex"
 
@@ -55646,14 +55665,6 @@ msgstr "Grupurile de contacte permise de dosar's sunt <b>%s</b>."
 msgid "The following %s could not be found: %s"
 msgstr "Următorul %s nu a putut fi găsit: %s."
 
-#, python-format
-msgid ""
-"The following backup codes have been generated: <ul>%s</ul> These codes are "
-"displayed only now. Save them securely."
-msgstr ""
-"Au fost generate următoarele coduri de rezervă: <ul>%s</ul> Aceste coduri "
-"sunt afișate doar acum. Salvați-le în siguranță."
-
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
 "in this exception:"
@@ -58367,6 +58378,10 @@ msgid ""
 msgstr ""
 "Aceste obiective de rezervă nu pot fi editate aici. Trebuie să deschideți "
 "gestionarea copiilor de rezervă ale dispozitivului."
+
+#, fuzzy
+msgid "These codes are only displayed now."
+msgstr "Aceste noduri se află doar în agregarea înghețată"
 
 msgid "These contact groups are also used in the monitoring configuration."
 msgstr ""
@@ -68130,7 +68145,8 @@ msgstr "Utilizați DNS pentru a converti adresele IP în nume de gazdă"
 msgid "Use FreeIPMI"
 msgstr "Utilizați FreeIPMI"
 
-msgid "Use GIT version control for WATO"
+#, fuzzy
+msgid "Use GIT version control for Setup"
 msgstr "Utilizați controlul versiunii GIT pentru WATO"
 
 msgid "Use Hard States"
@@ -76541,6 +76557,14 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#, python-format
+#~ msgid ""
+#~ "The following backup codes have been generated: <ul>%s</ul> These codes "
+#~ "are displayed only now. Save them securely."
+#~ msgstr ""
+#~ "Au fost generate următoarele coduri de rezervă: <ul>%s</ul> Aceste coduri "
+#~ "sunt afișate doar acum. Salvați-le în siguranță."
 
 #~ msgid "Validate OTP"
 #~ msgstr "Validarea OTP"

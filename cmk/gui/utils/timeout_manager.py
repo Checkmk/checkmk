@@ -47,6 +47,7 @@ class TimeoutManager:
         signal.alarm(duration)
 
     def disable_timeout(self) -> None:
+        signal.signal(signal.SIGALRM, signal.SIG_DFL)
         signal.alarm(0)
 
 

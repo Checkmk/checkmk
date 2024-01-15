@@ -1304,6 +1304,38 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     )
 
 
+def resolve_address_family(
+    config_cache: ConfigCache, host_name: HostName, config_address_family: AddressFamily
+) -> socket.AddressFamily | None:
+    if config_address_family is AddressFamily.NO_IP:
+        return None
+
+    if config_address_family is AddressFamily.IPv6:
+        return socket.AF_INET6
+
+    if config_address_family is AddressFamily.DUAL_STACK:
+        rules = config_cache.ruleset_matcher.get_host_values(host_name, primary_address_family)
+        if rules and rules[0] == "ipv6":
+            return socket.AF_INET6
+
+    return socket.AF_INET
+
+
+def get_custom_host_attributes(config_cache: ConfigCache, host_name: HostName) -> Mapping[str, str]:
+    attrs: dict[str, str] = {}
+
+    for key, value in config_cache.explicit_host_attributes(host_name).items():
+        attrs[key] = str(value)
+
+    for key, ruleset in extra_host_conf.items():
+        if key not in attrs:
+            values = config_cache.ruleset_matcher.get_host_values(host_name, ruleset)
+            if values:
+                attrs[key] = str(values[0])
+
+    return attrs
+
+
 # .
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |

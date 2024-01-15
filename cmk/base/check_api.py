@@ -193,7 +193,6 @@ def _levelsinfo_ty(
 def _build_perfdata(
     dsname: None | MetricName,
     value: int | float,
-    scale_value: Callable,
     levels: Levels,
     boundaries: tuple | None,
     ref_value: None | int | float = None,
@@ -203,7 +202,7 @@ def _build_perfdata(
 
     perf_list = [dsname, value, levels[0], levels[1]]
     if isinstance(boundaries, tuple) and len(boundaries) == 2:
-        perf_list.extend([scale_value(v) for v in boundaries])
+        perf_list.extend(boundaries)
     perfdata = [tuple(perf_list)]
     if ref_value:
         perfdata.append(("predict_" + dsname, ref_value))
@@ -215,7 +214,6 @@ def check_levels(  # pylint: disable=too-many-branches
     dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    scale: int | float = 1.0,
     statemarkers: bool = False,
     human_readable_func: Callable | None = None,
     infoname: str | None = None,
@@ -246,9 +244,6 @@ def check_levels(  # pylint: disable=too-many-branches
                 unit="/s",
                 human_readable_func=get_bytes_human_readable,
              results in 'X B/s'.
-    scale:   Scale of the levels in relation to "value" and the value in the RRDs.
-             For example if the levels are specified in GB and the RRD store KB, then
-             the scale is 1024*1024.
     human_readable_func: Single argument function to present in a human readable fashion
                          the value. Builtin human_readable-functions already provide a unit:
                          - get_percent_human_readable
@@ -269,15 +264,10 @@ def check_levels(  # pylint: disable=too-many-branches
         unit_info = ""
 
     def default_human_readable_func(x: float) -> str:
-        return "%.2f" % (x / scale)
+        return "%.2f" % x
 
     if human_readable_func is None:
         human_readable_func = default_human_readable_func
-
-    def scale_value(v: None | int | float) -> None | int | float:
-        if v is None:
-            return None
-        return v * scale
 
     infotext = f"{human_readable_func(value)}{unit_info}"
     if infoname:
@@ -287,12 +277,12 @@ def check_levels(  # pylint: disable=too-many-branches
     if not params or set(params) <= {None}:
         # always add warn/crit, because the call-site may not know it passed None,
         # and therefore expect a quadruple.
-        perf = _build_perfdata(dsname, value, scale_value, (None, None), boundaries)
+        perf = _build_perfdata(dsname, value, (None, None), boundaries)
         return 0, infotext, perf
 
     # Pair of numbers -> static levels
     if isinstance(params, tuple):
-        levels = tuple(scale_value(v) for v in _normalize_levels(params))
+        levels = _normalize_levels(params)
         ref_value = None
 
     # Dictionary -> predictive levels
@@ -301,10 +291,7 @@ def check_levels(  # pylint: disable=too-many-branches
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = params["__get_predictive_levels__"](
-                dsname,
-                levels_factor=scale,
-            )
+            ref_value, levels = params["__get_predictive_levels__"](dsname)
             if ref_value:
                 predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
             else:
@@ -328,7 +315,7 @@ def check_levels(  # pylint: disable=too-many-branches
     if statemarkers:
         infotext += state_markers[state]
 
-    perfdata = _build_perfdata(dsname, value, scale_value, levels, boundaries, ref_value)
+    perfdata = _build_perfdata(dsname, value, levels, boundaries, ref_value)
 
     return state, infotext, perfdata
 

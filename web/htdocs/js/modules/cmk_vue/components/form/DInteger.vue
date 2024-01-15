@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import {ref, computed, onMounted} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {VueComponentSpec} from "cmk_vue/types";
 import ValidationError from "cmk_vue/components/ValidatonError.vue";
 
+const emit = defineEmits<{
+    (e: "update-value", value: any): void;
+}>();
 interface VueLegacyNumberComponentSpec extends VueComponentSpec {
     config: {
         value: number;
@@ -17,13 +20,14 @@ const props = defineProps<{
 
 const component_value = ref<string>();
 
-function debug_info() {
-    console.log("Number input", props.component.title);
-}
-
 onMounted(() => {
     component_value.value = props.component.config.value.toString();
+    send_value_upstream(component_value.value);
 });
+
+function send_value_upstream(new_value: string) {
+    emit("update-value", parseInt(new_value));
+}
 
 let unit = computed(() => {
     return props.component.config.unit || "";
@@ -32,27 +36,15 @@ let unit = computed(() => {
 let style = computed(() => {
     return {width: "5.8ex"};
 });
-
-function collect(): number {
-    if (component_value.value == null)
-        // TODO: may throw "required" exception, and blocks sending of form
-        return 0;
-    return parseInt(component_value.value);
-}
-
-defineExpose({
-    collect,
-    debug_info,
-});
 </script>
 
 <template>
-    <!--  <div>{{component}}</div>-->
     <input
         class="number"
         :style="style"
         type="text"
-        v-model="component_value"
+        :value="component_value"
+        @input="send_value_upstream($event.target.value)"
         :placeholder="component.config.placeholder"
     />
     <span v-if="unit" class="vs_floating_text">{{ unit }}</span>

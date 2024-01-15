@@ -2,8 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::sqls::get_query;
+use super::sqls::find_known_query;
 use super::{client::Client, sqls};
+use std::borrow::Borrow;
 
 use anyhow::Result;
 use std::time::Instant;
@@ -86,10 +87,13 @@ impl<'a> Column<'a> for Row {
 
 /// Runs predefined query
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
-pub async fn run_known_query(client: &mut Client, id: &sqls::Id) -> Result<Vec<Answer>> {
+pub async fn run_known_query<T: Borrow<sqls::Id>>(
+    client: &mut Client,
+    id: T,
+) -> Result<Vec<Answer>> {
     let start = Instant::now();
-    let result = _run_known_query(client, id).await;
-    log_query(start, &result, format!("{id:?}").as_str());
+    let result = _run_known_query(client, id.borrow()).await;
+    log_query(start, &result, format!("{:?}", id.borrow()).as_str());
     result
 }
 
@@ -115,9 +119,9 @@ fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_name: &str) {
     }
 }
 
-async fn _run_known_query(client: &mut Client, id: &sqls::Id) -> Result<Vec<Answer>> {
-    log::debug!("Query name: `{:?}`", id);
-    let query = get_query(id)?;
+async fn _run_known_query<T: Borrow<sqls::Id>>(client: &mut Client, id: T) -> Result<Vec<Answer>> {
+    log::debug!("Query name: `{:?}`", id.borrow());
+    let query = find_known_query(id)?;
     exec_sql(client, query).await
 }
 
@@ -134,7 +138,7 @@ fn make_short_query(query: &str) -> String {
 }
 
 pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<String>> {
-    let rows = run_known_query(client, &sqls::Id::ComputerName).await?;
+    let rows = run_known_query(client, sqls::Id::ComputerName).await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Computer name not found with query computer_name");
         return Ok(None);

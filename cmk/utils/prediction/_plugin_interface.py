@@ -65,7 +65,7 @@ class PredictionUpdater:
         host_name: HostName,
         service_description: ServiceName,
         params: PredictionParameters,
-        partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord],
+        partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord | None],
     ) -> None:
         self.host_name: Final = host_name
         self.service_description: Final = service_description
@@ -75,7 +75,7 @@ class PredictionUpdater:
     def __repr__(self) -> str:
         return repr(f"{self.__class__.__name__}Sentinel")
 
-    def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord:
+    def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord | None:
         return self.partial_get_recorded_data(
             self.host_name, self.service_description, metric_name, start, end
         )
@@ -84,7 +84,7 @@ class PredictionUpdater:
         self,
         dsname: str,
         now: int,
-    ) -> PredictionData:
+    ) -> PredictionData | None:
         period_info = PREDICTION_PERIODS[self.params.period]
 
         current_slice = Slice.from_timestamp(now, period_info)
@@ -113,10 +113,14 @@ class PredictionUpdater:
             logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
             prediction_store.remove_prediction(info.name)
 
-            data_for_pred = compute_prediction(
-                info,
-                self._get_recorded_data,
-            )
+            if (
+                data_for_pred := compute_prediction(
+                    info,
+                    self._get_recorded_data,
+                )
+            ) is None:
+                return None
+
             prediction_store.save_prediction(info, data_for_pred)
 
         return data_for_pred
@@ -127,11 +131,11 @@ class PredictionUpdater:
     def __call__(
         self,
         metric_name: str,
-        levels_factor: float = 1.0,
     ) -> tuple[float | None, EstimatedLevels]:
         now = int(time.time())
-        prediction = self._get_updated_prediction(metric_name, now)
-        if (reference := prediction.predict(now)) is None:
+        if (prediction := self._get_updated_prediction(metric_name, now)) is None or (
+            reference := prediction.predict(now)
+        ) is None:
             return None, (None, None, None, None)
 
         return reference.average, estimate_levels(
@@ -140,7 +144,6 @@ class PredictionUpdater:
             levels_lower=self.params.levels_lower,
             levels_upper=self.params.levels_upper,
             levels_upper_lower_bound=self.params.levels_upper_min,
-            levels_factor=levels_factor,
         )
 
 
@@ -151,7 +154,6 @@ def estimate_levels(
     levels_lower: LevelsSpec | None,
     levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
-    levels_factor: float,
 ) -> EstimatedLevels:
     estimated_upper_warn, estimated_upper_crit = (
         _get_levels_from_params(
@@ -159,7 +161,6 @@ def estimate_levels(
             sig=1,
             reference=reference_value,
             stdev=stdev,
-            levels_factor=levels_factor,
         )
         if levels_upper
         else (None, None)
@@ -171,7 +172,6 @@ def estimate_levels(
             sig=-1,
             reference=reference_value,
             stdev=stdev,
-            levels_factor=levels_factor,
         )
         if levels_lower
         else (None, None)
@@ -198,13 +198,12 @@ def _get_levels_from_params(
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,
-    levels_factor: float,
 ) -> tuple[float, float] | tuple[None, None]:
     levels_type, (warn, crit) = levels
 
     match levels_type:
         case "absolute":
-            reference_deviation = levels_factor
+            reference_deviation = 1.0
         case "relative" if reference == 0:
             return (None, None)
         case "relative":

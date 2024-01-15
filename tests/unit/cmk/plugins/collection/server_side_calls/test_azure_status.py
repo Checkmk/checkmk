@@ -4,10 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.collection.server_side_calls.azure_status import special_agent_azure_status
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, SpecialAgentCommand
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+    SpecialAgentCommand,
+)
 
 HOST_CONFIG = HostConfig(
-    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPV4
+    name="hostname",
+    resolved_address="0.0.0.1",
+    alias="host_alias",
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+        ipv4_address="0.0.0.1",
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
 

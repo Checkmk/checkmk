@@ -21,15 +21,10 @@ def inventory_fortigate_cpu(string_table: StringTable) -> DiscoveryResult:
 
 
 def check_fortigate_cpu(item, params, info):
-    num_cpus = 0
-    util = 0
-    for line in info:
-        util += int(line[0])
-        num_cpus += 1
-    if num_cpus == 0:
+    if (num_cpus := len(info)) == 0:
         return None
 
-    util = float(util) / num_cpus  # type: ignore[assignment]
+    util = sum(float(raw_util) for raw_util, *_rest in info) / num_cpus
 
     state, infotext, perfdata = next(check_cpu_util(util, params))
     infotext += " at %d CPUs" % num_cpus

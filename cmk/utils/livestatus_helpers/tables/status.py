@@ -444,6 +444,13 @@ class Status(Table):
     )
     """The averaged number of new log messages per second"""
 
+    max_long_output_size = Column(
+        'max_long_output_size',
+        col_type='int',
+        description='Maximum length of long output',
+    )
+    """Maximum length of long output"""
+
     metrics_count = Column(
         'metrics_count',
         col_type='float',

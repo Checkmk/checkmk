@@ -8,13 +8,68 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 
-class IPAddressFamily(StrEnum):
-    """Defines an IP address family"""
+class ResolvedIPAddressFamily(StrEnum):
+    """Defines a resolved IP address family"""
 
     IPV4 = "ipv4"
     """IPv4 address family"""
     IPV6 = "ipv6"
     """IPv6 address family"""
+
+
+class IPAddressFamily(StrEnum):
+    """Defines an IP address family from the host configuration"""
+
+    IPV4 = "ipv4"
+    """IPv4 address family"""
+    IPV6 = "ipv6"
+    """IPv6 address family"""
+    DUAL_STACK = "dual_stack"
+    """Dual stack address family"""
+    NO_IP = "no_ip"
+    """No IP address family"""
+
+
+@dataclass(frozen=True)
+class NetworkAddressConfig:
+    """
+    Defines a network configuration of the host
+
+    All arguments are exactly defined as in the host configuration, no resolution of IP addresses
+    or family has been done.
+
+    Args:
+        ip_family: IP family of the host
+        ipv4_address: IPv4 address. Will be None if not defined in the configuration
+        ipv6_address: IPv6 address. Will be None if not defined in the configuration
+        additional_ipv4_addresses: Additional IPv4 addresses
+        additional_ipv6_addresses: Additional IPv6 addresses
+
+    """
+
+    ip_family: IPAddressFamily
+    ipv4_address: str | None = None
+    ipv6_address: str | None = None
+    additional_ipv4_addresses: Sequence[str] = field(default_factory=list)
+    additional_ipv6_addresses: Sequence[str] = field(default_factory=list)
+
+    @property
+    def all_ipv4_addresses(self) -> Sequence[str]:
+        """
+        Sequence containing the IPv4 address and the additional IPv4 addresses
+        """
+        if self.ipv4_address:
+            return [self.ipv4_address, *self.additional_ipv4_addresses]
+        return self.additional_ipv4_addresses
+
+    @property
+    def all_ipv6_addresses(self) -> Sequence[str]:
+        """
+        Sequence containing the IPv6 address and the additional IPv6 addresses
+        """
+        if self.ipv6_address:
+            return [self.ipv6_address, *self.additional_ipv6_addresses]
+        return self.additional_ipv6_addresses
 
 
 @dataclass(frozen=True)
@@ -26,22 +81,29 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     the active check or special agent is associated with.
     It will be created by the backend and passed to the `commands_function`.
 
-    The data is collected from the host setup configuration. If IPv4 or IPv6 address
-    isn't specified, it will be resolved using the host name.
-    If the IP family is configured as IPv4/IPv6 dual-stack, it will be resolved using the
-    `Primary IP address family of dual-stack hosts` rule.
+    Address config holds the data collected from the host setup configuration.
+    Resolved address can be the same as ipv4_address or ipv6_address from the address config,
+    resolved from the host name or host name if dynamic DNS is configured.
 
-    Address can be None only in case `No IP` has been configured as host's IP address family.
+    If the IP family is configured as IPv4/IPv6 dual-stack in address config,
+    resolved IP family will be resolved using the `Primary IP address family of dual-stack hosts`
+    rule.
+
+    Resolved address can be None in case `No IP` has been configured as host's IP
+    address family or if resolution wasn't successful.
 
     Args:
         name: Host name
-        address: Equal to the IPv4 or IPv6 address, depending on the IP family of the host
         alias: Host alias
-        ip_family: Resolved IP address family
-        ipv4address: Resolved IPv4 address, None if IP family is IPv6
-        ipv6address: Resolved IPv6 address, None if IP family is IPv4
-        additional_ipv4addresses: Additional IPv4 addresses
-        additional_ipv6addresses: Additional IPv6 addresses
+        resolved_address: If IP address isn't configured in the host config, it will be resolved
+            from the host name.
+        resolved_ip_family: Resolved IP address family
+        address_config: Address settings defined in the host configuration
+        custom_attributes: Custom attributes of the host
+        tags: Tags of the host
+        labels: Labels of the host
+        customer: Customer the host belongs to. Relevant only in the CME edition.
+
 
     Example:
 
@@ -60,31 +122,14 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     """
 
     name: str
-    address: str | None
     alias: str
-    ip_family: IPAddressFamily
-    ipv4address: str | None = None
-    ipv6address: str | None = None
-    additional_ipv4addresses: Sequence[str] = field(default_factory=list)
-    additional_ipv6addresses: Sequence[str] = field(default_factory=list)
-
-    @property
-    def all_ipv4addresses(self) -> Sequence[str]:
-        """
-        Sequence containing the IPv4 address and the additional IPv4 addresses
-        """
-        if self.ipv4address:
-            return [self.ipv4address, *self.additional_ipv4addresses]
-        return self.additional_ipv4addresses
-
-    @property
-    def all_ipv6addresses(self) -> Sequence[str]:
-        """
-        Sequence containing the IPv6 address and the additional IPv6 addresses
-        """
-        if self.ipv6address:
-            return [self.ipv6address, *self.additional_ipv6addresses]
-        return self.additional_ipv6addresses
+    resolved_address: str | None
+    address_config: NetworkAddressConfig
+    resolved_ip_family: ResolvedIPAddressFamily | None = None
+    custom_attributes: Mapping[str, str] = field(default_factory=dict)
+    tags: Mapping[str, str] = field(default_factory=dict)
+    labels: Mapping[str, str] = field(default_factory=dict)
+    customer: str | None = None
 
 
 @dataclass(frozen=True)

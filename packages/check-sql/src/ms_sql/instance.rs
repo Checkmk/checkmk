@@ -382,10 +382,7 @@ impl SqlInstance {
                 self.generate_state_entry(true, sep)
                     + &self.generate_details_entry(client, sep).await
             }
-            names::COUNTERS => {
-                self.generate_utc_entry(client, sep).await
-                    + &self.generate_counters_entry(client, sep).await
-            }
+            names::COUNTERS => self.generate_counters_section(client, sep).await,
             names::BACKUP => self.generate_backup_section(client, sep).await,
             names::BLOCKED_SESSIONS => {
                 self.generate_sessions_section(client, &sqls::Id::BlockingSessions, sep)
@@ -448,11 +445,14 @@ impl SqlInstance {
         format!("{};{};{}.mssql", self.hostname(), self.name, name)
     }
 
-    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_known_query(client, &sqls::Id::Counters)
+    pub async fn generate_counters_section(&self, client: &mut Client, sep: char) -> String {
+        let x = run_known_query(client, sqls::Id::Counters)
             .await
-            .and_then(validate_rows)
-            .and_then(|rows| self.process_counters_rows(&rows, sep));
+            .and_then(validate_rows_has_two_blocks)
+            .and_then(|rows| {
+                Ok(self.process_utc_rows(&rows[0], sep)?
+                    + &self.process_counters_rows(&rows[1], sep)?)
+            });
         match x {
             Ok(result) => result,
             Err(err) => {
@@ -462,8 +462,21 @@ impl SqlInstance {
         }
     }
 
-    fn process_counters_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
-        let rows = &rows[0];
+    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+        let x = run_known_query(client, sqls::Id::CounterEntries)
+            .await
+            .and_then(validate_rows)
+            .and_then(|rows| self.process_counters_rows(&rows[0], sep));
+        match x {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get counters: {}", err);
+                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+            }
+        }
+    }
+
+    fn process_counters_rows(&self, rows: &[Row], sep: char) -> Result<String> {
         let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
         Ok(z.join(""))
     }
@@ -508,7 +521,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::SpaceUsed)
+                    result += &run_known_query(&mut c, sqls::Id::SpaceUsed)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
                         .unwrap_or_else(|e| format_error(d, &e));
@@ -524,7 +537,7 @@ impl SqlInstance {
     pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
         let databases = self.generate_databases(client).await;
 
-        let result = run_known_query(client, &sqls::Id::Backup)
+        let result = run_known_query(client, sqls::Id::Backup)
             .await
             .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
@@ -586,7 +599,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::TransactionLogs)
+                    result += &run_known_query(&mut c, sqls::Id::TransactionLogs)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -619,7 +632,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, &sqls::Id::Datafiles)
+                    result += &run_known_query(&mut c, sqls::Id::Datafiles)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -663,7 +676,7 @@ impl SqlInstance {
 
     /// doesn't return error - the same behavior as plugin
     pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
-        let result = run_known_query(client, &sqls::Id::DatabaseNames)
+        let result = run_known_query(client, sqls::Id::DatabaseNames)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));
@@ -716,8 +729,7 @@ impl SqlInstance {
         if !self.is_database_clustered(client).await? {
             return Ok(None);
         }
-        let nodes = self.get_database_cluster_nodes(client).await?;
-        let active_node = self.get_database_cluster_active_node(client).await?;
+        let (nodes, active_node) = self.get_cluster_nodes(client).await?;
         Ok(Some(format!(
             "{}{sep}{}{sep}{}{sep}{}",
             self.name,
@@ -728,33 +740,28 @@ impl SqlInstance {
     }
 
     async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
-        let rows = &run_known_query(client, &sqls::Id::IsClustered)
+        let rows = &run_known_query(client, sqls::Id::IsClustered)
             .await
             .and_then(validate_rows)?;
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
-    async fn get_database_cluster_nodes(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_known_query(client, &sqls::Id::ClusterNodes).await?;
-        if !rows.is_empty() && !rows[0].is_empty() {
-            return Ok(rows[0]
-                .iter()
-                .map(|r| r.get_value_by_name("nodename"))
-                .collect::<Vec<String>>()
-                .join(","));
+    async fn get_cluster_nodes(&self, client: &mut Client) -> Result<(String, String)> {
+        let rows = &run_known_query(client, sqls::Id::Clusters).await?;
+        if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
+            return Ok((
+                rows[0]
+                    .iter()
+                    .map(|r| r.get_value_by_name("nodename"))
+                    .collect::<Vec<String>>()
+                    .join(","),
+                rows[1]
+                    .last() // as in legacy plugin
+                    .expect("impossible")
+                    .get_value_by_name("active_node"),
+            ));
         }
-        Ok("".to_string())
-    }
-
-    async fn get_database_cluster_active_node(&self, client: &mut Client) -> Result<String> {
-        let rows = &run_known_query(client, &sqls::Id::ClusterActiveNodes).await?;
-        if !rows.is_empty() && !rows[0].is_empty() {
-            return Ok(rows[0]
-                .last() // as in legacy plugin
-                .expect("impossible")
-                .get_value_by_name("active_node"));
-        }
-        Ok("-".to_string())
+        Ok((String::default(), String::default()))
     }
 
     pub async fn generate_connections_section(
@@ -843,23 +850,8 @@ impl SqlInstance {
             .join("")
     }
 
-    async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let result = match run_known_query(client, &sqls::Id::Utc).await {
-            Ok(r) => validate_rows(r).and_then(|rows| self.process_utc_rows(&rows, sep)),
-            Err(e) => Err(e),
-        };
-        match result {
-            Ok(value) => value,
-            Err(e) => {
-                log::error!("Failed to get UTC time: {e}\n");
-                e.to_string()
-            }
-        }
-    }
-
-    fn process_utc_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
-        let row = &rows[0];
-        let utc = row[0].get_value_by_name(sqls::UTC_DATE_FIELD);
+    fn process_utc_rows(&self, rows: &[Row], sep: char) -> Result<String> {
+        let utc = rows[0].get_value_by_name(sqls::UTC_DATE_FIELD);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
     }
 
@@ -971,7 +963,7 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
 
 impl SqlInstanceProperties {
     pub async fn obtain_by_query(client: &mut Client) -> Result<Self> {
-        let r = run_known_query(client, &sqls::Id::InstanceProperties).await?;
+        let r = run_known_query(client, sqls::Id::InstanceProperties).await?;
         if r.is_empty() {
             anyhow::bail!("Empty answer from server on query instance_properties");
         }
@@ -982,6 +974,14 @@ impl SqlInstanceProperties {
 fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     if rows.is_empty() || rows[0].is_empty() {
         Err(anyhow::anyhow!("No output from query"))
+    } else {
+        Ok(rows)
+    }
+}
+
+fn validate_rows_has_two_blocks(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+    if rows.len() != 2 || rows[0].is_empty() || rows[1].is_empty() {
+        Err(anyhow::anyhow!("Output from query is invalid"))
     } else {
         Ok(rows)
     }

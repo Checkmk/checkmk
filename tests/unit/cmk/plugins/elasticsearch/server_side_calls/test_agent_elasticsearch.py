@@ -5,9 +5,23 @@
 
 
 from cmk.plugins.elasticsearch.server_side_calls.special_agent import special_agent_elasticsearch
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    PlainTextSecret,
+    ResolvedIPAddressFamily,
+)
 
-TEST_HOST_CONFIG = HostConfig("my_host", "1.2.3.4", "my_alias", IPAddressFamily.IPV4)
+TEST_HOST_CONFIG = HostConfig(
+    name="my_host",
+    resolved_address="1.2.3.4",
+    alias="my_alias",
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.IPV4,
+    ),
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+)
 
 
 def test_agent_elasticsearch_arguments_cert_check() -> None:

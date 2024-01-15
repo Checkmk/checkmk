@@ -236,14 +236,12 @@ async fn validate_database_names(instance: &SqlInstance, client: &mut Client) {
 }
 
 async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
-    let counters = instance.generate_counters_entry(client, '|').await;
-    assert!(
-        counters.split('\n').collect::<Vec<&str>>().len() > 100,
-        "{:?}",
-        counters
-    );
-    assert!(!counters.contains(' '));
+    let counters = instance.generate_counters_section(client, '|').await;
+    let result = counters.split('\n').collect::<Vec<&str>>();
+    assert!(result[0].starts_with("None|utc_time|None|"));
+    assert!(result.len() > 100, "{:?}", counters);
     assert!(!counters.contains('$'));
+    assert!(!counters[result[0].len()..].contains(' '));
 }
 
 async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
@@ -508,7 +506,11 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
 
 async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, section: &Section) {
     let result = instance
-        .generate_unified_section(endpoint, section, sqls::get_query(&sqls::Id::BadQuery).ok())
+        .generate_unified_section(
+            endpoint,
+            section,
+            sqls::find_known_query(sqls::Id::BadQuery).ok(),
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();

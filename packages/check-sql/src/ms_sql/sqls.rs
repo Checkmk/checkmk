@@ -3,18 +3,19 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 pub const UTC_DATE_FIELD: &str = "utc_date";
 
-#[derive(Hash, PartialEq, Eq, Debug)]
+#[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Id {
     ComputerName,
     Mirroring,
     Jobs,
     AvailabilityGroups,
     InstanceProperties,
-    Utc,
+    UtcEntry,
     ClusterActiveNodes,
     ClusterNodes,
     IsClustered,
@@ -23,12 +24,14 @@ pub enum Id {
     Datafiles,
     Backup,
     SpaceUsed,
-    Counters,
+    CounterEntries,
     Connections,
     TransactionLogs,
     BadQuery,
     WaitingTasks,
     BlockingSessions,
+    Counters,
+    Clusters,
 }
 
 mod query {
@@ -138,9 +141,10 @@ DEALLOCATE instance_cursor;
 
 SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
-    pub const UTC: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
+    pub const UTC_ENTRY: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
 
-    pub const COUNTERS: &str = "SELECT counter_name, object_name, instance_name, cntr_value \
+    pub const COUNTERS_ENTRIES: &str =
+        "SELECT counter_name, object_name, instance_name, cntr_value \
      FROM sys.dm_os_performance_counters \
      WHERE object_name NOT LIKE '%Deprecated%'";
 
@@ -282,13 +286,15 @@ pub fn _get_blocking_sessions_query() -> String {
 
 lazy_static::lazy_static! {
     static ref BLOCKING_SESSIONS: String = format!("{} WHERE blocking_session_id <> 0 ", query::WAITING_TASKS).to_string();
+    static ref COUNTERS: String = format!("{};{};", query::UTC_ENTRY, query::COUNTERS_ENTRIES  ).to_string();
+    static ref CLUSTERS: String = format!("{};{};", query::CLUSTER_NODES, query::CLUSTER_ACTIVE_NODES  ).to_string();
     static ref QUERY_MAP: HashMap<Id, &'static str> = HashMap::from([
         (Id::ComputerName, query::COMPUTER_NAME),
         (Id::Mirroring, query::MIRRORING),
         (Id::Jobs, query::JOBS),
         (Id::AvailabilityGroups, query::AVAILABILITY_GROUP),
         (Id::InstanceProperties, query::INSTANCE_PROPERTIES),
-        (Id::Utc, query::UTC),
+        (Id::UtcEntry, query::UTC_ENTRY),
         (Id::ClusterActiveNodes, query::CLUSTER_ACTIVE_NODES),
         (Id::ClusterNodes, query::CLUSTER_NODES),
         (Id::IsClustered, query::IS_CLUSTERED),
@@ -297,18 +303,23 @@ lazy_static::lazy_static! {
         (Id::Datafiles, query::DATAFILES),
         (Id::Backup, query::BACKUP),
         (Id::SpaceUsed, query::SPACE_USED),
-        (Id::Counters, query::COUNTERS),
+        (Id::CounterEntries, query::COUNTERS_ENTRIES),
         (Id::Connections, query::CONNECTIONS),
         (Id::TransactionLogs, query::TRANSACTION_LOGS),
         (Id::BadQuery, query::BAD_QUERY),
         (Id::WaitingTasks, query::WAITING_TASKS), // used only in tests now
         (Id::BlockingSessions, BLOCKING_SESSIONS.as_str()),
+        (Id::Counters, COUNTERS.as_str()),
+        (Id::Clusters, CLUSTERS.as_str()),
     ]);
 }
 
-pub fn get_query(query_id: &Id) -> Result<&'static str> {
+pub fn find_known_query<T: Borrow<Id>>(query_id: T) -> Result<&'static str> {
     QUERY_MAP
-        .get(query_id)
+        .get(query_id.borrow())
         .copied()
-        .ok_or(anyhow::anyhow!("Query for {:?} not found", query_id))
+        .ok_or(anyhow::anyhow!(
+            "Query for {:?} not found",
+            query_id.borrow()
+        ))
 }

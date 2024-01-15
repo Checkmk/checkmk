@@ -134,8 +134,8 @@ class PredictionStore:
 
 def compute_prediction(
     info: PredictionInfo,
-    get_recorded_data: Callable[[str, int, int], MetricRecord],
-) -> PredictionData:
+    get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+) -> PredictionData | None:
     time_windows = time_slices(
         info.time, info.params.horizon * 86400, info.params.period, info.name
     )
@@ -151,15 +151,15 @@ def compute_prediction(
         if (response := get_recorded_data(f"{info.dsname}.max", start, end))
     ]
 
-    return _calculate_data_for_prediction(raw_slices)
+    return _calculate_data_for_prediction(raw_slices[0][0], raw_slices) if raw_slices else None
 
 
 def _calculate_data_for_prediction(
+    youngest_range: range,
     raw_slices: Sequence[tuple[range, Sequence[float | None], int]],
 ) -> PredictionData:
     # Upsample all time slices to same resolution
     # We assume that the youngest slice has the finest resolution.
-    youngest_range = raw_slices[0][0]
     slices = [
         _forward_fill_resample(
             current_range,

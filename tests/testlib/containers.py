@@ -60,7 +60,8 @@ def execute_tests_in_container(
     with _start(
         client,
         image=image_name_with_tag,
-        name=f"test-{container_name_suffix(distro_name, docker_tag)}",
+        # TODO: Re-enable using dedicated container names, the following causes name conflicts:
+        # name=f"test-{container_name_suffix(distro_name, docker_tag)}",
         command="/bin/bash",
         host_config=client.api.create_host_config(
             # Create some init process that manages signals and processes
@@ -336,10 +337,7 @@ def _create_cmk_image(
         ),
     ) as container:
         logger.info(
-            "Building in container %s/%s (from [%s])",
-            container.name,
-            container.short_id,
-            base_image_name_with_tag,
+            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
 
         _exec_run(container, ["mkdir", "-p", "/results"])

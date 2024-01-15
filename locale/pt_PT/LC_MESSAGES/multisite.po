@@ -4315,6 +4315,10 @@ msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
 #, fuzzy
+msgid "Advanced condition simulation"
+msgstr "Opções disponíveis"
+
+#, fuzzy
 msgid "Advanced options"
 msgstr "Opções disponíveis"
 
@@ -5942,6 +5946,10 @@ msgstr "Um pseudónimo ou descrição deste grupo."
 msgid "An empty value is not allowed here."
 msgstr "Um valor vazio não é permitido aqui."
 
+#, fuzzy
+msgid "An error occurred during SaaS authentication: "
+msgstr "Ocorreu um erro durante a última actualização"
+
 msgid "An error occurred during the last update"
 msgstr "Ocorreu um erro durante a última actualização"
 
@@ -6795,6 +6803,10 @@ msgstr "Falhas de Autenticação"
 #, fuzzy
 msgid "Authentication code (OTP / TOTP)"
 msgstr "Modo de Autenticação"
+
+#, fuzzy
+msgid "Authentication error"
+msgstr "Erros do Sistema de Autenticação"
 
 msgid "Authentication failed"
 msgstr "A autenticação falhou"
@@ -10114,6 +10126,16 @@ msgstr ""
 "Propriedades alteradas da regra #%d no conjunto de regras \"%s\" na pasta "
 "\"%s\""
 
+#, fuzzy
+msgid "Changed service: "
+msgid_plural "Changed services: "
+msgstr[0] "Serviço desaparecido: "
+msgstr[1] "Serviços desaparecidos: "
+
+#, fuzzy
+msgid "Changed services"
+msgstr "Gerir serviços"
+
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
 msgstr "Mudou a variável de configuração específica do local %s para %s."
@@ -10778,6 +10800,10 @@ msgstr ""
 
 msgid "Checkmk versions"
 msgstr "Versões Checkmk"
+
+#, fuzzy
+msgid "Checkmk virt1 Appliance"
+msgstr "Plugins de agente Checkmk"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -11642,6 +11668,9 @@ msgstr "Código Tamanho"
 msgid "Code Size in percent"
 msgstr "Tamanho do código em percentagem"
 
+msgid "Code verifier not found. Cache value is None."
+msgstr ""
+
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
 "Codec que deve ser utilizado para descodificar os ficheiros correspondentes"
@@ -11761,6 +11790,9 @@ msgstr "Colunas a combinar"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
+
+msgid "Combinations of suite application names and tags must be unique."
+msgstr ""
 
 msgid "Combined graph"
 msgstr "Gráfico combinado"
@@ -13333,6 +13365,10 @@ msgstr ""
 "Não foi possível recarregar o Livestatus Proxy: %s. Veja web.log e "
 "liveproxyd.log para mais informações."
 
+#, fuzzy, python-format
+msgid "Could not retrieve identity token. (%s)"
+msgstr "Não consegui determinar o tema actual."
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Não foi possível salvar as mudanças: %s"
@@ -14112,10 +14148,6 @@ msgid "Current replication mode"
 msgstr "Modo de replicação atual"
 
 msgid "Current setting"
-msgstr "Configuração atual"
-
-#, fuzzy
-msgid "Current setting as VUE"
 msgstr "Configuração atual"
 
 msgid "Current size"
@@ -16966,9 +16998,6 @@ msgstr "Etiquetas de anfitrião descobertas"
 msgid "Discovered host labels (%s)"
 msgstr "Etiquetas de anfitrião descobertas (%s)"
 
-msgid "Discovered labels"
-msgstr "Etiquetas Descobertas"
-
 msgid "Discovered process name"
 msgstr "Nome do processo descoberto"
 
@@ -17132,7 +17161,7 @@ msgid "Disovered services of the host"
 msgstr "Serviços do anfitrião"
 
 #, fuzzy
-msgid "Dispatch notifications"
+msgid "Dispatch notification"
 msgstr "Desactivar as notificações"
 
 msgid "Display"
@@ -18640,6 +18669,9 @@ msgid ""
 msgstr ""
 "Cada condição predefinida é propriedade de um grupo de utilizadores que são "
 "capazes de editar, eliminar e utilizar condições pré-definidas existentes."
+
+msgid "Each service monitors on Robot Framework tests.\n"
+msgstr ""
 
 msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
@@ -25445,6 +25477,9 @@ msgstr "Propriedades anfitriãs"
 msgid "Host properties of: %s"
 msgstr "Propriedades anfitriãs de: %s"
 
+msgid "Host properties, such as labels or contact groups, are inherited."
+msgstr ""
+
 msgid "Host registration"
 msgstr "Registo do anfitrião"
 
@@ -26910,6 +26945,12 @@ msgstr ""
 "para permitir a verificação para identificar o elemento correto do "
 "formulário."
 
+#, fuzzy
+msgid "If this error persists, please contact the Checkmk support team."
+msgstr ""
+"Se pretender utilizar o Checkmk sem restrições, contacte o suporte do "
+"Checkmk."
+
 msgid ""
 "If this is active, the check will automatically go into downtime whenever "
 "the aggregation does. This downtime is also cleaned up automatically when "
@@ -27918,6 +27959,11 @@ msgstr ""
 "você remover algumas das extensões padrão, nem todos os plug-ins de agente "
 "enviados continuarão a funcionar!<br><br>Especifique as extensões em letras "
 "minúsculas e sem um ponto à esquerda."
+
+msgid ""
+"If you want to test service notifications, please provide a service to test "
+"with."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -30935,12 +30981,6 @@ msgstr "Plugins de inventário legados"
 
 msgid "Legacy run"
 msgstr "Execução antiga"
-
-msgid "Legacy valuespec (input data is ignored"
-msgstr ""
-
-msgid "Legacy valuespec (input data is ignored)"
-msgstr ""
 
 msgid "Legal"
 msgstr "Legal"
@@ -36731,6 +36771,9 @@ msgstr "Nunca executado"
 msgid "Never install Python with the agent"
 msgstr "Nunca instale o Python com o agente"
 
+msgid "Never logged in"
+msgstr "Nunca fez login"
+
 msgid "Never remove files newer than"
 msgstr "Nunca remova arquivos mais novos do que"
 
@@ -36825,6 +36868,10 @@ msgstr "Mais novo arquivo idade abaixo"
 
 msgid "Newest first"
 msgstr "O mais recente primeiro"
+
+#, fuzzy
+msgid "Newly discovered"
+msgstr "descoberta do NTP"
 
 msgid "Next Run"
 msgstr "Próxima execução"
@@ -42531,6 +42578,10 @@ msgstr ""
 msgid "Preview this report"
 msgstr "Pré-visualizar este relatório"
 
+#, fuzzy
+msgid "Previously discovered"
+msgstr "Descoberta do processo"
+
 msgid "PrimSeq erros"
 msgstr "PrimSeq erros"
 
@@ -44635,6 +44686,9 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Renderizar regras verticais entre colunas"
 
+msgid "Rendering mode for valuespecs and tables"
+msgstr ""
+
 #, fuzzy
 msgid "Repeat"
 msgstr "Repete:"
@@ -45453,6 +45507,10 @@ msgstr "Tentativa"
 msgid "Retry Count"
 msgstr "Tentativa de contagem"
 
+#, fuzzy
+msgid "Retry authentication"
+msgstr "Testar a autenticação"
+
 msgid "Retry check interval"
 msgstr "Verificar novamente o intervalo"
 
@@ -45551,6 +45609,10 @@ msgid ""
 "Robotmk (as part of Checkmk Synthetic Monitoring) integrates the results of "
 "Robot Framework tests as Checkmk services."
 msgstr ""
+
+#, fuzzy
+msgid "Robotmk Dashboard"
+msgstr "Painel de problemas"
 
 #, fuzzy
 msgid "Robotmk Scheduler (Windows)"
@@ -47333,6 +47395,11 @@ msgstr "Enviar notificações para o Console de Eventos"
 msgid "Send notifications to remote Event Console"
 msgstr "Enviar notificações para console de eventos remoto"
 
+#, fuzzy
+msgid ""
+"Send out notification according to notification rules (uncheck to avoid spam)"
+msgstr "As notificações serão enviadas de acordo com as regras de notificação"
+
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -47428,6 +47495,10 @@ msgstr "Separador"
 
 msgid "September"
 msgstr "Setembro"
+
+#, fuzzy
+msgid "Sequential suite groups"
+msgstr "Vários grupos de acolhimento"
 
 msgid "Serial"
 msgstr "Em série"
@@ -52348,10 +52419,6 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
-msgid "Suite IDs are not unique"
-msgstr "Os IDs dos pedidos não são iguais"
-
-#, fuzzy
 msgid "Suite runtime"
 msgstr "Nome do local"
 
@@ -52625,10 +52692,18 @@ msgstr "Sincronização"
 msgid "Synology Updates"
 msgstr "Atualizações de Sinologia"
 
+#, fuzzy
+msgid "Synthetic Monitoring"
+msgstr "Pesquisa em Monitorização"
+
 #, python-format
 msgid ""
 "Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
 "subscription). You are currently monitoring %d %s on this site."
+msgstr ""
+
+#, python-format
+msgid "Synthetic monitoring (licensed tests: %s)"
 msgstr ""
 
 #, fuzzy
@@ -53254,6 +53329,10 @@ msgstr "Terse"
 msgid "Test"
 msgstr "Teste"
 
+#, fuzzy
+msgid "Test a self defined notification against your ruleset."
+msgstr "Criar uma cópia desta regra de notificação"
+
 msgid "Test authentication"
 msgstr "Testar a autenticação"
 
@@ -53265,10 +53344,6 @@ msgstr "Evento de teste gerado e enviado para o Console de Eventos."
 
 msgid "Test hostname before activation"
 msgstr "Teste o nome da mangueira antes da ativação"
-
-#, fuzzy
-msgid "Test if a given notification matches your notification rules."
-msgstr "Criar uma cópia desta regra de notificação"
 
 #, fuzzy
 msgid "Test notification"
@@ -53300,8 +53375,9 @@ msgstr "Grupos de texto de expressões regulares, separados por espaços"
 msgid "Text is not valid XML"
 msgstr "O texto não é um XML válido"
 
-msgid "Text logfiles (Linux, Solaris, Windows)"
-msgstr "Ficheiros de registo de texto (Linux, Solaris, Windows)"
+#, fuzzy
+msgid "Text logfiles (Windows, Linux, Solaris, AIX)"
+msgstr "Windows, Linux, Solaris, AIX"
 
 msgid "Text of forwarded events"
 msgstr "Texto dos eventos transmitidos"
@@ -54297,11 +54373,11 @@ msgstr ""
 "verificação do serviço Checkmk deste host, se você alterar o intervalo de "
 "verificação."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The agent will update itself only with packages that are signed by one of "
 "these keys. You need to specify at least one key. Keys are being create <a "
-"href='%s'>here</a>."
+"href='%s' target='_blank'>here</a>."
 msgstr ""
 "O agente se atualizará apenas com pacotes assinados por uma destas chaves. "
 "Você precisa especificar pelo menos uma chave. As chaves estão sendo criadas "
@@ -58141,9 +58217,18 @@ msgstr ""
 "o monitoramento, então você deve removê-las para evitar serviços UNKNOWN no "
 "monitoramento."
 
+#, fuzzy
 msgid ""
-"These services had been found by a discovery and are currently configured to "
-"be monitored."
+"These services have been discovered and a change from the currently "
+"monitored state has been detected."
+msgstr ""
+"Estes serviços tinham sido encontrados por uma descoberta e estão "
+"actualmente configurados para serem monitorizados."
+
+#, fuzzy
+msgid ""
+"These services have been found by the discovery and are currently being "
+"monitored. No changes have been made to these services."
 msgstr ""
 "Estes serviços tinham sido encontrados por uma descoberta e estão "
 "actualmente configurados para serem monitorizados."
@@ -65961,6 +66046,10 @@ msgstr "UNKNOWN Serviços do Site"
 msgid "UNKNOWN Services of host"
 msgstr "UNKNOWN Serviços do anfitrião"
 
+#, python-brace-format
+msgid "UNKNOWN custom_form_spec {custom_form_spec}"
+msgstr ""
+
 msgid "UNKNOWN services"
 msgstr "serviços UNKNOWN"
 
@@ -66486,10 +66575,6 @@ msgstr ""
 "ID de cliente único utilizado para o corretor. Será gerado aleatoriamente "
 "quando não estiver definido."
 
-#, fuzzy
-msgid "Unique suite ID"
-msgstr "Use o ID do site"
-
 msgid "Unit"
 msgstr "Unidade"
 
@@ -66551,6 +66636,10 @@ msgstr "Tipo de métrica desconhecida %s"
 
 msgid "Unknown paths"
 msgstr "Caminhos desconhecidos"
+
+#, fuzzy, python-format
+msgid "Unknown rendering mode %s"
+msgstr "Tipo de métrica desconhecida %s"
 
 #, python-format
 msgid "Unknown site %s"
@@ -68362,9 +68451,6 @@ msgstr "Use o nome do volume e o ponto de montagem"
 
 msgid "Use volume name as mountpoint"
 msgstr "Use o nome do volume como ponto de montagem"
-
-msgid "Use vue rendering"
-msgstr "Utilizar a renderização vue"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -73155,10 +73241,10 @@ msgstr ""
 "adicionar sites remotos, não esqueça de adicionar também o seu site de "
 "monitoramento local, se você quiser exibir seus dados."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"necessary."
+"You have not created any agent <a href='%s' target='_blank'>signature keys</"
+"a> yet. This is necessary."
 msgstr ""
 "Ainda não criou nenhum agente <a href='%s'>chaves de assinatura</a>. Isso é "
 "necessário."
@@ -75905,6 +75991,30 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 msgid "Ω"
 msgstr ""
 
+#, fuzzy
+#~| msgid "Current setting"
+#~ msgid "Current setting as VUE"
+#~ msgstr "Configuração atual"
+
+#~ msgid "Use vue rendering"
+#~ msgstr "Utilizar a renderização vue"
+
+#~ msgid "Discovered labels"
+#~ msgstr "Etiquetas Descobertas"
+
+#, fuzzy
+#~| msgid "Request IDs are not equal"
+#~ msgid "Suite IDs are not unique"
+#~ msgstr "Os IDs dos pedidos não são iguais"
+
+#~ msgid "Text logfiles (Linux, Solaris, Windows)"
+#~ msgstr "Ficheiros de registo de texto (Linux, Solaris, Windows)"
+
+#, fuzzy
+#~| msgid "Use site ID"
+#~ msgid "Unique suite ID"
+#~ msgstr "Use o ID do site"
+
 #, python-format
 #~ msgid ""
 #~ "The following backup codes have been generated: <ul>%s</ul> These codes "
@@ -76167,9 +76277,6 @@ msgstr ""
 
 #~ msgid "Add label condition"
 #~ msgstr "Adicionar condição de etiqueta"
-
-#~ msgid "Never logged in"
-#~ msgstr "Nunca fez login"
 
 #~ msgid ""
 #~ "Overall state of all hosts known by Ntop, with counts of services in the "

@@ -4215,6 +4215,10 @@ msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
 
 #, fuzzy
+msgid "Advanced condition simulation"
+msgstr "利用可能なオプション"
+
+#, fuzzy
 msgid "Advanced options"
 msgstr "利用可能なオプション"
 
@@ -5770,6 +5774,10 @@ msgstr "このグループのエイリアスまたは説明。"
 msgid "An empty value is not allowed here."
 msgstr "ここでは空の値は許可されていません。"
 
+#, fuzzy
+msgid "An error occurred during SaaS authentication: "
+msgstr "前回の更新中にエラーが発生しました"
+
 msgid "An error occurred during the last update"
 msgstr "前回の更新中にエラーが発生しました"
 
@@ -6600,6 +6608,10 @@ msgstr "認証の失敗"
 #, fuzzy
 msgid "Authentication code (OTP / TOTP)"
 msgstr "認証モード"
+
+#, fuzzy
+msgid "Authentication error"
+msgstr "認証システムエラー"
 
 msgid "Authentication failed"
 msgstr "認証失敗"
@@ -9843,6 +9855,15 @@ msgstr ""
 "ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは\"%s"
 "\""
 
+#, fuzzy
+msgid "Changed service: "
+msgid_plural "Changed services: "
+msgstr[0] "消失したサービス: "
+
+#, fuzzy
+msgid "Changed services"
+msgstr "サービス管理"
+
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
 msgstr "サイト固有の構成変数 %s を %sに変更しました。"
@@ -10498,6 +10519,10 @@ msgstr ""
 
 msgid "Checkmk versions"
 msgstr "Checkmkバージョン"
+
+#, fuzzy
+msgid "Checkmk virt1 Appliance"
+msgstr "Checkmkエージェントプラグイン"
 
 msgid ""
 "Checkmk was not not supporting special characters (like Umlauts) in User-"
@@ -11337,6 +11362,9 @@ msgstr "コードサイズ"
 msgid "Code Size in percent"
 msgstr "コードサイズ(パーセント)"
 
+msgid "Code verifier not found. Cache value is None."
+msgstr ""
+
 msgid "Codec that should be used to decode the matching files"
 msgstr "一致するファイルをデコードするために使用する必要があるコーデック"
 
@@ -11455,6 +11483,9 @@ msgstr "一致するカラム"
 
 msgid "Com. buf. max/total"
 msgstr "Com. Buf. 最大/合計"
+
+msgid "Combinations of suite application names and tags must be unique."
+msgstr ""
 
 msgid "Combined graph"
 msgstr "結合グラフ"
@@ -12973,6 +13004,10 @@ msgstr ""
 "Livestatusプロキシをリロードできませんでした:%s。詳細については、web.logおよ"
 "びliveproxyd.logを参照してください。"
 
+#, fuzzy, python-format
+msgid "Could not retrieve identity token. (%s)"
+msgstr "現在のテーマを特定できませんでした。"
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "変更を保存できませんでした: %s"
@@ -13739,10 +13774,6 @@ msgid "Current replication mode"
 msgstr "現在のレプリケーションモード"
 
 msgid "Current setting"
-msgstr "現在の設定"
-
-#, fuzzy
-msgid "Current setting as VUE"
 msgstr "現在の設定"
 
 msgid "Current size"
@@ -16565,9 +16596,6 @@ msgstr "検出されたホストラベル"
 msgid "Discovered host labels (%s)"
 msgstr "検出されたホストラベル (%s)"
 
-msgid "Discovered labels"
-msgstr "発見されたラベル"
-
 msgid "Discovered process name"
 msgstr "検出されたプロセス名"
 
@@ -16731,7 +16759,7 @@ msgid "Disovered services of the host"
 msgstr "ホストのサービスを発見"
 
 #, fuzzy
-msgid "Dispatch notifications"
+msgid "Dispatch notification"
 msgstr "通知を無効にする"
 
 msgid "Display"
@@ -18214,6 +18242,9 @@ msgid ""
 msgstr ""
 "事前定義された各条件は、既存の事前定義された条件を編集、削除、および使用でき"
 "るユーザーのグループによって所有されます。"
+
+msgid "Each service monitors on Robot Framework tests.\n"
+msgstr ""
 
 msgid ""
 "Each tag group will create one dropdown choice in the host configuration."
@@ -24906,6 +24937,9 @@ msgstr "ホストのプロパティ"
 msgid "Host properties of: %s"
 msgstr "ホストプロパティ: %s"
 
+msgid "Host properties, such as labels or contact groups, are inherited."
+msgstr ""
+
 msgid "Host registration"
 msgstr "ホスト登録"
 
@@ -26330,6 +26364,11 @@ msgstr ""
 "は、チェックで正しいフォーム要素を識別できるように、ここにフォームの名前を入"
 "力する必要があります。"
 
+#, fuzzy
+msgid "If this error persists, please contact the Checkmk support team."
+msgstr ""
+"Checkmk を制限なく使用したい場合は、Checkmk サポートにお問い合わせください。"
+
 msgid ""
 "If this is active, the check will automatically go into downtime whenever "
 "the aggregation does. This downtime is also cleaned up automatically when "
@@ -27295,6 +27334,11 @@ msgstr ""
 "する必要がなくなります。<b>注意:</b>デフォルトの拡張機能の一部を削除しても、"
 "出荷されたエージェントプラグインのすべてが引き続き機能するわけではありません!"
 "<br> <br>拡張機能を小文字で、先頭にドットを付けずに指定してください。"
+
+msgid ""
+"If you want to test service notifications, please provide a service to test "
+"with."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -30260,12 +30304,6 @@ msgstr "レガシーインベントリプラグイン"
 
 msgid "Legacy run"
 msgstr "レガシーラン"
-
-msgid "Legacy valuespec (input data is ignored"
-msgstr "レガシーの値指定（入力データは無視されます"
-
-msgid "Legacy valuespec (input data is ignored)"
-msgstr "レガシーの値指定（入力データは無視されます）"
 
 msgid "Legal"
 msgstr "法的"
@@ -35941,6 +35979,9 @@ msgstr "実行されたことはありません"
 msgid "Never install Python with the agent"
 msgstr "エージェントと一緒にPythonをインストールしないでください"
 
+msgid "Never logged in"
+msgstr "ログインしたことはありません"
+
 msgid "Never remove files newer than"
 msgstr "設定期間より新しいファイルは削除しない"
 
@@ -36034,6 +36075,10 @@ msgstr "以下の最新のファイル経過時間"
 
 msgid "Newest first"
 msgstr "最新のものが最初"
+
+#, fuzzy
+msgid "Newly discovered"
+msgstr "NTPディスカバリー"
 
 msgid "Next Run"
 msgstr "次の実行"
@@ -41625,6 +41670,10 @@ msgstr ""
 msgid "Preview this report"
 msgstr "このレポートをプレビューする"
 
+#, fuzzy
+msgid "Previously discovered"
+msgstr "プロセスディスカバリー"
+
 msgid "PrimSeq erros"
 msgstr "PrimSeq erros"
 
@@ -43708,6 +43757,9 @@ msgstr "要素の上にタイトルとリンクを含むタイトルバーをレ
 msgid "Render vertical rules between columns"
 msgstr "列間に垂直ルールをレンダリングする"
 
+msgid "Rendering mode for valuespecs and tables"
+msgstr ""
+
 #, fuzzy
 msgid "Repeat"
 msgstr "繰り返す:"
@@ -44511,6 +44563,10 @@ msgstr "リトライ"
 msgid "Retry Count"
 msgstr "再試行回数"
 
+#, fuzzy
+msgid "Retry authentication"
+msgstr "テスト認証"
+
 msgid "Retry check interval"
 msgstr "チェック間隔を再試行してください"
 
@@ -44611,6 +44667,10 @@ msgid ""
 msgstr ""
 "Robotmkは（Checkmk Synthetic Monitoringの一部として）Robot Frameworkのテスト"
 "結果をCheckmkサービスとして統合します。"
+
+#, fuzzy
+msgid "Robotmk Dashboard"
+msgstr "問題のダッシュボード"
 
 #, fuzzy
 msgid "Robotmk Scheduler (Windows)"
@@ -46360,6 +46420,11 @@ msgstr "イベントコンソールに通知を送信する"
 msgid "Send notifications to remote Event Console"
 msgstr "リモートイベントコンソールに通知を送信する"
 
+#, fuzzy
+msgid ""
+"Send out notification according to notification rules (uncheck to avoid spam)"
+msgstr "通知は、通知ルールに従って送信されます"
+
 msgid ""
 "Send regardless of restrictions, e.g. notification period or disabled "
 "notifications (forced)"
@@ -46451,6 +46516,10 @@ msgstr "セパレーター"
 
 msgid "September"
 msgstr "9月"
+
+#, fuzzy
+msgid "Sequential suite groups"
+msgstr "複数のホストグループ"
 
 msgid "Serial"
 msgstr "シリアル"
@@ -51242,9 +51311,6 @@ msgstr "推奨されるチュートリアルビデオ"
 msgid "Suite"
 msgstr "スイート"
 
-msgid "Suite IDs are not unique"
-msgstr "スイートIDが一意ではありません"
-
 #, fuzzy
 msgid "Suite runtime"
 msgstr "サイト名"
@@ -51516,10 +51582,18 @@ msgstr "同期"
 msgid "Synology Updates"
 msgstr "Synologyの更新"
 
+#, fuzzy
+msgid "Synthetic Monitoring"
+msgstr "モニタリングで検索"
+
 #, python-format
 msgid ""
 "Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
 "subscription). You are currently monitoring %d %s on this site."
+msgstr ""
+
+#, python-format
+msgid "Synthetic monitoring (licensed tests: %s)"
 msgstr ""
 
 #, fuzzy
@@ -52129,6 +52203,10 @@ msgstr "簡潔"
 msgid "Test"
 msgstr "テスト"
 
+#, fuzzy
+msgid "Test a self defined notification against your ruleset."
+msgstr "この通知ルールのコピーを作成します"
+
 msgid "Test authentication"
 msgstr "テスト認証"
 
@@ -52140,10 +52218,6 @@ msgstr "テストイベントが生成され、Event Consoleに送信されま�
 
 msgid "Test hostname before activation"
 msgstr "アクティベーション前にホスト名をテストする"
-
-#, fuzzy
-msgid "Test if a given notification matches your notification rules."
-msgstr "この通知ルールのコピーを作成します"
 
 #, fuzzy
 msgid "Test notification"
@@ -52175,8 +52249,9 @@ msgstr "スペースで区切られた正規表現一致のテキストグルー
 msgid "Text is not valid XML"
 msgstr "テキストが有効なXMLではありません"
 
-msgid "Text logfiles (Linux, Solaris, Windows)"
-msgstr "テキストログ・ファイル（Linux、Solaris、Windows）"
+#, fuzzy
+msgid "Text logfiles (Windows, Linux, Solaris, AIX)"
+msgstr "Windows、Linux、Solaris、AIX"
 
 msgid "Text of forwarded events"
 msgstr "転送されたイベントのテキスト"
@@ -53114,11 +53189,11 @@ msgstr ""
 "のデータ送信を停止します。このオプションは、このホストのCheckmkサービスの"
 "チェック間隔を変更した場合、その間隔に応じて変更する必要があります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The agent will update itself only with packages that are signed by one of "
 "these keys. You need to specify at least one key. Keys are being create <a "
-"href='%s'>here</a>."
+"href='%s' target='_blank'>here</a>."
 msgstr ""
 "エージェントは、これらのキーの1つによって署名されたパッケージでのみ自身を更新"
 "します。少なくとも1つのキーを指定する必要があります。キーは<a href = '%s'>こ"
@@ -56778,9 +56853,17 @@ msgstr ""
 "が実際に監視に関連しなくなった場合は、監視で不明なサービスを回避するためにそ"
 "れらを削除する必要があります。"
 
+#, fuzzy
 msgid ""
-"These services had been found by a discovery and are currently configured to "
-"be monitored."
+"These services have been discovered and a change from the currently "
+"monitored state has been detected."
+msgstr ""
+"これらのサービスは検出によって検出され、現在監視するように設定されています。"
+
+#, fuzzy
+msgid ""
+"These services have been found by the discovery and are currently being "
+"monitored. No changes have been made to these services."
 msgstr ""
 "これらのサービスは検出によって検出され、現在監視するように設定されています。"
 
@@ -64379,6 +64462,10 @@ msgstr "サイトの不明なサービス"
 msgid "UNKNOWN Services of host"
 msgstr "ホストの不明なサービス"
 
+#, python-brace-format
+msgid "UNKNOWN custom_form_spec {custom_form_spec}"
+msgstr ""
+
 msgid "UNKNOWN services"
 msgstr "不明なサービス"
 
@@ -64894,10 +64981,6 @@ msgstr ""
 "ブローカーに使用される一意のクライアントID。設定されていない場合は、ランダム"
 "に生成されます。"
 
-#, fuzzy
-msgid "Unique suite ID"
-msgstr "サイトIDを使用する"
-
 msgid "Unit"
 msgstr "単位"
 
@@ -64959,6 +65042,10 @@ msgstr "不明なメトリックのタイプ %s"
 
 msgid "Unknown paths"
 msgstr "不明なパス"
+
+#, fuzzy, python-format
+msgid "Unknown rendering mode %s"
+msgstr "不明なメトリックのタイプ %s"
 
 #, python-format
 msgid "Unknown site %s"
@@ -66715,9 +66802,6 @@ msgstr "ボリューム名とマウントポイントを使用する"
 
 msgid "Use volume name as mountpoint"
 msgstr "ボリューム名をマウントポイントとして使用する"
-
-msgid "Use vue rendering"
-msgstr "vueレンダリングの使用"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -71331,10 +71415,10 @@ msgstr ""
 "トのデータを暗黙のうちに追加します。リモートサイトを追加した場合で、ローカル"
 "監視サイトのデータも表示したいのであれば、忘れずに追加してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"necessary."
+"You have not created any agent <a href='%s' target='_blank'>signature keys</"
+"a> yet. This is necessary."
 msgstr ""
 "エージェントの<a href='%s'>署名キー</a>をまだ作成していません。これは必須で"
 "す。"
@@ -74047,6 +74131,34 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 msgid "Ω"
 msgstr "Ω"
 
+#, fuzzy
+#~| msgid "Current setting"
+#~ msgid "Current setting as VUE"
+#~ msgstr "現在の設定"
+
+#~ msgid "Legacy valuespec (input data is ignored"
+#~ msgstr "レガシーの値指定（入力データは無視されます"
+
+#~ msgid "Legacy valuespec (input data is ignored)"
+#~ msgstr "レガシーの値指定（入力データは無視されます）"
+
+#~ msgid "Use vue rendering"
+#~ msgstr "vueレンダリングの使用"
+
+#~ msgid "Discovered labels"
+#~ msgstr "発見されたラベル"
+
+#~ msgid "Suite IDs are not unique"
+#~ msgstr "スイートIDが一意ではありません"
+
+#~ msgid "Text logfiles (Linux, Solaris, Windows)"
+#~ msgstr "テキストログ・ファイル（Linux、Solaris、Windows）"
+
+#, fuzzy
+#~| msgid "Use site ID"
+#~ msgid "Unique suite ID"
+#~ msgstr "サイトIDを使用する"
+
 #, python-format
 #~ msgid ""
 #~ "The following backup codes have been generated: <ul>%s</ul> These codes "
@@ -74292,9 +74404,6 @@ msgstr "Ω"
 
 #~ msgid "Add label condition"
 #~ msgstr "ラベル条件を追加"
-
-#~ msgid "Never logged in"
-#~ msgstr "ログインしたことはありません"
 
 #~ msgid ""
 #~ "Overall state of all hosts known by Ntop, with counts of services in the "

@@ -461,8 +461,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.TimeSpan(),
-            legacy_valuespecs.Age(),
-            id="minimal Age",
+            legacy_valuespecs.TimeSpan(),
+            id="minimal TimeSpan",
         ),
         pytest.param(
             api_v1.form_specs.TimeSpan(
@@ -477,14 +477,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
                 prefill_value=100,
             ),
-            legacy_valuespecs.Age(
+            legacy_valuespecs.TimeSpan(
                 title=_("age title"),
                 label=_("age label"),
                 help=_("help text"),
                 display=["days", "hours", "minutes", "seconds"],
                 default_value=100,
             ),
-            id="Age",
+            id="TimeSpan",
         ),
         pytest.param(
             api_v1.preconfigured.Proxy(),

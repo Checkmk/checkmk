@@ -9,7 +9,9 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Dictionary, Integer, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput
+from cmk.gui.valuespec import TimeSpan as Age
+from cmk.gui.valuespec import Tuple
 
 
 def _parameter_valuespec_graylog_sources():
@@ -74,7 +76,6 @@ def _parameter_valuespec_graylog_sources():
                 "msgs_diff",
                 Age(
                     title=_("Timespan for difference calculation of total number of messages"),
-                    display=["days", "hours", "minutes"],
                     default_value=1800,
                 ),
             ),

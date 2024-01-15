@@ -545,6 +545,7 @@ class FixedValue:
 
 
 class TimeUnit(enum.Enum):
+    MILLISECONDS = "milliseconds"
     SECONDS = "seconds"
     MINUTES = "minutes"
     HOURS = "hours"
@@ -567,6 +568,11 @@ class TimeSpan:
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
+
+    Consumer model:
+        **Type**: ``float``
+
+        The configured value will be presented as a float to consumers.
     """
 
     title: Localizable | None = None

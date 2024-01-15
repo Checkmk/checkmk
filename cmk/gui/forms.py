@@ -136,6 +136,15 @@ def space() -> None:
     html.tr(HTMLWriter.render_td("", colspan=2, style="height:15px;"))
 
 
+def warning_message(message: str) -> None:
+    html.tr(
+        HTMLWriter.render_td(
+            html.render_div(html.render_div(message, class_="content"), class_="warning_container"),
+            colspan=2,
+        )
+    )
+
+
 def section(
     title: None | HTML | str = None,
     checkbox: None | HTML | str | tuple[str, bool, str] = None,

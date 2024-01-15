@@ -1,0 +1,13 @@
+Title: Rule "Check Email": Allow all makros
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705327143
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+The ruleset "Check Email" recently featured stricter validation.
+As a result, no makros (like <code>$HOSTNAME$</code>) could be used anymore.
+This was partially compensated for in <a href="https://checkmk.com/werk/15203">#15203</a>, but this was still too restrictive.
+Users can now configure validated host adresses or unvalidated strings containing macros.

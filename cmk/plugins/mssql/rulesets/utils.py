@@ -8,9 +8,9 @@ from cmk.rulesets.v1 import form_specs, Localizable, validators
 
 def _migrate_alternative_to_dropdown(
     model: object,
-) -> tuple[str, tuple[int | None, int | None]] | object:
+) -> tuple[str, tuple[int, int] | tuple[None, None]]:
     if not isinstance(model, tuple):
-        return model
+        raise TypeError("Invalid type, expected tuple, got {}".format(type(model)))
 
     if model[0] in ("no_levels", "levels"):
         return model

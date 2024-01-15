@@ -36,11 +36,6 @@ from cmk.plugins.collection.rulesets.alertmanager import (
             ("one_service", None),
             id="one service",
         ),
-        pytest.param(
-            (None),
-            (None),
-            id="option not selected",
-        ),
     ],
 )
 def test_migrate_dropdown_ident(

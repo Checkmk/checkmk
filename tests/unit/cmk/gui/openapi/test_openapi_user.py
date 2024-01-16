@@ -33,6 +33,7 @@ from cmk.gui.openapi.endpoints.user_config import (
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.userdb import ConnectorType
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
@@ -1261,3 +1262,105 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
         contactgroups=["group_one"],
     )
     assert resp.json["extensions"]["contactgroups"] == ["group_one"]
+
+
+@pytest.fixture(name="mock_ldap_locked_attributes")
+def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
+    """Mock the locked attributes of a LDAP user"""
+    ldap_config = {
+        "id": "CMKTest",
+        "description": "",
+        "comment": "",
+        "docu_url": "",
+        "disabled": False,
+        "directory_type": (
+            "ad",
+            {"connect_to": ("fixed_list", {"server": "some.domain.com"})},
+        ),
+        "bind": (
+            "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+            ("store", "AD_svc_checkmk"),
+        ),
+        "port": 636,
+        "use_ssl": True,
+        "user_dn": "OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+        "user_scope": "sub",
+        "user_filter": "(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+        "user_id_umlauts": "keep",
+        "group_dn": "OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+        "group_scope": "sub",
+        "active_plugins": {
+            "alias": {},
+            "auth_expire": {},
+            "groups_to_contactgroups": {"nested": True},
+            "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
+            "email": {"attr": "mail"},
+            "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
+            "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
+            "pager": {"attr": "mobile"},
+            "groups_to_roles": {
+                "admin": [
+                    (
+                        "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                        None,
+                    )
+                ]
+            },
+            "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
+            "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
+            "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
+            "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
+            "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
+            "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+        },
+        "cache_livetime": 300,
+        "type": "ldap",
+    }
+
+    return mocker.patch(
+        "cmk.gui.openapi.endpoints.user_config.locked_attributes",
+        return_value=LDAPUserConnector(ldap_config).locked_attributes(),
+    )
+
+
+@pytest.mark.usefixtures("mock_ldap_locked_attributes")
+def test_edit_ldap_user_with_locked_attributes(
+    clients: ClientRegistry, run_as_superuser: Callable[[], ContextManager[None]]
+) -> None:
+    name = UserId("foo")
+    user_object: UserObject = {
+        name: {
+            "attributes": {
+                "ui_theme": None,
+                "ui_sidebar_position": None,
+                "nav_hide_icons_title": None,
+                "icons_per_item": None,
+                "show_mode": None,
+                "start_url": None,
+                "force_authuser": False,
+                "enforce_pw_change": True,
+                "alias": "cmkADAdmin",
+                "locked": False,
+                "pager": "",
+                "roles": ["guest"],
+                "contactgroups": [],
+                "email": "",
+                "fallback_contact": False,
+                "password": PasswordHash(
+                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+                ),
+                "serial": 1,
+                "connector": "CMKTest",
+                "disable_notifications": {},
+            },
+            "is_new_user": True,
+        },
+    }
+    with run_as_superuser():
+        edit_users(user_object)
+
+    clients.User.edit(
+        username=name,
+        roles=["admin"],
+        expect_ok=False,
+    ).assert_status_code(403)

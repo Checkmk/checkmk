@@ -20,7 +20,7 @@ def _parameter_valuespec() -> Dictionary:
                 "upper_levels_runtime_percentage",
                 SimpleLevels(
                     spec=Percentage,
-                    unit="%",
+                    unit="% of overall suite timeout",
                     default_levels=(80.0, 90.0),
                     title=_("Upper levels on suite runtime relative to overall timeout"),
                     help=_(

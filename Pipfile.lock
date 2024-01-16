@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6034b44f9fa2ab8f806b78a0173d57f230e3114e8606ef1a48eea937a6fe99c0"
+            "sha256": "4d08c5e247a398f192b9b735938887c320977b854bd6cc5eb66ba2fa3c5f3da1"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1565,15 +1565,6 @@
             ],
             "markers": "python_version >= '3.5'",
             "version": "==1.0.0"
-        },
-        "netapp-ontap": {
-            "hashes": [
-                "sha256:495e679e10e61b9bb2cf5a432a5cdaf9f2ec56855540ba221c021d31a6b91eb7",
-                "sha256:9e1ed21dccae8d35574a0c506a3440e04b9e37a1dff1c2ae7906ec6e7afafaac"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.6'",
-            "version": "==9.14.1.0"
         },
         "numpy": {
             "hashes": [

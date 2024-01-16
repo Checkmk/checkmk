@@ -1,0 +1,13 @@
+Title: user_config: add verification for contact groups and locked attributes
+Class: fix
+Compatible: compat
+Component: rest-api 
+Date: 1705416141
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p19
+
+This werk introduces two changes:
+LI: it now verifies for create & edit if the provided contact groups actually exist
+LI: it verifies that for an edit request, locked attributes are not being modified

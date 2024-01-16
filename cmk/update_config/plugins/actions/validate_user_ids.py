@@ -5,6 +5,8 @@
 
 from logging import Logger
 
+from pydantic import ValidationError
+
 from cmk.utils import tty
 from cmk.utils.user import UserId
 
@@ -25,8 +27,8 @@ class ValidateUserIds(UpdateAction):
         in 'var/check_mk/web' (which are also converted to UserIds).
         """
         try:
-            load_users()
-        except ValueError:
+            load_users(skip_validation=True)
+        except (ValueError, ValidationError):
             err = """ERROR: Update aborted.
 Incompatible user IDs have been found. Updating is not possible. See Werk #15182
 for further information. """
@@ -43,7 +45,10 @@ for further information. """
 
             if invalid_users := [
                 user
-                for user in set(list(load_contacts()) + list(load_multisite_users()))
+                for user in set(
+                    list(load_contacts(skip_contact_validation=True))
+                    + list(load_multisite_users(skip_user_validation=True))
+                )
                 if not _is_valid(user)
             ]:
                 err += "The following users are incompatible with Checkmk 2.2:\n  " + "\n  ".join(

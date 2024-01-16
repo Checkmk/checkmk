@@ -824,7 +824,7 @@ def test_show_all_users_with_no_email(clients: ClientRegistry, monkeypatch: Monk
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
         "cmk.gui.userdb.store.load_contacts",
-        lambda: {},
+        lambda flag: {},
     )
 
     resp = clients.User.get_all()
@@ -1401,3 +1401,35 @@ def test_edit_ldap_user_with_locked_attributes(
         roles=["admin"],
         expect_ok=False,
     ).assert_status_code(403)
+
+
+def test_openapi_minimum_configuration(clients: ClientRegistry) -> None:
+    create_resp = clients.User.create(username="user", fullname="User Test")
+    get_resp = clients.User.get(username="user")
+
+    print(create_resp.json)
+    print(get_resp.json)
+    assert create_resp.json == get_resp.json
+    assert create_resp.json["id"] == "user"
+    assert create_resp.json["extensions"]["fullname"] == "User Test"
+
+
+def test_openapi_full_configuration(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="group_one", alias="Group")
+    create_resp = clients.User.create(
+        username="user",
+        fullname="User Test",
+        authorized_sites=["NO_SITE"],
+        contactgroups=["group_one"],
+        temperature_unit="fahrenheit",
+        disable_login=True,
+        pager_address="LMP",
+        language="de",
+        contact_options={"email": "test@example.com", "fallback_contact": True},
+        auth_option={"auth_type": "automation", "secret": "TopSecret!"},
+        roles=["guest"],
+    )
+
+    get_resp = clients.User.get(username="user")
+
+    assert create_resp.json == get_resp.json

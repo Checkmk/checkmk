@@ -30,7 +30,7 @@ class CheckPasswordHashes(UpdateAction):
     """
 
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        users: Users = load_users()
+        users: Users = load_users(skip_validation=True)
         if unsupported := [
             user_id
             for user_id in users

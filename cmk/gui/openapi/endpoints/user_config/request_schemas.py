@@ -250,7 +250,7 @@ class CreateUser(CustomUserAttributes):
         attribute="alias",
     )
     customer = gui_fields.customer_field(
-        required=True,
+        required=False,
         should_exist=True,
         allow_global=True,
         description="By specifying a customer, you configure on which sites the user object will be available. "

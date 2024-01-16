@@ -315,7 +315,8 @@ def _create_cmk_image(
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
     with _start(
         client,
-        name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
+        # TODO: Re-enable using dedicated container names, the following causes name conflicts:
+        # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
             "org.tribe29.build_time": f"{int(time.time()):d}",

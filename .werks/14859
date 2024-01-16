@@ -1,0 +1,12 @@
+Title: Event Console: Fix The EC always activates the config written by the previous activation.
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1705414424
+Edition: cre
+Level: 2
+Version: 2.2.0p19
+
+The bug was introduced by the werk: [#16012](https://checkmk.com/werk/16012) in version 2.2.0p18.
+A workaround would be: make a trivial change to the rules/rule packs (edit description)
+and activate the changes. Or reload the EC manually after the initial reload to apply the correct config.

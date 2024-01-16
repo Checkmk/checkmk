@@ -151,6 +151,10 @@ class SetupSearch(ABCMegaMenuSearch):
                 name="reset",
                 type_="button",
                 onclick="cmk.search.on_click_reset('setup');",
+                # When the user searched for something, let him jump to the first result with the first
+                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
+                # the <ESC> key.
+                tabindex="-1",
             )
         html.close_div()
         html.div("", id_="mk_side_clear")

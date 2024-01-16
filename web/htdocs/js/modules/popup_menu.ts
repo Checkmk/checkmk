@@ -105,6 +105,10 @@ export function open_popup() {
     active_popup.open();
 }
 
+export function is_open(ident: string): boolean {
+    return Boolean(active_popup.id && active_popup.id === ident);
+}
+
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
 function handle_popup_close(event: Event | undefined): true | void {

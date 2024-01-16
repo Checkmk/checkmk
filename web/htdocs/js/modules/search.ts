@@ -243,7 +243,20 @@ export function on_key_down(id: string) {
             follow_current_search_query(current_search!);
             break;
         case "Escape":
-            on_click_reset(id);
+            if (!current_search) return;
+            if (current_search.has_search_query()) on_click_reset(id);
+            else
+                toggle_popup(
+                    event,
+                    this,
+                    "mega_menu_" + id,
+                    {type: "inline"},
+                    null,
+                    null,
+                    null,
+                    false
+                );
+
             break;
     }
 }

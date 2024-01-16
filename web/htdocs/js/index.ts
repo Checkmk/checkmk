@@ -32,6 +32,7 @@ import * as help from "help";
 import * as host_diagnose from "host_diagnose";
 import * as hover from "hover";
 import $ from "jquery";
+import * as keyboard_shortcuts from "keyboard_shortcuts";
 import * as number_format from "number_format";
 import * as page_menu from "page_menu";
 import * as password_meter from "password_meter";
@@ -101,6 +102,7 @@ $(() => {
     forms.enable_dynamic_form_elements();
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
+    keyboard_shortcuts.register_shortcuts();
     // add a confirmation popup for each for that has a valid confirmation text
     document
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
@@ -128,7 +130,7 @@ export const cmk_export = {
         async_progress: async_progress,
         activation: activation,
         selection: selection,
-        element_dragging: element_dragging,
+        keyboard_shortcuts: keyboard_shortcuts,
         help: help,
         availability: availability,
         sla: sla,

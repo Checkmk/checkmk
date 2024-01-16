@@ -1,0 +1,11 @@
+Title: revert_changes: internal changes can be reverted only if the user has the correct permission
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1705491719
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+Changes made by the checkmk internal user can now only be reverted when the
+logged-in user has the permission "Discard foreign changes".

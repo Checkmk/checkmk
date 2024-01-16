@@ -161,6 +161,11 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         if not user.may("wato.discard"):
             return False
 
+        if any((change["user_id"] != user.id for _, change in self._changes)) and not user.may(
+            "wato.discardforeign"
+        ):
+            return False
+
         if not user.may("wato.discardforeign") and self._has_foreign_changes_on_any_site():
             return False
 

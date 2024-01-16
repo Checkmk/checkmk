@@ -194,7 +194,7 @@ def main() {
     }
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir} --ulimit nofile=2048:2048") {
+    docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 

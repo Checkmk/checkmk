@@ -64,14 +64,14 @@ def _migrate(
 def _migrate_alternative(
     p: _PercUsedModel | _AbsFreeModel | _PredictiveModel,
 ) -> (
-    tuple[Literal["used_perc"], tuple[float, float]]
+    tuple[Literal["perc_used"], tuple[float, float]]
     | tuple[Literal["abs_free"], tuple[int, int]]
     | tuple[Literal["predictive"], dict]
 ):
     if isinstance(p, tuple):
         w, c = p
         if isinstance(w, float):
-            return ("used_perc", (float(w), float(c)))
+            return ("perc_used", (float(w), float(c)))
         return ("abs_free", (int(w) * _MiB, int(c) * _MiB))
     return ("predictive", p)
 

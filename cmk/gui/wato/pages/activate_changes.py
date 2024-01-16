@@ -455,6 +455,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 disabled_tooltip = _(
                     "Blocked due to non-revertible change. Activate those changes to unblock reverting."
                 )
+            elif any(
+                (change["user_id"] != user.id for _, change in self._pending_changes)
+            ) and not user.may("wato.discardforeign"):
+                enabled = False
+                disabled_tooltip = _("This user doesn't have permission to revert these changes")
             else:
                 enabled = True
 

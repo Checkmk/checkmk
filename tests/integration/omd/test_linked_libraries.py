@@ -93,7 +93,7 @@ def _linked_libraries_of_file(site: Site, file: Path) -> Iterator[LinkedLibrary]
     yield from _parse_ldd(_run_ldd(site, file))
 
 
-@pytest.mark.skip(reason="fails unexpected at the moment")
+@pytest.mark.skip(reason="fails unexpected at the moment - CMK-15651")
 def test_linked_libraries(site: Site) -> None:
     """
     A test to sanity check linked libraries in the installation.

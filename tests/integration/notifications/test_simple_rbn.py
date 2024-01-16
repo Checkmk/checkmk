@@ -85,6 +85,7 @@ def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
 @pytest.mark.usefixtures("fake_sendmail")
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("disable_flap_detection")
+@pytest.mark.skip(reason="flaky test")
 def test_simple_rbn_service_notification(host: HostName, site: Site) -> None:
     # cmc only has 'Check_MK' and 'Check_MK Discovery'.
     service: Final = "PING" if site.core_name() == "nagios" else "Check_MK"

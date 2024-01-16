@@ -9,7 +9,13 @@ import time
 from collections.abc import Hashable, Iterable, Sequence
 from dataclasses import dataclass, field
 
-from livestatus import get_rrd_data, lqencode, MKLivestatusNotFoundError, SiteId
+from livestatus import (
+    get_rrd_data,
+    lqencode,
+    MKLivestatusNotFoundError,
+    SingleSiteConnection,
+    SiteId,
+)
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -68,22 +74,14 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("prediction_graph", page_graph)
 
 
-def page_graph() -> None:
-    host_name = HostName(request_.get_str_input_mandatory("host"))
-    service_name = ServiceName(request_.get_str_input_mandatory("service"))
-    metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
-
-    breadcrumb = make_service_breadcrumb(host_name, service_name)
-    make_header(
-        html,
-        _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),
-        breadcrumb,
-    )
-
+def _select_prediction(
+    livestatus_connection: SingleSiteConnection,
+    host_name: HostName,
+    service_name: ServiceName,
+    metric_name: MetricName,
+) -> tuple[PredictionInfo, PredictionData]:
     prediction_data_querier = PredictionQuerier(
-        livestatus_connection=live().get_connection(
-            SiteId(request_.get_str_input_mandatory("site"))
-        ),
+        livestatus_connection=livestatus_connection,
         host_name=host_name,
         service_name=service_name,
     )
@@ -122,6 +120,26 @@ def page_graph() -> None:
         )
         html.hidden_fields()
 
+    return selected_prediction_info, selected_prediction_data
+
+
+def page_graph() -> None:
+    host_name = HostName(request_.get_str_input_mandatory("host"))
+    service_name = ServiceName(request_.get_str_input_mandatory("service"))
+    metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
+    livestatus_connection = live().get_connection(SiteId(request_.get_str_input_mandatory("site")))
+
+    breadcrumb = make_service_breadcrumb(host_name, service_name)
+    make_header(
+        html,
+        _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),
+        breadcrumb,
+    )
+
+    selected_prediction_info, selected_prediction_data = _select_prediction(
+        livestatus_connection, host_name, service_name, metric_name
+    )
+
     curves = _make_prediction_curves(selected_prediction_data, selected_prediction_info.params)
     vertical_range = _compute_vertical_range(curves)
 
@@ -141,9 +159,14 @@ def page_graph() -> None:
 
     _render_prediction(curves)
 
-    _render_observed_data(
-        prediction_data_querier, selected_prediction_info, current_measurement, time.time()
-    )
+    if (
+        current_measurement_rrd := _get_observed_data(
+            livestatus_connection, host_name, service_name, selected_prediction_info, time.time()
+        )
+    ) is not None:
+        _render_curve(current_measurement_rrd, Color.OBSERVED, 2)
+        if current_measurement is not None:
+            _render_point(*current_measurement, Color.OBSERVED)
 
     html.footer()
 
@@ -207,37 +230,36 @@ def _render_prediction(curves: PredictionCurves) -> None:
     _render_curve(curves.average, Color.PREDICTION)  # repetition makes line bolder
 
 
-def _render_observed_data(
-    prediction_data_querier: PredictionQuerier,
+def _get_observed_data(
+    livestatus_connection: SingleSiteConnection,
+    host_name: HostName,
+    service_name: ServiceName,
     selected_prediction_info: PredictionInfo,
-    current_measurement: tuple[float, float] | None,
     now: float,
-) -> None:
+) -> Sequence[float | None] | None:
     # Try to get current RRD data and render it as well
     from_time, until_time = selected_prediction_info.valid_interval
-    if from_time <= now <= until_time:
-        try:
-            response = get_rrd_data(
-                prediction_data_querier.livestatus_connection,
-                prediction_data_querier.host_name,
-                prediction_data_querier.service_name,
-                f"{selected_prediction_info.metric}.max",
-                from_time,
-                until_time,
-            )
-        except MKLivestatusNotFoundError as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
-        if response is None:
-            # TODO: not sure this is the true reason for `None`.
-            raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
+    if not from_time <= now <= until_time:
+        return None
 
-        rrd_data = response.values
+    try:
+        response = get_rrd_data(
+            livestatus_connection,
+            host_name,
+            service_name,
+            f"{selected_prediction_info.metric}.max",
+            from_time,
+            until_time,
+        )
+    except MKLivestatusNotFoundError as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
+    if response is None:
+        # TODO: not sure this is the true reason for `None`.
+        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
 
-        _render_curve(rrd_data, Color.OBSERVED, 2)
-        if current_measurement is not None:
-            _render_point(*current_measurement, Color.OBSERVED)
+    return response.values
 
 
 def _compute_vertical_scala(  # pylint: disable=too-many-branches

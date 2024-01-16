@@ -15,7 +15,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
+from cmk.utils.prediction import estimate_levels_quadruple, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
@@ -303,7 +303,7 @@ def _make_prediction_curves(
             curves.min_.append(predicted.min_)
             curves.max_.append(predicted.max_)
             curves.stdev.append(predicted.stdev)
-            upper_0, upper_1, lower_0, lower_1 = estimate_levels(
+            upper_0, upper_1, lower_0, lower_1 = estimate_levels_quadruple(
                 reference_value=predicted.average,
                 stdev=predicted.stdev,
                 levels_lower=params.levels_lower,

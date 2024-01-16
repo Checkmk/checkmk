@@ -85,14 +85,14 @@ def test_prediction_updater_serializable() -> None:
         ),
     ],
 )
-def test_estimate_levels(
+def test_estimate_levels_quadruple(
     reference_value: float,
     reference_deviation: float,
     params: Mapping,
     result: _plugin_interface.EstimatedLevels,
 ) -> None:
     assert (
-        _plugin_interface.estimate_levels(
+        _plugin_interface.estimate_levels_quadruple(
             reference_value=reference_value,
             stdev=reference_deviation,
             levels_lower=params.get("levels_lower"),
@@ -101,3 +101,25 @@ def test_estimate_levels(
         )
         == result
     )
+
+
+def test_estimate_levels_upper_lbound() -> None:
+    assert _plugin_interface.estimate_levels(42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), None) == (
+        44.3,
+        45.2,
+    )
+
+    assert _plugin_interface.estimate_levels(
+        42.0, 1.0, "upper", ("stdev", (2.3, 3.2)), (45.0, 45.0)
+    ) == (45.0, 45.2)
+
+
+def test_estimate_levels_lower_ubound() -> None:
+    assert _plugin_interface.estimate_levels(42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), None) == (
+        39.7,
+        38.8,
+    )
+
+    assert _plugin_interface.estimate_levels(
+        42.0, 1.0, "lower", ("stdev", (2.3, 3.2)), (38.5, 50.0)
+    ) == (38.5, 38.8)

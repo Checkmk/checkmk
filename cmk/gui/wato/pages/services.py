@@ -404,7 +404,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     raise_errors=raise_errors,
                 )
-            case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.BULK_UPDATE | DiscoveryAction.UPDATE_SERVICES:
+            case (
+                DiscoveryAction.SINGLE_UPDATE
+                | DiscoveryAction.BULK_UPDATE
+                | DiscoveryAction.UPDATE_SERVICES
+                | DiscoveryAction.UPDATE_SERVICE_LABELS
+            ):
                 discovery_result = perform_service_discovery(
                     action=action,
                     discovery_result=discovery_result,
@@ -913,8 +918,12 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
+        has_changed_services = any(
+            check.check_source == DiscoveryState.CHANGED for check in discovery_result.check_table
+        )
         has_changes = any(
-            check.check_source in (DiscoveryState.UNDECIDED, DiscoveryState.VANISHED)
+            check.check_source
+            in (DiscoveryState.UNDECIDED, DiscoveryState.VANISHED, DiscoveryState.CHANGED)
             for check in discovery_result.check_table
         )
         had_services_before = any(
@@ -944,6 +953,9 @@ class DiscoveryPageRenderer:
             and user.may("wato.service_discovery_to_removed")
         ):
             enable_page_menu_entry(html, "tabula_rasa")
+
+        if has_changed_services:
+            enable_page_menu_entry(html, "update_service_labels")
 
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
@@ -1999,6 +2011,24 @@ def _page_menu_selected_services_entries(
             is_show_more=entry.is_show_more,
             css_classes=["action"],
         )
+    yield PageMenuEntry(
+        title=_("Update service labels"),
+        icon_name="update_service_labels",
+        item=make_javascript_link(
+            _start_js_call(
+                host,
+                options._replace(action=DiscoveryAction.UPDATE_SERVICE_LABELS),
+                request_vars={
+                    "update_target": DiscoveryState.MONITORED,
+                    "update_source": DiscoveryState.CHANGED,
+                },
+            )
+        ),
+        name="update_service_labels",
+        is_enabled=False,
+        is_shortcut=False,
+        css_classes=["action"],
+    )
 
 
 def _page_menu_host_labels_entries(

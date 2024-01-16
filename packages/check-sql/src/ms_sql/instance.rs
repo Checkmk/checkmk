@@ -377,34 +377,35 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
     ) -> String {
-        let sep = section.sep();
-        match section.name() {
-            names::INSTANCE => {
-                self.generate_state_entry(true, sep)
-                    + &self.generate_details_entry(client, sep).await
+        if let Some(query) = section.select_query(get_sql_dir()) {
+            let sep = section.sep();
+            match section.name() {
+                names::INSTANCE => {
+                    self.generate_state_entry(true, sep)
+                        + &self.generate_details_entry(client, sep).await
+                }
+                names::COUNTERS => self.generate_counters_section(client, &query, sep).await,
+                names::BACKUP => self.generate_backup_section(client, &query, sep).await,
+                names::BLOCKED_SESSIONS => {
+                    self.generate_sessions_section(client, &query, sep).await
+                }
+                names::DATABASES => self.generate_databases_section(client, &query, sep).await,
+                names::CONNECTIONS => self.generate_connections_section(client, &query, sep).await,
+                names::TRANSACTION_LOG
+                | names::TABLE_SPACES
+                | names::DATAFILES
+                | names::CLUSTERS => {
+                    self.generate_database_indexed_section(client, endpoint, section, &query, sep)
+                        .await
+                }
+                names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
+                    self.generate_unified_section(endpoint, section, None).await
+                }
+                _ => format!("{} not implemented\n", section.name()).to_string(),
             }
-            names::COUNTERS => self.generate_counters_section(client, sep).await,
-            names::BACKUP => self.generate_backup_section(client, sep).await,
-            names::BLOCKED_SESSIONS => {
-                self.generate_sessions_section(client, &sqls::Id::BlockingSessions, sep)
-                    .await
-            }
-            names::DATABASES => {
-                self.generate_databases_section(client, &sqls::Id::Databases, sep)
-                    .await
-            }
-            names::CONNECTIONS => {
-                self.generate_connections_section(client, &sqls::Id::Connections, sep)
-                    .await
-            }
-            names::TRANSACTION_LOG | names::TABLE_SPACES | names::DATAFILES | names::CLUSTERS => {
-                self.generate_database_indexed_section(client, endpoint, section)
-                    .await
-            }
-            names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
-                self.generate_unified_section(endpoint, section, None).await
-            }
-            _ => format!("{} not implemented\n", section.name()).to_string(),
+        } else {
+            log::error!("Bad section query: {}", section.name());
+            String::default()
         }
     }
 
@@ -446,8 +447,13 @@ impl SqlInstance {
         format!("{};{};{}.mssql", self.hostname(), self.name, name)
     }
 
-    pub async fn generate_counters_section(&self, client: &mut Client, sep: char) -> String {
-        let x = run_known_query(client, sqls::Id::Counters)
+    pub async fn generate_counters_section(
+        &self,
+        client: &mut Client,
+        query: &str,
+        sep: char,
+    ) -> String {
+        let x = run_custom_query(client, query)
             .await
             .and_then(validate_rows_has_two_blocks)
             .and_then(|rows| {
@@ -485,10 +491,10 @@ impl SqlInstance {
     pub async fn generate_sessions_section(
         &self,
         client: &mut Client,
-        id: &sqls::Id,
+        query: &str,
         sep: char,
     ) -> String {
-        match run_known_query(client, id).await {
+        match run_custom_query(client, query).await {
             Ok(rows) => {
                 if rows.is_empty() || rows[0].is_empty() {
                     log::info!("No blocking sessions");
@@ -507,6 +513,7 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         databases: &Vec<String>,
+        query: &str,
         sep: char,
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
@@ -522,7 +529,7 @@ impl SqlInstance {
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, sqls::Id::SpaceUsed)
+                    result += &run_custom_query(&mut c, query)
                         .await
                         .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
                         .unwrap_or_else(|e| format_error(d, &e));
@@ -535,10 +542,15 @@ impl SqlInstance {
         result
     }
 
-    pub async fn generate_backup_section(&self, client: &mut Client, sep: char) -> String {
+    pub async fn generate_backup_section(
+        &self,
+        client: &mut Client,
+        query: &str,
+        sep: char,
+    ) -> String {
         let databases = self.generate_databases(client).await;
 
-        let result = run_known_query(client, sqls::Id::Backup)
+        let result = run_custom_query(client, query)
             .await
             .map(|rows| self.process_backup_rows(&rows, &databases, sep));
         match result {
@@ -566,24 +578,25 @@ impl SqlInstance {
         client: &mut Client,
         endpoint: &Endpoint,
         section: &Section,
+        query: &str,
+        sep: char,
     ) -> String {
-        let sep = section.sep();
         let databases = self.generate_databases(client).await;
         match section.name() {
             names::TRANSACTION_LOG => {
-                self.generate_transaction_logs_section(endpoint, &databases, sep)
+                self.generate_transaction_logs_section(endpoint, &databases, query, sep)
                     .await
             }
             names::TABLE_SPACES => {
-                self.generate_table_spaces_section(endpoint, &databases, sep)
+                self.generate_table_spaces_section(endpoint, &databases, query, sep)
                     .await
             }
             names::DATAFILES => {
-                self.generate_datafiles_section(endpoint, &databases, sep)
+                self.generate_datafiles_section(endpoint, &databases, query, sep)
                     .await
             }
             names::CLUSTERS => {
-                self.generate_clusters_section(endpoint, &databases, sep)
+                self.generate_clusters_section(endpoint, &databases, query, sep)
                     .await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
@@ -594,13 +607,14 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         databases: &Vec<String>,
+        query: &str,
         sep: char,
     ) -> String {
         let mut result = String::new();
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, sqls::Id::TransactionLogs)
+                    result += &run_custom_query(&mut c, query)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -627,13 +641,14 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         databases: &Vec<String>,
+        query: &str,
         sep: char,
     ) -> String {
         let mut result = String::new();
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
-                    result += &run_known_query(&mut c, sqls::Id::Datafiles)
+                    result += &run_custom_query(&mut c, query)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
                         .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
@@ -649,11 +664,11 @@ impl SqlInstance {
     pub async fn generate_databases_section(
         &self,
         client: &mut Client,
-        id: &sqls::Id,
+        query: &str,
         sep: char,
     ) -> String {
         let databases = self.generate_databases(client).await;
-        run_known_query(client, id)
+        run_custom_query(client, query)
             .await
             .map(|rows| to_databases_entries(&self.name, &rows, sep))
             .unwrap_or_else(|e| {
@@ -695,6 +710,7 @@ impl SqlInstance {
         &self,
         endpoint: &Endpoint,
         databases: &Vec<String>,
+        query: &str,
         sep: char,
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
@@ -706,15 +722,18 @@ impl SqlInstance {
             )
         };
         let mut result = String::new();
-        for d in databases {
-            match self.create_client(endpoint, Some(d.clone())).await {
-                Ok(mut c) => match self.generate_clusters_entry(&mut c, d, sep).await {
+        for database in databases {
+            match self.create_client(endpoint, Some(database.clone())).await {
+                Ok(mut c) => match self
+                    .generate_clusters_entry(&mut c, database, query, sep)
+                    .await
+                {
                     Ok(None) => {}
                     Ok(Some(entry)) => result += &entry,
-                    Err(err) => result += &format_error(d, &err),
+                    Err(err) => result += &format_error(database, &err),
                 },
                 Err(err) => {
-                    result += &format_error(d, &err);
+                    result += &format_error(database, &err);
                 }
             }
         }
@@ -724,17 +743,18 @@ impl SqlInstance {
     async fn generate_clusters_entry(
         &self,
         client: &mut Client,
-        d: &str,
+        database: &str,
+        query: &str,
         sep: char,
     ) -> Result<Option<String>> {
         if !self.is_database_clustered(client).await? {
             return Ok(None);
         }
-        let (nodes, active_node) = self.get_cluster_nodes(client).await?;
+        let (nodes, active_node) = self.get_cluster_nodes(client, query).await?;
         Ok(Some(format!(
             "{}{sep}{}{sep}{}{sep}{}",
             self.name,
-            d.replace(' ', "_"),
+            database.replace(' ', "_"),
             active_node,
             nodes
         )))
@@ -747,8 +767,12 @@ impl SqlInstance {
         Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
     }
 
-    async fn get_cluster_nodes(&self, client: &mut Client) -> Result<(String, String)> {
-        let rows = &run_known_query(client, sqls::Id::Clusters).await?;
+    async fn get_cluster_nodes(
+        &self,
+        client: &mut Client,
+        query: &str,
+    ) -> Result<(String, String)> {
+        let rows = &run_custom_query(client, query).await?;
         if rows.len() > 2 && !rows[0].is_empty() && !rows[1].is_empty() {
             return Ok((
                 rows[0]
@@ -768,10 +792,10 @@ impl SqlInstance {
     pub async fn generate_connections_section(
         &self,
         client: &mut Client,
-        id: &sqls::Id,
+        query: &str,
         sep: char,
     ) -> String {
-        run_known_query(client, id)
+        run_custom_query(client, query)
             .await
             .map(|rows| self.to_connections_entries(&rows, sep))
             .unwrap_or_else(|e| format!("{}{sep}{}\n", self.name, e))

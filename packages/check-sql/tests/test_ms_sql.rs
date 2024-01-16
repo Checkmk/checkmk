@@ -10,7 +10,7 @@ use check_sql::ms_sql::{
     instance::{self, SqlInstance, SqlInstanceBuilder},
     query,
     section::Section,
-    sqls,
+    sqls::{self, find_known_query},
 };
 
 use check_sql::setup::Env;
@@ -38,11 +38,21 @@ fn test_section_select_query() {
     let work_dir = tools::create_temp_process_dir();
     let custom_sql_path = work_dir.path().join("mssql");
     std::fs::create_dir_all(&custom_sql_path).unwrap();
-    for name in [names::JOBS, names::AVAILABILITY_GROUPS, names::MIRRORING] {
+    for name in [
+        names::JOBS,
+        names::AVAILABILITY_GROUPS,
+        names::MIRRORING,
+        "buzz",
+    ] {
         tools::create_file_with_content(&custom_sql_path, &(name.to_owned() + ".sql"), "Bu!");
     }
     let mk_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), 100);
-    for name in [names::JOBS, names::AVAILABILITY_GROUPS, names::MIRRORING] {
+    for name in [
+        names::JOBS,
+        names::AVAILABILITY_GROUPS,
+        names::MIRRORING,
+        "buzz",
+    ] {
         assert_eq!(
             mk_section(name)
                 .select_query(Some(custom_sql_path.to_owned()))
@@ -227,7 +237,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_blocked_sessions(i, c).await;
     validate_all_sessions_to_check_format(i, c).await;
     assert!(i
-        .generate_sessions_section(c, &sqls::Id::BadQuery, '|',)
+        .generate_sessions_section(c, "SELEC * FROM sys.dm_exec_sessions", '|',)
         .await
         .contains(" error: "),);
     validate_table_spaces(i, c, e).await;
@@ -255,7 +265,9 @@ async fn validate_database_names(instance: &SqlInstance, client: &mut Client) {
 }
 
 async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
-    let counters = instance.generate_counters_section(client, '|').await;
+    let counters = instance
+        .generate_counters_section(client, find_known_query(sqls::Id::Counters).unwrap(), '|')
+        .await;
     let result = counters.split('\n').collect::<Vec<&str>>();
     assert!(result[0].starts_with("None|utc_time|None|"));
     assert!(result.len() > 100, "{:?}", counters);
@@ -265,7 +277,11 @@ async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
     let blocked_sessions = &instance
-        .generate_sessions_section(client, &sqls::Id::BlockingSessions, '|')
+        .generate_sessions_section(
+            client,
+            find_known_query(sqls::Id::BlockedSessions).unwrap(),
+            '|',
+        )
         .await;
     assert_eq!(
         blocked_sessions,
@@ -275,7 +291,11 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) 
 
 async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
     let all_sessions = &instance
-        .generate_sessions_section(client, &sqls::Id::WaitingTasks, '|')
+        .generate_sessions_section(
+            client,
+            find_known_query(sqls::Id::WaitingTasks).unwrap(),
+            '|',
+        )
         .await;
 
     let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
@@ -302,7 +322,12 @@ async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endp
     let expected = expected_databases();
 
     let result = instance
-        .generate_table_spaces_section(endpoint, &databases, ' ')
+        .generate_table_spaces_section(
+            endpoint,
+            &databases,
+            find_known_query(sqls::Id::TableSpaces).unwrap(),
+            ' ',
+        )
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
@@ -322,7 +347,9 @@ async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endp
 async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
-    let result = instance.generate_backup_section(client, '|').await;
+    let result = instance
+        .generate_backup_section(client, find_known_query(sqls::Id::Backup).unwrap(), '|')
+        .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= (to_be_found.len() + 1), "{:?}", lines);
 
@@ -351,7 +378,12 @@ async fn validate_transaction_logs(
 
     let databases = instance.generate_databases(client).await;
     let result = instance
-        .generate_transaction_logs_section(endpoint, &databases, '|')
+        .generate_transaction_logs_section(
+            endpoint,
+            &databases,
+            find_known_query(sqls::Id::TransactionLogs).unwrap(),
+            '|',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -366,6 +398,7 @@ async fn validate_transaction_logs(
         }
         assert!(values[2].to_lowercase().ends_with("log"), "wrong: {l}");
         assert!(values[3].starts_with("C:\\Program"), "wrong: {l}");
+        assert!(values[3].ends_with(".ldf"), "wrong: {l}");
         assert!(values[4].parse::<u64>().is_ok(), "wrong: {l}");
         assert!(values[5].parse::<u64>().is_ok(), "wrong: {l}");
         assert!(values[6].parse::<u64>().is_ok(), "wrong: {l}");
@@ -379,7 +412,12 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
     let databases = instance.generate_databases(client).await;
 
     let result = instance
-        .generate_transaction_logs_section(endpoint, &databases, '|')
+        .generate_datafiles_section(
+            endpoint,
+            &databases,
+            find_known_query(sqls::Id::Datafiles).unwrap(),
+            '|',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -393,8 +431,12 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
-        assert!(values[2].to_lowercase().ends_with("log"), "wrong: {l}");
+        assert!(!values[2].to_lowercase().ends_with("log"), "wrong: {l}");
         assert!(values[3].starts_with("C:\\Program"), "wrong: {l}");
+        assert!(
+            values[3].ends_with(".mdf") || values[3].ends_with(".ndf"),
+            "wrong: {l}"
+        );
         assert!(values[4].parse::<u64>().is_ok(), "wrong: {l}");
         assert!(values[5].parse::<u64>().is_ok(), "wrong: {l}");
         assert!(values[6].parse::<u64>().is_ok(), "wrong: {l}");
@@ -407,7 +449,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, &sqls::Id::Databases, '|')
+        .generate_databases_section(client, find_known_query(sqls::Id::Databases).unwrap(), '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -439,7 +481,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_databases_section(client, &sqls::Id::BadQuery, '|')
+        .generate_databases_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), '|')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -463,7 +505,11 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
-        .generate_connections_section(client, &sqls::Id::Connections, ' ')
+        .generate_connections_section(
+            client,
+            find_known_query(sqls::Id::Connections).unwrap(),
+            ' ',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -485,7 +531,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
 
 async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
     let result = instance
-        .generate_connections_section(client, &sqls::Id::BadQuery, ' ')
+        .generate_connections_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), ' ')
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();

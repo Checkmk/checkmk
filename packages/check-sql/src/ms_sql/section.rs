@@ -2,9 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use super::sqls::{self, find_known_query};
 use crate::config::{self, section, section::names};
 use crate::emit::header;
-use crate::ms_sql::sqls;
 use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -105,10 +105,10 @@ impl Section {
 
     pub fn select_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
         match self.name.as_ref() {
-            section::names::JOBS
-            | section::names::MIRRORING
-            | section::names::AVAILABILITY_GROUPS => self.find_query(sql_dir),
-            _ => None,
+            names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
+                .map(str::to_string)
+                .ok(),
+            _ => self.find_query(sql_dir),
         }
     }
 
@@ -173,13 +173,13 @@ lazy_static::lazy_static! {
         (names::INSTANCE, sqls::Id::InstanceProperties),
         (names::COUNTERS, sqls::Id::Counters),
         (names::BACKUP, sqls::Id::Backup),
-        (names::BLOCKED_SESSIONS, sqls::Id::BlockingSessions),
+        (names::BLOCKED_SESSIONS, sqls::Id::BlockedSessions),
         (names::DATABASES, sqls::Id::Databases),
         (names::CONNECTIONS, sqls::Id::Connections),
 
         (names::TRANSACTION_LOG, sqls::Id::TransactionLogs),
         (names::DATAFILES, sqls::Id::Datafiles),
-        (names::TABLE_SPACES, sqls::Id::SpaceUsed),
+        (names::TABLE_SPACES, sqls::Id::TableSpaces),
         (names::CLUSTERS, sqls::Id::Clusters),
 
         (names::JOBS, sqls::Id::Jobs),
@@ -220,38 +220,33 @@ mod tests {
     fn test_section_select_query() {
         let mk_section =
             |name: &str| Section::new(&config::section::SectionBuilder::new(name).build(), 100);
-        let test_set: &[(&str, Option<&str>)] = &[
-            (names::INSTANCE, None),
-            (names::DATABASES, None),
-            (names::COUNTERS, None),
-            (names::BLOCKED_SESSIONS, None),
-            (names::TRANSACTION_LOG, None),
-            (names::CLUSTERS, None),
-            (
-                names::MIRRORING,
-                Some(sqls::find_known_query(sqls::Id::Mirroring).unwrap()),
-            ),
-            (
-                names::AVAILABILITY_GROUPS,
-                Some(sqls::find_known_query(sqls::Id::AvailabilityGroups).unwrap()),
-            ),
-            (names::CONNECTIONS, None),
-            (names::TABLE_SPACES, None),
-            (names::DATAFILES, None),
-            (names::BACKUP, None),
-            (
-                names::JOBS,
-                Some(sqls::find_known_query(sqls::Id::Jobs).unwrap()),
-            ),
+        let test_set: &[(&str, sqls::Id)] = &[
+            (names::INSTANCE, sqls::Id::InstanceProperties),
+            (names::DATABASES, sqls::Id::Databases),
+            (names::COUNTERS, sqls::Id::Counters),
+            (names::BLOCKED_SESSIONS, sqls::Id::BlockedSessions),
+            (names::TRANSACTION_LOG, sqls::Id::TransactionLogs),
+            (names::CLUSTERS, sqls::Id::Clusters),
+            (names::MIRRORING, sqls::Id::Mirroring),
+            (names::AVAILABILITY_GROUPS, sqls::Id::AvailabilityGroups),
+            (names::CONNECTIONS, sqls::Id::Connections),
+            (names::TABLE_SPACES, sqls::Id::TableSpaces),
+            (names::DATAFILES, sqls::Id::Datafiles),
+            (names::BACKUP, sqls::Id::Backup),
+            (names::JOBS, sqls::Id::Jobs),
         ];
         for (name, ids) in test_set {
             assert_eq!(
                 mk_section(name)
                     .select_query(custom::get_sql_dir())
-                    .as_deref(),
-                *ids
+                    .unwrap(),
+                find_known_query(ids).unwrap()
             );
         }
+        assert_eq!(
+            mk_section("no_name").select_query(custom::get_sql_dir()),
+            None
+        )
     }
 
     #[test]

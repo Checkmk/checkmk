@@ -111,7 +111,7 @@ class PredictionUpdater:
         ) is None:
             return None, (None, None, None, None)
 
-        return reference.average, estimate_levels(
+        return reference.average, estimate_levels_quadruple(
             reference_value=reference.average,
             stdev=reference.stdev,
             levels_lower=self.params.levels_lower,
@@ -120,7 +120,7 @@ class PredictionUpdater:
         )
 
 
-def estimate_levels(
+def estimate_levels_quadruple(
     *,
     reference_value: float,
     stdev: float | None,
@@ -128,63 +128,65 @@ def estimate_levels(
     levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
 ) -> EstimatedLevels:
-    estimated_upper_warn, estimated_upper_crit = (
-        _get_levels_from_params(
-            levels=levels_upper,
-            sig=1,
-            reference=reference_value,
-            stdev=stdev,
-        )
+    upper = (
+        estimate_levels(reference_value, stdev, "upper", levels_upper, levels_upper_lower_bound)
         if levels_upper
-        else (None, None)
-    )
-
-    estimated_lower_warn, estimated_lower_crit = (
-        _get_levels_from_params(
-            levels=levels_lower,
-            sig=-1,
-            reference=reference_value,
-            stdev=stdev,
-        )
+        else None
+    ) or (None, None)
+    lower = (
+        estimate_levels(reference_value, stdev, "lower", levels_lower, None)
         if levels_lower
-        else (None, None)
+        else None
+    ) or (None, None)
+
+    return (upper[0], upper[1], lower[0], lower[1])
+
+
+def estimate_levels(
+    reference_value: float,
+    stdev: float | None,
+    direction: Literal["upper", "lower"],
+    levels: LevelsSpec,
+    bound: tuple[float, float] | None,
+) -> tuple[float, float] | None:
+    estimated = _compute_levels_from_params(
+        levels=levels,
+        sig=1 if direction == "upper" else -1,
+        reference=reference_value,
+        stdev=stdev,
     )
+    if estimated is None or bound is None:
+        return estimated
 
-    if levels_upper_lower_bound:
-        estimated_upper_warn = (
-            None
-            if estimated_upper_warn is None
-            else max(levels_upper_lower_bound[0], estimated_upper_warn)
-        )
-        estimated_upper_crit = (
-            None
-            if estimated_upper_crit is None
-            else max(levels_upper_lower_bound[1], estimated_upper_crit)
-        )
-
-    return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
+    match direction:
+        case "upper":
+            return (max(estimated[0], bound[0]), max(estimated[1], bound[1]))
+        case "lower":
+            return (min(estimated[0], bound[0]), min(estimated[1], bound[1]))
+        case other:
+            assert_never(other)
 
 
-def _get_levels_from_params(
+def _compute_levels_from_params(
     *,
     levels: LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,
-) -> tuple[float, float] | tuple[None, None]:
+) -> tuple[float, float] | None:
     levels_type, (warn, crit) = levels
 
     match levels_type:
         case "absolute":
             reference_deviation = 1.0
         case "relative" if reference == 0:
-            return (None, None)
+            return None
         case "relative":
             reference_deviation = reference / 100.0
         case "stdev":
             match stdev:
                 case 0 | None:
-                    return (None, None)
+                    return None
                 case _:
                     reference_deviation = stdev
         case _:

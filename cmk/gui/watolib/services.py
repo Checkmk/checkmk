@@ -101,7 +101,7 @@ class DiscoveryAction(enum.StrEnum):
 
     >>> import json
     >>> [json.dumps(a) for a in DiscoveryAction]
-    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"']
+    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"']
     """
 
     NONE = ""  # corresponds to Full Scan in WATO
@@ -113,6 +113,7 @@ class DiscoveryAction(enum.StrEnum):
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"
     UPDATE_SERVICES = "update_services"
+    UPDATE_SERVICE_LABELS = "update_service_labels"
 
 
 class UpdateType(enum.Enum):
@@ -256,22 +257,33 @@ class Discovery:
 
             table_target = self._get_table_target(entry)
             key = entry.check_plugin_name, entry.item
-            value = (
+            old_value = (
                 entry.description,
                 entry.old_discovered_parameters,
                 entry.old_labels,
                 entry.found_on_nodes,
             )
+            value = old_value
 
             if entry.check_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
                     user.need_permission("wato.service_discovery_to_undecided")
                 elif table_target in [
                     DiscoveryState.MONITORED,
+                    DiscoveryState.CHANGED,
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
                 ]:
                     user.need_permission("wato.service_discovery_to_monitored")
+                    # adjust the values in case the corresponding action is called.
+                    value = (
+                        entry.description,
+                        entry.old_discovered_parameters,
+                        entry.new_labels
+                        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS
+                        else entry.old_labels,
+                        entry.found_on_nodes,
+                    )
                 elif table_target == DiscoveryState.IGNORED:
                     user.need_permission("wato.service_discovery_to_ignored")
                 elif table_target == DiscoveryState.REMOVED:
@@ -296,10 +308,11 @@ class Discovery:
             # "added" entry, also on remove of a vanished service
             if entry.check_source in [
                 DiscoveryState.MONITORED,
+                DiscoveryState.CHANGED,
                 DiscoveryState.IGNORED,
                 DiscoveryState.VANISHED,
             ]:
-                old_autochecks[key] = value
+                old_autochecks[key] = old_value
 
         if apply_changes:
             need_sync = False
@@ -350,6 +363,9 @@ class Discovery:
                 return DiscoveryState.IGNORED
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
+
+        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS and self._update_target:
+            return self._update_target
 
         if not self._update_target:
             return entry.check_source
@@ -479,6 +495,8 @@ def has_discovery_action_specific_permissions(
             )
         case DiscoveryAction.UPDATE_HOST_LABELS:
             return user.may("wato.services")
+        case DiscoveryAction.UPDATE_SERVICE_LABELS:
+            return user.may("wato.services")
         case DiscoveryAction.UPDATE_SERVICES:
             return user.may("wato.services")
 
@@ -548,58 +566,189 @@ def _apply_state_change(
 ) -> None:
     match table_source:
         case DiscoveryState.UNDECIDED:
-            if table_target == DiscoveryState.MONITORED:
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
-            elif table_target == DiscoveryState.IGNORED:
-                add_disabled_rule.add(descr)
+            _case_undecided(
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+            )
 
         case DiscoveryState.VANISHED:
-            if table_target == DiscoveryState.REMOVED:
-                pass
-            elif table_target == DiscoveryState.IGNORED:
-                add_disabled_rule.add(descr)
-                autochecks_to_save[key] = value
-            else:
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
+            _case_vanished(
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+            )
 
         case DiscoveryState.MONITORED:
-            if table_target in [
-                DiscoveryState.MONITORED,
-                DiscoveryState.IGNORED,
-            ]:
-                autochecks_to_save[key] = value
+            _case_monitored(
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+            )
 
-            if table_target == DiscoveryState.IGNORED:
-                add_disabled_rule.add(descr)
-            else:
-                saved_services.add(descr)
+        case DiscoveryState.CHANGED:
+            _case_changed(
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+            )
 
         case DiscoveryState.IGNORED:
-            if table_target in [
-                DiscoveryState.MONITORED,
-                DiscoveryState.UNDECIDED,
-                DiscoveryState.VANISHED,
-            ]:
-                remove_disabled_rule.add(descr)
-            if table_target in [
-                DiscoveryState.MONITORED,
-                DiscoveryState.IGNORED,
-            ]:
-                autochecks_to_save[key] = value
-                saved_services.add(descr)
-            if table_target == DiscoveryState.IGNORED:
-                add_disabled_rule.add(descr)
+            _case_ignored(
+                table_target,
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+                add_disabled_rule,
+                remove_disabled_rule,
+            )
 
         case DiscoveryState.CLUSTERED_NEW | DiscoveryState.CLUSTERED_OLD | DiscoveryState.CLUSTERED_VANISHED | DiscoveryState.CLUSTERED_IGNORED:
-            # We keep VANISHED clustered services on the node with the following reason:
-            # If a service is mapped to a cluster then there are already operations
-            # for adding, removing, etc. of this service on the cluster. Therefore we
-            # do not allow any operation for this clustered service on the related node.
-            # We just display the clustered service state (OLD, NEW, VANISHED).
-            autochecks_to_save[key] = value
-            saved_services.add(descr)
+            _case_clustered(
+                key,
+                value,
+                descr,
+                autochecks_to_save,
+                saved_services,
+            )
+
+
+def _case_undecided(
+    table_target: str,
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+) -> None:
+    if table_target == DiscoveryState.MONITORED:
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
+    elif table_target == DiscoveryState.IGNORED:
+        add_disabled_rule.add(descr)
+
+
+def _case_vanished(
+    table_target: str,
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+) -> None:
+    if table_target == DiscoveryState.REMOVED:
+        return
+    if table_target == DiscoveryState.IGNORED:
+        add_disabled_rule.add(descr)
+        autochecks_to_save[key] = value
+    else:
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
+
+
+def _case_monitored(
+    table_target: str,
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+) -> None:
+    if table_target in [
+        DiscoveryState.MONITORED,
+        DiscoveryState.IGNORED,
+    ]:
+        autochecks_to_save[key] = value
+
+    if table_target == DiscoveryState.IGNORED:
+        add_disabled_rule.add(descr)
+    else:
+        saved_services.add(descr)
+
+
+def _case_changed(
+    table_target: str,
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+) -> None:
+    if table_target in [
+        DiscoveryState.MONITORED,
+        DiscoveryState.IGNORED,
+        DiscoveryState.CHANGED,
+    ]:
+        autochecks_to_save[key] = value
+
+    if table_target == DiscoveryState.IGNORED:
+        add_disabled_rule.add(descr)
+    else:
+        saved_services.add(descr)
+
+
+def _case_ignored(
+    table_target: str,
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+    remove_disabled_rule: set[str],
+) -> None:
+    if table_target in [
+        DiscoveryState.MONITORED,
+        DiscoveryState.UNDECIDED,
+        DiscoveryState.VANISHED,
+    ]:
+        remove_disabled_rule.add(descr)
+    if table_target in [
+        DiscoveryState.MONITORED,
+        DiscoveryState.IGNORED,
+    ]:
+        autochecks_to_save[key] = value
+        saved_services.add(descr)
+    if table_target == DiscoveryState.IGNORED:
+        add_disabled_rule.add(descr)
+
+
+def _case_clustered(
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
+    descr: str,
+    autochecks_to_save: SetAutochecksTable,
+    saved_services: set[str],
+) -> None:
+    # We keep VANISHED clustered services on the node with the following reason:
+    # If a service is mapped to a cluster then there are already operations
+    # for adding, removing, etc. of this service on the cluster. Therefore we
+    # do not allow any operation for this clustered service on the related node.
+    # We just display the clustered service state (OLD, NEW, VANISHED).
+    autochecks_to_save[key] = value
+    saved_services.add(descr)
 
 
 def _make_host_audit_log_object(checks: SetAutochecksTable) -> set[str]:

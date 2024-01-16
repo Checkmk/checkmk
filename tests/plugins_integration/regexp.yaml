@@ -130,4 +130,10 @@
     Status: Success, Size \(total/read/transferred\): 100 GiB/ 5.29 GiB/ 1.78 GiB,
     Last backup: [0-9]+ days [0-9]+ hours ago\(!!\) \(Warn/Crit: 1 day 6 hours/2 days 0 hours\),
     Duration: 2 minutes 28 seconds, Average Speed: 81.5 MB/s, Backup server: BM-SR1-BACK-001
-    
+'.*:VEEAM Client StandardWinVMs_/_Domain_Member':
+  plugin_output: >-2
+    Status: Success, Size \(total/read/transferred\): 750 GiB/ 3.90 GiB/ 1.30 GiB,
+    Last backup: [0-9]+ (day)s? [0-9]+ (hour)s? ago\(!!\) \(Warn/Crit: 1 day 6 hours/2 days 0 hours\),
+    Duration: 1 minute 46 seconds,
+    Average Speed: 76.4 MB/s,
+    Backup server: BM-SR1-BACK-001

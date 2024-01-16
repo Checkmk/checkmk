@@ -73,7 +73,7 @@ build_cmd = """
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
-    if [[ "{requirements}" = -r* ]]; then
+    if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
         REQUIREMENTS="{requirements}"
     else
         REQUIREMENTS=$$HOME/tmp/$(OUTS)

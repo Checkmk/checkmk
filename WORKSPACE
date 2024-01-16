@@ -257,6 +257,7 @@ create_python_requirements(
         "rrdtool",  # don't build with pip -> see rrdtool omd packages
         "agent-receiver",  # don't build with pip (yet)
         "werks",  # don't build with pip (yet)
+        "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
     requirements = "//:Pipfile",
 )

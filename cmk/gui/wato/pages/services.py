@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
-
+import dataclasses
 import json
 import pprint
 import traceback
@@ -53,10 +53,11 @@ from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_en
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import sitenames
 from cmk.gui.table import Foldable, Table, table_element
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import HTTPVariables, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, render_labels
@@ -111,6 +112,9 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
     page_registry.register_page("ajax_service_discovery")(ModeAjaxServiceDiscovery)
+    page_registry.register_page_handler(
+        "ajax_popup_service_action_menu", ajax_popup_service_action_menu
+    )
     page_registry.register_page("wato_ajax_execute_check")(ModeAjaxExecuteCheck)
     mode_registry.register(ModeDiscovery)
     automation_command_registry.register(AutomationServiceDiscoveryJob)
@@ -1223,6 +1227,43 @@ class DiscoveryPageRenderer:
 
         num_buttons = 0
         match entry.check_source:
+            case DiscoveryState.CHANGED:
+                if has_modification_specific_permissions(UpdateType.MONITORED):
+                    html.icon_button(
+                        url="",
+                        title=_("Update service labels"),
+                        icon="update_service_labels",
+                        class_=button_classes,
+                        onclick=_start_js_call(
+                            self._host,
+                            self._options._replace(
+                                action=DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
+                            ),
+                            request_vars={
+                                "update_target": DiscoveryState.MONITORED,
+                                "update_source": DiscoveryState.CHANGED,
+                                "update_services": [checkbox_name],
+                            },
+                        ),
+                    )
+                    num_buttons += 1
+                    if has_modification_specific_permissions(UpdateType.UNDECIDED):
+                        num_buttons += self._icon_button(
+                            DiscoveryState.MONITORED,
+                            checkbox_name,
+                            DiscoveryState.UNDECIDED,
+                            "undecided",
+                            button_classes,
+                        )
+                    if has_modification_specific_permissions(UpdateType.IGNORED):
+                        num_buttons += self._icon_button(
+                            DiscoveryState.MONITORED,
+                            checkbox_name,
+                            DiscoveryState.IGNORED,
+                            "disabled",
+                            button_classes,
+                        )
+
             case DiscoveryState.MONITORED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     num_buttons += self._icon_button(
@@ -1302,9 +1343,23 @@ class DiscoveryPageRenderer:
         if entry.check_source not in [
             DiscoveryState.UNDECIDED,
             DiscoveryState.IGNORED,
+            DiscoveryState.CHANGED,
         ] and user.may("wato.rulesets"):
             num_buttons += self.rulesets_button(entry.description, self._host.name())
             num_buttons += self.check_parameters_button(entry, self._host.name())
+
+        if entry.check_source == DiscoveryState.CHANGED:
+            url_vars: HTTPVariables = [
+                ("checkboxname", checkbox_name),
+                ("hostname", self._host.name()),
+                ("entry", json.dumps(dataclasses.astuple(entry))),
+            ]
+            html.popup_trigger(
+                html.render_icon("menu", _("More options"), cssclass="iconbutton"),
+                f"service_action_menu_{checkbox_name}",
+                MethodAjax(endpoint="service_action_menu", url_vars=url_vars),
+            )
+            num_buttons += 1
 
         while num_buttons < 4:
             html.empty_icon()
@@ -2067,3 +2122,25 @@ def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | N
         json.dumps(transactions.get()),
         json.dumps(request_vars),
     )
+
+
+def ajax_popup_service_action_menu() -> None:
+    checkbox_name = request.get_ascii_input_mandatory("checkboxname")
+    hostname = HostName(request.get_ascii_input_mandatory("hostname"))
+    entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
+    if checkbox_name is None or hostname is None or not entry:
+        html.show_error(_("Cannot render dropdown: Missing required information"))
+        return
+
+    html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
+    html.icon("rulesets")
+    html.write_text(_("View and edit the parameters for this service"))
+    html.close_a()
+
+    check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(entry, hostname)
+    if not check_parameters_url:
+        return
+    html.open_a(href=check_parameters_url)
+    html.icon("check_parameters")
+    html.write_text(_("Edit and analyse the check parameters for this service"))
+    html.close_a()

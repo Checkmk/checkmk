@@ -10,6 +10,7 @@ from typing_extensions import TypedDict
 
 from cmk.agent_based.v2 import get_rate, GetRateError, Metric, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.df import df_check_filesystem_single
 
 CPUSection = TypedDict(
@@ -32,6 +33,28 @@ DEV_KEYS = {
     "fan": ("cooling-element-is-error", "cooling-element-number"),
     "power supply unit": ("power-supply-is-error", "power-supply-element-number"),
 }
+
+MACList = list[tuple[str, str | None]]
+
+
+class NICExtraInfo(TypedDict, total=False):
+    grouped_if: MACList
+    speed_differs: tuple[int, int]
+    home_port: str
+    home_node: str | None
+    is_home: bool
+    failover_ports: Sequence[Mapping[str, str]]
+
+
+ExtraInfo = Mapping[str, NICExtraInfo]
+IfSection = tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
+
+STATUS_MAP = {
+    "check_and_crit": 2,
+    "check_and_warn": 1,
+    "check_and_display": 0,
+}
+INFO_INCLUDED_MAP = {"dont_show_and_check": False}
 
 
 def parse_netapp_api_multiple_instances(
@@ -374,3 +397,197 @@ def check_netapp_luns(
             params,
             this_time=now,
         )
+
+
+def merge_if_sections(  # pylint: disable=too-many-branches
+    interfaces_section: SectionSingleInstance,
+    if_mac_list: MutableMapping[str, MACList],
+    virtual_interfaces: Sequence[str],
+) -> IfSection:
+    nics = []
+    extra_info: MutableMapping[str, NICExtraInfo] = {}
+    for idx, (nic_name, values) in enumerate(sorted(interfaces_section.items())):
+        speed = values.get("speed", 0)
+
+        # Try to determine the speed and state for virtual interfaces
+        # We know all physical interfaces for this virtual device and use the highest available
+        # speed as the virtual speed. Note: Depending on the configuration this behaviour might
+        # differ, e.g. the speed of all interfaces might get accumulated..
+        # Additionally, we check if not all interfaces of the virtual group share the same
+        # connection speed
+        if not speed:
+            if "mac-address" in values:
+                mac_list = if_mac_list[values["mac-address"]]
+                if len(mac_list) > 1:  # check if this interface is grouped
+                    extra_info.setdefault(nic_name, {})
+                    extra_info[nic_name]["grouped_if"] = [
+                        x for x in mac_list if x[0] not in virtual_interfaces
+                    ]
+
+                    max_speed = 0
+                    min_speed = 1024**5
+                    for tmp_if, _ in mac_list:
+                        if tmp_if == nic_name or "speed" not in interfaces_section[tmp_if]:
+                            continue
+                        check_speed = int(interfaces_section[tmp_if]["speed"])
+                        max_speed = max(max_speed, check_speed)
+                        min_speed = min(min_speed, check_speed)
+                    if max_speed != min_speed:
+                        extra_info[nic_name]["speed_differs"] = (max_speed, min_speed)
+                    speed = max_speed
+
+        # Virtual interfaces is "Up" if at least one physical interface is up
+        if "state" in values:
+            oper_status = values["state"]
+        else:
+            oper_status = "2"
+            if "mac-address" in values:
+                for tmp_if, tmp_oper_status in if_mac_list[values["mac-address"]]:
+                    if tmp_oper_status == "1":
+                        oper_status = "1"
+                        break
+
+        if "failover_ports" in values and values["failover_ports"] != "none":
+            extra_info.setdefault(nic_name, {})["failover_ports"] = [
+                {
+                    "node": node,
+                    "port": name,
+                    "link-status": link_status,
+                }
+                for port in values["failover_ports"].split(";")
+                for node, name, link_status, *_ in (port.split("|"),)
+            ]
+
+        nics.append(
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(idx + 1),
+                    descr=nic_name,
+                    alias=values.get("interface-name", ""),
+                    type="6",
+                    speed=interfaces.saveint(speed),
+                    oper_status=oper_status,
+                    phys_address=interfaces.mac_address_from_hexstring(
+                        values.get("mac-address", "")
+                    ),
+                    speed_as_text=speed == "auto" and "auto" or "",
+                ),
+                interfaces.Counters(
+                    in_octets=interfaces.saveint(values.get("recv_data", 0)),
+                    in_ucast=interfaces.saveint(values.get("recv_packet", 0)),
+                    in_mcast=interfaces.saveint(values.get("recv_mcasts", 0)),
+                    in_err=interfaces.saveint(values.get("recv_errors", 0)),
+                    out_octets=interfaces.saveint(values.get("send_data", 0)),
+                    out_ucast=interfaces.saveint(values.get("send_packet", 0)),
+                    out_mcast=interfaces.saveint(values.get("send_mcasts", 0)),
+                    out_err=interfaces.saveint(values.get("send_errors", 0)),
+                ),
+            )
+        )
+        if "home-port" in values:
+            extra_info.setdefault(nic_name, {}).update(
+                {
+                    "home_port": values["home-port"],
+                    "home_node": values.get("home-node"),
+                    "is_home": str(values.get("is-home")).lower() == "true",
+                }
+            )
+
+    return nics, extra_info
+
+
+def check_netapp_interfaces(  # pylint: disable=too-many-branches
+    item: str,
+    params: Mapping[str, Any],
+    section: IfSection,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    nics, extra_info = section
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        nics,
+        value_store=value_store,
+    )
+
+    for iface in interfaces.matching_interfaces_for_item(item, nics):
+        first_member = True
+        vif = extra_info.get(iface.attributes.descr)
+        if vif is None:
+            continue
+
+        speed_state, speed_info_included = 1, True
+        home_state, home_info_included = 0, True
+
+        if "match_same_speed" in params:
+            speed_behaviour = params["match_same_speed"]
+            speed_info_included = INFO_INCLUDED_MAP.get(
+                speed_behaviour,
+                speed_info_included,
+            )
+            speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
+
+        if "home_port" in params:
+            home_behaviour = params["home_port"]
+            home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
+            home_state = STATUS_MAP.get(home_behaviour, home_state)
+
+        if "home_port" in vif and home_info_included:
+            is_home_port = vif["is_home"]
+            mon_state = 0 if is_home_port else home_state
+            home_attribute = "is %shome port" % ("" if is_home_port else "not ")
+            yield Result(
+                state=State(mon_state),
+                summary="Current Port: {} ({})".format(vif["home_port"], home_attribute),
+            )
+
+        if "failover_ports" in vif:
+            failover_group_str = ", ".join(
+                f"{fop['node']}:{fop['port']}={fop['link-status']}"
+                for fop in sorted(vif["failover_ports"], key=lambda x: (x["node"], x["port"]))
+            )
+            yield Result(
+                state=(
+                    State.CRIT
+                    if any(
+                        fop["link-status"] != "up" and fop["node"] == vif["home_node"]
+                        for fop in vif["failover_ports"]
+                    )
+                    else State.WARN
+                    if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
+                    else State.OK
+                ),
+                notice=f"Failover Group: [{failover_group_str}]",
+            )
+
+        if "grouped_if" in vif:
+            for member_name, member_state in sorted(vif.get("grouped_if", [])):
+                if member_state is None or member_name == iface.attributes.descr:
+                    continue  # Not a real member or the grouped interface itself
+
+                if member_state == "2":
+                    mon_state = 1
+                else:
+                    mon_state = 0
+
+                if first_member:
+                    yield Result(
+                        state=State(mon_state),
+                        summary="Physical interfaces: %s(%s)"
+                        % (
+                            member_name,
+                            interfaces.statename(member_state),
+                        ),
+                    )
+                    first_member = False
+                else:
+                    yield Result(
+                        state=State(mon_state),
+                        summary=f"{member_name}({interfaces.statename(member_state)})",
+                    )
+
+        if "speed_differs" in vif and speed_info_included:
+            yield Result(
+                state=State(speed_state),
+                summary="Interfaces do not have the same speed",
+            )

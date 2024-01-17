@@ -580,6 +580,7 @@ check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
+check_metrics["check_mk-netapp_ontap_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
 check_metrics["check_mk-gcp_gce_network"] = if_translation
 check_metrics["check_mk-azure_vm_network_io"] = if_translation

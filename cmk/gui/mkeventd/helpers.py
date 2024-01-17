@@ -38,9 +38,19 @@ def eventd_configuration() -> ec.ConfigFromWATO:
     )
 
 
+def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECRulePackSpec]:
+    dissolved = []
+    for rule_pack in rule_packs:
+        if isinstance(rule_pack, ec.MkpRulePackProxy):
+            dissolved.append(rule_pack.get_rule_pack_spec())
+        else:
+            dissolved.append(rule_pack)
+    return dissolved
+
+
 def save_active_rule_packs() -> None:
     ec.save_rule_packs(
-        ec.load_rule_packs(),
+        dissolve_mkp_proxies(ec.load_rule_packs()),
         active_config.mkeventd_pprint_rules,
         ec.active_config_dir(),
     )

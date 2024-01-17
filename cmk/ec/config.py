@@ -158,6 +158,7 @@ class Rule(TypedDict, total=False):
     comment: str
     contact_groups: ContactGroups
     count: Count
+    customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
     description: str
     docu_url: str
     disabled: bool

@@ -658,11 +658,10 @@ test_mk_oracle_mk_ora_db_connect_asm_2() {
 }
 
 test_mk_oracle_mk_ora_db_connect_gi_restart_1() {
-    TMP_PATH=$(mktemp -d)
-    echo 'echo "ut_hostname_hostname"' >"$TMP_PATH/hostname"
-    chmod +x "$TMP_PATH/hostname"
-    OLD_PATH="$PATH"
-    PATH="$TMP_PATH:$PATH"
+    # shellcheck disable=SC2317 # Command appears to be unreachable.
+    hostname() {
+        echo "ut_hostname_hostname"
+    }
     OLRLOC=$(mktemp)
     crs_home=$(mktemp -d)
 
@@ -672,8 +671,7 @@ test_mk_oracle_mk_ora_db_connect_gi_restart_1() {
 
     rm -d "$crs_home"
     rm "$OLRLOC"
-    rm -r "$TMP_PATH"
-    PATH="$OLD_PATH"
+    unset -f hostname
 }
 
 test_mk_oracle_mk_ora_db_connect_gi_restart_2() {

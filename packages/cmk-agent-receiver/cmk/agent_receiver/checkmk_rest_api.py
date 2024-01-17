@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from base64 import b64encode
 from collections.abc import Callable
 from enum import Enum
 from http import HTTPStatus
@@ -132,10 +133,13 @@ class ControllerCertSettings(BaseModel, frozen=True):
 
 
 @log_http_exception
-def controller_certificate_settings(credentials: HTTPBasicCredentials) -> ControllerCertSettings:
-    response = _forward_get(
-        "agent_controller_certificates_settings",
-        credentials,
+def controller_certificate_settings(site_internal_secret: bytes) -> ControllerCertSettings:
+    response = requests.get(
+        f"{_local_rest_api_url()}/agent_controller_certificates_settings",
+        headers={
+            "Authorization": f"InternalToken {b64encode(site_internal_secret).decode()}",
+        },
+        timeout=30,
     )
     _verify_response(response, HTTPStatus.OK)
     return ControllerCertSettings.model_validate(response.json())

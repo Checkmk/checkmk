@@ -242,3 +242,21 @@ def test_local_secret_no_sessions(site: Site) -> None:
     assert "Dashboard" in response.text
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
+
+
+def test_local_secret_permissions(site: Site) -> None:
+    """test if all pages are accessible by the local_secret
+
+    while introducing the secret and refactoring code to this secret we should
+    add tests here to make sure the functionallity works..."""
+
+    session = CMKWebSession(site)
+    b64_token = b64encode(site.get_site_internal_secret()).decode("utf-8")
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/agent_controller_certificates_settings",
+        headers={
+            "Authorization": f"InternalToken {b64_token}",
+        },
+    )
+    assert response.status_code == 200
+    assert isinstance(response.json()["lifetime_in_months"], int)

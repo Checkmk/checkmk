@@ -121,9 +121,12 @@ class LabelManager(NamedTuple):
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RulesetMatchObject:
-    # TODO: Get rid of this.  Or at least, make it private to this module.
     host_name: HostName | HostAddress
-    service_description: ServiceName | None = None
+    # The next field is:
+    #   * None to match hosts
+    #   * ServiceName to match services
+    #   * Item to match checkgroups
+    service_description: ServiceName | Item | None = None
     service_labels: Labels | None = None
 
 
@@ -232,7 +235,7 @@ class RulesetMatcher:
     ) -> None:
         cache_id = (hostname, description, item)
         if cache_id not in self.__service_match_obj:
-            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, description, labels)
+            self.__service_match_obj[cache_id] = RulesetMatchObject(hostname, item, labels)
 
     def _service_match_object(
         self, hostname: HostName, description: ServiceName

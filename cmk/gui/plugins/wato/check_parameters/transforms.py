@@ -6,6 +6,16 @@
 from typing import Any
 
 
+def scale_levels(
+    p: None | tuple[float, float] | dict, factor: float
+) -> None | tuple[float, float] | dict:
+    if p is None:
+        return None
+    if isinstance(p, tuple):
+        return p[0] * factor, p[1] * factor
+    return scale_predictive(p, factor)
+
+
 def scale_predictive(p: dict, factor: float) -> dict:
     """
     >>> from pprint import pprint

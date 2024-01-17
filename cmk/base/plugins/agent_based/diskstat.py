@@ -427,7 +427,7 @@ def check_diskstat(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk=disk_with_rates,
         value_store=value_store,
         this_time=time.time(),

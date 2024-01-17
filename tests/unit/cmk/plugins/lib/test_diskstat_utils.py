@@ -11,11 +11,18 @@ import pytest
 
 from tests.testlib import on_time
 
-from tests.unit.cmk.plugins.lib.diskstat import LEVELS
+from cmk.gui.plugins.wato.check_parameters.diskstat import scale_back, scale_forth
 
 from cmk.agent_based.v2 import get_rate, IgnoreResultsError, Metric, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib import diskstat
+
+
+def migrated_parameters(p: dict) -> dict:
+    """replace the test parameters with the scaled ones
+
+    inline this once the migration is done."""
+    return scale_back(scale_forth(p))
 
 
 @pytest.mark.parametrize(
@@ -316,47 +323,6 @@ def test_summarize_disks(
 
 
 @pytest.mark.parametrize(
-    "levels,factor",
-    [
-        (
-            (
-                1,
-                2,
-            ),
-            3,
-        ),
-        (
-            (
-                10,
-                20,
-            ),
-            1e6,
-        ),
-        (
-            None,
-            1,
-        ),
-    ],
-)
-def test_scale_levels(levels: tuple[float, float] | None, factor: float) -> None:
-    scaled_levels = diskstat._scale_levels(levels, factor)
-    if levels is None:
-        assert scaled_levels is None
-    else:
-        assert scaled_levels == tuple(level * factor for level in levels)
-
-
-def test_scale_levels_predictive() -> None:
-    assert diskstat._scale_levels_predictive(LEVELS, 10) == {
-        "horizon": 90,
-        "levels_lower": ("absolute", (20.0, 40.0)),
-        "levels_upper": ("absolute", (100.0, 200.0)),
-        "levels_upper_min": (100.0, 150.0),
-        "period": "wday",
-    }
-
-
-@pytest.mark.parametrize(
     "params,disk,exp_res",
     [
         (
@@ -396,7 +362,7 @@ def test_scale_levels_predictive() -> None:
             ],
         ),
         (
-            (
+            migrated_parameters(
                 {
                     "utilization": (10, 20),
                     "read": (1e-5, 1e-4),
@@ -483,14 +449,17 @@ def test_check_diskstat_dict(
     assert (
         list(
             diskstat.check_diskstat_dict(
-                params_unscaled=params, disk=disk, value_store=value_store, this_time=0.0
+                params=params,
+                disk=disk,
+                value_store=value_store,
+                this_time=0.0,
             )
         )
         == exp_res
     )
     assert list(
         diskstat.check_diskstat_dict(
-            params_unscaled=({**params, "average": 300}),
+            params={**params, "average": 300},
             disk=disk,
             value_store=value_store,
             this_time=60.0,

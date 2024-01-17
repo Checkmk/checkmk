@@ -20,7 +20,7 @@ def _check_disk(
 ) -> type_defs.CheckResult:
     disk_with_rates = diskstat.compute_rates(disk=disk, value_store=value_store, this_time=now)
     yield from diskstat.check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk=disk_with_rates,
         value_store=value_store,
         this_time=now,

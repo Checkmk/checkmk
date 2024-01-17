@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Final
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -13,6 +15,8 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput, Transform
+
+from .transforms import scale_levels
 
 
 def _valuespec_diskstat_inventory() -> Dictionary:
@@ -91,6 +95,59 @@ def _item_spec_diskstat():
     )
 
 
+_KEY_MAP: Final = {
+    "read": "read_throughput",
+    "write": "write_throughput",
+    "read_wait": "average_read_wait",
+    "write_wait": "average_write_wait",
+}
+
+
+_SCALES: Final = {
+    "read_throughput": 1e6,
+    "write_throughput": 1e6,
+    "utilization": 0.01,
+    "latency": 1e-3,
+    "read_latency": 1e-3,
+    "write_latency": 1e-3,
+    "average_wait": 1e-3,
+    "average_read_wait": 1e-3,
+    "average_write_wait": 1e-3,
+}
+
+_NEEDS_CONVERSION = "_NEEDS_CONVERSION"
+
+
+def scale_forth(p: dict[str, Any]) -> dict[str, Any]:
+    """If this is seconds and bytes (good), convert into something more readable
+
+    >>> scale_forth({"read_wait": (23.0, 42.0)})
+    {'average_read_wait': (23.0, 42.0)}
+    >>> scale_forth({"_NEEDS_CONVERSION": True, "latency": (0.023, 0.042)})
+    {'latency': (23.0, 42.0)}
+    """
+    if _NEEDS_CONVERSION not in p:
+        # first time, "back" has not ever been called
+        return {_KEY_MAP.get(k, k): v for k, v in p.items()}
+    return {
+        k: scale_levels(v, 1.0 / _SCALES[k]) if k in _SCALES else v
+        for k, v in p.items()
+        if k != _NEEDS_CONVERSION
+    }
+
+
+def scale_back(p: dict[str, Any]) -> dict[str, Any]:
+    """Store the nicely rendered ms or MB values in seconds or bytes
+
+    >>> scale_back({"latency": (23.0, 42.0)})
+    {'latency': (0.023, 0.042), '_NEEDS_CONVERSION': True}
+    """
+    return {
+        **{k: scale_levels(v, _SCALES[k]) if k in _SCALES else v for k, v in p.items()},
+        _NEEDS_CONVERSION: True,
+    }
+
+
 def _parameter_valuespec_diskstat():
     return Transform(
         Dictionary(
@@ -102,7 +159,7 @@ def _parameter_valuespec_diskstat():
             ),
             elements=[
                 (
-                    "read",
+                    "read_throughput",
                     Levels(
                         title=_("Read throughput"),
                         unit=_("MB/s"),
@@ -110,7 +167,7 @@ def _parameter_valuespec_diskstat():
                     ),
                 ),
                 (
-                    "write",
+                    "write_throughput",
                     Levels(
                         title=_("Write throughput"),
                         unit=_("MB/s"),
@@ -150,11 +207,11 @@ def _parameter_valuespec_diskstat():
                     ),
                 ),
                 (
-                    "read_wait",
+                    "average_read_wait",
                     Levels(title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0)),
                 ),
                 (
-                    "write_wait",
+                    "average_write_wait",
                     Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0, 50.0)),
                 ),
                 (
@@ -183,7 +240,9 @@ def _parameter_valuespec_diskstat():
                     ),
                 ),
             ],
-        )
+        ),
+        forth=scale_forth,
+        back=scale_back,
     )
 
 

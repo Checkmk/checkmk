@@ -213,16 +213,16 @@ def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None
 
 def _render_level_areas(selected_prediction_info: PredictionInfo, curves: PredictionCurves) -> None:
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(curves.upper_warn, curves.upper_crit, Color.WARN_AREA, 0.4)
-        _render_area_reverse(curves.upper_crit, Color.CRIT_AREA, 0.1)
+        _render_filled_area_between(curves.upper_warn, curves.upper_crit, Color.WARN_AREA, 0.4)
+        _render_filled_area_above(curves.upper_crit, Color.CRIT_AREA, 0.1)
 
     if selected_prediction_info.params.levels_lower is not None:
-        _render_dual_area(curves.lower_crit, curves.lower_warn, Color.WARN_AREA, 0.4)
-        _render_area(curves.lower_crit, Color.CRIT_AREA, 0.1)
-        _render_dual_area(curves.average, curves.lower_warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves.lower_crit, curves.lower_warn, Color.WARN_AREA, 0.4)
+        _render_filled_area_below(curves.lower_crit, Color.CRIT_AREA, 0.1)
+        _render_filled_area_between(curves.average, curves.lower_warn, Color.OK_AREA, 0.5)
 
     if selected_prediction_info.params.levels_upper is not None:
-        _render_dual_area(curves.upper_warn, curves.average, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves.upper_warn, curves.average, Color.OK_AREA, 0.5)
 
 
 def _render_prediction(curves: PredictionCurves) -> None:
@@ -417,20 +417,27 @@ def _render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
     )
 
 
-def _render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_filled_area_below(
+    points: Sequence[float | None], color: str, alpha: float = 1.0
+) -> None:
     html.javascript(
         f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def _render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
+def _render_filled_area_above(
+    points: Sequence[float | None], color: str, alpha: float = 1.0
+) -> None:
     html.javascript(
         f"cmk.prediction.render_area_reverse({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def _render_dual_area(  # type: ignore[no-untyped-def]
-    lower_points, upper_points, color, alpha=1.0
+def _render_filled_area_between(
+    lower_points: Sequence[float | None],
+    upper_points: Sequence[float | None],
+    color: str,
+    alpha: float = 1.0,
 ) -> None:
     html.javascript(
         f"cmk.prediction.render_dual_area({json.dumps(lower_points)}, {json.dumps(upper_points)}, {json.dumps(color)}, {alpha:f});"

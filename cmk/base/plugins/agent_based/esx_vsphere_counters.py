@@ -271,7 +271,7 @@ def check_esx_vsphere_counters_diskio(
         summary["latency"] = latency / 1000.0
 
     yield from diskstat.check_diskstat_dict(
-        params=params,
+        params_unscaled=params,
         disk=summary,
         value_store=get_value_store(),
         this_time=time.time(),

@@ -258,7 +258,7 @@ def check_gcp_sql_disk(
     }
 
     yield from check_diskstat_dict(
-        params=params,
+        params_unscaled=params,
         disk=disk_data,
         value_store=get_value_store(),
         this_time=time.time(),

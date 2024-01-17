@@ -440,22 +440,51 @@ def compute_rates(
 # }}
 def check_diskstat_dict(
     *,
-    params: Mapping[str, Any],
+    params_unscaled: Mapping[str, Any],
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,
 ) -> type_defs.CheckResult:
+    """
+    NOTE: the parameters here are unscaled in the sense that they are not in the same
+    OOM as the measured value.
+    We need to fix this, to unbreak the predictive levels.
+    Affected Rulesets are:
+     * diskstat
+       - aws_ebs
+       - aws_ec2_disk_io
+       - aws_rds_disk_io
+       - cadvisor_diskstat
+       - diskstat
+       - diskstat_io
+       - diskstat_io_director
+       - diskstat_io_volumes
+       - esx_vsphere_counters_diskio
+       - esx_vsphere_datastore_io
+       - fjdarye_ca_ports
+       - gcp_filestore_disk
+       - gcp_sql_disk
+       - hp_msa_disk_io
+       - hp_msa_controller_io
+       - hp_msa_volume_io
+       - scaleio_storage_pool_rebalancerw
+       - scaleio_storage_pool_totalrw
+       - scale_io_volume
+       - ucd_disk_io
+     * disk_io
+       - winperf_phydisk
+    """
     if not disk:
         return
 
-    averaging = params.get("average")
+    averaging = params_unscaled.get("average")
     if averaging:
         disk = yield from _get_averaged_disk(averaging, disk, value_store, this_time)
 
     for key, specs in _METRICS:
         metric_val = disk.get(key)
         if metric_val is not None:
-            levels = params.get(specs.get("levels_key") or key)
+            levels = params_unscaled.get(specs.get("levels_key") or key)
             metric_name = "disk_" + key
             render_func = specs.get("render_func")
             label = specs.get("label") or key.replace("_", " ").capitalize()
@@ -483,7 +512,7 @@ def check_diskstat_dict(
     # make sure we have a latency.
     if "latency" not in disk and "average_write_wait" in disk and "average_read_wait" in disk:
         latency = max(disk["average_write_wait"], disk["average_read_wait"])
-        levels = params.get("latency")
+        levels = params_unscaled.get("latency")
         yield from check_levels_fixed(
             latency,
             levels_upper=_scale_levels(levels, 1e-3),

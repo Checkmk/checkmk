@@ -2571,8 +2571,13 @@ class ConfigCache:
                 check_interval=int(check_interval),
                 severity_new_services=int(entry["severity_unmonitored"]),
                 severity_vanished_services=int(entry["severity_vanished"]),
-                severity_changed_service_labels=int(entry["severity_changed_service_labels"]),
-                severity_changed_service_params=int(entry["severity_changed_service_params"]),
+                # TODO: should be changed via Transform & update-action of the periodic discovery rule
+                severity_changed_service_labels=int(
+                    entry.get("severity_changed_service_labels", 1)
+                ),
+                severity_changed_service_params=int(
+                    entry.get("severity_changed_service_params", 1)
+                ),
                 severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
                 rediscovery=entry.get("inventory_rediscovery", {}),
             )

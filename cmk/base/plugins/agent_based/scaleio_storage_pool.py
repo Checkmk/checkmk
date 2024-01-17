@@ -181,7 +181,7 @@ def _check_scaleio_storage_pool_disks(
         return
 
     yield from check_diskstat_dict(
-        params=params,
+        params_unscaled=params,
         disk={
             "read_ios": disk_stats.read_operations,
             "read_throughput": disk_stats.read_throughput,

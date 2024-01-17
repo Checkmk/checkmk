@@ -483,14 +483,14 @@ def test_check_diskstat_dict(
     assert (
         list(
             diskstat.check_diskstat_dict(
-                params=params, disk=disk, value_store=value_store, this_time=0.0
+                params_unscaled=params, disk=disk, value_store=value_store, this_time=0.0
             )
         )
         == exp_res
     )
     assert list(
         diskstat.check_diskstat_dict(
-            params=({**params, "average": 300}),
+            params_unscaled=({**params, "average": 300}),
             disk=disk,
             value_store=value_store,
             this_time=60.0,

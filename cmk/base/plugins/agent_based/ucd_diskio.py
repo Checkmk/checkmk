@@ -133,7 +133,7 @@ def _check_ucd_diskio(
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 
     yield from check_diskstat_dict(
-        params=params,
+        params_unscaled=params,
         disk=disk_data,
         value_store=value_store,
         this_time=time.time(),

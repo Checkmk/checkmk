@@ -147,17 +147,18 @@ def page_graph() -> None:
         livestatus_connection, host_name, service_name, selected_prediction_info, time.time()
     )
 
-    vertical_range = _compute_vertical_range(curves, measurement_point, measurement_rrd)
+    x_range = selected_prediction_info.valid_interval
+    y_range = _compute_vertical_range(curves, measurement_point, measurement_rrd)
 
     _create_graph(
         selected_prediction_info,
         _GRAPH_SIZE,
-        selected_prediction_info.valid_interval,
-        vertical_range,
+        x_range,
+        y_range,
         _make_legend(measurement_point),
     )
 
-    _render_grid(selected_prediction_info.valid_interval, vertical_range)
+    _render_grid(x_range, y_range)
 
     _render_level_areas(curves)
 

@@ -1923,7 +1923,7 @@ class Filename(TextInput):
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        default: str = "/tmp/foo",
+        default: str = "/tmp/foo",  # nosec B108 # BNS:13b2c8
         trans_func: Callable[[str], str] | None = None,
         # TextInput
         label: str | None = None,

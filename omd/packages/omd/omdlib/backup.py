@@ -14,6 +14,7 @@ import socket
 import sys
 import tarfile
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import BinaryIO
 
 from omdlib.contexts import SiteContext
@@ -115,7 +116,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
 
 class RRDSocket(contextlib.AbstractContextManager):
     def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
-        self._rrdcached_socket_path = site_dir + "/tmp/run/rrdcached.sock"
+        self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )

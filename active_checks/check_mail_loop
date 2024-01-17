@@ -117,7 +117,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     default_status_dir = (
-        (os.environ["OMD_ROOT"] + "/var/check_mk") if "OMD_ROOT" in os.environ else "/tmp"  #
+        (os.environ["OMD_ROOT"] + "/var/check_mk")
+        if "OMD_ROOT" in os.environ
+        else "/tmp"  # nosec B108 # BNS:13b2c8
     )
     parser.add_argument(
         "--status-dir",

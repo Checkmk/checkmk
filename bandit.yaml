@@ -9,7 +9,6 @@
 ### using the -t/-s CLI options. Note that the same test ID should not appear
 ### in both 'tests' and 'skips', this would be nonsensical and is detected by
 ### Bandit at runtime.
-
 # Available tests:
 # B101 : assert_used
 # B102 : exec_used
@@ -98,7 +97,6 @@ skips:
 # medium severity tests excluded for now; enable step-by-step
 
   - B104  # hardcoded_bind_all_interfaces
-  - B108  # hardcoded_tmp_directory
   - B302  # marshal
   - B608  # hardcoded_sql_expressions
 

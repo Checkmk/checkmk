@@ -7,6 +7,7 @@ import getopt
 import os
 import sys
 import time
+from pathlib import Path
 
 import livestatus
 
@@ -42,7 +43,7 @@ except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-socket_path = ""
+socket_path = None
 timerange = 60
 warn, crit = None, None
 
@@ -57,16 +58,17 @@ for o, a in opts:
     elif o == "-c":
         crit = int(a)
     elif o == "-l":
-        socket_path = a
+        socket_path = Path(a)
 
 if len(args) == 1:
     sys.stderr.write("ERROR: No service pattern given.\n")
     sys.exit(1)
 
-if not socket_path and "OMD_ROOT" in os.environ:
-    socket_path = os.environ["OMD_ROOT"] + "/tmp/run/live"
+if socket_path is None and "OMD_ROOT" in os.environ:
+    socket_path = Path(os.environ["OMD_ROOT"]) / "tmp/run/live"
 
-if not os.path.exists(socket_path):
+# The condition when socket_path is empty and OMD_ROOT is not set, so I consider it an error
+if socket_path is None or not socket_path.exists():
     sys.stderr.write("ERROR: Livestatus socket (%s) does not exist\n" % socket_path)
     sys.exit(1)
 
@@ -78,7 +80,7 @@ query = (
     "Stats: state != 999\n"
 ) % (int(time.time() - (timerange * 60)))
 
-c = livestatus.SingleSiteConnection("unix:" + socket_path)
+c = livestatus.SingleSiteConnection(f"unix:{socket_path}")
 
 total_num = 0
 perfdata = []

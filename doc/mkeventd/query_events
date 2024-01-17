@@ -8,11 +8,12 @@
 import ast
 import os
 import socket
+from pathlib import Path
 
 # Create Unix socket and connect to status socket
-path = os.getenv("OMD_ROOT", "") + "/tmp/run/mkeventd/status"
+path = Path(os.getenv("OMD_ROOT", "/")) / "tmp/run/mkeventd/status"
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.connect(path)
+sock.connect(str(path))
 
 # Send query
 sock.sendall(b"GET events\nFilter: event_phase = open")

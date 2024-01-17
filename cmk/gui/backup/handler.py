@@ -1940,7 +1940,7 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self) -> Path:
-        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])  # nosec B108 # BNS:13b2c8
 
     def complete(self) -> None:
         self.cleanup()

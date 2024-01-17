@@ -1,0 +1,12 @@
+Title: check_uniserv: running the active check results in exception "TypeError: a bytes-like object is required, not 'str'"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705503976
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+<code>check_uniserv</code> implementation didn't encode the <code>close</code> command resulting in an exception
+<code>TypeError: a bytes-like object is required, not 'str'</code> being raised.
+This change adds the missing encoding among some general modernization.

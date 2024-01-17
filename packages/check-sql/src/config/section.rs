@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::collections::HashSet;
+
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
 use anyhow::Result;
@@ -40,7 +42,7 @@ const PIPE_SEP_SECTIONS: [&str; 8] = [
 const SPACE_SEP_SECTIONS: [&str; 2] = [names::TABLE_SPACES, names::CONNECTIONS];
 
 const QUERY_BASED_SECTIONS: [&str; 3] = [names::JOBS, names::MIRRORING, names::AVAILABILITY_GROUPS];
-const DEFAULT_SYNC_SECTIONS: [&str; 9] = [
+const PREDEFINED_SECTIONS: [&str; 13] = [
     names::INSTANCE,
     names::DATABASES,
     names::COUNTERS,
@@ -50,15 +52,20 @@ const DEFAULT_SYNC_SECTIONS: [&str; 9] = [
     names::MIRRORING,
     names::AVAILABILITY_GROUPS,
     names::CONNECTIONS,
-];
-
-const DEFAULT_ASYNC_SECTIONS: [&str; 4] = [
     names::TABLE_SPACES,
     names::DATAFILES,
     names::BACKUP,
     names::JOBS,
 ];
 
+const ASYNC_SECTIONS: [&str; 4] = [
+    names::TABLE_SPACES,
+    names::DATAFILES,
+    names::BACKUP,
+    names::JOBS,
+];
+
+const FIRST_LINE_SECTIONS: [&str; 2] = [names::MIRRORING, names::JOBS];
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum SectionKind {
     Sync,
@@ -78,10 +85,11 @@ impl SectionBuilder {
     pub fn new<S: Into<String>>(name: S) -> Self {
         let name = name.into();
         let sep = get_default_separator(&name);
+        let is_async = ASYNC_SECTIONS.contains(&name.as_str());
         Self {
             name,
             sep,
-            is_async: false,
+            is_async,
             is_disabled: false,
             sql: None,
         }
@@ -162,22 +170,34 @@ pub struct Sections {
 impl Default for Sections {
     fn default() -> Self {
         Self {
-            sections: get_default_sections(),
+            sections: get_predefined_sections(),
             cache_age: defaults::SECTIONS_CACHE_AGE,
         }
     }
 }
 
-fn get_default_sections() -> Vec<Section> {
-    let sync_sections: Vec<Section> = DEFAULT_SYNC_SECTIONS
+fn get_predefined_sections() -> Vec<Section> {
+    PREDEFINED_SECTIONS
         .iter()
         .map(|&s| Section::new(s))
-        .collect();
-    let async_sections: Vec<Section> = DEFAULT_ASYNC_SECTIONS
+        .collect()
+}
+
+fn get_predefined_section_names() -> Vec<String> {
+    get_predefined_sections()
         .iter()
-        .map(|&s| SectionBuilder::new(s).set_async().build())
-        .collect();
-    [sync_sections, async_sections].concat()
+        .map(|s| s.name().to_owned())
+        .collect()
+}
+
+fn get_decorated_section_names() -> Vec<String> {
+    FIRST_LINE_SECTIONS.iter().map(|&s| s.to_owned()).collect()
+}
+
+pub fn get_plain_section_names() -> HashSet<String> {
+    let all = hash_set(&get_predefined_section_names());
+    let decorated = hash_set(&get_decorated_section_names());
+    (&all - &decorated).into_iter().collect()
 }
 
 impl Section {
@@ -274,6 +294,10 @@ fn get_default_separator(name: &str) -> char {
     }
 }
 
+fn hash_set<T: AsRef<str>>(v: &[T]) -> HashSet<String> {
+    HashSet::from_iter(v.iter().map(|s| s.as_ref().to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -325,18 +349,19 @@ sections:
     fn test_sections_from_yaml_default() {
         let s = Sections::from_yaml(&create_sections_yaml_default(), Sections::default()).unwrap();
         assert_eq!(
-            s.select(&[SectionKind::Sync])
-                .iter()
-                .map(|s| s.name())
-                .collect::<Vec<&str>>(),
-            DEFAULT_SYNC_SECTIONS
+            HashSet::from_iter(
+                s.select(&[SectionKind::Sync])
+                    .iter()
+                    .map(|s| s.name().to_string())
+            ),
+            (&hash_set(&PREDEFINED_SECTIONS) - &hash_set(&ASYNC_SECTIONS))
         );
         assert_eq!(
             s.select(&[SectionKind::Async])
                 .iter()
                 .map(|s| s.name())
                 .collect::<Vec<&str>>(),
-            DEFAULT_ASYNC_SECTIONS
+            ASYNC_SECTIONS
         );
         assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
         assert_eq!(
@@ -365,5 +390,13 @@ _nothing: "nothing"
         assert_eq!(get_default_separator("mirroring"), '\t');
         assert_eq!(get_default_separator("availability_groups"), '\t');
         assert_eq!(get_default_separator("instance"), '|');
+    }
+    #[test]
+    fn test_get_no_first_line() {
+        assert_eq!(
+            get_plain_section_names(),
+            (&hash_set(&get_predefined_section_names())
+                - &hash_set(&get_decorated_section_names()))
+        );
     }
 }

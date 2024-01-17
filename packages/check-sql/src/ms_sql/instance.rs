@@ -401,7 +401,16 @@ impl SqlInstance {
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     self.generate_unified_section(endpoint, section, None).await
                 }
-                _ => format!("{} not implemented\n", section.name()).to_string(),
+                _ => self
+                    .generate_custom_section(endpoint, section)
+                    .await
+                    .unwrap_or_else(|| {
+                        format!(
+                            "Can't find sql in for custom section `{}`\n",
+                            section.name()
+                        )
+                        .to_string()
+                    }),
             }
         } else {
             log::error!("Bad section query: {}", section.name());
@@ -837,13 +846,42 @@ impl SqlInstance {
                     .map(|rows| {
                         format!(
                             "{}{}",
-                            section.first_line(|| format!("{}\n", &self.name)),
+                            section.first_line(Some(&self.name)),
                             self.to_entries(rows, section.sep())
                         )
                     })
                     .unwrap_or_else(|e| format!("{} {}\n", self.name, e))
             }
             Err(err) => format!("{} {}\n", self.name, err),
+        }
+    }
+
+    pub async fn generate_custom_section(
+        &self,
+        endpoint: &Endpoint,
+        section: &Section,
+    ) -> Option<String> {
+        match self.create_client(endpoint, None).await {
+            Ok(mut c) => {
+                if let Some(query) = section.find_provided_query(get_sql_dir()) {
+                    Some(
+                        run_custom_query(&mut c, query)
+                            .await
+                            .and_then(|r| section.validate_rows(r))
+                            .map(|rows| {
+                                format!(
+                                    "{}{}",
+                                    section.first_line(Some(&self.name)),
+                                    self.to_entries(rows, section.sep())
+                                )
+                            })
+                            .unwrap_or_else(|e| format!("{} {}\n", self.name, e)),
+                    )
+                } else {
+                    None
+                }
+            }
+            Err(err) => Some(format!("{} {}\n", self.name, err)),
         }
     }
 

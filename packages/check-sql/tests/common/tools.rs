@@ -9,7 +9,7 @@ use check_sql::ms_sql::client::Client;
 use check_sql::ms_sql::query;
 use flexi_logger::{self, DeferredNow, FileSpec, LogSpecification, Record};
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Output;
 use tempfile::NamedTempFile;
 use tempfile::{Builder, TempDir};
@@ -94,10 +94,11 @@ pub fn get_remote_sql_from_env_var() -> Option<SqlDbEndpoint> {
     None
 }
 
-pub fn create_file_with_content(dir: &Path, file_name: &str, content: &str) {
+pub fn create_file_with_content(dir: &Path, file_name: &str, content: &str) -> PathBuf {
     let file_path = dir.join(file_name);
-    let mut file = std::fs::File::create(file_path).unwrap();
+    let mut file = std::fs::File::create(&file_path).unwrap();
     file.write_all(content.as_bytes()).unwrap();
+    file_path
 }
 
 pub fn create_temp_process_dir() -> TempDir {

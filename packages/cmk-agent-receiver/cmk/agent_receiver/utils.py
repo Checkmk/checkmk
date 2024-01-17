@@ -10,13 +10,10 @@ from typing import Final, Self
 
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
-from fastapi.security import HTTPBasicCredentials
 from pydantic import UUID4
 
 from .models import ConnectionMode, R4RStatus, RequestForRegistration
-from .site_context import agent_output_dir, r4r_dir, users_dir
-
-INTERNAL_REST_API_USER = "automation"
+from .site_context import agent_output_dir, internal_secret_path, r4r_dir
 
 
 class NotRegisteredException(Exception):
@@ -79,6 +76,5 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         return "[CSR parsing failed]"
 
 
-def internal_credentials() -> HTTPBasicCredentials:
-    secret = (users_dir() / INTERNAL_REST_API_USER / "automation.secret").read_text().strip()
-    return HTTPBasicCredentials(username=INTERNAL_REST_API_USER, password=secret)
+def internal_credentials() -> bytes:
+    return internal_secret_path().read_bytes()

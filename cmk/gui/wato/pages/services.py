@@ -1361,56 +1361,63 @@ class DiscoveryPageRenderer:
     def rulesets_button(cls, descr: str, hostname: str) -> Literal[1]:
         # Link to list of all rulesets affecting this service
         html.icon_button(
-            folder_preserving_link(
-                [
-                    ("mode", "object_parameters"),
-                    ("host", hostname),
-                    ("service", descr),
-                ]
-            ),
+            cls.rulesets_button_link(descr, hostname),
             _("View and edit the parameters for this service"),
             "rulesets",
         )
         return 1
 
     @classmethod
+    def rulesets_button_link(cls, descr: str, hostname: str) -> str:
+        return folder_preserving_link(
+            [
+                ("mode", "object_parameters"),
+                ("host", hostname),
+                ("service", descr),
+            ]
+        )
+
+    @classmethod
     def check_parameters_button(cls, entry: CheckPreviewEntry, hostname: str) -> Literal[0, 1]:
         if not entry.ruleset_name:
             return 0
+        url = cls.check_parameters_button_link(entry, hostname)
+        if not url:
+            return 0
+        html.icon_button(
+            url, _("Edit and analyze the check parameters of this service"), "check_parameters"
+        )
+        return 1
 
+    @classmethod
+    def check_parameters_button_link(cls, entry: CheckPreviewEntry, hostname: str) -> str | None:
         if entry.check_source == DiscoveryState.MANUAL:
-            url = folder_preserving_link(
+            return folder_preserving_link(
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
                     ("host", hostname),
                 ]
             )
-        else:
-            ruleset_name = cls._get_ruleset_name(entry)
-            if ruleset_name is None:
-                return 0
+        ruleset_name = cls._get_ruleset_name(entry)
+        if ruleset_name is None:
+            return None
 
-            url = folder_preserving_link(
-                [
-                    ("mode", "edit_ruleset"),
-                    ("varname", ruleset_name),
-                    ("host", hostname),
-                    (
-                        "item",
-                        mk_repr(entry.item).decode(),
-                    ),
-                    (
-                        "service",
-                        mk_repr(entry.description).decode(),
-                    ),
-                ]
-            )
-
-        html.icon_button(
-            url, _("Edit and analyze the check parameters of this service"), "check_parameters"
+        return folder_preserving_link(
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", ruleset_name),
+                ("host", hostname),
+                (
+                    "item",
+                    mk_repr(entry.item).decode(),
+                ),
+                (
+                    "service",
+                    mk_repr(entry.description).decode(),
+                ),
+            ]
         )
-        return 1
 
     def _disabled_services_button(self, descr: str) -> Literal[1]:
         html.icon_button(

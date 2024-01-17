@@ -456,6 +456,7 @@ def active_check_preview_rows(
                 check_source=make_check_source(active_service.description),
                 check_plugin_name=active_service.plugin_name,
                 ruleset_name=None,
+                discovery_ruleset_name=None,
                 item=active_service.description,
                 discovered_parameters={},
                 effective_parameters=None,

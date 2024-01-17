@@ -146,7 +146,7 @@ class DiscoveryResult(NamedTuple):
                             if k != "check_source"
                             else v.replace("unchanged", "old").replace("changed", "old")
                             for k, v in dataclasses.asdict(cpe).items()
-                            if k != "new_labels"
+                            if k not in ["new_labels", "discovery_ruleset_name"]
                         )
                         for cpe in self.check_table
                     ],

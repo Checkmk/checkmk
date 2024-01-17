@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal
+from typing import Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -22,6 +22,8 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
+from .transforms import scale_predictive
 
 _PercUsedModel = tuple[float, float]
 _AbsFreeModel = tuple[int, int]
@@ -46,12 +48,12 @@ def _migrate(
     ...     {
     ...         'average': 3,
     ...         'memory': (1, 2),
-    ...         'pagefile': {'see': 'doctest below'},
+    ...         'pagefile': {'see': 'doctest in scale_predictive'},
     ...     }
     ... ))
     {'average': 3,
      'memory': ('abs_free', (1048576, 2097152)),
-     'pagefile': ('predictive', {'see': 'doctest below'})}
+     'pagefile': ('predictive', {'see': 'doctest in scale_predictive'})}
     """
     return {
         k: v
@@ -76,39 +78,6 @@ def _migrate_alternative(
     return ("predictive", p)
 
 
-def _scale_predictive(p: _PredictiveModel, factor: float) -> _PredictiveModel:
-    """
-    >>> from pprint import pprint
-    >>> pprint(_scale_predictive(
-    ...     {
-    ...         '__get_predictive_levels__': None,
-    ...         'period': 'minute',
-    ...         'horizon': 4,
-    ...         'levels_upper': ('absolute', (0.5, 1.0)),
-    ...         'levels_lower': ('stdev', (2.0, 4.0)),
-    ...     },
-    ...     1024.0,
-    ... ))
-    {'__get_predictive_levels__': None,
-     'horizon': 4,
-     'levels_lower': ('stdev', (2.0, 4.0)),
-     'levels_upper': ('absolute', (512.0, 1024.0)),
-     'period': 'minute'}
-    """
-    return {k: _scale_predictive_element(k, v, factor) for k, v in p.items()}
-
-
-def _scale_predictive_element(k: str, v: Any, factor: float) -> Any:
-    match k:
-        case "levels_upper" | "levels_lower":
-            type_, (warn, crit) = v
-            return (type_, (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit))
-        case "levels_upper_min":
-            warn, crit = v
-            return warn * factor, crit * factor
-    return v
-
-
 def _prec_used_levels() -> Tuple:
     return Tuple(
         elements=[
@@ -130,8 +99,8 @@ def _abs_free_levels() -> Tuple:
 def _predictive_levels() -> Transform:
     return Transform(  # *not* transform until we migrate to new API and can use Datasize inside PredictiveLevels!
         PredictiveLevels(unit=_("GiB"), default_difference=(0.5, 1.0)),
-        to_valuespec=lambda p: _scale_predictive(p, 1.0 / _GiB),
-        from_valuespec=lambda p: _scale_predictive(p, _GiB),
+        to_valuespec=lambda p: scale_predictive(p, 1.0 / _GiB),
+        from_valuespec=lambda p: scale_predictive(p, _GiB),
     )
 
 

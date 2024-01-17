@@ -6,66 +6,59 @@
 import re
 import socket
 import sys
+from collections.abc import Mapping
 
 
-def parse_response(data):
+def parse_response(data: str) -> Mapping[str, str]:
     try:
         parsed = dict([x.split("=") for x in data.split(";")][:-1])
-        response_type = parsed["type"]
+        if parsed["type"] == "1":
+            bail_out(3, f"Invalid response: {data!r}")
     except (ValueError, KeyError):
-        sys.stdout.write("Invalid data: %s\n" % data)
-        sys.exit(3)
+        bail_out(3, f"Invalid data: {data!r}")
 
-    if response_type == "1":
-        sys.stdout.write("Invalid response: %s\n" % data)
-        sys.exit(3)
     return parsed
 
 
-def send_and_receive(sock, request_str):
-    encoding = "utf-8"
-    sock.send(request_str.encode(encoding))
-    answer = sock.recv(1024)
-    return parse_response(answer.decode(encoding))
+def send_and_receive(sock: socket.socket, request_str: str) -> Mapping[str, str]:
+    sock.send(f"{request_str}\n".encode())
+    return parse_response(sock.recv(1024).decode())
 
 
-def check_job(job, s, sid, street, street_nr, city, regex):
+def check_job(
+    job: str,
+    tcp_socket: socket.socket,
+    sid: str,
+    street: str,
+    street_nr: str,
+    city: str,
+    regex: str,
+) -> tuple[int, str]:
     if job == "VERSION":
-        sendstring = "version:session=" + sid + "\n"
-        data = send_and_receive(s, sendstring)
+        data = send_and_receive(tcp_socket, f"version:session={sid}")
         try:
-            version = data["version_str"]
+            return 0, f"Version: {data['version_str']}"
         except KeyError:
             return 3, "Unknown version"
-        return 0, "Version: %s" % version
 
     if job == "ADDRESS":
-        sendstring = (
-            "exec:session={};request_type=check_address;in_str={};in_hno={};in_city={}\n".format(
-                sid,
-                street,
-                street_nr,
-                city,
-            )
+        _data = send_and_receive(
+            tcp_socket,
+            f"exec:session={sid};request_type=check_address;in_str={street};"
+            f"in_hno={street_nr};in_city={city}",
         )
-        _data = send_and_receive(s, sendstring)
 
-        sendstring = "fetch:session=" + sid + ";out_zip=?;out_city=?\n"
-        data = send_and_receive(s, sendstring)
+        data = send_and_receive(tcp_socket, f"fetch:session={sid};out_zip=?;out_city=?")
 
         try:
-            city_zip = data["out_zip"]
-            city_name = data["out_city"]
+            infotext = f"Address: {data['out_zip']} {data['out_city']}"
         except KeyError:
             return 3, "Unknown zip or city"
 
-        state = 0
-        infotext = f"Address: {city_zip} {city_name}"
-        if not re.match(regex, data["out_city"]):
-            infotext += " but expects %s" % regex
-            state = 2
+        if re.match(regex, data["out_city"]):
+            return 0, infotext
 
-        return state, infotext
+        return 2, f"{infotext} but expects {regex}"
 
     return 3, "Unknown job"
 
@@ -93,35 +86,40 @@ def parse_arguments(sys_args):
             city = sys_args[6]
             regex = sys_args[7]
     except (IndexError, ValueError):
-        sys.stdout.write(
-            " Usage: check_uniserv HOSTNAME PORT SERVICE (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)\n"
+        bail_out(
+            3,
+            (
+                " Usage: check_uniserv HOSTNAME PORT SERVICE"
+                " (VERSION|ADDRESS STREET NR CITY SEARCH_REGEX)"
+            ),
         )
-        sys.exit(3)
 
     return host, tcp_port, service, job, street, street_nr, city, regex
+
+
+def bail_out(result: int, message: str) -> None:
+    sys.stdout.write(f"{message}\n")
+    raise SystemExit(result)
 
 
 def main(sys_args=None):
     host, tcp_port, service, job, street, street_nr, city, regex = parse_arguments(sys_args)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host, tcp_port))
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
+        tcp_socket.connect((host, tcp_port))
 
-    sendstring = "open:service=" + service + ";servicehost=" + host + "\n"
-    data = send_and_receive(s, sendstring)
-    sid = data.get("session")
-    if not sid:
-        return 3, "Error getting SID. Response was: %s\n" % data
+        data = send_and_receive(tcp_socket, f"open:service={service};servicehost={host}")
+        if not (sid := data.get("session")):
+            return 3, f"Error getting SID. Response was: {data}"
 
-    state, infotext = check_job(job, s, sid, street, street_nr, city, regex)
+        state, infotext = check_job(job, tcp_socket, sid, street, street_nr, city, regex)
 
-    s.send("close:session=" + sid + "\n")
-    s.close()
+        tcp_socket.send(f"close:session={sid}\n".encode())
 
-    return state, "%s\n" % infotext
+    return state, infotext
 
 
 if __name__ == "__main__":
     exitcode, info = main()
-    sys.stdout.write("%s\n" % info)
+    sys.stdout.write(f"{info}\n")
     sys.exit(exitcode)

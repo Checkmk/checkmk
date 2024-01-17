@@ -7,7 +7,7 @@ import enum
 import json
 import time
 from collections.abc import Hashable, Iterable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from livestatus import (
     get_rrd_data,
@@ -21,7 +21,7 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import estimate_levels_quadruple, PredictionData, PredictionQuerier
+from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
@@ -59,15 +59,16 @@ _VRANGES = (
 
 
 @dataclass(frozen=True)
+class _LevelsCurves:
+    warn: Sequence[float | None]
+    crit: Sequence[float | None]
+
+
+@dataclass(frozen=True)
 class PredictionCurves:
-    average: list[float | None] = field(default_factory=list)
-    min_: list[float | None] = field(default_factory=list)
-    max_: list[float | None] = field(default_factory=list)
-    stdev: list[float | None] = field(default_factory=list)
-    upper_warn: list[float] = field(default_factory=list)
-    upper_crit: list[float] = field(default_factory=list)
-    lower_warn: list[float] = field(default_factory=list)
-    lower_crit: list[float] = field(default_factory=list)
+    average: Sequence[float | None]
+    levels_upper: _LevelsCurves | None
+    levels_lower: _LevelsCurves | None
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -155,7 +156,7 @@ def page_graph() -> None:
 
     _render_grid(selected_prediction_info.valid_interval, vertical_range)
 
-    _render_level_areas(selected_prediction_info, curves)
+    _render_level_areas(curves)
 
     _render_prediction(curves)
 
@@ -211,18 +212,24 @@ def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None
     _render_coordinates(y_scala, x_scala)
 
 
-def _render_level_areas(selected_prediction_info: PredictionInfo, curves: PredictionCurves) -> None:
-    if selected_prediction_info.params.levels_upper is not None:
-        _render_filled_area_between(curves.upper_warn, curves.upper_crit, Color.WARN_AREA, 0.4)
-        _render_filled_area_above(curves.upper_crit, Color.CRIT_AREA, 0.1)
+def _render_level_areas(curves: PredictionCurves) -> None:
+    if curves.levels_upper is None:
+        _render_filled_area_above(curves.average, Color.OK_AREA, 0.5)
+    else:
+        _render_filled_area_between(curves.average, curves.levels_upper.warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(
+            curves.levels_upper.warn, curves.levels_upper.crit, Color.WARN_AREA, 0.4
+        )
+        _render_filled_area_above(curves.levels_upper.crit, Color.CRIT_AREA, 0.1)
 
-    if selected_prediction_info.params.levels_lower is not None:
-        _render_filled_area_between(curves.lower_crit, curves.lower_warn, Color.WARN_AREA, 0.4)
-        _render_filled_area_below(curves.lower_crit, Color.CRIT_AREA, 0.1)
-        _render_filled_area_between(curves.average, curves.lower_warn, Color.OK_AREA, 0.5)
-
-    if selected_prediction_info.params.levels_upper is not None:
-        _render_filled_area_between(curves.upper_warn, curves.average, Color.OK_AREA, 0.5)
+    if curves.levels_lower is None:
+        _render_filled_area_below(curves.average, Color.OK_AREA, 0.5)
+    else:
+        _render_filled_area_below(curves.levels_lower.crit, Color.CRIT_AREA, 0.1)
+        _render_filled_area_between(
+            curves.levels_lower.crit, curves.levels_lower.warn, Color.WARN_AREA, 0.4
+        )
+        _render_filled_area_between(curves.average, curves.levels_lower.warn, Color.OK_AREA, 0.5)
 
 
 def _render_prediction(curves: PredictionCurves) -> None:
@@ -318,48 +325,52 @@ def _get_current_perfdata_via_livestatus(
 def _make_prediction_curves(
     tg_data: PredictionData, params: PredictionParameters
 ) -> PredictionCurves:
-    curves = PredictionCurves()
-    for predicted in tg_data.points:
-        if predicted is not None:
-            curves.average.append(predicted.average)
-            curves.min_.append(predicted.min_)
-            curves.max_.append(predicted.max_)
-            curves.stdev.append(predicted.stdev)
-            upper_0, upper_1, lower_0, lower_1 = estimate_levels_quadruple(
-                reference_value=predicted.average,
-                stdev=predicted.stdev,
-                levels_lower=params.levels_lower,
-                levels_upper=params.levels_upper,
-                levels_upper_lower_bound=params.levels_upper_min,
-            )
-            curves.upper_warn.append(upper_0 or 0)
-            curves.upper_crit.append(upper_1 or 0)
-            curves.lower_warn.append(lower_0 or 0)
-            curves.lower_crit.append(lower_1 or 0)
-        else:
-            curves.average.append(None)
-            curves.min_.append(None)
-            curves.max_.append(None)
-            curves.stdev.append(None)
-            curves.upper_warn.append(0)
-            curves.upper_crit.append(0)
-            curves.lower_warn.append(0)
-            curves.lower_crit.append(0)
+    # FIXME: dont access `.points`, use `.predict`!
+    predictions = tg_data.points
 
-    return curves
+    if params.levels_upper is None:
+        levels_upper = None
+    else:
+        upper_warn, upper_crit = [], []
+        for levels in (
+            estimate_levels(
+                p.average, p.stdev, "upper", params.levels_upper, params.levels_upper_min
+            )
+            if p
+            else None
+            for p in predictions
+        ):
+            upper_warn.append(levels[0] if levels else None)
+            upper_crit.append(levels[1] if levels else None)
+        levels_upper = _LevelsCurves(upper_warn, upper_crit)
+
+    if params.levels_lower is None:
+        levels_lower = None
+    else:
+        lower_warn, lower_crit = [], []
+        for levels in (
+            estimate_levels(p.average, p.stdev, "lower", params.levels_lower, None) if p else None
+            for p in predictions
+        ):
+            lower_warn.append(levels[0] if levels else None)
+            lower_crit.append(levels[1] if levels else None)
+        levels_lower = _LevelsCurves(lower_warn, lower_crit)
+
+    return PredictionCurves(
+        average=[None if p is None else p.average for p in predictions],
+        levels_upper=levels_upper,
+        levels_lower=levels_lower,
+    )
 
 
 def _compute_vertical_range(curves: PredictionCurves) -> tuple[float, float]:
+    # TODO: consider the actual measurement here!
     points = (
-        curves.average
-        + curves.min_
-        + curves.max_
-        + curves.min_
-        + curves.stdev
-        + curves.upper_warn
-        + curves.upper_crit
-        + curves.lower_warn
-        + curves.lower_crit
+        *curves.average,
+        *(curves.levels_upper.warn if curves.levels_upper else ()),
+        *(curves.levels_upper.crit if curves.levels_upper else ()),
+        *(curves.levels_lower.warn if curves.levels_lower else ()),
+        *(curves.levels_lower.crit if curves.levels_lower else ()),
     )
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 

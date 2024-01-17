@@ -111,7 +111,7 @@ def check_scaleio_volume(
         return
 
     yield from check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk={
             "read_ios": volume.volume_ios.read_operations,
             "read_throughput": volume.volume_ios.read_throughput,

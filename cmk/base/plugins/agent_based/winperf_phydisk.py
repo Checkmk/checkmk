@@ -358,7 +358,7 @@ def check_winperf_phydisk(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params_unscaled=_with_average_in_seconds(params),
+        params=_with_average_in_seconds(params),
         disk=disk_with_rates,
         value_store=value_store,
         this_time=time.time(),

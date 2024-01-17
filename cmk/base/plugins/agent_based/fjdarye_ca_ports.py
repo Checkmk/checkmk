@@ -125,7 +125,7 @@ def check_fjdarye_ca_ports(
 
     yield from check_diskstat_dict(
         disk={k: v for k, v in disk.items() if k != "mode" and isinstance(v, float)},
-        params_unscaled=params,
+        params=params,
         value_store=get_value_store(),
         this_time=time.time(),
     )

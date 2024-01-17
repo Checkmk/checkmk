@@ -116,7 +116,7 @@ def check_aws_ebs(item: str, params: Mapping[str, Any], section: Section) -> Che
     }
 
     yield from check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk=disk_data,
         value_store=get_value_store(),
         this_time=now,

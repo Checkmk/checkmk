@@ -130,25 +130,25 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
 
     PARAMS = {
         "average": 300,
-        "latency": (80.0, 160.0),
-        "read": {
+        "latency": (0.08, 0.16),
+        "read_throughput": {
             "horizon": 90,
-            "levels_lower": ("absolute", (2.0, 4.0)),
+            "levels_lower": ("absolute", (2000000.0, 4000000.0)),
             "levels_upper": ("relative", (10.0, 20.0)),
-            "levels_upper_min": (10.0, 15.0),
+            "levels_upper_min": (10000000.0, 15000000.0),
             "period": "wday",
             "__get_predictive_levels__": FixedPredictionUpdater(
-                None, (2.1, 4.1, None, None)
+                0.1, (-1.0, 2.0, None, None)  # Funny values to see something
             ).get_predictive_levels,
         },
         "read_ios": (400.0, 600.0),
-        "read_latency": (80.0, 160.0),
-        "read_wait": (30.0, 50.0),
-        "utilization": (80.0, 90.0),
-        "write": (50.0, 100.0),
+        "read_latency": (0.08, 0.16),
+        "average_read_wait": (0.03, 0.05),
+        "utilization": (0.8, 0.9),
+        "write_throughput": (50000000.0, 100000000.0),
         "write_ios": (300.0, 400.0),
-        "write_latency": (80.0, 160.0),
-        "write_wait": (30.0, 50.0),
+        "write_latency": (0.08, 0.16),
+        "average_write_wait": (0.03, 0.05),
     }
 
     with pytest.raises(IgnoreResultsError):
@@ -165,8 +165,12 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
         Result(state=State.OK, notice="Utilization: 0%"),
         Metric("disk_utilization", 0.0, levels=(0.8, 0.9)),
-        Result(state=State.OK, summary="Read: 0.00 B/s (no reference for prediction yet)"),
-        Metric("disk_read_throughput", 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
+        Result(
+            state=State.WARN,
+            summary="Read: 0.00 B/s (predicted reference: 0.10 B/s) (warn/crit at -1.00 B/s/2.00 B/s)",
+        ),
+        Metric("disk_read_throughput", 0.0, levels=(-1.0, 2.0)),
+        Metric("predict_disk_read_throughput", 0.1),
         Result(state=State.OK, summary="Write: 0.00 B/s"),
         Metric("disk_write_throughput", 0.0, levels=(50000000.0, 100000000.0)),
         Result(state=State.OK, notice="Average wait: 0 seconds"),
@@ -1591,7 +1595,7 @@ def test_check_latency_calculation() -> None:
     results_summary = list(
         diskstat.check_diskstat(
             "SUMMARY",
-            {"latency": (3, 5)},
+            {"latency": (0.003, 0.005)},
             {
                 "disk1": {
                     "timestamp": 10000000,

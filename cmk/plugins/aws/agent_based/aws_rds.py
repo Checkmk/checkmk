@@ -191,7 +191,7 @@ def check_aws_rds_disk_io(
         disk_data[key] = metric * scale
 
     yield from check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk=disk_data,
         value_store=get_value_store(),
         this_time=time.time(),

@@ -134,7 +134,7 @@ def _check_esx_vsphere_datastore_io(
             return
 
     yield from check_diskstat_dict(
-        params_unscaled=params,
+        params=params,
         disk=disk,
         value_store=value_store,
         this_time=now,

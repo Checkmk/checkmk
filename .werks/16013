@@ -1,0 +1,12 @@
+Title: Fix missing event console rules after site update
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1705483102
+Edition: cee
+Level: 1
+Version: 2.2.0p19
+
+With werk 16012 the event console rules are filtered ond saved to the location
+var/mkeventd/active_config during activate changes.
+This werk fixes the missing procedure while updating to a new Checkmk version.

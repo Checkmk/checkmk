@@ -1,0 +1,14 @@
+Title: Support Diagnostics: UI improvements
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1705477018
+Edition: cre
+Level: 1
+Version: 2.2.0p19
+
+This fix 
+
+LI: renames "Crash Dumps" to "Crash Reports" and mark them as medium sensitive,
+LI: renames "Local Files" to "Local Files and MKPs". That's somewhat redundant, but it helps to better understand what is packed.
+

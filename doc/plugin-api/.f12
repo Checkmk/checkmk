@@ -15,4 +15,4 @@ echo "Updating documentation..."
 make html
 
 echo "Updating site $SITE..."
-sudo rsync -a build/html "$ROOT/share/doc/check_mk/plugin-api/"
+rsync -rlD build/html "$ROOT/share/doc/check_mk/plugin-api/"

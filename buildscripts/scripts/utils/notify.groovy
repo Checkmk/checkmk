@@ -90,6 +90,12 @@ def notify_error(error) {
                 notify_emails += "benedikt.seidl@checkmk.com";
             }
 
+            /// Inform QA if something's wrong with those jobs
+            if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
+                notify_emails += "matteo.stifano@checkmk.com";
+                notify_emails += "rene.slowenski@checkmk.com";
+            }
+
             /// fallback - for investigation
             /* groovylint-disable DuplicateListLiteral */
             notify_emails = notify_emails ?: [

@@ -10,7 +10,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
-import cmk.utils.paths
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.log import init_dedicated_logging
 
@@ -34,7 +33,7 @@ def log_security_event(event: SecurityEvent) -> None:
         init_dedicated_logging(
             logging.INFO,
             target_logger=_root_logger(),
-            log_file=cmk.utils.paths.security_log_file,
+            log_file_name="security.log",
             formatter=logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"),
         )
 

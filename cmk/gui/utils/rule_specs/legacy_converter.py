@@ -952,7 +952,7 @@ def _get_legacy_level_spec(
         return legacy_valuespecs.Float(
             title=title,
             unit=unit,
-            default_value=int(prefill) if isinstance(prefill, float) else prefill,
+            default_value=prefill,
         )
     if issubclass(form_spec, ruleset_api_v1.form_specs.DataSize):
         return legacy_valuespecs.Filesize(

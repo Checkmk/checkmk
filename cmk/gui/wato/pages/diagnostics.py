@@ -274,7 +274,7 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Local Files"),
+                    title=_("Local Files and MKPs"),
                     help=_(
                         "List of installed, unpacked, optional files below OMD_ROOT/local. "
                         "This also includes information about installed MKPs."
@@ -315,8 +315,12 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Crash Dumps"),
-                    help=_("The latest crash dumps"),
+                    title=_("Crash Reports"),
+                    help=_(
+                        "The latest crash reports"
+                        "<br>Note: Some crash reports may contain sensitive data like"
+                        "host names or user names."
+                    ),
                 ),
             ),
             (

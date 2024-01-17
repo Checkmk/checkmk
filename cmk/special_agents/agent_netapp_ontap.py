@@ -284,15 +284,28 @@ def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceM
         "location.node.name",
         "location.port.name",
         "location.failover",
-        # "ip",
+        "location.home_node.name",
+        "location.home_port.name",
+        "location.is_home",
     }
 
-    yield from (
-        models.IpInterfaceModel.model_validate(element.to_dict())
-        for element in NetAppResource.IpInterface.get_collection(
-            connection=connection, fields=",".join(field_query)
+    for element in NetAppResource.IpInterface.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.IpInterfaceModel(
+            uuid=element_data["uuid"],
+            name=element_data["name"],
+            enabled=element_data["enabled"],
+            state=element_data.get("state"),
+            node_name=element_data["location"]["node"]["name"],
+            port_name=element_data["location"]["port"]["name"],
+            failover=element_data["location"]["failover"],
+            home_node=element_data["location"]["home_node"]["name"],
+            home_port=element_data["location"]["home_port"]["name"],
+            is_home=element_data["location"]["is_home"],
         )
-    )
 
 
 def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
@@ -303,6 +316,7 @@ def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
         "state",
         "speed",
         "type",
+        "mac_address",
         "broadcast_domain.name",
     }
 
@@ -318,35 +332,52 @@ def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
             state=element_data["state"],
             speed=element_data.get("speed"),
             port_type=element_data["type"],
-            broadcast_domain=element_data.get("broadcast_domain"),
+            mac_address=element_data["mac_address"],
+            broadcast_domain=element_data.get("broadcast_domain", {}).get("name", None),
         )
 
 
 def fetch_interfaces_counters(
     connection: HostConnection, interfaces: Sequence[models.IpInterfaceModel]
-) -> Iterable[models.InterfaceCountersRowModel]:
+) -> Iterable[models.InterfaceCounters]:
     """
     id is composed in this way: {node_name}:{interface_name}:{unique_id}
 
     - https://docs.netapp.com/us-en/ontap-pcmap-9141/lif.html
 
     """
-    interfaces_counters_field_query = {"*"}
+    interfaces_counters_field_query = {
+        "received_data",
+        "received_packets",
+        "received_errors",
+        "sent_data",
+        "sent_packets",
+        "sent_errors",
+    }
 
     for interface in interfaces:
-        interface_id = f"{interface.location.node.name}:{interface.name}:*"
+        interface_id = (f"{interface.node_name}:{interface.name}:*",)
 
-        yield from (
-            models.InterfaceCountersRowModel.model_validate(element.to_dict())
-            for element in NetAppResource.CounterRow.get_collection(
-                "lif",
-                id=interface_id,
-                connection=connection,
-                fields="counters",
-                max_records=None,  # type: ignore # pylint disable=arg-type not working
-                **{"counters.name": "|".join(interfaces_counters_field_query)},
+        for element in NetAppResource.CounterRow.get_collection(
+            "lif",
+            id=interface_id,
+            connection=connection,
+            fields="counters",
+            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            **{"counters.name": "|".join(interfaces_counters_field_query)},
+        ):
+            element_data = element.to_dict()
+            counters = {el["name"]: el["value"] for el in element_data["counters"]}
+
+            yield models.InterfaceCounters(
+                id=element_data["id"],
+                recv_data=counters["received_data"],
+                recv_packet=counters["received_packets"],
+                recv_errors=counters["received_errors"],
+                send_data=counters["sent_data"],
+                send_packet=counters["sent_packets"],
+                send_errors=counters["sent_errors"],
             )
-        )
 
 
 def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
@@ -454,8 +485,8 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("vs_status", fetch_vs_status(connection), logger)
     write_section("ports", fetch_ports(connection), logger)
     interfaces = list(fetch_interfaces(connection))
-    write_section("interfaces_rest", interfaces, logger)
-    write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)
+    write_section("if", interfaces, logger)
+    write_section("if_counters", fetch_interfaces_counters(connection, interfaces), logger)
     write_section("node", fetch_nodes(connection), logger)
     write_section("fan", fetch_fans(connection), logger)
     write_section("temp", fetch_temperatures(connection), logger)

@@ -13,7 +13,7 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
-from collections.abc import Sequence
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -252,25 +252,6 @@ class SvmModel(BaseModel):
     subtype: str | None = None
 
 
-class InterfaceLocation(BaseModel):
-    """
-    Cfr: class IpInterfaceLocationSchema from NetApp module
-    """
-
-    class IfLocationNode(BaseModel):
-        name: str
-        # uuid: str  # FIXME: useless?
-
-    class IfLocationPort(BaseModel):
-        name: str
-        # node: Mapping[str, str]  # FIXME: useless?
-        # uuid: str  # FIXME: useless?
-
-    node: IfLocationNode  # FIXME: use Node class
-    port: IfLocationPort  # FIXME: use Port class
-    failover: str  # was: failover policy
-
-
 class IpInterfaceModel(BaseModel):
     """Wraps information coming from "/api/network/ip/interfaces", see
     - https://library.netapp.com/ecmdocs/ECMLP2885799/html/index.html#/networking/network_ip_interfaces_get
@@ -291,13 +272,28 @@ class IpInterfaceModel(BaseModel):
 
     name: str
     uuid: str
-    state: str
+    state: str | None = None  # default None inherited from old NetApp API logic
     enabled: bool
-    location: InterfaceLocation
+    node_name: str
+    port_name: str
+    failover: str
+    home_node: str
+    home_port: str
+    is_home: bool
 
-
-class BroadcastDomain(BaseModel):
-    name: str
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "state": self.state,
+            "enabled": self.enabled,
+            "node_name": self.node_name,
+            "port_name": self.port_name,
+            "failover": self.failover,
+            "home-node": self.home_node,
+            "home-port": self.home_port,
+            "is-home": self.is_home,
+        }
 
 
 class PortModel(BaseModel):
@@ -312,32 +308,59 @@ class PortModel(BaseModel):
     "port" -> name
     "operational-speed" -> speed
     "health-status" -> NOT AVAILABLE IN REST API
+
+    "operational-status" -> state
+    "mac-address" -> mac_address
     ============
 
     """
 
     uuid: str
     name: str
+    node_name: str
     state: str
     speed: int | None = None
-    node_name: str
     port_type: str
-    broadcast_domain: BroadcastDomain | None = None
+    mac_address: str | None = None
+    broadcast_domain: str | None = None
 
     def item_name(self) -> str:
         return f"{self.port_type.capitalize()} port {self.node_name}.{self.name}"
 
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "port-uuid": self.uuid,
+            "port-name": self.name,
+            "port-node": self.node_name,
+            "port_state": self.state,
+            "speed": self.speed,
+            "port_type": self.port_type,
+            "mac-address": self.mac_address,
+            "broadcast_domain": self.broadcast_domain,
+        }
 
-class InterfaceCounter(BaseModel):
-    name: str
-    value: int | float
 
+class InterfaceCounters(BaseModel):
+    """
+    "recv_data" -> received_data
+    "send_data" -> sent_data
+    "recv_mcasts" -> ! NA
+    "send_mcasts" -> ! NA
+    "recv_errors" -> received_errors
+    "send_errors" -> sent_errors
+    "recv_packet" -> received_packets
+    "send_packet" -> sent_packets
+    """
 
-class InterfaceCountersRowModel(BaseModel):
-    # node_name:svm_name:volume_name:volume_uuid
-    # "mcc_darz_a-01:FlexPodXCS_NFS_Frank:Test_300T:00b3e6b1-5781-11ee-b0c8-00a098c54c0b"
+    # id composition: node_name:interface_name:??
     id: str
-    counters: Sequence[InterfaceCounter]
+
+    recv_data: int
+    recv_packet: int
+    recv_errors: int
+    send_data: int
+    send_packet: int
+    send_errors: int
 
 
 class Version(BaseModel):
@@ -357,7 +380,8 @@ class NodeModel(BaseModel):
     api: /api/cluster/nodes
     doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-get-node-info-iter
 
-    CPU/NVRAM plugin
+
+    STATUS PLUGIN:
     ============
     OLD -> NEW:
     ============

@@ -1,0 +1,11 @@
+Title: check_mk_agent.aix: Fix Missing Plugin Details
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705508100
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p20
+
+

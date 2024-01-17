@@ -66,7 +66,7 @@ class _LevelsCurves:
 
 @dataclass(frozen=True)
 class PredictionCurves:
-    average: Sequence[float | None]
+    prediction: Sequence[float | None]
     levels_upper: _LevelsCurves | None
     levels_lower: _LevelsCurves | None
 
@@ -142,16 +142,19 @@ def page_graph() -> None:
     )
 
     curves = _make_prediction_curves(selected_prediction_data, selected_prediction_info.params)
-    vertical_range = _compute_vertical_range(curves)
+    measurement_point = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)
+    measurement_rrd = _get_observed_data(
+        livestatus_connection, host_name, service_name, selected_prediction_info, time.time()
+    )
 
-    current_measurement = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)
+    vertical_range = _compute_vertical_range(curves, measurement_point, measurement_rrd)
 
     _create_graph(
         selected_prediction_info,
         _GRAPH_SIZE,
         selected_prediction_info.valid_interval,
         vertical_range,
-        _make_legend(current_measurement),
+        _make_legend(measurement_point),
     )
 
     _render_grid(selected_prediction_info.valid_interval, vertical_range)
@@ -160,14 +163,10 @@ def page_graph() -> None:
 
     _render_prediction(curves)
 
-    if (
-        current_measurement_rrd := _get_observed_data(
-            livestatus_connection, host_name, service_name, selected_prediction_info, time.time()
-        )
-    ) is not None:
-        _render_curve(current_measurement_rrd, Color.OBSERVED, 2)
-        if current_measurement is not None:
-            _render_point(*current_measurement, Color.OBSERVED)
+    if measurement_rrd is not None:
+        _render_curve(measurement_rrd, Color.OBSERVED, 2)
+    if measurement_point is not None:
+        _render_point(*measurement_point, Color.OBSERVED)
 
     html.footer()
 
@@ -214,27 +213,27 @@ def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None
 
 def _render_level_areas(curves: PredictionCurves) -> None:
     if curves.levels_upper is None:
-        _render_filled_area_above(curves.average, Color.OK_AREA, 0.5)
+        _render_filled_area_above(curves.prediction, Color.OK_AREA, 0.5)
     else:
-        _render_filled_area_between(curves.average, curves.levels_upper.warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves.prediction, curves.levels_upper.warn, Color.OK_AREA, 0.5)
         _render_filled_area_between(
             curves.levels_upper.warn, curves.levels_upper.crit, Color.WARN_AREA, 0.4
         )
         _render_filled_area_above(curves.levels_upper.crit, Color.CRIT_AREA, 0.1)
 
     if curves.levels_lower is None:
-        _render_filled_area_below(curves.average, Color.OK_AREA, 0.5)
+        _render_filled_area_below(curves.prediction, Color.OK_AREA, 0.5)
     else:
         _render_filled_area_below(curves.levels_lower.crit, Color.CRIT_AREA, 0.1)
         _render_filled_area_between(
             curves.levels_lower.crit, curves.levels_lower.warn, Color.WARN_AREA, 0.4
         )
-        _render_filled_area_between(curves.average, curves.levels_lower.warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves.prediction, curves.levels_lower.warn, Color.OK_AREA, 0.5)
 
 
 def _render_prediction(curves: PredictionCurves) -> None:
-    _render_curve(curves.average, Color.PREDICTION)
-    _render_curve(curves.average, Color.PREDICTION)  # repetition makes line bolder
+    _render_curve(curves.prediction, Color.PREDICTION)
+    _render_curve(curves.prediction, Color.PREDICTION)  # repetition makes line bolder
 
 
 def _get_observed_data(
@@ -357,20 +356,25 @@ def _make_prediction_curves(
         levels_lower = _LevelsCurves(lower_warn, lower_crit)
 
     return PredictionCurves(
-        average=[None if p is None else p.average for p in predictions],
+        prediction=[None if p is None else p.average for p in predictions],
         levels_upper=levels_upper,
         levels_lower=levels_lower,
     )
 
 
-def _compute_vertical_range(curves: PredictionCurves) -> tuple[float, float]:
-    # TODO: consider the actual measurement here!
+def _compute_vertical_range(
+    curves: PredictionCurves,
+    measured_point: tuple[float, float] | None,
+    measured_rrd: Sequence[float | None] | None,
+) -> tuple[float, float]:
     points = (
-        *curves.average,
+        *curves.prediction,
         *(curves.levels_upper.warn if curves.levels_upper else ()),
         *(curves.levels_upper.crit if curves.levels_upper else ()),
         *(curves.levels_lower.warn if curves.levels_lower else ()),
         *(curves.levels_lower.crit if curves.levels_lower else ()),
+        *((measured_point[0],) if measured_point else ()),
+        *(measured_rrd if measured_rrd else ()),
     )
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)
 

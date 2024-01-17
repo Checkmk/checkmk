@@ -382,7 +382,7 @@ def build_tar_gz(
             )
 
             with gzip.open(tar_name, "wb") as tar_ball:
-                for chunk in image.save():
+                for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
 
             docker_client.images.remove(
@@ -390,7 +390,7 @@ def build_tar_gz(
             )
         else:
             with gzip.open(tar_name, "wb") as tar_ball:
-                for chunk in image.save():
+                for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
 
 

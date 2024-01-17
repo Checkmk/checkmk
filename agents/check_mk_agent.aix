@@ -942,7 +942,7 @@ run_purely_synchronous_sections() {
 
     _log_section_time section_cmk_agent_ctl_status
 
-    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && log_section_time section_checkmk_agent_plugins
+    [ -z "${MK_SKIP_CHECKMK_AGENT_PLUGINS}" ] && _log_section_time section_checkmk_agent_plugins
 
     [ -z "${MK_SKIP_DF}" ] && _log_section_time section_df
 

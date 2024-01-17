@@ -44,6 +44,12 @@
     Total virtual memory: [0-9]+(\.[0-9]+)?%
     - [0-9]+(\.[0-9]+)? ([KMGTPEZY]i)?B of [0-9]+(\.[0-9]+)? ([KMGTPEZY]i)?B,
     [0-9]+ additional details? available
+'.*:MSSQL.*DynamicsNAV100 Backup':
+  plugin_output: >-2
+    \[database\] Last backup: 2022-10-18 16:16:38,
+    Time since last backup: ([0-9]+ (year|month|day)s? ?)+.*,
+    \[log\] Last backup: 2022-10-18 16:37:13,
+    Time since last backup: ([0-9]+ (year|month|day)s? ?)+.*
 '.*:NTP Time':
   plugin_output: >-2
     Offset: -?[0-9]+(\.[0-9]+) m?s,

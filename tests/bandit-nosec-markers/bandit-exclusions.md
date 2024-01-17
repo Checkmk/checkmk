@@ -30,3 +30,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:f6c1b9` | `B605` | Shell command has been reviewed. |
 | `BNS:bbfc92` | `B701` | The test code in the examples is hard coded and does not currently take in external input. |
 | `BNS:a7d6b8` | `B202` | Bandit is not updated (tarfile check added July 2022) for the changes to tarfile.extractall() filters from python 3.12. |
+| `BNS:13b2c8` | `B108` | Using /tmp directory on host, reviewed. |

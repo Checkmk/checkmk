@@ -245,7 +245,7 @@ class RootContext(AbstractSiteContext):
 
     @property
     def tmp_dir(self) -> str:
-        return "/tmp"
+        return "/tmp"  # nosec B108 # BNS:13b2c8
 
     @property
     def real_dir(self) -> str:

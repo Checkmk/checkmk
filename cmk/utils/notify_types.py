@@ -442,26 +442,6 @@ RoutingKeyType = tuple[
     Literal["routing_key", "store"],
     str,
 ]
-ServiceLevels = Literal[
-    0,
-    10,
-    20,
-    30,
-]
-ServiceLevelsType = tuple[
-    ServiceLevels,
-    ServiceLevels,
-]
-ServiceLevelsStr = Literal[
-    "no_service_level",
-    "silver",
-    "gold",
-    "platinum",
-]
-ServiceLevelsMap = Mapping[
-    ServiceLevels,
-    ServiceLevelsStr,
-]
 RegexModes = Literal[
     "match_id",
     "match_alias",
@@ -577,11 +557,11 @@ class EventRule(_EventRuleMandatory, total=False):
     match_servicelabels: dict[str, str]
     match_services: list[str]
     match_site: list[str]
-    match_sl: ServiceLevelsType
+    match_sl: tuple[int, int]
     match_timeperiod: TimeperiodName
     notify_method: NotifyPluginParams
     bulk: NotifyBulkType
-    match_service_level: ServiceLevelsType
+    match_service_level: tuple[int, int]
     match_only_during_timeperiod: str
     notification_method: NotificationPluginNameStr
 

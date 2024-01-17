@@ -33,7 +33,6 @@ from cmk.utils.notify_types import (
     PluginOptions,
     PushOverPriorityStringType,
     RegexModes,
-    ServiceLevelsStr,
     SoundType,
     SysLogFacilityStrType,
     SysLogPriorityStrType,
@@ -47,6 +46,7 @@ from cmk.gui.fields import (
     HostField,
     IPField,
     PasswordStoreIDField,
+    ServiceLevelField,
     SiteField,
     SplunkURLField,
     TimePeriodIDField,
@@ -427,16 +427,8 @@ class CheckboxWithListOfServiceGroupsRegex(Checkbox):
 
 
 class FromToServiceLevels(BaseSchema):
-    from_level = fields.String(
-        enum=list(get_args(ServiceLevelsStr)),
-        required=True,
-        example="gold",
-    )
-    to_level = fields.String(
-        enum=list(get_args(ServiceLevelsStr)),
-        required=True,
-        example="gold",
-    )
+    from_level = ServiceLevelField()
+    to_level = ServiceLevelField()
 
 
 class CheckboxWithFromToServiceLevels(Checkbox):

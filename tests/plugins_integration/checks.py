@@ -108,7 +108,7 @@ config = CheckConfig()
 
 def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     """Apply regular expressions to the canon and result objects."""
-    regexp_filepath = f"{os.path.dirname(__file__)}/regexp.yaml"
+    regexp_filepath = f"{config.data_dir}/regexp.yaml"
     if not os.path.exists(regexp_filepath):
         return
     with open(regexp_filepath, encoding="utf-8") as regexp_file:

@@ -1303,8 +1303,8 @@ class DiscoveryPageRenderer:
             DiscoveryState.UNDECIDED,
             DiscoveryState.IGNORED,
         ] and user.may("wato.rulesets"):
-            num_buttons += self._rulesets_button(entry.description)
-            num_buttons += self._check_parameters_button(entry)
+            num_buttons += self.rulesets_button(entry.description, self._host.name())
+            num_buttons += self.check_parameters_button(entry, self._host.name())
 
         while num_buttons < 4:
             html.empty_icon()
@@ -1357,13 +1357,14 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _rulesets_button(self, descr: str) -> Literal[1]:
+    @classmethod
+    def rulesets_button(cls, descr: str, hostname: str) -> Literal[1]:
         # Link to list of all rulesets affecting this service
         html.icon_button(
             folder_preserving_link(
                 [
                     ("mode", "object_parameters"),
-                    ("host", self._host.name()),
+                    ("host", hostname),
                     ("service", descr),
                 ]
             ),
@@ -1372,7 +1373,8 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _check_parameters_button(self, entry: CheckPreviewEntry) -> Literal[0, 1]:
+    @classmethod
+    def check_parameters_button(cls, entry: CheckPreviewEntry, hostname: str) -> Literal[0, 1]:
         if not entry.ruleset_name:
             return 0
 
@@ -1381,11 +1383,11 @@ class DiscoveryPageRenderer:
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
-                    ("host", self._host.name()),
+                    ("host", hostname),
                 ]
             )
         else:
-            ruleset_name = self._get_ruleset_name(entry)
+            ruleset_name = cls._get_ruleset_name(entry)
             if ruleset_name is None:
                 return 0
 
@@ -1393,7 +1395,7 @@ class DiscoveryPageRenderer:
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", ruleset_name),
-                    ("host", self._host.name()),
+                    ("host", hostname),
                     (
                         "item",
                         mk_repr(entry.item).decode(),
@@ -1428,7 +1430,8 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _get_ruleset_name(self, entry: CheckPreviewEntry) -> str | None:
+    @classmethod
+    def _get_ruleset_name(cls, entry: CheckPreviewEntry) -> str | None:
         if entry.ruleset_name == "logwatch":
             return "logwatch_rules"
         if entry.ruleset_name:

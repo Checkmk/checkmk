@@ -13,8 +13,10 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 pipenv run pip wheel --no-deps --wheel-dir build .
 
-sudo "/omd/sites/${SITE}/bin/python3" -m pip install \
+"/omd/sites/${SITE}/bin/python3" -m pip install \
     --no-deps \
     --upgrade \
     --force-reinstall \
+    --isolated \
+    --target "/omd/sites/${SITE}/lib/python3.*/site-packages/" \
     ./build/*-*-py3-none-any.whl

@@ -15,5 +15,5 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 if [ -d "$ROOT" ]; then
-    sudo install -v -m 755 build/src/unixcat "$ROOT/bin"
+    install -v -m 755 build/src/unixcat "$ROOT/bin"
 fi

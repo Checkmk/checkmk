@@ -1324,6 +1324,7 @@ def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.mark.usefixtures("mock_ldap_locked_attributes")
+@managedtest
 def test_edit_ldap_user_with_locked_attributes(
     clients: ClientRegistry, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:

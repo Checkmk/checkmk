@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::sqls::{self, find_known_query};
+use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
 use crate::{constants, utils};
@@ -24,16 +25,13 @@ pub struct Section {
     name: String,
     sep: char,
     cache_age: Option<u32>,
+    decorated: bool,
 }
 
 impl Section {
     pub fn make_instance_section() -> Self {
         let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
-        Self {
-            name: config_section.name().to_string(),
-            sep: config_section.sep(),
-            cache_age: None,
-        }
+        Self::new(&config_section, 0)
     }
 
     pub fn new(section: &config::section::Section, cache_age: u32) -> Self {
@@ -46,6 +44,7 @@ impl Section {
             name: section.name().into(),
             sep: section.sep(),
             cache_age,
+            decorated: !get_plain_section_names().contains(section.name()),
         }
     }
 
@@ -93,13 +92,13 @@ impl Section {
         }
     }
 
-    pub fn first_line<F>(&self, closure: F) -> String
-    where
-        F: Fn() -> String,
-    {
-        match self.name.as_ref() {
-            section::names::JOBS | section::names::MIRRORING => closure(),
-            _ => "".to_string(),
+    pub fn first_line<T: AsRef<str>>(&self, value: Option<T>) -> String {
+        if self.decorated {
+            value
+                .map(|v| format!("{}\n", v.as_ref()))
+                .unwrap_or_default()
+        } else {
+            String::new()
         }
     }
 
@@ -120,7 +119,7 @@ impl Section {
         })
     }
 
-    fn find_provided_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
+    pub fn find_provided_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
         if let Some(dir) = sql_dir {
             let f = dir.join(self.name.to_lowercase().to_owned() + constants::SQL_QUERY_EXTENSION);
             read_to_string(&f)

@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
-use std::collections::HashSet;
+use std::{collections::HashSet, fs::create_dir_all};
 
 use check_sql::ms_sql::{
     client::{self, Client},
@@ -1144,4 +1144,68 @@ fn expected_databases() -> HashSet<String> {
         .iter()
         .map(|&s| s.to_string())
         .collect()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_check_config_custom() {
+    let dir = tools::create_temp_process_dir();
+    let content = create_remote_config_custom(tools::get_remote_sql_from_env_var().unwrap());
+    let config = tools::create_file_with_content(dir.path(), "check-sql.yml", &content);
+    let sql_dir = dir.path().join("mssql");
+    create_dir_all(&sql_dir).unwrap();
+    tools::create_file_with_content(
+        &sql_dir,
+        "job_ext.sql",
+        "select physical_name from sys.database_files",
+    );
+
+    let r = tools::run_bin()
+        .env("MK_CONFDIR", dir.path())
+        .arg("-c")
+        .arg(&config.to_string_lossy().into_owned())
+        .unwrap();
+    let (stdout, code) = tools::get_good_results(&r).unwrap();
+
+    assert_eq!(code, 0);
+    let sections: Vec<&str> = stdout
+        .split("<<<")
+        .filter(|s| !s.ends_with(">>>\n"))
+        .filter(|s| s.starts_with("mssql_job_ext"))
+        .map(|s| s.trim_start_matches("mssql_job_ext>>>\n"))
+        .collect();
+    assert_eq!(sections.len(), 3);
+    let mut instances: Vec<&str> = Vec::new();
+    for section in sections {
+        let lines: Vec<&str> = section.split('\n').collect();
+        instances.push(lines[0]);
+        for line in &lines[1..lines.len() - 2] {
+            assert!(line.starts_with("C:\\"), "{}", line);
+            assert!(line.ends_with("df"), "{}", line);
+        }
+    }
+    instances.sort();
+    assert_eq!(
+        instances,
+        ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"]
+    );
+}
+
+fn create_remote_config_custom(endpoint: SqlDbEndpoint) -> String {
+    format!(
+        r#"
+---
+mssql:
+  main:
+    authentication:
+      username: {}
+      password: {}
+      type: "sql_server"
+    connection:
+      hostname: {}
+    sections:
+      - instance:
+      - job_ext:
+ "#,
+        endpoint.user, endpoint.pwd, endpoint.host
+    )
 }

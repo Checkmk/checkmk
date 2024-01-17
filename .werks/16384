@@ -1,0 +1,36 @@
+Title: notification rule: allow for non builtin service levels
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1705490346
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+When configuring a notification rule via the Rest API, you could not
+set the value for "match_service_levels" to anything but the default
+service levels.  This werk addresses this issue by now allowing any
+of the service levels configured to be used.  This change mean that
+there is a change to the request schema. Previously, we accepeted
+the service level string value, whereas now we accept the integer
+value.
+
+Previous schema
+
+C+:
+{"match_service_levels": {
+    "state": "enabled",
+    "value": {"from_level": "silver", "to_level": "gold"}
+    }
+}
+C-:
+
+New schema
+
+C+:
+{"match_service_levels: {
+    "state": "enabled",
+    "value": {"from_level" 10, "to_level": 20}
+    }
+}
+C-:

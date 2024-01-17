@@ -47,9 +47,6 @@ from cmk.utils.notify_types import (
     RegexModes,
     RoutingKeyType,
     ServiceEventType,
-    ServiceLevels,
-    ServiceLevelsStr,
-    ServiceLevelsType,
     SortOrder,
     SoundType,
     SysLogFacilityIntType,
@@ -604,17 +601,9 @@ class CheckboxOpsGeniePriority:
 
 
 # ----------------------------------------------------------------
-SERVICE_LEVELS: Mapping[ServiceLevels, ServiceLevelsStr] = {
-    0: "no_service_level",
-    10: "silver",
-    20: "gold",
-    30: "platinum",
-}
-
-
 class MatchServiceFromToLevels(TypedDict):
-    from_level: ServiceLevelsStr
-    to_level: ServiceLevelsStr
+    from_level: int
+    to_level: int
 
 
 class MatchServiceLevelsAPIValueType(CheckboxStateType, total=False):
@@ -623,10 +612,10 @@ class MatchServiceLevelsAPIValueType(CheckboxStateType, total=False):
 
 @dataclass
 class MatchServiceLevels:
-    value: ServiceLevelsType | None = None
+    value: tuple[int, int] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: ServiceLevelsType | None) -> MatchServiceLevels:
+    def from_mk_file_format(cls, data: tuple[int, int] | None) -> MatchServiceLevels:
         return cls(value=data)
 
     @classmethod
@@ -634,11 +623,8 @@ class MatchServiceLevels:
         if data["state"] == "disabled":
             return cls()
 
-        value = data["value"]
-
-        sls: Mapping[ServiceLevelsStr, ServiceLevels] = {v: k for k, v in SERVICE_LEVELS.items()}
         return cls(
-            value=(sls[value["from_level"]], sls[value["to_level"]]),
+            value=(data["value"]["from_level"], data["value"]["to_level"]),
         )
 
     def api_response(self) -> MatchServiceLevelsAPIValueType:
@@ -646,12 +632,12 @@ class MatchServiceLevels:
         r: MatchServiceLevelsAPIValueType = {"state": state}
         if self.value is not None:
             r["value"] = {
-                "from_level": SERVICE_LEVELS[self.value[0]],
-                "to_level": SERVICE_LEVELS[self.value[1]],
+                "from_level": self.value[0],
+                "to_level": self.value[1],
             }
         return r
 
-    def to_mk_file_format(self) -> ServiceLevelsType | None:
+    def to_mk_file_format(self) -> tuple[int, int] | None:
         return self.value
 
     def disable(self) -> None:

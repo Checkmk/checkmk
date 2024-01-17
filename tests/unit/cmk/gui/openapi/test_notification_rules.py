@@ -264,7 +264,7 @@ def conditions_set_1() -> APIConditions:
         "match_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
         "match_service_levels": {
             "state": "enabled",
-            "value": {"from_level": "no_service_level", "to_level": "platinum"},
+            "value": {"from_level": 0, "to_level": 30},
         },
         "match_only_during_time_period": {"state": "enabled", "value": "time_period_1"},
         "match_host_event_type": {

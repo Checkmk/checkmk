@@ -12,7 +12,7 @@ from pathlib import Path
 from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
-from .query import Columns, QueryGET
+from .query import Columns, QueryFilter, QueryGET
 from .settings import Settings
 
 
@@ -31,7 +31,7 @@ def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
     with open(file, "r") as f, connection as con:
         cur = con.cursor()
         cur.executemany(
-            """INSERT INTO history (time, what, who, addinfo, event_id, count, text, first, last,
+            """INSERT INTO history (time, what, who, addinfo, id, count, text, first, last,
                                 comment, sl, host, contact, application,
                                 pid, priority, facility, rule_id,
                                 state, phase, owner, match_groups,
@@ -41,6 +41,42 @@ def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
             __iter(f),
         )
+
+
+def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
+    """
+    Construct the sqlite filtering specification.
+
+    Used in SQLiteHistory.get() method.
+    """
+
+    query_columns: set[str] = set()
+    query_conditions: list[str] = []
+
+    for f in filters:
+        adjusted_column_name = ""
+
+        if f.column_name.startswith("event_") or f.column_name.startswith("history_"):
+            adjusted_column_name = f.column_name.replace("event_", "").replace("history_", "")
+        else:
+            raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
+
+        sqlite_filter: str = {
+            "=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            ">": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            "<": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            ">=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            "<=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            "~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
+            "=~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
+            "~~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
+            "in": f"{adjusted_column_name} in '%{f.argument}%'",
+        }[f.operator_name]
+
+        query_columns.add(adjusted_column_name)
+        query_conditions.append(sqlite_filter)
+
+    return f'SELECT {", ".join(sorted(query_columns))} FROM history WHERE {" AND ".join(query_conditions)};'
 
 
 class SQLiteHistory(History):

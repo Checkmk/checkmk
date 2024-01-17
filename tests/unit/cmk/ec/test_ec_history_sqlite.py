@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ec.history_sqlite import history_file_to_sqlite
+from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite
+from cmk.ec.query import QueryFilter
 
 
 @pytest.fixture(name="history_sqlite_raw")
@@ -21,7 +22,7 @@ def fixture_history_sqlite_raw() -> Iterator[sqlite3.Connection]:
     con = sqlite3.connect(":memory:")
     con.execute(
         """CREATE TABLE IF NOT EXISTS history
-                             (time TEXT, what TEXT, who TEXT, addinfo TEXT, event_id INTEGER, count INTEGER, text TEXT, first FLOAT, last FLOAT,
+                             (time TEXT, what TEXT, who TEXT, addinfo TEXT, id INTEGER, count INTEGER, text TEXT, first FLOAT, last FLOAT,
                              comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
                              pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
                              state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
@@ -63,3 +64,59 @@ def test_history_file_to_sqlite_exceptions(
 
     with pytest.raises(sqlite3.ProgrammingError):
         history_file_to_sqlite(path, history_sqlite_raw)
+
+
+@pytest.mark.parametrize(
+    "filters, expected_sqlite_query",
+    [
+        (
+            [
+                QueryFilter(
+                    column_name="event_text",
+                    operator_name="=",
+                    predicate=lambda x: True,
+                    argument="test_event",
+                ),
+            ],
+            "SELECT text FROM history WHERE text = test_event;",
+        ),
+        (
+            [
+                QueryFilter(
+                    column_name="event_time",
+                    operator_name="<",
+                    predicate=lambda x: True,
+                    argument=123456789,
+                ),
+                QueryFilter(
+                    column_name="event_time",
+                    operator_name=">",
+                    predicate=lambda x: True,
+                    argument=1234,
+                ),
+            ],
+            "SELECT time FROM history WHERE time < 123456789 AND time > 1234;",
+        ),
+        (
+            [
+                QueryFilter(
+                    column_name="history_who",
+                    operator_name="~~",
+                    predicate=lambda x: True,
+                    argument="admin",
+                ),
+                QueryFilter(
+                    column_name="event_owner",
+                    operator_name="=~",
+                    predicate=lambda x: True,
+                    argument="user",
+                ),
+            ],
+            "SELECT owner, who FROM history WHERE who LIKE '%admin%' AND owner LIKE '%user%';",
+        ),
+    ],
+)
+def test_filters_to_sqlite_query(filters: list[QueryFilter], expected_sqlite_query: str) -> None:
+    """History file saved correctly into sqlite inmemory DB."""
+
+    assert filters_to_sqlite_query(filters) == expected_sqlite_query

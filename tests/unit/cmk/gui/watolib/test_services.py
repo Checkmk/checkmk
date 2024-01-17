@@ -42,6 +42,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             "cpu.loads",
             "cpu_load",
             None,
+            None,
             {},
             (5.0, 10.0),
             "CPU load",
@@ -59,6 +60,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
         CheckPreviewEntry(
             "active",
             "cmk_inv",
+            None,
             None,
             "Check_MK HW/SW Inventory",
             {},
@@ -181,6 +183,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     check_source="unchanged",
                     check_plugin_name="lnx_thermal",
                     ruleset_name="temperature",
+                    discovery_ruleset_name=None,
                     item="Zone 1",
                     discovered_parameters={},
                     effective_parameters={
@@ -199,6 +202,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     check_source="active",
                     check_plugin_name="cmk_inv",
                     ruleset_name=None,
+                    discovery_ruleset_name=None,
                     item="Check_MK HW/SW Inventory",
                     discovered_parameters={},
                     effective_parameters={"status_data_inventory": True},
@@ -241,6 +245,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 check_source="new",
                 check_plugin_name="lnx_thermal",
                 ruleset_name="temperature",
+                discovery_ruleset_name=None,
                 item="Zone 1",
                 discovered_parameters={},
                 effective_parameters={
@@ -259,6 +264,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 check_source="active",
                 check_plugin_name="cmk_inv",
                 ruleset_name=None,
+                discovery_ruleset_name=None,
                 item="Check_MK HW/SW Inventory",
                 discovered_parameters={},
                 effective_parameters={"status_data_inventory": True},
@@ -336,6 +342,7 @@ def test_perform_discovery_single_update(
                     check_source="unchanged",
                     check_plugin_name="checkmk_agent",
                     ruleset_name="agent_update",
+                    discovery_ruleset_name=None,
                     item=None,
                     discovered_parameters={},
                     effective_parameters={
@@ -369,6 +376,7 @@ def test_perform_discovery_single_update(
                     check_source="unchanged",
                     check_plugin_name="mem_linux",
                     ruleset_name="memory_linux",
+                    discovery_ruleset_name=None,
                     item=None,
                     discovered_parameters={},
                     effective_parameters={
@@ -444,6 +452,7 @@ def test_perform_discovery_single_update(
                 check_source="unchanged",
                 check_plugin_name="checkmk_agent",
                 ruleset_name="agent_update",
+                discovery_ruleset_name=None,
                 item=None,
                 discovered_parameters={},
                 effective_parameters={
@@ -477,6 +486,7 @@ def test_perform_discovery_single_update(
                 check_source="new",
                 check_plugin_name="mem_linux",
                 ruleset_name="memory_linux",
+                discovery_ruleset_name=None,
                 item=None,
                 discovered_parameters={},
                 effective_parameters={
@@ -578,6 +588,7 @@ def test_perform_discovery_action_update_services(
                     check_source="unchanged",
                     check_plugin_name="df",
                     ruleset_name="filesystem",
+                    discovery_ruleset_name=None,
                     item="/opt/omd/sites/heute/tmp",
                     discovered_parameters={
                         "mountpoint_for_block_devices": "volume_name",
@@ -647,6 +658,7 @@ def test_perform_discovery_action_update_services(
                 check_source="new",
                 check_plugin_name="df",
                 ruleset_name="filesystem",
+                discovery_ruleset_name=None,
                 item="/opt/omd/sites/heute/tmp",
                 discovered_parameters={
                     "mountpoint_for_block_devices": "volume_name",
@@ -677,6 +689,7 @@ def test_perform_discovery_action_update_services(
                 check_source="vanished",
                 check_plugin_name="lnx_if",
                 ruleset_name="if",
+                discovery_ruleset_name=None,
                 item="2",
                 discovered_parameters={
                     "discovered_oper_status": ["1"],

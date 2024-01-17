@@ -415,6 +415,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             function=check_function,
             default_parameters=plugin.check_default_parameters,
             ruleset_name=plugin.check_ruleset_name,
+            discovery_ruleset_name=plugin.discovery_ruleset_name,
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:

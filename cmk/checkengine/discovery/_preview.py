@@ -46,6 +46,7 @@ class CheckPreviewEntry:
     check_source: str
     check_plugin_name: str
     ruleset_name: RulesetName | None
+    discovery_ruleset_name: RulesetName | None
     item: Item
     discovered_parameters: Mapping[str, object]
     effective_parameters: LegacyCheckParameters
@@ -224,6 +225,11 @@ def _check_preview_table_row(
     ruleset_name = (
         str(check_plugin.ruleset_name) if check_plugin and check_plugin.ruleset_name else None
     )
+    discovery_ruleset_name = (
+        str(check_plugin.discovery_ruleset_name)
+        if check_plugin and check_plugin.discovery_ruleset_name
+        else None
+    )
 
     result = (
         check_plugin.function(host_name, service, providers=providers).result
@@ -241,6 +247,7 @@ def _check_preview_table_row(
         check_source=check_source,
         check_plugin_name=str(service.check_plugin_name),
         ruleset_name=ruleset_name,
+        discovery_ruleset_name=discovery_ruleset_name,
         item=service.item,
         discovered_parameters=service.discovered_parameters,
         effective_parameters=service.parameters.preview(timeperiod_active),

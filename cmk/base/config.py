@@ -2649,6 +2649,7 @@ class ConfigCache:
                     check_source=make_check_source(entry["service_description"]),
                     check_plugin_name="custom",
                     ruleset_name=None,
+                    discovery_ruleset_name=None,
                     item=entry["service_description"],
                     discovered_parameters={},
                     effective_parameters=None,

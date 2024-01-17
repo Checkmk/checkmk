@@ -112,6 +112,7 @@ class TestTryDiscoveryResult:
                     check_source="my_check_source",
                     check_plugin_name="my_check_plugin_name",
                     ruleset_name=None,
+                    discovery_ruleset_name=None,
                     item=None,
                     discovered_parameters={},
                     effective_parameters=None,

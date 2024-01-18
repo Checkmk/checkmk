@@ -23,7 +23,6 @@ from cmk.gui.openapi.endpoints.notification_rules.common_schemas import (
     CheckboxWithListOfLabels,
     CheckboxWithListOfServiceGroupsRegex,
     CheckboxWithListOfStr,
-    CheckboxWithStr,
     CheckboxWithStrValue,
     CiscoWebexPluginResponse,
     HTMLEmailParamsResponse,
@@ -183,15 +182,15 @@ class ConditionsAttributes(BaseSchema):
     match_services = fields.Nested(CheckboxWithListOfStr)
     match_exclude_services = fields.Nested(CheckboxWithListOfStr)
     match_check_types = fields.Nested(CheckboxWithListOfStr)
-    match_plugin_output = fields.Nested(CheckboxWithStr)
+    match_plugin_output = fields.Nested(CheckboxWithStrValue)
     match_contact_groups = fields.Nested(CheckboxWithListOfStr)
     match_service_levels = fields.Nested(CheckboxWithFromToServiceLevels)
-    match_only_during_time_period = fields.Nested(CheckboxWithStr)
+    match_only_during_time_period = fields.Nested(CheckboxWithStrValue)
     match_host_event_type = fields.Nested(CheckboxHostEventType)
     match_service_event_type = fields.Nested(CheckboxServiceEventType)
     restrict_to_notification_numbers = fields.Nested(CheckboxRestrictNotificationNumbers)
     throttle_periodic_notifications = fields.Nested(CheckboxThrottlePeriodicNotifcations)
-    match_notification_comment = fields.Nested(CheckboxWithStr)
+    match_notification_comment = fields.Nested(CheckboxWithStrValue)
     event_console_alerts = fields.Nested(MatchEventConsoleAlertsResponse)
 
 

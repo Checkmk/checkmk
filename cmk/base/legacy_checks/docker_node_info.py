@@ -21,9 +21,9 @@ def discover_docker_node_info(section: NodeInfoSection) -> Iterable[tuple[None, 
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, "Daemon running on host %s" % parsed["Name"]
-    for state, key in enumerate(("Warning", "Critical", "Unknown"), 1):
-        if key in parsed:
-            yield state, parsed[key]
+    for state, key in [(2, "Critical"), (3, "Unknown")]:
+        for msg in parsed.get(key, ()):
+            yield state, msg
 
 
 check_info["docker_node_info"] = LegacyCheckDefinition(

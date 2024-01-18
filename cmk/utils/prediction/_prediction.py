@@ -7,14 +7,11 @@ import logging
 import math
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple, Protocol, Self
+from typing import Final, Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.misc import pnp_cleanup
-from cmk.utils.servicename import ServiceName
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 
@@ -71,18 +68,16 @@ class PredictionData(BaseModel, frozen=True):
 class PredictionStore:
     def __init__(
         self,
-        basedir: Path,
-        host_name: HostName,
-        service_description: ServiceName,
+        path: Path,
     ) -> None:
-        self._dir = basedir / host_name / pnp_cleanup(service_description)
+        self.path: Final = path
 
     @staticmethod
     def relative_basename(metric: str, period: str, valid_from: int) -> Path:
-        return Path(pnp_cleanup(metric), f"{period}-{valid_from}")
+        return Path(metric, f"{period}-{valid_from}")
 
     def _base_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self._dir / self.relative_basename(metric, period, valid_from)
+        return self.path / self.relative_basename(metric, period, valid_from)
 
     def _info_file(self, metric: str, period: str, valid_from: int) -> Path:
         return self._base_file(metric, period, valid_from).with_suffix(INFO_FILE_SUFFIX)
@@ -94,11 +89,11 @@ class PredictionStore:
     def filter_prediction_files_by_metric(
         metric: str, prediction_files: Iterable[Path]
     ) -> Iterator[Path]:
-        metric_dir = pnp_cleanup(metric)
         yield from (
             prediction_file
             for prediction_file in prediction_files
-            if metric_dir in prediction_file.parts
+            # note that a metric name cannot have a '/' in it.
+            if metric in prediction_file.parts
         )
 
     def save_prediction(

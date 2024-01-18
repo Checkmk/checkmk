@@ -18,7 +18,9 @@
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/IntFilter.h"
+#include "livestatus/IntSorter.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
 class Row;
@@ -58,6 +60,10 @@ public:
         return std::make_unique<IntAggregator>(
             factory,
             [this](Row row, const User &user) { return getValue(row, user); });
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<IntSorter>();
     }
 
     // TODO(sp): The only 2 places where auth_user is actually used are

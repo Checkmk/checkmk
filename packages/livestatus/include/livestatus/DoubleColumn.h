@@ -16,9 +16,11 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleAggregator.h"
 #include "livestatus/DoubleFilter.h"
+#include "livestatus/DoubleSorter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/opids.h"
 class User;
 
@@ -52,6 +54,10 @@ public:
         return std::make_unique<DoubleFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<DoubleSorter>();
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

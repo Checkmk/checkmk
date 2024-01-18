@@ -16,9 +16,11 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/DictFilter.h"
+#include "livestatus/DictSorter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/opids.h"
 enum class AttributeKind;
 class Aggregator;
@@ -53,6 +55,10 @@ public:
         return std::make_unique<DictStrValueFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<DictStrValueSorter>();
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
@@ -99,6 +105,10 @@ public:
         return std::make_unique<DictDoubleValueFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<DictDoubleValueSorter>();
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

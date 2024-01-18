@@ -15,7 +15,9 @@
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/PerfdataAggregator.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/StringFilter.h"
+#include "livestatus/StringSorter.h"
 #include "livestatus/opids.h"
 class Aggregator;
 class Row;
@@ -47,6 +49,10 @@ public:
         return std::make_unique<StringFilter>(
             kind, name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<StringSorter>();
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

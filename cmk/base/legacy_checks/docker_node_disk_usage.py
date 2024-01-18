@@ -8,6 +8,7 @@
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 import cmk.plugins.lib.docker as docker
 from cmk.agent_based.v2 import render
@@ -19,6 +20,10 @@ def parse_docker_node_disk_usage(string_table):
 
 
 def check_docker_node_disk_usage(item, params, parsed):
+    if not parsed:
+        # The section error is reported by the "Docker node info" service
+        raise IgnoreResultsError("Disk usage missing")
+
     if not (data := parsed.get(item)):
         return
     for key, human_readable_func in (

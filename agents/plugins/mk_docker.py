@@ -660,7 +660,14 @@ def call_node_sections(client, config):
         except Exception as exc:
             if DEBUG:
                 raise
+            # The section is already always written. Prevent duplicate @docker_version_info
+            if name != "docker_node_info":
+                write_empty_section(name)
             report_exception_to_server(exc, section.__name__)
+
+
+def write_empty_section(name, piggytarget=None):
+    Section(name, piggytarget).write()
 
 
 def call_container_sections(client, config):

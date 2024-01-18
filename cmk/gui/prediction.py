@@ -374,7 +374,7 @@ def _compute_vertical_range(
         *(curves.levels_upper.crit if curves.levels_upper else ()),
         *(curves.levels_lower.warn if curves.levels_lower else ()),
         *(curves.levels_lower.crit if curves.levels_lower else ()),
-        *((measured_point[0],) if measured_point else ()),
+        *((measured_point[1],) if measured_point else ()),
         *(measured_rrd if measured_rrd else ()),
     )
     return min(filter(None, points), default=0.0), max(filter(None, points), default=0.0)

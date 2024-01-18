@@ -10,8 +10,13 @@ def parse_docker_node_disk_usage(info):
     return {r.get("type"): r for r in disk_usage if r is not None}
 
 
-@get_parsed_item_data
-def check_docker_node_disk_usage(_no_item, params, data):
+def check_docker_node_disk_usage(item, params, parsed):
+    if not parsed:
+        # The section error is reported by the "Docker node info" service
+        raise MKCounterWrapped("Disk usage missing")
+
+    if item not in parsed or not parsed[item]:
+        return
 
     for key, human_readable_func in (
         ("size", get_bytes_human_readable),
@@ -19,7 +24,7 @@ def check_docker_node_disk_usage(_no_item, params, data):
         ("count", lambda x: x),
         ("active", lambda x: x),
     ):
-        value = data[key]
+        value = parsed[item][key]
 
         yield check_levels(
             value,

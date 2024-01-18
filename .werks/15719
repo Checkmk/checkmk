@@ -1,0 +1,14 @@
+Title: mk_docker: Prevent "Missing monitoring data for plugins" warnings
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705561042
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+In case a docker node section can not be computed by the mk_docker agent plugin, the "Docker node
+info" service reports about the error in detail. Until this werk, the "Check_MK" service did also
+raise an issue regarding the missing agent section, like: "Missing monitoring data for plugins:
+docker_node_disk_usage". This duplicate information is now suppressed, reducing the number of
+notification Checkmk produces in such situations.

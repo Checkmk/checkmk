@@ -11,6 +11,8 @@ from typing import cast
 
 from cmk.utils.hostaddress import HostName
 
+from cmk.checkengine.discovery import DiscoverySettings
+
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
@@ -29,7 +31,6 @@ from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     BulkSize,
     DiscoveryHost,
-    DiscoveryMode,
     DoFullScan,
     IgnoreErrors,
     start_bulk_discovery,
@@ -85,7 +86,7 @@ class ModeBulkDiscovery(WatoMode):
         )
 
         self._do_full_scan, self._bulk_size = self._get_performance_params()
-        self._mode = DiscoveryMode(self._bulk_discovery_params["mode"])
+        self._mode = DiscoverySettings.from_vs(self._bulk_discovery_params.get("mode"))
         self._ignore_errors = IgnoreErrors(self._bulk_discovery_params["error_handling"])
 
     def _get_performance_params(self) -> tuple[DoFullScan, BulkSize]:

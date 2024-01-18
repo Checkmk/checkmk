@@ -16,7 +16,6 @@ from cmk.utils.log import VERBOSE
 from cmk.agent_based.prediction_backend import PredictionInfo
 
 from ._grouping import time_slices
-from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -66,6 +65,9 @@ class PredictionData(BaseModel, frozen=True):
 
 
 class PredictionStore:
+    DATA_FILE_SUFFIX = ""
+    INFO_FILE_SUFFIX = ".info"
+
     def __init__(
         self,
         path: Path,
@@ -76,14 +78,20 @@ class PredictionStore:
     def relative_basename(metric: str, period: str, valid_from: int) -> Path:
         return Path(metric, f"{period}-{valid_from}")
 
+    @classmethod
+    def relative_data_file(cls, meta: PredictionInfo) -> Path:
+        return PredictionStore.relative_basename(
+            meta.metric, meta.params.period, meta.valid_interval[0]
+        ).with_suffix(cls.DATA_FILE_SUFFIX)
+
     def _base_file(self, metric: str, period: str, valid_from: int) -> Path:
         return self.path / self.relative_basename(metric, period, valid_from)
 
     def _info_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self._base_file(metric, period, valid_from).with_suffix(INFO_FILE_SUFFIX)
+        return self._base_file(metric, period, valid_from).with_suffix(self.INFO_FILE_SUFFIX)
 
     def _data_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self._base_file(metric, period, valid_from).with_suffix(DATA_FILE_SUFFIX)
+        return self._base_file(metric, period, valid_from).with_suffix(self.DATA_FILE_SUFFIX)
 
     @staticmethod
     def filter_prediction_files_by_metric(

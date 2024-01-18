@@ -17,6 +17,7 @@ from typing import Final, TypeVar
 import livestatus
 
 import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
@@ -27,7 +28,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.prediction import PREDICTION_DIR, PredictionStore, PredictionUpdater
+from cmk.utils.prediction import PredictionStore, PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -787,7 +788,9 @@ def _inject_prediction_callback_recursively(
                         service_name,
                     ),
                     # Whatch out. The CMC has to agree on the path.
-                    PredictionStore(PREDICTION_DIR / host_name / pnp_cleanup(service_name)),
+                    PredictionStore(
+                        cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service_name)
+                    ),
                 )
                 return params
             return dict(

@@ -7,8 +7,7 @@ ENV PATH="/opt/bin:${PATH}"
 
 ARG ARTIFACT_STORAGE
 
-RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp3 sles15sp3 \
-    && zypper -n --no-gpg-checks in --replacefiles \
+RUN zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \

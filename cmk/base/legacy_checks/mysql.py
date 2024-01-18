@@ -5,7 +5,7 @@
 
 
 import time
-from collections.abc import Iterable, Mapping, MutableSequence
+from collections.abc import Iterable, Mapping
 from typing import Any, Protocol
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
@@ -161,7 +161,7 @@ def check_mysql_iostat(item, params, parsed):
     if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
         return
 
-    yield check_diskstat_line(
+    yield from check_diskstat_line(
         time.time(),
         "innodb_io" + item,
         params,
@@ -176,16 +176,15 @@ def check_diskstat_line(
     params: Mapping[str, Any],
     read_value: int,
     write_value: int,
-) -> tuple[int, str, MutableSequence[Any],]:
+) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
 
     value_store = get_value_store()
 
-    perfdata: MutableSequence[Any] = []
-    infos: MutableSequence[str] = []
-    status: int = 0
+    # collect perfdata, apparently we want to re-order them
+    perfdata: list = []
 
     for metric_name, value in (("read", read_value), ("write", write_value)):
         # unpack levels now, need also for perfdata
@@ -209,25 +208,22 @@ def check_diskstat_line(
         else:
             metric_name_suffix = ""
 
-        # check levels
+        # check levels (no predictive)
         state, text, extraperf = check_levels(
             bytes_per_sec,
             metric_name + metric_name_suffix,
             levels,
-            statemarkers=True,
             human_readable_func=render.iobandwidth,
             infoname=metric_name.capitalize(),
         )
-        if text:
-            infos.append(text)
-        status = max(state, status)
+        yield state, text
         perfdata += extraperf
 
     # Add performance data for averaged IO
     if average_range is not None:
         perfdata = [perfdata[0], perfdata[2], perfdata[1], perfdata[3]]
 
-    return (status, ", ".join(infos), perfdata)
+    yield 0, "", perfdata
 
 
 check_info["mysql.innodb_io"] = LegacyCheckDefinition(

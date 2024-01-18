@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import json
 from collections.abc import Hashable, Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Final, Generic, Literal, Protocol, Self, TypeVar
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
@@ -71,6 +72,13 @@ class DiscoverySettings:
             update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
             update_changed_service_parameters=False,
         )
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self))
+
+    @classmethod
+    def from_json(cls, mode: str) -> DiscoverySettings:
+        return cls(**json.loads(mode))
 
 
 class DiscoveryMode(enum.Enum):

@@ -220,11 +220,8 @@ class AutomationDiscovery(DiscoveryAutomation):
     needs_config = True
     needs_checks = True
 
-    # Does discovery for a list of hosts. Possible values for mode:
-    # "new" - find only new services (like -I)
-    # "remove" - remove exceeding services
-    # "fixall" - find new, remove exceeding
-    # "refresh" - drop all services and reinventorize
+    # Does discovery for a list of hosts. For possible values see
+    # DiscoverySettings
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: list[str]) -> ServiceDiscoveryResult:
@@ -243,10 +240,19 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         if len(args) < 2:
             raise MKAutomationError(
-                "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
+                "Need two arguments: %s " % "DiscoveryMode|DiscoverySettings HOSTNAME"
             )
 
-        settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(args[0]))
+        # TODO 2.3 introduced a new format but has to be compatible for 2.2.
+        # Can be removed one day
+        if (discovery_settings := args[0]) in ["new", "remove", "fixall", "refresh"]:
+            settings = DiscoverySettings.from_discovery_mode(
+                DiscoveryMode.from_str(discovery_settings)
+            )
+        else:
+            # 2.3 format
+            settings = DiscoverySettings.from_json(discovery_settings)
+
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()

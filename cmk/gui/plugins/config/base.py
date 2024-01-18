@@ -322,7 +322,14 @@ class CREConfig:
     # Bulk discovery default options
     bulk_discovery_default_settings: dict[str, Any] = field(
         default_factory=lambda: {
-            "mode": "new",
+            "mode": (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             "selection": (True, False, False, False),
             "performance": (True, 10),
             "error_handling": True,

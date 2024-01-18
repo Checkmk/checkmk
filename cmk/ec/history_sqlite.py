@@ -6,6 +6,7 @@
 import itertools
 import sqlite3
 from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
 from .query import Columns, QueryFilter, QueryGET
-from .settings import Settings
+from .settings import Options, Paths, Settings
 
 
 def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
@@ -79,10 +80,25 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
     return f'SELECT {", ".join(sorted(query_columns))} FROM history WHERE {" AND ".join(query_conditions)};'
 
 
+@dataclass
+class SQLiteSettings:
+    paths: Paths
+    options: Options
+    database: str | Path
+
+    @classmethod
+    def from_settings(cls, settings: Settings, db: str | Path = "") -> "SQLiteSettings":
+        return cls(
+            paths=settings.paths,
+            options=settings.options,
+            database=db or Path(settings.paths.history_dir.value / "history.sqlite"),
+        )
+
+
 class SQLiteHistory(History):
     def __init__(
         self,
-        settings: Settings,
+        settings: SQLiteSettings,
         config: Config,
         logger: Logger,
         event_columns: Columns,
@@ -94,10 +110,25 @@ class SQLiteHistory(History):
         self._event_columns = event_columns
         self._history_columns = history_columns
 
+        self.conn = sqlite3.connect(self._settings.database)
+
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(
+            """CREATE TABLE IF NOT EXISTS history
+                             (time text, what text, who text, addinfo text, id INTEGER, count INTEGER,
+                             text TEXT, first FLOAT, last FLOAT,
+                             comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
+                             pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
+                             state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
+                             contact_groups TEXT, ipaddress TEXT, orig_host TEXT,
+                             contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
+                             match_groups_syslog_application TEXT);"""
+        )
+        self.conn.commit()
+
     def flush(self) -> None:
-        """
-        docstring
-        """
+        self.conn.execute("DROP TABLE IF EXISTS history;")
+        self.conn.commit()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """

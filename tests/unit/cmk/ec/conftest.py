@@ -19,6 +19,7 @@ from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory
 from cmk.ec.history_mongo import MongoDBHistory
+from cmk.ec.history_sqlite import SQLiteHistory, SQLiteSettings
 from cmk.ec.main import (
     create_history,
     default_slave_status_master,
@@ -96,6 +97,23 @@ def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoD
         assert isinstance(history, MongoDBHistory)
         yield history
         history.flush()
+
+
+@pytest.fixture(name="history_sqlite")
+def fixture_history_sqlite(settings: Settings, config: Config) -> Iterator[SQLiteHistory]:
+    """history_sqlite with history file path set to :memory:"""
+
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, ":memory:"),
+        {**config, "archive_mode": "sqlite"},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+
+    yield history
+
+    history.flush()
 
 
 @pytest.fixture(name="perfcounters")

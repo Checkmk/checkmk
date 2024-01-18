@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite
+from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite, SQLiteHistory
 from cmk.ec.query import QueryFilter
 
 
@@ -120,3 +120,11 @@ def test_filters_to_sqlite_query(filters: list[QueryFilter], expected_sqlite_que
     """History file saved correctly into sqlite inmemory DB."""
 
     assert filters_to_sqlite_query(filters) == expected_sqlite_query
+
+
+def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
+    """Basic init in memory and history table exists."""
+
+    cur = history_sqlite.conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='history';")
+    assert cur.fetchall()[0] == ("history",)

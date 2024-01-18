@@ -580,7 +580,7 @@ class ContainerRunningState(BaseModel):
 
 class ContainerWaitingState(BaseModel):
     type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting)
-    reason: str
+    reason: str | None = None
     detail: str | None = None
 
 

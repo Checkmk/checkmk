@@ -166,10 +166,10 @@ class Section(list):
         if piggytarget is not None:
             self.append("<<<<%s>>>>" % piggytarget)
         if name is not None:
-            self.append("<<<docker_%s:sep(124)>>>" % name)
+            self.append("<<<%s:sep(124)>>>" % name)
             version_json = json.dumps(Section.version_info)
             self.append("@docker_version_info|%s" % version_json)
-            self.append("<<<docker_%s:sep(0)>>>" % name)
+            self.append("<<<%s:sep(0)>>>" % name)
 
     def write(self):
         if self[0].startswith("<<<<"):
@@ -183,7 +183,7 @@ class Section(list):
 def report_exception_to_server(exc, location):
     LOGGER.info("handling exception: %s", exc)
     msg = "Plugin exception in %s: %s" % (location, exc)
-    sec = Section("node_info")
+    sec = Section("docker_node_info")
     sec.append(json.dumps({"Unknown": msg}))
     sec.write()
 
@@ -410,7 +410,7 @@ def is_disabled_section(config, section_name):
 @time_it
 def section_node_info(client):
     LOGGER.debug(client.node_info)
-    section = Section("node_info")
+    section = Section("docker_node_info")
     section.append(json.dumps(client.node_info))
     section.write()
 
@@ -418,7 +418,7 @@ def section_node_info(client):
 @time_it
 def section_node_disk_usage(client):
     """docker system df"""
-    section = Section("node_disk_usage")
+    section = Section("docker_node_disk_usage")
     try:
         data = client.df()
     except docker.errors.APIError as exc:
@@ -496,7 +496,7 @@ def _robust_inspect(client, docker_object):
 @time_it
 def section_node_images(client):
     """in subsections list [[[images]]] and [[[containers]]]"""
-    section = Section("node_images")
+    section = Section("docker_node_images")
 
     images = _robust_inspect(client, "images")
     LOGGER.debug(images)
@@ -515,14 +515,14 @@ def section_node_images(client):
 @time_it
 def section_node_network(client):
     networks = client.networks.list(filters={"driver": "bridge"})
-    section = Section("node_network")
+    section = Section("docker_node_network")
     section += [json.dumps(n.attrs) for n in networks]
     section.write()
 
 
 def section_container_node_name(client, container_id):
     node_name = client.node_info.get("Name")
-    section = Section("container_node_name", piggytarget=container_id)
+    section = Section("docker_container_node_name", piggytarget=container_id)
     section.append(json.dumps({"NodeName": node_name}))
     section.write()
 
@@ -545,14 +545,14 @@ def section_container_status(client, container_id):
         pass
     status["NodeName"] = client.node_info.get("Name")
 
-    section = Section("container_status", piggytarget=container_id)
+    section = Section("docker_container_status", piggytarget=container_id)
     section.append(json.dumps(status))
     section.write()
 
 
 def section_container_labels(client, container_id):
     container = client.all_containers[container_id]
-    section = Section("container_labels", piggytarget=container_id)
+    section = Section("docker_container_labels", piggytarget=container_id)
     section.append(json.dumps(container.labels))
     section.write()
 
@@ -560,7 +560,7 @@ def section_container_labels(client, container_id):
 def section_container_network(client, container_id):
     container = client.all_containers[container_id]
     network = container.attrs.get("NetworkSettings", {})
-    section = Section("container_network", piggytarget=container_id)
+    section = Section("docker_container_network", piggytarget=container_id)
     section.append(json.dumps(network))
     section.write()
 
@@ -603,7 +603,7 @@ def section_container_mem(client, container_id):
     if stats is None:  # container not running
         return
     container_mem = stats["memory_stats"]
-    section = Section("container_mem", piggytarget=container_id)
+    section = Section("docker_container_mem", piggytarget=container_id)
     section.append(json.dumps(container_mem))
     section.write()
 
@@ -613,7 +613,7 @@ def section_container_cpu(client, container_id):
     if stats is None:  # container not running
         return
     container_cpu = stats["cpu_stats"]
-    section = Section("container_cpu", piggytarget=container_id)
+    section = Section("docker_container_cpu", piggytarget=container_id)
     section.append(json.dumps(container_cpu))
     section.write()
 
@@ -625,7 +625,7 @@ def section_container_diskstat(client, container_id):
     container_blkio = stats["blkio_stats"]
     container_blkio["time"] = time.time()
     container_blkio["names"] = client.device_map()
-    section = Section("container_diskstat", piggytarget=container_id)
+    section = Section("docker_container_diskstat", piggytarget=container_id)
     section.append(json.dumps(container_blkio))
     section.write()
 

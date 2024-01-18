@@ -14,7 +14,8 @@ from cmk.utils.type_defs import (
     NotifyPluginParams,
     PluginOptions,
 )
-from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
+
+from cmk.gui.rest_api_types.notifications_rule_types import (
     API_AsciiMailData,
     API_CiscoData,
     API_HTMLMailData,

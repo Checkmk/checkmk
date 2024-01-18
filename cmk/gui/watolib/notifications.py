@@ -37,7 +37,11 @@ from cmk.utils.type_defs.notify import (
     NotifyBulkType,
     NotifyPlugin,
 )
-from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
+
+import cmk.gui.userdb as userdb
+from cmk.gui.config import active_config
+from cmk.gui.i18n import _
+from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
     APINotificationMethod,
@@ -58,16 +62,12 @@ from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
     MatchServiceLevels,
     RestrictToNotificationNumbers,
 )
-from cmk.utils.type_defs.rest_api_types.notifications_types import (
+from cmk.gui.rest_api_types.notifications_types import (
     CustomPlugin,
     get_plugin_from_api_request,
     get_plugin_from_mk_file,
     NotificationPlugin,
 )
-
-import cmk.gui.userdb as userdb
-from cmk.gui.config import active_config
-from cmk.gui.i18n import _
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 

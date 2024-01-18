@@ -18,7 +18,6 @@ all notification rules configured.
 from typing import Any, Mapping
 
 from cmk.utils.type_defs import NotificationRuleID
-from cmk.utils.type_defs.rest_api_types.notifications_rule_types import APINotificationRule
 
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
@@ -34,6 +33,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.constructors import domain_object
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
+from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.watolib.notifications import (
     BulkNotAllowedException,
     load_notification_rules,

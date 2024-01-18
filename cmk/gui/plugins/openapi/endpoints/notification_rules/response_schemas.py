@@ -7,15 +7,16 @@
 from collections.abc import Mapping
 from typing import Any, get_args
 
-from cmk.utils.type_defs import BuiltInPluginNames, PluginOptions
-from cmk.utils.type_defs.rest_api_types.notifications_rule_types import PluginType
+from marshmallow.decorators import pre_dump
 
+from cmk.utils.type_defs import BuiltInPluginNames, PluginOptions
+
+from cmk.gui.fields import AuxTagIDField, TagGroupIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas import (
     AsciiEmailParamsResponse,
     Checkbox,
     CheckboxHostEventType,
-    CheckboxMatchHostTags,
     CheckboxRestrictNotificationNumbers,
     CheckboxServiceEventType,
     CheckboxThrottlePeriodicNotifcations,
@@ -62,8 +63,68 @@ from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
     DomainObject,
     DomainObjectCollection,
 )
+from cmk.gui.rest_api_types.notifications_rule_types import PluginType
+from cmk.gui.watolib.tags import load_all_tag_config_read_only
 
 from cmk import fields
+
+
+class MatchHostTags(BaseSchema):
+    tag_type = fields.String(
+        example="aux_tag", description="If it's an aux tag id or a group tag tag id."
+    )
+    tag_group_id = TagGroupIDField(
+        example="agent",
+        required=False,
+        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+    )
+    operator = fields.String(
+        description="This describes the matching action",
+    )
+    tag_id = AuxTagIDField(
+        example="checkmk-agent",
+        description="Tag groups tag ids are available via the host tag group endpoint.",
+    )
+
+
+class CheckboxMatchHostTags(Checkbox):
+    value = fields.List(fields.Nested(MatchHostTags))
+
+    @pre_dump(pass_many=True)
+    def pre_dump(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        tag_config = load_all_tag_config_read_only()
+        aux_tags = [tag.id for tag in tag_config.aux_tag_list]
+        tag_groups_n_tags = [
+            (group.id, [tag.id for tag in group.tags]) for group in tag_config.tag_groups
+        ]
+
+        if (raw_value := data.get("value")) is not None:
+            data["value"] = []
+
+            for tag_id in raw_value:
+                raw_id = tag_id.replace("!", "")
+                if raw_id in aux_tags:
+                    auxtag = {
+                        "tag_type": "aux_tag",
+                        "tag_id": raw_id,
+                        "operator": "is_not_set" if tag_id[0] == "!" else "is_set",
+                    }
+                    data["value"].append(auxtag)
+
+                for tag_group_id, tag_ids in tag_groups_n_tags:
+                    if raw_id in tag_ids:
+                        grouptag = {
+                            "tag_type": "tag_group",
+                            "tag_group_id": tag_group_id,
+                            "operator": "is_not" if tag_id[0] == "!" else "is",
+                            "tag_id": raw_id,
+                        }
+                        data["value"].append(grouptag)
+
+        return data
+
+
+# -----------------------------------------------------------------------------------------
 
 
 class RulePropertiesAttributes(BaseSchema):

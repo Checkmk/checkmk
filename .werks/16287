@@ -1,0 +1,46 @@
+Title: rule_notification: match_hosttag now accepts custom tag ids
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1705077038
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+Previously, when creating or updating a notification rule,
+the match_host_tag field would only allow for builtin tag ids.
+With this werk we now accept any configured host tag id.
+The schema has also changed in order to make this possible.
+This means that instead of a field representing each tag,
+you now have to pass a list of aux tag ids/tag group tag ids
+along with an operator. This way we can determine if the
+tag id should match or not.
+
+e.g.
+
+C+:
+{
+  "match_host_tags": {
+    "state": "enabled",
+    "value": [
+        {
+            "tag_type": "aux_tag",
+            "tag_id": "snmp",
+            "operator": "is_set",
+        },
+        {
+            "tag_type": "tag_group",
+            "tag_group_id": "criticality",
+            "operator": "is",
+            "tag_id": "prod",
+        },
+        {
+            "tag_type": "tag_group",
+            "tag_group_id": "networking",
+            "operator": "is_not",
+            "tag_id": "lan",
+        }
+    ],
+    },
+}
+C-:

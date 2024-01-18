@@ -31,7 +31,7 @@ class PredictionInfo(BaseModel, frozen=True):  # type: ignore[misc]  # hidden An
         cls,
         metric: str,
         params: PredictionParameters,
-        now: int,
+        now: float,
     ) -> Self:
         start_of_day = _start_of_day(now)
         return cls(
@@ -41,7 +41,7 @@ class PredictionInfo(BaseModel, frozen=True):  # type: ignore[misc]  # hidden An
         )
 
 
-def _start_of_day(timestamp: int) -> int:
+def _start_of_day(timestamp: float) -> int:
     t = time.localtime(timestamp)
     sec_of_day = t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec
-    return timestamp - sec_of_day
+    return int(timestamp) - sec_of_day

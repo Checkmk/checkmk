@@ -76,6 +76,7 @@ mssql:
         is_async: yes
         disabled: yes
     cache_age: 600 # optional, default: 600
+    piggyback_host: "myPiggybackHost" # optional
     discovery: # optional, defines which instances are to be monitored
       detect: yes # optional, default, if no then valid only instances in `instances` subsection
       include: ["foo", "bar", "inst1"] # optional, no default /prio 2; use only those instance, ignore exclude

@@ -18,6 +18,7 @@ pub struct Config {
     conn: Connection,
     section_info: Sections,
     discovery: Discovery,
+    piggyback_host: Option<String>,
     mode: Mode,
     custom_instances: Vec<CustomInstance>,
     configs: Vec<Config>,
@@ -31,6 +32,7 @@ impl Default for Config {
             conn: Connection::default(),
             section_info: Sections::default(),
             discovery: Discovery::default(),
+            piggyback_host: None,
             mode: Mode::Port,
             custom_instances: vec![],
             configs: vec![],
@@ -89,6 +91,7 @@ impl Config {
             conn,
             section_info: sections,
             discovery: Discovery::from_yaml(main)?,
+            piggyback_host: main.get_string(keys::PIGGYBACK_HOST),
             mode: Mode::from_yaml(main)?,
             custom_instances: custom_instances?,
             configs: configs?,
@@ -111,8 +114,13 @@ impl Config {
         self.section_info
             .select(&[SectionKind::Sync, SectionKind::Async])
     }
+
     pub fn cache_age(&self) -> u32 {
         self.section_info.cache_age()
+    }
+
+    pub fn piggyback_host(&self) -> Option<&str> {
+        self.piggyback_host.as_deref()
     }
 
     pub fn discovery(&self) -> &Discovery {
@@ -646,6 +654,7 @@ mssql:
         is_async: yes
         disabled: yes
     cache_age: 600 # optional(default:600)
+    piggyback_host: "my_pb_host"
     discovery: # optional
       detect: true # optional(default:yes)
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
@@ -722,6 +731,8 @@ discovery:
   include: ["a", "b" ]
   exclude: ["c", "d" ]
 "#;
+        pub const PIGGYBACK_HOST: &str = "piggyback_host: zuzu";
+
         pub const PIGGYBACK_FULL: &str = r#"
 piggyback:
   hostname: "piggy_host"
@@ -776,6 +787,7 @@ piggyback:
                 conn: Connection::default(),
                 section_info: Sections::default(),
                 discovery: Discovery::default(),
+                piggyback_host: None,
                 mode: Mode::Port,
                 custom_instances: vec![],
                 configs: vec![],
@@ -907,6 +919,12 @@ connection:
         assert!(!discovery.detect());
         assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
         assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
+    }
+
+    #[test]
+    fn test_piggyback_host() {
+        let ph = &create_yaml(data::PIGGYBACK_HOST).get_string(keys::PIGGYBACK_HOST);
+        assert_eq!(ph.as_deref(), Some("zuzu"));
     }
 
     #[test]
@@ -1075,6 +1093,7 @@ connection:
             c.conn().socket().unwrap(),
             &PathBuf::from(r"C:\path\to\file")
         );
+        assert_eq!(c.piggyback_host(), Some("my_pb_host"));
         assert_eq!(c.conn().tls().unwrap().ca(), Path::new(r"C:\path\to\file"));
         assert_eq!(
             c.conn().tls().unwrap().client_certificate(),

@@ -18,25 +18,23 @@ from cmk.base import check_api
 
 
 @pytest.mark.parametrize(
-    "value, levels, representation, unit, result",
+    "value, levels, representation, result",
     [
-        (5, (3, 6), int, "", (1, " (warn/crit at 3/6)")),
-        (7, (3, 6), lambda x: "%.1f m" % x, "", (2, " (warn/crit at 3.0 m/6.0 m)")),
-        (7, (3, 6), lambda x: "%.1f" % x, " m", (2, " (warn/crit at 3.0 m/6.0 m)")),
-        (2, (3, 6, 1, 0), int, "", (0, "")),
-        (1, (3, 6, 1, 0), int, "", (0, "")),
-        (0, (3, 6, 1, 0), int, "", (1, " (warn/crit below 1/0)")),
-        (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
+        (5, (3, 6), int, (1, " (warn/crit at 3/6)")),
+        (7, (3, 6), lambda x: "%.1f m" % x, (2, " (warn/crit at 3.0 m/6.0 m)")),
+        (2, (3, 6, 1, 0), int, (0, "")),
+        (1, (3, 6, 1, 0), int, (0, "")),
+        (0, (3, 6, 1, 0), int, (1, " (warn/crit below 1/0)")),
+        (-1, (3, 6, 1, 0), int, (2, " (warn/crit below 1/0)")),
     ],
 )
 def test_boundaries(
     value: float,
     levels: check_api.Levels,
     representation: Callable,
-    unit: str,
     result: tuple[ServiceState, ServiceDetails],
 ) -> None:
-    assert check_api._do_check_levels(value, levels, representation, unit) == result
+    assert check_api._do_check_levels(value, levels, representation) == result
 
 
 @pytest.mark.parametrize(

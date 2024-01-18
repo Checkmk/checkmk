@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-from pytest_mock import MockerFixture
+import time
 
-from tests.testlib.prediction import FixedPredictionUpdater
+import pytest
 
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -18,6 +17,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
 from cmk.plugins.lib.multipath import Group
 
 
@@ -30,7 +34,7 @@ def test_parse_diskstat_minimum() -> None:
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
+def test_parse_diskstat_predictive() -> None:
     # SUP-5924
     DATA = [
         ["1617784511"],
@@ -128,18 +132,27 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         ["buntu--vg-root", "253:1", "ubuntu-vg", "root"],
     ]
 
+    prep_u = PredictionParameters(
+        period="wday", horizon=90, levels=("relative", (10.0, 20.0)), bound=(10.0, 15.0)
+    )
+    meta_u = PredictionInfo.make(
+        metric="disk_read_throughput", direction="upper", params=prep_u, now=time.time()
+    )
+
     PARAMS = {
         "average": 300,
         "latency": (0.08, 0.16),
         "read_throughput": {
-            "horizon": 90,
-            "levels_lower": ("absolute", (2000000.0, 4000000.0)),
-            "levels_upper": ("relative", (10.0, 20.0)),
-            "levels_upper_min": (10000000.0, 15000000.0),
-            "period": "wday",
-            "__get_predictive_levels__": FixedPredictionUpdater(
-                0.1, (-1.0, 2.0, None, None)  # Funny values to see something
-            ).get_predictive_levels,
+            "period": prep_u.period,
+            "horizon": prep_u.horizon,
+            "levels_upper": prep_u.levels,
+            "levels_upper_min": prep_u.bound,
+            "__injected__": InjectedParameters(
+                meta_file_path_template="",  # should not be used
+                predictions={
+                    hash(meta_u): (0.1, (-1.0, 2.0))
+                },  # funny levels just to see something in the output
+            ).model_dump(),
         },
         "read_ios": (400.0, 600.0),
         "read_latency": (0.08, 0.16),

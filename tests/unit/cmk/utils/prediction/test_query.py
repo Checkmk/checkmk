@@ -21,9 +21,11 @@ class TestPredictionQuerier:
         expected_prediction_info = PredictionInfo(
             valid_interval=(0, 200),
             metric=metric,
+            direction="upper",
             params=PredictionParameters(
                 period="day",
                 horizon=20,
+                levels=("stdev", (2, 4)),
             ),
         )
         mock_livestatus.add_table(
@@ -33,13 +35,13 @@ class TestPredictionQuerier:
                     "host_name": str(querier.host_name),
                     "description": str(querier.service_name),
                     "prediction_files": [
-                        f"{metric}/everyday.info",
-                        f"{metric}/everyday",
-                        f"{metric}/strange.info",
-                        "other_metric/everyday.info",
-                        "other_metric/everyday",
+                        f"{metric}/everyday-lower.info",
+                        f"{metric}/everyday-lower",
+                        f"{metric}/strange-lower.info",
+                        "other_metric/everyday-lower.info",
+                        "other_metric/everyday-lower",
                     ],
-                    f"prediction_file:file:{metric}/everyday.info": expected_prediction_info.model_dump_json().encode(),
+                    f"prediction_file:file:{metric}/everyday-lower.info": expected_prediction_info.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),
@@ -53,7 +55,7 @@ class TestPredictionQuerier:
         )
         mock_livestatus.expect_query(
             "GET services\n"
-            f"Columns: prediction_file:file:{metric}/everyday.info\n"
+            f"Columns: prediction_file:file:{metric}/everyday-lower.info\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
             "ColumnHeaders: off"
@@ -66,7 +68,8 @@ class TestPredictionQuerier:
         prediciton_info = PredictionInfo(
             valid_interval=(1234, 5678),
             metric=metric,
-            params=PredictionParameters(period="day", horizon=0),
+            direction="lower",
+            params=PredictionParameters(period="day", horizon=0, levels=("absolute", (10, 20))),
         )
         expected_prediction_data = PredictionData(
             points=[
@@ -87,14 +90,14 @@ class TestPredictionQuerier:
                 {
                     "host_name": str(querier.host_name),
                     "description": str(querier.service_name),
-                    f"prediction_file:file:{metric}/day-1234": expected_prediction_data.model_dump_json().encode(),
+                    f"prediction_file:file:{metric}/day-1234-lower": expected_prediction_data.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),
         )
         mock_livestatus.expect_query(
             "GET services\n"
-            f"Columns: prediction_file:file:{metric}/day-1234\n"
+            f"Columns: prediction_file:file:{metric}/day-1234-lower\n"
             f"Filter: host_name = {querier.host_name}\n"
             f"Filter: description = {querier.service_name}\n"
             "ColumnHeaders: off"

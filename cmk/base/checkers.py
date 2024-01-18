@@ -10,6 +10,7 @@ from __future__ import annotations
 import functools
 import itertools
 import logging
+import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from typing import Final, TypeVar
@@ -28,7 +29,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.prediction import PredictionStore, PredictionUpdater
+from cmk.utils.prediction import make_updated_predictions, PredictionStore
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -78,7 +79,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
-from cmk.agent_based.prediction_backend import PredictionParameters
+from cmk.agent_based.prediction_backend import InjectedParameters
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
@@ -397,6 +398,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 self.value_store_manager,
                 clusters=self.clusters,
             )
+            # Whatch out. The CMC has to agree on the path.
+            prediction_store = PredictionStore(
+                cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
+            )
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
@@ -408,6 +413,22 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
+                # In the past the creation of predictions (and the livestatus query needed)
+                # was performed inside the check plugins context.
+                # We should consider moving this side effect even further up the stack
+                injected_p=InjectedParameters(
+                    meta_file_path_template=prediction_store.meta_file_path_template,
+                    predictions=make_updated_predictions(
+                        prediction_store,
+                        partial(
+                            livestatus.get_rrd_data,
+                            livestatus.LocalConnection(),
+                            host_name,
+                            service.description,
+                        ),
+                        time.time(),
+                    ),
+                ),
             )
 
         return CheckPlugin(
@@ -602,6 +623,7 @@ def get_aggregated_result(
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
+    injected_p: InjectedParameters,
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
@@ -666,11 +688,7 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {
-            "params": _final_read_only_check_parameters(
-                host_name, service.description, service.parameters
-            )
-        }
+        else {"params": _final_read_only_check_parameters(service.parameters, injected_p)}
     )
 
     try:
@@ -729,9 +747,8 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(
-    host_name: HostName,
-    service_name: ServiceName,
     entries: TimespecificParameters | LegacyCheckParameters,
+    injected_p: InjectedParameters,
 ) -> Parameters:
     params = (
         entries.evaluate(timeperiod_active)
@@ -744,11 +761,7 @@ def _final_read_only_check_parameters(
         # For auto-migrated plugins expecting tuples, they will be
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
-            _inject_prediction_callback_recursively(
-                host_name,
-                service_name,
-                params,
-            )
+            _inject_prediction_params_recursively(params, injected_p)
             if _contains_predictive_levels(params)
             else params,
         )
@@ -760,7 +773,7 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
         return any(_contains_predictive_levels(p) for p in params)
 
     if isinstance(params, dict):
-        return "__get_predictive_levels__" in params or any(
+        return "__injected__" in params or any(
             _contains_predictive_levels(p) for p in params.values()
         )
 
@@ -770,44 +783,34 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
 _TParams = TypeVar("_TParams", object, list[object], tuple[object, ...], dict[str, object])
 
 
-def _inject_prediction_callback_recursively(
-    host_name: HostName, service_name: ServiceName, params: _TParams
+def _inject_prediction_params_recursively(
+    params: _TParams,
+    injected_p: InjectedParameters,
 ) -> _TParams:
     match params:
         case tuple():
-            return tuple(_inject_prediction_callback_iterable(host_name, service_name, params))
+            return tuple(_inject_prediction_params_iterable(params, injected_p))
         case list():
-            return list(_inject_prediction_callback_iterable(host_name, service_name, params))
+            return list(_inject_prediction_params_iterable(params, injected_p))
         case dict():
-            if "__get_predictive_levels__" in params:
-                params["__get_predictive_levels__"] = PredictionUpdater(
-                    PredictionParameters.model_validate(params),
-                    partial(
-                        livestatus.get_rrd_data,
-                        livestatus.LocalConnection(),
-                        host_name,
-                        service_name,
-                    ),
-                    # Whatch out. The CMC has to agree on the path.
-                    PredictionStore(
-                        cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service_name)
-                    ),
-                )
+            if "__injected__" in params:
+                params["__injected__"] = injected_p.model_dump()
                 return params
             return dict(
                 zip(
                     params.keys(),
-                    _inject_prediction_callback_iterable(host_name, service_name, params.values()),
+                    _inject_prediction_params_iterable(params.values(), injected_p),
                 )
             )
 
     return params
 
 
-def _inject_prediction_callback_iterable(
-    host_name: HostName, service_name: ServiceName, params: Iterable[_TParams]
+def _inject_prediction_params_iterable(
+    params: Iterable[_TParams],
+    injected_p: InjectedParameters,
 ) -> Iterable[_TParams]:
-    return (_inject_prediction_callback_recursively(host_name, service_name, v) for v in params)
+    return (_inject_prediction_params_recursively(v, injected_p) for v in params)
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

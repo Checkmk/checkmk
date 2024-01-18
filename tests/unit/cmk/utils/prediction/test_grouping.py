@@ -11,16 +11,15 @@ from tests.testlib import on_time
 
 from cmk.utils.prediction import _grouping
 
-from cmk.agent_based.prediction_backend import PredictionParameters
-
 
 @pytest.mark.parametrize(
-    "utcdate, timezone, params, windows_expected",
+    "utcdate, timezone, period, horizon, windows_expected",
     [
         (
             "2018-11-29 14:56",
             "Europe/Berlin",
-            PredictionParameters(period="wday", horizon=90),
+            "wday",
+            90,
             [
                 (1543446000, 1543532400),
                 (1542841200, 1542927600),
@@ -40,13 +39,15 @@ from cmk.agent_based.prediction_backend import PredictionParameters
         (
             "2018-11-26 07:00",
             "Europe/Berlin",
-            PredictionParameters(period="day", horizon=90),
+            "day",
+            90,
             [(1543186800, 1543273200), (1540504800, 1540591200), (1537912800, 1537999200)],
         ),
         (
             "2018-11-10 07:00",
             "Europe/Berlin",
-            PredictionParameters(period="hour", horizon=90),
+            "hour",
+            90,
             [
                 (1541804400, 1541890800),
                 (1541718000, 1541804400),
@@ -143,7 +144,8 @@ from cmk.agent_based.prediction_backend import PredictionParameters
         (
             "2018-07-15 10:00",
             "America/New_York",
-            PredictionParameters(period="hour", horizon=10),
+            "hour",
+            10,
             [
                 (1531627200, 1531713600),
                 (1531540800, 1531627200),
@@ -160,7 +162,8 @@ from cmk.agent_based.prediction_backend import PredictionParameters
         (
             "2018-07-15 10:00",
             "UTC",
-            PredictionParameters(period="wday", horizon=10),
+            "wday",
+            10,
             [(1531612800, 1531699200), (1531008000, 1531094400)],
         ),
     ],
@@ -168,15 +171,16 @@ from cmk.agent_based.prediction_backend import PredictionParameters
 def test_time_slices(
     utcdate: str,
     timezone: str,
-    params: PredictionParameters,
+    period: _grouping.PeriodName,
+    horizon: int,
     windows_expected: list[tuple[int, int]],
 ) -> None:
-    period_info = _grouping.PREDICTION_PERIODS[params.period]
+    period_info = _grouping.PREDICTION_PERIODS[period]
 
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
 
-        time_windows = _grouping.time_slices(now, params.horizon * 86400, params.period)
+        time_windows = _grouping.time_slices(now, horizon * 86400, period)
 
     assert time_windows == windows_expected

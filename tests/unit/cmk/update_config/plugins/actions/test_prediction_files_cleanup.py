@@ -19,7 +19,8 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
         PredictionInfo(
             valid_interval=(23, 42),
             metric="kuchen_count",
-            params=PredictionParameters(horizon=3, period="wday"),
+            direction="upper",
+            params=PredictionParameters(horizon=3, period="wday", levels=("absolute", (1, 2))),
         ).model_dump_json(),
     )
     data_file.write_text(

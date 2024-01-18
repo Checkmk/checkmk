@@ -5,13 +5,12 @@
 """Code for predictive monitoring / anomaly detection"""
 
 import logging
-import time
-from collections.abc import Callable
-from typing import assert_never, Final, Literal
+from collections.abc import Callable, Mapping
+from typing import assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 
-from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
+from cmk.agent_based.prediction_backend import PredictionInfo
 
 from ._prediction import (
     compute_prediction,
@@ -21,125 +20,57 @@ from ._prediction import (
     PredictionStore,
 )
 
-EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
+EstimatedLevels = tuple[tuple[float, float] | None, tuple[float, float] | None]
 
 logger = logging.getLogger("cmk.prediction")
 
 
-def _get_prediction(
-    metric: str,
+def make_updated_predictions(
     store: PredictionStore,
-    required_prediction: PredictionInfo,
+    get_recorded_data: Callable[[str, int, int], MetricRecord | None],
+    now: float,
+) -> Mapping[int, tuple[float | None, tuple[float, float] | None]]:
+    return {
+        hash(meta): _make_reference_and_prediction(
+            meta, valid_prediction or _update_prediction(store, meta, get_recorded_data), now
+        )
+        for meta, valid_prediction in store.iter_all_valid_predictions(now)
+    }
+
+
+def _make_reference_and_prediction(
+    meta: PredictionInfo,
+    prediction: PredictionData | None,
+    now: float,
+) -> tuple[float | None, tuple[float, float] | None]:
+    if prediction is None or (reference := prediction.predict(now)) is None:
+        return None, None
+
+    return reference.average, estimate_levels(
+        reference_value=reference.average,
+        stdev=reference.stdev,
+        direction=meta.direction,
+        levels=meta.params.levels,
+        bound=meta.params.bound,
+    )
+
+
+def _update_prediction(
+    store: PredictionStore,
+    meta: PredictionInfo,
+    get_recorded_data: Callable[[str, int, int], MetricRecord | None],
 ) -> PredictionData | None:
-    """Return a valid prediction, if available
-
-    No prediction is available if
-    * no prediction meta data file is found
-    * the prediction is outdated
-    * no prediction for these parameters (time group) has been made yet
-    * no prediction data file is found
-    """
-    if (
-        available_prediciton := store.get_info(
-            metric, required_prediction.params.period, required_prediction.valid_interval[0]
-        )
-    ) is None:
+    logger.log(
+        VERBOSE,
+        "Predicting %s / %s / %s",
+        meta.metric,
+        meta.params.period,
+        meta.valid_interval[0],
+    )
+    if (prediction := compute_prediction(meta, get_recorded_data)) is None:
         return None
-
-    if available_prediciton != required_prediction:
-        logger.log(VERBOSE, "Prediction outdated or parameters have changed.")
-        return None
-
-    return store.get_data(available_prediciton)
-
-
-class PredictionUpdater:
-    def __init__(
-        self,
-        params: PredictionParameters,
-        partial_get_recorded_data: Callable[[str, int, int], MetricRecord | None],
-        store: PredictionStore,
-    ) -> None:
-        self.params: Final = params
-        self.partial_get_recorded_data: Final = partial_get_recorded_data
-        self.store: Final = store
-
-    def __repr__(self) -> str:
-        return repr(f"{self.__class__.__name__}Sentinel")
-
-    def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord | None:
-        return self.partial_get_recorded_data(metric_name, start, end)
-
-    def _get_updated_prediction(
-        self,
-        metric: str,
-        now: float,
-    ) -> PredictionData | None:
-        info = PredictionInfo.make(metric, self.params, now)
-
-        if (data_for_pred := _get_prediction(metric, self.store, info)) is None:
-            logger.log(
-                VERBOSE,
-                "Calculating prediction data for %s/%s",
-                info.params.period,
-                info.valid_interval[0],
-            )
-            self.store.remove_prediction(info.metric, info.params.period, info.valid_interval[0])
-
-            if (
-                data_for_pred := compute_prediction(
-                    info,
-                    self._get_recorded_data,
-                )
-            ) is None:
-                return None
-
-            self.store.save_prediction(info, data_for_pred)
-
-        return data_for_pred
-
-    # levels_factor: this multiplies all absolute levels.
-    # Passed via `scale` argument of the legacy check_levels.
-    # Only remaining usages in mem plugin and diskstat include.
-    def __call__(
-        self,
-        metric_name: str,
-    ) -> tuple[float | None, EstimatedLevels]:
-        now = time.time()
-        if (prediction := self._get_updated_prediction(metric_name, now)) is None or (
-            reference := prediction.predict(now)
-        ) is None:
-            return None, (None, None, None, None)
-
-        return reference.average, estimate_levels_quadruple(
-            reference_value=reference.average,
-            stdev=reference.stdev,
-            levels_lower=self.params.levels_lower,
-            levels_upper=self.params.levels_upper,
-            levels_upper_lower_bound=self.params.levels_upper_min,
-        )
-
-
-def estimate_levels_quadruple(
-    *,
-    reference_value: float,
-    stdev: float | None,
-    levels_lower: LevelsSpec | None,
-    levels_upper: LevelsSpec | None,
-    levels_upper_lower_bound: tuple[float, float] | None,
-) -> EstimatedLevels:
-    upper = (
-        estimate_levels(reference_value, stdev, "upper", levels_upper, levels_upper_lower_bound)
-        if levels_upper
-        else None
-    ) or (None, None)
-    lower = (
-        estimate_levels(reference_value, stdev, "lower", levels_lower, None)
-        if levels_lower
-        else None
-    ) or (None, None)
-
-    return (upper[0], upper[1], lower[0], lower[1])
+    store.save_prediction(meta, prediction)
+    return prediction
 
 
 def estimate_levels(

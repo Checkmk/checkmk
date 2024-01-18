@@ -259,8 +259,19 @@ class InvalidElementValidator:
 
 @dataclass(frozen=True)
 class SingleChoiceElement:
+    """Specifies an element of a single choice form
+
+    Args:
+        name: Identifier of the SingleChoiceElement. Must be a valid Python identifier.
+        title: Human readable title that will be shown in the UI
+    """
+
     name: str
     title: Localizable
+
+    def __post_init__(self) -> None:
+        if not self.name.isidentifier():
+            raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
 @dataclass(frozen=True)
@@ -300,12 +311,28 @@ class SingleChoice:
 
     custom_validate: Callable[[str], object] | None = None
 
+    def __post_init__(self) -> None:
+        avail_idents = [elem.name for elem in self.elements]
+        if self.prefill_selection is not None and self.prefill_selection not in avail_idents:
+            raise ValueError("Default element is not one of the specified elements")
+
 
 @dataclass(frozen=True)
 class CascadingSingleChoiceElement:
+    """Specifies an element of a single choice cascading form
+
+    Args:
+        name: Identifier of the CascadingSingleChoiceElement. Must be a valid Python identifier.
+        title: Human readable title that will be shown in the UI
+    """
+
     name: str
     title: Localizable
     parameter_form: "FormSpec"
+
+    def __post_init__(self) -> None:
+        if not self.name.isidentifier():
+            raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
 @dataclass(frozen=True)
@@ -349,7 +376,8 @@ class CascadingSingleChoice:
 
 @dataclass(frozen=True)
 class DictElement:
-    """
+    """Specifies an element of a dictionary form
+
     Args:
         parameter_form: Configuration specification of this entry
         required: Whether the user has to configure the value in question. If set to False, it may
@@ -369,7 +397,7 @@ class Dictionary:
 
     Args:
         elements: key-value mapping where the key identifies the selected option and the value
-                  specifies how the option can be configured. The key has to be a valid python
+                  specifies how the option can be configured. The key has to be a valid Python
                   identifier.
         title: Human readable title
         help_text: Description to help the user with the configuration
@@ -396,8 +424,9 @@ class Dictionary:
     custom_validate: Callable[[Mapping[str, object]], object] | None = None
 
     def __post_init__(self) -> None:
-        for key in self.elements.keys():
-            assert key.isidentifier(), f"'{key}' is not a valid python identifier"
+        for key in self.elements:
+            if not key.isidentifier():
+                raise ValueError(f"'{key}' is not a valid Python identifier")
 
 
 @dataclass(frozen=True)
@@ -731,14 +760,19 @@ class FileUpload:
 
 @dataclass(frozen=True)
 class MultipleChoiceElement:
-    """
+    """Specifies an element of a multiple choice form
+
     Args:
-        name: Identifier of the MultipleChoiceElement
+        name: Identifier of the MultipleChoiceElement. Must be a valid Python identifier.
         title: Human readable title that will be shown in the UI
     """
 
     name: str
     title: Localizable
+
+    def __post_init__(self) -> None:
+        if not self.name.isidentifier():
+            raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
 @dataclass(frozen=True)

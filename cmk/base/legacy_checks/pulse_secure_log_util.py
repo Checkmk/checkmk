@@ -26,14 +26,14 @@ def discover_pulse_secure_log_util(section: Section) -> Iterable[tuple[None, dic
         yield None, {}
 
 
-def check_pulse_secure_log_util(item, params, parsed):
+def check_pulse_secure_log_util(_no_item, _no_params, parsed):
     if not parsed:
         return
 
     yield check_levels(
         parsed[METRIC_PULSE_SECURE_LOG],
         METRIC_PULSE_SECURE_LOG,
-        params,
+        None,
         infoname="Percentage of log file used",
         human_readable_func=render.percent,
     )

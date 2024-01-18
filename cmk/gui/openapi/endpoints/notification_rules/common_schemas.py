@@ -9,22 +9,10 @@ from typing import Any, get_args
 from marshmallow import post_dump, post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.notify_types import (
+from cmk.utils.notify_types import (  # HostTagAgentOrSpecialAgentType,; HostTagAgentType,; HostTagCheckMkAgentType,; HostTagIpAddressFamilyType,; HostTagIpV4Type,; HostTagIpV6Type,; HostTagMonitorSNMPType,; HostTagPiggyBackType,; HostTagPingType,; HostTagSNMPType,
     BuiltInPluginNames,
     EmailBodyElementsType,
     GroupbyType,
-    HostTagAgentOrSpecialAgentType,
-    HostTagAgentType,
-    HostTagCheckMkAgentType,
-    HostTagCriticalType,
-    HostTagIpAddressFamilyType,
-    HostTagIpV4Type,
-    HostTagIpV6Type,
-    HostTagMonitorSNMPType,
-    HostTagNetworkType,
-    HostTagPiggyBackType,
-    HostTagPingType,
-    HostTagSNMPType,
     IlertPriorityType,
     MgmntPriorityType,
     MgmntUrgencyType,
@@ -39,6 +27,7 @@ from cmk.utils.notify_types import (
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import (
+    AuxTagIDField,
     ContactGroupField,
     FolderIDField,
     GroupField,
@@ -48,11 +37,13 @@ from cmk.gui.fields import (
     ServiceLevelField,
     SiteField,
     SplunkURLField,
+    TagGroupIDField,
     TimePeriodIDField,
 )
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.rest_api_types.notifications_rule_types import CASE_STATE_TYPE, INCIDENT_STATE_TYPE
 from cmk.gui.wato import notification_parameter_registry
+from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.user_scripts import user_script_choices
 
 from cmk import fields
@@ -272,83 +263,82 @@ class CheckboxWithFolderStr(Checkbox):
     )
 
 
-class HostTagValues(BaseSchema):
-    ip_address_family = fields.String(
-        enum=list(get_args(HostTagIpAddressFamilyType)),
+class TagType(BaseSchema):
+    tag_type = fields.String(
+        enum=["aux_tag", "tag_group"],
         required=True,
-        example="no-ip",
-    )
-    ip_v4 = fields.String(
-        enum=list(get_args(HostTagIpV4Type)),
-        required=True,
-        example="ip-v4",
-    )
-    ip_v6 = fields.String(
-        enum=list(get_args(HostTagIpV6Type)),
-        required=True,
-        example="!ip-v6",
+        example="aux_tag",
     )
 
-    checkmk_agent_api_integration = fields.String(
-        enum=list(get_args(HostTagCheckMkAgentType)),
-        required=True,
-        example="special-agents",
-    )
 
-    piggyback = fields.String(
-        enum=list(get_args(HostTagPiggyBackType)),
-        required=True,
-        example="auto-piggyback",
-    )
-
-    snmp = fields.String(
-        enum=list(get_args(HostTagSNMPType)),
-        required=True,
-        example="snmp-v2",
-    )
-
-    monitor_via_snmp = fields.String(
-        enum=list(get_args(HostTagMonitorSNMPType)),
+class AuxHostTag(TagType):
+    tag_id = AuxTagIDField(
+        presence="should_exist",
         required=True,
         example="snmp",
+        description="Tag ids are available via the aux tag endpoint.",
+    )
+    operator = fields.String(
+        enum=["is_set", "is_not_set"],
+        required=True,
+        example="is_set",
+        description="",
     )
 
-    monitor_via_checkmkagent_or_specialagent = fields.String(
-        enum=list(get_args(HostTagAgentOrSpecialAgentType)),
-        required=True,
-        example="tcp",
-    )
 
-    monitor_via_checkmkagent = fields.String(
-        enum=list(get_args(HostTagAgentType)),
+class TagGroupTag(TagType):
+    tag_group_id = TagGroupIDField(
+        presence="should_exist",
         required=True,
+        example="agent",
+        description="Tag group ids are available via the host tag group endpoint.",
+    )
+    operator = fields.String(
+        enum=["is", "is_not"],
+        example="is_not",
+        required=True,
+        description="",
+    )
+    tag_id = fields.String(
         example="checkmk-agent",
+        required=True,
+        description="Tag groups tag ids are available via the host tag group endpoint.",
     )
 
-    only_ping_this_device = fields.String(
-        enum=list(get_args(HostTagPingType)),
-        required=True,
-        example="ping",
-    )
+    @post_load
+    def _post_load(self, data: dict[str, Any], **_kwargs: Any) -> dict[str, Any]:
+        tg = load_tag_group(ident=data["tag_group_id"])
+        if tg is not None:
+            if data["tag_id"] not in tg.get_tag_ids():
+                raise ValidationError(
+                    f"The tag id {data['tag_id']} does not belong to the tag group {data['tag_group_id']}"
+                )
+        return data
 
-    criticality = fields.String(
-        enum=list(get_args(HostTagCriticalType)),
-        required=True,
-        example="critical",
-    )
 
-    networking_segment = fields.String(
-        enum=list(get_args(HostTagNetworkType)),
-        required=True,
-        example="lan",
-    )
+class TagTypeSelector(OneOfSchema):
+    type_field = "tag_type"
+    type_field_remove = False
+    type_schemas = {
+        "aux_tag": AuxHostTag,
+        "tag_group": TagGroupTag,
+    }
 
 
 class CheckboxMatchHostTags(Checkbox):
-    value = fields.Nested(
-        HostTagValues,
+    value = fields.List(
+        fields.Nested(TagTypeSelector),
         required=True,
-        description="Match host tags with the following parameters",
+        example=[
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "agent",
+                "operator": "is",
+                "tag_id": "checkmk-agent",
+            },
+            {"tag_type": "aux_tag", "operator": "is_set", "tag_id": "snmp"},
+        ],
+        description="A list of tag groups or aux tags with conditions",
     )
 
 

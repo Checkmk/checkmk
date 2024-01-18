@@ -25,7 +25,6 @@ import cmk.utils.debug as _debug
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
@@ -44,7 +43,7 @@ from cmk.base.api.agent_based.register.utils_legacy import (
 from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
 from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 
-from cmk.agent_based.v1 import render as _render
+from cmk.agent_based import v1 as _v1
 
 # pylint: enable=unused-import
 
@@ -126,7 +125,7 @@ def is_ipv6_primary(hostname: HostName) -> bool:
 
 
 def get_age_human_readable(seconds: float) -> str:
-    return _render.timespan(seconds) if seconds >= 0 else f"-{_render.timespan(-seconds)}"
+    return _v1.render.timespan(seconds) if seconds >= 0 else f"-{_v1.render.timespan(-seconds)}"
 
 
 def get_bytes_human_readable(
@@ -137,8 +136,8 @@ def get_bytes_human_readable(
 ) -> str:
     if not (
         renderer := {
-            1000: _render.disksize,
-            1024: _render.bytes,
+            1000: _v1.render.disksize,
+            1024: _v1.render.bytes,
         }.get(int(base))
     ):
         raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
@@ -194,18 +193,11 @@ def _build_perfdata(
     value: int | float,
     levels: Levels,
     boundaries: tuple | None,
-    ref_value: None | int | float = None,
 ) -> list:
     if not dsname:
         return []
-
-    perf_list = [dsname, value, levels[0], levels[1]]
-    if isinstance(boundaries, tuple) and len(boundaries) == 2:
-        perf_list.extend(boundaries)
-    perfdata = [tuple(perf_list)]
-    if ref_value:
-        perfdata.append(("predict_" + dsname, ref_value))
-    return perfdata
+    used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
+    return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
 def check_levels(  # pylint: disable=too-many-branches
@@ -215,7 +207,7 @@ def check_levels(  # pylint: disable=too-many-branches
     unit: str = "",
     human_readable_func: Callable | None = None,
     infoname: str | None = None,
-    boundaries: tuple | None = None,
+    boundaries: tuple[float | None, float | None] | None = None,
 ) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
@@ -271,53 +263,40 @@ def check_levels(  # pylint: disable=too-many-branches
         def render_func(x: float) -> str:
             return "%s%s" % (human_readable_func(x), unit_info)
 
+    if params and isinstance(params, dict):
+        if not dsname:
+            raise TypeError("Metric name is empty/None")
+        result, *metrics = _v1.check_levels_predictive(
+            value,
+            levels=params,
+            metric_name=dsname,
+            render_func=render_func,
+            label=infoname,
+            boundaries=boundaries,
+        )
+        assert isinstance(result, _v1.Result)
+        return (
+            int(result.state),
+            result.summary,
+            [
+                (m.name, m.value, *m.levels, *m.boundaries)
+                for m in metrics
+                if isinstance(m, _v1.Metric)
+            ],
+        )
+
     infotext = f"{render_func(value)}"
     if infoname:
         infotext = f"{infoname}: {infotext}"
 
-    # {}, (), None, (None, None), (None, None, None, None) -> do not check any levels
+    # normalize {}, (), None, (None, None), (None, None, None, None)
     if not params or set(params) <= {None}:
-        # always add warn/crit, because the call-site may not know it passed None,
-        # and therefore expect a quadruple.
-        perf = _build_perfdata(dsname, value, (None, None), boundaries)
-        return 0, infotext, perf
-
-    # Pair of numbers -> static levels
-    if isinstance(params, tuple):
-        levels = _normalize_levels(params)
-        ref_value = None
-
-    # Dictionary -> predictive levels
+        levels: Levels = (None, None, None, None)
     else:
-        if not dsname:
-            raise TypeError("Metric name is empty/None")
-
-        try:
-            ref_value, levels = params["__get_predictive_levels__"](dsname)
-            if ref_value:
-                predictive_levels_msg = "predicted reference: %s" % render_func(ref_value)
-            else:
-                predictive_levels_msg = "no reference for prediction yet"
-
-        except MKGeneralException as e:
-            ref_value = None
-            levels = (None, None, None, None)
-            predictive_levels_msg = "no reference for prediction (%s)" % e
-
-        except Exception as e:
-            if _debug.enabled():
-                raise
-            return 3, "%s" % e, []
-
-        if predictive_levels_msg:
-            infotext += " (%s)" % predictive_levels_msg
+        levels = _normalize_levels(params)
 
     state, levelstext = _do_check_levels(value, levels, render_func)
-    infotext += levelstext
-
-    perfdata = _build_perfdata(dsname, value, levels, boundaries, ref_value)
-
-    return state, infotext, perfdata
+    return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
 
 
 def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:

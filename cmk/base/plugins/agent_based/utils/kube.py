@@ -545,7 +545,7 @@ class ContainerRunningState(BaseModel):
 
 class ContainerWaitingState(BaseModel):
     type: str = Field("waiting", const=True)
-    reason: str
+    reason: Optional[str] = None
     detail: Optional[str]
 
 

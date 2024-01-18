@@ -4217,112 +4217,141 @@ def _valuespec_periodic_discovery():
     )
 
 
-def _vs_periodic_discovery() -> Dictionary:
-    return Dictionary(
-        title=_("Perform periodic service discovery check"),
-        help=_(
-            "If enabled, Checkmk will create one additional service per host "
-            "that does a periodic check, if the service discovery would find new services "
-            "that are currently not monitored."
+def _vs_periodic_discovery() -> Transform:
+    return Transform(
+        valuespec=Dictionary(
+            title=_("Perform periodic service discovery check"),
+            help=_(
+                "If enabled, Checkmk will create one additional service per host "
+                "that does a periodic check, if the service discovery would find new services "
+                "that are currently not monitored."
+            ),
+            elements=[
+                (
+                    "check_interval",
+                    Transform(
+                        valuespec=Age(
+                            minvalue=1,
+                            display=["days", "hours", "minutes"],
+                        ),
+                        to_valuespec=lambda v: int(v * 60),
+                        from_valuespec=lambda v: float(v) / 60.0,
+                        title=_("Perform service discovery every"),
+                    ),
+                ),
+                (
+                    "severity_unmonitored",
+                    DropdownChoice(
+                        title=_("Severity of unmonitored services"),
+                        help=_(
+                            "Please select which alarm state the service discovery check services "
+                            "shall assume in case that un-monitored services are found."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                (
+                    "severity_vanished",
+                    DropdownChoice(
+                        title=_("Severity of vanished services"),
+                        help=_(
+                            "Please select which alarm state the service discovery check services "
+                            "shall assume in case that non-existing services are being monitored."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                (
+                    "severity_changed_service_labels",
+                    DropdownChoice(
+                        title=_("Severity of services with changed labels"),
+                        help=_(
+                            "Please select which alarm state the service discovery check services "
+                            "shall assume in case that labels of services have changed."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                (
+                    "severity_changed_service_params",
+                    DropdownChoice(
+                        title=_("Severity of services with changed parameters"),
+                        help=_(
+                            "Please select which alarm state the service discovery check services "
+                            "shall assume in case that parameters of services have changed."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                (
+                    "severity_new_host_label",
+                    DropdownChoice(
+                        title=_("Severity of new host labels"),
+                        help=_(
+                            "Please select which state the service discovery check services "
+                            "shall assume in case that new host labels are found."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                (
+                    "test_label",
+                    DropdownChoice(
+                        title=_("Severity of new host labels"),
+                        help=_(
+                            "Please select which state the service discovery check services "
+                            "shall assume in case that new host labels are found."
+                        ),
+                        choices=[
+                            (0, _("OK - do not alert, just display")),
+                            (1, _("Warning")),
+                            (2, _("Critical")),
+                            (3, _("Unknown")),
+                        ],
+                    ),
+                ),
+                ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
+            ],
+            optional_keys=["inventory_rediscovery"],
+            ignored_keys=["inventory_check_do_scan"],
         ),
-        elements=[
-            (
-                "check_interval",
-                Transform(
-                    valuespec=Age(
-                        minvalue=1,
-                        display=["days", "hours", "minutes"],
-                    ),
-                    to_valuespec=lambda v: int(v * 60),
-                    from_valuespec=lambda v: float(v) / 60.0,
-                    title=_("Perform service discovery every"),
-                ),
-            ),
-            (
-                "severity_unmonitored",
-                DropdownChoice(
-                    title=_("Severity of unmonitored services"),
-                    help=_(
-                        "Please select which alarm state the service discovery check services "
-                        "shall assume in case that un-monitored services are found."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            (
-                "severity_vanished",
-                DropdownChoice(
-                    title=_("Severity of vanished services"),
-                    help=_(
-                        "Please select which alarm state the service discovery check services "
-                        "shall assume in case that non-existing services are being monitored."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            (
-                "severity_changed_service_labels",
-                DropdownChoice(
-                    title=_("Severity of services with changed labels"),
-                    help=_(
-                        "Please select which alarm state the service discovery check services "
-                        "shall assume in case that labels of services have changed."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            (
-                "severity_changed_service_params",
-                DropdownChoice(
-                    title=_("Severity of services with changed parameters"),
-                    help=_(
-                        "Please select which alarm state the service discovery check services "
-                        "shall assume in case that parameters of services have changed."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            (
-                "severity_new_host_label",
-                DropdownChoice(
-                    title=_("Severity of new host labels"),
-                    help=_(
-                        "Please select which state the service discovery check services "
-                        "shall assume in case that new host labels are found."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
-        ],
-        optional_keys=["inventory_rediscovery"],
-        ignored_keys=["inventory_check_do_scan"],
+        to_valuespec=_from_periodic_service_discovery_config,
     )
+
+
+def _from_periodic_service_discovery_config(values: dict) -> dict:
+    if "severity_changed_service_labels" in values:
+        values["severity_changed_service_labels"] = 1
+
+    if "severity_changed_service_params" not in values:
+        values["severity_changed_service_params"] = 1
+
+    return values
 
 
 def _valuespec_automatic_rediscover_parameters() -> Dictionary:

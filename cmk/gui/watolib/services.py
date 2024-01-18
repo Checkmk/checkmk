@@ -146,7 +146,12 @@ class DiscoveryResult(NamedTuple):
                             if k != "check_source"
                             else v.replace("unchanged", "old").replace("changed", "old")
                             for k, v in dataclasses.asdict(cpe).items()
-                            if k not in ["new_labels", "discovery_ruleset_name"]
+                            if k
+                            not in [
+                                "new_labels",
+                                "discovery_ruleset_name",
+                                "new_discovered_parameters",
+                            ]
                         )
                         for cpe in self.check_table
                     ],
@@ -253,7 +258,7 @@ class Discovery:
             key = entry.check_plugin_name, entry.item
             value = (
                 entry.description,
-                entry.discovered_parameters,
+                entry.old_discovered_parameters,
                 entry.old_labels,
                 entry.found_on_nodes,
             )

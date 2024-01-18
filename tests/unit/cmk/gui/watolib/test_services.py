@@ -44,6 +44,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             None,
             None,
             {},
+            {},
             (5.0, 10.0),
             "CPU load",
             0,
@@ -63,6 +64,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             None,
             None,
             "Check_MK HW/SW Inventory",
+            {},
             {},
             {},
             "Check_MK HW/SW Inventory",
@@ -185,7 +187,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     ruleset_name="temperature",
                     discovery_ruleset_name=None,
                     item="Zone 1",
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "levels": (70.0, 80.0),
                         "device_levels_handling": "devdefault",
@@ -204,7 +207,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     ruleset_name=None,
                     discovery_ruleset_name=None,
                     item="Check_MK HW/SW Inventory",
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={"status_data_inventory": True},
                     description="Check_MK HW/SW Inventory",
                     state=None,
@@ -247,7 +251,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 ruleset_name="temperature",
                 discovery_ruleset_name=None,
                 item="Zone 1",
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "levels": (70.0, 80.0),
                     "device_levels_handling": "devdefault",
@@ -266,7 +271,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 ruleset_name=None,
                 discovery_ruleset_name=None,
                 item="Check_MK HW/SW Inventory",
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={"status_data_inventory": True},
                 description="Check_MK HW/SW Inventory",
                 state=None,
@@ -344,7 +350,8 @@ def test_perform_discovery_single_update(
                     ruleset_name="agent_update",
                     discovery_ruleset_name=None,
                     item=None,
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "agent_version": ("ignore", {}),
                         "agent_version_missmatch": 1,
@@ -378,7 +385,8 @@ def test_perform_discovery_single_update(
                     ruleset_name="memory_linux",
                     discovery_ruleset_name=None,
                     item=None,
-                    discovered_parameters={},
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
                     effective_parameters={
                         "levels_virtual": ("perc_used", (80.0, 90.0)),
                         "levels_total": ("perc_used", (120.0, 150.0)),
@@ -454,7 +462,8 @@ def test_perform_discovery_single_update(
                 ruleset_name="agent_update",
                 discovery_ruleset_name=None,
                 item=None,
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "agent_version": ("ignore", {}),
                     "agent_version_missmatch": 1,
@@ -488,7 +497,8 @@ def test_perform_discovery_single_update(
                 ruleset_name="memory_linux",
                 discovery_ruleset_name=None,
                 item=None,
-                discovered_parameters={},
+                old_discovered_parameters={},
+                new_discovered_parameters={},
                 effective_parameters={
                     "levels_virtual": ("perc_used", (80.0, 90.0)),
                     "levels_total": ("perc_used", (120.0, 150.0)),
@@ -590,7 +600,11 @@ def test_perform_discovery_action_update_services(
                     ruleset_name="filesystem",
                     discovery_ruleset_name=None,
                     item="/opt/omd/sites/heute/tmp",
-                    discovered_parameters={
+                    old_discovered_parameters={
+                        "mountpoint_for_block_devices": "volume_name",
+                        "item_appearance": "mountpoint",
+                    },
+                    new_discovered_parameters={
                         "mountpoint_for_block_devices": "volume_name",
                         "item_appearance": "mountpoint",
                     },
@@ -660,7 +674,11 @@ def test_perform_discovery_action_update_services(
                 ruleset_name="filesystem",
                 discovery_ruleset_name=None,
                 item="/opt/omd/sites/heute/tmp",
-                discovered_parameters={
+                old_discovered_parameters={
+                    "mountpoint_for_block_devices": "volume_name",
+                    "item_appearance": "mountpoint",
+                },
+                new_discovered_parameters={
                     "mountpoint_for_block_devices": "volume_name",
                     "item_appearance": "mountpoint",
                 },
@@ -691,7 +709,11 @@ def test_perform_discovery_action_update_services(
                 ruleset_name="if",
                 discovery_ruleset_name=None,
                 item="2",
-                discovered_parameters={
+                old_discovered_parameters={
+                    "discovered_oper_status": ["1"],
+                    "discovered_speed": 10000000,
+                },
+                new_discovered_parameters={
                     "discovered_oper_status": ["1"],
                     "discovered_speed": 10000000,
                 },

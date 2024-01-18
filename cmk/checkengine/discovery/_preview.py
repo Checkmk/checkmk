@@ -48,7 +48,8 @@ class CheckPreviewEntry:
     ruleset_name: RulesetName | None
     discovery_ruleset_name: RulesetName | None
     item: Item
-    discovered_parameters: Mapping[str, object]
+    old_discovered_parameters: Mapping[str, object]
+    new_discovered_parameters: Mapping[str, object]
     effective_parameters: LegacyCheckParameters
     description: str
     state: int | None
@@ -178,6 +179,7 @@ def get_check_preview(
                 },
                 is_enforced=False,
             ),
+            new_discovered_parameters=DiscoveredService.newer(entry).parameters,
             new_service_labels={
                 n: ServiceLabel(n, v)
                 for n, v in DiscoveredService.newer(entry).service_labels.items()
@@ -193,6 +195,7 @@ def get_check_preview(
             host_name,
             service=service,
             new_service_labels={},
+            new_discovered_parameters={},
             check_plugins=check_plugins,
             check_source="manual",  # "enforced" would be nicer
             providers=providers,
@@ -215,6 +218,7 @@ def _check_preview_table_row(
     host_name: HostName,
     *,
     service: ConfiguredService,
+    new_discovered_parameters: Mapping[str, object],
     new_service_labels: Mapping[str, ServiceLabel],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
@@ -249,7 +253,8 @@ def _check_preview_table_row(
         ruleset_name=ruleset_name,
         discovery_ruleset_name=discovery_ruleset_name,
         item=service.item,
-        discovered_parameters=service.discovered_parameters,
+        old_discovered_parameters=service.discovered_parameters,
+        new_discovered_parameters=new_discovered_parameters,
         effective_parameters=service.parameters.preview(timeperiod_active),
         description=service.description,
         state=result.state,

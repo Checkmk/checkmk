@@ -416,16 +416,24 @@ class List:
         title: Human readable title
         help_text: Description to help the user with the configuration
         custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
+            builtin validation logic. Needs to raise a ValidationError in case
+            validation fails. The return value of the function will not be used.
         prefill_value: Value to pre-populate the form field with
         order_editable: Can the elements be reordered in the UI
+        add_element_label: Label used to customize the add element button. If not set,
+            the default label will be used.
+        remove_element_label: Label used to customize the remove element button. If not set,
+            the default label will be used.
+        list_empty_label: Label used in the rule summary if the list is empty.
     """
 
     parameter_form: "FormSpec"
     title: Localizable | None = None
     help_text: Localizable | None = None
     order_editable: bool = True
+    add_element_label: Localizable | None = None
+    remove_element_label: Localizable | None = None
+    list_empty_label: Localizable | None = None
 
     prefill_value: Sequence[object] | None = None
     transform: Transform[Sequence[object]] | Migrate[Sequence[object]] | None = None

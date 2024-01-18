@@ -855,6 +855,9 @@ def _convert_to_legacy_list(
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "movable": to_convert.order_editable,
+        "add_label": _localize_optional(to_convert.add_element_label, localizer),
+        "del_label": _localize_optional(to_convert.remove_element_label, localizer),
+        "text_if_empty": _localize_optional(to_convert.list_empty_label, localizer),
     }
 
     if to_convert.custom_validate is not None:

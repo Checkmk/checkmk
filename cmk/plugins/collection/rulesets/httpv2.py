@@ -14,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Float,
     Integer,
+    LevelDirection,
     Levels,
     List,
     SingleChoice,
@@ -503,13 +504,14 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                             title=Localizable("Certificate validity"),
                             parameter_form=Levels(
                                 title=Localizable("Check validity"),
+                                form_spec=Integer,
+                                fixed=FixedLevels(),
+                                level_direction=LevelDirection.LOWER,
+                                predictive=None,
+                                unit=Localizable("days"),
                                 help_text=Localizable(
                                     "Minimum number of days a certificate has to be valid."
                                 ),
-                                form_spec=Integer,
-                                lower=(FixedLevels(), None),
-                                upper=None,
-                                unit=Localizable("days"),
                             ),
                         ),
                         CascadingSingleChoiceElement(

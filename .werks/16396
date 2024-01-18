@@ -1,0 +1,9 @@
+Title: KUBE: Fixing Validation Error for ContainerWaitingState
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705931823
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+

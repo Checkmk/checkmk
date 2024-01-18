@@ -73,7 +73,7 @@ class PredictionUpdater:
     def _get_updated_prediction(
         self,
         metric: str,
-        now: int,
+        now: float,
     ) -> PredictionData | None:
         info = PredictionInfo.make(metric, self.params, now)
 
@@ -105,7 +105,7 @@ class PredictionUpdater:
         self,
         metric_name: str,
     ) -> tuple[float | None, EstimatedLevels]:
-        now = int(time.time())
+        now = time.time()
         if (prediction := self._get_updated_prediction(metric_name, now)) is None or (
             reference := prediction.predict(now)
         ) is None:

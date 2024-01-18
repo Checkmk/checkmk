@@ -56,8 +56,8 @@ class PredictionData(BaseModel, frozen=True):
     start: int
     step: int
 
-    def predict(self, timestamp: int) -> DataStat | None:
-        unbound_index = (timestamp - self.start) // self.step
+    def predict(self, timestamp: float) -> DataStat | None:
+        unbound_index = round((timestamp - self.start) / self.step)
         # NOTE: A one hour prediction is valid for 24 hours, while the time range only covers one hour.
         # This is why we have to wrap larger indices back into the available list.
         # For consistenty we allow negative times as well.

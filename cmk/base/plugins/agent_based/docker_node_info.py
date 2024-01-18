@@ -30,9 +30,11 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
                 "docker_node_info has wrong number of string_table elements. "
                 "This is an internal error and should never happen."
             )
-        parsed = docker.parse([version_info, payload]).data
-        # TODO: if there are two errors of the same type, only one will be shown.
-        loaded.update(parsed)
+        for key, val in docker.parse([version_info, payload]).data.items():
+            if key in ("Unknown", "Critical"):
+                loaded.setdefault(key, []).append(val)
+            else:
+                loaded[key] = val
     return loaded
 
 

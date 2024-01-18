@@ -1,0 +1,12 @@
+Title: docker_node_info: Display all errors reported by the agent plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705583753
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+The "Docker node info" service reports about failures of the mk_docker
+agent plugin. In the past it always only reported one error per check
+cycle, which now changed to displaying all reported issues.

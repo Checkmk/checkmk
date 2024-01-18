@@ -412,6 +412,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("list help"),
                 prefill_value=[("first", 1), ("second", 2), ("third", 3)],
                 order_editable=False,
+                add_element_label=api_v1.Localizable("Add item"),
+                remove_element_label=api_v1.Localizable("Remove item"),
+                list_empty_label=api_v1.Localizable("No items"),
             ),
             legacy_valuespecs.ListOf(
                 valuespec=legacy_valuespecs.Tuple(
@@ -420,10 +423,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title="list title",
                 help="list help",
                 default_value=[("first", 1), ("second", 2), ("third", 3)],
-                add_label="Add new element",
-                del_label="Delete this entry",
+                add_label="Add item",
+                del_label="Remove item",
                 movable=False,
-                text_if_empty="No entries",
+                text_if_empty="No items",
             ),
             id="ListOf",
         ),

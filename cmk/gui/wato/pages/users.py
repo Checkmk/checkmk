@@ -516,10 +516,10 @@ class ModeUsers(WatoMode):
                 auth_method: str | HTML = _("Automation")
             elif user_spec.get("password") or "password" in locked_attributes:
                 auth_method = _("Password")
-                if _is_two_factor_enabled(user_spec):
-                    auth_method += " (+2FA)"
-                elif connection and connection.type() == ConnectorType.SAML2:
+                if connection and connection.type() == ConnectorType.SAML2:
                     auth_method = connection.short_title()
+                if userdb.is_two_factor_login_enabled(uid):
+                    auth_method += " (+2FA)"
             else:
                 auth_method = HTMLWriter.render_i(_("none"))
             add_header(_("Authentication"))
@@ -727,10 +727,10 @@ class ModeUsers(WatoMode):
                     auth_method: str | HTML = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
-                    if _is_two_factor_enabled(user_spec):
-                        auth_method += " (+2FA)"
-                    elif connection and connection.type() == ConnectorType.SAML2:
+                    if connection and connection.type() == ConnectorType.SAML2:
                         auth_method = connection.short_title()
+                    if userdb.is_two_factor_login_enabled(uid):
+                        auth_method += " (+2FA)"
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
@@ -971,7 +971,9 @@ class ModeEditUser(WatoMode):
                         title=_("Remove two-factor authentication of %s") % self._user_id,
                     )
                 ),
-                is_enabled=_is_two_factor_enabled(self._user),
+                is_enabled=userdb.is_two_factor_login_enabled(self._user_id)
+                if self._user_id is not None
+                else False,
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
@@ -1618,10 +1620,6 @@ def select_language(user_spec: UserSpec) -> None:
             target="_blank",
         )
     )
-
-
-def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
-    return bool(user_spec.get("two_factor_credentials", {}).get("webauthn_credentials"))
 
 
 def _sync_possible() -> bool:

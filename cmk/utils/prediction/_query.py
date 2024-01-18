@@ -14,7 +14,6 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 
-from ._paths import DATA_FILE_SUFFIX, INFO_FILE_SUFFIX
 from ._prediction import PredictionData, PredictionStore
 
 
@@ -33,14 +32,13 @@ class PredictionQuerier:
         yield from (
             PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
             for prediction_file in available_prediction_files
-            if prediction_file.suffix == INFO_FILE_SUFFIX
-            and prediction_file.with_suffix(DATA_FILE_SUFFIX) in available_prediction_files
+            if prediction_file.suffix == PredictionStore.INFO_FILE_SUFFIX
+            and prediction_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
+            in available_prediction_files
         )
 
     def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
-        rel_filename = PredictionStore.relative_basename(
-            meta.metric, meta.params.period, meta.valid_interval[0]
-        ).with_suffix(DATA_FILE_SUFFIX)
+        rel_filename = PredictionStore.relative_data_file(meta)
         return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
 
     def _query_prediction_files(self) -> Iterator[Path]:

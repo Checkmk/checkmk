@@ -19,19 +19,6 @@ from cmk.utils.notify_types import (
     FromOrToType,
     GroupbyType,
     HostEventType,
-    HostTagAgentOrSpecialAgentType,
-    HostTagAgentType,
-    HostTagCheckMkAgentType,
-    HostTagCriticalType,
-    HostTagIpAddressFamilyType,
-    HostTagIpV4Type,
-    HostTagIpV6Type,
-    HostTagMonitorSNMPType,
-    HostTagNetworkType,
-    HostTagPiggyBackType,
-    HostTagPingType,
-    HostTagSNMPType,
-    HostTagTypes,
     IlertAPIKey,
     MatchRegex,
     MgmntPriorityType,
@@ -795,44 +782,32 @@ class FromAndToEmailFields:
         self.value = None
 
 
-# ----------------------------------------------------------------
-class MatchHostTagAPIMap(TypedDict):
-    ip_address_family: HostTagIpAddressFamilyType
-    ip_v4: HostTagIpV4Type
-    ip_v6: HostTagIpV6Type
-    checkmk_agent_api_integration: HostTagCheckMkAgentType
-    piggyback: HostTagPiggyBackType
-    snmp: HostTagSNMPType
-    monitor_via_snmp: HostTagMonitorSNMPType
-    monitor_via_checkmkagent_or_specialagent: HostTagAgentOrSpecialAgentType
-    monitor_via_checkmkagent: HostTagAgentType
-    only_ping_this_device: HostTagPingType
-    criticality: HostTagCriticalType
-    networking_segment: HostTagNetworkType
+# ---------------------------------------------------------------
+
+
+class MatchHostAuxTagValues(TypedDict):
+    tag_type: Literal["aux_tag"]
+    tag_id: str
+    operator: Literal["is_set", "is_not_set"]
+
+
+class MatchHostTagGroupValues(TypedDict):
+    tag_type: Literal["tag_group"]
+    tag_group_id: str
+    operator: Literal["is", "is_not"]
+    tag_id: str
 
 
 class MatchHostTagsAPIValueType(CheckboxStateType, total=False):
-    value: MatchHostTagAPIMap
+    value: list[MatchHostTagGroupValues | MatchHostAuxTagValues]
 
 
 @dataclass
 class CheckboxMatchHostTags:
-    value: HostTagTypes | None = None
-    _ip_address_family: HostTagIpAddressFamilyType = "ignore"
-    _ip_v4: HostTagIpV4Type = "ignore"
-    _ip_v6: HostTagIpV6Type = "ignore"
-    _checkmk_agent_api_integration: HostTagCheckMkAgentType = "ignore"
-    _piggyback: HostTagPiggyBackType = "ignore"
-    _snmp: HostTagSNMPType = "ignore"
-    _monitor_via_snmp: HostTagMonitorSNMPType = "ignore"
-    _monitor_via_checkmkagent_or_specialagent: HostTagAgentOrSpecialAgentType = "ignore"
-    _monitor_via_checkmkagent: HostTagAgentType = "ignore"
-    _only_ping_this_device: HostTagPingType = "ignore"
-    _criticality: HostTagCriticalType = "ignore"
-    _networking_segment: HostTagNetworkType = "ignore"
+    value: list[str] | None = None
 
     @classmethod
-    def from_mk_file_format(cls, data: HostTagTypes | None) -> CheckboxMatchHostTags:
+    def from_mk_file_format(cls, data: list[str] | None) -> CheckboxMatchHostTags:
         return cls(value=data)
 
     @classmethod
@@ -840,196 +815,62 @@ class CheckboxMatchHostTags:
         if data["state"] == "disabled":
             return cls()
 
-        return cls(value=cast(HostTagTypes, list(data["value"].values())))
+        tagids: list[str] = []
+        for value in data["value"]:
+            if "is_not" in value["operator"]:
+                tagids.append(
+                    f"!{value['tag_id']}",
+                )
+            else:
+                tagids.append(value["tag_id"])
+
+        return cls(value=tagids)
 
     def api_response(self) -> MatchHostTagsAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"
-        r: MatchHostTagsAPIValueType = {"state": state}
-        if self.value is not None:
-            r["value"] = {
-                "ip_address_family": self.ip_address_family,
-                "ip_v4": self.ip_v4,
-                "ip_v6": self.ip_v6,
-                "checkmk_agent_api_integration": self.checkmk_agent_api_integration,
-                "piggyback": self.piggyback,
-                "snmp": self.snmp,
-                "monitor_via_snmp": self.monitor_via_snmp,
-                "monitor_via_checkmkagent_or_specialagent": self.monitor_via_checkmkagent_or_specialagent,
-                "monitor_via_checkmkagent": self.monitor_via_checkmkagent,
-                "only_ping_this_device": self.only_ping_this_device,
-                "criticality": self.criticality,
-                "networking_segment": self.networking_segment,
-            }
-        return r
+        resp: MatchHostTagsAPIValueType = {"state": state}
+        if self.value is None:
+            return resp
 
-    def to_mk_file_format(self) -> HostTagTypes | None:
+        # Can't import this at module level without causing unit test fixuture issues.
+        from cmk.gui.watolib.tags import load_all_tag_config_read_only
+
+        tag_config = load_all_tag_config_read_only()
+        aux_tags = [tag.id for tag in tag_config.aux_tag_list]
+        tag_groups_n_tags = [
+            (group.id, [tag.id for tag in group.tags]) for group in tag_config.tag_groups
+        ]
+
+        tags: list[MatchHostTagGroupValues | MatchHostAuxTagValues] = []
+
+        for tag_id in self.value:
+            raw_id = tag_id.replace("!", "")
+            if raw_id in aux_tags:
+                auxtag: MatchHostAuxTagValues = {
+                    "tag_type": "aux_tag",
+                    "tag_id": raw_id,
+                    "operator": "is_not_set" if tag_id[0] == "!" else "is_set",
+                }
+                tags.append(auxtag)
+
+            for tag_group_id, tag_ids in tag_groups_n_tags:
+                if raw_id in tag_ids:
+                    grouptag: MatchHostTagGroupValues = {
+                        "tag_type": "tag_group",
+                        "tag_group_id": tag_group_id,
+                        "operator": "is_not" if tag_id[0] == "!" else "is",
+                        "tag_id": raw_id,
+                    }
+                    tags.append(grouptag)
+
+        resp["value"] = tags
+        return resp
+
+    def to_mk_file_format(self) -> list[str] | None:
         return self.value
 
     def disable(self) -> None:
         self.value = None
-
-    @property
-    def ip_address_family(self) -> HostTagIpAddressFamilyType:
-        if self.value is None:
-            return self._ip_address_family
-
-        if set_intersection := set(self.value) & {
-            "ip-v4-only",
-            "ip-v6-only",
-            "ip-v4v6",
-            "no-ip",
-            "!ip-v4-only",
-            "!ip-v6-only",
-            "!ip-v4v6",
-            "!no-ip",
-        }:
-            self._ip_address_family = cast(HostTagIpAddressFamilyType, set_intersection.pop())
-
-        return self._ip_address_family
-
-    @property
-    def ip_v4(self) -> HostTagIpV4Type:
-        if self.value is None:
-            return self._ip_v4
-
-        if set_intersection := set(self.value) & {"ip-v4", "!ip-v4"}:
-            self._ip_v4 = cast(HostTagIpV4Type, set_intersection.pop())
-        return self._ip_v4
-
-    @property
-    def ip_v6(self) -> HostTagIpV6Type:
-        if self.value is None:
-            return self._ip_v6
-
-        if set_intersection := set(self.value) & {"ip-v6", "!ip-v6"}:
-            self._ip_v6 = cast(HostTagIpV6Type, set_intersection.pop())
-        return self._ip_v6
-
-    @property
-    def checkmk_agent_api_integration(self) -> HostTagCheckMkAgentType:
-        if self.value is None:
-            return self._checkmk_agent_api_integration
-
-        if set_intersection := set(self.value) & {
-            "cmk-agent",
-            "!cmk-agent",
-            "all-agents",
-            "!all-agnts",
-            "special-agents",
-            "!special-agents",
-            "no-agent",
-            "!no-agent",
-        }:
-            self._checkmk_agent_api_integration = cast(
-                HostTagCheckMkAgentType, set_intersection.pop()
-            )
-        return self._checkmk_agent_api_integration
-
-    @property
-    def piggyback(self) -> HostTagPiggyBackType:
-        if self.value is None:
-            return self._piggyback
-
-        if set_intersection := set(self.value) & {
-            "auto-piggyback",
-            "!auto-piggyback",
-            "piggyback",
-            "!piggyback",
-            "no-piggyback",
-            "!no-piggyback",
-        }:
-            self._piggyback = cast(HostTagPiggyBackType, set_intersection.pop())
-
-        return self._piggyback
-
-    @property
-    def snmp(self) -> HostTagSNMPType:
-        if self.value is None:
-            return self._snmp
-
-        if set_intersection := set(self.value) & {
-            "no-snmp",
-            "!no-snmp",
-            "snmp-v1",
-            "!snmp-v1",
-            "snmp-v2",
-            "!snmp-v2",
-        }:
-            self._snmp = cast(HostTagSNMPType, set_intersection.pop())
-        return self._snmp
-
-    @property
-    def monitor_via_snmp(self) -> HostTagMonitorSNMPType:
-        if self.value is None:
-            return self._monitor_via_snmp
-
-        if set_intersection := set(self.value) & {"snmp", "!snmp"}:
-            self._monitor_via_snmp = cast(HostTagMonitorSNMPType, set_intersection.pop())
-        return self._monitor_via_snmp
-
-    @property
-    def monitor_via_checkmkagent_or_specialagent(self) -> HostTagAgentOrSpecialAgentType:
-        if self.value is None:
-            return self._monitor_via_checkmkagent_or_specialagent
-
-        set_intersection = set(self.value) & {"tcp", "!tcp"}
-        if set_intersection:
-            self._monitor_via_checkmkagent_or_specialagent = cast(
-                HostTagAgentOrSpecialAgentType, set_intersection.pop()
-            )
-        return self._monitor_via_checkmkagent_or_specialagent
-
-    @property
-    def monitor_via_checkmkagent(self) -> HostTagAgentType:
-        if self.value is None:
-            return self._monitor_via_checkmkagent
-
-        if set_intersection := set(self.value) & {"checkmk-agent", "!checkmk-agent"}:
-            self._monitor_via_checkmkagent = cast(HostTagAgentType, set_intersection.pop())
-        return self._monitor_via_checkmkagent
-
-    @property
-    def only_ping_this_device(self) -> HostTagPingType:
-        if self.value is None:
-            return self._only_ping_this_device
-
-        if set_intersection := set(self.value) & {"ping", "!ping"}:
-            self._only_ping_this_device = cast(HostTagPingType, set_intersection.pop())
-        return self._only_ping_this_device
-
-    @property
-    def criticality(self) -> HostTagCriticalType:
-        if self.value is None:
-            return self._criticality
-
-        if set_intersection := set(self.value) & {
-            "prod",
-            "critical",
-            "test",
-            "offline",
-            "!prod",
-            "!critical",
-            "!test",
-            "!offline",
-        }:
-            self._criticality = cast(HostTagCriticalType, set_intersection.pop())
-        return self._criticality
-
-    @property
-    def networking_segment(self) -> HostTagNetworkType:
-        if self.value is None:
-            return self._networking_segment
-
-        if set_intersection := set(self.value) & {
-            "lan",
-            "wan",
-            "dmz",
-            "!lan",
-            "!wan",
-            "!dmz",
-        }:
-            self._networking_segment = cast(HostTagNetworkType, set_intersection.pop())
-        return self._networking_segment
 
 
 # ----------------------------------------------------------------

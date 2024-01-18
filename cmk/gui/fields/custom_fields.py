@@ -14,7 +14,11 @@ from cmk.gui.config import active_config
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.userdb import connection_choices
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
+from cmk.gui.watolib.tags import (
+    load_all_tag_config_read_only,
+    load_tag_config_read_only,
+    tag_group_exists,
+)
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
@@ -204,11 +208,13 @@ class AuxTagIDField(fields.String):
             "should_not_exist",
             "ignore",
         ] = "ignore",
+        example: str = "ip-v4",
+        description: str = "An auxiliary tag id",
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            description="An auxiliary tag id",
-            example="ip-v4",
+            description=description,
+            example=example,
             pattern=r"^[-0-9a-zA-Z_]+\Z",
             **kwargs,
         )
@@ -456,3 +462,35 @@ class ServiceLevelField(fields.Integer):
         if self.presence == "should_not_exist":
             if value in choices:
                 raise self.make_error("should_not_exist", value=value)
+
+
+class TagGroupIDField(fields.String):
+    """A field representing the host tag group id"""
+
+    default_error_messages = {
+        "should_exist": "The host tag group id {name!r} should exist but it doesn't",
+        "should_not_exist": "The host tag group id {name!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A host tag group id",
+        example: str = "piggyback",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, example=example, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        if self.presence == "should_exist" and not tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)
+
+        if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)

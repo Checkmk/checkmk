@@ -9,12 +9,12 @@ from typing import Any, get_args
 
 from cmk.utils.notify_types import BuiltInPluginNames, PluginOptions
 
+from cmk.gui.fields import AuxTagIDField, TagGroupIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.notification_rules.common_schemas import (
     AsciiEmailParamsResponse,
     Checkbox,
     CheckboxHostEventType,
-    CheckboxMatchHostTags,
     CheckboxRestrictNotificationNumbers,
     CheckboxServiceEventType,
     CheckboxThrottlePeriodicNotifcations,
@@ -61,6 +61,31 @@ from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, Domai
 from cmk.gui.rest_api_types.notifications_rule_types import PluginType
 
 from cmk import fields
+
+
+class MatchHostTags(BaseSchema):
+    tag_type = fields.String(
+        example="aux_tag", description="If it's an aux tag id or a group tag tag id."
+    )
+    tag_group_id = TagGroupIDField(
+        example="agent",
+        required=False,
+        description="If the tag_type is 'tag_group', the id of that group is shown here.",
+    )
+    operator = fields.String(
+        description="This describes the matching action",
+    )
+    tag_id = AuxTagIDField(
+        example="checkmk-agent",
+        description="Tag groups tag ids are available via the host tag group endpoint.",
+    )
+
+
+class CheckboxMatchHostTags(Checkbox):
+    value = fields.List(fields.Nested(MatchHostTags))
+
+
+# -----------------------------------------------------------------------------------------
 
 
 class RulePropertiesAttributes(BaseSchema):

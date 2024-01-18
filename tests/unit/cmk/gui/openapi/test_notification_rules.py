@@ -221,20 +221,7 @@ def conditions_set_1() -> APIConditions:
         },
         "match_host_tags": {
             "state": "enabled",
-            "value": {
-                "ip_address_family": "ip-v4-only",
-                "ip_v4": "ip-v4",
-                "ip_v6": "!ip-v6",
-                "checkmk_agent_api_integration": "special-agents",
-                "piggyback": "piggyback",
-                "snmp": "snmp-v1",
-                "monitor_via_snmp": "snmp",
-                "monitor_via_checkmkagent_or_specialagent": "tcp",
-                "monitor_via_checkmkagent": "checkmk-agent",
-                "only_ping_this_device": "ping",
-                "criticality": "test",
-                "networking_segment": "wan",
-            },
+            "value": [],
         },
         "match_host_labels": {
             "state": "enabled",
@@ -300,20 +287,19 @@ def conditions_set_2() -> APIConditions:
         },
         "match_host_tags": {
             "state": "enabled",
-            "value": {
-                "ip_address_family": "ignore",
-                "ip_v4": "ignore",
-                "ip_v6": "ignore",
-                "checkmk_agent_api_integration": "ignore",
-                "piggyback": "ignore",
-                "snmp": "ignore",
-                "monitor_via_snmp": "ignore",
-                "monitor_via_checkmkagent_or_specialagent": "ignore",
-                "monitor_via_checkmkagent": "ignore",
-                "only_ping_this_device": "ignore",
-                "criticality": "ignore",
-                "networking_segment": "ignore",
-            },
+            "value": [
+                {
+                    "tag_type": "aux_tag",
+                    "tag_id": "ip-v4",
+                    "operator": "is_set",
+                },
+                {
+                    "tag_type": "tag_group",
+                    "tag_group_id": "piggyback",
+                    "operator": "is_not",
+                    "tag_id": "auto-piggyback",
+                },
+            ],
         },
         "match_service_groups_regex": {
             "state": "enabled",
@@ -1926,3 +1912,66 @@ def test_create_notification_custom_plugin_invalid_dict_config(
         resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
         == expected_error
     )
+
+
+def setup_host_tags_on_site(clients: ClientRegistry) -> None:
+    clients.HostTagGroup.create(
+        ident="criticality",
+        title="Criticality",
+        help_text="",
+        tags=[
+            {"ident": "prod", "title": "Productive system"},
+            {"ident": "critical", "title": "Business critical"},
+            {"ident": "test", "title": "Test system"},
+            {"ident": "offline", "title": "Do not monitor this host"},
+        ],
+    )
+
+    clients.HostTagGroup.create(
+        ident="networking",
+        title="Networking Segment",
+        help_text="",
+        tags=[
+            {"ident": "lan", "title": "Local network (low latency)"},
+            {"ident": "wan", "title": "WAN (high latency)"},
+            {"ident": "dmz", "title": "DMZ (low latency, secure access)"},
+        ],
+    )
+
+    test_data: dict[str, Any] = {
+        "aux_tag_id": "aux_tag_id_1",
+        "title": "aux_tag_1",
+        "topic": "topic_1",
+        "help": "HELP",
+    }
+    clients.AuxTag.create(tag_data=test_data)
+
+
+def test_match_host_tags(clients: ClientRegistry) -> None:
+    setup_host_tags_on_site(clients)
+    config = notification_rule_request_example()
+    config["conditions"]["match_host_tags"] = {
+        "state": "enabled",
+        "value": [
+            {
+                "tag_type": "aux_tag",
+                "tag_id": "aux_tag_id_1",
+                "operator": "is_set",
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "criticality",
+                "operator": "is_not",
+                "tag_id": "prod",
+            },
+            {
+                "tag_type": "tag_group",
+                "tag_group_id": "networking",
+                "operator": "is_not",
+                "tag_id": "lan",
+            },
+        ],
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    assert resp.json["extensions"]["rule_config"] == config

@@ -17,6 +17,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
@@ -768,7 +769,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
-    def _copy(self, rel_filepath: str, tmp_dump_folder: Path) -> Optional[Path]:
+    def _copy_or_sanitize(self, rel_filepath: str, tmp_dump_folder: Path) -> Optional[Path]:
         checkmk_files_map = self._checkmk_files_map
         filepath = checkmk_files_map.get(rel_filepath)
         if filepath is None or not filepath.exists():
@@ -784,14 +785,24 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         tmp_folder = tmp_dump_folder.joinpath(subfolder)
         tmp_folder.mkdir(parents=True, exist_ok=True)
 
-        return Path(shutil.copy(str(filepath), str(tmp_folder.joinpath(filename))))
+        tmp_filepath = tmp_folder.joinpath(filename)
+
+        if str(rel_filepath) == "multisite.d/sites.mk":
+            sites = store.load_from_mk_file(filepath, "sites", {})
+            for detail in sites.values():
+                with suppress(KeyError):
+                    detail["secret"] = "redacted"
+            store.save_to_mk_file(tmp_filepath, "sites", sites)
+        else:
+            shutil.copy(str(filepath), str(tmp_filepath))
+        return tmp_filepath
 
     def add_or_get_files(
         self, tmp_dump_folder: Path, collectors: Collectors
     ) -> DiagnosticsElementFilepaths:
         unknown_files = []
         for rel_filepath in self.rel_checkmk_files:
-            tmp_filepath = self._copy(rel_filepath, tmp_dump_folder)
+            tmp_filepath = self._copy_or_sanitize(rel_filepath, tmp_dump_folder)
             if tmp_filepath is None:
                 unknown_files.append(rel_filepath)
                 continue

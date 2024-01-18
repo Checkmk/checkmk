@@ -436,22 +436,16 @@ class ServiceLevelField(fields.Integer):
         required: bool = True,
         example: int = 10,
         presence: Literal["should_exist", "should_not_exist"] = "should_exist",
+        description: str = "A service level represented as an integer",
         **kwargs: Any,
     ) -> None:
-        super().__init__(required=required, example=example, **kwargs)
+        super().__init__(required=required, example=example, description=description, **kwargs)
         self.presence = presence
 
     def _validate(self, value):
         super()._validate(value)
 
         choices = [int_val for int_val, _str_val in active_config.mkeventd_service_levels]
-
-        import logging
-
-        logger = logging.getLogger(__name__)
-        from pprint import pformat
-
-        logger.warning(pformat(choices))
 
         if self.presence == "should_exist":
             if value not in choices:

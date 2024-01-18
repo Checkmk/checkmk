@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,6 +17,12 @@ from cmk.base.legacy_checks import mem
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
+
 _SECTION = {
     "MemTotal": 137438347264,
     "MemFree": 25417879552,
@@ -28,11 +35,36 @@ _SECTION = {
 }
 
 
-_PREDICTED_VALUE = 104857600000
+PREDICTIVE_PARAMS = PredictionParameters(
+    period="minute",
+    horizon=90,
+    levels=("relative", (10.0, 20.0)),
+)
+
+PREDICTED_VALUE_MEM = 104857600000
+META_MEM = PredictionInfo.make("mem_used", "upper", PREDICTIVE_PARAMS, time.time())
+INJECTED_MEM = InjectedParameters(
+    meta_file_path_template="",
+    predictions={
+        hash(META_MEM): (
+            PREDICTED_VALUE_MEM,
+            (int(PREDICTED_VALUE_MEM * 0.9), int(PREDICTED_VALUE_MEM * 1.1)),
+        )
+    },
+)
 
 
-def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]]:
-    return _PREDICTED_VALUE, (int(_PREDICTED_VALUE * 0.9), int(_PREDICTED_VALUE * 1.1), None, None)
+PREDICTED_VALUE_PGF = 100000000000
+META_PGF = PredictionInfo.make("pagefile_used", "upper", PREDICTIVE_PARAMS, time.time())
+INJECTED_PGF = InjectedParameters(
+    meta_file_path_template="",
+    predictions={
+        hash(META_PGF): (
+            PREDICTED_VALUE_PGF,
+            (int(PREDICTED_VALUE_PGF * 0.9), int(PREDICTED_VALUE_PGF * 1.1)),
+        )
+    },
+)
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -116,19 +148,19 @@ def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]
                 memory=(
                     "predictive",
                     {
-                        "period": "minute",
-                        "horizon": 90,
-                        "levels_upper": ("relative", (10.0, 20.0)),
-                        "__get_predictive_levels__": _get_prediction,
+                        "horizon": PREDICTIVE_PARAMS.horizon,
+                        "period": PREDICTIVE_PARAMS.period,
+                        "levels_upper": PREDICTIVE_PARAMS.levels,
+                        "__injected__": INJECTED_MEM.model_dump(),
                     },
                 ),
                 pagefile=(
                     "predictive",
                     {
-                        "period": "minute",
-                        "horizon": 90,
-                        "levels_upper": ("relative", (10.0, 20.0)),
-                        "__get_predictive_levels__": _get_prediction,
+                        "horizon": PREDICTIVE_PARAMS.horizon,
+                        "period": PREDICTIVE_PARAMS.period,
+                        "levels_upper": PREDICTIVE_PARAMS.levels,
+                        "__injected__": INJECTED_PGF.model_dump(),
                     },
                 ),
             ),
@@ -140,14 +172,14 @@ def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]
                 ),
                 Metric("mem_used", 112020467712.0, boundaries=(0.0, 137438347264.0)),
                 Metric("mem_used_percent", 81.50597700132717, boundaries=(0.0, None)),
-                Metric("predict_mem_used", _PREDICTED_VALUE),
+                Metric("predict_mem_used", PREDICTED_VALUE_MEM),
                 Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 111 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 111 GiB (predicted reference: 93.1 GiB) (warn/crit at 83.8 GiB/102 GiB)",
                 ),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),
-                Metric("predict_pagefile_used", _PREDICTED_VALUE),
+                Metric("predict_pagefile_used", PREDICTED_VALUE_PGF),
             ],
             id="predictive levels",
         ),
@@ -156,19 +188,19 @@ def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]
                 memory=(
                     "predictive",
                     {
-                        "period": "minute",
-                        "horizon": 90,
-                        "levels_upper": ("relative", (10.0, 20.0)),
-                        "__get_predictive_levels__": _get_prediction,
+                        "horizon": PREDICTIVE_PARAMS.horizon,
+                        "period": PREDICTIVE_PARAMS.period,
+                        "levels_upper": PREDICTIVE_PARAMS.levels,
+                        "__injected__": INJECTED_MEM.model_dump(),
                     },
                 ),
                 pagefile=(
                     "predictive",
                     {
-                        "period": "minute",
-                        "horizon": 90,
-                        "levels_upper": ("relative", (10.0, 20.0)),
-                        "__get_predictive_levels__": _get_prediction,
+                        "horizon": PREDICTIVE_PARAMS.horizon,
+                        "period": PREDICTIVE_PARAMS.period,
+                        "levels_upper": PREDICTIVE_PARAMS.levels,
+                        "__injected__": INJECTED_PGF.model_dump(),
                     },
                 ),
                 average=60,
@@ -182,15 +214,15 @@ def _get_prediction(metric: str) -> tuple[float, tuple[float, float, None, None]
                 Metric("mem_used", 112020467712.0, boundaries=(0.0, 137438347264.0)),
                 Metric("mem_used_percent", 81.50597700132717, boundaries=(0.0, None)),
                 Metric("mem_used_avg", 112020467712.0, boundaries=(0.0, 137438347264.0)),
-                Metric("predict_mem_used", _PREDICTED_VALUE),
+                Metric("predict_mem_used", PREDICTED_VALUE_MEM),
                 Metric("pagefile_total", 150527.421875),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 111 GiB (predicted reference: 97.7 GiB) (warn/crit at 87.9 GiB/107 GiB)",
+                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 111 GiB (predicted reference: 93.1 GiB) (warn/crit at 83.8 GiB/102 GiB)",
                 ),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),
                 Metric("pagefile_used_avg", 119057674240.0, boundaries=(0.0, 157839441920.0)),
-                Metric("predict_pagefile_used", _PREDICTED_VALUE),
+                Metric("predict_pagefile_used", PREDICTED_VALUE_PGF),
             ],
             id="predictive levels + averaging",
         ),

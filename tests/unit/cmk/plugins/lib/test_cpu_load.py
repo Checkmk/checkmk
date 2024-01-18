@@ -3,10 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+from pathlib import Path
 from unittest.mock import Mock
 
-from tests.testlib.prediction import FixedPredictionUpdater
-
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.plugins.lib.cpu import Load, ProcessorType, Section, Threads
 from cmk.plugins.lib.cpu_load import check_cpu_load
@@ -40,7 +45,12 @@ def test_cpu_loads_fixed_levels() -> None:
     ]
 
 
-def test_cpu_loads_predictive(mocker: Mock) -> None:
+def test_cpu_loads_predictive(mocker: Mock, tmp_path: Path) -> None:
+    prep_u = PredictionParameters(
+        period="minute", horizon=1, levels=("absolute", (2.0, 4.0)), bound=None
+    )
+    meta_u = PredictionInfo.make(metric="load15", direction="upper", params=prep_u, now=time.time())
+
     # make sure cpu_load check can handle predictive values
     assert list(
         check_cpu_load(
@@ -48,12 +58,13 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
                 "levels1": None,
                 "levels5": None,
                 "levels15": {
-                    "period": "minute",
-                    "horizon": 1,
-                    "levels_upper": ("absolute", (2.0, 4.0)),
-                    "__get_predictive_levels__": FixedPredictionUpdater(
-                        None, (2.2, 4.2, None, None)
-                    ).get_predictive_levels,
+                    "period": prep_u.period,
+                    "horizon": prep_u.horizon,
+                    "levels_upper": prep_u.levels,
+                    "__injected__": InjectedParameters(
+                        meta_file_path_template=str(tmp_path),
+                        predictions={hash(meta_u): (None, (2.2, 4.2))},
+                    ).model_dump(),
                 },
             },
             Section(

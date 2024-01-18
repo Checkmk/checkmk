@@ -11,8 +11,6 @@ from typing import Final, Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
-from cmk.utils.log import VERBOSE
-
 from cmk.agent_based.prediction_backend import PredictionInfo
 
 from ._grouping import time_slices
@@ -67,31 +65,25 @@ class PredictionData(BaseModel, frozen=True):
 class PredictionStore:
     DATA_FILE_SUFFIX = ""
     INFO_FILE_SUFFIX = ".info"
+    NAME_TEMPLATE = "{meta.metric}/{meta.params.period}-{meta.valid_interval[0]}-{meta.direction}"
 
     def __init__(
         self,
         path: Path,
     ) -> None:
         self.path: Final = path
-
-    @staticmethod
-    def relative_basename(metric: str, period: str, valid_from: int) -> Path:
-        return Path(metric, f"{period}-{valid_from}")
+        self.meta_file_path_template: Final = (
+            # make base dir safe for .format call
+            str(self.path).replace("{", "{{").replace("}", "}}")
+            + f"/{self.NAME_TEMPLATE}{self.INFO_FILE_SUFFIX}"
+        )
 
     @classmethod
     def relative_data_file(cls, meta: PredictionInfo) -> Path:
-        return PredictionStore.relative_basename(
-            meta.metric, meta.params.period, meta.valid_interval[0]
-        ).with_suffix(cls.DATA_FILE_SUFFIX)
+        return Path(cls.NAME_TEMPLATE.format(meta=meta)).with_suffix(cls.DATA_FILE_SUFFIX)
 
-    def _base_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self.path / self.relative_basename(metric, period, valid_from)
-
-    def _info_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self._base_file(metric, period, valid_from).with_suffix(self.INFO_FILE_SUFFIX)
-
-    def _data_file(self, metric: str, period: str, valid_from: int) -> Path:
-        return self._base_file(metric, period, valid_from).with_suffix(self.DATA_FILE_SUFFIX)
+    def _data_file(self, meta: PredictionInfo) -> Path:
+        return self.path / self.relative_data_file(meta=meta)
 
     @staticmethod
     def filter_prediction_files_by_metric(
@@ -104,37 +96,34 @@ class PredictionStore:
             if metric in prediction_file.parts
         )
 
-    def save_prediction(
-        self,
-        meta: PredictionInfo,
-        data: PredictionData,
-    ) -> None:
-        info_file = self._info_file(meta.metric, meta.params.period, meta.valid_interval[0])
-        info_file.parent.mkdir(exist_ok=True, parents=True)
-        info_file.write_text(meta.model_dump_json())
-        self._data_file(meta.metric, meta.params.period, meta.valid_interval[0]).write_text(
-            data.model_dump_json()
-        )
+    def save_prediction(self, meta: PredictionInfo, prediction: PredictionData) -> None:
+        data_file = self._data_file(meta)
+        data_file.parent.mkdir(exist_ok=True, parents=True)
+        data_file.write_text(prediction.model_dump_json())
 
-    def remove_prediction(self, metric: str, period: str, valid_from: int) -> None:
-        self._data_file(metric, period, valid_from).unlink(missing_ok=True)
-        self._info_file(metric, period, valid_from).unlink(missing_ok=True)
+    def iter_all_metadata_files(self) -> Iterable[Path]:
+        return self.path.rglob(f"*{self.INFO_FILE_SUFFIX}")
 
-    def get_info(self, metric: str, period: str, valid_from: int) -> PredictionInfo | None:
-        file_path = self._info_file(metric, period, valid_from)
-        try:
-            return PredictionInfo.model_validate_json(file_path.read_text())
-        except FileNotFoundError as exc:
-            logger.log(VERBOSE, "No prediction meta data: %s", exc)
-        return None
+    def iter_all_valid_predictions(
+        self, now: float
+    ) -> Iterator[tuple[PredictionInfo, PredictionData | None]]:
+        for info_path in self.iter_all_metadata_files():
+            try:
+                meta = PredictionInfo.model_validate_json(info_path.read_text())
+            except FileNotFoundError:
+                continue
 
-    def get_data(self, meta: PredictionInfo) -> PredictionData | None:
-        file_path = self._data_file(meta.metric, meta.params.period, meta.valid_interval[0])
-        try:
-            return PredictionData.model_validate_json(file_path.read_text())
-        except FileNotFoundError as exc:
-            logger.log(VERBOSE, "No prediction: %s", exc)
-        return None
+            if not meta.valid_interval[0] <= now < meta.valid_interval[1]:
+                continue
+
+            data_path = info_path.with_suffix(self.DATA_FILE_SUFFIX)
+            try:
+                if info_path.stat().st_mtime >= data_path.stat().st_mtime:
+                    yield meta, PredictionData.model_validate_json(data_path.read_text())
+            except FileNotFoundError:
+                pass
+
+            yield meta, None
 
 
 def compute_prediction(

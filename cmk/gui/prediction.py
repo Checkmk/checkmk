@@ -6,8 +6,9 @@
 import enum
 import json
 import time
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from livestatus import (
     get_rrd_data,
@@ -33,9 +34,11 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
-from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParameters
+from cmk.agent_based.prediction_backend import PredictionInfo
 
 _GRAPH_SIZE = 2000, 700
+
+_FIVE_MINUTES = 300
 
 
 class Color(enum.StrEnum):
@@ -59,20 +62,38 @@ _VRANGES = (
 
 
 @dataclass(frozen=True)
-class _LevelsCurves:
+class PredictionCurves:
+    prediction: Sequence[float | None]
     warn: Sequence[float | None]
     crit: Sequence[float | None]
 
 
-@dataclass(frozen=True)
-class PredictionCurves:
-    prediction: Sequence[float | None]
-    levels_upper: _LevelsCurves | None
-    levels_lower: _LevelsCurves | None
-
-
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page_handler("prediction_graph", page_graph)
+
+
+@dataclass
+class _Predictions:
+    title: str
+    upper: tuple[PredictionInfo, PredictionData] | None = None
+    lower: tuple[PredictionInfo, PredictionData] | None = None
+
+    def get_x_range(self) -> tuple[int, int]:
+        """Both predictions should have the same range.
+
+        If for some reason they had not, we could only draw the smaller range.
+        """
+        if self.upper is None:
+            if self.lower is None:
+                raise ValueError("need either of upper or lower prediction")
+            return self.lower[0].valid_interval
+        if self.lower is None:
+            return self.upper[0].valid_interval
+
+        return (
+            max(self.lower[0].valid_interval[0], self.upper[0].valid_interval[0]),
+            min(self.lower[0].valid_interval[1], self.upper[0].valid_interval[1]),
+        )
 
 
 def _select_prediction(
@@ -80,48 +101,57 @@ def _select_prediction(
     host_name: HostName,
     service_name: ServiceName,
     metric_name: MetricName,
-) -> tuple[PredictionInfo, PredictionData]:
-    prediction_data_querier = PredictionQuerier(
+) -> _Predictions:
+    querier = PredictionQuerier(
         livestatus_connection=livestatus_connection,
         host_name=host_name,
         service_name=service_name,
     )
-    if not (
-        available_predictions_sorted_by_start_time := sorted(
-            prediction_data_querier.query_available_predictions(metric_name),
-            key=lambda pred_info: pred_info.valid_interval[0],
+
+    available_predictions_sorted = _available_predictions(querier, metric_name)
+    try:
+        selected_title = request_.var("prediction_selection") or next(
+            iter(available_predictions_sorted)
         )
-    ):
+        selected_prediction_infos = available_predictions_sorted[selected_title]
+    except (StopIteration, KeyError):
         raise MKGeneralException(
             _("There is currently no prediction information available for this service.")
         )
-
-    selected_prediction_info = next(
-        (
-            prediction_info
-            for prediction_info in available_predictions_sorted_by_start_time
-            if _make_prediciton_id(prediction_info) == request_.var("prediction_selection")
-        ),
-        available_predictions_sorted_by_start_time[0],
-    )
-    selected_prediction_data = prediction_data_querier.query_prediction_data(
-        selected_prediction_info
-    )
 
     with html.form_context("prediction"):
         html.write_text(_("Show prediction for "))
         html.dropdown(
             "prediction_selection",
-            (
-                (_make_prediciton_id(prediction_info), _make_prediction_title(prediction_info))
-                for prediction_info in available_predictions_sorted_by_start_time
-            ),
-            deflt=_make_prediciton_id(selected_prediction_info),
+            ((title, title) for title in available_predictions_sorted),
+            deflt=selected_title,
             onchange="document.prediction.submit();",
         )
         html.hidden_fields()
 
-    return selected_prediction_info, selected_prediction_data
+    return _Predictions(
+        title=selected_title,
+        upper=None
+        if (meta := selected_prediction_infos.get("upper")) is None
+        else (meta, querier.query_prediction_data(meta)),
+        lower=None
+        if (meta := selected_prediction_infos.get("lower")) is None
+        else (meta, querier.query_prediction_data(meta)),
+    )
+
+
+def _available_predictions(
+    querier: PredictionQuerier, metric: str
+) -> Mapping[str, Mapping[Literal["upper", "lower"], PredictionInfo]]:
+    available: dict[str, dict[Literal["upper", "lower"], PredictionInfo]] = {}
+    for meta in sorted(
+        querier.query_available_predictions(metric),
+        key=lambda m: m.valid_interval[0],
+    ):
+        title = _make_prediction_title(meta)
+        available.setdefault(title, {})[meta.direction] = meta
+
+    return available
 
 
 def page_graph() -> None:
@@ -137,21 +167,38 @@ def page_graph() -> None:
         breadcrumb,
     )
 
-    selected_prediction_info, selected_prediction_data = _select_prediction(
+    selected_predictions = _select_prediction(
         livestatus_connection, host_name, service_name, metric_name
     )
+    x_range = selected_predictions.get_x_range()
 
-    curves = _make_prediction_curves(selected_prediction_data, selected_prediction_info.params)
     measurement_point = _get_current_perfdata_via_livestatus(host_name, service_name, metric_name)
     measurement_rrd = _get_observed_data(
-        livestatus_connection, host_name, service_name, selected_prediction_info, time.time()
+        livestatus_connection,
+        host_name,
+        service_name,
+        metric_name,
+        x_range,
+        time.time(),
     )
 
-    x_range = selected_prediction_info.valid_interval
-    y_range = _compute_vertical_range(curves, measurement_point, measurement_rrd)
+    curves_upper = (
+        None
+        if selected_predictions.upper is None
+        else _make_prediction_curves(x_range, *selected_predictions.upper)
+    )
+    curves_lower = (
+        None
+        if selected_predictions.lower is None
+        else _make_prediction_curves(x_range, *selected_predictions.lower)
+    )
+
+    y_range = _compute_vertical_range(
+        curves_upper, curves_lower, measurement_point, measurement_rrd
+    )
 
     _create_graph(
-        selected_prediction_info,
+        selected_predictions.title,
         _GRAPH_SIZE,
         x_range,
         y_range,
@@ -160,9 +207,9 @@ def page_graph() -> None:
 
     _render_grid(x_range, y_range)
 
-    _render_level_areas(curves)
+    _render_level_areas(curves_upper, curves_lower)
 
-    _render_prediction(curves)
+    _render_prediction(curves_upper, curves_lower)
 
     if measurement_rrd is not None:
         _render_curve(measurement_rrd, Color.OBSERVED, 2)
@@ -170,10 +217,6 @@ def page_graph() -> None:
         _render_point(*measurement_point, Color.OBSERVED)
 
     html.footer()
-
-
-def _make_prediciton_id(meta: PredictionInfo) -> str:
-    return str(hash(meta))
 
 
 def _make_prediction_title(meta: PredictionInfo) -> str:
@@ -212,40 +255,45 @@ def _render_grid(x_range: tuple[int, int], y_range: tuple[float, float]) -> None
     _render_coordinates(y_scala, x_scala)
 
 
-def _render_level_areas(curves: PredictionCurves) -> None:
-    if curves.levels_upper is None:
-        _render_filled_area_above(curves.prediction, Color.OK_AREA, 0.5)
-    else:
-        _render_filled_area_between(curves.prediction, curves.levels_upper.warn, Color.OK_AREA, 0.5)
-        _render_filled_area_between(
-            curves.levels_upper.warn, curves.levels_upper.crit, Color.WARN_AREA, 0.4
-        )
-        _render_filled_area_above(curves.levels_upper.crit, Color.CRIT_AREA, 0.1)
+def _render_level_areas(
+    curves_upper: PredictionCurves | None, curves_lower: PredictionCurves | None
+) -> None:
+    if curves_upper:
+        # we have upper levels -> render the OK / WARN / CRIT areas above the prediction
+        _render_filled_area_between(curves_upper.prediction, curves_upper.warn, Color.OK_AREA, 0.5)
+        _render_filled_area_between(curves_upper.warn, curves_upper.crit, Color.WARN_AREA, 0.4)
+        _render_filled_area_above(curves_upper.crit, Color.CRIT_AREA, 0.1)
+    elif curves_lower:
+        _render_filled_area_above(curves_lower.prediction, Color.OK_AREA, 0.1)
 
-    if curves.levels_lower is None:
-        _render_filled_area_below(curves.prediction, Color.OK_AREA, 0.5)
-    else:
-        _render_filled_area_below(curves.levels_lower.crit, Color.CRIT_AREA, 0.1)
-        _render_filled_area_between(
-            curves.levels_lower.crit, curves.levels_lower.warn, Color.WARN_AREA, 0.4
-        )
-        _render_filled_area_between(curves.prediction, curves.levels_lower.warn, Color.OK_AREA, 0.5)
+    if curves_lower:
+        # we have lower levels -> render the Ok / WARN / CRIT areas below the prediction
+        _render_filled_area_below(curves_lower.crit, Color.CRIT_AREA, 0.1)
+        _render_filled_area_between(curves_lower.crit, curves_lower.warn, Color.WARN_AREA, 0.4)
+        _render_filled_area_between(curves_lower.prediction, curves_lower.warn, Color.OK_AREA, 0.5)
+    elif curves_upper:
+        _render_filled_area_below(curves_upper.prediction, Color.OK_AREA, 0.5)
 
 
-def _render_prediction(curves: PredictionCurves) -> None:
-    _render_curve(curves.prediction, Color.PREDICTION)
-    _render_curve(curves.prediction, Color.PREDICTION)  # repetition makes line bolder
+def _render_prediction(
+    curves_upper: PredictionCurves | None, curves_lower: PredictionCurves | None
+) -> None:
+    # repetition makes line bolder (in case both predictions are present and coincide)
+    for curves in (curves_lower or curves_upper, curves_upper or curves_lower):
+        if curves is not None:
+            _render_curve(curves.prediction, Color.PREDICTION)
 
 
 def _get_observed_data(
     livestatus_connection: SingleSiteConnection,
     host_name: HostName,
     service_name: ServiceName,
-    selected_prediction_info: PredictionInfo,
+    metric: MetricName,
+    valid_interval: tuple[int, int],
     now: float,
 ) -> Sequence[float | None] | None:
     # Try to get current RRD data and render it as well
-    from_time, until_time = selected_prediction_info.valid_interval
+    from_time, until_time = valid_interval
     if not from_time <= now <= until_time:
         return None
 
@@ -254,7 +302,7 @@ def _get_observed_data(
             livestatus_connection,
             host_name,
             service_name,
-            f"{selected_prediction_info.metric}.max",
+            f"{metric}.max",
             from_time,
             until_time,
         )
@@ -323,57 +371,43 @@ def _get_current_perfdata_via_livestatus(
 
 
 def _make_prediction_curves(
-    tg_data: PredictionData, params: PredictionParameters
+    x_range: tuple[float, float], meta: PredictionInfo, tg_data: PredictionData
 ) -> PredictionCurves:
-    # FIXME: dont access `.points`, use `.predict`!
-    predictions = tg_data.points
+    # we're rendereing the whole day, one point every 5 minutes should be plenty.
+    predictions = [
+        tg_data.predict(t) for t in range(int(x_range[0]), int(x_range[1]), _FIVE_MINUTES)
+    ]
 
-    if params.levels_upper is None:
-        levels_upper = None
-    else:
-        upper_warn, upper_crit = [], []
-        for levels in (
-            estimate_levels(
-                p.average, p.stdev, "upper", params.levels_upper, params.levels_upper_min
-            )
-            if p
-            else None
-            for p in predictions
-        ):
-            upper_warn.append(levels[0] if levels else None)
-            upper_crit.append(levels[1] if levels else None)
-        levels_upper = _LevelsCurves(upper_warn, upper_crit)
-
-    if params.levels_lower is None:
-        levels_lower = None
-    else:
-        lower_warn, lower_crit = [], []
-        for levels in (
-            estimate_levels(p.average, p.stdev, "lower", params.levels_lower, None) if p else None
-            for p in predictions
-        ):
-            lower_warn.append(levels[0] if levels else None)
-            lower_crit.append(levels[1] if levels else None)
-        levels_lower = _LevelsCurves(lower_warn, lower_crit)
+    warn, crit = [], []
+    for levels in (
+        estimate_levels(p.average, p.stdev, meta.direction, meta.params.levels, meta.params.bound)
+        if p
+        else None
+        for p in predictions
+    ):
+        warn.append(levels[0] if levels else None)
+        crit.append(levels[1] if levels else None)
 
     return PredictionCurves(
         prediction=[None if p is None else p.average for p in predictions],
-        levels_upper=levels_upper,
-        levels_lower=levels_lower,
+        warn=warn,
+        crit=crit,
     )
 
 
 def _compute_vertical_range(
-    curves: PredictionCurves,
+    curves_upper: PredictionCurves | None,
+    curves_lower: PredictionCurves | None,
     measured_point: tuple[float, float] | None,
     measured_rrd: Sequence[float | None] | None,
 ) -> tuple[float, float]:
     points = (
-        *curves.prediction,
-        *(curves.levels_upper.warn if curves.levels_upper else ()),
-        *(curves.levels_upper.crit if curves.levels_upper else ()),
-        *(curves.levels_lower.warn if curves.levels_lower else ()),
-        *(curves.levels_lower.crit if curves.levels_lower else ()),
+        *(() if curves_upper is None else curves_upper.prediction),
+        *(() if curves_upper is None else curves_upper.warn),
+        *(() if curves_upper is None else curves_upper.crit),
+        *(() if curves_lower is None else curves_lower.prediction),
+        *(() if curves_lower is None else curves_lower.warn),
+        *(() if curves_lower is None else curves_lower.crit),
         *((measured_point[1],) if measured_point else ()),
         *(measured_rrd if measured_rrd else ()),
     )

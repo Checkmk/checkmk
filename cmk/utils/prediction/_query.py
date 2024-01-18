@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from livestatus import SingleSiteConnection
 
-from cmk.utils import pnp_cleanup
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
@@ -27,7 +26,9 @@ class PredictionQuerier:
 
     def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
         available_prediction_files = frozenset(
-            self._filter_prediction_files_by_metric(metric, self._query_prediction_files())
+            PredictionStore.filter_prediction_files_by_metric(
+                metric, self._query_prediction_files()
+            )
         )
         yield from (
             PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
@@ -41,18 +42,6 @@ class PredictionQuerier:
             meta.metric, meta.params.period, meta.valid_interval[0]
         ).with_suffix(DATA_FILE_SUFFIX)
         return PredictionData.model_validate_json(self._query_prediction_file_content(rel_filename))
-
-    # TODO: I think this belongs to the store.
-    @staticmethod
-    def _filter_prediction_files_by_metric(
-        metric: str, prediction_files: Iterable[Path]
-    ) -> Iterator[Path]:
-        metric_dir = pnp_cleanup(metric)
-        yield from (
-            prediction_file
-            for prediction_file in prediction_files
-            if metric_dir in prediction_file.parts
-        )
 
     def _query_prediction_files(self) -> Iterator[Path]:
         yield from (

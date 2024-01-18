@@ -5,7 +5,7 @@
 
 import logging
 import math
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, Protocol, Self
 
@@ -89,6 +89,17 @@ class PredictionStore:
 
     def _data_file(self, metric: str, period: str, valid_from: int) -> Path:
         return self._base_file(metric, period, valid_from).with_suffix(DATA_FILE_SUFFIX)
+
+    @staticmethod
+    def filter_prediction_files_by_metric(
+        metric: str, prediction_files: Iterable[Path]
+    ) -> Iterator[Path]:
+        metric_dir = pnp_cleanup(metric)
+        yield from (
+            prediction_file
+            for prediction_file in prediction_files
+            if metric_dir in prediction_file.parts
+        )
 
     def save_prediction(
         self,

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import cmk.utils.paths
@@ -38,19 +38,17 @@ def eventd_configuration() -> ec.ConfigFromWATO:
     )
 
 
-def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Sequence[ec.ECRulePackSpec]:
-    dissolved = []
+def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Iterator[ec.ECRulePackSpec]:
     for rule_pack in rule_packs:
         if isinstance(rule_pack, ec.MkpRulePackProxy):
-            dissolved.append(rule_pack.get_rule_pack_spec())
+            yield rule_pack.get_rule_pack_spec()
         else:
-            dissolved.append(rule_pack)
-    return dissolved
+            yield rule_pack
 
 
 def save_active_rule_packs() -> None:
     ec.save_rule_packs(
-        dissolve_mkp_proxies(ec.load_rule_packs()),
+        list(dissolve_mkp_proxies(ec.load_rule_packs())),
         active_config.mkeventd_pprint_rules,
         ec.active_config_dir(),
     )

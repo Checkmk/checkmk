@@ -17,8 +17,10 @@
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/TimeAggregator.h"
 #include "livestatus/TimeFilter.h"
+#include "livestatus/TimeSorter.h"
 #include "livestatus/opids.h"
 class User;
 
@@ -50,6 +52,10 @@ public:
                 return this->getValue(row, timezone_offset);
             },
             relOp, value);
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<TimeSorter>();
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

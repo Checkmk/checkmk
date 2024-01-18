@@ -54,6 +54,11 @@ public:
                                  "' not supported");
     }
 
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        throw std::runtime_error("sorting on blob column '" + name() +
+                                 "' not supported");
+    }
+
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory /*factory*/) const override {
         throw std::runtime_error("aggregating on blob column '" + name() +

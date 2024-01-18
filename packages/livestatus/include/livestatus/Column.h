@@ -19,6 +19,7 @@
 
 class Aggregation;
 class Aggregator;
+struct Sorter;
 enum class RelationalOperator;
 class RowRenderer;
 class User;
@@ -80,6 +81,8 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;
+
+    [[nodiscard]] virtual std::unique_ptr<Sorter> createSorter() const = 0;
 
     [[nodiscard]] Logger *logger() const { return &_logger; }
 

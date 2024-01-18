@@ -1,0 +1,15 @@
+Title: "Cisco Devices: Temperature Sensors" Revert: used wrong lower device levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705569737
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+In Werk <a href="https://checkmk.com/werk/16276">#16276</a>, we replaced the "less than" comparison by the
+"less or equal" comparison.  This is not consistent with how Checkmk handles lower levels, despite
+what the Werk claims.  This Werk restores the old behavior before Werk
+<a href="https://checkmk.com/werk/16276">#16276</a>. Note, that Werk <a href="https://checkmk.com/werk/16276">#16276</a>
+also uncovered some Cisco devices, which report faulty thresholds for "less or equal". These
+thresholds are now ignored again.

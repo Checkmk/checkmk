@@ -166,28 +166,26 @@ def _normalize_levels(levels: Levels) -> Levels:
 
 
 def _do_check_levels(
-    value: int | float, levels: Levels, human_readable_func: Callable, unit_info: str
+    value: int | float, levels: Levels, human_readable_func: Callable
 ) -> tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
-        return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
+        return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
     if crit_lower is not None and value < crit_lower:
-        return 2, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
+        return 2, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
 
     # Warning cases
     if warn_upper is not None and value >= warn_upper:
-        return 1, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
+        return 1, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
     if warn_lower is not None and value < warn_lower:
-        return 1, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
+        return 1, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
     return 0, ""
 
 
-def _levelsinfo_ty(
-    ty: str, warn: Warn, crit: Crit, human_readable_func: Callable, unit_info: str
-) -> str:
-    warn_str = "never" if warn is None else f"{human_readable_func(warn)}{unit_info}"
-    crit_str = "never" if crit is None else f"{human_readable_func(crit)}{unit_info}"
+def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable) -> str:
+    warn_str = "never" if warn is None else f"{human_readable_func(warn)}"
+    crit_str = "never" if crit is None else f"{human_readable_func(crit)}"
     return f" (warn/crit {ty} {warn_str}/{crit_str})"
 
 
@@ -263,13 +261,17 @@ def check_levels(  # pylint: disable=too-many-branches
     else:
         unit_info = ""
 
-    def default_human_readable_func(x: float) -> str:
-        return "%.2f" % x
-
     if human_readable_func is None:
-        human_readable_func = default_human_readable_func
 
-    infotext = f"{human_readable_func(value)}{unit_info}"
+        def render_func(x: float) -> str:
+            return "%.2f%s" % (x, unit_info)
+
+    else:
+
+        def render_func(x: float) -> str:
+            return "%s%s" % (human_readable_func(x), unit_info)
+
+    infotext = f"{render_func(value)}"
     if infoname:
         infotext = f"{infoname}: {infotext}"
 
@@ -293,7 +295,7 @@ def check_levels(  # pylint: disable=too-many-branches
         try:
             ref_value, levels = params["__get_predictive_levels__"](dsname)
             if ref_value:
-                predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
+                predictive_levels_msg = "predicted reference: %s" % render_func(ref_value)
             else:
                 predictive_levels_msg = "no reference for prediction yet"
 
@@ -310,7 +312,7 @@ def check_levels(  # pylint: disable=too-many-branches
         if predictive_levels_msg:
             infotext += " (%s)" % predictive_levels_msg
 
-    state, levelstext = _do_check_levels(value, levels, human_readable_func, unit_info)
+    state, levelstext = _do_check_levels(value, levels, render_func)
     infotext += levelstext
 
     perfdata = _build_perfdata(dsname, value, levels, boundaries, ref_value)

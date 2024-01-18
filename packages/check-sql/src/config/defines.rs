@@ -28,6 +28,7 @@ pub mod keys {
     pub const DISABLED: &str = "disabled";
     pub const SEP: &str = "sep";
 
+    pub const PIGGYBACK_HOST: &str = "piggyback_host";
     pub const DISCOVERY: &str = "discovery";
     pub const DETECT: &str = "detect";
     pub const INCLUDE: &str = "include";

@@ -1426,7 +1426,10 @@ pub async fn find_all_instance_builders(
             .iter()
             .map(|name| SqlInstanceBuilder::new().name(name))
             .collect()
-    };
+    }
+    .into_iter()
+    .map(|b| b.piggyback(ms_sql.piggyback_host()))
+    .collect();
     let customizations: HashMap<&String, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
     let builders = apply_customizations(detected, &customizations);

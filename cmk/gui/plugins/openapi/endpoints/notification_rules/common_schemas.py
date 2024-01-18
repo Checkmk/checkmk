@@ -7,8 +7,7 @@ import re
 from typing import Any, get_args
 
 from marshmallow import post_dump, post_load, pre_load, ValidationError
-from marshmallow.schema import Schema
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.type_defs import (
     BuiltInPluginNames,
@@ -66,18 +65,14 @@ class Checkbox(BaseSchema):
     state = fields.String(
         enum=["enabled", "disabled"],
         required=True,
-        description="",
-        example="",
+        description="To enable or disable this field",
+        example="enabled",
     )
 
 
 class CheckboxOneOfSchema(OneOfSchema):
     type_field = "state"
     type_field_remove = False
-
-    def __init__(self, value_schema: type[Schema], *args: Any, **kwargs: Any) -> None:
-        self.type_schemas = {"disabled": Checkbox, "enabled": value_schema}
-        super().__init__(*args, **kwargs)
 
 
 class HttpProxy(BaseSchema):
@@ -128,9 +123,12 @@ class CheckMKURLPrefixManual(CheckMKURLPrefixBase):
     url = CHECKMK_URL_PREFIX_URL
 
 
-class ManualOrAutomaticSelector(OneOfSchema):
+class OptionOneOfSchema(OneOfSchema):
     type_field = "option"
     type_field_remove = False
+
+
+class ManualOrAutomaticSelector(OptionOneOfSchema):
     type_schemas = {
         "automatic": CheckMKURLPrefixAuto,
         "manual": CheckMKURLPrefixManual,
@@ -170,8 +168,15 @@ USERNAME = fields.String(
 )
 
 
+class HttpProxyOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": HttpProxyValue,
+    }
+
+
 HTTP_PROXY_CREATE = fields.Nested(
-    CheckboxOneOfSchema(HttpProxyValue),
+    HttpProxyOneOfSchema,
     required=True,
     description="Use the proxy settings from the environment variables. The variables NO_PROXY, HTTP_PROXY and HTTPS_PROXY are taken into account during execution.",
 )
@@ -183,8 +188,16 @@ HTTP_PROXY_RESPONSE = fields.Nested(
     description="",
 )
 
+
+class UrlPrefixOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckMKURLPrefixValue,
+    }
+
+
 URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE = fields.Nested(
-    CheckboxOneOfSchema(CheckMKURLPrefixValue),
+    UrlPrefixOneOfSchema,
     required=True,
 )
 
@@ -214,7 +227,7 @@ class MatchCustomMacros(Checkbox):
     )
 
 
-class CheckboxWithStr(Checkbox):
+class CheckboxWithStrValue(Checkbox):
     value = fields.String(
         required=True,
     )
@@ -434,7 +447,7 @@ class FromToServiceLevels(BaseSchema):
     to_level = ServiceLevelField()
 
 
-class CheckboxWithFromToServiceLevels(Checkbox):
+class CheckboxWithFromToServiceLevels(Checkbox):  # <------------------- here
     value = fields.Nested(
         FromToServiceLevels,
         required=True,
@@ -694,12 +707,6 @@ class CheckboxWithMgmtTypeUrgencyValue(Checkbox):
     )
 
 
-class CheckboxWithStrValue(Checkbox):
-    value = fields.String(
-        required=True,
-    )
-
-
 EVENT_CONSOLE_ALERT_MATCH_TYPE = fields.String(
     enum=["match_only_event_console_alerts", "do_not_match_event_console_alerts"],
     required=True,
@@ -712,18 +719,46 @@ class EventConsoleAlertAttributesBase(BaseSchema):
     match_type = EVENT_CONSOLE_ALERT_MATCH_TYPE
 
 
+class MatchRuleIdsOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithListOfRuleIds,
+    }
+
+
+class MatchSysLogPriOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithSysLogPriority,
+    }
+
+
+class MatchSysLogFacOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithSysLogFacility,
+    }
+
+
+class StrValueOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithStrValue,
+    }
+
+
 class EventConsoleAlertAttrsCreate(BaseSchema):
     match_rule_ids = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithListOfRuleIds),
+        MatchRuleIdsOneOfSchema,
     )
     match_syslog_priority = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithSysLogPriority),
+        MatchSysLogPriOneOfSchema,
     )
     match_syslog_facility = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithSysLogFacility),
+        MatchSysLogFacOneOfSchema,
     )
     match_event_comment = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
 
 
@@ -754,8 +789,8 @@ class CheckboxEventConsoleAlerts(Checkbox):
 class EventConsoleAlertAttrsResponse(BaseSchema):
     match_rule_ids = fields.Nested(CheckboxWithListOfStr)
     match_syslog_priority = fields.Nested(CheckboxWithSysLogPriority)
-    match_syslog_facility = fields.Nested(CheckboxWithStr)
-    match_event_comment = fields.Nested(CheckboxWithStr)
+    match_syslog_facility = fields.Nested(CheckboxWithStrValue)
+    match_event_comment = fields.Nested(CheckboxWithStrValue)
 
 
 class EventConsoleAlertsResponse(Checkbox):
@@ -1003,9 +1038,7 @@ class CiscoExplicitWebhookUrl(ExplicitOrStoreOptions):
     )
 
 
-class CiscoUrlOrStoreSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class CiscoUrlOrStoreSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": CiscoExplicitWebhookUrl,
         "store": CiscoPasswordStore,
@@ -1031,9 +1064,7 @@ class IlertAPIKey(ExplicitOrStoreOptions):
     )
 
 
-class IlertKeyOrStoreSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class IlertKeyOrStoreSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": IlertAPIKey,
         "store": IlertPasswordStoreID,
@@ -1057,9 +1088,7 @@ class OpsGenieExplicitKey(ExplicitOrStoreOptions):
     )
 
 
-class OpsGenisStoreOrExplicitKeySelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class OpsGenisStoreOrExplicitKeySelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": OpsGenieExplicitKey,
         "store": OpsGenieStoreID,
@@ -1083,9 +1112,7 @@ class PagerDutyExplicitKey(ExplicitOrStoreOptions):
     )
 
 
-class PagerDutyStoreOrIntegrationKeySelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class PagerDutyStoreOrIntegrationKeySelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": PagerDutyExplicitKey,
         "store": PagerDutyAPIKeyStoreID,
@@ -1109,9 +1136,7 @@ class ServiceNowExplicitPassword(ExplicitOrStoreOptions):
     )
 
 
-class ServiceNowPasswordSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class ServiceNowPasswordSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": ServiceNowExplicitPassword,
         "store": ServiceNowPasswordStoreID,
@@ -1135,9 +1160,7 @@ class SignL4TeamSecret(ExplicitOrStoreOptions):
     )
 
 
-class SignL4ExplicitOrStoreSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class SignL4ExplicitOrStoreSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": SignL4TeamSecret,
         "store": SignL4TeamSecretStoreID,
@@ -1161,9 +1184,7 @@ class SlackWebhookURL(ExplicitOrStoreOptions):
     )
 
 
-class SlackStoreOrExplicitURLSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class SlackStoreOrExplicitURLSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": SlackWebhookURL,
         "store": SlackWebhookStore,
@@ -1187,9 +1208,7 @@ class SMSAPIExplicitPassword(ExplicitOrStoreOptions):
     )
 
 
-class SMSAPIPasswordSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class SMSAPIPasswordSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": SMSAPIExplicitPassword,
         "store": SMSAPIPStoreID,
@@ -1212,9 +1231,7 @@ class SplunkURLExplicit(ExplicitOrStoreOptions):
     url = SplunkURLField(required=True)
 
 
-class SplunkRESTEndpointSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class SplunkRESTEndpointSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": SplunkURLExplicit,
         "store": SplunkStoreID,
@@ -1234,9 +1251,7 @@ class MSTeamsExplicitWebhookUrl(ExplicitOrStoreOptions):
     )
 
 
-class MSTeamsUrlOrStoreSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class MSTeamsUrlOrStoreSelector(OptionOneOfSchema):
     type_schemas = {
         "explicit": MSTeamsExplicitWebhookUrl,
         "store": MSTeamsURLResponse,
@@ -1372,26 +1387,50 @@ class ServiceNowMngmtType(BaseSchema):
 
 class IncidentAndCaseParams(BaseSchema):
     host_description = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
     service_description = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
     host_short_description = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
     service_short_description = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
+
+
+class PriorityOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithMgmtTypePriorityValue,
+    }
+
+
+class StateRecoveryOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithManagementTypeStateCaseValues,
+    }
 
 
 class CaseParams(IncidentAndCaseParams):
-    priority = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithMgmtTypePriorityValue),
-    )
-    state_recovery = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithManagementTypeStateCaseValues),
-    )
+    priority = fields.Nested(PriorityOneOfSchema)
+    state_recovery = fields.Nested(StateRecoveryOneOfSchema)
+
+
+class TypeStateOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithManagementTypeStateIncedentValues,
+    }
+
+
+class TypeUrgencyOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithMgmtTypeUrgencyValue,
+    }
 
 
 class IncidentParams(IncidentAndCaseParams):
@@ -1401,19 +1440,19 @@ class IncidentParams(IncidentAndCaseParams):
         description="Caller is the user on behalf of whom the incident is being reported within ServiceNow.",
     )
     urgency = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithMgmtTypeUrgencyValue),
+        TypeUrgencyOneOfSchema,
     )
     impact = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
     )
     state_acknowledgement = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithManagementTypeStateIncedentValues),
+        TypeStateOneOfSchema,
     )
     state_downtime = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithManagementTypeStateIncedentValues),
+        TypeStateOneOfSchema,
     )
     state_recovery = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithManagementTypeStateIncedentValues),
+        TypeStateOneOfSchema,
     )
 
 
@@ -1433,9 +1472,7 @@ class MgmntTypeIncidentParams(MgmntTypeCommon):
     params = fields.Nested(IncidentParams)
 
 
-class MgmntTypeSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class MgmntTypeSelector(OptionOneOfSchema):
     type_schemas = {
         "case": MgmntTypeCaseParams,
         "incident": MgmntTypeIncidentParams,
@@ -1452,23 +1489,56 @@ class PluginName(BaseSchema):
 
 
 # ----------------------------------------------------------------------------
+class FromDetailsOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": FromEmailAndNameCheckbox,
+    }
+
+
+class ReplyToOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": ToEmailAndNameCheckbox,
+    }
+
+
+class SubjectHostOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": SubjectForHostNotificationsCheckbox,
+    }
+
+
+class SubjectServiceOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": SubjectForServiceNotificationsCheckbox,
+    }
+
+
+class SortOrderOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxSortOrderValue,
+    }
 
 
 class MailBaseCreate(PluginName):
     from_details = fields.Nested(
-        CheckboxOneOfSchema(FromEmailAndNameCheckbox),
+        FromDetailsOneOfSchema,
         required=True,
     )
     reply_to = fields.Nested(
-        CheckboxOneOfSchema(ToEmailAndNameCheckbox),
+        ReplyToOneOfSchema,
         required=True,
     )
     subject_for_host_notifications = fields.Nested(
-        CheckboxOneOfSchema(SubjectForHostNotificationsCheckbox),
+        SubjectHostOneOfSchema,
         required=True,
     )
     subject_for_service_notifications = fields.Nested(
-        CheckboxOneOfSchema(SubjectForServiceNotificationsCheckbox),
+        SubjectServiceOneOfSchema,
         required=True,
     )
     send_separate_notification_to_every_recipient = fields.Nested(
@@ -1476,33 +1546,68 @@ class MailBaseCreate(PluginName):
         required=True,
     )
     sort_order_for_bulk_notificaions = fields.Nested(
-        CheckboxOneOfSchema(CheckboxSortOrderValue),
+        SortOrderOneOfSchema,
         required=True,
     )
 
 
 class AsciiMailPluginCreate(MailBaseCreate):
     body_head_for_both_host_and_service_notifications = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
     )
     body_tail_for_host_notifications = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
     )
     body_tail_for_service_notifications = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
     )
+
+
+class EmailInfoOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithListOfEmailInfoStrs,
+    }
+
+
+class InsertHtmlOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": HtmlSectionBetweenBodyAndTableCheckbox,
+    }
+
+
+class EnableSyncOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": EnableSynchronousDeliveryViaSMTPValue,
+    }
+
+
+class GraphsPerNotificationOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": GraphsPerNotification,
+    }
+
+
+class BulkNotificationsOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": BulkNotificationsWithGraphs,
+    }
 
 
 class HTMLMailPluginCreate(MailBaseCreate):
     info_to_be_displayed_in_the_email_body = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithListOfEmailInfoStrs),
+        EmailInfoOneOfSchema,
         required=True,
     )
     insert_html_section_between_body_and_table = fields.Nested(
-        CheckboxOneOfSchema(HtmlSectionBetweenBodyAndTableCheckbox),
+        InsertHtmlOneOfSchema,
         required=True,
     )
 
@@ -1513,15 +1618,15 @@ class HTMLMailPluginCreate(MailBaseCreate):
         required=True,
     )
     enable_sync_smtp = fields.Nested(
-        CheckboxOneOfSchema(EnableSynchronousDeliveryViaSMTPValue),
+        EnableSyncOneOfSchema,
         required=True,
     )
     graphs_per_notification = fields.Nested(
-        CheckboxOneOfSchema(GraphsPerNotification),
+        GraphsPerNotificationOneOfSchema,
         required=True,
     )
     bulk_notifications_with_graphs = fields.Nested(
-        CheckboxOneOfSchema(BulkNotificationsWithGraphs),
+        BulkNotificationsOneOfSchema,
         required=True,
     )
 
@@ -1584,15 +1689,15 @@ class HTMLEmailParamsResponse(MailCommonParams):
 
 class AsciiEmailParamsResponse(MailCommonParams):
     body_head_for_both_host_and_service_notifications = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     body_tail_for_host_notifications = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     body_tail_for_service_notifications = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
 
@@ -1617,15 +1722,27 @@ class CiscoWebexPluginResponse(CiscoWebexPluginBase):
 
 
 # ----------------------------------------------------------------------------
+class SysLogFacilityOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxSysLogFacilityToUseValue,
+    }
+
+
+class IPAddressOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckBoxIPAddressValue,
+    }
 
 
 class MkEventDPluginCreate(PluginName):
     syslog_facility_to_use = fields.Nested(
-        CheckboxOneOfSchema(CheckboxSysLogFacilityToUseValue),
+        SysLogFacilityOneOfSchema,
         required=True,
     )
     ip_address_of_remote_event_console = fields.Nested(
-        CheckboxOneOfSchema(CheckBoxIPAddressValue),
+        IPAddressOneOfSchema,
         required=True,
     )
 
@@ -1719,37 +1836,37 @@ class JiraPluginBase(PluginName):
 
 class JiraPluginCreate(JiraPluginBase):
     site_custom_id = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="The numerical ID of the JIRA custom field for sites. Please use this option if you have multiple sites in a distributed setup which send their notifications to the same JIRA instance",
     )
     priority_id = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="The numerical JIRA priority ID. If not set, it will be retrieved from a custom user attribute named jirapriority. If that is not set, the standard priority will be used",
     )
     host_summary = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Here you are allowed to use all macros that are defined in the notification context",
     )
     service_summary = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Here you are allowed to use all macros that are defined in the notification context",
     )
     label = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Here you can set a custom label for new issues. If not set, 'monitoring' will be used",
     )
     resolution_id = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="The numerical JIRA resolution transition ID. 11 - 'To Do', 21 - 'In Progress', 31 - 'Done'",
     )
     optional_timeout = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Here you can configure timeout settings.",
     )
@@ -1757,105 +1874,119 @@ class JiraPluginCreate(JiraPluginBase):
 
 class JiraPluginResponse(JiraPluginBase):
     site_custom_id = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     priority_id = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     host_summary = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     service_summary = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     label = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     resolution_id = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     optional_timeout = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
 
 
+class ListOfStrOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithListOfStr,
+    }
+
+
 # ----------------------------------------------------------------------------
+class OpsGeniePriorityOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxOpsGeniePriorityValue,
+    }
+
+
 class OpsGeniePluginCreate(PluginName):
     api_key = fields.Nested(OpsGenisStoreOrExplicitKeySelector, required=True)
     domain = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="If you have an european account, please set the domain of your opsgenie. Specify an absolute URL like https://api.eu.opsgenie.com",
     )
     http_proxy = HTTP_PROXY_CREATE
     owner = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Sets the user of the alert. Display name of the request owner",
     )
     source = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Source field of the alert. Default value is IP address of the incoming request",
     )
     priority = fields.Nested(
-        CheckboxOneOfSchema(CheckboxOpsGeniePriorityValue),
+        OpsGeniePriorityOneOfSchema,
         required=True,
     )
     note_while_creating = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Additional note that will be added while creating the alert",
     )
     note_while_closing = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Additional note that will be added while closing the alert",
     )
     desc_for_host_alerts = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Description field of host alert that is generally used to provide a detailed information about the alert",
     )
     desc_for_service_alerts = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Description field of service alert that is generally used to provide a detailed information about the alert",
     )
     message_for_host_alerts = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="",
     )
     message_for_service_alerts = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="",
     )
     responsible_teams = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithListOfStr),
+        ListOfStrOneOfSchema,
         required=True,
         description="Team names which will be responsible for the alert. If the API Key belongs to a team integration, this field will be overwritten with the owner team. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     actions = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithListOfStr),
+        ListOfStrOneOfSchema,
         required=True,
         description="Custom actions that will be available for the alert. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     tags = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithListOfStr),
+        ListOfStrOneOfSchema,
         required=True,
         description="Tags of the alert. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input fields",
     )
     entity = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="Is used to specify which domain the alert is related to",
     )
@@ -1864,7 +1995,7 @@ class OpsGeniePluginCreate(PluginName):
 class OpenGeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse, required=True)
     domain = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     http_proxy = fields.Nested(
@@ -1872,11 +2003,11 @@ class OpenGeniePluginResponse(PluginName):
         required=True,
     )
     owner = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     source = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     priority = fields.Nested(
@@ -1884,27 +2015,27 @@ class OpenGeniePluginResponse(PluginName):
         required=True,
     )
     note_while_creating = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     note_while_closing = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     desc_for_host_alerts = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     desc_for_service_alerts = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     message_for_host_alerts = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     message_for_service_alerts = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     responsible_teams = fields.Nested(
@@ -1920,7 +2051,7 @@ class OpenGeniePluginResponse(PluginName):
         required=True,
     )
     entity = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
 
@@ -1958,18 +2089,32 @@ class PushOverPluginBase(PluginName):
     )
 
 
+class PushOverOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": PushOverPriority,
+    }
+
+
+class SoundsOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": Sounds,
+    }
+
+
 class PushOverPluginCreate(PushOverPluginBase):
     url_prefix_for_links_to_checkmk = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
         description="If you specify an URL prefix here, then several parts of the email body are armed with hyperlinks to your Check_MK GUI, so that the recipient of the email can directly visit the host or service in question in Check_MK. Specify an absolute URL including the .../check_mk/",
     )
     priority = fields.Nested(
-        CheckboxOneOfSchema(PushOverPriority),
+        PushOverOneOfSchema,
         required=True,
     )
     sound = fields.Nested(
-        CheckboxOneOfSchema(Sounds),
+        SoundsOneOfSchema,
         required=True,
     )
     http_proxy = HTTP_PROXY_CREATE
@@ -2003,15 +2148,22 @@ class ServiceNowBase(PluginName):
     username = USERNAME
 
 
+class SiteIDPrefixOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckBoxUseSiteIDPrefix,
+    }
+
+
 class ServiceNowPluginCreate(ServiceNowBase):
     user_password = fields.Nested(ServiceNowPasswordSelector, required=True)
     http_proxy = HTTP_PROXY_CREATE
     use_site_id_prefix = fields.Nested(
-        CheckboxOneOfSchema(CheckBoxUseSiteIDPrefix),
+        SiteIDPrefixOneOfSchema,
         required=True,
     )
     optional_timeout = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
     )
     management_type = fields.Nested(
@@ -2032,7 +2184,7 @@ class ServiceNowPluginResponse(ServiceNowBase):
         required=True,
     )
     optional_timeout = fields.Nested(
-        CheckboxWithStr,
+        CheckboxWithStrValue,
         required=True,
     )
     management_type = fields.Nested(
@@ -2175,32 +2327,32 @@ class MSTeamsPluginCreate(PluginName):
         description="Enable/disable if we show affected host groups in the created message",
     )
     host_details = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the details for host notifications",
     )
     service_details = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the details for service notifications",
     )
     host_summary = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the summary for host notifications",
     )
     service_summary = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the summary for service notifications",
     )
     host_title = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the title for host notifications",
     )
     service_title = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStrValue),
+        StrValueOneOfSchema,
         required=True,
         description="Enable/disable the title for service notifications",
     )
@@ -2408,7 +2560,7 @@ WHEN_TO_BULK = fields.String(
 
 class NotificationBulkingCommon(BaseSchema):
     subject_for_bulk_notifications = fields.Nested(
-        CheckboxOneOfSchema(CheckboxWithStr),
+        StrValueOneOfSchema,
         required=True,
     )
     max_bulk_size = MAX_BULK_SIZE
@@ -2426,10 +2578,17 @@ class OutsideTimeperiodValue(Checkbox):
     )
 
 
+class TimePeriodOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": OutsideTimeperiodValue,
+    }
+
+
 class NotificationBulkingTimePeriod(NotificationBulkingCommon):
     time_period = TIME_PERIOD
     bulk_outside_timeperiod = fields.Nested(
-        CheckboxOneOfSchema(OutsideTimeperiodValue),
+        TimePeriodOneOfSchema,
         required=True,
     )
 
@@ -2452,24 +2611,7 @@ class TimePeriod(WhenToBulk):
     )
 
 
-class NotificationBulkingWhenToBulkSelector(OneOfSchema):
-    type_field = "when_to_bulk"
-    type_field_remove = False
-    type_schemas = {
-        "always": AlwaysBulk,
-        "timeperiod": TimePeriod,
-    }
-
-
-class NotificationBulkingValue(Checkbox):
-    value = fields.Nested(
-        NotificationBulkingWhenToBulkSelector,
-    )
-
-
-class PluginOptionsSelector(OneOfSchema):
-    type_field = "option"
-    type_field_remove = False
+class PluginOptionsSelector(OptionOneOfSchema):
     type_schemas = {
         PluginOptions.CANCEL.value: PluginBase,
         PluginOptions.WITH_PARAMS.value: PluginWithParams,
@@ -2530,300 +2672,3 @@ class NotificationPlugin(fields.Nested):
             PluginOptionsSelector,
             required=required,
         )
-
-
-class NotificationBulk(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(NotificationBulkingValue),
-            required=required,
-        )
-
-
-class SimpleCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            Checkbox,
-            required=required,
-        )
-
-
-class AllContacts(SimpleCheckbox):
-    ...
-
-
-class AllUsers(SimpleCheckbox):
-    ...
-
-
-class AllUsersWithEmail(SimpleCheckbox):
-    ...
-
-
-class StringCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithStr),
-            required=required,
-        )
-
-
-class ListOfStringCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfStr),
-            required=required,
-        )
-
-
-class TheFollowingUsers(ListOfStringCheckbox):
-    ...
-
-
-class ListOfContactGroupsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfContactGroups),
-            required=required,
-        )
-
-
-class ExplicitEmailAddressesCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfEmailAddresses),
-            required=required,
-        )
-
-
-class CustomMacrosCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(MatchCustomMacros),
-            required=required,
-        )
-
-
-class MatchSitesCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfSites),
-            required=required,
-        )
-
-
-class MatchFolderCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithFolderStr),
-            required=required,
-        )
-
-
-class MatchHostTagsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxMatchHostTags),
-            required=required,
-        )
-
-
-class MatchHostsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfHosts),
-            required=required,
-        )
-
-
-class MatchServiceGroupsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfServiceGroups),
-            required=required,
-        )
-
-
-class MatchServicesCheckbox(ListOfStringCheckbox):
-    ...
-
-
-class MatchHostGroupsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfHostGroups),
-            required=required,
-        )
-
-
-class MatchLabelsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfLabels),
-            required=required,
-        )
-
-
-class MatchServiceGroupRegexCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfServiceGroupsRegex),
-            required=required,
-        )
-
-
-class MatchCheckTypesCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfCheckTypes),
-            required=required,
-        )
-
-
-class MatchContactGroupsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithListOfContactGroups),
-            required=required,
-        )
-
-
-class MatchServiceLevelsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithFromToServiceLevels),
-            required=required,
-        )
-
-
-class MatchTimePeriodCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxWithTimePeriod),
-            required=required,
-        )
-
-
-class MatchHostEventTypeCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxHostEventType),
-            required=required,
-        )
-
-
-class MatchServiceEventTypeCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxServiceEventType),
-            required=required,
-        )
-
-
-class RestrictNotificationNumCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxRestrictNotificationNumbers),
-            required=required,
-        )
-
-
-class ThorttlePeriodicNotificationsCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxThrottlePeriodicNotifcations),
-            required=required,
-        )
-
-
-class EventConsoleAlertCheckbox(fields.Nested):
-    def __init__(self, required: bool):
-        super().__init__(
-            CheckboxOneOfSchema(CheckboxEventConsoleAlerts),
-            required=required,
-        )
-
-
-class RuleProperties(BaseSchema):
-    description = RulePropertiesDescription(required=False)
-    comment = RulePropertiesComment(required=False)
-    documentation_url = RulePropertiesDocURL(required=False)
-    do_not_apply_this_rule = RulePropertiesDoNotApplyRule(required=False)
-    allow_users_to_deactivate = RulePropertiesAllowDeactivate(required=False)
-
-
-class RuleNotificationMethod(BaseSchema):
-    notify_plugin = NotificationPlugin(required=False)
-    notification_bulking = NotificationBulk(required=False)
-
-
-class ContactSelection(BaseSchema):
-    all_contacts_of_the_notified_object = AllContacts(required=False)
-    all_users = AllUsers(required=False)
-    all_users_with_an_email_address = AllUsersWithEmail(required=False)
-    the_following_users = TheFollowingUsers(required=False)
-    members_of_contact_groups = ListOfContactGroupsCheckbox(required=False)
-    explicit_email_addresses = ExplicitEmailAddressesCheckbox(required=False)
-    restrict_by_contact_groups = ListOfContactGroupsCheckbox(required=False)
-    restrict_by_custom_macros = CustomMacrosCheckbox(required=False)
-
-
-class RuleConditions(BaseSchema):
-    match_sites = MatchSitesCheckbox(required=False)
-    match_folder = MatchFolderCheckbox(required=False)
-    match_host_tags = MatchHostTagsCheckbox(required=False)
-    match_host_labels = MatchLabelsCheckbox(required=False)
-    match_host_groups = MatchHostGroupsCheckbox(required=False)
-    match_hosts = MatchHostsCheckbox(required=False)
-    match_exclude_hosts = MatchHostsCheckbox(required=False)
-    match_service_labels = MatchLabelsCheckbox(required=False)
-    match_service_groups = MatchServiceGroupsCheckbox(required=False)
-    match_exclude_service_groups = MatchServiceGroupsCheckbox(required=False)
-    match_service_groups_regex = MatchServiceGroupRegexCheckbox(required=False)
-    match_exclude_service_groups_regex = MatchServiceGroupRegexCheckbox(required=False)
-    match_services = MatchServicesCheckbox(required=False)
-    match_exclude_services = MatchServicesCheckbox(required=False)
-    match_check_types = MatchCheckTypesCheckbox(required=False)
-    match_plugin_output = StringCheckbox(required=False)
-    match_contact_groups = MatchContactGroupsCheckbox(required=False)
-    match_service_levels = MatchServiceLevelsCheckbox(required=False)
-    match_only_during_time_period = MatchTimePeriodCheckbox(required=False)
-    match_host_event_type = MatchHostEventTypeCheckbox(required=False)
-    match_service_event_type = MatchServiceEventTypeCheckbox(required=False)
-    restrict_to_notification_numbers = RestrictNotificationNumCheckbox(required=False)
-    throttle_periodic_notifications = ThorttlePeriodicNotificationsCheckbox(required=False)
-    match_notification_comment = StringCheckbox(required=False)
-    event_console_alerts = EventConsoleAlertCheckbox(required=False)
-
-
-class RuleNotificationUpdate(BaseSchema):
-    rule_properties = fields.Nested(
-        RuleProperties,
-        required=False,
-    )
-    notification_method = fields.Nested(
-        RuleNotificationMethod,
-        required=False,
-    )
-    contact_selection = fields.Nested(
-        ContactSelection,
-        required=False,
-    )
-    conditions = fields.Nested(
-        RuleConditions,
-        required=False,
-    )
-
-    @post_load
-    def verify_at_least_one(self, *args, **kwargs):
-        at_least_one_of = {
-            "rule_properties",
-            "notification_method",
-            "contact_selection",
-            "conditions",
-        }
-        if not at_least_one_of & set(args[0]):
-            raise ValidationError(
-                f"At least one of the following parameters should be provided: {at_least_one_of}"
-            )
-        return args[0]

@@ -25,6 +25,7 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
+from cmk.utils.misc import pnp_cleanup
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.prediction import PREDICTION_DIR, PredictionStore, PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -785,7 +786,8 @@ def _inject_prediction_callback_recursively(
                         host_name,
                         service_name,
                     ),
-                    PredictionStore(PREDICTION_DIR, host_name, service_name),
+                    # Whatch out. The CMC has to agree on the path.
+                    PredictionStore(PREDICTION_DIR / host_name / pnp_cleanup(service_name)),
                 )
                 return params
             return dict(

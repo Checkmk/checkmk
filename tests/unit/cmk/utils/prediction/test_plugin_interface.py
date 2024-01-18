@@ -5,15 +5,15 @@
 
 import ast
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import _plugin_interface, PREDICTION_DIR, PredictionStore
+from cmk.utils.prediction import _plugin_interface, PredictionStore
 
 
-def test_prediction_updater_serializable() -> None:
+def test_prediction_updater_serializable(tmp_path: Path) -> None:
     """Make sure the PredictionUpdater is (de)serializable (for automation calls)
 
     We do not care what it is deserialized to.
@@ -32,7 +32,7 @@ def test_prediction_updater_serializable() -> None:
             _plugin_interface.PredictionUpdater(
                 None,  # type: ignore[arg-type]  # keep the test simple.
                 unserializable_callback,
-                PredictionStore(PREDICTION_DIR, HostName("myhost"), "My service description"),
+                PredictionStore(tmp_path),
             )
         )
     )

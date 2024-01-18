@@ -70,7 +70,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
     - levels: use plain resource_key
     - performance data: aws_%s_%s % AWS resource, resource_key
     """
-    long_output = []
+    long_output: list[tuple[int, str]] = []
     levels_reached = set()
     max_state = 0
     perfdata = []
@@ -103,7 +103,6 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             None,
             (warn, crit),
             human_readable_func=render.percent,
-            statemarkers=True,
             infoname="Usage",
         )
 
@@ -111,15 +110,16 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         if state:
             levels_reached.add(resource_title)
             infotext += f", {extrainfo}"
-        long_output.append(infotext)
+        long_output.append((state, infotext))
 
     if levels_reached:
         yield max_state, "Levels reached: %s" % ", ".join(sorted(levels_reached)), perfdata
     else:
         yield 0, "No levels reached", perfdata
 
-    if long_output:
-        yield 0, "\n%s" % "\n".join(sorted(long_output))
+    # use `notice` upon migration!
+    for state, details in sorted(long_output, key=lambda x: x[1]):
+        yield state, f"\n{details}"
 
 
 def aws_get_float_human_readable(value: float, unit: str = "") -> str:

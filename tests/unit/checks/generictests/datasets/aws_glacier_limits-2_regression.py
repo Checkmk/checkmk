@@ -46,7 +46,7 @@ checks = {
                     "Levels reached: Vaults",
                     [("aws_glacier_number_of_vaults", 910, None, None, None, None)],
                 ),
-                (0, "\nVaults: 910 (of max. 1000), Usage: 91.00% (warn/crit at 80.00%/90.00%)(!!)"),
+                (2, "\nVaults: 910 (of max. 1000), Usage: 91.00% (warn/crit at 80.00%/90.00%)"),
             ],
         ),
         (
@@ -71,8 +71,8 @@ checks = {
                     [("aws_glacier_number_of_vaults", 1001, None, None, None, None)],
                 ),
                 (
-                    0,
-                    "\nVaults: 1001 (of max. 1000), Usage: 100.10% (warn/crit at 80.00%/90.00%)(!!)",
+                    2,
+                    "\nVaults: 1001 (of max. 1000), Usage: 100.10% (warn/crit at 80.00%/90.00%)",
                 ),
             ],
         ),

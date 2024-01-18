@@ -31,6 +31,7 @@ from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
+# pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
@@ -214,7 +215,6 @@ def check_levels(  # pylint: disable=too-many-branches
     dsname: None | MetricName,
     params: Any,
     unit: str = "",
-    statemarkers: bool = False,
     human_readable_func: Callable | None = None,
     infoname: str | None = None,
     boundaries: tuple | None = None,
@@ -312,8 +312,6 @@ def check_levels(  # pylint: disable=too-many-branches
 
     state, levelstext = _do_check_levels(value, levels, human_readable_func, unit_info)
     infotext += levelstext
-    if statemarkers:
-        infotext += state_markers[state]
 
     perfdata = _build_perfdata(dsname, value, levels, boundaries, ref_value)
 

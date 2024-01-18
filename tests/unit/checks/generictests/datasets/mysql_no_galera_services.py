@@ -1255,7 +1255,17 @@ checks = {
             [
                 (
                     0,
-                    "Read: 0.00 B/s, Write: 0.00 B/s",
+                    "Read: 0.00 B/s",
+                    [],
+                ),
+                (
+                    0,
+                    "Write: 0.00 B/s",
+                    [],
+                ),
+                (
+                    0,
+                    "",
                     [("read", 0.0, None, None, None, None), ("write", 0.0, None, None, None, None)],
                 )
             ],

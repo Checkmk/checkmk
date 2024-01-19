@@ -618,17 +618,29 @@ class RawSubscriptionDetailsForAggregation(TypedDict):
 class SubscriptionDetailsForAggregation:
     start: int | None
     end: int | None
-    limit: Literal["unlimited"] | int | None
+    limit: Literal["unlimited"] | tuple[Literal["free"], Literal[3]] | int | None
 
     def __post_init__(self) -> None:
         if isinstance(self.limit, int) and self.limit <= 0:
             raise ValueError(self.limit)
 
+    @property
+    def is_free(self) -> bool:
+        return isinstance(self.limit, tuple) and self.limit[0] == "free"
+
+    @property
+    def real_limit(self) -> int | None:
+        if isinstance(self.limit, tuple):
+            return self.limit[1]
+        if isinstance(self.limit, int):
+            return self.limit
+        return None
+
     def for_report(self) -> RawSubscriptionDetailsForAggregation:
         return RawSubscriptionDetailsForAggregation(
             start=self.start,
             end=self.end,
-            limit=self.limit,
+            limit=self.limit[1] if isinstance(self.limit, tuple) else self.limit,
         )
 
 
@@ -757,12 +769,9 @@ class MonthlyServiceAverages:
         return max(self._monthly_service_averages, key=lambda d: d.num_services).for_report()
 
     def _get_subscription_exceeded_first(self) -> Mapping[str, float] | None:
-        if (
-            self._subscription_details.limit == "unlimited"
-            or self._subscription_details.limit is None
-        ):
+        if self._subscription_details.real_limit is None:
             return None
         for service_average in self._monthly_service_averages:
-            if service_average.num_services >= self._subscription_details.limit:
+            if service_average.num_services >= self._subscription_details.real_limit:
                 return service_average.for_report()
         return None

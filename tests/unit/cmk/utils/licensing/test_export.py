@@ -10,6 +10,7 @@ import pytest
 
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
+    RawSubscriptionDetailsForAggregation,
     SubscriptionDetails,
     SubscriptionDetailsError,
     SubscriptionDetailsForAggregation,
@@ -380,6 +381,18 @@ def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
 
 
 @pytest.mark.parametrize(
+    "limit",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(-1, id="lt-zero"),
+    ],
+)
+def test_subscription_details_for_aggregation_limit_error(limit: int) -> None:
+    with pytest.raises(ValueError):
+        SubscriptionDetailsForAggregation(None, None, limit)
+
+
+@pytest.mark.parametrize(
     "start",
     [
         pytest.param(None, id="start-none"),
@@ -396,29 +409,56 @@ def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "limit",
+    "limit, is_free, real_limit",
     [
-        pytest.param(None, id="limit-none"),
-        pytest.param("unlimited", id="unlimited"),
-        pytest.param(1, id="limit-int"),
+        pytest.param(None, False, None, id="limit-none"),
+        pytest.param("unlimited", False, None, id="unlimited"),
+        pytest.param(("free", 3), True, 3, id="free"),
+        pytest.param(1, False, 1, id="limit-int"),
     ],
 )
 def test_subscription_details_for_aggregation(
-    start: int | None, end: int | None, limit: Literal["unlimited"] | int | None
+    start: int | None,
+    end: int | None,
+    limit: Literal["unlimited"] | tuple[Literal["free"], Literal[3]] | int | None,
+    is_free: bool,
+    real_limit: Literal["unlimited"] | int | None,
 ) -> None:
     subscription_details = SubscriptionDetailsForAggregation(start, end, limit)
     assert subscription_details.start == start
     assert subscription_details.end == end
     assert subscription_details.limit == limit
+    assert subscription_details.is_free == is_free
+    assert subscription_details.real_limit == real_limit
 
 
 @pytest.mark.parametrize(
-    "limit",
+    "subscription_details, expected_report",
     [
-        pytest.param(0, id="zero"),
-        pytest.param(-1, id="lt-zero"),
+        pytest.param(
+            SubscriptionDetailsForAggregation(None, None, None),
+            RawSubscriptionDetailsForAggregation(start=None, end=None, limit=None),
+            id="all-none",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, 2),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit=2),
+            id="all-set",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, "unlimited"),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit="unlimited"),
+            id="unlimited",
+        ),
+        pytest.param(
+            SubscriptionDetailsForAggregation(0, 1, ("free", 3)),
+            RawSubscriptionDetailsForAggregation(start=0, end=1, limit=3),
+            id="free",
+        ),
     ],
 )
-def test_subscription_details_for_aggregation_limit_error(limit: int) -> None:
-    with pytest.raises(ValueError):
-        SubscriptionDetailsForAggregation(None, None, limit)
+def test_subscription_details_for_aggregation_for_report(
+    subscription_details: SubscriptionDetailsForAggregation,
+    expected_report: RawSubscriptionDetailsForAggregation,
+) -> None:
+    assert subscription_details.for_report() == expected_report

@@ -7,7 +7,8 @@ import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels_fixed, render, Result, State
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import render, Result, State
 from cmk.agent_based.v2.type_defs import CheckResult
 
 
@@ -34,7 +35,7 @@ def _check_time_difference(
         )
         return
 
-    yield from check_levels_fixed(
+    yield from check_levels(
         value=time_difference,
         levels_upper=levels_upper,
         metric_name=metric_name,

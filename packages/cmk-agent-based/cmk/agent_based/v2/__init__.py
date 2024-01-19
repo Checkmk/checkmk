@@ -61,10 +61,10 @@ On popular demand we add a function to render a number of seconds that might be 
 """
 # pylint: disable=duplicate-code
 
-from ..v1 import all_of, any_of, Attributes
-from ..v1 import check_levels as check_levels_fixed
 from ..v1 import (
-    check_levels_predictive,
+    all_of,
+    any_of,
+    Attributes,
     contains,
     endswith,
     equals,
@@ -126,8 +126,6 @@ __all__ = [
     "not_startswith",
     "Attributes",
     "check_levels",
-    "check_levels_fixed",
-    "check_levels_predictive",
     "clusterize",
     "get_average",
     "get_rate",

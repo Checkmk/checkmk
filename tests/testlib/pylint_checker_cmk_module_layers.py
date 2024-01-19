@@ -396,6 +396,7 @@ def _is_allowed_for_plugins(
 ) -> bool:
     return any(
         (
+            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
             _in_component(imported=imported, component=Component("cmk.agent_based.v2")),
             _in_component(imported=imported, component=Component("cmk.graphing.v1")),
             _in_component(imported=imported, component=Component("cmk.rulesets.v1")),

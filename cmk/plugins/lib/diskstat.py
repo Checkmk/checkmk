@@ -8,9 +8,8 @@ from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, DefaultDict, TypedDict
 
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
     get_average,
     get_rate,
     IgnoreResultsError,
@@ -417,7 +416,7 @@ def check_diskstat_dict(
                     label=label,
                 )
             else:
-                yield from check_levels_fixed(
+                yield from check_levels(
                     metric_val,
                     levels_upper=levels,
                     metric_name=metric_name,
@@ -430,7 +429,7 @@ def check_diskstat_dict(
     if "latency" not in disk and "average_write_wait" in disk and "average_read_wait" in disk:
         latency = max(disk["average_write_wait"], disk["average_read_wait"])
         levels = params.get("latency")
-        yield from check_levels_fixed(
+        yield from check_levels(
             latency,
             levels_upper=levels,
             render_func=render.timespan,

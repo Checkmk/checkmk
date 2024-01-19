@@ -25,9 +25,8 @@ from typing import Any, assert_never, Literal, ParamSpec, TypeVar
 import pydantic
 from typing_extensions import TypedDict
 
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
     get_average,
     get_rate,
     get_value_store,
@@ -1834,7 +1833,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     else:
         # The metric already got yielded, so it's only the result that is
         # needed here.
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             filtered_traffic,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -2007,7 +2006,7 @@ def _output_packet_rates(
         ]:
             if packets is None:
                 continue
-            yield from check_levels_fixed(
+            yield from check_levels(
                 packets.rate,
                 levels_upper=levels,
                 metric_name=f"if_{direction}_{metric_name}",
@@ -2057,7 +2056,7 @@ def _check_single_packet_rate(
         # Note: A rate of 0% for a pacrate of 0 is mathematically incorrect,
         # but it yields the best information for the "no packets" case in the check output.
         perc_value = 0 if reference_rate == 0 else rate_check * 100 / reference_rate
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             perc_value,
             levels_upper=perc_levels,
             render_func=partial(_render_floating_point, precision=3, unit="%"),
@@ -2066,7 +2065,7 @@ def _check_single_packet_rate(
         )
         yield result
     else:
-        (result,) = check_levels_fixed(
+        (result,) = check_levels(
             rate_check,
             levels_upper=abs_levels,
             render_func=partial(_render_floating_point, precision=2, unit=" packets/s"),

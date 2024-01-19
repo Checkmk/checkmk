@@ -1,0 +1,21 @@
+Title: Fix wrong edition reported via livestatus in enterprise sites running the Nagios core
+Class: fix
+Compatible: compat
+Component: core
+Date: 1705654051
+Edition: cee
+Level: 1
+Version: 2.2.0p20
+
+This change fixes a bug in the Nagios Core edition detection logic which could occur when using the
+Nagios core with another edition than the Raw Edition. This is a rare use case, but can happen
+temporarily during the migration from the Raw Edition to an Enterprise Edition.
+
+The bug manifests itself by reporting the wrong edition via the livestatus interface. This can be
+observed with the following query:
+
+C+:
+lq "GET status\nColumns: edition"
+C-:
+
+The edition column was introduced in 2.2.0.

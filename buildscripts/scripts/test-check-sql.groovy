@@ -10,7 +10,7 @@ def main() {
                     credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                     variable:"CI_TEST_SQL_DB_ENDPOINT"
                 )]) {
-                    sh("packages/check-sql/run --setup-environment --clean --all");
+                    sh("packages/mk-sql/run --setup-environment --clean --all");
                 }
             }
         }

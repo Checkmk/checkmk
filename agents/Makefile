@@ -25,7 +25,7 @@ AGENT_CTL_GZ := $(AGENT_CTL).gz
 AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
 
 CHECK_SQL := $(AGENTS_DIR)/linux/check-sql
-CHECK_SQL_DIR := $(REPO_PATH)/packages/check-sql
+CHECK_SQL_DIR := $(REPO_PATH)/packages/mk-sql
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \

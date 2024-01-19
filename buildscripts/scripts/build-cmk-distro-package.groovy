@@ -119,7 +119,7 @@ def main() {
                             "agents/wnx",
                             "agents/windows",
                             "packages/cmk-agent-ctl",
-                            "packages/check-sql"
+                            "packages/mk-sql"
                         ],
                         dest: "artifacts/winagt-build",
                     );

@@ -71,7 +71,7 @@ def build(Map args) {
                 "call run.cmd --all",
                 ""] :
             (args.TARGET == "check_sql_no_sign") ? [
-                "packages/check-sql",
+                "packages/mk-sql",
                 "call run.cmd --all",
                 "check-sql.exe"] :
             (args.TARGET == "test_unit") ? [

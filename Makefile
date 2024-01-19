@@ -257,7 +257,7 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 # The list of files and folders to be protected from remove after "buildclean" is called
 # Rust dirs are kept due to heavy load when compiled: .cargo, controller
 AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
-CHECK_SQL_TARGET_PATH=packages/check-sql/target
+CHECK_SQL_TARGET_PATH=packages/mk-sql/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \

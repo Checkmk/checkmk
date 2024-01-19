@@ -246,7 +246,7 @@ def set_autochecks_of_real_hosts(
             hostname,
             new_services_with_nodes,
             store.read(),
-        ),
+        )
     )
 
 
@@ -261,10 +261,12 @@ def _consolidate_autochecks_of_real_hosts(
         if hostname in found_on_nodes
     }
 
-    # overwrite parameters from existing ones for those which are kept
     new_services = {DiscoveredService.id(x.service) for x in new_services_with_nodes}
-    consolidated.update((id_, ex) for ex in existing_autochecks if (id_ := ex.id()) in new_services)
-
+    consolidated.update(
+        (id_, ex)
+        for ex in existing_autochecks
+        if (id_ := ex.id()) in new_services and id_ not in consolidated
+    )
     return list(consolidated.values())
 
 

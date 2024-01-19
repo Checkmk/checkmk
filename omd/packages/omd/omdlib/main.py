@@ -60,7 +60,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
+from omdlib.skel_permissions import Permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
     has_old_apache_hook_in_site,
@@ -301,7 +301,9 @@ def create_skeleton_files(site: SiteContext, directory: str) -> None:
                         continue
                     if dirpath == "tmp" or dirpath.startswith("tmp/"):
                         continue
-                create_skeleton_file(skelroot, site.dir, dirpath + "/" + entry, replacements)
+                create_skeleton_file(
+                    skelroot, site.dir, dirpath + "/" + entry, replacements, site.skel_permissions
+                )
 
 
 def save_version_meta_data(site: SiteContext, version: str) -> None:
@@ -330,7 +332,11 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
 
 
 def create_skeleton_file(
-    skelbase: str, userbase: str, relpath: str, replacements: Replacements
+    skelbase: str,
+    userbase: str,
+    relpath: str,
+    replacements: Replacements,
+    permissions: Permissions,
 ) -> None:
     skel_path = Path(skelbase, relpath)
     user_path = Path(userbase, relpath)
@@ -348,7 +354,7 @@ def create_skeleton_file(
         user_path.write_bytes(replace_tags(skel_path.read_bytes(), replacements))
 
     if not skel_path.is_symlink():
-        mode = read_skel_permissions().get(relpath.removeprefix("./"))
+        mode = permissions.get(relpath.removeprefix("./"))
         if mode is None:
             if skel_path.is_dir():
                 mode = 0o750
@@ -838,7 +844,7 @@ def _execute_update_file(
     new_version: str,
     old_edition: str,
     new_edition: str,
-    old_perms: Permissions,
+    old_permissions: Permissions,
 ) -> None:
     todo = True
     while todo:
@@ -851,7 +857,7 @@ def _execute_update_file(
                 new_version,
                 old_edition,
                 new_edition,
-                old_perms,
+                old_permissions,
             )
             todo = False
         except MKTerminate:
@@ -896,7 +902,7 @@ def update_file(  # pylint: disable=too-many-branches
     new_version: str,
     old_edition: str,
     new_edition: str,
-    old_perms: Permissions,
+    old_permissions: Permissions,
 ) -> None:
     old_skel = site.version_skel_dir
     new_skel = "/omd/versions/%s/skel" % new_version
@@ -974,7 +980,8 @@ def update_file(  # pylint: disable=too-many-branches
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
-        create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+        # TODO: Change to new permissions in next commit
+        create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
         sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/directory/link
@@ -1001,7 +1008,8 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+            # TODO: Change to new permissions in next commit
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
             sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 3) old version had a file which has vanished in new (got obsolete). If the user
@@ -1097,7 +1105,8 @@ def update_file(  # pylint: disable=too-many-branches
 
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
-        create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+        # TODO: Change to new permissions in next commit
+        create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
         sys.stdout.write(StateMarkers.good + " Updated        %s\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action necessary
@@ -1173,7 +1182,8 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your version of %s\n" % fn)
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+            # TODO: Change to new permissions in next commit
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Replaced your {user_type} {relpath} by new default {new_type}.\n"
@@ -1198,7 +1208,8 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+            # TODO: Change to new permissions in next commit
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
@@ -1223,7 +1234,8 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
+            # TODO: Change to new permissions in next commit
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements, old_permissions)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
@@ -1235,8 +1247,9 @@ def update_file(  # pylint: disable=too-many-branches
     # something himself.
 
     user_type = filetype(user_path)
-    old_perm = get_skel_permissions(old_skel, old_perms, relpath)
-    new_perm = get_skel_permissions(new_skel, read_skel_permissions(), relpath)
+    old_perm = get_skel_permissions(old_skel, old_permissions, relpath)
+    # TODO: Change to new permissions in next commit
+    new_perm = get_skel_permissions(new_skel, old_permissions, relpath)
     user_perm = get_file_permissions(user_path)
 
     # Fix permissions not for links and only if the new type is as expected
@@ -2998,7 +3011,7 @@ def main_update(  # pylint: disable=too-many-branches
     # In case the version_meta is stored in the site and it's the data of the
     # old version we are facing, use these files instead of the files from the
     # version directory. This makes updates possible without the old version.
-    old_perms = site.skel_permissions
+    old_permissions = site.skel_permissions
 
     from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
@@ -3013,7 +3026,7 @@ def main_update(  # pylint: disable=too-many-branches
             to_version,
             from_edition,
             to_edition,
-            old_perms,
+            old_permissions,
         )
 
     # Now handle files present in old but not in new skel files
@@ -3028,7 +3041,7 @@ def main_update(  # pylint: disable=too-many-branches
             to_version,
             from_edition,
             to_edition,
-            old_perms,
+            old_permissions,
         )
 
     # Change symbolic link pointing to new version

@@ -72,7 +72,7 @@ def load_custom_attr(
         return None
 
     if lock:
-        result = load_text_from_file(Path(attr_path, lock=lock))
+        result = load_text_from_file(Path(attr_path), lock=lock)
     else:
         # Simpler operation if no lock is required. Does NOT check file permissions
         # These are only considered critical in case of pickled data

@@ -249,7 +249,7 @@ goto :eof
 :build_check_sql
 if not "%arg_check_sql%" == "1" powershell Write-Host "Skipped Sql Check Build"  -Foreground Yellow & goto :eof
 powershell Write-Host "run:Building Check-SQL..." -Foreground White
-pushd ..\..\packages\check-sql
+pushd ..\..\packages\mk-sql
 call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
 popd

@@ -668,7 +668,7 @@ def _copy_directory(
     tar_stream.seek(0)
 
     with tarfile.TarFile(fileobj=tar_stream) as tar:
-        tar.extractall(str(dest_path))
+        tar.extractall(str(dest_path), filter="data")
 
 
 def _prepare_git_overlay(container: docker.Container, lower_path: str, target_path: str) -> None:

@@ -445,7 +445,7 @@ def build_image(
         name=f"{args.source_path}/check-mk-{args.edition}-{args.version}{suffix}.tar.gz",
         mode="r:gz",
     ) as tar:
-        tar.extractall(tmp_path)
+        tar.extractall(tmp_path, filter="data")
 
     LOG.info("Copy debian package ...")
     run_cmd(cmd=["cp", f"{args.source_path}/{pkg_file}", docker_path])

@@ -29,3 +29,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:2b5952` | `B602`, `B605` | Intended Shell functionaility, should be reviewed for mitigating security layers in the future. |
 | `BNS:f6c1b9` | `B605` | Shell command has been reviewed. |
 | `BNS:bbfc92` | `B701` | The test code in the examples is hard coded and does not currently take in external input. |
+| `BNS:a7d6b8` | `B202` | Bandit is not updated (tarfile check added July 2022) for the changes to tarfile.extractall() filters from python 3.12. |

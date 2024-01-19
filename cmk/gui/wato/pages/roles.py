@@ -365,6 +365,9 @@ class ModeRoleMatrix(WatoMode):
     def title(self) -> str:
         return _("Permission matrix")
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(breadcrumb=breadcrumb, inpage_search=PageMenuSearch())
+
     def page(self) -> None:
         for section in permission_section_registry.get_sorted_sections():
             with table_element(

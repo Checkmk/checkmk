@@ -40,7 +40,8 @@ def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
     assert site.version == "2018.08.11.cee"
 
 
-def test_site_context_replacements() -> None:
+def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     site = SiteContext("dingeling")
 
     assert site.replacements["###SITE###"] == "dingeling"

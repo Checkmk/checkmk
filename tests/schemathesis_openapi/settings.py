@@ -31,11 +31,12 @@ else:
             # "CMK-14375.2",
             "CMK-14381",
             "CMK-TODO",
-            "CMK-14991",
+            # "CMK-14991",
             "CMK-14995",
             "CMK-15035",
             "CMK-15166",
             "CMK-15167",
+            "CMK-15515",
         }
     )
 for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):

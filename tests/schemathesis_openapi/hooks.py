@@ -452,8 +452,19 @@ def hook_after_call(  # pylint: disable=too-many-branches
         status_code=500,
         body={"detail": "The requested pack_id does not exist"},
         set_status_code=404,
-        update_body={"title": "Bad Request", "status": 404},
+        update_body={"title": "Not Found", "status": 404},
         ticket_id="CMK-14991",
+    )
+    fix_response(
+        case,
+        response,
+        method="POST",
+        path="/domain-types/metric/actions/get_custom_graph/invoke",
+        status_code=500,
+        body={"detail": "Cannot find Custom graph with the name .*"},
+        set_status_code=400,
+        update_body={"title": "Not Found", "status": 404},
+        ticket_id="CMK-15515",
     )
 
     # invalid status: 500 instead of 409

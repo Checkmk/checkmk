@@ -801,15 +801,20 @@ def _try_merge(
 
 
 # Compares two files and returns infos wether the file type or contants have changed """
-def file_status(site: SiteContext, source_path: str, target_path: str) -> tuple[bool, bool, bool]:
+def file_status(
+    source_path: str,
+    source_replacements: Replacements,
+    target_path: str,
+    target_replacements: Replacements,
+) -> tuple[bool, bool, bool]:
     source_type = filetype(source_path)
     target_type = filetype(target_path)
 
     if source_type == "file":
-        source_content = file_contents(site, source_path)
+        source_content = file_contents(source_path, source_replacements)
 
     if target_type == "file":
-        target_content = file_contents(site, target_path)
+        target_content = file_contents(target_path, target_replacements)
 
     changed_type = source_type != target_type
     # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
@@ -831,6 +836,7 @@ def _execute_update_file(
     conflict_mode: str,
     old_version: str,
     new_version: str,
+    old_edition: str,
     new_edition: str,
     old_perms: Permissions,
 ) -> None:
@@ -838,7 +844,14 @@ def _execute_update_file(
     while todo:
         try:
             update_file(
-                relpath, site, conflict_mode, old_version, new_version, new_edition, old_perms
+                relpath,
+                site,
+                conflict_mode,
+                old_version,
+                new_version,
+                old_edition,
+                new_edition,
+                old_perms,
             )
             todo = False
         except MKTerminate:
@@ -881,7 +894,8 @@ def update_file(  # pylint: disable=too-many-branches
     conflict_mode: str,
     old_version: str,
     new_version: str,
-    to_edition: str,
+    old_edition: str,
+    new_edition: str,
     old_perms: Permissions,
 ) -> None:
     old_skel = site.version_skel_dir
@@ -900,10 +914,18 @@ def update_file(  # pylint: disable=too-many-branches
             sys.stdout.write(f"{StateMarkers.good} Keeping your   {relpath}\n")
             return
 
-    replacements = site.replacements
-    # omd_version of the site still contains the old version/edition at this point, make sure new
-    # edition is provided
-    replacements["###EDITION###"] = to_edition
+    new_replacements = {
+        **site.replacements,
+        # When calling this during "omd update", the site.version and site.edition still point to
+        # the original edition, because we are still in the update prcedure and the version symlink
+        # has not been changed yet.
+        "###EDITION###": new_edition,
+    }
+
+    old_replacements = {
+        **site.replacements,
+        "###EDITION###": old_edition,
+    }
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -914,13 +936,19 @@ def update_file(  # pylint: disable=too-many-branches
     user_type = filetype(user_path)
 
     # compare our new version with the user's version
-    _type_differs, _content_differs, differs = file_status(site, user_path, new_path)
+    _type_differs, _content_differs, differs = file_status(
+        user_path, new_replacements, new_path, new_replacements
+    )
 
     # compare our old version with the user's version
-    user_changed_type, user_changed_content, user_changed = file_status(site, old_path, user_path)
+    user_changed_type, user_changed_content, user_changed = file_status(
+        old_path, old_replacements, user_path, old_replacements
+    )
 
     # compare our old with our new version
-    _we_changed_type, _we_changed_content, we_changed = file_status(site, old_path, new_path)
+    _we_changed_type, _we_changed_content, we_changed = file_status(
+        old_path, old_replacements, new_path, new_replacements
+    )
 
     non_empty_directory = (
         not os.path.islink(user_path) and os.path.isdir(user_path) and bool(os.listdir(user_path))
@@ -941,7 +969,7 @@ def update_file(  # pylint: disable=too-many-branches
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
-        create_skeleton_file(new_skel, site.dir, relpath, replacements)
+        create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
         sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/directory/link
@@ -968,7 +996,7 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, replacements)
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
             sys.stdout.write(StateMarkers.good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 3) old version had a file which has vanished in new (got obsolete). If the user
@@ -1064,7 +1092,7 @@ def update_file(  # pylint: disable=too-many-branches
 
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
-        create_skeleton_file(new_skel, site.dir, relpath, replacements)
+        create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
         sys.stdout.write(StateMarkers.good + " Updated        %s\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action necessary
@@ -1140,7 +1168,7 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your version of %s\n" % fn)
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, replacements)
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Replaced your {user_type} {relpath} by new default {new_type}.\n"
@@ -1165,7 +1193,7 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, replacements)
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
@@ -1190,7 +1218,7 @@ def update_file(  # pylint: disable=too-many-branches
         ):
             sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
-            create_skeleton_file(new_skel, site.dir, relpath, replacements)
+            create_skeleton_file(new_skel, site.dir, relpath, new_replacements)
             sys.stdout.write(
                 StateMarkers.warn
                 + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
@@ -1335,19 +1363,19 @@ def filetype(p: str) -> str | None:
     return "file"
 
 
-def file_contents(site: SiteContext, path: str) -> bytes:
+def file_contents(path: str, replacements: Replacements) -> bytes:
     """Returns the file contents of a site file or a skel file"""
     if "/skel/" in path and not _is_unpatchable_file(path):
-        return _instantiate_skel(site, path)
+        return _instantiate_skel(path, replacements)
 
     with open(path, "rb") as f:
         return f.read()
 
 
-def _instantiate_skel(site: SiteContext, path: str) -> bytes:
+def _instantiate_skel(path: str, replacements: Replacements) -> bytes:
     try:
         with open(path, "rb") as f:
-            return replace_tags(f.read(), site.replacements)
+            return replace_tags(f.read(), replacements)
     except Exception:
         # TODO: This is a bad exception handler. Drop it
         return b""  # e.g. due to permission error
@@ -2710,7 +2738,9 @@ def print_diff(
     source_type = filetype(source_file)
     target_type = filetype(target_file)
 
-    changed_type, changed_content, changed = file_status(site, source_file, target_file)
+    changed_type, changed_content, changed = file_status(
+        source_file, site.replacements, target_file, site.replacements
+    )
 
     if not changed:
         return
@@ -2726,7 +2756,7 @@ def print_diff(
         else:
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
-                source_content = file_contents(site, source_file)
+                source_content = file_contents(source_file, site.replacements)
                 if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B605 # BNS:2b5952
                     diff = "colordiff"
                 else:
@@ -2949,7 +2979,14 @@ def main_update(  # pylint: disable=too-many-branches
     # First walk through skeleton files of new version
     for relpath in walk_skel(to_skelroot, conflict_mode=conflict_mode, depth_first=False):
         _execute_update_file(
-            relpath, site, conflict_mode, from_version, to_version, to_edition, old_perms
+            relpath,
+            site,
+            conflict_mode,
+            from_version,
+            to_version,
+            from_edition,
+            to_edition,
+            old_perms,
         )
 
     # Now handle files present in old but not in new skel files
@@ -2957,7 +2994,14 @@ def main_update(  # pylint: disable=too-many-branches
         from_skelroot, conflict_mode=conflict_mode, depth_first=True, exclude_if_in=to_skelroot
     ):
         _execute_update_file(
-            relpath, site, conflict_mode, from_version, to_version, to_edition, old_perms
+            relpath,
+            site,
+            conflict_mode,
+            from_version,
+            to_version,
+            from_edition,
+            to_edition,
+            old_perms,
         )
 
     # Change symbolic link pointing to new version

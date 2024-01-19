@@ -45,9 +45,9 @@ from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
     CheckboxPushoverSound,
     CheckboxSortOrder,
     CheckboxSysLogFacility,
+    CheckboxTrueOrNone,
     CheckboxURLPrefix,
     CheckboxUseSiteIDPrefix,
-    CheckboxWithBoolValue,
     CheckboxWithIntValue,
     CheckboxWithListOfStrValues,
     CheckboxWithStrValue,
@@ -91,8 +91,8 @@ class AsciiMailPlugin:
     subject_for_service_notifications: CheckboxWithStrValue = field(
         default_factory=CheckboxWithStrValue
     )
-    send_separate_notification_to_every_recipient: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
+    send_separate_notification_to_every_recipient: CheckboxTrueOrNone = field(
+        default_factory=CheckboxTrueOrNone
     )
     sort_order_for_bulk_notificaions: CheckboxSortOrder = field(default_factory=CheckboxSortOrder)
     body_head_for_both_host_and_service_notifications: CheckboxWithStrValue = field(
@@ -132,7 +132,7 @@ class AsciiMailPlugin:
             sort_order_for_bulk_notificaions=CheckboxSortOrder.from_mk_file_format(
                 pluginparams.get("bulk_sort_order")
             ),
-            send_separate_notification_to_every_recipient=CheckboxWithBoolValue.from_mk_file_format(
+            send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("disable_multiplexing"),
             ),
         )
@@ -154,7 +154,7 @@ class AsciiMailPlugin:
             subject_for_service_notifications=CheckboxWithStrValue.from_api_request(
                 params["subject_for_service_notifications"]
             ),
-            send_separate_notification_to_every_recipient=CheckboxWithBoolValue.from_api_request(
+            send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_api_request(
                 params["send_separate_notification_to_every_recipient"]
             ),
             sort_order_for_bulk_notificaions=CheckboxSortOrder.from_api_request(
@@ -223,8 +223,8 @@ class HTMLMailPlugin:
     subject_for_service_notifications: CheckboxWithStrValue = field(
         default_factory=CheckboxWithStrValue,
     )
-    send_separate_notification_to_every_recipient: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue,
+    send_separate_notification_to_every_recipient: CheckboxTrueOrNone = field(
+        default_factory=CheckboxTrueOrNone,
     )
     sort_order_for_bulk_notificaions: CheckboxSortOrder = field(
         default_factory=CheckboxSortOrder,
@@ -238,8 +238,8 @@ class HTMLMailPlugin:
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(
         default_factory=CheckboxURLPrefix,
     )
-    no_floating_graphs: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue,
+    no_floating_graphs: CheckboxTrueOrNone = field(
+        default_factory=CheckboxTrueOrNone,
     )
     smtp: EnableSyncDeliveryViaSMTP = field(
         default_factory=EnableSyncDeliveryViaSMTP,
@@ -282,13 +282,13 @@ class HTMLMailPlugin:
             sort_order_for_bulk_notificaions=CheckboxSortOrder.from_mk_file_format(
                 pluginparams.get("bulk_sort_order"),
             ),
-            send_separate_notification_to_every_recipient=CheckboxWithBoolValue.from_mk_file_format(
+            send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("disable_multiplexing"),
             ),
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix"),
             ),
-            no_floating_graphs=CheckboxWithBoolValue.from_mk_file_format(
+            no_floating_graphs=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("no_floating_graphs"),
             ),
             graphs_per_notification=CheckboxWithIntValue.from_mk_file_format(
@@ -316,7 +316,7 @@ class HTMLMailPlugin:
             subject_for_service_notifications=CheckboxWithStrValue.from_api_request(
                 params["subject_for_service_notifications"]
             ),
-            send_separate_notification_to_every_recipient=CheckboxWithBoolValue.from_api_request(
+            send_separate_notification_to_every_recipient=CheckboxTrueOrNone.from_api_request(
                 params["send_separate_notification_to_every_recipient"]
             ),
             sort_order_for_bulk_notificaions=CheckboxSortOrder.from_api_request(
@@ -331,7 +331,7 @@ class HTMLMailPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
-            no_floating_graphs=CheckboxWithBoolValue.from_api_request(
+            no_floating_graphs=CheckboxTrueOrNone.from_api_request(
                 params["display_graphs_among_each_other"]
             ),
             smtp=EnableSyncDeliveryViaSMTP.from_api_request(params["enable_sync_smtp"]),
@@ -394,9 +394,7 @@ class CiscoWebexPlugin:
     webhook_url: WebhookURLOption = field(default_factory=WebhookURLOption)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
 
     @classmethod
     def from_mk_file_format(cls, pluginparams: NotifyPluginParams | None) -> CiscoWebexPlugin:
@@ -411,7 +409,7 @@ class CiscoWebexPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix"),
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl")
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(pluginparams.get("proxy_url")),
@@ -431,7 +429,7 @@ class CiscoWebexPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
         )
@@ -529,9 +527,7 @@ class IlertPlugin:
     plugin_name: ClassVar[Literal["ilert"]] = "ilert"
     option: PluginOptions = PluginOptions.CANCEL
     ilert_key: APIIlertKeyOption = field(default_factory=APIIlertKeyOption)
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     ilert_priority: Literal["HIGH", "LOW"] = "HIGH"
     ilert_summary_host: str = ""
     ilert_summary_service: str = ""
@@ -546,7 +542,7 @@ class IlertPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             ilert_key=APIIlertKeyOption.from_mk_file_format(pluginparams["ilert_api_key"]),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl")
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(pluginparams.get("proxy_url")),
@@ -568,7 +564,7 @@ class IlertPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             ilert_key=APIIlertKeyOption.from_api_request(params["api_key"]),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             ilert_priority=params["notification_priority"],
@@ -617,9 +613,7 @@ class JiraIssuePlugin:
     plugin_name: ClassVar[Literal["jira_issues"]] = "jira_issues"
     option: PluginOptions = PluginOptions.CANCEL
     url: str | None = None
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     username: str | None = None
     password: str | None = None
     project_id: str | None = None
@@ -646,7 +640,7 @@ class JiraIssuePlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             url=pluginparams["url"],
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
             username=pluginparams["username"],
@@ -689,7 +683,7 @@ class JiraIssuePlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             url=params["jira_url"],
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             username=params["username"],
@@ -921,9 +915,7 @@ class PagerDutyPlugin:
     plugin_name: ClassVar[Literal["pagerduty"]] = "pagerduty"
     option: PluginOptions = PluginOptions.CANCEL
     integration_key: APIPagerDutyKeyOption = field(default_factory=APIPagerDutyKeyOption)
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
     webhook_url: Literal[
@@ -938,7 +930,7 @@ class PagerDutyPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             integration_key=APIPagerDutyKeyOption.from_mk_file_format(pluginparams["routing_key"]),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -959,7 +951,7 @@ class PagerDutyPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             integration_key=APIPagerDutyKeyOption.from_api_request(params["integration_key"]),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
@@ -1171,9 +1163,7 @@ class SignL4Plugin:
     option: PluginOptions = PluginOptions.CANCEL
     team_secret: APISignL4SecretOption = field(default_factory=APISignL4SecretOption)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
 
     @classmethod
@@ -1190,7 +1180,7 @@ class SignL4Plugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix")
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl")
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -1211,7 +1201,7 @@ class SignL4Plugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
@@ -1249,9 +1239,7 @@ class SlackPlugin:
     option: PluginOptions = PluginOptions.CANCEL
     webhook_url: WebhookURLOption = field(default_factory=WebhookURLOption)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
 
     @classmethod
@@ -1267,7 +1255,7 @@ class SlackPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix"),
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -1288,7 +1276,7 @@ class SlackPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
@@ -1326,9 +1314,7 @@ class SMSAPIPlugin:
     option: PluginOptions = PluginOptions.CANCEL
     modem_type: Literal["trb140"] = "trb140"  # Teltonika-TRB140
     modem_url: str | None = None
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     username: str | None = None
     user_password: APIPasswordOption = field(default_factory=APIPasswordOption)
@@ -1342,7 +1328,7 @@ class SMSAPIPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             modem_url=pluginparams.get("url"),
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -1363,7 +1349,7 @@ class SMSAPIPlugin:
         return cls(
             option=PluginOptions.WITH_PARAMS,
             modem_url=params["modem_url"],
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
@@ -1509,9 +1495,7 @@ class SpectrumPlugin:
 class VictoropsPlugin:
     plugin_name: ClassVar[Literal["victorops"]] = "victorops"
     option: PluginOptions = PluginOptions.CANCEL
-    disable_ssl_cert_verification: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue
-    )
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
     splunk_on_call_rest_endpoint: WebhookURLOption = field(default_factory=WebhookURLOption)
@@ -1523,7 +1507,7 @@ class VictoropsPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_mk_file_format(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl")
             ),
             http_proxy=CheckboxHttpProxy.from_mk_file_format(
@@ -1546,7 +1530,7 @@ class VictoropsPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            disable_ssl_cert_verification=CheckboxWithBoolValue.from_api_request(
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
@@ -1612,8 +1596,8 @@ class MsTeamsPlugin:
     service_details: CheckboxWithStrValue = field(
         default_factory=CheckboxWithStrValue,
     )
-    show_affected_host_groups: CheckboxWithBoolValue = field(
-        default_factory=CheckboxWithBoolValue,
+    show_affected_host_groups: CheckboxTrueOrNone = field(
+        default_factory=CheckboxTrueOrNone,
     )
 
     @classmethod
@@ -1650,7 +1634,7 @@ class MsTeamsPlugin:
             service_details=CheckboxWithStrValue.from_mk_file_format(
                 pluginparams.get("service_details"),
             ),
-            show_affected_host_groups=CheckboxWithBoolValue.from_mk_file_format(
+            show_affected_host_groups=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("affected_host_groups"),
             ),
         )
@@ -1675,7 +1659,7 @@ class MsTeamsPlugin:
             ),
             host_details=CheckboxWithStrValue.from_api_request(params["host_details"]),
             service_details=CheckboxWithStrValue.from_api_request(params["service_details"]),
-            show_affected_host_groups=CheckboxWithBoolValue.from_api_request(
+            show_affected_host_groups=CheckboxTrueOrNone.from_api_request(
                 params["affected_host_groups"]
             ),
         )

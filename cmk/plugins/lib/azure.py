@@ -10,7 +10,8 @@ from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v2 import check_levels_fixed, IgnoreResultsError, render, Service
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import IgnoreResultsError, render, Service
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 AZURE_AGENT_SEPARATOR = "|"
@@ -247,7 +248,7 @@ def check_resource_metrics(
         if not metric:
             continue
 
-        yield from check_levels_fixed(
+        yield from check_levels(
             metric.value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),

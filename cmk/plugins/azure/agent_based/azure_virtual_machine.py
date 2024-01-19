@@ -7,9 +7,9 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    AgentSection,
     CheckPlugin,
     get_value_store,
     IgnoreResultsError,

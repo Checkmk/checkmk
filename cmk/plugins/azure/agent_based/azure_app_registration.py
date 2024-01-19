@@ -9,9 +9,8 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
-from cmk.agent_based.v2 import CheckPlugin, render, Result, Service, State
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.azure import parse_azure_datetime
 

@@ -7,9 +7,9 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection
-from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    AgentSection,
     CheckPlugin,
     IgnoreResultsError,
     Metric,

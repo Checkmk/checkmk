@@ -51,8 +51,6 @@ def test_v2() -> None:
         "all_of",
         "any_of",
         "check_levels",
-        "check_levels_fixed",
-        "check_levels_predictive",
         "clusterize",
         "contains",
         "endswith",

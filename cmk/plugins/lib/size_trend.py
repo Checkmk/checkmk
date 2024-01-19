@@ -7,7 +7,8 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels_fixed, get_average, get_rate, Metric, render
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import get_average, get_rate, Metric, render
 from cmk.agent_based.v2.type_defs import CheckResult
 
 Levels = tuple[float, float]
@@ -102,7 +103,7 @@ def size_trend(
         yield Metric("growth", mb_per_sec * SEC_PER_D)  # MB / day
 
     # apply levels for absolute growth in MB / interval
-    yield from check_levels_fixed(
+    yield from check_levels(
         mb_in_range * MB,
         levels_upper=levels.get("trend_bytes"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
@@ -111,7 +112,7 @@ def size_trend(
     )
 
     # apply levels for percentual growth in % / interval
-    yield from check_levels_fixed(
+    yield from check_levels(
         mb_in_range * 100 / size_mb,
         levels_upper=levels.get("trend_perc"),
         levels_lower=_reverse_level_signs(levels.get("trend_shrinking_perc")),
@@ -142,7 +143,7 @@ def size_trend(
         )
 
     if mb_in_range > 0:
-        yield from check_levels_fixed(
+        yield from check_levels(
             # CMK-13217: size_mb - used_mb < 0: the device reported nonsense, resulting in a crash:
             # ValueError("Cannot render negative timespan")
             max(

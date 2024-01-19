@@ -7,7 +7,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels_fixed, CheckPlugin, Service, SimpleSNMPSection, SNMPTree
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckPlugin, Service, SimpleSNMPSection, SNMPTree
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.arbor import DETECT_PEAKFLOW_SP, DETECT_PEAKFLOW_TMS, DETECT_PRAVAIL
 
@@ -64,13 +65,13 @@ def discover_arbor_memory(section: Section) -> DiscoveryResult:
 
 
 def check_arbor_memory(params: Mapping[str, Any], section: Section) -> CheckResult:
-    yield from check_levels_fixed(
+    yield from check_levels(
         section.ram,
         metric_name="mem_used_percent",
         levels_upper=params["levels_ram"][1],
         label="Used RAM",
     )
-    yield from check_levels_fixed(
+    yield from check_levels(
         section.swap,
         metric_name="swap_used_percent",
         levels_upper=params["levels_swap"][1],

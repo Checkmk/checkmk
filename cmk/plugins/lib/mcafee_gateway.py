@@ -7,16 +7,8 @@ import dataclasses
 import datetime
 import typing
 
-from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
-    contains,
-    get_rate,
-    GetRateError,
-    Result,
-    State,
-    type_defs,
-)
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v2 import contains, get_rate, GetRateError, Result, State, type_defs
 
 DETECT_EMAIL_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway")
 DETECT_WEB_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")
@@ -93,7 +85,7 @@ def compute_rate(
             label=label,
         )
     else:
-        yield from check_levels_fixed(
+        yield from check_levels(
             rate,
             metric_name=metric_name,
             levels_upper=levels,

@@ -1,0 +1,17 @@
+Title: Fix error on update if LDAP connection ID contains spaces
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1705650557
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+With werk #15815 LDAP connection IDs are validated and rewritten if they
+contain spaces (possible in 2.1).
+
+Such connection IDs resultet in sync_time files in the web dir, also containing
+spaces and lead to an error on user ID validation if you update from 2.1
+to 2.2.
+
+This files are now also renamed during the update.

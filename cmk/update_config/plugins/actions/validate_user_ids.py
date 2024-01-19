@@ -62,7 +62,8 @@ update_action_registry.register(
     ValidateUserIds(
         name="validate_user_ids",
         title="Validate user IDs",
-        # Run this validation before any plugin that deals with UserIds, as those would encounter
+        # Run this validation after LDAP sync time file renaming and before any
+        # plugin that deals with UserIds, as those would encounter
         # unexpected errors when UserIds cannot be created.
         # Currently the next to run is UpdateViews, which uses UserIds as view owners.
         sort_index=5,

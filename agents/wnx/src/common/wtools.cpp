@@ -2721,14 +2721,19 @@ void ProtectPathFromUserWrite(const fs::path &path,
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
 
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c",
+                    path.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(std::wstring{t}, path.wstring());
-        commands.emplace_back(cmd);
+    for (auto const t : commands) {
+        commands.emplace_back(t);
     }
     XLOG::l.i("Protect path from User write '{}'", path);
 }
@@ -2739,32 +2744,29 @@ void ProtectFileFromUserWrite(const fs::path &path,
     // folder "programdata/checkmk" we must remove inherited write rights
     // for Users in checkmk root data folder.
 
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user
-                                                      // rights
-        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", path.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", path.wstring()));
+    // read/exec
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c", path.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), path.wstring());
-        commands.emplace_back(cmd);
-    }
     XLOG::l.i("Protect file from User write '{}'", path);
 }
 
 void ProtectPathFromUserAccess(const fs::path &entry,
                                std::vector<std::wstring> &commands) {
     // CONTEXT: some files must be protected from the user fully
-    constexpr std::wstring_view command_templates[] = {
-        L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
-        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user
-                                                     // rights
-    };
+    // disable inheritance
+    commands.emplace_back(
+        fmt::format(L"icacls \"{}\" /inheritance:d /c", entry.wstring()));
+    // remove all user rights
+    commands.emplace_back(fmt::format(
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c", entry.wstring()));
 
-    for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), entry.wstring());
-        commands.emplace_back(cmd);
-    }
     XLOG::l.i("Protect path from User access '{}'", entry);
 }
 

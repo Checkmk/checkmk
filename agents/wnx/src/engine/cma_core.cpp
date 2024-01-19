@@ -1605,16 +1605,15 @@ std::wstring LocatePs1Proxy() {
                : L"";
 }
 
-std::wstring MakePowershellWrapper() noexcept {
+std::wstring MakePowershellWrapper(const fs::path &script) noexcept {
     try {
         const auto powershell_exe = FindPowershellExe();
         auto proxy = LocatePs1Proxy();
 
         return powershell_exe +
                fmt::format(
-                   L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File{}",
-                   proxy) +
-               L" \"{}\"";
+                   L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File{} \"{}\"",
+                   proxy, script.wstring());
     } catch (const std::exception &e) {
         XLOG::l("Exception when finding powershell e:{}", e);
         return L"";

@@ -157,11 +157,39 @@ class CheckboxWithBoolValue:
         r: CheckboxStateType = {"state": state}
         return r
 
-    def to_mk_file_format(self) -> bool | None:
+    def to_mk_file_format(self) -> bool:
         return self.value
 
 
 # ----------------------------------------------------------------
+@dataclass
+class CheckboxTrueOrNone:
+    value: Literal[True] | None = None
+
+    @classmethod
+    def from_mk_file_format(cls, data: Literal[True] | None) -> CheckboxTrueOrNone:
+        if data is None:
+            return cls()
+        return cls(value=data)
+
+    @classmethod
+    def from_api_request(cls, data: CheckboxStateType) -> CheckboxTrueOrNone:
+        if data["state"] == "disabled":
+            return cls()
+        return cls(value=True)
+
+    def api_response(self) -> CheckboxStateType:
+        state: CheckboxState = "disabled" if not self.value else "enabled"
+        r: CheckboxStateType = {"state": state}
+        return r
+
+    def to_mk_file_format(self) -> Literal[True] | None:
+        return self.value
+
+
+# ----------------------------------------------------------------
+
+
 class CheckboxIntAPIType(CheckboxStateType, total=False):
     value: int
 

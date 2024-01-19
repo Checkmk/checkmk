@@ -3,18 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+from pathlib import Path
 
-import omdlib.main
-import omdlib.skel_permissions
+from omdlib.skel_permissions import load_skel_permissions_from
 
 
-def test_read_skel_permissions(monkeypatch, tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_load_skel_permissions_from(tmp_path: Path) -> None:
     pfile = tmp_path / "skel.permissions"
     pfile.open("w", encoding="utf-8").write("bla 755\nblub 644\n")
-
-    monkeypatch.setattr(
-        omdlib.skel_permissions, "skel_permissions_file_path", lambda v: "%s" % (pfile)
-    )
-
-    assert omdlib.main.read_skel_permissions() == {"bla": 493, "blub": 420}
+    assert load_skel_permissions_from(str(pfile)) == {"bla": 493, "blub": 420}

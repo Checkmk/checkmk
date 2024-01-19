@@ -5,7 +5,7 @@
 mod common;
 use std::{collections::HashSet, fs::create_dir_all};
 
-use check_sql::ms_sql::{
+use mk_sql::ms_sql::{
     client::{self, Client},
     instance::{self, SqlInstance, SqlInstanceBuilder},
     query,
@@ -13,15 +13,15 @@ use check_sql::ms_sql::{
     sqls::{self, find_known_query},
 };
 
-use check_sql::setup::Env;
+use mk_sql::setup::Env;
 
-use check_sql::config::{
+use common::tools::{self, SqlDbEndpoint};
+use mk_sql::config::{
     ms_sql::{Config, Endpoint},
     section::names,
     section::SectionBuilder,
     CheckConfig,
 };
-use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
 
 fn expected_instances() -> Vec<String> {
@@ -65,7 +65,7 @@ fn test_section_select_query() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    let mut client = client::create_local(None, check_sql::ms_sql::defaults::STANDARD_PORT)
+    let mut client = client::create_local(None, mk_sql::ms_sql::defaults::STANDARD_PORT)
         .await
         .unwrap();
     let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
@@ -774,10 +774,9 @@ fn make_local_custom_instances_config_sub_string() -> String {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_no_detect_local() {
     // no detect - no instances
-    let mssql =
-        check_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
-            .unwrap()
-            .unwrap();
+    let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
+        .unwrap()
+        .unwrap();
     let instances = instance::find_all_instance_builders(&mssql).await.unwrap();
     assert_eq!(instances.len(), 0);
 }
@@ -786,7 +785,7 @@ async fn test_find_no_detect_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_no_detect_two_custom_instances_local() {
-    let mssql = check_sql::config::ms_sql::Config::from_string(&make_local_config_string(
+    let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string(
         &make_local_custom_instances_config_sub_string(),
         false,
     ))
@@ -806,7 +805,7 @@ async fn test_find_no_detect_two_custom_instances_local() {
 async fn test_find_no_detect_remote() {
     // no detect - no instances
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mssql = check_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
+        let mssql = mk_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
             &endpoint.user,
             &endpoint.pwd,
             &endpoint.host,
@@ -827,7 +826,7 @@ async fn test_find_no_detect_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_no_detect_two_custom_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mssql = check_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
+        let mssql = mk_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
             &endpoint.user,
             &endpoint.pwd,
             &endpoint.host,
@@ -949,7 +948,7 @@ fn test_check_log_file() {
         .unwrap_err();
     let (stderr, code) = tools::get_bad_results(&output).unwrap();
     assert!(
-        log_dir_path.join("check-sql_rCURRENT.log").exists(),
+        log_dir_path.join("mk-sql_rCURRENT.log").exists(),
         "{:?}\n{:?}",
         stderr,
         code
@@ -1093,8 +1092,8 @@ async fn test_check_config_exec_piggyback_remote() {
     let dir = tools::create_temp_process_dir();
     let content =
         create_remote_config_with_piggyback(tools::get_remote_sql_from_env_var().unwrap());
-    tools::create_file_with_content(dir.path(), "check-sql.yml", &content);
-    let check_config = CheckConfig::load_file(&dir.path().join("check-sql.yml")).unwrap();
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
     let output = check_config.exec(&Env::default()).await.unwrap();
     assert!(!output.is_empty());
 }
@@ -1136,7 +1135,7 @@ mssql:
 }
 
 fn update_config_in_dir(dir: &TempDir, content: &str) {
-    tools::create_file_with_content(dir.path(), "check-sql.yml", content);
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", content);
 }
 
 fn expected_databases() -> HashSet<String> {
@@ -1150,7 +1149,7 @@ fn expected_databases() -> HashSet<String> {
 async fn test_check_config_custom() {
     let dir = tools::create_temp_process_dir();
     let content = create_remote_config_custom(tools::get_remote_sql_from_env_var().unwrap());
-    let config = tools::create_file_with_content(dir.path(), "check-sql.yml", &content);
+    let config = tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
     let sql_dir = dir.path().join("mssql");
     create_dir_all(&sql_dir).unwrap();
     tools::create_file_with_content(

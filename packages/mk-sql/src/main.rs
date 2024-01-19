@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 use anyhow::Result;
-use check_sql::setup;
+use mk_sql::setup;
 
 #[tokio::main]
 async fn main() -> Result<()> {

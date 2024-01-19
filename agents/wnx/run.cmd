@@ -63,8 +63,8 @@ if "%~1"=="--msi"           (set arg_msi=1)          & shift & goto CheckOpts
 if "%~1"=="-O"              (set arg_ohm=1)          & shift & goto CheckOpts
 if "%~1"=="--ohm"           (set arg_ohm=1)          & shift & goto CheckOpts
 
-if "%~1"=="-Q"              (set arg_check_sql=1)   & shift & goto CheckOpts
-if "%~1"=="--check-sql"     (set arg_check_sql=1)   & shift & goto CheckOpts
+if "%~1"=="-Q"              (set arg_mk_sql=1)       & shift & goto CheckOpts
+if "%~1"=="--mk-sql"        (set arg_mk_sql=1)       & shift & goto CheckOpts
 
 if "%~1"=="-E"              (set arg_ext=1)          & shift & goto CheckOpts
 if "%~1"=="--extensions"    (set arg_ext=1)          & shift & goto CheckOpts
@@ -81,7 +81,7 @@ if "%~1"=="--var"           (set arg_var_name=%~2) & (set arg_var_value=%~3) & s
 
 if "%~1"=="--sign"          (set arg_detach=1) & (set arg_sign_file=%~2) & (set arg_sign_secret=%~3)  & (set arg_sign=1) & shift & shift & shift & goto CheckOpts
 )
-if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_check_sql=1) & (set arg_ext=1) & (set arg_msi=1)
+if "%arg_all%"=="1" (set arg_ctl=1) & (set arg_build=1) & (set arg_test=1) & (set arg_setup=1) & (set arg_ohm=1) & (set arg_mk_sql=1) & (set arg_ext=1) & (set arg_msi=1)
 
 @echo logonserver: "%LOGONSERVER%" user: "%USERNAME%"
 
@@ -120,8 +120,8 @@ call :unit_test  || call :halt 81
 :: arg_ctl
 call :build_agent_controller || call :halt 81
 
-:: arg_check_sql
-call :build_check_sql || call :halt 81
+:: arg_mk_sql
+call :build_mk_sql || call :halt 81
 
 :: arg_ohm
 call :build_ohm  || call :halt 81
@@ -246,9 +246,9 @@ if not %errorlevel% == 0 powershell Write-Host "Failed Controller Build" -Foregr
 popd
 goto :eof
 
-:build_check_sql
-if not "%arg_check_sql%" == "1" powershell Write-Host "Skipped Sql Check Build"  -Foreground Yellow & goto :eof
-powershell Write-Host "run:Building Check-SQL..." -Foreground White
+:build_mk_sql
+if not "%arg_mk_sql%" == "1" powershell Write-Host "Skipped Sql Check Build"  -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building MK-SQL..." -Foreground White
 pushd ..\..\packages\mk-sql
 call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Sql Check Build" -Foreground Red && popd & call :halt 74
@@ -319,7 +319,7 @@ powershell Write-Host "Signing Executables" -Foreground White
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
 @call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
-@call scripts\sign_code.cmd %arte%\check-sql.exe %hash_file%
+@call scripts\sign_code.cmd %arte%\mk-sql.exe %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
 goto :eof

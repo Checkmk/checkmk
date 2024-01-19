@@ -173,25 +173,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "check-sql"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "flexi_logger",
- "futures",
- "lazy_static",
- "log",
- "openssl",
- "tempfile",
- "tiberius",
- "tokio",
- "tokio-util",
- "yaml-rust",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -678,6 +659,25 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "mk-sql"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "assert_cmd",
+ "clap",
+ "flexi_logger",
+ "futures",
+ "lazy_static",
+ "log",
+ "openssl",
+ "tempfile",
+ "tiberius",
+ "tokio",
+ "tokio-util",
+ "yaml-rust",
 ]
 
 [[package]]

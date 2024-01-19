@@ -137,7 +137,7 @@ VARIABLES:
     - NAME: CHANGED_CHECK_HTTP_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
 
-    - NAME: CHANGED_CHECK_SQL_FILES
+    - NAME: CHANGED_MK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/' || true"
 
     - NAME: CHANGED_CMC_FILES
@@ -419,14 +419,14 @@ STAGES:
       TEXT_ON_SKIP: 'No check-http files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 
-    - NAME: 'Package check-sql'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_SQL_FILES
+    - NAME: 'Package mk-sql'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_MK_SQL_FILES
       SEC_VAR_LIST:
         - 'CI_TEST_SQL_DB_ENDPOINT'
       DIR: 'packages/mk-sql'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-sql.txt"
-      TEXT_ON_SKIP: 'No check-sql files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/check-sql.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
+      TEXT_ON_SKIP: 'No mk-sql files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 
     # NOTE: This has to come *before* the neb & cmc packages, as they depend on
     # livestatus. Their run scripts rebuild livestatus, "eating away" compiler

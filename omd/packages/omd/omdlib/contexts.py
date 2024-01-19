@@ -18,7 +18,7 @@ from omdlib.type_defs import Config, Replacements
 from omdlib.utils import is_containerized
 
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.version import edition
+from cmk.utils.version import Edition
 
 
 class AbstractSiteContext(abc.ABC):
@@ -128,10 +128,13 @@ class SiteContext(AbstractSiteContext):
     @property
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
+        version = self.version
+        if version is None:
+            raise RuntimeError("Failed to determine site version")
         return {
             "###SITE###": self.name,
             "###ROOT###": self.dir,
-            "###EDITION###": edition().long,
+            "###EDITION###": Edition[version.split(".")[-1].upper()].long,
         }
 
     def load_config(self, defaults: dict[str, str]) -> None:

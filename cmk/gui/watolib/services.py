@@ -101,7 +101,7 @@ class DiscoveryAction(enum.StrEnum):
 
     >>> import json
     >>> [json.dumps(a) for a in DiscoveryAction]
-    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"']
+    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"', '"update_service_labels"', '"single_update_service_labels"']
     """
 
     NONE = ""  # corresponds to Full Scan in WATO
@@ -114,6 +114,7 @@ class DiscoveryAction(enum.StrEnum):
     UPDATE_HOST_LABELS = "update_host_labels"
     UPDATE_SERVICES = "update_services"
     UPDATE_SERVICE_LABELS = "update_service_labels"
+    SINGLE_UPDATE_SERVICE_LABELS = "single_update_service_labels"
 
 
 class UpdateType(enum.Enum):
@@ -280,7 +281,11 @@ class Discovery:
                         entry.description,
                         entry.old_discovered_parameters,
                         entry.new_labels
-                        if self._action == DiscoveryAction.UPDATE_SERVICE_LABELS
+                        if self._action
+                        in [
+                            DiscoveryAction.UPDATE_SERVICE_LABELS,
+                            DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
+                        ]
                         else entry.old_labels,
                         entry.found_on_nodes,
                     )
@@ -377,7 +382,10 @@ class Discovery:
             if (entry.check_plugin_name, entry.item) in self._selected_services:
                 return self._update_target
 
-        if self._action == DiscoveryAction.SINGLE_UPDATE:
+        if self._action in [
+            DiscoveryAction.SINGLE_UPDATE,
+            DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
+        ]:
             if (entry.check_plugin_name, entry.item) in self._selected_services:
                 return self._update_target
 
@@ -481,7 +489,7 @@ def has_discovery_action_specific_permissions(
             )
         case DiscoveryAction.REFRESH:
             return user.may("wato.services")
-        case DiscoveryAction.SINGLE_UPDATE:
+        case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS:
             if update_target is None:
                 # This should never happen.
                 # The typing possibilities are currently so limited that I don't see a better solution.

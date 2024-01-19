@@ -21,6 +21,9 @@ logger = logging.getLogger("cmk.prediction")
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
 
 
+_DAY = 86400
+
+
 class MetricRecord(Protocol):
     @property
     def window(self) -> range:
@@ -66,6 +69,12 @@ class PredictionStore:
     DATA_FILE_SUFFIX = ""
     INFO_FILE_SUFFIX = ".info"
     NAME_TEMPLATE = "{meta.metric}/{meta.params.period}-{meta.valid_interval[0]}-{meta.direction}"
+    RETENTION = {
+        "wday": 7 * _DAY,
+        "day": 31 * _DAY,
+        "hour": 3 * _DAY,
+        "minute": 3 * _DAY,
+    }
 
     def __init__(
         self,
@@ -103,6 +112,14 @@ class PredictionStore:
 
     def iter_all_metadata_files(self) -> Iterable[Path]:
         return self.path.rglob(f"*{self.INFO_FILE_SUFFIX}")
+
+    def remove_outdated_predictions(self, now: float) -> None:
+        for info_path in self.iter_all_metadata_files():
+            period, start_time_str = info_path.name.split("-")[:2]
+
+            if (now - float(start_time_str)) > self.RETENTION[period]:
+                info_path.unlink(missing_ok=True)
+                info_path.with_suffix(self.DATA_FILE_SUFFIX).unlink(missing_ok=True)
 
     def iter_all_valid_predictions(
         self, now: float

@@ -409,6 +409,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 | DiscoveryAction.BULK_UPDATE
                 | DiscoveryAction.UPDATE_SERVICES
                 | DiscoveryAction.UPDATE_SERVICE_LABELS
+                | DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS
             ):
                 discovery_result = perform_service_discovery(
                     action=action,

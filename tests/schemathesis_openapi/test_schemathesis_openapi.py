@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from typing import Any
 
 import pytest
 from hypothesis import given, strategies
@@ -35,14 +34,13 @@ def test_openapi_stateful():
     run_state_machine_test(schema)
 
 
-@pytest.mark.skip(reason="Currently fails due to TypeError. See CMK-15469.")
 @pytest.mark.type("schemathesis_openapi")
 @given(data=strategies.data())
 @pytest.mark.parametrize(
     "endpoint", **parametrize_crud_endpoints(schema, ignore="site_connection|rule")
 )
 def test_openapi_crud(
-    data: Any,
+    data: strategies.SearchStrategy,
     endpoint: dict[str, str],
 ) -> None:
     """Run schemathesis based CRUD testing."""

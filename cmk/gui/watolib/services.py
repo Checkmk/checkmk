@@ -283,6 +283,7 @@ class Discovery:
                         entry.new_labels
                         if self._action
                         in [
+                            DiscoveryAction.FIX_ALL,
                             DiscoveryAction.UPDATE_SERVICE_LABELS,
                             DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
                         ]

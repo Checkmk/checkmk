@@ -927,10 +927,15 @@ def update_file(  # pylint: disable=too-many-branches
         "###EDITION###": new_edition,
     }
 
-    old_replacements = {
-        **site.replacements,
-        "###EDITION###": old_edition,
-    }
+    old_replacements = _patch_livestatus_nagios_cfg_replacements(
+        relpath,
+        old_edition,
+        site.dir,
+        {
+            **site.replacements,
+            "###EDITION###": old_edition,
+        },
+    )
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -1267,6 +1272,28 @@ def update_file(  # pylint: disable=too-many-branches
                 + " Permission:    cannot change %04o -> %04o %s: %s\n"
                 % (user_perm, new_perm, fn, e)
             )
+
+
+def _patch_livestatus_nagios_cfg_replacements(
+    relpath: str, old_edition: str, site_dir: str, replacements: Replacements
+) -> Replacements:
+    """Patch replacements for mk-livestatus.cfg to make transition from 2.2 sites work
+
+    Previously "edition=raw" was written into the mk-livestatus.cfg for all sites which were
+    created with 2.2.0 or newer, independent of the actual used edition. Sites updated from 2.1.0
+    are not affected. This was due to the fact that the edition detection was broken during site
+    creation. The previous mechanism always reported 'raw' instead of the correct edition. We now
+    specifically detect this situation and fix it. See also #15721.
+
+    This can be removed in 2.4.
+    """
+    if (
+        relpath == "etc/mk-livestatus/nagios.cfg"
+        and old_edition != "raw"
+        and "edition=raw" in Path(site_dir, "etc/mk-livestatus/nagios.cfg").read_text()
+    ):
+        return {**replacements, "###EDITION###": "raw"}
+    return replacements
 
 
 def permission_action(

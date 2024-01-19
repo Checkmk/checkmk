@@ -1,0 +1,13 @@
+Title: notification rule: match service levels and match time period being saved with wrong key
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1705664610
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+Previously when creating or updating an notification rule via the rest-api, the
+matching conditions for service levels and time periods were being saved to
+file with an incorrect key.  This werk addresses this issue by correcting the
+keys being saved.

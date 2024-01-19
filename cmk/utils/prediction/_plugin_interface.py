@@ -30,6 +30,7 @@ def make_updated_predictions(
     get_recorded_data: Callable[[str, int, int], MetricRecord | None],
     now: float,
 ) -> Mapping[int, tuple[float | None, tuple[float, float] | None]]:
+    store.remove_outdated_predictions(now)
     return {
         hash(meta): _make_reference_and_prediction(
             meta, valid_prediction or _update_prediction(store, meta, get_recorded_data), now

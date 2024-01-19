@@ -6,13 +6,14 @@
 import math
 import time
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from pprint import pprint
 
 import pytest
 
 from tests.testlib import on_time
 
-from cmk.utils.prediction import _grouping, _prediction, DataStat
+from cmk.utils.prediction import _grouping, _prediction, DataStat, PredictionStore
 
 Timestamp = int
 
@@ -202,3 +203,31 @@ def test_data_stats(
     slices: list[Sequence[float | None]], result: Sequence[DataStat | None]
 ) -> None:
     assert _prediction._data_stats(slices) == result
+
+
+class TestPredictionStore:
+    def test_remove_outdated_predictions(self, tmp_path: Path) -> None:
+        now = int(time.time())
+
+        def _make_f(period: str, days_old: int) -> Path:
+            return tmp_path / f"{period}-{now - days_old * 86400}-upper.info"
+
+        (too_old_day := _make_f("day", 32)).touch()
+        (stillok_day := _make_f("day", 30)).touch()
+        (too_old_wday := _make_f("wday", 8)).touch()
+        (stillok_wday := _make_f("wday", 6)).touch()
+        (too_old_hour := _make_f("hour", 4)).touch()
+        (stillok_hour := _make_f("hour", 2)).touch()
+        (too_old_minute := _make_f("minute", 4)).touch()
+        (stillok_minute := _make_f("minute", 2)).touch()
+
+        PredictionStore(tmp_path).remove_outdated_predictions(now)
+
+        assert not too_old_day.exists()
+        assert stillok_day.exists()
+        assert not too_old_wday.exists()
+        assert stillok_wday.exists()
+        assert not too_old_hour.exists()
+        assert stillok_hour.exists()
+        assert not too_old_minute.exists()
+        assert stillok_minute.exists()

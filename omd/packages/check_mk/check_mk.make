@@ -156,7 +156,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
 	    windows/robotmk_ext.exe \
-	    windows/check-sql.exe \
+	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \
 	    windows/mrpe \
 	    windows/plugins \

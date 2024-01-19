@@ -456,7 +456,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def patch_file = "unsign-msi.patch";
         def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe";
         def ext_files = "robotmk_ext.exe";
-        def check_sql = "check-sql.exe";
+        def mk_sql = "mk-sql.exe";
         def hashes_file = "windows_files_hashes.txt";
         def artifacts = [
             "check_mk_agent-64.exe",
@@ -467,7 +467,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
             "python-3.cab",
             "${ohm_files}",
             "${ext_files}",
-            "${check_sql}",
+            "${mk_sql}",
             "${hashes_file}",
         ].join(",");
 

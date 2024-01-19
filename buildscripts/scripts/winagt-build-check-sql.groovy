@@ -22,7 +22,7 @@ def main() {
             variable:"CI_TEST_SQL_DB_ENDPOINT"
         )]) {
             windows.build(
-                TARGET: 'check_sql_no_sign',
+                TARGET: 'mk_sql_no_sign',
             );
         }
     }

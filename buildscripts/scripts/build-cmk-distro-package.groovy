@@ -102,7 +102,7 @@ def main() {
                         sh("find .");
                         sh("cp *.deb *.rpm ${checkout_dir}/agents/");
                         sh("mkdir -p ${checkout_dir}/agents/linux");
-                        sh("cp cmk-agent-ctl* check-sql ${checkout_dir}/agents/linux/");
+                        sh("cp cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/");
                         if (edition != "raw") {
                             sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
                         }
@@ -135,7 +135,7 @@ def main() {
                             check_mk.user.yml \
                             OpenHardwareMonitorLib.dll \
                             OpenHardwareMonitorCLI.exe \
-                            check-sql.exe \
+                            mk-sql.exe \
                             robotmk_ext.exe \
                             windows_files_hashes.txt \
                             ${checkout_dir}/agents/windows/

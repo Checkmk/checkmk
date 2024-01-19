@@ -1,0 +1,13 @@
+Title: omd update: Fix setting world read permissions on etc and local files
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1705690005
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+Starting with 2.2.0 (see #15062), we use a umask of 0077 to prevent files and directories owned by
+the site user from being world readable. However, when updating from the CRE to a non CRE edition,
+some files and directories were still set to be world readable during 'omd update'. This is now in
+line with the other files.

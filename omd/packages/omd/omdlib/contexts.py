@@ -13,7 +13,11 @@ from typing import cast
 import omdlib
 import omdlib.utils
 from omdlib.init_scripts import check_status
-from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
+from omdlib.skel_permissions import (
+    load_skel_permissions_from,
+    Permissions,
+    skel_permissions_file_path,
+)
 from omdlib.type_defs import Config, Replacements
 from omdlib.utils import is_containerized
 
@@ -210,7 +214,7 @@ class SiteContext(AbstractSiteContext):
         if not self._has_version_meta_data():
             if self.version is None:
                 raise MKTerminate("Failed to determine site version")
-            return load_skel_permissions(self.version)
+            return load_skel_permissions_from(skel_permissions_file_path(self.version))
 
         return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
 

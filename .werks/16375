@@ -5,7 +5,7 @@ Component: checks
 Date: 1705327143
 Edition: cre
 Level: 1
-Version: 2.2.0p19
+Version: 2.2.0p20
 
 The ruleset "Check Email" recently featured stricter validation.
 As a result, no makros (like <code>$HOSTNAME$</code>) could be used anymore.

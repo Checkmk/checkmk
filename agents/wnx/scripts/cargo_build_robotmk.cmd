@@ -29,9 +29,9 @@ set target=i686-pc-windows-msvc
 set exe_name=robotmk_ext.exe
 set exe=target\%target%\release\%exe_name%
 rustup toolchain list
-rustup default 1.66.0
+rustup default 1.72.0
 rustup target add %target%
-rustup update 1.66.0
+rustup update 1.72.0
 
 :: Build
 powershell Write-Host "Building Rust executables" -Foreground White

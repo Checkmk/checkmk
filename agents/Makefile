@@ -105,7 +105,7 @@ $(AGENT_CTL_GZ): $(AGENT_CTL)
 $(CHECK_SQL):
 	$(CHECK_SQL_DIR)/run --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(CHECK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/check-sql $(CHECK_SQL)
+	install -m 755 $(CHECK_SQL_DIR)/target/x86_64-unknown-linux-musl/release/mk-sql $(CHECK_SQL)
 	strip $(CHECK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)

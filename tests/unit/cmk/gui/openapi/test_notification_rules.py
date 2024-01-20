@@ -1671,7 +1671,7 @@ def test_create_notification_custom_plugin_invalid_list_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
@@ -1695,7 +1695,7 @@ def test_create_notification_custom_plugin_valid_list_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
@@ -1829,7 +1829,7 @@ def test_create_notification_custom_plugin_valid_dict_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
 
@@ -1891,7 +1891,7 @@ def test_create_notification_custom_plugin_invalid_dict_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        "cmk.gui.openapi.endpoints.notification_rules.request_schemas.user_script_choices",
         lambda what: [("my_cool_plugin", "info")],
     )
     config = notification_rule_request_example()

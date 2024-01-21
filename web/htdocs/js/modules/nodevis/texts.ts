@@ -33,7 +33,7 @@ const default_lookup: Record<string, string> = {
     zoom_fit: "Fit to screen",
     show: "Show",
     hide: "Hide",
-    host_labels: "host name",
+    host_labels: "hostname",
     service_labels: "service name",
     icons: "Icons",
     line_style: "Line style",

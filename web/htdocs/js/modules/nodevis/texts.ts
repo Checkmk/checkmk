@@ -43,10 +43,11 @@ const default_lookup: Record<string, string> = {
     all: "All",
     none: "None",
     only_problems: "Only problems",
+    services_remove_explicit_setting: "Services: Remove explicit setting",
     services: "Services",
     merge_data: "Merge nodes with equal ID",
-    set_root_node: "Only grow from here",
-    add_root_node: "Additionally grow from here",
+    set_root_node: "Start with this hostname",
+    add_root_node: "Additionally start from these nodes",
     remove_root_node: "Do not grow from here",
     matching_nodes: "Matching nodes",
 };

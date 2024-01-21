@@ -665,9 +665,7 @@ export function has_custom_node_settings(node: NodevisNode) {
 }
 
 export function get_custom_node_settings(node: NodevisNode) {
-    node.data.custom_node_settings = node.data.custom_node_settings || {
-        id: node.data.id,
-    };
+    node.data.custom_node_settings = node.data.custom_node_settings || {};
     return node.data.custom_node_settings;
 }
 

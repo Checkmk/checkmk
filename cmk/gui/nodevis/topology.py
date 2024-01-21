@@ -179,7 +179,12 @@ def _save_topology_configuration(topology_configuration: TopologyConfiguration) 
     store.save_object_to_file(topology_settings_lookup, data)
 
     # The actual settings are stored in a separate file
-    config = topology_configuration.serialize()
+    config = asdict(topology_configuration)
+
+    # We do NOT store the datasource configuration and available_layers
+    # because these elements are not part of the fixed configuration
+    config["frontend"].pop("datasource_configuration", None)
+    config["frontend"]["overlays_config"].pop("available_layers", None)
     store.save_text_to_file(_layout_path(topology_hash), json.dumps(config))
 
 
@@ -212,7 +217,7 @@ class ABCTopologyPage(Page):
         div_id = "node_visualization"
         html.div("", id_=div_id)
         topology_configuration = get_topology_configuration(
-            self.visual_spec()["name"], self._get_default_overlays_config()
+            self.visual_spec()["name"], self.get_default_overlays_config()
         )
         # logger.warning(f"Initial topology {pprint.pformat(topology_configuration)}")
         new_topology = Topology(topology_configuration)
@@ -226,8 +231,9 @@ class ABCTopologyPage(Page):
 
         html.javascript(f"{self._instance_name}.show_topology({json.dumps(result)})")
 
+    @classmethod
     @abc.abstractmethod
-    def _get_default_overlays_config(self) -> OverlaysConfig:
+    def get_default_overlays_config(cls) -> OverlaysConfig:
         pass
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
@@ -282,17 +288,16 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "packaged": False,
         }
 
-    def _get_default_overlays_config(self) -> OverlaysConfig:
-        return OverlaysConfig.deserialize(
-            {
-                "available_layers": [ParentChildDataGenerator.ident],
-                "overlays": {
-                    ParentChildDataGenerator.ident: {
-                        "active": True,
-                        "hidden": True,
-                    }
-                },
-            }
+    @classmethod
+    def get_default_overlays_config(cls) -> OverlaysConfig:
+        return OverlaysConfig(
+            available_layers=[ParentChildDataGenerator.ident],
+            overlays={
+                ParentChildDataGenerator.ident: {
+                    "active": True,
+                    "hidden": True,
+                }
+            },
         )
 
 
@@ -318,13 +323,12 @@ class NetworkTopologyPage(ABCTopologyPage):
             "packaged": False,
         }
 
-    def _get_default_overlays_config(self) -> OverlaysConfig:
+    @classmethod
+    def get_default_overlays_config(cls) -> OverlaysConfig:
         layer_ids = _get_dynamic_layer_ids()
-        return OverlaysConfig.deserialize(
-            {
-                "available_layers": layer_ids,
-                "overlays": {x: {"active": True} for x in layer_ids},
-            }
+        return OverlaysConfig(
+            available_layers=layer_ids,
+            overlays={x: {"active": True} for x in layer_ids},
         )
 
 
@@ -336,9 +340,12 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
 
 class AjaxFetchTopology(AjaxPage):
     def page(self) -> PageResult:
-        topology_configuration = get_topology_configuration(
-            request.get_str_input_mandatory("topology_type")
-        )
+        topology_type = request.get_str_input_mandatory("topology_type")
+        if topology_type == "network_topology":
+            default_overlays = NetworkTopologyPage.get_default_overlays_config()
+        else:
+            default_overlays = ParentChildTopologyPage.get_default_overlays_config()
+        topology_configuration = get_topology_configuration(topology_type, default_overlays)
         if request.has_var("delete_topology_configuration"):
             _delete_topology_configuration(topology_configuration)
             topology_configuration.frontend = FrontendTopologyConfiguration()
@@ -392,7 +399,7 @@ class ABCTopologyNodeDataGenerator:
     def _generate_data(
         self,
     ) -> None:
-        root_nodes = self._topology_configuration.frontend.growth_root_nodes.union(
+        root_nodes = self._topology_configuration.frontend.growth_root_nodes_set.union(
             self._root_hostnames_from_core
         )
         try:
@@ -905,7 +912,7 @@ class Topology:
     ) -> None:
         self._topology_configuration = topology_configuration
         self._root_hostnames_from_core = _get_hostnames_from_core(self._topology_configuration)
-        self._growth_root_nodes = self._topology_configuration.frontend.growth_root_nodes.union(
+        self._growth_root_nodes = self._topology_configuration.frontend.growth_root_nodes_set.union(
             self._root_hostnames_from_core
         )
         # logger.warning(pprint.pformat(self._topology_configuration))
@@ -936,7 +943,7 @@ class Topology:
             layer_id,
             overlay_config,
         ) in self._topology_configuration.frontend.overlays_config.overlays.items():
-            if not overlay_config.active:
+            if not overlay_config.get("active"):
                 continue
             layer_class = topology_layer_registry.get(layer_id)
             layer = None
@@ -1010,7 +1017,7 @@ class Topology:
 
         return TopologyResponse(
             self._compute_node_config(merged_results, node_specific_infos),
-            self._topology_configuration.frontend.serialize(),
+            self._topology_configuration.frontend,
             self._topology_configuration.layout,
             headline,
         )
@@ -1399,7 +1406,7 @@ def _create_filter_configuration_from_hash(hash_value: str) -> TopologyFilterCon
 
 
 def get_topology_configuration(
-    topology_type: str, default_overlays: OverlaysConfig | None = None
+    topology_type: str, default_overlays: OverlaysConfig
 ) -> TopologyConfiguration:
     # Get parameters from request
     topology_filters = _get_topology_settings_from_filters()
@@ -1413,14 +1420,22 @@ def get_topology_configuration(
     if frontend_configuration:
         layout = Layout(**json.loads(request.get_str_input_mandatory("layout")))
         return TopologyConfiguration(
-            topology_type, frontend_configuration, filter_configuration, layout
+            type=topology_type,
+            frontend=frontend_configuration,
+            filter=filter_configuration,
+            layout=layout,
         )
 
     # Check if there is a saved topology for this filter
     query_identifier = TopologyQueryIdentifier(topology_type, filter_configuration)
-    topology_configuration = _get_topology_config_for_query(query_identifier)
-    if topology_configuration:
-        return TopologyConfiguration.deserialize(topology_configuration)
+    serialized_settings = _get_topology_config_for_query(query_identifier)
+    if serialized_settings:
+        topology_configuration = TopologyConfiguration.parse(serialized_settings)
+        # Since we do not save the available_overlays in the settings we have to add them
+        topology_configuration.frontend.overlays_config.available_layers = (
+            default_overlays.available_layers
+        )
+        return topology_configuration
 
     # Fallback, new page, no saved settings
     frontend_configuration = FrontendTopologyConfiguration()
@@ -1445,7 +1460,10 @@ def get_topology_configuration(
     default_layout.line_config = {"style": "straight"}
 
     return TopologyConfiguration(
-        topology_type, frontend_configuration, filter_configuration, default_layout
+        type=topology_type,
+        frontend=frontend_configuration,
+        filter=filter_configuration,
+        layout=default_layout,
     )
 
 
@@ -1509,7 +1527,7 @@ def _all_settings() -> dict[tuple[str, ...], str]:
 
 def _get_frontend_configuration_from_request() -> None | FrontendTopologyConfiguration:
     if frontend_config := request.get_str_input("topology_frontend_configuration"):
-        return FrontendTopologyConfiguration.deserialize(json.loads(frontend_config))
+        return FrontendTopologyConfiguration.parse(json.loads(frontend_config))
     return None
 
 

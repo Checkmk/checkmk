@@ -1466,7 +1466,7 @@ def get_topology_configuration(
                 "rotation": 0,
             },
             "position": {
-                "x": 10,
+                "x": 3,
                 "y": 50,
             },
             "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},

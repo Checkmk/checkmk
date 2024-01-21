@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import hashlib
-from dataclasses import asdict, dataclass, field
+import os
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
+from cmk.gui.nodevis.utils import topology_data_dir
 
 
 class MKGrowthExceeded(MKGeneralException):
@@ -20,12 +22,25 @@ class MKGrowthInterruption(MKGeneralException):
     pass
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TopologyFilterConfiguration:
-    max_nodes: int = FilterTopologyMaxNodes().range_config.default
-    mesh_depth: int = FilterTopologyMeshDepth().range_config.default
+    max_nodes: int = field(default_factory=FilterTopologyMaxNodes().range_config.default)
+    mesh_depth: int = field(default_factory=FilterTopologyMeshDepth().range_config.default)
     growth_auto_max_nodes: int = 400
     query: str = ""
+
+    @classmethod
+    def parse(cls, serialized_config: dict[str, Any]) -> "TopologyFilterConfiguration":
+        return cls(
+            max_nodes=serialized_config.get(
+                "max_nodes", FilterTopologyMaxNodes().range_config.default
+            ),
+            mesh_depth=serialized_config.get(
+                "mesh_depth", FilterTopologyMeshDepth().range_config.default
+            ),
+            growth_auto_max_nodes=serialized_config.get("growth_auto_max_nodes", 400),
+            query=serialized_config.get("query", ""),
+        )
 
     @property
     def ident(self) -> tuple:
@@ -38,43 +53,41 @@ class TopologyDatasourceConfiguration:
     reference: str = "default"
     compare_to: str = "default"
 
+    def __post_init__(self):
+        if not self.available_datasources:
+            sorted_list = sorted(os.listdir(topology_data_dir))
+            sorted_list.remove("default")
+            self.available_datasources = ["default"] + sorted_list
+
 
 @dataclass(kw_only=True)
 class ComputationOptions:
     merge_nodes: bool = True
     show_services: Literal["none", "all", "only_problems"] = "all"
 
-
-@dataclass(kw_only=True)
-class OverlayConfig:
-    active: bool = True
+    @classmethod
+    def parse(cls, serialized_config: dict[str, Any]) -> "ComputationOptions":
+        show_services: Literal["none", "all", "only_problems"] = "all"
+        show_services = serialized_config.get("show_services", show_services)
+        return cls(
+            merge_nodes=serialized_config.get("merge_nodes", True), show_services=show_services
+        )
 
 
 @dataclass(kw_only=True)
 class OverlaysConfig:
     available_layers: list[str] = field(default_factory=list)
-    overlays: dict[str, Any] = field(default_factory=dict)
+    overlays: dict[str, dict[str, Any]] = field(default_factory=dict)
     computation_options: ComputationOptions = field(default_factory=ComputationOptions)
 
-    def __init__(
-        self,
-        available_layers: list[str] | None = None,
-        overlays: dict[str, OverlayConfig] | None = None,
-        computation_options: ComputationOptions | None = None,
-    ):
-        self.available_layers = available_layers or []
-        self.overlays = overlays or {}
-        self.computation_options = computation_options or ComputationOptions()
-
     @classmethod
-    def deserialize(cls, config: dict[str, Any]) -> "OverlaysConfig":
-        return OverlaysConfig(
-            config["available_layers"],
-            {
-                x: OverlayConfig(active=y.get("active"))
-                for x, y in config.get("overlays", {}).items()
-            },
-            ComputationOptions(**config.get("computation_options", {})),
+    def parse(cls, serialized_config: dict[str, Any]) -> "OverlaysConfig":
+        return cls(
+            available_layers=serialized_config.get("available_layers") or [],
+            overlays=serialized_config.get("overlays", {}),
+            computation_options=ComputationOptions.parse(
+                serialized_config.get("computation_options", {})
+            ),
         )
 
 
@@ -91,25 +104,44 @@ class Layout:
 @dataclass
 class FrontendTopologyConfiguration:
     overlays_config: OverlaysConfig = field(default_factory=OverlaysConfig)
-    growth_root_nodes: set[str] = field(default_factory=set)  # Extra Growth starts from here
-    growth_forbidden_nodes: set[str] = field(default_factory=set)  # Growth stops here
-    growth_continue_nodes: set[str] = field(default_factory=set)  # Growth continues here
+    growth_root_nodes: list[str] = field(default_factory=list)  # Extra Growth starts from here
+    growth_forbidden_nodes: list[str] = field(default_factory=list)  # Growth stops here
+    growth_continue_nodes: list[str] = field(default_factory=list)  # Growth continues here
     datasource_configuration: TopologyDatasourceConfiguration = field(
         default_factory=TopologyDatasourceConfiguration
     )
     custom_node_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
 
+    def __post_init__(self):
+        # Used as faster lookup, not serialized
+        self._growth_root_nodes_set = set(self.growth_root_nodes)
+        self._growth_forbidden_nodes_set = set(self.growth_forbidden_nodes)
+        self._growth_continue_nodes_set = set(self.growth_continue_nodes)
+
     @classmethod
-    def deserialize(cls, settings: dict[str, Any]) -> "FrontendTopologyConfiguration":
-        for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            settings[key] = set(settings[key])
-        settings["datasource_configuration"] = TopologyDatasourceConfiguration(
-            **settings.get("datasource_configuration", {})
+    def parse(cls, serialized_config: dict[str, Any]) -> "FrontendTopologyConfiguration":
+        return cls(
+            overlays_config=OverlaysConfig.parse(serialized_config.get("overlays_config", {})),
+            growth_root_nodes=serialized_config.get("growth_root_nodes", []),
+            growth_forbidden_nodes=serialized_config.get("growth_forbidden_nodes", []),
+            growth_continue_nodes=serialized_config.get("growth_continue_nodes", []),
+            datasource_configuration=TopologyDatasourceConfiguration(
+                **serialized_config.get("datasource_configuration", {})
+            ),
+            custom_node_settings=(serialized_config.get("custom_node_settings", {})),
         )
-        settings["overlays_config"] = OverlaysConfig.deserialize(
-            settings.get("overlays_config", {})
-        )
-        return cls(**settings)
+
+    @property
+    def growth_root_nodes_set(self) -> set[str]:
+        return self._growth_root_nodes_set
+
+    @property
+    def growth_forbidden_nodes_set(self) -> set[str]:
+        return self._growth_root_nodes_set
+
+    @property
+    def growth_continue_nodes_set(self) -> set[str]:
+        return self._growth_continue_nodes_set
 
     @classmethod
     def _convert_overlays_config(cls, overlays_config: dict[str, Any]) -> dict[str, Any]:
@@ -121,39 +153,27 @@ class FrontendTopologyConfiguration:
             "computation_options": ComputationOptions(),
         }
 
-    def serialize(self):
-        value = asdict(self)
-        for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            value[key] = list(value[key])
-        return value
 
-
-@dataclass
+@dataclass(kw_only=True)
 class TopologyConfiguration:
-    type: str
-    frontend: FrontendTopologyConfiguration
-    filter: TopologyFilterConfiguration
+    version: int = 1
+    type: str = ""
+    frontend: FrontendTopologyConfiguration = field(default_factory=FrontendTopologyConfiguration)
+    filter: TopologyFilterConfiguration = field(default_factory=TopologyFilterConfiguration)
     layout: Layout = field(default_factory=Layout)
-    version = 1
-
-    def serialize(self):
-        return {
-            "type": self.type,
-            "frontend": self.frontend.serialize(),
-            "filter": self.filter.ident,
-            "layout": asdict(self.layout),
-            "version": self.version,
-        }
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any]) -> "TopologyConfiguration":
-        if "version" not in data:
-            data = cls._migrate_legacy_data(data)
-        return TopologyConfiguration(
-            data.get("type", ""),
-            FrontendTopologyConfiguration.deserialize(data.get("frontend", {})),
-            TopologyFilterConfiguration(*data.get("filter", [])),
-            Layout(**data.get("layout", {})),
+    def parse(cls, serialized_config: dict[str, Any]) -> "TopologyConfiguration":
+        if (version := serialized_config.get("version")) is None:
+            cls._migrate_legacy_data(serialized_config)
+            version = 1
+
+        return cls(
+            version=version,
+            type=serialized_config.get("type", ""),
+            frontend=FrontendTopologyConfiguration.parse(serialized_config.get("frontend", {})),
+            filter=TopologyFilterConfiguration.parse(serialized_config.get("filter", {})),
+            layout=Layout(**serialized_config.get("layout", {})),
         )
 
     @classmethod
@@ -249,9 +269,8 @@ class TopologyNode:
 
 TopologyNodes = dict[str, TopologyNode]
 
+
 #### FRONTEND DATACLASSES
-
-
 @dataclass(kw_only=True)
 class TopologyFrontendNode:
     id: str

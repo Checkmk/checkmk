@@ -80,6 +80,22 @@ div.topology_compare_history {
   img.on {
     content: url("images/icon_toggle_on.svg") !important;
   }
+
+  span.choices {
+    height: 100%;
+    pointer-events: all;
+  }
+
+  label {
+    margin-right: 4px;
+  }
+
+  span.choice {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 10px;
+    padding-top: 5px;
+  }
 }
 
 // Toggle switch

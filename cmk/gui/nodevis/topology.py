@@ -121,6 +121,11 @@ class NetworkTopology(Icon):
         return 51
 
     def render(self, what, row, tags, custom_vars):
+        # Only show this icon if topology data is available
+        files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")
+        if not files:
+            return None
+
         url = makeuri_contextless(
             request, [("host_regex", f"{row['host_name']}$")], filename="network_topology.py"
         )

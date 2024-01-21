@@ -12,7 +12,10 @@ import {
 } from "nodevis/layer_utils";
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
-import {node_type_class_registry} from "nodevis/node_utils";
+import {
+    get_custom_node_settings,
+    node_type_class_registry,
+} from "nodevis/node_utils";
 import * as texts from "nodevis/texts";
 import {
     d3SelectionDiv,
@@ -332,22 +335,56 @@ class TopologyHost extends TopologyCoreEntity {
     override get_context_menu_elements() {
         const elements =
             TopologyCoreEntity.prototype.get_context_menu_elements.call(this);
-        // elements.push({
-        //     text: "Toggle interfaces",
-        //     img: "themes/facelift/images/icon_status.svg",
-        //     on: event => {
-        //         let current_master_toggle = this._world.viewport.get_layer(
-        //             NetworkOverlay.class_name
-        //         )._master_toggle;
-        //         if (
-        //             current_master_toggle ==
-        //             InterfaceMasterToggleMode.only_problems
-        //         )
-        //             current_master_toggle = InterfaceNodeToggleMode.off;
-        //         _toggle_if_node(this.node, current_master_toggle);
-        //         this._world.update_data();
-        //     },
-        // });
+
+        const custom_settings = get_custom_node_settings(this.node);
+
+        if (custom_settings["show_services"]) {
+            elements.push({
+                text: texts.get("services_remove_explicit_setting"),
+                img: "themes/facelift/images/icon_status.svg",
+                on: () => {
+                    const node = this._world.viewport.get_node_by_id(this.id());
+                    if (!node) return;
+                    const custom_settings = get_custom_node_settings(node);
+                    delete custom_settings["show_services"];
+                    this._world.update_data();
+                },
+            });
+        }
+
+        const current_value = custom_settings["show_services"] || "all";
+        let next_option_text = "";
+        let next_option_value = "";
+
+        switch (current_value) {
+            case "all": {
+                next_option_text = texts.get("only_problems");
+                next_option_value = "only_problems";
+                break;
+            }
+            case "only_problems": {
+                next_option_text = texts.get("none");
+                next_option_value = "none";
+                break;
+            }
+            case "none": {
+                next_option_text = texts.get("all");
+                next_option_value = "all";
+                console.log("soso");
+                break;
+            }
+        }
+        elements.push({
+            text: "Show services: " + next_option_text.toLowerCase(),
+            img: "themes/facelift/images/icon_status.svg",
+            on: () => {
+                const node = this._world.viewport.get_node_by_id(this.id());
+                if (!node) return;
+                const custom_settings = get_custom_node_settings(node);
+                custom_settings["show_services"] = next_option_value;
+                this._world.update_data();
+            },
+        });
         return elements;
     }
 

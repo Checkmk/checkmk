@@ -346,6 +346,8 @@ class AjaxFetchTopology(AjaxPage):
         else:
             default_overlays = ParentChildTopologyPage.get_default_overlays_config()
         topology_configuration = get_topology_configuration(topology_type, default_overlays)
+        # import pprint
+        # logger.warning(f"AJAX config {pprint.pformat(topology_configuration)}")
         if request.has_var("delete_topology_configuration"):
             _delete_topology_configuration(topology_configuration)
             topology_configuration.frontend = FrontendTopologyConfiguration()
@@ -809,11 +811,9 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         )
 
     def _apply_service_visibility(self):
-        service_visibility = (
+        general_service_visibility = (
             self._topology_configuration.frontend.overlays_config.computation_options.show_services
         )
-        if service_visibility == "all":
-            return
 
         def remove_service(remove_node: TopologyNode) -> None:
             # Create links between adjacent objects and remove node from topology_nodes
@@ -838,11 +838,26 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             self._topology_nodes.pop(remove_node.id)
 
         # Depending on the configuration, remove service nodes and link hosts directly
-        hide_all_services = service_visibility == "none"
         for node_id, node in list(self._topology_nodes.items()):
             if node.type != FrontendNodeType.TOPOLOGY_SERVICE:
                 continue
-            if hide_all_services or self._node_extra_info.get(node_id, {}).get("state") == 0:
+
+            visibility = general_service_visibility
+
+            # A host may disable its services
+            # Check if the host is also present in this data and use its visibility setting
+            core_entity = self._network_data.core_entity_for_id(node_id)
+            if core_entity is not None:
+                host_id = self._network_data.hostname.get(core_entity[0])
+                if host_id and (
+                    custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
+                        host_id
+                    )
+                ):
+                    visibility = custom_settings.get("show_services", general_service_visibility)
+            if visibility == "all":
+                continue
+            if visibility == "none" or self._node_extra_info.get(node_id, {}).get("state") == 0:
                 remove_service(node)
 
     def _enrich_nodes_with_core_data(self):

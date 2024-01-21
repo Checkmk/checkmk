@@ -902,27 +902,6 @@ export class LayoutingToolbar {
         show_viewport_information(this._world.viewport);
     }
 
-    _show_force_configuration(
-        into_selection: d3.Selection<HTMLDivElement, null, any, unknown>
-    ): void {
-        into_selection
-            .selectAll("input#force_config")
-            .data([null])
-            .join("input")
-            .attr("type", "button")
-            .attr("id", "force_config")
-            .classed("button", true)
-            .attr("value", texts.get("show_force_configuration"))
-            .on("click", _event => {
-                if (
-                    this.layout_style_configuration!.active_style_id == "force"
-                ) {
-                    this.layout_style_configuration!.hide_configuration();
-                } else {
-                    this._layout_manager.show_force_config();
-                }
-            });
-    }
     enable() {
         this.active = true;
         this._layout_manager.show_layout_options();
@@ -1188,6 +1167,14 @@ class LayoutApplier {
     get_context_menu_elements(node: NodevisNode | null): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
         const styles = this.layout_style_factory.get_styles();
+
+        elements.push({
+            text: texts.get("show_force_configuration"),
+            on: () => this._layout_manager.show_force_config(),
+            href: "",
+            img: "themes/facelift/images/icon_aggr.svg",
+        });
+
         for (const [_key, style] of Object.entries(styles)) {
             if (node) {
                 elements.push({

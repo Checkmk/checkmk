@@ -18,6 +18,7 @@ import {layout_style_class_registry} from "nodevis/layout_utils";
 import {link_type_class_registry} from "nodevis/link_utils";
 import {node_type_class_registry} from "nodevis/node_utils";
 import {SearchNodes} from "nodevis/search";
+import * as texts from "nodevis/texts";
 import {
     BackendResponse,
     d3SelectionDiv,
@@ -57,95 +58,6 @@ export class NodeVisualization {
 
     toggle_layout_designer(): boolean {
         return this._world.viewport.get_layout_manager().toggle_toolbar();
-    }
-
-    toggle_compare_history(): boolean {
-        const div_compare = d3.select(".suggestion.topology_compare_history");
-        const icon = div_compare.select("img");
-        const new_state = !icon.classed("on");
-        icon.classed("on", new_state);
-
-        if (!new_state) {
-            div_compare.selectAll("select").remove();
-        } else {
-            const inner_a = div_compare.select("a");
-            inner_a.transition().duration(3000).style("width", null);
-            const select = inner_a
-                .append("select")
-                .style("opacity", 0.2)
-                .style("position", "relative")
-                .style("margin-left", "5px")
-                .style("left", "-112px")
-                .style("top", "-200px");
-            select.append("option").attr("value", "option").text("Reference");
-
-            select
-                .transition()
-                .duration(2000)
-                .style("top", "0px")
-                .style("opacity", 1)
-                .style("left", null);
-
-            const compare_to = inner_a
-                .append("select")
-                .style("opacity", 0.2)
-                .style("position", "relative")
-                .style("transform", "rotate(50deg)")
-                .style("top", "-80px")
-                .style("left", "-120px");
-
-            compare_to
-                .append("option")
-                .attr("value", "option")
-                .text("Compare to");
-
-            compare_to
-                .transition()
-                .duration(800)
-                .style("transform", "rotate(-70deg)")
-                .style("left", "-220px")
-                .style("opacity", 1)
-                .end()
-                .then(() => {
-                    compare_to
-                        .transition()
-                        .duration(800)
-                        .style("transform", "rotate(70deg)")
-                        .style("left", "-20px")
-                        .style("top", "-40px")
-                        .end()
-                        .then(() => {
-                            compare_to
-                                .transition()
-                                .duration(800)
-                                .style("top", "0px")
-                                .style("transform", "rotate(10deg)")
-                                .style("left", null)
-                                .end()
-                                .then(() => {
-                                    compare_to
-                                        .transition()
-                                        .duration(200)
-                                        .style("top", "0px")
-                                        .style("transform", "rotate(350deg)")
-                                        .style("left", null)
-                                        .end()
-                                        .then(() => {
-                                            compare_to
-                                                .transition()
-                                                .duration(200)
-                                                .style("top", "0px")
-                                                .style(
-                                                    "transform",
-                                                    "rotate(0deg)"
-                                                )
-                                                .style("left", null);
-                                        });
-                                });
-                        });
-                });
-        }
-        return new_state;
     }
 
     update_browser_url(): void {
@@ -374,6 +286,95 @@ export class TopologyVisualization extends NodeVisualization {
             }
         });
         return frontend_config;
+    }
+
+    toggle_compare_history(): boolean {
+        const div_compare = d3.select(".suggestion.topology_compare_history");
+        const icon = div_compare.select("img");
+        const new_state = !icon.classed("on");
+        icon.classed("on", new_state);
+
+        const ds_config =
+            this._frontend_configuration!.datasource_configuration;
+
+        type SpanConfig = [string, string, [string, boolean][]];
+        const reference_options: [string, boolean][] = [];
+        const compare_to_options: [string, boolean][] = [];
+        ds_config.available_datasources.forEach(datasource => {
+            reference_options.push([
+                datasource,
+                datasource == ds_config.reference,
+            ]);
+            compare_to_options.push([
+                datasource,
+                datasource == ds_config.compare_to,
+            ]);
+        });
+        const data: SpanConfig[] = [
+            [texts.get("reference"), "reference", reference_options],
+            [texts.get("compare_to"), "compare_to", compare_to_options],
+        ];
+
+        if (!new_state) {
+            div_compare
+                .selectAll("span.choice")
+                .transition()
+                .style("width", "0px")
+                .remove();
+            return new_state;
+        }
+
+        const inner_a = div_compare.select("a");
+        const choices = inner_a
+            .selectAll("span.choices")
+            .data([null])
+            .join("span")
+            .classed("choices", true)
+            .on("click", event => {
+                event.stopPropagation();
+            });
+        const spans = choices
+            .selectAll<HTMLSpanElement, SpanConfig[]>("span.choice")
+            .data(data)
+            .join("span")
+            .style("width", "0px")
+            .style("overflow", "hidden")
+            .classed("choice", true);
+
+        spans
+            .selectAll<HTMLLabelElement, string>("label")
+            .data(d => [d[0]])
+            .join("label")
+            .text(d => d)
+            .on("click", event => {
+                event.stopPropagation();
+            });
+        const selects = spans
+            .selectAll<HTMLSelectElement, SpanConfig>("select")
+            .data(d => [d])
+            .join("select")
+            .attr("class", d => d[1])
+            .on("change", event => {
+                this.frontend_configuration().datasource_configuration.reference =
+                    choices.select("select.reference").property("value");
+                this.frontend_configuration().datasource_configuration.compare_to =
+                    choices.select("select.compare_to").property("value");
+                this.update_data();
+                event.stopPropagation();
+            });
+
+        selects
+            .selectAll<HTMLOptionElement, SpanConfig>("option")
+            .data(d => d[2])
+            .join("option")
+            .text(d => d[0])
+            .property("selected", d => d[1])
+            .on("click", event => {
+                event.stopPropagation();
+            });
+
+        spans.transition().style("width", null);
+        return new_state;
     }
 
     override update_browser_url(): void {

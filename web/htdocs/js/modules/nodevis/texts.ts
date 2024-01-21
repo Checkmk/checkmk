@@ -50,4 +50,6 @@ const default_lookup: Record<string, string> = {
     add_root_node: "Additionally start from these nodes",
     remove_root_node: "Do not grow from here",
     matching_nodes: "Matching nodes",
+    reference: "Reference",
+    compare_to: "Compare to (not yet implemented)",
 };

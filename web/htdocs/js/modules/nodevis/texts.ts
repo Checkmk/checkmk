@@ -9,6 +9,9 @@ export function get(name: string): string {
 }
 
 const default_lookup: Record<string, string> = {
+    live_search: "Live search active",
+    live_search_help:
+        "Automatically detects changes in the formular and fetches new data",
     selected_style_configuration: "Selected style configuration",
     advanced_configuration_options: "Advanced configuration options",
     show_force_configuration: "Show force configuration",

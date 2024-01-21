@@ -7,6 +7,7 @@
 import * as d3 from "d3";
 import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
 import {StyleMatcherConditions} from "nodevis/layout_utils";
+import * as texts from "nodevis/texts";
 import {
     BoundingRect,
     Coords,
@@ -309,8 +310,12 @@ export class LiveSearch {
     enable(): void {
         this._enabled = true;
         clearInterval(this._interval_id);
-        this._search_button.property("value", "Live search");
-        this._search_button.style("pointer-events", "none");
+        this._root_node
+            .select<HTMLInputElement>("input#_reset")
+            .style("display", "none");
+        this._search_button.property("value", texts.get("live_search"));
+        this._search_button.attr("title", texts.get("live_search_help"));
+        this._search_button.style("pointer-events", "hover");
         this._initialize_last_body();
         // @ts-ignore
         this._interval_id = setInterval(
@@ -323,7 +328,11 @@ export class LiveSearch {
     disable(): void {
         this._enabled = false;
         clearInterval(this._interval_id);
+        this._root_node
+            .select<HTMLInputElement>("input#_reset")
+            .style("display", null);
         this._search_button.property("value", "Apply");
+        this._search_button.attr("title", null);
         this._search_button.style("pointer-events", "all");
         this._root_node.attr("onsubmit", this._original_submit_handler);
     }

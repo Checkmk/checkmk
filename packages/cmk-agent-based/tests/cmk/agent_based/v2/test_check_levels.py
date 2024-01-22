@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Callable
 
 import pytest
@@ -121,7 +121,7 @@ def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
                 state=State.WARN,
                 levels=(5.0, 6.0),
                 levels_text="(warn/crit at 5.00/6.00)",
-                prediction=6.5,
+                prediction=Metric("predict_test_metric", 6.5),
             ),
             id="predictive levels",
         ),
@@ -192,39 +192,57 @@ def test__check_levels_errors(
 
 
 @pytest.mark.parametrize(
-    "upper_result, lower_result, metric_name, expected_result",
+    "upper_result, lower_result, expected_result",
     [
         pytest.param(
             CheckLevelsResult(Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None),
             CheckLevelsResult(Type.NO_LEVELS, State.OK),
-            "test_metric",
-            ({}, ""),
+            ((), ""),
             id="no predictive levels",
         ),
         pytest.param(
             CheckLevelsResult(Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None),
-            CheckLevelsResult(Type.PREDICTIVE, State.OK, (2.0, 1.0), "", 6.5),
-            "test_metric",
-            ({"predict_test_metric": 6.5}, "(prediction: 6.50%)"),
+            CheckLevelsResult(
+                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_test_metric", 6.5)
+            ),
+            (
+                [
+                    Metric("predict_test_metric", 6.5),
+                ],
+                "(prediction: 6.50%)",
+            ),
             id="1 direction predictive levels",
         ),
         pytest.param(
             CheckLevelsResult(
-                Type.PREDICTIVE, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", 6.5
+                Type.PREDICTIVE,
+                State.WARN,
+                (6.0, 7.0),
+                "(warn/crit at 6.00/7.00)",
+                Metric("predict_test_metric", 6.5),
             ),
-            CheckLevelsResult(Type.PREDICTIVE, State.OK, (2.0, 1.0), "", 6.5),
-            "test_metric",
-            ({"predict_test_metric": 6.5}, "(prediction: 6.50%)"),
+            CheckLevelsResult(
+                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_lower_test_metric", 6.5)
+            ),
+            (
+                [Metric("predict_test_metric", 6.5), Metric("predict_lower_test_metric", 6.5)],
+                "(prediction: 6.50%)",
+            ),
             id="2 directions predictive levels, same predictions",
         ),
         pytest.param(
             CheckLevelsResult(
-                Type.PREDICTIVE, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", 6.5
+                Type.PREDICTIVE,
+                State.WARN,
+                (6.0, 7.0),
+                "(warn/crit at 6.00/7.00)",
+                Metric("predict_test_metric", 6.5),
             ),
-            CheckLevelsResult(Type.PREDICTIVE, State.OK, (2.0, 1.0), "", 3.0),
-            "test_metric",
+            CheckLevelsResult(
+                Type.PREDICTIVE, State.OK, (2.0, 1.0), "", Metric("predict_lower_test_metric", 3.0)
+            ),
             (
-                {"predict_test_metric": 6.5, "predict_lower_test_metric": 3.0},
+                [Metric("predict_test_metric", 6.5), Metric("predict_lower_test_metric", 3.0)],
                 "(upper levels prediction: 6.50%, lower levels prediction: 3.00%)",
             ),
             id="2 directions predictive levels, different predictions",
@@ -235,8 +253,7 @@ def test__check_levels_errors(
                 State.OK,
             ),
             CheckLevelsResult(Type.PREDICTIVE, State.OK),
-            "test_metric",
-            ({}, "(prediction: N/A)"),
+            ((), "(prediction: N/A)"),
             id="2 directions predictive levels, no predictions",
         ),
     ],
@@ -244,13 +261,11 @@ def test__check_levels_errors(
 def test_summarize_predictions(
     upper_result: CheckLevelsResult,
     lower_result: CheckLevelsResult,
-    metric_name: str | None,
-    expected_result: tuple[Mapping[str, float], str],
+    expected_result: tuple[Sequence[Metric], str],
 ) -> None:
     result = _summarize_predictions(
         upper_result=upper_result,
         lower_result=lower_result,
-        metric_name=metric_name,
         render_func=render.percent,
     )
     assert result == expected_result

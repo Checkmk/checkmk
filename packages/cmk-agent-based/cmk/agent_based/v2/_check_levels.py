@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
 from typing import assert_never, Literal, NotRequired, overload, TypedDict
@@ -49,7 +49,7 @@ class CheckLevelsResult:
     state: State
     levels: tuple[int, int] | tuple[float, float] | None = None
     levels_text: str = ""
-    prediction: float | None = None
+    prediction: Metric | None = None
 
 
 def _default_rendering(x: float) -> str:
@@ -96,10 +96,7 @@ def _check_predictive_levels(
     metric_name: str,
     render_func: Callable[[float], str],
 ) -> CheckLevelsResult:
-    (  # pylint: disable=assignment-from-no-return,unpacking-non-sequence
-        prediction,
-        levels,
-    ) = lookup_predictive_levels(
+    (predicted_value, levels) = lookup_predictive_levels(
         metric_name,
         levels_direction.value,
         PredictionParameters.model_validate(levels_params),
@@ -108,14 +105,26 @@ def _check_predictive_levels(
 
     if levels is None:
         return CheckLevelsResult(
-            type=Type.PREDICTIVE, state=State.OK, levels=None, levels_text="", prediction=prediction
+            type=Type.PREDICTIVE,
+            state=State.OK,
+            levels=None,
+            levels_text="",
+            prediction=_make_prediction_metric(metric_name, predicted_value, levels_direction),
         )
 
     return replace(
         _check_fixed_levels(value, levels, levels_direction, render_func),
         type=Type.PREDICTIVE,
-        prediction=prediction,
+        prediction=_make_prediction_metric(metric_name, predicted_value, levels_direction),
     )
+
+
+def _make_prediction_metric(name: str, value: float | None, direction: Direction) -> Metric | None:
+    if value is None:
+        return None
+    if direction is Direction.UPPER:
+        return Metric(f"predict_{name}", value)
+    return Metric(f"predict_lower_{name}", value)
 
 
 def _check_levels(
@@ -160,28 +169,22 @@ def _prediction_text(prediction: float | None, render_func: Callable[[float], st
 def _summarize_predictions(
     upper_result: CheckLevelsResult,
     lower_result: CheckLevelsResult,
-    metric_name: str | None,
     render_func: Callable[[float], str],
-) -> tuple[Mapping[str, float], str]:
-    if (Type.PREDICTIVE not in (upper_result.type, lower_result.type)) or metric_name is None:
-        return {}, ""
+) -> tuple[Sequence[Metric], str]:
+    if Type.PREDICTIVE not in (upper_result.type, lower_result.type):
+        return (), ""
 
     predictions = [p for p in (upper_result.prediction, lower_result.prediction) if p is not None]
 
-    if len(predictions) == 0:
-        return {}, f"({_prediction_text(None, render_func)})"
+    if not predictions:
+        return (), f"({_prediction_text(None, render_func)})"
 
-    if len(predictions) == 1 or predictions[0] == predictions[1]:
-        metrics = {f"predict_{metric_name}": predictions[0]}
-        return metrics, f"({_prediction_text(predictions[0], render_func)})"
+    if len(predictions) == 1 or predictions[0].value == predictions[1].value:
+        return predictions, f"({_prediction_text(predictions[0].value, render_func)})"
 
-    metrics = {
-        f"predict_{metric_name}": predictions[0],
-        f"predict_lower_{metric_name}": predictions[1],
-    }
-    upper_text = _prediction_text(predictions[0], render_func)
-    lower_text = _prediction_text(predictions[1], render_func)
-    return metrics, f"(upper levels {upper_text}, lower levels {lower_text})"
+    upper_text = _prediction_text(predictions[0].value, render_func)
+    lower_text = _prediction_text(predictions[1].value, render_func)
+    return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
 
 
 @overload
@@ -265,7 +268,7 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
 
     state = State.worst(result_upper.state, result_lower.state)
     prediction_metrics, prediction_text = _summarize_predictions(
-        result_upper, result_lower, metric_name, render_func
+        result_upper, result_lower, render_func
     )
 
     messages = [info_text, prediction_text, result_upper.levels_text, result_lower.levels_text]
@@ -283,6 +286,4 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
             levels=result_upper.levels,
             boundaries=boundaries,
         )
-
-    for prediction_metric, prediction_value in prediction_metrics.items():
-        yield Metric(prediction_metric, prediction_value)
+    yield from prediction_metrics

@@ -6,19 +6,24 @@
 #ifndef Sorter_h
 #define Sorter_h
 
+#include <chrono>
+#include <optional>
+#include <string>
+#include <variant>
+
+class RowRenderer;
 class Row;
+class User;
 
-// StrongOrdering::notimplemented is a place holder to let us
-// implement the ordering of the different column types one
-// after the other.
-// See also:
-// https://en.cppreference.com/w/cpp/language/default_comparisons
-enum StrongOrdering { equal, less, greater, notimplemented };
-
-struct Sorter {
+class Sorter {
+public:
+    using key_type = std::variant<std::string, double, int,
+                                  std::chrono::system_clock::time_point>;
     Sorter() = default;
     virtual ~Sorter() = default;
-    [[nodiscard]] virtual StrongOrdering compare(Row) const = 0;
+    [[nodiscard]] virtual key_type getKey(
+        Row, const std::optional<std::string> &key, const User &user,
+        std::chrono::seconds timezone_offset) const = 0;
 };
 
 #endif

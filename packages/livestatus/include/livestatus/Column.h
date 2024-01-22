@@ -19,7 +19,7 @@
 
 class Aggregation;
 class Aggregator;
-struct Sorter;
+class Sorter;
 enum class RelationalOperator;
 class RowRenderer;
 class User;

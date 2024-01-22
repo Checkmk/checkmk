@@ -52,7 +52,15 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<StringSorter>();
+        return std::make_unique<StringSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (key) {
+                    throw std::runtime_error("string column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row);
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

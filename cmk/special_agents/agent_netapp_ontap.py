@@ -42,6 +42,9 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
         "svm.uuid",
         "files.maximum",
         "files.used",
+        "space.snapshot.reserve_size",
+        "space.snapshot.used",
+        "space.snapshot.reserve_percent",
     }
 
     for element in NetAppResource.Volume.get_collection(
@@ -64,6 +67,13 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
             svm_uuid=element_data.get("svm", {}).get("uuid"),
             files_maximum=element_data.get("files", {}).get("maximum"),
             files_used=element_data.get("files", {}).get("used"),
+            snapshot_reserve_size=element_data.get("space", {})
+            .get("snapshot", {})
+            .get("reserve_size"),
+            snapshot_used=element_data.get("space", {}).get("snapshot", {}).get("used"),
+            snapshot_reserve_percent=element_data.get("space", {})
+            .get("snapshot", {})
+            .get("reserve_percent"),
         )
 
 

@@ -1030,7 +1030,7 @@ def test_convert_to_legacy_rulespec_group(
             id="EnforcedServiceRuleSpecWithoutItem no parameters",
         ),
         pytest.param(
-            api_v1.rule_specs.ActiveChecks(
+            api_v1.rule_specs.ActiveCheck(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -1049,7 +1049,7 @@ def test_convert_to_legacy_rulespec_group(
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
             ),
-            id="ActiveChecksRuleSpec",
+            id="ActiveCheckRuleSpec",
         ),
         pytest.param(
             api_v1.rule_specs.AgentAccess(

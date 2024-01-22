@@ -49,7 +49,7 @@ def convert_to_legacy_rulespec(
     to_convert: APIV1RuleSpec, edition_only: Edition, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
     match to_convert:
-        case ruleset_api_v1.rule_specs.ActiveChecks():
+        case ruleset_api_v1.rule_specs.ActiveCheck():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_wato_groups.RulespecGroupActiveChecks,
@@ -244,7 +244,7 @@ def _convert_to_legacy_rulespec_group(
 
 
 def _convert_to_legacy_host_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.ActiveChecks
+    to_convert: ruleset_api_v1.rule_specs.ActiveCheck
     | ruleset_api_v1.rule_specs.AgentConfig
     | ruleset_api_v1.rule_specs.AgentAccess
     | ruleset_api_v1.rule_specs.ExtraHostConfEventConsole

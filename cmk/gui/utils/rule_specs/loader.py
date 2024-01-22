@@ -10,7 +10,7 @@ from cmk.utils.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1.rule_specs import (
-    ActiveChecks,
+    ActiveCheck,
     AgentAccess,
     AgentConfig,
     CheckParameterWithItem,
@@ -31,7 +31,7 @@ from cmk.rulesets.v1.rule_specs import (
 )
 
 RuleSpec = (
-    ActiveChecks
+    ActiveCheck
     | AgentConfig
     | AgentAccess
     | EnforcedServiceWithItem
@@ -64,7 +64,7 @@ def load_api_v1_rule_specs(
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {
-            ActiveChecks: "rule_spec_",
+            ActiveCheck: "rule_spec_",
             AgentConfig: "rule_spec_",
             AgentAccess: "rule_spec_",
             EnforcedServiceWithItem: "rule_spec_",

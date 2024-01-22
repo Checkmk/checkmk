@@ -19,6 +19,7 @@ from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .forward import SyslogForwarderUnixSocket as SyslogForwarderUnixSocket
 from .forward import SyslogMessage as SyslogMessage
+from .main import save_active_config as save_active_config
 from .main import SyslogFacility as SyslogFacility
 from .main import SyslogPriority as SyslogPriority
 from .main import TimePeriods as TimePeriods
@@ -30,7 +31,6 @@ from .rule_matcher import MatchFailure as MatchFailure
 from .rule_matcher import MatchResult as MatchResult
 from .rule_matcher import MatchSuccess as MatchSuccess
 from .rule_matcher import RuleMatcher as RuleMatcher
-from .rule_packs import active_config_dir as active_config_dir
 from .rule_packs import export_rule_pack as export_rule_pack
 from .rule_packs import install_packaged_rule_packs as install_packaged_rule_packs
 from .rule_packs import load_config as load_config

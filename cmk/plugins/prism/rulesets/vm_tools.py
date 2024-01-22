@@ -54,9 +54,10 @@ def _parameter_form_prism_vm_tools():
     )
 
 
-rule_spec_prism_vm_tools = rule_specs.CheckParameterWithoutItem(
+rule_spec_prism_vm_tools = rule_specs.CheckParameters(
     name="prism_vm_tools",
     topic=rule_specs.Topic.VIRTUALIZATION,
     parameter_form=_parameter_form_prism_vm_tools,
     title=Localizable("Nutanix Prism VM Tools"),
+    condition=rule_specs.HostCondition(),
 )

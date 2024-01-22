@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     Text,
     TupleDoNotUseWillbeRemoved,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
@@ -54,10 +54,10 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     )
 
 
-rule_spec_rabbitmq_nodes_proc = CheckParameterWithItem(
+rule_spec_rabbitmq_nodes_proc = CheckParameters(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
-    item_form=Text(title=Localizable("Node name")),
     parameter_form=_parameter_form_rabbitmq_nodes_proc,
     title=Localizable("RabbitMQ nodes processes"),
+    condition=HostAndItemCondition(item_form=Text(title=Localizable("Node name"))),
 )

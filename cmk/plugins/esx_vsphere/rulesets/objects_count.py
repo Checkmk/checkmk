@@ -6,7 +6,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Integer, List, ServiceState, Text
-from cmk.rulesets.v1.rule_specs import CheckParameterWithoutItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
 def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
@@ -51,9 +51,10 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
     )
 
 
-rule_spec_esx_vsphere_objects_count = CheckParameterWithoutItem(
+rule_spec_esx_vsphere_objects_count = CheckParameters(
     name="esx_vsphere_objects_count",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_esx_vsphere_objects_count,
     title=Localizable("ESX hosts: distribution of virtual machines"),
+    condition=HostCondition(),
 )

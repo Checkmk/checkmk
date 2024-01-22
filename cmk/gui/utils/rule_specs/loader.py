@@ -13,11 +13,9 @@ from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
     AgentAccess,
     AgentConfig,
-    CheckParameterWithItem,
-    CheckParameterWithoutItem,
+    CheckParameters,
     DiscoveryParameters,
-    EnforcedServiceWithItem,
-    EnforcedServiceWithoutItem,
+    EnforcedService,
     ExtraHostConfEventConsole,
     ExtraHostConfHostMonitoring,
     ExtraServiceConf,
@@ -33,13 +31,11 @@ RuleSpec = (
     ActiveCheck
     | AgentConfig
     | AgentAccess
-    | EnforcedServiceWithItem
-    | EnforcedServiceWithoutItem
+    | EnforcedService
     | ExtraServiceConf
     | ExtraHostConfHostMonitoring
     | ExtraHostConfEventConsole
-    | CheckParameterWithItem
-    | CheckParameterWithoutItem
+    | CheckParameters
     | Host
     | InventoryParameters
     | NotificationParameters
@@ -65,13 +61,11 @@ def load_api_v1_rule_specs(
             ActiveCheck: "rule_spec_",
             AgentConfig: "rule_spec_",
             AgentAccess: "rule_spec_",
-            EnforcedServiceWithItem: "rule_spec_",
-            EnforcedServiceWithoutItem: "rule_spec_",
+            EnforcedService: "rule_spec_",
             ExtraServiceConf: "rule_spec_",
             ExtraHostConfHostMonitoring: "rule_spec_",
             ExtraHostConfEventConsole: "rule_spec_",
-            CheckParameterWithItem: "rule_spec_",
-            CheckParameterWithoutItem: "rule_spec_",
+            CheckParameters: "rule_spec_",
             Host: "rule_spec_",
             InventoryParameters: "rule_spec_",
             NotificationParameters: "rule_spec_",
@@ -103,29 +97,15 @@ def _generate_additional_plugins(
 ) -> Sequence[LoadedRuleSpec]:
     loaded: list[LoadedRuleSpec] = []
     for location, plugin in discovered_plugins.plugins.items():
-        if isinstance(plugin, CheckParameterWithItem) and plugin.create_enforced_service:
+        if isinstance(plugin, CheckParameters) and plugin.create_enforced_service:
             loaded.append(
                 LoadedRuleSpec(
-                    rule_spec=EnforcedServiceWithItem(
-                        title=plugin.title,
-                        topic=plugin.topic,
-                        parameter_form=plugin.parameter_form,
-                        item_form=plugin.item_form,
-                        name=plugin.name,
-                        is_deprecated=plugin.is_deprecated,
-                        help_text=plugin.help_text,
-                    ),
-                    edition_only=_get_edition_only(location.module),
-                )
-            )
-        elif isinstance(plugin, CheckParameterWithoutItem) and plugin.create_enforced_service:
-            loaded.append(
-                LoadedRuleSpec(
-                    rule_spec=EnforcedServiceWithoutItem(
+                    rule_spec=EnforcedService(
                         title=plugin.title,
                         topic=plugin.topic,
                         parameter_form=plugin.parameter_form,
                         name=plugin.name,
+                        condition=plugin.condition,
                         is_deprecated=plugin.is_deprecated,
                         help_text=plugin.help_text,
                     ),

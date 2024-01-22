@@ -5,7 +5,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Migrate, ServiceState
-from cmk.rulesets.v1.rule_specs import CheckParameterWithoutItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
 def _parameter_form_zypper() -> Dictionary:
@@ -44,9 +44,10 @@ def _parameter_form_zypper() -> Dictionary:
     )
 
 
-rule_spec_zypper = CheckParameterWithoutItem(
+rule_spec_zypper = CheckParameters(
     name="zypper",
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=_parameter_form_zypper,
     title=Localizable("Zypper Updates"),
+    condition=HostCondition(),
 )

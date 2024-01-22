@@ -26,10 +26,10 @@ def _item_spec() -> form_specs.Text:
     )
 
 
-rule_spec_mssql_backup_per_type = rule_specs.CheckParameterWithItem(
+rule_spec_mssql_backup_per_type = rule_specs.CheckParameters(
     name="mssql_backup_per_type",
     topic=rule_specs.Topic.APPLICATIONS,
-    item_form=_item_spec(),
     parameter_form=_parameter_form_mssql_backup_per_type,
     title=Localizable("MSSQL Backup"),
+    condition=rule_specs.HostAndItemCondition(item_form=_item_spec()),
 )

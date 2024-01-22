@@ -68,10 +68,10 @@ def _parameter_formspec_mssql_backup() -> form_specs.Dictionary:
     )
 
 
-rule_spec_mssql_backup = rule_specs.CheckParameterWithItem(
+rule_spec_mssql_backup = rule_specs.CheckParameters(
     name="mssql_backup",
     title=Localizable("MSSQL Backup summary"),
     topic=rule_specs.Topic.APPLICATIONS,
-    item_form=mssql_item_spec_instance_tablespace(),
     parameter_form=_parameter_formspec_mssql_backup,
+    condition=rule_specs.HostAndItemCondition(item_form=mssql_item_spec_instance_tablespace()),
 )

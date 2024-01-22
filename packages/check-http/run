@@ -144,7 +144,7 @@ run_setup_environment() {
         export CARGO_HOME
     fi
 
-    export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
+    export CARGO_BUILD_TARGET="x86_64-unknown-linux-gnu"
     RUSTFLAGS="
 $RUSTFLAGS \
 --remap-path-prefix=${REPO_DIR}=/builddir \

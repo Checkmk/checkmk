@@ -27,7 +27,6 @@ reqwest = { version = "*", features = [
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
 tokio = { version = "*", features = ["full"] }
-openssl = { version = "*", features = ["vendored"] }
 httpdate = { version = "*" }
 mime = { version = "*" }
 encoding_rs = { version = "*" }

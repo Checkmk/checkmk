@@ -277,6 +277,9 @@ def main() {
                                     }
                                 }
                             }
+                            sh("""echo ==== ${distro} =====
+                            ps wauxw
+                            """)
                         }
                         }
 

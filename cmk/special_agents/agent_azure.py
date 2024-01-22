@@ -1597,17 +1597,17 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
         write_usage_section([], monitored_groups)
 
 
-def _is_monitored(
+def _get_monitored_resource(
     resource_id: str,
     monitored_resources: Sequence[AzureResource],
     args: Args,
-) -> bool:
+) -> AzureResource | None:
     for resource in monitored_resources:
         # different endpoints deliver ids in different case
         if resource_id.lower() == resource.info["id"].lower():
-            return resource.info["type"] in args.services
+            return resource if resource.info["type"] in args.services else None
 
-    return False
+    return None
 
 
 def process_resource_health(
@@ -1628,7 +1628,7 @@ def process_resource_health(
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])
 
-        if not _is_monitored(resource_id, monitored_resources, args):
+        if (resource := _get_monitored_resource(resource_id, monitored_resources, args)) is None:
             continue
 
         health_data = {
@@ -1637,6 +1637,7 @@ def process_resource_health(
             **filter_keys(
                 health["properties"], ("availabilityState", "summary", "reasonType", "occuredTime")
             ),
+            "tags": resource.tags,
         }
 
         health_section[group].append(json.dumps(health_data))

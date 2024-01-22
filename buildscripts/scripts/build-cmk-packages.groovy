@@ -282,6 +282,9 @@ def main() {
                                     build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
                             }
+                            sh("""echo ==== ${distro} =====
+                            ps wauxw
+                            """)
                         }
                     }
                 }

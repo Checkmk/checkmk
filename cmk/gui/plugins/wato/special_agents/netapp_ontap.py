@@ -7,6 +7,7 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_yes
 from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 from cmk.gui.wato import (
     MigrateToIndividualOrStoredPassword,
@@ -32,6 +33,7 @@ def _valuespec_special_agents_netapp_ontap() -> Dictionary:
                     allow_empty=False,
                 ),
             ),
+            tls_verify_flag_default_yes(),
             (
                 "skip_elements",
                 ListChoice(

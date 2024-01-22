@@ -119,7 +119,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             # TODO: migrate to form_specs.Levels after check_levels function has been implemented
             "levels": form_specs.DictElement(
-                parameter_form=form_specs.Tuple(
+                parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
                     title=Localizable("Upper levels for first output item"),
                     elements=[
                         form_specs.Float(title=Localizable("Warning at")),
@@ -130,7 +130,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
             ),
             # TODO: migrate to form_specs.Levels after check_levels function has been implemented
             "levels_low": form_specs.DictElement(
-                parameter_form=form_specs.Tuple(
+                parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
                     title=Localizable("Lower levels for first output item"),
                     elements=[
                         form_specs.Float(title=Localizable("Warning below")),

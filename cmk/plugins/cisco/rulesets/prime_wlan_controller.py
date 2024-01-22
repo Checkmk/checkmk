@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     Text,
     TimeSpan,
     TimeUnit,
-    Tuple,
+    TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
@@ -21,7 +21,7 @@ def _parameter_form_wlan_controllers_clients():
     return Dictionary(
         elements={
             "clients": DictElement(
-                parameter_form=Tuple(
+                parameter_form=TupleDoNotUseWillbeRemoved(
                     title=Localizable("Maximum number of clients"),
                     elements=[
                         Integer(title=Localizable("Warning at")),
@@ -46,7 +46,7 @@ def _parameter_form_wlan_controllers_access_points():
     return Dictionary(
         elements={
             "access_points": DictElement(
-                parameter_form=Tuple(
+                parameter_form=TupleDoNotUseWillbeRemoved(
                     title=Localizable("Maximum number of access points"),
                     elements=[
                         Integer(title=Localizable("Warning at")),
@@ -71,7 +71,7 @@ def _parameter_form_wlan_controllers_last_backup():
     return Dictionary(
         elements={
             "last_backup": DictElement(
-                parameter_form=Tuple(
+                parameter_form=TupleDoNotUseWillbeRemoved(
                     title=Localizable("Time since last backup"),
                     elements=[
                         TimeSpan(

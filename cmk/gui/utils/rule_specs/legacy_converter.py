@@ -473,7 +473,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Text():
             return _convert_to_legacy_text_input(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Tuple():
+        case ruleset_api_v1.form_specs.TupleDoNotUseWillbeRemoved():
             return _convert_to_legacy_tuple(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Dictionary():
@@ -696,7 +696,8 @@ def _convert_to_legacy_text_input(
 
 
 def _convert_to_legacy_tuple(
-    to_convert: ruleset_api_v1.form_specs.Tuple, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.TupleDoNotUseWillbeRemoved,
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
     legacy_elements = [
         _convert_to_legacy_valuespec(element, localizer) for element in to_convert.elements

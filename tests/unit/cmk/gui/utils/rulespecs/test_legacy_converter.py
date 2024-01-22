@@ -272,12 +272,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="TextInput",
         ),
         pytest.param(
-            api_v1.form_specs.Tuple(elements=[]),
+            api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[]),
             legacy_valuespecs.Tuple(elements=[]),
             id="minimal Tuple",
         ),
         pytest.param(
-            api_v1.form_specs.Tuple(
+            api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                 elements=[
                     api_v1.form_specs.Text(title=api_v1.Localizable("child title 1")),
                     api_v1.form_specs.Text(title=api_v1.Localizable("child title 2")),
@@ -405,13 +405,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown",
         ),
         pytest.param(
-            api_v1.form_specs.List(parameter_form=api_v1.form_specs.Tuple(elements=[])),
+            api_v1.form_specs.List(
+                parameter_form=api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[])
+            ),
             legacy_valuespecs.ListOf(valuespec=legacy_valuespecs.Tuple(elements=[])),
             id="minimal ListOf",
         ),
         pytest.param(
             api_v1.form_specs.List(
-                parameter_form=api_v1.form_specs.Tuple(
+                parameter_form=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                     elements=[
                         api_v1.form_specs.Text(),
                         api_v1.form_specs.Integer(unit=api_v1.Localizable("km")),
@@ -1448,7 +1450,9 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.validators.ValidationError(api_v1.Localizable("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.List(
-        parameter_form=api_v1.form_specs.Tuple(elements=[api_v1.form_specs.Text()]),
+        parameter_form=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
+            elements=[api_v1.form_specs.Text()]
+        ),
         custom_validate=_v1_custom_list_validate,
     )
 
@@ -1481,7 +1485,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             id="integer migration",
         ),
         pytest.param(
-            api_v1.form_specs.Tuple(
+            api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                 elements=[
                     api_v1.form_specs.Integer(
                         transform=api_v1.form_specs.Migrate(
@@ -1574,7 +1578,7 @@ def test_migrate(
             id="transform different",
         ),
         pytest.param(
-            api_v1.form_specs.Tuple(
+            api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                 elements=[
                     api_v1.form_specs.Integer(
                         transform=api_v1.form_specs.Transform(
@@ -1658,7 +1662,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.DataSize(),
         api_v1.form_specs.Percentage(),
         api_v1.form_specs.Text(),
-        api_v1.form_specs.Tuple(elements=[]),
+        api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[]),
         api_v1.form_specs.Dictionary(elements={}),
         api_v1.form_specs.SingleChoice(elements=[]),
         api_v1.form_specs.CascadingSingleChoice(elements=[]),
@@ -1686,7 +1690,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
 def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
     match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.Tuple() | api_v1.form_specs.Dictionary() | api_v1.form_specs.SingleChoice() | api_v1.form_specs.CascadingSingleChoice() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
+        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.TupleDoNotUseWillbeRemoved() | api_v1.form_specs.Dictionary() | api_v1.form_specs.SingleChoice() | api_v1.form_specs.CascadingSingleChoice() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
             try:
                 _ = form_spec.transform
             except AttributeError:

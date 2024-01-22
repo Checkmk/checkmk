@@ -198,11 +198,12 @@ div#service_container {
 }
 
 div.warning_container {
-  margin: $spacing 0;
+  margin: $spacing;
   display: inline-flex;
   border-radius: $theme-border-radius $spacing $spacing $theme-border-radius;
   align-items: center;
   background: $color-state-1-background;
+  width: calc(100% - 2 * $spacing);
   div.content {
     margin: 0;
     background-color: $headline-color;

@@ -126,7 +126,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
 
     unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
 
-    assert unsubscribed_sections_names == {"labels"}
+    assert unsubscribed_sections_names == {"azure_labels", "labels"}
 
 
 def test_section_detection_uses_sysdescr_or_sysobjid(

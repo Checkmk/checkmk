@@ -20,10 +20,11 @@ from cmk.rulesets.v1.form_specs import (
     Text,
 )
 from cmk.rulesets.v1.rule_specs import (
-    CheckParameterWithItem,
-    CheckParameterWithoutItem,
+    CheckParameters,
     DiscoveryParameters,
     EvalType,
+    HostAndItemCondition,
+    HostCondition,
     Topic,
 )
 
@@ -198,20 +199,23 @@ def _check_parameters_form_alertmanager():
     )
 
 
-rule_spec_alertmanager_rule_state = CheckParameterWithItem(
+rule_spec_alertmanager_rule_state = CheckParameters(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
-    item_form=Text(
-        title=Localizable("Name of Alert rules/Alert rule groups"),
-        custom_validate=validators.DisallowEmpty(),
-    ),
     parameter_form=_check_parameters_form_alertmanager,
     title=Localizable("Alertmanager rule states"),
+    condition=HostAndItemCondition(
+        item_form=Text(
+            title=Localizable("Name of Alert rules/Alert rule groups"),
+            custom_validate=validators.DisallowEmpty(),
+        )
+    ),
 )
 
-rule_spec_alertmanager_rule_state_summary = CheckParameterWithoutItem(
+rule_spec_alertmanager_rule_state_summary = CheckParameters(
     name="alertmanager_rule_state_summary",
     topic=Topic.APPLICATIONS,
     parameter_form=_check_parameters_form_alertmanager,
     title=Localizable("Alertmanager rule states (Summary)"),
+    condition=HostCondition(),
 )

@@ -11,7 +11,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     Text,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_form_prism_protection_domains() -> Dictionary:
@@ -35,10 +35,10 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
     )
 
 
-rule_spec_prims_protection_domains = CheckParameterWithItem(
+rule_spec_prims_protection_domains = CheckParameters(
     name="prism_protection_domains",
     title=Localizable("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,
-    item_form=Text(title=Localizable("Protection Domain")),
     parameter_form=_parameter_form_prism_protection_domains,
+    condition=HostAndItemCondition(item_form=Text(title=Localizable("Protection Domain"))),
 )

@@ -69,20 +69,9 @@ def convert_to_legacy_rulespec(
                 localizer,
                 config_scope_prefix=RuleGroup.AgentConfig,
             )
-        case ruleset_api_v1.rule_specs.CheckParameterWithItem():
-            return _convert_to_legacy_check_parameter_with_item_rulespec(
-                to_convert, edition_only, localizer
-            )
-        case ruleset_api_v1.rule_specs.CheckParameterWithoutItem():
-            return _convert_to_legacy_check_parameter_without_item_rulespec(
-                to_convert, edition_only, localizer
-            )
-        case ruleset_api_v1.rule_specs.EnforcedServiceWithItem():
-            item_spec = partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer)
-            return _convert_to_legacy_manual_check_parameter_rulespec(
-                to_convert, edition_only, localizer, item_spec
-            )
-        case ruleset_api_v1.rule_specs.EnforcedServiceWithoutItem():
+        case ruleset_api_v1.rule_specs.CheckParameters():
+            return _convert_to_legacy_check_parameter_rulespec(to_convert, edition_only, localizer)
+        case ruleset_api_v1.rule_specs.EnforcedService():
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, edition_only, localizer
             )
@@ -164,35 +153,35 @@ def convert_to_legacy_rulespec(
             assert_never(other)
 
 
-def _convert_to_legacy_check_parameter_with_item_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.CheckParameterWithItem,
+def _convert_to_legacy_check_parameter_rulespec(
+    to_convert: ruleset_api_v1.rule_specs.CheckParameters,
     edition_only: Edition,
     localizer: Callable[[str], str],
-) -> CheckParameterRulespecWithItem:
-    return CheckParameterRulespecWithItem(
-        check_group_name=to_convert.name,
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
-        group=_convert_to_legacy_rulespec_group(
-            legacy_rulespec_groups.RulespecGroupMonitoringConfiguration, to_convert.topic, localizer
-        ),
-        item_spec=partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer),
-        match_type="dict",
-        parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
-        ),
-        is_deprecated=to_convert.is_deprecated,
-        create_manual_check=False,
-        # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
-        # want to mark rulespecs that are available in both the CCE and CME as such
-        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
-    )
-
-
-def _convert_to_legacy_check_parameter_without_item_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.CheckParameterWithoutItem,
-    edition_only: Edition,
-    localizer: Callable[[str], str],
-) -> CheckParameterRulespecWithoutItem:
+) -> CheckParameterRulespecWithItem | CheckParameterRulespecWithoutItem:
+    if isinstance(to_convert.condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
+        return CheckParameterRulespecWithItem(
+            check_group_name=to_convert.name,
+            title=None
+            if to_convert.title is None
+            else partial(to_convert.title.localize, localizer),
+            group=_convert_to_legacy_rulespec_group(
+                legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+                to_convert.topic,
+                localizer,
+            ),
+            item_spec=partial(
+                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
+            ),
+            match_type="dict",
+            parameter_valuespec=partial(
+                _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
+            ),
+            is_deprecated=to_convert.is_deprecated,
+            create_manual_check=False,
+            # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
+            # want to mark rulespecs that are available in both the CCE and CME as such
+            is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
+        )
     return CheckParameterRulespecWithoutItem(
         check_group_name=to_convert.name,
         title=partial(to_convert.title.localize, localizer),
@@ -209,12 +198,20 @@ def _convert_to_legacy_check_parameter_without_item_rulespec(
 
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.EnforcedServiceWithItem
-    | ruleset_api_v1.rule_specs.EnforcedServiceWithoutItem,
+    to_convert: ruleset_api_v1.rule_specs.EnforcedService,
     edition_only: Edition,
     localizer: Callable[[str], str],
-    item_spec: Callable[[], legacy_valuespecs.ValueSpec] | None = None,
 ) -> ManualCheckParameterRulespec:
+    match to_convert.condition:
+        case ruleset_api_v1.rule_specs.HostCondition():
+            item_spec = None
+        case ruleset_api_v1.rule_specs.HostAndItemCondition():
+            item_spec = partial(
+                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
+            )
+        case other:
+            assert_never(other)
+
     return ManualCheckParameterRulespec(
         group=_convert_to_legacy_rulespec_group(
             legacy_rulespecs.RulespecGroupEnforcedServices, to_convert.topic, localizer

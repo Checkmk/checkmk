@@ -868,11 +868,10 @@ def test_convert_to_legacy_rulespec_group(
     ["new_rulespec", "expected"],
     [
         pytest.param(
-            api_v1.rule_specs.CheckParameterWithItem(
+            api_v1.rule_specs.CheckParameters(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
                     api_v1.form_specs.Dictionary,
                     elements={
@@ -882,6 +881,9 @@ def test_convert_to_legacy_rulespec_group(
                             )
                         ),
                     },
+                ),
+                condition=api_v1.rule_specs.HostAndItemCondition(
+                    item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title"))
                 ),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -898,10 +900,10 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="dict",
                 create_manual_check=False,
             ),
-            id="CheckParameterRuleSpecWithItem",
+            id="CheckParameterRuleSpec with HostAndItemCondition",
         ),
         pytest.param(
-            api_v1.rule_specs.CheckParameterWithoutItem(
+            api_v1.rule_specs.CheckParameters(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -915,6 +917,7 @@ def test_convert_to_legacy_rulespec_group(
                         ),
                     },
                 ),
+                condition=api_v1.rule_specs.HostCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.CheckParameterRulespecWithoutItem(
@@ -929,14 +932,13 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="dict",
                 create_manual_check=False,
             ),
-            id="CheckParameterRuleSpecWithoutItem",
+            id="CheckParameterRuleSpec with HostCondition",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceWithItem(
+            api_v1.rule_specs.EnforcedService(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=partial(
                     api_v1.form_specs.Dictionary,
                     elements={
@@ -946,6 +948,9 @@ def test_convert_to_legacy_rulespec_group(
                             )
                         ),
                     },
+                ),
+                condition=api_v1.rule_specs.HostAndItemCondition(
+                    item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title"))
                 ),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -961,15 +966,17 @@ def test_convert_to_legacy_rulespec_group(
                 ),
                 match_type="dict",
             ),
-            id="EnforcedServiceRuleSpecWithItem",
+            id="EnforcedServiceRuleSpec with HostAndItemCondition",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceWithItem(
+            api_v1.rule_specs.EnforcedService(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title")),
                 parameter_form=None,
+                condition=api_v1.rule_specs.HostAndItemCondition(
+                    item_form=api_v1.form_specs.Text(title=api_v1.Localizable("item title"))
+                ),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
@@ -980,10 +987,10 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=None,
                 match_type="dict",
             ),
-            id="EnforcedServiceRuleSpecWithItem no parameters",
+            id="EnforcedServiceRuleSpec with HostAndItemCondition no parameters",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceWithoutItem(
+            api_v1.rule_specs.EnforcedService(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
@@ -997,6 +1004,7 @@ def test_convert_to_legacy_rulespec_group(
                         ),
                     },
                 ),
+                condition=api_v1.rule_specs.HostCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
@@ -1010,14 +1018,15 @@ def test_convert_to_legacy_rulespec_group(
                 ),
                 match_type="dict",
             ),
-            id="EnforcedServiceRuleSpecWithoutItem",
+            id="EnforcedServiceRuleSpec with HostCondition",
         ),
         pytest.param(
-            api_v1.rule_specs.EnforcedServiceWithoutItem(
+            api_v1.rule_specs.EnforcedService(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 parameter_form=None,
+                condition=api_v1.rule_specs.HostCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ManualCheckParameterRulespec(
@@ -1027,7 +1036,7 @@ def test_convert_to_legacy_rulespec_group(
                 parameter_valuespec=None,
                 match_type="dict",
             ),
-            id="EnforcedServiceRuleSpecWithoutItem no parameters",
+            id="EnforcedServiceRuleSpec with HostCondition no parameters",
         ),
         pytest.param(
             api_v1.rule_specs.ActiveCheck(

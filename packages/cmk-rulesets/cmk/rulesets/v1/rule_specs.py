@@ -59,6 +59,16 @@ class HostAndServiceCondition:
 
 
 @dataclass(frozen=True)
+class HostAndItemCondition:
+    """
+    Args:
+        item_form: Configuration specification for the item of the check
+    """
+
+    item_form: ItemFormSpec
+
+
+@dataclass(frozen=True)
 class Host:
     """Specifies rule configurations for hosts
 
@@ -107,59 +117,62 @@ class Service:
 
 
 @dataclass(frozen=True)
-class CheckParameterWithItem:
+class CheckParameters:
+    """Specifies rule configurations for checks
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+        create_enforced_service: Whether to automatically create an enforced service for any
+                                  service created with this rule spec
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    item_form: ItemFormSpec
     name: str
+    condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
     help_text: Localizable | None = None
     create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, SingleChoice))
+        if isinstance(self.condition, HostAndItemCondition):
+            assert isinstance(self.condition.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
 
 @dataclass(frozen=True)
-class CheckParameterWithoutItem:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], Dictionary]
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-    create_enforced_service: bool = True
+class EnforcedService:
+    """Specifies rule configurations for checks whose creation is enforced
 
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
 
-@dataclass(frozen=True)
-class EnforcedServiceWithItem:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec] | None
-    item_form: ItemFormSpec
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-    def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, SingleChoice))
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
-
-
-@dataclass(frozen=True)
-class EnforcedServiceWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec] | None
     name: str
+    condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
     def __post_init__(self) -> None:
+        if isinstance(self.condition, HostAndItemCondition):
+            assert isinstance(self.condition.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 

@@ -12,6 +12,7 @@ from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Servic
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.azure import (
     create_check_metrics_function,
+    get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
     parse_azure_datetime,
@@ -96,8 +97,10 @@ agent_section_azure_virtualnetworkgateways = AgentSection(
 
 
 def discover_virtual_network_gateway(section: Section) -> DiscoveryResult:
-    for item in section:
-        yield Service(item=item)
+    for item, vnet_gateway in section.items():
+        yield Service(
+            item=item, labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags)
+        )
 
 
 def check_azure_virtual_network_gateway(
@@ -327,9 +330,12 @@ check_plugin_azure_virtual_network_gateway_bgp = CheckPlugin(
 
 
 def discover_virtual_network_gateway_peering(section: Section) -> DiscoveryResult:
-    for item in section:
-        for peering in section[item].remote_vnet_peerings:
-            yield Service(item=f"{item} Remote Peering {peering.name}")
+    for item, vnet_gateway in section.items():
+        for peering in vnet_gateway.remote_vnet_peerings:
+            yield Service(
+                item=f"{item} Remote Peering {peering.name}",
+                labels=get_service_labels_from_resource_tags(vnet_gateway.resource.tags),
+            )
 
 
 def check_virtual_network_gateway_peering(item: str, section: Section) -> CheckResult:

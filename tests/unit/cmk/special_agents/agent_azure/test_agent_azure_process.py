@@ -709,55 +709,96 @@ def test_usage_details(
 @pytest.mark.parametrize(
     "monitored_resources,resource_health,expected_output",
     [
-        (
-            (
-                [
-                    AzureResource(
-                        {
-                            "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
-                            "name": "VM-test-1",
-                            "type": "Microsoft.Compute/virtualMachines",
-                            "location": "uksouth",
-                            "zones": ["1"],
-                            "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
-                            "group": "test1",
-                            "provider": "Microsoft.Compute",
-                        }
-                    )
-                ],
-                {
-                    "value": [
-                        {
-                            "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
-                            "name": "current",
-                            "type": "Microsoft.ResourceHealth/AvailabilityStatuses",
-                            "location": "uksouth",
-                            "properties": {
-                                "availabilityState": "Available",
-                                "title": "Available",
-                                "summary": "There aren't any known Azure platform problems affecting this virtual machine.",
-                                "reasonType": "",
-                                "category": "Not Applicable",
-                                "context": "Not Applicable",
-                                "occuredTime": "2023-02-09T16: 19: 01Z",
-                                "reasonChronicity": "Persistent",
-                                "reportedTime": "2023-02-22T15: 21: 41.7883795Z",
-                            },
-                        }
-                    ]
-                },
-                "<<<<test1>>>>\n"
-                "<<<azure_resource_health:sep(124)>>>\n"
-                '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z"}\n'
-                "<<<<>>>>\n",
-            )
+        pytest.param(
+            [
+                AzureResource(
+                    {
+                        "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+                        "name": "VM-test-1",
+                        "type": "Microsoft.Compute/virtualMachines",
+                        "location": "uksouth",
+                        "zones": ["1"],
+                        "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
+                        "group": "test1",
+                        "provider": "Microsoft.Compute",
+                    },
+                )
+            ],
+            {
+                "value": [
+                    {
+                        "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
+                        "name": "current",
+                        "type": "Microsoft.ResourceHealth/AvailabilityStatuses",
+                        "location": "uksouth",
+                        "properties": {
+                            "availabilityState": "Available",
+                            "title": "Available",
+                            "summary": "There aren't any known Azure platform problems affecting this virtual machine.",
+                            "reasonType": "",
+                            "category": "Not Applicable",
+                            "context": "Not Applicable",
+                            "occuredTime": "2023-02-09T16: 19: 01Z",
+                            "reasonChronicity": "Persistent",
+                            "reportedTime": "2023-02-22T15: 21: 41.7883795Z",
+                        },
+                    }
+                ]
+            },
+            "<<<<test1>>>>\n"
+            "<<<azure_resource_health:sep(124)>>>\n"
+            '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {}}\n'
+            "<<<<>>>>\n",
+            id="virtual_machine",
         ),
-        (
-            (
-                [],
-                {"value": []},
-                "",
-            )
+        pytest.param(
+            [
+                AzureResource(
+                    {
+                        "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+                        "name": "VM-test-1",
+                        "type": "Microsoft.Compute/virtualMachines",
+                        "location": "uksouth",
+                        "zones": ["1"],
+                        "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
+                        "group": "test1",
+                        "provider": "Microsoft.Compute",
+                        "tags": {"tag1": "value1"},
+                    },
+                )
+            ],
+            {
+                "value": [
+                    {
+                        "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
+                        "name": "current",
+                        "type": "Microsoft.ResourceHealth/AvailabilityStatuses",
+                        "location": "uksouth",
+                        "properties": {
+                            "availabilityState": "Available",
+                            "title": "Available",
+                            "summary": "There aren't any known Azure platform problems affecting this virtual machine.",
+                            "reasonType": "",
+                            "category": "Not Applicable",
+                            "context": "Not Applicable",
+                            "occuredTime": "2023-02-09T16: 19: 01Z",
+                            "reasonChronicity": "Persistent",
+                            "reportedTime": "2023-02-22T15: 21: 41.7883795Z",
+                        },
+                    }
+                ]
+            },
+            "<<<<test1>>>>\n"
+            "<<<azure_resource_health:sep(124)>>>\n"
+            '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {"tag1": "value1"}}\n'
+            "<<<<>>>>\n",
+            id="virtual_machine_import_tags",
+        ),
+        pytest.param(
+            [],
+            {"value": []},
+            "",
+            id="no_resource",
         ),
     ],
 )

@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 import json
 import pprint
 import uuid
@@ -19,14 +23,14 @@ from cmk.rulesets.v1.form_specs import Localizable  # type: ignore[attr-defined]
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,
-    SingleChoice,
-    SingleChoiceElement,
     Float,
     FormSpec,
     Integer,
     List,
     Percentage,
     ServiceState,
+    SingleChoice,
+    SingleChoiceElement,
     Text,
     Transform,
     Tuple,
@@ -108,17 +112,17 @@ class VueFormSpecVisitor:
             return self._visit_float
         if isinstance(form_spec, Percentage):
             return self._visit_percentage
-        elif isinstance(form_spec, Dictionary):
+        if isinstance(form_spec, Dictionary):
             return self._visit_dictionary
-        elif isinstance(form_spec, Tuple):
+        if isinstance(form_spec, Tuple):
             return self._visit_tuple
-        elif isinstance(form_spec, CascadingSingleChoice):
+        if isinstance(form_spec, CascadingSingleChoice):
             return self._visit_cascading_dropdown
-        elif isinstance(form_spec, SingleChoice):
+        if isinstance(form_spec, SingleChoice):
             return self._visit_dropdown_choice
-        elif isinstance(form_spec, List):
+        if isinstance(form_spec, List):
             return self._visit_list
-        elif isinstance(form_spec, Text):
+        if isinstance(form_spec, Text):
             return self._visit_text
         raise MKGeneralException(f"No visitor for {form_spec}")
 
@@ -131,7 +135,7 @@ class VueFormSpecVisitor:
                 _log_indent(f"  validate {node.__class__.__name__}")
                 try:
                     custom_validate = node.custom_validate  # type: ignore[union-attr]
-                except Exception as e:
+                except Exception:
                     # Basic exception handling -> TODO: inspect, etc.
                     # Not every formspec has a custom validate callable
                     _log_indent(f"  no custom validate for {node.__class__.__name__}")
@@ -194,8 +198,8 @@ class VueFormSpecVisitor:
     def _visit_tuple(self, form_spec: Tuple, value: tuple) -> VueVisitorMethodResult:
         raw_value = []
         component_elements = []
-        for element, value in zip(form_spec.elements, value):
-            component_result, component_value = self._visit(element, value)
+        for element, val in zip(form_spec.elements, value):
+            component_result, component_value = self._visit(element, val)
             component_elements.append(self._component_to_dict(component_result))
             raw_value.append(component_value)
 
@@ -279,9 +283,7 @@ class VueFormSpecVisitor:
             value,
         )
 
-    def _visit_dropdown_choice(
-        self, form_spec: SingleChoice, value: Any
-    ) -> VueVisitorMethodResult:
+    def _visit_dropdown_choice(self, form_spec: SingleChoice, value: Any) -> VueVisitorMethodResult:
         # TODO: improve transform. the frontend only renders strings
         return (
             VueFormSpecComponent(
@@ -300,7 +302,7 @@ class VueFormSpecVisitor:
         )
 
     def _visit_list(self, form_spec: List, value: list) -> VueVisitorMethodResult:
-        template, template_default = self._visit(
+        template, _ = self._visit(
             form_spec.parameter_form, compute_default_value(form_spec.parameter_form)
         )
 
@@ -421,7 +423,10 @@ def _convert_service_state(form_spec: ServiceState) -> SingleChoice:
         title=form_spec.title,
         help_text=form_spec.help_text,
         elements=[SingleChoiceElement(str(x), y) for x, y in states],
-        transform=Transform(model_to_form=lambda x: str(x), form_to_model=lambda x: int(x)),
+        transform=Transform(
+            model_to_form=lambda x: str(x),  # pylint: disable=unnecessary-lambda
+            form_to_model=lambda x: int(x),  # pylint: disable=unnecessary-lambda
+        ),
         prefill_selection=str(form_spec.prefill_value),
     )
 

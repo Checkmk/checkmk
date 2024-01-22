@@ -83,13 +83,28 @@ def test_parse() -> None:
 
 
 def test_discovery() -> None:
-    services = list(discovery_windows_tasks(SECTION))
+    services = list(discovery_windows_tasks({}, SECTION))
     assert services == [
         Service(item="Monitoring - Content Replication get failed and outdated items"),
         Service(item="Monitoring - Content Replicaton status reporting overall"),
         Service(item="Monitoring - Delete old IIS logs"),
         Service(item="task-unknown-exit-code"),
     ]
+
+
+def test_discovery_rule() -> None:
+    section = {
+        "task": {
+            "Last Run Time": "10/26/2020 4:23:10 AM",
+            "Next Run Time": "N/A",
+            "Last Result": "-2147024630",
+            "Scheduled Task State": "Disabled",
+        }
+    }
+    services = list(discovery_windows_tasks({}, section))
+    assert not services
+    services = list(discovery_windows_tasks({"discover_disabled": True}, section))
+    assert services == [Service(item="task")]
 
 
 @pytest.mark.parametrize(
@@ -275,4 +290,3 @@ def test_discovery() -> None:
 def test_check(item: str, params: Params, expected_result: list[Result]) -> None:
     result = list(check_windows_tasks(item, params, SECTION))
     assert result == expected_result
-    # checks =

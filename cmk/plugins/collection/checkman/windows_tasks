@@ -16,6 +16,8 @@ description:
  check plugin for a given return code. Finally, this rule allows users to modify the monitoring state
  of tasks which are not enabled.
 
+ The discovered services are configurable via the service discovery rule "Windows Tasks".
+
  Note that for this check plugin to discover any services at all, you need to activate the Windows
  agent plugin "Windows Task Scheduler".
 

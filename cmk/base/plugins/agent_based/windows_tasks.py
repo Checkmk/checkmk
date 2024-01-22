@@ -54,9 +54,16 @@ register.agent_section(
 )
 
 
-def discovery_windows_tasks(section: dict[str, dict[str, str]]) -> DiscoveryResult:
+class DiscoveryParams(TypedDict):
+    discover_disabled: NotRequired[Literal[True]]
+
+
+def discovery_windows_tasks(
+    params: DiscoveryParams, section: dict[str, dict[str, str]]
+) -> DiscoveryResult:
+    discover_disabled = params.get("discover_disabled", False)
     for n, v in section.items():
-        if v.get("Scheduled Task State") != "Disabled":
+        if discover_disabled or v.get("Scheduled Task State") != "Disabled":
             yield Service(item=n)
 
 
@@ -223,6 +230,8 @@ register.check_plugin(
     check_function=check_windows_tasks,
     check_ruleset_name="windows_tasks",
     discovery_function=discovery_windows_tasks,
+    discovery_default_parameters={},
+    discovery_ruleset_name="windows_tasks_discovery",
     service_name="Task %s",
     check_default_parameters={
         # This list is overruled by a ruleset, if configured.

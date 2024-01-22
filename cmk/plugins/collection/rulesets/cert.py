@@ -22,7 +22,7 @@ from cmk.rulesets.v1.form_specs import (
     Text,
     TupleDoNotUseWillbeRemoved,
 )
-from cmk.rulesets.v1.rule_specs import ActiveChecks, EvalType, Topic
+from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 
 
@@ -328,7 +328,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
     )
 
 
-rule_spec_cert = ActiveChecks(
+rule_spec_cert = ActiveCheck(
     title=Localizable("Check certificates"),
     topic=Topic.NETWORKING,
     eval_type=EvalType.ALL,

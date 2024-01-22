@@ -24,7 +24,7 @@ from cmk.rulesets.v1.form_specs import (
     TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.preconfigured import Password
-from cmk.rulesets.v1.rule_specs import ActiveChecks, EvalType, Topic
+from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty
 
 
@@ -585,7 +585,7 @@ def _form_active_checks_httpv2() -> Dictionary:
     )
 
 
-rule_spec_httpv2 = ActiveChecks(
+rule_spec_httpv2 = ActiveCheck(
     title=Localizable("Check HTTP web service"),
     topic=Topic.NETWORKING,
     eval_type=EvalType.MERGE,

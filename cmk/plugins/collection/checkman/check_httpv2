@@ -1,0 +1,24 @@
+title: HTTP/HTTPS Service
+agents: active
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+
+item:
+ The name of the connection (Service name)
+
+description:
+ This performs an active check of an HTTP or HTTPS server.
+
+ This is the new version and designated successor of the
+ "HTTP/HTTPS Connection" active check.
+ The feature set is mostly similar, but includes some new
+ features like http2 support, TLSv1.3 support, and more
+ precise input forms.
+ It also allows to specify multiple connections to check per host.
+
+ Please consider migrating to this active check, as the old
+ one will be deprecated in a future version of Checkmk.
+
+ This check can be configured via ruleset at Checkmk Setup.
+ Please refer to the ruleset for details.

@@ -2162,18 +2162,18 @@ The following users in your current installation will become incompatible with C
 
             password_hash = htpasswd_entries.get(user_id)
             locked = False
-            assert password_hash is not None
-            if password_hash.startswith("!"):
-                locked = True
-                password_hash = password_hash[1:]
+            if password_hash is not None:
+                if password_hash.startswith("!"):
+                    locked = True
+                    password_hash = password_hash[1:]
 
-            if locked:
-                self._logger.warning(
-                    "Automation user %r is locked!",
-                    user_id,
-                )
-            if password_hashing.matches(automation_user_password, password_hash):
-                continue
+                if locked:
+                    self._logger.warning(
+                        "Automation user %r is locked!",
+                        user_id,
+                    )
+                if password_hashing.matches(automation_user_password, password_hash):
+                    continue
 
             htpasswd.save(
                 user_id,

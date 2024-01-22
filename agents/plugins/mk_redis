@@ -56,7 +56,9 @@ redis_args() {
     fi
 
     if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_ARGS+=("-a" "${!PASSWORD}")
+        REDIS_CLI_COMMAND="REDISCLI_AUTH='${!PASSWORD}' redis-cli"
+    else
+        REDIS_CLI_COMMAND="redis-cli"
     fi
 
     REDIS_ARGS+=("info")
@@ -105,7 +107,7 @@ main() {
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
         # execute command
-        waitmax 3 redis-cli "${REDIS_ARGS[@]}" || true
+        waitmax 3 ${REDIS_CLI_COMMAND} "${REDIS_ARGS[@]}" || true
         echo
     done
 

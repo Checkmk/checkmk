@@ -5,7 +5,7 @@
 
 
 from collections.abc import Mapping
-from typing import Any, get_args
+from typing import Any, cast, get_args
 
 from marshmallow import post_dump, pre_dump
 
@@ -1000,7 +1000,7 @@ class PluginBase(BaseSchema):
         }
 
         plugin_params: PluginType = obj["plugin_params"]
-        plugin_name: BuiltInPluginNames = plugin_params["plugin_name"]
+        plugin_name = cast(BuiltInPluginNames, plugin_params["plugin_name"])
         schema_to_use = schema_mapper[plugin_name]
         obj.update({"plugin_params": schema_to_use().dump(plugin_params)})
         return obj

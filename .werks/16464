@@ -1,0 +1,13 @@
+Title: update action: resolve error during sync of automationuser secrets
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1705944989
+Edition: cre
+Level: 1
+Version: 2.2.0p20
+
+During the update config process, the step 'Synchronize automationuser
+secrets' could fail when a deleted automation user still had its
+'var/check_mk/web/' profile present. This werk now correctly resolves
+this issue.

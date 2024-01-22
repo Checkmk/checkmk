@@ -15,8 +15,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
 )
 
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import render, Service
 from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 from cmk.plugins.lib.azure import iter_resource_attributes as iter_resource_attributes
 from cmk.plugins.lib.azure import parse_resources as parse_resources
 
@@ -106,7 +107,9 @@ def discover_azure_by_metrics(*desired_metrics):
         for name, resource in parsed.items():
             metr = resource.metrics
             if set(desired_metrics) & set(metr):
-                yield name, {}
+                yield Service(
+                    item=name, labels=get_service_labels_from_resource_tags(resource.tags)
+                )
 
     return discovery_function
 

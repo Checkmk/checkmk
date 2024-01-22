@@ -15,7 +15,8 @@ from cmk.base.check_legacy_includes.azure import (
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import render, Service
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 
@@ -165,7 +166,13 @@ def check_azure_databases(_item, _no_params, resource):
 
 
 def discover_azure_databases(section):
-    yield from ((item, {}) for item in section)
+    yield from (
+        Service(
+            item=item,
+            labels=get_service_labels_from_resource_tags(resource.tags),
+        )
+        for item, resource in section.items()
+    )
 
 
 check_info["azure_databases"] = LegacyCheckDefinition(

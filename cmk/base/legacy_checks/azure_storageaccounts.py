@@ -16,6 +16,9 @@ from cmk.base.check_legacy_includes.azure import (
 )
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import Service
+from cmk.plugins.lib.azure import get_service_labels_from_resource_tags
+
 
 @get_data_or_go_stale
 def check_azure_storageaccounts(_item, params, resource):
@@ -38,7 +41,10 @@ def check_azure_storageaccounts(_item, params, resource):
 
 
 def discover_azure_storageaccounts(section):
-    yield from ((item, {}) for item in section)
+    yield from (
+        Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
+        for item, resource in section.items()
+    )
 
 
 check_info["azure_storageaccounts"] = LegacyCheckDefinition(

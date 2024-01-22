@@ -24,6 +24,7 @@ from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
+    get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
     parse_resources,
@@ -76,8 +77,8 @@ agent_section_azure_virtualmachines = AgentSection(
 
 
 def discover_azure_virtual_machine(section: Section) -> DiscoveryResult:
-    for item in section.keys():
-        yield Service(item=item)
+    for item, resource in section.items():
+        yield Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
 
 
 def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:

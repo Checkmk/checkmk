@@ -12,6 +12,7 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
+from cmk.utils.type_defs import CustomPluginName, PluginOptions
 
 from cmk.gui.plugins.openapi.endpoints.notification_rules.request_example import (
     notification_rule_request_example,
@@ -26,6 +27,8 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
     APINotificationRule,
+    APIPluginDict,
+    APIPluginList,
     APIRuleProperties,
     CASE_STATE_TYPE,
     INCIDENT_STATE_TYPE,
@@ -35,7 +38,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     MgmtTypeParamsAPI,
     NotificationBulkingAPIAttrs,
     NotificationBulkingAPIValueType,
-    PluginOptions,
     PluginType,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
@@ -1616,7 +1618,9 @@ def test_create_notification_with_invalid_custom_plugin(
     clients: ClientRegistry,
 ) -> None:
     config = notification_rule_request_example()
-    plugin_params: dict[str, Any] = {"plugin_name": "my_cool_plugin"}
+    plugin_params: APIPluginDict = {
+        "plugin_name": CustomPluginName("my_cool_plugin"),
+    }
     config["notification_method"]["notify_plugin"] = {
         "option": PluginOptions.WITH_CUSTOM_PARAMS,
         "plugin_params": plugin_params,
@@ -1664,7 +1668,7 @@ invalid_list_configs = [
 @pytest.mark.parametrize("plugin_params, expected_error", invalid_list_configs)
 def test_create_notification_custom_plugin_invalid_list_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginList,
     expected_error: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1697,8 +1701,8 @@ def test_create_notification_custom_plugin_valid_list_config(
         lambda what: [("my_cool_plugin", "info")],
     )
 
-    plugin_params: dict[str, Any] = {
-        "plugin_name": "my_cool_plugin",
+    plugin_params: APIPluginList = {
+        "plugin_name": CustomPluginName("my_cool_plugin"),
         "params": ["param1", "param2", "param3"],
     }
 
@@ -1823,7 +1827,7 @@ valid_dict_configs = [
 @pytest.mark.usefixtures("register_custom_plugin")
 def test_create_notification_custom_plugin_valid_dict_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginDict,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -1884,7 +1888,7 @@ invalid_dict_configs = [
 @pytest.mark.usefixtures("register_custom_plugin")
 def test_create_notification_custom_plugin_invalid_dict_config(
     clients: ClientRegistry,
-    plugin_params: dict[str, Any],
+    plugin_params: APIPluginDict,
     expected_error: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

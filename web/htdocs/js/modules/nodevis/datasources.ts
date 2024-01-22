@@ -199,6 +199,8 @@ export class AggregationsDatasource extends AbstractDatasource {
 }
 
 export class TopologyDatasource extends AbstractDatasource {
+    override _supports_regular_updates = false;
+
     constructor() {
         super("Topology");
     }

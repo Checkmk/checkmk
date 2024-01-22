@@ -7,7 +7,7 @@
 from collections.abc import Iterator, Mapping
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -22,6 +22,7 @@ from cmk.server_side_calls.v1 import (
 class NetappOntapParams(BaseModel):
     username: str
     password: tuple[Literal["password", "store"], str]
+    no_cert_check: bool = Field(default=False, alias="no-cert-check")
 
 
 def generate_netapp_ontap_command(  # pylint: disable=too-many-branches
@@ -32,6 +33,9 @@ def generate_netapp_ontap_command(  # pylint: disable=too-many-branches
     args = ["--hostname", host_config.address_config.ipv4_address or host_config.name]
     args += ["--username", params.username]
     args += ["--password", parse_secret(params.password)]
+
+    if params.no_cert_check:
+        args += ["--no-cert-check"]
 
     yield SpecialAgentCommand(command_arguments=args)
 

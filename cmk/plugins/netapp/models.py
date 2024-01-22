@@ -521,3 +521,11 @@ class ShelfTemperatureModel(BaseModel):
 
     def item_name(self) -> str:
         return f"{self.list_id}/{self.id}"
+
+
+class AlertModel(BaseModel):
+    """
+    cfr: https://docs.netapp.com/us-en/ontap-restmap-9141//diagnosis.html#diagnosis-alert-get
+    """
+
+    name: str

@@ -6,6 +6,7 @@
 import logging
 from collections.abc import Iterable, Sequence
 
+import requests
 from netapp_ontap import resources as NetAppResource
 from netapp_ontap.host_connection import HostConnection
 
@@ -491,7 +492,20 @@ def fetch_temperatures(
             )
 
 
-def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
+def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.AlertModel]:
+    response = requests.get(
+        url=f"{connection.origin}/api/private/support/alerts",
+        headers=connection.headers,
+        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
+        auth=(connection.username, connection.password),
+        timeout=args.timeout,
+    )
+
+    records = response.json()
+    yield from (models.AlertModel.model_validate(record) for record in records["records"])
+
+
+def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
     write_section("volumes_counters", fetch_volumes_counters(connection, volumes), logger)
@@ -506,6 +520,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("node", fetch_nodes(connection), logger)
     write_section("fan", fetch_fans(connection), logger)
     write_section("temp", fetch_temperatures(connection), logger)
+    write_section("alerts", fetch_alerts(connection, args), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -525,7 +540,9 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
             "to each individual subquery. (Default is %(default)s seconds)"
         ),
     )
-    parser.add_argument("--no-tls-verify", action="store_true", help="Don't verify TLS certificate")
+    parser.add_argument(
+        "--no-cert-check", action="store_true", help="Do not verify TLS certificate"
+    )
 
     return parser.parse_args(argv)
 
@@ -543,11 +560,11 @@ def agent_netapp_main(args: Args) -> int:
         args.hostname,
         args.username,
         args.password,
-        verify=False,  # TODO: check
+        verify=False if args.no_cert_check else True,  # pylint: disable=simplifiable-if-expression
         headers={"User-Agent": USER_AGENT},
     ) as connection:
         logger.debug("Connection estabilished. Start writing sections")
-        write_sections(connection, logger)
+        write_sections(connection, logger, args)
         logger.debug("Sections have been written")
 
     return 0

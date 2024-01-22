@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
-from cmk.utils.licensing.registry import get_remaining_trial_time
+from cmk.utils.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.urls import is_allowed_url
@@ -296,7 +296,7 @@ class LoginPage(Page):
         html.close_a()
 
         try:
-            _show_remaining_trial_time(get_remaining_trial_time())
+            _show_remaining_trial_time(get_remaining_trial_time_rounded())
         except LicenseStateError:
             pass
 
@@ -389,11 +389,13 @@ class LoginPage(Page):
 
 
 def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None:
-    # Add 1 to round up the remaining days/hours, to not show "0 days" or "0 hours"
-    # Note: Once the remaining trial time <= 0 seconds, this code is not reached anymore (license
-    #       switch from trial to free)
-    remaining_days: int = remaining_trial_time.days + 1
-    remaining_hours: int = remaining_trial_time.hours + 1
+    # remaining_trial_time has already been adjusted for display purposes
+    # so that 29d 23h turns into 30d
+    # and 0d 0h 30m turns into 1h
+    # Note: Once the actual remaining trial time <= 0 seconds,
+    #       this code is not reached anymore (license switch from trial to free)
+    remaining_days: int = remaining_trial_time.days
+    remaining_hours: int = remaining_trial_time.hours
     remaining_percentage: float = remaining_trial_time.perc
 
     html.open_div(class_="trial_expiration_info" + (" warning" if remaining_days < 8 else ""))

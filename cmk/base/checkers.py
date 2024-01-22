@@ -13,7 +13,7 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final, TypeVar
+from typing import Final, Literal, TypeVar
 
 import livestatus
 
@@ -79,7 +79,11 @@ from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
-from cmk.agent_based.prediction_backend import InjectedParameters
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    lookup_predictive_levels,
+    PredictionParameters,
+)
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
@@ -773,8 +777,10 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
         return any(_contains_predictive_levels(p) for p in params)
 
     if isinstance(params, dict):
-        return "__injected__" in params or any(
-            _contains_predictive_levels(p) for p in params.values()
+        return (
+            "__injected__" in params
+            or "__reference_metric__" in params
+            or any(_contains_predictive_levels(p) for p in params.values())
         )
 
     return False
@@ -793,17 +799,48 @@ def _inject_prediction_params_recursively(
         case list():
             return list(_inject_prediction_params_iterable(params, injected_p))
         case dict():
-            if "__injected__" in params:
-                params["__injected__"] = injected_p.model_dump()
-                return params
-            return dict(
-                zip(
-                    params.keys(),
-                    _inject_prediction_params_iterable(params.values(), injected_p),
+            return {
+                k: (
+                    _inject_prediction_params(v, injected_p)
+                    if (
+                        isinstance(v, dict) and ("__injected__" in v or "__reference_metric__" in v)
+                    )
+                    else _inject_prediction_params_recursively(v, injected_p)
                 )
-            )
-
+                for k, v in params.items()
+            }
     return params
+
+
+def _inject_prediction_params(
+    params: dict, injected_p: InjectedParameters
+) -> dict | tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
+    """This currently supports two ways to handle predictive levels.
+
+    The "__injected__" case is legacy, the other case is the new one.
+    Once the legacy case is removed, this can be simplified significantly.
+    """
+    if "__injected__" in params:
+        return {
+            **params,
+            "__injected__": injected_p.model_dump(),
+        }
+
+    metric = params["__reference_metric__"]
+    return (
+        "predictive",
+        (
+            metric,
+            *lookup_predictive_levels(
+                metric,
+                params["__direction__"],
+                PredictionParameters.model_validate(
+                    {k: v for k, v in params.items() if not k.startswith("__")}
+                ),
+                injected_p,
+            ),
+        ),
+    )
 
 
 def _inject_prediction_params_iterable(

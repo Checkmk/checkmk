@@ -18,6 +18,9 @@ from tests.unit.conftest import FixRegister
 from cmk.utils.sectionname import SectionName
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/azure/resource_group",
+    "cmk/azure/tag/{key}:{value}",
+    "cmk/azure/vm:instance",
     "cmk/check_mk_server",
     "cmk/device_type",
     "cmk/docker_image",

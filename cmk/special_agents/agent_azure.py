@@ -854,7 +854,7 @@ class AzureSection(Section):
 
 class LabelsSection(Section):
     def __init__(self, piggytarget) -> None:  # type: ignore[no-untyped-def]
-        super().__init__("labels", [piggytarget], separator=0, options=[])
+        super().__init__("azure_labels", [piggytarget], separator=0, options=[])
 
 
 class IssueCollecter:
@@ -1336,9 +1336,8 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
         if tag_name not in vm.tags:
             vm_labels[tag_name] = tag_value
 
-    vm_labels["cmk/azure/vm"] = "instance"
-
     labels_section = LabelsSection(vm.info["name"])
+    labels_section.add((json.dumps({"group_name": vm.info["group"], "vm_instance": True}),))
     labels_section.add((json.dumps(vm_labels),))
     return labels_section
 
@@ -1394,7 +1393,7 @@ def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]
         name = group["name"]
         tags = group.get("tags", {})
         if name in monitored_groups:
-            group_labels[name] = {**tags, **{"cmk/azure/resource_group": name}}
+            group_labels[name] = tags
 
     return group_labels
 
@@ -1406,6 +1405,7 @@ def write_group_info(
 ) -> None:
     for group_name, tags in group_labels.items():
         labels_section = LabelsSection(group_name)
+        labels_section.add((json.dumps({"group_name": group_name}),))
         labels_section.add((json.dumps(tags),))
         labels_section.write()
 

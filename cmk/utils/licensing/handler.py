@@ -126,5 +126,5 @@ class LicensingHandler(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def remaining_trial_time(self) -> RemainingTrialTime:
+    def remaining_trial_time_rounded(self) -> RemainingTrialTime:
         raise NotImplementedError()

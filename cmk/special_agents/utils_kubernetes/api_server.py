@@ -45,7 +45,9 @@ from cmk.special_agents.utils_kubernetes.transform_json import (
 LOGGER = logging.getLogger()
 VERSION_MATCH_RE = re.compile(r"\s*v?([0-9]+(?:\.[0-9]+)*).*")
 SUPPORTED_VERSIONS = [(1, 24), (1, 25), (1, 26), (1, 27), (1, 28)]
-LOWEST_FUNCTIONING_VERSION = min(SUPPORTED_VERSIONS)
+# PM decision: LOWEST_FUNCTIONING_VERSION is incremented, if an issue is reported by a customer.
+# Otherwise, we try not change anything in monitoring (despite lack of support).
+LOWEST_FUNCTIONING_VERSION = (1, 21)
 SUPPORTED_VERSIONS_DISPLAY = ", ".join(f"v{major}.{minor}" for major, minor in SUPPORTED_VERSIONS)
 
 

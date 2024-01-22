@@ -2,8 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import glob
 import hashlib
-import os
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
@@ -55,8 +55,11 @@ class TopologyDatasourceConfiguration:
 
     def __post_init__(self):
         if not self.available_datasources:
-            sorted_list = sorted(os.listdir(topology_data_dir))
-            sorted_list.remove("default")
+            sorted_list = sorted(glob.glob("*", root_dir=topology_data_dir))
+            try:
+                sorted_list.remove("default")
+            except ValueError:
+                pass
             self.available_datasources = ["default"] + sorted_list
 
 

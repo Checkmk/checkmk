@@ -132,17 +132,21 @@ def convert_to_legacy_rulespec(
                 legacy_wato.RulespecGroupDiscoveryCheckParameters,
                 localizer,
             )
-        case ruleset_api_v1.rule_specs.ServiceMonitoring():
-            return _convert_to_legacy_service_rule_spec_rulespec(
-                to_convert,
-                localizer,
-            )
-        case ruleset_api_v1.rule_specs.ServiceMonitoringWithoutService():
-            return _convert_to_legacy_host_rule_spec_rulespec(
-                to_convert,
-                legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
-                localizer,
-            )
+        case ruleset_api_v1.rule_specs.Service():
+            match to_convert.condition:
+                case ruleset_api_v1.rule_specs.HostCondition():
+                    return _convert_to_legacy_host_rule_spec_rulespec(
+                        to_convert,
+                        legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
+                        localizer,
+                    )
+                case ruleset_api_v1.rule_specs.HostAndServiceCondition():
+                    return _convert_to_legacy_service_rule_spec_rulespec(
+                        to_convert,
+                        localizer,
+                    )
+                case other:
+                    assert_never(other)
         case ruleset_api_v1.rule_specs.SNMP():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
@@ -253,7 +257,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     | ruleset_api_v1.rule_specs.NotificationParameters
     | ruleset_api_v1.rule_specs.InventoryParameters
     | ruleset_api_v1.rule_specs.DiscoveryParameters
-    | ruleset_api_v1.rule_specs.ServiceMonitoringWithoutService
+    | ruleset_api_v1.rule_specs.Service
     | ruleset_api_v1.rule_specs.SNMP
     | ruleset_api_v1.rule_specs.SpecialAgent,
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
@@ -273,8 +277,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
 
 
 def _convert_to_legacy_service_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.ServiceMonitoring
-    | ruleset_api_v1.rule_specs.ExtraServiceConf,
+    to_convert: ruleset_api_v1.rule_specs.Service | ruleset_api_v1.rule_specs.ExtraServiceConf,
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
 ) -> legacy_rulespecs.ServiceRulespec:

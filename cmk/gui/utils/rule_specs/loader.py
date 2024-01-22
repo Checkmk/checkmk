@@ -24,8 +24,7 @@ from cmk.rulesets.v1.rule_specs import (
     Host,
     InventoryParameters,
     NotificationParameters,
-    ServiceMonitoring,
-    ServiceMonitoringWithoutService,
+    Service,
     SNMP,
     SpecialAgent,
 )
@@ -45,8 +44,7 @@ RuleSpec = (
     | InventoryParameters
     | NotificationParameters
     | DiscoveryParameters
-    | ServiceMonitoring
-    | ServiceMonitoringWithoutService
+    | Service
     | SNMP
     | SpecialAgent
 )
@@ -78,8 +76,7 @@ def load_api_v1_rule_specs(
             InventoryParameters: "rule_spec_",
             NotificationParameters: "rule_spec_",
             DiscoveryParameters: "rule_spec_",
-            ServiceMonitoring: "rule_spec_",
-            ServiceMonitoringWithoutService: "rule_spec_",
+            Service: "rule_spec_",
             SNMP: "rule_spec_",
             SpecialAgent: "rule_spec_",
         },

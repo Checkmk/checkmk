@@ -2195,7 +2195,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "win_printers",
         "windows_broadcom_bonding",
         "windows_multipath",
-        "windows_tasks",
         "winperf.cpuusage",
         "winperf.diskstat",
         "winperf_mem",

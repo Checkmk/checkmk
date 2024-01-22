@@ -388,13 +388,12 @@ class NodeModel(BaseModel):
     api: /api/cluster/nodes
     doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-get-node-info-iter
 
-
     STATUS PLUGIN:
     ============
     OLD -> NEW:
     ============
     "node" -> name
-    "cpu-busytime": "cpu_busy" -> # ! NO REST equivalent
+    "cpu-busytime": "cpu_busy" -> statistics processor_utilization_base + processor_utilization_raw
     "nvram-battery-status" -> nvram.battery_state
     "number-of-processors": "num_processors" -> controller.cpu.count
     ============
@@ -416,6 +415,8 @@ class NodeModel(BaseModel):
     cpu-processor-type -> controller.cpu.processor
     ============
 
+    cpu_utilization is calculated as explained here:
+    https://docs.netapp.com/us-en/ontap-restapi//ontap/get-cluster-nodes-.html#definitions
     """
 
     name: str
@@ -429,6 +430,11 @@ class NodeModel(BaseModel):
     serial_number: str
     system_id: str
     cpu_processor: str | None = None  # default None inherited from old NetApp API logic
+    processor_utilization_raw: int
+    processor_utilization_base: int
+
+    def cpu_utilization(self):
+        return (self.processor_utilization_raw / self.processor_utilization_base) * 100
 
 
 class ShelfFanModel(BaseModel):

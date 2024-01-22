@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
@@ -12,6 +12,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     SubscriptionDetails,
     SubscriptionDetailsError,
+    SubscriptionDetailsForAggregation,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
 )
@@ -376,3 +377,48 @@ def test_LicenseUsageExtensions_parse(expected_ntop_enabled: bool) -> None:
         LicenseUsageExtensions(ntop=expected_ntop_enabled).for_report()
     )
     assert extensions.ntop is expected_ntop_enabled
+
+
+@pytest.mark.parametrize(
+    "start",
+    [
+        pytest.param(None, id="start-none"),
+        pytest.param(0, id="start-int"),
+        pytest.param(1, id="start-int"),
+    ],
+)
+@pytest.mark.parametrize(
+    "end",
+    [
+        pytest.param(None, id="end-none"),
+        pytest.param(0, id="end-int"),
+        pytest.param(1, id="end-int"),
+    ],
+)
+@pytest.mark.parametrize(
+    "limit",
+    [
+        pytest.param(None, id="limit-none"),
+        pytest.param("unlimited", id="unlimited"),
+        pytest.param(1, id="limit-int"),
+    ],
+)
+def test_subscription_details_for_aggregation(
+    start: int | None, end: int | None, limit: Literal["unlimited"] | int | None
+) -> None:
+    subscription_details = SubscriptionDetailsForAggregation(start, end, limit)
+    assert subscription_details.start == start
+    assert subscription_details.end == end
+    assert subscription_details.limit == limit
+
+
+@pytest.mark.parametrize(
+    "limit",
+    [
+        pytest.param(0, id="zero"),
+        pytest.param(-1, id="lt-zero"),
+    ],
+)
+def test_subscription_details_for_aggregation_limit_error(limit: int) -> None:
+    with pytest.raises(ValueError):
+        SubscriptionDetailsForAggregation(None, None, limit)

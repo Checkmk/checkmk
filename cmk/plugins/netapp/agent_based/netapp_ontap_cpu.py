@@ -3,23 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.netapp import models
 
 Section = Mapping[str, models.NodeModel]
 
 # <<<netapp_ontap_node:sep(0)>>>
 # {
-#     "controller": {"cpu": {"count": 36, "processor": "Intel(R) Xeon(R) CPU E5-2697 v4 @ 2.30GHz"}},
+#     "battery_state": "battery_ok",
+#     "cpu_count": 36,
+#     "cpu_processor": "Intel(R) Xeon(R) CPU E5-2697 v4 @ 2.30GHz",
 #     "model": "AFF-A700",
 #     "name": "mcc_darz_a-02",
-#     "nvram": {"battery_state": "battery_ok"},
+#     "processor_utilization_base": 27042825320982,
+#     "processor_utilization_raw": 601168655834,
 #     "serial_number": "211709000156",
 #     "system_id": "0537063878",
+#     "system_machine_type": null,
 #     "uuid": "1e13de87-bda2-11ed-b8bd-00a098c50e5b",
 #     "version": {
 #         "full": "NetApp Release 9.12.1P6: Fri Aug 04 00:26:53 UTC 2023",
@@ -29,12 +35,16 @@ Section = Mapping[str, models.NodeModel]
 #     },
 # }
 # {
-#     "controller": {"cpu": {"count": 36, "processor": "Intel(R) Xeon(R) CPU E5-2697 v4 @ 2.30GHz"}},
+#     "battery_state": "battery_ok",
+#     "cpu_count": 36,
+#     "cpu_processor": "Intel(R) Xeon(R) CPU E5-2697 v4 @ 2.30GHz",
 #     "model": "AFF-A700",
 #     "name": "mcc_darz_a-01",
-#     "nvram": {"battery_state": "battery_ok"},
+#     "processor_utilization_base": 10050880057543,
+#     "processor_utilization_raw": 179556352511,
 #     "serial_number": "211709000155",
 #     "system_id": "0537063936",
+#     "system_machine_type": null,
 #     "uuid": "8f2677e2-bda7-11ed-88df-00a098c54c0b",
 #     "version": {
 #         "full": "NetApp Release 9.12.1P6: Fri Aug 04 00:26:53 UTC 2023",
@@ -69,10 +79,15 @@ def check_netapp_ontap_cpu_utilization(
     if (data := section.get(item)) is None:
         return
 
+    yield from check_cpu_util(
+        util=data.cpu_utilization(),
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
     if data.cpu_count is not None:
-        yield Result(state=State.OK, summary=f"Total CPU: {data.cpu_count} CPUs")
-    else:
-        yield Result(state=State.UNKNOWN, summary="No available CPU data")
+        yield Result(state=State.OK, summary=f"Number of CPUs: {data.cpu_count} CPUs")
 
 
 check_plugin_netapp_ontap_cpu = CheckPlugin(

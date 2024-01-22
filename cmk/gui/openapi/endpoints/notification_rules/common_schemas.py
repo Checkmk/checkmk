@@ -9,7 +9,7 @@ from typing import Any, get_args
 from marshmallow import post_dump, post_load, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
-from cmk.utils.notify_types import (  # HostTagAgentOrSpecialAgentType,; HostTagAgentType,; HostTagCheckMkAgentType,; HostTagIpAddressFamilyType,; HostTagIpV4Type,; HostTagIpV6Type,; HostTagMonitorSNMPType,; HostTagPiggyBackType,; HostTagPingType,; HostTagSNMPType,
+from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EmailBodyElementsType,
     GroupbyType,

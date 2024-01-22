@@ -73,11 +73,6 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
     target_data_sd = {}
     target_data_sd_status_0 = {}
     for host_name in get_host_names(test_site_update):
-        # services in snmp-rittal-CMCIII host disappearing after update. See CMK-15029
-        # Todo: re-enable host after the ticket is solved.
-        if host_name == "snmp-rittal-CMCIII":
-            continue
-
         target_data_sd[host_name] = test_site_update.get_host_services(host_name)
         target_data_sd_status_0[host_name] = get_services_with_status(target_data_sd[host_name], 0)
 

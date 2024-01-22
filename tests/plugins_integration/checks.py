@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = []  # type: ignore
+    SKIPPED_DUMPS = [
+        # services in snmp-rittal-CMCIII host disappearing after update. See CMK-15029
+        # Todo: re-enable host after the ticket is solved.
+        "snmp-rittal-CMCIII",
+    ]
 
 
 @dataclass
@@ -181,7 +185,11 @@ def get_host_names(site: Site | None = None) -> list[str]:
         if not (config.dump_dir and os.path.exists(config.dump_dir)):
             # need to skip here to abort the collection and return RC=5: "no tests collected"
             pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
-        for dump_file_name in [_ for _ in os.listdir(config.dump_dir) if not _.startswith(".")]:
+        for dump_file_name in [
+            _
+            for _ in os.listdir(config.dump_dir)
+            if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+        ]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"
                 with open(dump_file_path, encoding="utf-8") as dump_file:

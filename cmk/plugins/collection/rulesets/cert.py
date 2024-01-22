@@ -330,7 +330,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
 
 rule_spec_cert = ActiveChecks(
     title=Localizable("Check certificates"),
-    topic=Topic.ENVIRONMENTAL,
+    topic=Topic.NETWORKING,
     eval_type=EvalType.ALL,
     name="cert",
     parameter_form=_form_active_checks_cert,

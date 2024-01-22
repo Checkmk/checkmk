@@ -20,15 +20,15 @@ from cmk.rulesets.v1.form_specs import (
     Levels,
     List,
     Text,
-    Tuple,
+    TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.rule_specs import ActiveChecks, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 
 
-def _valuespec_response_time() -> Tuple:
+def _valuespec_response_time() -> TupleDoNotUseWillbeRemoved:
     # TODO API uses seconds, we need ms here!
-    return Tuple(
+    return TupleDoNotUseWillbeRemoved(
         title=Localizable("Response time"),
         elements=[
             Levels(
@@ -212,8 +212,8 @@ def _valuespec_specific_values() -> Dictionary:
     )
 
 
-def _valuespec_remaining_validity() -> Tuple:
-    return Tuple(
+def _valuespec_remaining_validity() -> TupleDoNotUseWillbeRemoved:
+    return TupleDoNotUseWillbeRemoved(
         title=Localizable("Remaining validity time"),
         help_text=Localizable("Minimum number of days a certificate has to be valid."),
         elements=[

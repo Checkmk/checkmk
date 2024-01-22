@@ -30,7 +30,7 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
                 form_specs.CascadingSingleChoiceElement(
                     name="levels",
                     title=Localizable("Set levels"),
-                    parameter_form=form_specs.Tuple(
+                    parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
                         title=Localizable("Set levels"),
                         elements=[
                             form_specs.TimeSpan(title=Localizable("Warning if older than")),
@@ -41,7 +41,7 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
                 form_specs.CascadingSingleChoiceElement(
                     name="no_levels",
                     title=Localizable("No levels"),
-                    parameter_form=form_specs.Tuple(
+                    parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
                         title=Localizable("No levels"),
                         elements=[
                             form_specs.FixedValue(value=None, label=Localizable("")),

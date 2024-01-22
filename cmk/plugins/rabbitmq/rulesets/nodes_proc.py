@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     Percentage,
     Text,
-    Tuple,
+    TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
 
@@ -21,7 +21,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     fd_perc = CascadingSingleChoiceElement(
         name="fd_perc",
         title=Localizable("Percentual levels for used processes"),
-        parameter_form=Tuple(
+        parameter_form=TupleDoNotUseWillbeRemoved(
             title=Localizable("Percentual levels for used processes"),
             elements=[
                 Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
@@ -32,7 +32,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     fd_abs = CascadingSingleChoiceElement(
         name="fd_abs",
         title=Localizable("Absolute levels for total number of used processes"),
-        parameter_form=Tuple(
+        parameter_form=TupleDoNotUseWillbeRemoved(
             title=Localizable("Absolute levels for total number of used processes"),
             elements=[
                 Integer(title=Localizable("Warning at"), unit=Localizable("processes")),

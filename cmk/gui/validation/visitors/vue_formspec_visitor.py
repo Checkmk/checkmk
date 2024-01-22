@@ -2,6 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 import pprint
 import uuid
@@ -33,7 +34,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     Text,
     Transform,
-    Tuple,
+    TupleDoNotUseWillbeRemoved,
 )
 
 VueVisitorMethodResult = tuple[VueFormSpecComponent, Any]
@@ -114,7 +115,7 @@ class VueFormSpecVisitor:
             return self._visit_percentage
         if isinstance(form_spec, Dictionary):
             return self._visit_dictionary
-        if isinstance(form_spec, Tuple):
+        if isinstance(form_spec, TupleDoNotUseWillbeRemoved):
             return self._visit_tuple
         if isinstance(form_spec, CascadingSingleChoice):
             return self._visit_cascading_dropdown
@@ -195,7 +196,9 @@ class VueFormSpecVisitor:
             value,
         )
 
-    def _visit_tuple(self, form_spec: Tuple, value: tuple) -> VueVisitorMethodResult:
+    def _visit_tuple(
+        self, form_spec: TupleDoNotUseWillbeRemoved, value: tuple
+    ) -> VueVisitorMethodResult:
         raw_value = []
         component_elements = []
         for element, val in zip(form_spec.elements, value):
@@ -389,7 +392,7 @@ VueFormSpecTypes = (
     | Float
     | Percentage
     | Text
-    | Tuple
+    | TupleDoNotUseWillbeRemoved
     | SingleChoice
     | CascadingSingleChoice
     | Dictionary
@@ -433,7 +436,7 @@ def _convert_service_state(form_spec: ServiceState) -> SingleChoice:
 
 def compute_default_value(form_spec: FormSpec) -> Any:
     form_spec = _convert_to_supported_form_spec(form_spec)
-    if isinstance(form_spec, Tuple):
+    if isinstance(form_spec, TupleDoNotUseWillbeRemoved):
         elements = []
         for x in form_spec.elements:
             elements.append(compute_default_value(x))

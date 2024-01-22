@@ -21,7 +21,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     Text,
     TimeSpan,
-    Tuple,
+    TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import ActiveChecks, EvalType, Topic
@@ -82,7 +82,7 @@ def _valuespec_document() -> Dictionary:
                 ),
             ),
             "page_size": DictElement(
-                Tuple(
+                TupleDoNotUseWillbeRemoved(
                     title=Localizable("Size"),
                     elements=[
                         Integer(
@@ -100,16 +100,16 @@ def _valuespec_document() -> Dictionary:
     )
 
 
-def _valuespec_expected_regex() -> Tuple:
-    return Tuple(
+def _valuespec_expected_regex() -> TupleDoNotUseWillbeRemoved:
+    return TupleDoNotUseWillbeRemoved(
         title=Localizable("Regular expression to expect"),
         # orientation="vertical",
         # show_titles=False,
         elements=[
             # TODO Regex currently not implemented in ruleset API
-            Tuple(
+            TupleDoNotUseWillbeRemoved(
                 elements=[
-                    Tuple(
+                    TupleDoNotUseWillbeRemoved(
                         elements=[
                             Text(
                                 label=Localizable("Name"),
@@ -131,14 +131,14 @@ def _valuespec_expected_regex() -> Tuple:
     )
 
 
-def _send_data(http_method: str | None = None) -> FixedValue | Tuple:
+def _send_data(http_method: str | None = None) -> FixedValue | TupleDoNotUseWillbeRemoved:
     if not http_method:
         return FixedValue(
             value=None,
             label=Localizable("No additional configuration options for this method."),
         )
 
-    return Tuple(
+    return TupleDoNotUseWillbeRemoved(
         elements=[
             Text(
                 title=Localizable("Data to send"),
@@ -238,7 +238,7 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "tls_versions": DictElement(
-                Tuple(
+                TupleDoNotUseWillbeRemoved(
                     title=Localizable("SSL version"),
                     elements=[
                         SingleChoice(
@@ -367,7 +367,7 @@ def _valuespec_connection() -> Dictionary:
             "add_headers": DictElement(
                 List(
                     title=Localizable("Additional header lines"),
-                    parameter_form=Tuple(
+                    parameter_form=TupleDoNotUseWillbeRemoved(
                         elements=[
                             Text(label=Localizable("Name")),
                             Text(label=Localizable("Value")),
@@ -383,7 +383,7 @@ def _valuespec_connection() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="user_auth",
                             title=Localizable("User based authentication"),
-                            parameter_form=Tuple(
+                            parameter_form=TupleDoNotUseWillbeRemoved(
                                 title=Localizable("User based authentication"),
                                 help_text=Localizable("Credentials for HTTP Basic Authentication"),
                                 elements=[
@@ -400,7 +400,7 @@ def _valuespec_connection() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="token_auth",
                             title=Localizable("Token based authentication"),
-                            parameter_form=Tuple(
+                            parameter_form=TupleDoNotUseWillbeRemoved(
                                 title=Localizable("Token based authentication"),
                                 elements=[
                                     Text(title=Localizable("API key header")),
@@ -427,7 +427,7 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="string",
                             title=Localizable("Fixed string"),
-                            parameter_form=Tuple(
+                            parameter_form=TupleDoNotUseWillbeRemoved(
                                 title=Localizable("Fixed string"),
                                 elements=[
                                     Text(label=Localizable("Name")),
@@ -475,7 +475,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
         elements={
             "connection": DictElement(_valuespec_connection()),
             "response_time": DictElement(
-                Tuple(
+                TupleDoNotUseWillbeRemoved(
                     title=Localizable("Response time"),
                     elements=[
                         # TODO this should be ms but only seconds are supported
@@ -538,7 +538,7 @@ def _valuespec_endpoints() -> List:
         parameter_form=Dictionary(
             elements={
                 "service_name": DictElement(
-                    Tuple(
+                    TupleDoNotUseWillbeRemoved(
                         title=Localizable("Service description"),
                         elements=[
                             SingleChoice(

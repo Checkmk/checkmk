@@ -234,7 +234,7 @@ class Text:
 
 
 @dataclass(frozen=True)
-class Tuple:
+class TupleDoNotUseWillbeRemoved:
     elements: Sequence["FormSpec"]
 
     title: Localizable | None = None
@@ -879,7 +879,7 @@ FormSpec = (
     | DataSize
     | Percentage
     | Text
-    | Tuple
+    | TupleDoNotUseWillbeRemoved
     | SingleChoice
     | CascadingSingleChoice
     | Dictionary

@@ -297,7 +297,7 @@ def check_netapp_ontap_volumes(
 
     if not volume.state or volume.state != "online":
         # There are volumes with state to None... are they offline? - waiting for discord reponse
-        yield Result(state=State.WARN, summary=f"Volume is {volume.state or 'Unknown'}")
+        yield Result(state=State.WARN, summary=f"Volume state {volume.state or 'Unknown'}")
         return
 
     if not section_netapp_ontap_volumes_counters:

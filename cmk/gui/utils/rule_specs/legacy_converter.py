@@ -1158,7 +1158,7 @@ def _get_predictive_levels_choice_element(
     level_direction: ruleset_api_v1.form_specs.LevelDirection,
     unit: str,
     localizer: Callable[[str], str],
-) -> legacy_valuespecs.Dictionary:
+) -> legacy_valuespecs.Transform:
     valuespec = type(_get_legacy_level_spec(form_spec, "", "", legacy_valuespecs.Sentinel()))
 
     if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
@@ -1171,12 +1171,6 @@ def _get_predictive_levels_choice_element(
         )
     else:
         assert_never(level_direction)
-
-    # This is a placeholder:
-    # The backend uses this marker to inject a callback to get the prediction.
-    # Its main purpose it to bind the host name and service description,
-    # which are not known to the plugin.
-    injected_parameters_key = "__injected__"
 
     predictive_elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]] = [
         (
@@ -1225,13 +1219,24 @@ def _get_predictive_levels_choice_element(
                 ],
             ),
         ),
-        (injected_parameters_key, legacy_valuespecs.FixedValue(None)),
     ]
-    return legacy_valuespecs.Dictionary(
-        elements=predictive_elements,
-        optional_keys=["bound"],
-        ignored_keys=[injected_parameters_key],
-        hidden_keys=[injected_parameters_key],
+
+    return legacy_valuespecs.Transform(
+        valuespec=legacy_valuespecs.Dictionary(
+            elements=predictive_elements,
+            optional_keys=["bound"],
+        ),
+        to_valuespec=lambda p: {k: p[k] for k in p if not k.startswith("__")},
+        from_valuespec=lambda p: {
+            **p,
+            # The backend uses this information to compute the correct prediction.
+            # The Transform ensures that an updated value in the ruleset plugin
+            # is reflecetd in the stored data after update.
+            "__reference_metric__": to_convert.reference_metric,
+            "__direction__": "upper"
+            if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER
+            else "lower",
+        },
     )
 
 

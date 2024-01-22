@@ -9,14 +9,6 @@ from typing import Callable
 
 import pytest
 
-import cmk.agent_based.v2._check_levels
-from cmk.agent_based.prediction_backend import (
-    _Direction,
-    _EstimatedLevels,
-    _Prediction,
-    InjectedParameters,
-    PredictionParameters,
-)
 from cmk.agent_based.v2 import Metric, render, Result, State
 from cmk.agent_based.v2._check_levels import (
     _check_levels,
@@ -25,7 +17,6 @@ from cmk.agent_based.v2._check_levels import (
     _FixedLevels,
     _NoLevels,
     _PredictiveLevels,
-    _PredictiveModel,
     _summarize_predictions,
     check_levels,
     CheckLevelsResult,
@@ -34,48 +25,18 @@ from cmk.agent_based.v2._check_levels import (
 )
 
 
-def mock_lookup_predictive_levels(
-    _metric: str,
-    _direction: _Direction,
-    _parameters: PredictionParameters,
-    _injected: InjectedParameters,
-) -> tuple[_Prediction | None, _EstimatedLevels | None]:
-    return (6.5, (5.0, 6.0))
-
-
-def mock_lookup_predictive_levels_empty(
-    _metric: str,
-    _direction: _Direction,
-    _parameters: PredictionParameters,
-    _injected: InjectedParameters,
-) -> tuple[_Prediction | None, _EstimatedLevels | None]:
-    return (None, None)
-
-
-def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        cmk.agent_based.v2._check_levels,  # pylint: disable=protected-access
-        "lookup_predictive_levels",
-        mock_lookup_predictive_levels_empty,
-    )
-    levels_params: _PredictiveModel = {
-        "period": "hour",
-        "horizon": 90,
-        "levels": ("relative", (3.0, 4.0)),
-        "__injected__": {"meta_file_path_template": "path_template", "predictions": {}},
-    }
+def test_check_predictive_levels() -> None:
     result = _check_predictive_levels(
-        5.0, levels_params, Direction.UPPER, "test_metric", _default_rendering
+        5.0, "metric", None, None, Direction.UPPER, _default_rendering
     )
     assert result == CheckLevelsResult(Type.PREDICTIVE, State.OK)
 
 
 @pytest.mark.parametrize(
-    "value, levels, metric_name, expected_result",
+    "value, levels, expected_result",
     [
         pytest.param(
             5.0,
-            None,
             None,
             CheckLevelsResult(
                 type=Type.NO_LEVELS, state=State.OK, levels=None, levels_text="", prediction=None
@@ -85,7 +46,6 @@ def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             5.0,
             ("no_levels", None),
-            None,
             CheckLevelsResult(
                 type=Type.NO_LEVELS, state=State.OK, levels=None, levels_text="", prediction=None
             ),
@@ -94,7 +54,6 @@ def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             5.0,
             ("fixed", (3.0, 4.0)),
-            None,
             CheckLevelsResult(
                 type=Type.FIXED,
                 state=State.CRIT,
@@ -106,22 +65,13 @@ def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             5.0,
-            (
-                "predictive",
-                {
-                    "period": "hour",
-                    "horizon": 90,
-                    "levels": ("relative", (3.0, 4.0)),
-                    "__injected__": {"meta_file_path_template": "path_template", "predictions": {}},
-                },
-            ),
-            "test_metric",
+            ("predictive", ("test_metric", 4.5, (5.0, 6.0))),
             CheckLevelsResult(
                 type=Type.PREDICTIVE,
                 state=State.WARN,
                 levels=(5.0, 6.0),
                 levels_text="(warn/crit at 5.00/6.00)",
-                prediction=Metric("predict_test_metric", 6.5),
+                prediction=Metric("predict_test_metric", 4.5),
             ),
             id="predictive levels",
         ),
@@ -130,50 +80,32 @@ def test_check_predictive_levels(monkeypatch: pytest.MonkeyPatch) -> None:
 def test__check_levels(
     value: float,
     levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
-    metric_name: str | None,
     expected_result: CheckLevelsResult,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        cmk.agent_based.v2._check_levels,  # pylint: disable=protected-access
-        "lookup_predictive_levels",
-        mock_lookup_predictive_levels,
-    )
-    result = _check_levels(value, levels, Direction.UPPER, _default_rendering, metric_name)
+    result = _check_levels(value, levels, Direction.UPPER, _default_rendering)
     assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "value, levels, metric_name, error_type, error_message",
+    "value, levels, error_type, error_message",
     [
         pytest.param(
             5.0,
             ("unknown", 3.0),
-            "test_metric",
-            AssertionError,
-            "Expected code to be unreachable, but got: 'unknown'",
+            TypeError,
+            "Incorrect level parameters",
             id="invalid level type",
         ),
         pytest.param(
             5.0,
             ("fixed", 3.0),
-            "test_metric",
             TypeError,
             "Incorrect level parameters",
             id="invalid fixed levels",
         ),
         pytest.param(
             5.0,
-            ("predictive", {}),
-            None,
-            TypeError,
-            "Metric name can't be `None` if predictive levels are used.",
-            id="predictive levels without metric",
-        ),
-        pytest.param(
-            5.0,
             ("predictive", 3.0),
-            "test_metric",
             TypeError,
             "Incorrect level parameters",
             id="invalid predictive levels",
@@ -183,12 +115,11 @@ def test__check_levels(
 def test__check_levels_errors(
     value: float,
     levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
-    metric_name: str | None,
     error_type: typing.Type[Exception],
     error_message: str,
 ) -> None:
     with pytest.raises(error_type, match=error_message):
-        _check_levels(value, levels, Direction.UPPER, _default_rendering, metric_name)
+        _check_levels(value, levels, Direction.UPPER, _default_rendering)
 
 
 @pytest.mark.parametrize(
@@ -313,13 +244,7 @@ def test_check_levels(  # pylint: disable=too-many-arguments
     boundaries: tuple[float | None, float | None] | None,
     notice_only: bool,
     expected_results: Sequence[Result | Metric],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        cmk.agent_based.v2._check_levels,  # pylint: disable=protected-access
-        "lookup_predictive_levels",
-        mock_lookup_predictive_levels,
-    )
     results = list(
         check_levels(
             value,
@@ -359,12 +284,7 @@ def test_check_levels(  # pylint: disable=too-many-arguments
             9.0,
             (
                 "predictive",
-                {
-                    "period": "hour",
-                    "horizon": 90,
-                    "levels": ("relative", (3.0, 4.0)),
-                    "__injected__": {"meta_file_path_template": "path_template", "predictions": {}},
-                },
+                ("reference_metric", 4.5, (5.0, 6.0)),
             ),
             ("fixed", (12.0, 10.0)),
             "test_metric",
@@ -375,17 +295,17 @@ def test_check_levels(  # pylint: disable=too-many-arguments
             [
                 Result(
                     state=State.CRIT,
-                    summary="9.00 (prediction: 6.50) (warn/crit at 5.00/6.00)"
+                    summary="9.00 (prediction: 4.50) (warn/crit at 5.00/6.00)"
                     " (warn/crit below 12.00/10.00)",
                 ),
                 Metric("test_metric", 9.0, levels=(5.0, 6.0)),
-                Metric("predict_test_metric", 6.5),
+                Metric("predict_reference_metric", 4.5),
             ],
             id="levels overlap",
         ),
         pytest.param(
             5.0,
-            ("no_levels", (12.0, 10.0)),
+            ("no_levels", None),
             ("fixed", (2.0, 1.0)),
             "test_metric",
             None,
@@ -407,13 +327,7 @@ def test_check_levels_with_metric(  # pylint: disable=too-many-arguments
     boundaries: tuple[float | None, float | None] | None,
     notice_only: bool,
     expected_results: Sequence[Result | Metric],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        cmk.agent_based.v2._check_levels,  # pylint: disable=protected-access
-        "lookup_predictive_levels",
-        mock_lookup_predictive_levels,
-    )
     results = list(
         check_levels(
             value,

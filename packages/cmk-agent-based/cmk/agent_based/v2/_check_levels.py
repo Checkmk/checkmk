@@ -3,16 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
-from typing import assert_never, Literal, NotRequired, overload, TypedDict
-
-from cmk.agent_based.prediction_backend import (
-    InjectedParameters,
-    lookup_predictive_levels,
-    PredictionParameters,
-)
+from typing import Literal
 
 from ..v1 import Metric, Result, State
 
@@ -20,16 +14,9 @@ _NoLevels = tuple[Literal["no_levels"], None]
 
 _FixedLevels = tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
 
-
-class _PredictiveModel(TypedDict):
-    period: Literal["wday", "day", "hour", "minute"]
-    horizon: int
-    levels: tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
-    bound: NotRequired[tuple[float, float] | None]
-    __injected__: Mapping[str, object] | None
-
-
-_PredictiveLevels = tuple[Literal["predictive"], _PredictiveModel]
+_PredictiveLevels = tuple[
+    Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]
+]
 
 
 class Direction(StrEnum):
@@ -89,20 +76,14 @@ def _check_fixed_levels(
     return CheckLevelsResult(Type.FIXED, State.OK, levels)
 
 
-def _check_predictive_levels(
+def _check_predictive_levels(  # pylint: disable=too-many-arguments
     value: float,
-    levels_params: _PredictiveModel,
-    levels_direction: Direction,
     metric_name: str,
+    predicted_value: float | None,
+    levels: tuple[float, float] | None,
+    levels_direction: Direction,
     render_func: Callable[[float], str],
 ) -> CheckLevelsResult:
-    (predicted_value, levels) = lookup_predictive_levels(
-        metric_name,
-        levels_direction.value,
-        PredictionParameters.model_validate(levels_params),
-        InjectedParameters.model_validate(levels_params["__injected__"]),
-    )
-
     if levels is None:
         return CheckLevelsResult(
             type=Type.PREDICTIVE,
@@ -132,33 +113,27 @@ def _check_levels(
     levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
     levels_direction: Direction,
     render_func: Callable[[float], str],
-    metric_name: str | None,
 ) -> CheckLevelsResult:
-    if levels is None:
-        return CheckLevelsResult(Type.NO_LEVELS, State.OK)
-
-    levels_type, levels_model = levels
-
-    match levels_type:
-        case "no_levels":
+    # mypy does not properly narrow tuples types, so we need a couple of asserts.
+    # They are only for mypy though.
+    match levels:
+        case None | ("no_levels", None):
             return CheckLevelsResult(Type.NO_LEVELS, State.OK)
-        case "fixed":
-            if not isinstance(levels_model, tuple):
-                raise TypeError("Incorrect level parameters")
 
-            return _check_fixed_levels(value, levels_model, levels_direction, render_func)
-        case "predictive":
-            if not isinstance(metric_name, str):
-                raise TypeError("Metric name can't be `None` if predictive levels are used.")
+        case "fixed", (warn, crit):
+            assert isinstance(warn, (float, int)) and isinstance(crit, (float, int))
+            return _check_fixed_levels(value, (warn, crit), levels_direction, render_func)
 
-            if not isinstance(levels_model, dict):
-                raise TypeError("Incorrect level parameters")
-
+        case "predictive", (metric, prediction, p_levels):
+            assert isinstance(metric, str)
+            assert prediction is None or isinstance(prediction, float)
+            assert p_levels is None or isinstance(p_levels, tuple)
             return _check_predictive_levels(
-                value, levels_model, levels_direction, metric_name, render_func
+                value, metric, prediction, p_levels, levels_direction, render_func
             )
-        case other:
-            assert_never(other)
+
+        case _other:
+            raise TypeError("Incorrect level parameters")
 
 
 def _prediction_text(prediction: float | None, render_func: Callable[[float], str]) -> str:
@@ -185,36 +160,6 @@ def _summarize_predictions(
     upper_text = _prediction_text(predictions[0].value, render_func)
     lower_text = _prediction_text(predictions[1].value, render_func)
     return predictions, f"(upper levels {upper_text}, lower levels {lower_text})"
-
-
-@overload
-def check_levels(  # pylint: disable=too-many-arguments
-    value: float,
-    *,
-    levels_upper: _NoLevels | _FixedLevels | None = None,
-    levels_lower: _NoLevels | _FixedLevels | None = None,
-    metric_name: None = None,
-    render_function: Callable[[float], str] | None = None,
-    label: str | None = None,
-    boundaries: tuple[float | None, float | None] | None = None,
-    notice_only: bool = False,
-) -> Iterable[Result]:
-    pass
-
-
-@overload
-def check_levels(  # pylint: disable=too-many-arguments
-    value: float,
-    *,
-    levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
-    levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
-    metric_name: str = "",
-    render_function: Callable[[float], str] | None = None,
-    label: str | None = None,
-    boundaries: tuple[float | None, float | None] | None = None,
-    notice_only: bool = False,
-) -> Iterable[Result | Metric]:
-    pass
 
 
 def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
@@ -263,8 +208,8 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
     value_string = render_func(value)
     info_text = f"{label}: {value_string}" if label else value_string
 
-    result_upper = _check_levels(value, levels_upper, Direction.UPPER, render_func, metric_name)
-    result_lower = _check_levels(value, levels_lower, Direction.LOWER, render_func, metric_name)
+    result_upper = _check_levels(value, levels_upper, Direction.UPPER, render_func)
+    result_lower = _check_levels(value, levels_lower, Direction.LOWER, render_func)
 
     state = State.worst(result_upper.state, result_lower.state)
     prediction_metrics, prediction_text = _summarize_predictions(

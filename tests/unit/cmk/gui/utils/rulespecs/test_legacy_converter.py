@@ -1348,7 +1348,13 @@ def _compare_specs(actual: object, expected: object) -> None:
         if attr in ignored_attrs:
             continue
         actual_value = getattr(actual, attr)
-        if attr in ["_custom_validate", "_validate", "_render_function"]:
+        if attr in [
+            "_custom_validate",
+            "_validate",
+            "_render_function",
+            "to_valuespec",
+            "from_valuespec",
+        ]:
             # testing the equality of the validation in a generic way seems very difficult
             #  check that the field was set during conversion and test behavior separately
             assert (actual_value is not None) is (expected_value is not None)
@@ -1776,6 +1782,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 fixed=api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
                 predictive=api_v1.form_specs.PredictiveLevels(
+                    reference_metric="my_metric",
                     prefill_abs_diff=(5.0, 10.0),
                     prefill_rel_diff=(50.0, 80.0),
                     prefill_stddev_diff=(2.0, 3.0),
@@ -1808,135 +1815,137 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     (
                         "predictive",
                         _("Predictive levels (only on CMC)"),
-                        legacy_valuespecs.Dictionary(
-                            elements=[
-                                (
-                                    "period",
-                                    legacy_valuespecs.DropdownChoice(
-                                        choices=[
-                                            ("wday", _("Day of the week")),
-                                            ("day", _("Day of the month")),
-                                            ("hour", _("Hour of the day")),
-                                            ("minute", _("Minute of the hour")),
-                                        ],
-                                        title=_("Base prediction on"),
-                                        help=_(
-                                            "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
+                        legacy_valuespecs.Transform(
+                            valuespec=legacy_valuespecs.Dictionary(
+                                elements=[
+                                    (
+                                        "period",
+                                        legacy_valuespecs.DropdownChoice(
+                                            choices=[
+                                                ("wday", _("Day of the week")),
+                                                ("day", _("Day of the month")),
+                                                ("hour", _("Hour of the day")),
+                                                ("minute", _("Minute of the hour")),
+                                            ],
+                                            title=_("Base prediction on"),
+                                            help=_(
+                                                "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
+                                            ),
                                         ),
                                     ),
-                                ),
-                                (
-                                    "horizon",
-                                    legacy_valuespecs.Integer(
-                                        title=_("Length of historic data to consider"),
-                                        help=_(
-                                            "How many days in the past Checkmk should evaluate the measurement data"
+                                    (
+                                        "horizon",
+                                        legacy_valuespecs.Integer(
+                                            title=_("Length of historic data to consider"),
+                                            help=_(
+                                                "How many days in the past Checkmk should evaluate the measurement data"
+                                            ),
+                                            unit=_("days"),
+                                            minvalue=1,
+                                            default_value=90,
                                         ),
-                                        unit=_("days"),
-                                        minvalue=1,
-                                        default_value=90,
                                     ),
-                                ),
-                                (
-                                    "levels",
-                                    legacy_valuespecs.CascadingDropdown(
-                                        title=_(
-                                            "Level definition in relation to the predicted value"
-                                        ),
-                                        choices=[
-                                            (
-                                                "absolute",
-                                                _("Absolute difference"),
-                                                legacy_valuespecs.Tuple(
-                                                    elements=[
-                                                        legacy_valuespecs.Integer(
-                                                            title=_("Warning above"),
-                                                            unit="GiB",
-                                                            default_value=5,
+                                    (
+                                        "levels",
+                                        legacy_valuespecs.CascadingDropdown(
+                                            title=_(
+                                                "Level definition in relation to the predicted value"
+                                            ),
+                                            choices=[
+                                                (
+                                                    "absolute",
+                                                    _("Absolute difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.Integer(
+                                                                title=_("Warning above"),
+                                                                unit="GiB",
+                                                                default_value=5,
+                                                            ),
+                                                            legacy_valuespecs.Integer(
+                                                                title=_("Critical above"),
+                                                                unit="GiB",
+                                                                default_value=10,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
                                                         ),
-                                                        legacy_valuespecs.Integer(
-                                                            title=_("Critical above"),
-                                                            unit="GiB",
-                                                            default_value=10,
-                                                        ),
-                                                    ],
-                                                    help=_(
-                                                        "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
                                                     ),
                                                 ),
-                                            ),
-                                            (
-                                                "relative",
-                                                _("Relative difference"),
-                                                legacy_valuespecs.Tuple(
-                                                    elements=[
-                                                        legacy_valuespecs.Percentage(
-                                                            title=_("Warning above"),
-                                                            unit="%",
-                                                            default_value=50.0,
+                                                (
+                                                    "relative",
+                                                    _("Relative difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.Percentage(
+                                                                title=_("Warning above"),
+                                                                unit="%",
+                                                                default_value=50.0,
+                                                            ),
+                                                            legacy_valuespecs.Percentage(
+                                                                title=_("Critical above"),
+                                                                unit="%",
+                                                                default_value=80.0,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
                                                         ),
-                                                        legacy_valuespecs.Percentage(
-                                                            title=_("Critical above"),
-                                                            unit="%",
-                                                            default_value=80.0,
-                                                        ),
-                                                    ],
-                                                    help=_(
-                                                        "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
                                                     ),
                                                 ),
-                                            ),
-                                            (
-                                                "stddev",
-                                                _("Standard deviation difference"),
-                                                legacy_valuespecs.Tuple(
-                                                    elements=[
-                                                        legacy_valuespecs.Float(
-                                                            title=_("Warning above"),
-                                                            unit=_("times the standard deviation"),
-                                                            default_value=2.0,
+                                                (
+                                                    "stddev",
+                                                    _("Standard deviation difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.Float(
+                                                                title=_("Warning above"),
+                                                                unit=_(
+                                                                    "times the standard deviation"
+                                                                ),
+                                                                default_value=2.0,
+                                                            ),
+                                                            legacy_valuespecs.Float(
+                                                                title=_("Critical above"),
+                                                                unit=_(
+                                                                    "times the standard deviation"
+                                                                ),
+                                                                default_value=3.0,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
                                                         ),
-                                                        legacy_valuespecs.Float(
-                                                            title=_("Critical above"),
-                                                            unit=_("times the standard deviation"),
-                                                            default_value=3.0,
-                                                        ),
-                                                    ],
-                                                    help=_(
-                                                        "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
                                                     ),
                                                 ),
-                                            ),
-                                        ],
-                                    ),
-                                ),
-                                (
-                                    "bound",
-                                    legacy_valuespecs.Tuple(
-                                        title=_("Fixed limits"),
-                                        help=_(
-                                            "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                            ],
                                         ),
-                                        elements=[
-                                            legacy_valuespecs.Integer(
-                                                title="Warning level is at least",
-                                                unit="GiB",
-                                            ),
-                                            legacy_valuespecs.Integer(
-                                                title="Critical level is at least",
-                                                unit="GiB",
-                                            ),
-                                        ],
                                     ),
-                                ),
-                                (
-                                    "__injected__",
-                                    legacy_valuespecs.FixedValue(None),
-                                ),
-                            ],
-                            optional_keys=["bound"],
-                            ignored_keys=["__injected__"],
-                            hidden_keys=["__injected__"],
+                                    (
+                                        "bound",
+                                        legacy_valuespecs.Tuple(
+                                            title=_("Fixed limits"),
+                                            help=_(
+                                                "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                            ),
+                                            elements=[
+                                                legacy_valuespecs.Integer(
+                                                    title="Warning level is at least",
+                                                    unit="GiB",
+                                                ),
+                                                legacy_valuespecs.Integer(
+                                                    title="Critical level is at least",
+                                                    unit="GiB",
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                ],
+                                optional_keys=["bound"],
+                            ),
+                            to_valuespec=lambda x: x,
+                            from_valuespec=lambda x: x,
                         ),
                     ),
                 ),

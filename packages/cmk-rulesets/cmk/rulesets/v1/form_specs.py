@@ -602,6 +602,11 @@ class PredictiveLevels:
     Usable only in conjunction with `Levels`
 
     Args:
+        reference_metric: The name of the metric that should be used to compute the prediction.
+         This value is hardcoded by you, the developer. It is your responsibility to make sure
+         that all plugins subscribing to the ruleset actually create this metric.
+         Failing to do so will prevent the backend from providing a prediction, currently leading
+         to an always OK service.
         prefill_abs_diff: Value to pre-populate the form fields with when the levels depend on the
          absolute difference to the predicted value. If None, the backend will decide whether to
          leave the field empty or to prefill it with a canonical value.
@@ -613,6 +618,7 @@ class PredictiveLevels:
          decide whether to leave the field empty or to prefill it with a canonical value.
     """
 
+    reference_metric: str
     prefill_abs_diff: tuple[float, float] | None = None
     prefill_rel_diff: tuple[float, float] | None = None
     prefill_stddev_diff: tuple[float, float] | None = None
@@ -641,29 +647,36 @@ class Levels:
         transform: Transformation of the stored configuration
 
     Consumer model:
-        **Type**:
+        **Type**: ``object``
+
+        The value presented to consumers will be crafted in a way that makes it a proper
           This is the type definition of
           the consumer model::
             _NoLevels | _FixedLevels | _PredictiveLevels
 
           where the tree possible types are defined
           as follows::
-            _NoLevels = tuple[Literal["no_levels"], None]
+            _NoLevels = tuple[
+                Literal["no_levels"],
+                None,
+            ]
 
-            _FixedLevels = tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
+            _FixedLevels = tuple[
+                Literal["fixed"],
+                # (warn, crit)
+                tuple[int, int] | tuple[float, float],
+            ]
 
-            _PredictiveLevels = tuple[Literal["predictive"], _PredictiveModel]
-
-            class _PredictiveModel(TypedDict):
-                period: Literal["wday", "day", "hour", "minute"]
-                horizon: int
-                levels: tuple[Literal["absolute", "relative", "stddev"], tuple[float, float]]
-                bound: tuple[float, float] | None
-                __injected__: Mapping[str, object] | None
-
+            _PredictiveLevels = tuple[
+                Literal["predictive"],
+                # (reference_metric, predicted_value, levels_tuple)
+                tuple[str, float | None, tuple[float, float] | None],
+            ]
 
           The configured value will be presented to consumers as a 2-tuple consisting of
-          level type identifier and one of the 3 types: None, 2-tuple of floats or dictionary.
+          level type identifier and one of the 3 types: None, 2-tuple of numbers or a
+          3-tuple containing the name of the referencere metric used for prediction,
+          the predicted value and the resulting levels tuple.
 
         **Example**:
             Levels used to configure no levels will look
@@ -674,18 +687,9 @@ class Levels:
             like this::
                 ("fixed", (5.0, 1.0))
 
-            Levels used to configure upper predictive levels might look
+            Levels resulting from configured upper predictive levels might look
             like this::
-                (
-                    "predictive",
-                    {
-                        "period": "hour",
-                        "horizon": 90,
-                        "levels": ("stddev", (2.0, 4.0)),
-                        "bound": (23.0, 42.0),
-                        __injected__: None,
-                    },
-                )
+                ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
 
     """
 

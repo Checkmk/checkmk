@@ -226,7 +226,6 @@ export class TopologyVisualization extends NodeVisualization {
         this._last_update_request = 0;
 
         this._topology_datasource.enable();
-        this._topology_datasource.set_update_interval(30);
         this._topology_datasource.subscribe_new_data(() =>
             this._fetched_topology_data()
         );

@@ -1,0 +1,11 @@
+Title: mk_redis: Use REDISCLI_AUTH instead of -a argument in order to hide password
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706088220
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+mk_redis used to expose the password in the process name because of the '-a' argument.
+This has been fixed using the environment variable REDISCLI_AUTH.

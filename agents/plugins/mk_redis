@@ -33,8 +33,7 @@ set -e -o pipefail
 
 REDIS_INSTANCES=()
 IS_DETECTED=false
-REDIS_CLI_CMD=${REDIS_CLI_CMD:-redis-cli} # To be overloaded by tests
-WAITMAX_CMD=${WAITMAX_CMD:-waitmax}       # To be overloaded by tests
+WAITMAX_CMD=${WAITMAX_CMD:-waitmax} # To be overloaded by tests
 
 load_config() {
     # source optional configuration file
@@ -63,7 +62,9 @@ redis_args() {
     fi
 
     if [[ "${!PASSWORD}" ]] && [[ "${!PASSWORD}" != "None" ]]; then
-        REDIS_ARGS+=("-a" "${!PASSWORD}")
+        REDIS_CLI_COMMAND="REDISCLI_AUTH='${!PASSWORD}' redis-cli"
+    else
+        REDIS_CLI_COMMAND="redis-cli"
     fi
 
     REDIS_ARGS+=("info")
@@ -108,6 +109,6 @@ for INSTANCE in "${REDIS_INSTANCES[@]}"; do
     echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
     # execute command
-    $WAITMAX_CMD 3 "${REDIS_CLI_CMD}" "${REDIS_ARGS[@]}" || true
+    $WAITMAX_CMD 3 "${REDIS_CLI_COMMAND}" "${REDIS_ARGS[@]}" || true
     echo
 done

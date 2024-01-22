@@ -47,7 +47,7 @@ class Type(Enum):
 class CheckLevelsResult:
     type: Type
     state: State
-    levels: tuple[int | int] | tuple[float, float] | None = None
+    levels: tuple[int, int] | tuple[float, float] | None = None
     levels_text: str = ""
     prediction: float | None = None
 
@@ -280,7 +280,7 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
         yield Metric(
             metric_name,
             value,
-            levels=result_upper.levels,  # type: ignore[arg-type]
+            levels=result_upper.levels,
             boundaries=boundaries,
         )
 

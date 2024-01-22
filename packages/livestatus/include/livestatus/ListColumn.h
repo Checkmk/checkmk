@@ -19,7 +19,6 @@
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ListFilter.h"
-#include "livestatus/ListSorter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
 #include "livestatus/Sorter.h"
@@ -99,7 +98,8 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<ListSorter>();
+        throw std::runtime_error("sorting on list column '" + name() +
+                                 "' not supported");
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

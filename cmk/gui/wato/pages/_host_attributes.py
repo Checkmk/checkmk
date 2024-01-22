@@ -91,7 +91,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
         if topic_id == "management_board":
             message = _(
                 "<b>This feature will be deprecated in a future version of Checkmk.</b>"
-                "<br>Please do not configure management boards in here anymore."
+                "<br>Please do not configure management boards in here anymore. "
                 "Monitor the management boards via a dedicated host using <a href='%s'>IPMI</a>"
                 " or SNMP.<br><a href='%s' target='_blank'>Read more about management boards.</a>"
             ) % (

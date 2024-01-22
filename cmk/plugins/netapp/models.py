@@ -26,6 +26,7 @@ class VolumeModel(BaseModel):
     doc: https://docs.netapp.com/us-en/ontap-restmap-9131//volume.html#volume-footprint-get-iter
     call: next(NetAppResource.Volume.get_collection(fields="*"))
 
+    Volume plugin:
     ============
     OLD -> NEW:
     ============
@@ -46,20 +47,37 @@ class VolumeModel(BaseModel):
     "volume-inode-attributes.files-used" -> files.used
     ============
 
+    Snapshot plugin:
+    ============
+    OLD -> NEW:
+    ============
+    "name" -> the volume name (see above)
+    "state" -> the volume state (see above)
+    "snapshot-percent-reserved" -> space.snapshot.reserve_percent
+    "snapshot-blocks-reserved" -> space.snapshot.reserve_size
+    "reserve-used-actual" -> space.snapshot.used
+    ============
+
+
     """
 
     uuid: str
     state: str | None = None
     name: str
     msid: int
-    space_available: int | None = None  # None because sometime this data is not present
-    space_total: int | None = None  # None because sometime this data is not present
-    logical_enforcement: bool | None = None  # None because sometime this data is not present
-    logical_used: int | None = None  # None because sometime this data is not present
     svm_name: str
     svm_uuid: str
-    files_maximum: int | None = None  # None because sometime this data is not present
-    files_used: int | None = None  # None because sometime this data is not present
+
+    # None because sometime this data is not present:
+    space_available: int | None = None
+    space_total: int | None = None
+    logical_enforcement: bool | None = None
+    logical_used: int | None = None
+    files_maximum: int | None = None
+    files_used: int | None = None
+    snapshot_reserve_size: int | None = None
+    snapshot_used: int | None = None
+    snapshot_reserve_percent: int | None = None
 
     def size_total(self) -> float | None:
         return self.space_total / MEGA if self.space_total is not None else None

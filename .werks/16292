@@ -6,7 +6,7 @@ Date: 1705416141
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 This werk introduces two changes:
 LI: it now verifies for create & edit if the provided contact groups actually exist

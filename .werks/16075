@@ -5,7 +5,7 @@ Component: notifications
 Date: 1700481159
 Edition: cee
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 The notification spooler used the mtime of the spool files to determine the
 order of execution.

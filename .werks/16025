@@ -5,7 +5,7 @@ Component: rpm
 Date: 1701254497
 Edition: cre
 Level: 2
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 Checkmk was shipped with a dependency to PHP7 for SLES15SP3. Since PHP7 is
 part of the legacy module, this Werk updates the dependency from PHP7 to PHP8.

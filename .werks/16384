@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1705490346
 Edition: cre
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 When configuring a notification rule via the Rest API, you could not
 set the value for "match_service_levels" to anything but the default

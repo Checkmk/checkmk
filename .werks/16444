@@ -5,7 +5,7 @@ Component: ec
 Date: 1705915976
 Edition: cee
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 With werk 16012 the event console rules are filtered and saved to the location
 var/mkeventd/active_config during activate changes.

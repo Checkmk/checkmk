@@ -5,7 +5,7 @@ Component: wato
 Date: 1705650557
 Edition: cre
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 With werk #15815 LDAP connection IDs are validated and rewritten if they
 contain spaces (possible in 2.1).

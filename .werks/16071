@@ -5,7 +5,7 @@ Component: notifications
 Date: 1699356565
 Edition: cee
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 If you used notification spooling and configured "Timing settings for specific
 methods" in the global settings option "Notification Spooler Configuration",

@@ -106,7 +106,7 @@ def convert_to_legacy_rulespec(
                 localizer,
                 config_scope_prefix=RuleGroup.ExtraServiceConf,
             )
-        case ruleset_api_v1.rule_specs.HostMonitoring():
+        case ruleset_api_v1.rule_specs.Host():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
@@ -249,7 +249,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     | ruleset_api_v1.rule_specs.AgentAccess
     | ruleset_api_v1.rule_specs.ExtraHostConfEventConsole
     | ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoring
-    | ruleset_api_v1.rule_specs.HostMonitoring
+    | ruleset_api_v1.rule_specs.Host
     | ruleset_api_v1.rule_specs.NotificationParameters
     | ruleset_api_v1.rule_specs.InventoryParameters
     | ruleset_api_v1.rule_specs.DiscoveryParameters

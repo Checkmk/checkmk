@@ -21,7 +21,7 @@ from cmk.rulesets.v1.rule_specs import (
     ExtraHostConfEventConsole,
     ExtraHostConfHostMonitoring,
     ExtraServiceConf,
-    HostMonitoring,
+    Host,
     InventoryParameters,
     NotificationParameters,
     ServiceMonitoring,
@@ -41,7 +41,7 @@ RuleSpec = (
     | ExtraHostConfEventConsole
     | CheckParameterWithItem
     | CheckParameterWithoutItem
-    | HostMonitoring
+    | Host
     | InventoryParameters
     | NotificationParameters
     | DiscoveryParameters
@@ -74,7 +74,7 @@ def load_api_v1_rule_specs(
             ExtraHostConfEventConsole: "rule_spec_",
             CheckParameterWithItem: "rule_spec_",
             CheckParameterWithoutItem: "rule_spec_",
-            HostMonitoring: "rule_spec_",
+            Host: "rule_spec_",
             InventoryParameters: "rule_spec_",
             NotificationParameters: "rule_spec_",
             DiscoveryParameters: "rule_spec_",

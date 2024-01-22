@@ -173,6 +173,7 @@ div.node_vis {
   g#svg_layers .node_element circle.mesh_root {
     display: none;
   }
+
   g#svg_layers g#nodes.edit .node_element circle.mesh_root {
     display: unset;
   }
@@ -210,6 +211,7 @@ div.node_vis {
     width: 50px;
     content: url("images/icon_maxisnapin.svg");
   }
+
   // Radio group
   div.radio_group {
     display: flex;
@@ -219,6 +221,7 @@ div.node_vis {
   table.radio_group {
     border-collapse: separate;
     border-spacing: 0;
+
     input[type="radio"] {
       display: none !important;
     }
@@ -236,6 +239,7 @@ div.node_vis {
       border-top: solid $ux-theme-6;
       border-bottom: solid $ux-theme-6;
       background-color: $ux-theme-0;
+
       &:hover {
         cursor: pointer;
         background-color: $ux-theme-6;
@@ -245,10 +249,12 @@ div.node_vis {
         border-left: solid $ux-theme-6;
         border-radius: $theme-border-radius 0px 0px $theme-border-radius;
       }
+
       &:last-child {
         border-right: solid $ux-theme-6;
         border-radius: 0px $theme-border-radius $theme-border-radius 0px;
       }
+
       label {
         display: flex;
         padding: 4px;
@@ -337,6 +343,7 @@ div.node_vis {
       margin-top: 6px;
       margin-bottom: -12px;
       table-layout: fixed;
+
       tr {
         height: 21px;
 
@@ -348,6 +355,7 @@ div.node_vis {
 
     div.radio_group {
       margin-top: 12px;
+
       label.title {
         width: 68px;
       }
@@ -372,6 +380,7 @@ div.node_vis {
     input.save_delete {
       width: 100%;
       margin: 3px;
+
       &.save {
         border: 1px solid $success;
       }
@@ -396,9 +405,11 @@ div.node_vis {
     background-color: $node-vis-menu-bg-color;
     border: solid $ux-theme-6;
     border-width: thin;
+
     table.style_configuration {
       margin-top: 10px;
     }
+
     div#style_div {
       position: relative;
     }
@@ -408,6 +419,7 @@ div.node_vis {
     position: absolute;
     right: 4px;
     top: 6px;
+
     img {
       width: 16px;
       height: 20px;
@@ -487,33 +499,65 @@ div.node_vis {
     stroke: $blue !important;
     stroke-width: 3;
   }
+
   .node_element.white_focus circle {
     stroke: $grey-1 !important;
     stroke-width: 4;
   }
+
   .link_element .critical {
     stroke: $danger !important;
     stroke-width: 4;
   }
+
   .link_element .white_focus {
     stroke: $grey-1 !important;
     stroke-width: 4;
   }
-  .link_element .only_in_reference {
-    stroke: $tag-added-color-light !important;
-    stroke-width: 4;
+
+  .only_in_ref {
+    circle {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 3;
+    }
   }
-  .link_element .only_in_reference.white_focus {
-    stroke: $tag-added-color-light !important;
-    stroke-width: 4;
+  .only_in_ref.white_focus {
+    circle {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-added-color-light !important;
+      stroke-width: 3;
+    }
   }
-  .link_element .missing_in_reference {
-    stroke: $tag-removed-color-light !important;
-    stroke-width: 4;
+  .missing_in_ref {
+    circle {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 3;
+    }
   }
-  .link_element .missing_in_reference.white_focus {
-    stroke: $tag-removed-color-light !important;
-    stroke-width: 4;
+  .missing_in_ref.white_focus {
+    circle {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 5;
+    }
+    line,
+    path {
+      stroke: $tag-removed-color-light !important;
+      stroke-width: 3;
+    }
   }
 
   div#popup_menu {

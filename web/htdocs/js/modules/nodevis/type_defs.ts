@@ -273,6 +273,7 @@ export interface LinkConfig {
     color?: string;
     css?: string;
     link_info?: string;
+    topology_classes?: [string, boolean][];
 }
 
 export interface SerializedNodevisLink {

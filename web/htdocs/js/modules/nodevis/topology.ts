@@ -523,8 +523,9 @@ class NetworkLink extends AbstractLink {
         ].forEach(id => {
             const gui_node = this._world.viewport
                 .get_nodes_layer()
-                .get_node_by_id(id) as TopologyCoreEntity;
-            gui_node.highlight_connection(traversed_ids);
+                .get_node_by_id(id);
+            if (gui_node instanceof TopologyCoreEntity)
+                gui_node.highlight_connection(traversed_ids);
         });
     }
 
@@ -538,8 +539,9 @@ class NetworkLink extends AbstractLink {
         ].forEach(id => {
             const gui_node = this._world.viewport
                 .get_nodes_layer()
-                .get_node_by_id(id) as TopologyCoreEntity;
-            gui_node.hide_connection(traversed_ids);
+                .get_node_by_id(id);
+            if (gui_node instanceof TopologyCoreEntity)
+                gui_node.hide_connection(traversed_ids);
         });
     }
 
@@ -570,6 +572,22 @@ class NetworkLink extends AbstractLink {
             });
         if (this._link_data.config.css) {
             this.selection().attr("class", this._link_data.config.css);
+        }
+        if (this._link_data.config.topology_classes) {
+            const data: [string, boolean][] =
+                this._link_data.config.topology_classes;
+            this.selection().selectAll("title.topology_info").remove();
+            data.forEach(entry => {
+                this._root_selection!.classed(entry[0], entry[1]);
+                if (entry[1] == true) {
+                    this.selection()
+                        .selectAll("title.topology_info")
+                        .data([entry[0]])
+                        .join("title")
+                        .classed("topology_info", true)
+                        .text(d => d);
+                }
+            });
         }
     }
 

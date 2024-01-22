@@ -164,7 +164,7 @@ export class AbstractGUINode implements TypeWithName {
             return;
         }
 
-        let is_host_text = false;
+        let is_host_text = true;
         let is_service_text = false;
         const core_info = this.node.data.type_specific.core;
         if (core_info) {

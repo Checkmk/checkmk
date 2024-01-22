@@ -235,9 +235,6 @@ class TopologyFrontendLink:
         tokens = tuple(sorted([self.source, self.target]))
         return ("%s_%s" % tokens).__hash__()
 
-    def id(self) -> tuple[str, ...]:
-        return tuple(sorted([self.source, self.target]))
-
 
 class TopologyQueryIdentifier:
     """Describes the query parameters which were used to generate the result"""

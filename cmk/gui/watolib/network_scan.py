@@ -129,9 +129,9 @@ def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -
         translation = TranslationOptions(
             {
                 "case": translate_names["case"],
-                "mapping": translate_names["mapping"],
+                "mapping": translate_names.get("mapping", []),
                 "drop_domain": translate_names.get("drop_domain", False),
-                "regex": translate_names["regex"],
+                "regex": translate_names.get("regex", []),
             }
         )
 

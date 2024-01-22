@@ -20,16 +20,15 @@
 # A list of all task state can be found here:
 # http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
+from typing import Literal, NotRequired, TypedDict
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
-def parse_windows_tasks(string_table):
-    data = {}
-    last_task: bool | str = False
+def parse_windows_tasks(string_table: StringTable) -> dict[str, dict[str, str]]:
+    data: dict[str, dict[str, str]] = {}
+    last_task: str | None = None
     for line in string_table:
         name = line[0].strip()
         value = ":".join(line[1:]).strip()
@@ -41,7 +40,7 @@ def parse_windows_tasks(string_table):
             data[last_task] = {}
 
         # this is a line continuation from TaskName
-        elif not value and not data[last_task]:
+        elif last_task is not None and not value and not data[last_task]:
             data.pop(last_task)
             last_task += " " + name
             data[last_task] = {}
@@ -49,8 +48,16 @@ def parse_windows_tasks(string_table):
     return data
 
 
-def inventory_windows_tasks(parsed):
-    return [(n, None) for n, v in parsed.items() if v.get("Scheduled Task State") != "Disabled"]
+register.agent_section(
+    name="windows_tasks",
+    parse_function=parse_windows_tasks,
+)
+
+
+def discovery_windows_tasks(section: dict[str, dict[str, str]]) -> DiscoveryResult:
+    for n, v in section.items():
+        if v.get("Scheduled Task State") != "Disabled":
+            yield Service(item=n)
 
 
 # Code duplication with cmk/gui/plugins/wato/check_parameters/windows_tasks.py
@@ -138,31 +145,43 @@ _MAP_EXIT_CODES = {
 }
 
 
-def check_windows_tasks(item, params, parsed):
-    if item not in parsed:
-        yield 3, "Task not found on server"
+class ExitCodeToState(TypedDict):
+    exit_code: str
+    monitoring_state: Literal[0, 1, 2, 3]
+    info_text: NotRequired[str]
+
+
+class Params(TypedDict):
+    exit_code_to_state: NotRequired[list[ExitCodeToState]]
+    state_not_enabled: NotRequired[Literal[0, 1, 2, 3]]
+
+
+def check_windows_tasks(
+    item: str, params: Params, section: dict[str, dict[str, str]]
+) -> CheckResult:
+    if item not in section:
+        yield Result(state=State.UNKNOWN, summary="Task not found on server")
         return
 
     state_not_enabled = params.get("state_not_enabled", 1)
 
-    custom_map_exit_codes = {
-        exit_code: (
+    custom_map_exit_codes: dict[str, tuple[Literal[0, 1, 2, 3], str]] = {
+        user_defined_mapping["exit_code"]: (
             user_defined_mapping["monitoring_state"],
             user_defined_mapping.get(
                 "info_text",
                 # in case info_text was not specified, we use the default one if available
-                _MAP_EXIT_CODES.get(exit_code, (None, None))[1],
+                _MAP_EXIT_CODES.get(user_defined_mapping["exit_code"], (0, ""))[1],
             ),
         )
         for user_defined_mapping in params.get("exit_code_to_state", [])
-        for exit_code in [user_defined_mapping["exit_code"]]
     }
     map_exit_codes = {
         **_MAP_EXIT_CODES,
         **custom_map_exit_codes,
     }
 
-    data = parsed[item]
+    data = section[item]
     last_result = data["Last Result"]
 
     # schtasks.exe (used by the check plugin) returns a signed integer
@@ -177,13 +196,15 @@ def check_windows_tasks(item, params, parsed):
         last_result_hex,
         (2, None),
     )
-    yield (
-        state,
-        f"{state_txt} ({last_result_hex})" if state_txt else f"Got exit code {last_result_hex}",
+    yield Result(
+        state=State(state),
+        summary=f"{state_txt} ({last_result_hex})"
+        if state_txt
+        else f"Got exit code {last_result_hex}",
     )
 
     if data.get("Scheduled Task State", None) != "Enabled":
-        yield state_not_enabled, "Task not enabled"
+        yield Result(state=State(state_not_enabled), summary="Task not enabled")
 
     additional_infos = []
     for key, title in [
@@ -194,15 +215,15 @@ def check_windows_tasks(item, params, parsed):
             additional_infos.append(f"{title}: {data[key]}")
 
     if additional_infos:
-        yield 0, ", ".join(additional_infos)
+        yield Result(state=State.OK, summary=", ".join(additional_infos))
 
 
-check_info["windows_tasks"] = LegacyCheckDefinition(
-    parse_function=parse_windows_tasks,
-    service_name="Task %s",
-    discovery_function=inventory_windows_tasks,
+register.check_plugin(
+    name="windows_tasks",
     check_function=check_windows_tasks,
     check_ruleset_name="windows_tasks",
+    discovery_function=discovery_windows_tasks,
+    service_name="Task %s",
     check_default_parameters={
         # This list is overruled by a ruleset, if configured.
         # The defaults are brought back individually below.

@@ -51,5 +51,5 @@ const default_lookup: Record<string, string> = {
     remove_root_node: "Do not grow from here",
     matching_nodes: "Matching nodes",
     reference: "Reference",
-    compare_to: "Compare to (not yet implemented)",
+    compare_to: "Compare to",
 };

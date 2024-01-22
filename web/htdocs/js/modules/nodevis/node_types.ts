@@ -53,6 +53,14 @@ export class TopologyNode extends AbstractGUINode {
                 this._world.update_data();
             });
 
+        if (this.node.data.type_specific?.topology_classes) {
+            const data: [string, boolean][] =
+                this.node.data.type_specific.topology_classes;
+            data.forEach(entry => {
+                this.selection().classed(entry[0], entry[1]);
+            });
+        }
+
         this.update_growth_indicators();
     }
 

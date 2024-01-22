@@ -26,12 +26,14 @@ export function compute_link_id(link_data: NodevisLink): string {
 export class AbstractLink implements TypeWithName {
     _world: NodevisWorld;
     _link_data: NodevisLink;
+    _root_selection: d3SelectionG | null;
     _selection: d3SelectionG | null;
     _line_config: LineConfig;
 
     constructor(world: NodevisWorld, link_data: NodevisLink) {
         this._world = world;
         this._link_data = link_data;
+        this._root_selection = null;
         this._selection = null;
         this._line_config = this._world.viewport
             .get_layout_manager()
@@ -53,6 +55,8 @@ export class AbstractLink implements TypeWithName {
     }
 
     render_into(selection: d3SelectionG): void {
+        this._root_selection = selection;
+
         // Straigth line style
         const line_selection = selection
             .selectAll("line")
@@ -79,7 +83,6 @@ export class AbstractLink implements TypeWithName {
             this._line_config.style == "straight"
                 ? line_selection
                 : path_selection;
-        // if (this._line_config.dashed) this.selection().classed("dashed", true);
     }
 
     _color(): string {

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, cast, ClassVar, get_args, Literal, Protocol
+from typing import cast, ClassVar, Literal, Protocol
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
@@ -38,6 +38,8 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APIOpenGenieKeyOption,
     APIPagerDutyKeyOption,
     APIPasswordOption,
+    APIPluginDict,
+    APIPluginList,
     APISignL4SecretOption,
     CheckboxEmailBodyInfo,
     CheckboxHttpProxy,
@@ -1723,41 +1725,48 @@ class CustomPlugin:
         )
 
     @classmethod
-    def from_api_request(cls, incoming: dict[str, Any]) -> CustomPlugin:
-        plugin_name: CustomPluginName = incoming["plugin_params"]["plugin_name"]
-
-        if incoming["option"] == PluginOptions.CANCEL:
+    def from_api_request(cls, incoming: APINotifyPlugin) -> CustomPlugin:
+        option = incoming["option"]
+        plugin_params = incoming["plugin_params"]
+        plugin_name = cast(CustomPluginName, plugin_params["plugin_name"])
+        if option == PluginOptions.CANCEL:
             return cls(plugin_name=plugin_name)
 
-        plugin_options: NotifyPluginParams = {
-            k: v for k, v in incoming["plugin_params"].items() if k != "plugin_name"
-        }
+        if "params" in plugin_params:
+            pluginparams_with_list = cast(APIPluginList, plugin_params)
+            return cls(
+                plugin_name=plugin_name,
+                option=PluginOptions.WITH_CUSTOM_PARAMS,
+                plugin_options=pluginparams_with_list["params"],
+            )
+
+        pluginparams_with_dict = cast(APIPluginDict, plugin_params)
 
         return cls(
-            option=PluginOptions.WITH_CUSTOM_PARAMS,
             plugin_name=plugin_name,
-            plugin_options=plugin_options,
+            option=PluginOptions.WITH_CUSTOM_PARAMS,
+            plugin_options={k: v for k, v in pluginparams_with_dict.items() if k != "plugin_name"},
         )
 
     def api_response(self) -> APINotifyPlugin:
-        plugin_params: dict[str, Any] = {}
-
         if self.plugin_options is None:
-            plugin_params = {"plugin_name": self.plugin_name}
+            return {
+                "option": self.option,
+                "plugin_params": {"plugin_name": self.plugin_name},
+            }
 
-        elif isinstance(self.plugin_options, list):
-            plugin_params = {"plugin_name": self.plugin_name, "params": self.plugin_options}
+        if isinstance(self.plugin_options, list):
+            return {
+                "option": self.option,
+                "plugin_params": {"plugin_name": self.plugin_name, "params": self.plugin_options},
+            }
 
-        else:
-            self.plugin_options.update({"plugin_name": self.plugin_name})
-            plugin_params = self.plugin_options
-
-        r: APINotifyPlugin = {
+        plugin_params = cast(APIPluginDict, self.plugin_options.copy())
+        plugin_params["plugin_name"] = self.plugin_name
+        return {
             "option": self.option,
             "plugin_params": plugin_params,
         }
-
-        return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
         return self.plugin_name, self.plugin_options
@@ -1810,13 +1819,7 @@ def get_plugin_from_mk_file(
 
 
 def get_plugin_from_api_request(incoming: APINotifyPlugin) -> NotificationPlugin | CustomPlugin:
-    if incoming["plugin_params"]["plugin_name"] not in list(get_args(BuiltInPluginNames)):
-        custom_plugin_options = cast(dict[str, Any], incoming)
-        return CustomPlugin.from_api_request(custom_plugin_options)
-
-    plugin_name = cast(BuiltInPluginNames, incoming["plugin_params"]["plugin_name"])
-
-    match plugin_name:
+    match incoming["plugin_params"]["plugin_name"]:
         case "cisco_webex_teams":
             return CiscoWebexPlugin.from_api_request(incoming)
         case "mkeventd":
@@ -1851,3 +1854,5 @@ def get_plugin_from_api_request(incoming: APINotifyPlugin) -> NotificationPlugin
             return SpectrumPlugin.from_api_request(incoming)
         case "victorops":
             return VictoropsPlugin.from_api_request(incoming)
+        case _:
+            return CustomPlugin.from_api_request(incoming)

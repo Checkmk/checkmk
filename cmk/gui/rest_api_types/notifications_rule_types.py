@@ -14,6 +14,7 @@ from cmk.utils.notify_types import (
     BuiltInPluginNames,
     BulkOutsideTimePeriodType,
     ConditionEventConsoleAlertsType,
+    CustomPluginName,
     EmailBodyElementsType,
     EventConsoleOption,
     FromOrToType,
@@ -2467,6 +2468,19 @@ class API_MSTeamsData(APINotifyPluginParams, total=False):
     affected_host_groups: CheckboxStateType
 
 
+class APIPluginDict(TypedDict, total=False):
+    """Users can create their own plugins"""
+
+    plugin_name: CustomPluginName
+
+
+class APIPluginList(TypedDict, total=False):
+    """Users can create their own plugins"""
+
+    plugin_name: CustomPluginName
+    params: list[str]
+
+
 PluginType = (
     API_AsciiMailData
     | API_HTMLMailData
@@ -2485,6 +2499,8 @@ PluginType = (
     | API_VictorOpsData
     | API_MSTeamsData
     | API_SmsData
+    | APIPluginDict
+    | APIPluginList
 )
 
 
@@ -2498,9 +2514,9 @@ class APIRuleProperties(TypedDict, total=False):
     rule_id: str
 
 
-class APINotifyPlugin(TypedDict, total=False):
-    option: PluginOptions | str
-    plugin_params: PluginType | dict[str, Any]
+class APINotifyPlugin(TypedDict):
+    option: PluginOptions | str  # str only required for the openapi docs example
+    plugin_params: PluginType
 
 
 class APINotificationMethod(TypedDict, total=False):

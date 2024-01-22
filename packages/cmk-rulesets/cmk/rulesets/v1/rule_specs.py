@@ -54,6 +54,11 @@ class HostCondition:
 
 
 @dataclass(frozen=True)
+class HostAndServiceCondition:
+    ...
+
+
+@dataclass(frozen=True)
 class Host:
     """Specifies rule configurations for hosts
 
@@ -77,23 +82,26 @@ class Host:
 
 
 @dataclass(frozen=True)
-class ServiceMonitoringWithoutService:
+class Service:
+    """Specifies rule configurations for services
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
     title: Localizable
     topic: Topic | CustomTopic
     parameter_form: Callable[[], FormSpec]
     eval_type: EvalType
     name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-
-@dataclass(frozen=True)
-class ServiceMonitoring:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
+    condition: HostCondition | HostAndServiceCondition
     is_deprecated: bool = False
     help_text: Localizable | None = None
 

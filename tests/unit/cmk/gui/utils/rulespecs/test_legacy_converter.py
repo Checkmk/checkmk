@@ -1239,12 +1239,13 @@ def test_convert_to_legacy_rulespec_group(
             id="ServiceDiscoveryRuleSpec",
         ),
         pytest.param(
-            api_v1.rule_specs.ServiceMonitoringWithoutService(
+            api_v1.rule_specs.Service(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
                 parameter_form=partial(api_v1.form_specs.Text),
+                condition=api_v1.rule_specs.HostCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1254,15 +1255,16 @@ def test_convert_to_legacy_rulespec_group(
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
             ),
-            id="ServiceMonitoringRuleSpec",
+            id="ServiceRuleSpec with HostCondition",
         ),
         pytest.param(
-            api_v1.rule_specs.ServiceMonitoring(
+            api_v1.rule_specs.Service(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.VIRTUALIZATION,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
                 parameter_form=partial(api_v1.form_specs.Text),
+                condition=api_v1.rule_specs.HostAndServiceCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.ServiceRulespec(
@@ -1273,7 +1275,7 @@ def test_convert_to_legacy_rulespec_group(
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
             ),
-            id="ServiceRuleSpec",
+            id="ServiceRuleSpec with HostAndServiceCondition",
         ),
         pytest.param(
             api_v1.rule_specs.SNMP(

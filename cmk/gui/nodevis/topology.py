@@ -223,7 +223,6 @@ class ABCTopologyPage(Page):
         result = _compute_topology_response(topology_configuration)
 
         # logger.warning(f"Initial topology result {pprint.pformat(result)}")
-        # logger.warning(f"{topology_configuration.frontend.overlays_config}")
 
         html.javascript(
             f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},{json.dumps(topology_configuration.type)});"
@@ -1032,9 +1031,7 @@ def compute_node_config(
 
     # Compute node info
     all_frontend_nodes: dict[str, TopologyFrontendNode] = {}
-    nodes_by_depth: dict[int, TopologyNodes] = {}
     for node_id, node in merged_results.items():
-        nodes_by_depth.setdefault(node.mesh_depth, {})[node_id] = node
         all_frontend_nodes[node_id] = TopologyFrontendNode(
             id=node.id,
             name=node.name,
@@ -1046,7 +1043,7 @@ def compute_node_config(
             type_specific=node_specific_infos.get(node_id, {}),
         )
 
-    assigned_node_ids = set()
+    assigned_node_ids: set[str] = set()
     hosts_to_assign: dict[HostName, list[TopologyFrontendNode]] = {}
     services_to_assign: dict[str, TopologyFrontendNode] = {}
     for node_id, frontend_node in all_frontend_nodes.items():
@@ -1058,17 +1055,21 @@ def compute_node_config(
                     frontend_node
                 )
 
-    # The initial mesh with the mesh_depth is fully connected
-    # Goal: Assign services to their hosts, but only if the hosts have a lower mesh depth
-    for service_id, service_node in sorted(services_to_assign.items()):
-        hostname = service_node.type_specific["core"]["hostname"]
-        possible_hosts = hosts_to_assign.get(hostname, [])
-        if len(possible_hosts) == 1:
-            host_depth = merged_results[possible_hosts[0].id].mesh_depth
-            own_depth = merged_results[service_id].mesh_depth
-            if own_depth > host_depth:
-                possible_hosts[0].children.append(service_node)
-                assigned_node_ids.add(service_id)
+    if topology_configuration.frontend.overlays_config.computation_options.flat_hierarchy:
+        _flatten_hierarchy(merged_results, hosts_to_assign, services_to_assign)
+
+    _assign_services_to_hosts(
+        merged_results, hosts_to_assign, services_to_assign, assigned_node_ids
+    )
+
+    nodes_by_depth: dict[int, TopologyNodes] = {}
+    for node_id, node in merged_results.items():
+        nodes_by_depth.setdefault(node.mesh_depth, {})[node_id] = node
+
+    # logger.warning("NODES BY DEPTH")
+    # for depth, values in nodes_by_depth.items():
+    #     logger.warning(f"Depth {depth}")
+    #     logger.warning(pprint.pformat(values.keys()))
 
     _build_children_hierarchy(
         nodes_by_depth,
@@ -1082,6 +1083,58 @@ def compute_node_config(
         frontend_node.children.sort(key=lambda x: x.id)
 
     return topology_center, assigned_node_ids
+
+
+def _flatten_hierarchy(
+    merged_results: TopologyNodes,
+    hosts_to_assign: dict[HostName, list[TopologyFrontendNode]],
+    services_to_assign: dict[str, TopologyFrontendNode],
+) -> None:
+    # Goal: Step1: Move all non-root nodes to mesh_depth 1
+    #       Step2: Services with a known hosts are set to mesh_depth 2
+    root_nodes = []
+    for node_id, node in merged_results.items():
+        if node.mesh_depth == 0:
+            root_nodes.append(node)
+            continue
+        node.mesh_depth = 1
+
+    for service_id, service_node in sorted(services_to_assign.items()):
+        hostname = service_node.type_specific["core"]["hostname"]
+        possible_hosts = hosts_to_assign.get(hostname, [])
+        if len(possible_hosts) == 1:
+            merged_results[service_id].mesh_depth = 2
+
+    # Create a (hidden) connection from the first root node to all nodes at mesh_depth_1
+    first_root_node = root_nodes[0]
+    first_root_adjacents_ids = first_root_node.outgoing.union(first_root_node.incoming)
+    for node_id, node in merged_results.items():
+        if node.mesh_depth != 1:
+            continue
+        if node_id in first_root_adjacents_ids:
+            continue
+        first_root_node.incoming.add(node_id)
+
+
+def _assign_services_to_hosts(
+    merged_results: dict[str, TopologyNode],
+    hosts_to_assign: dict[HostName, list[TopologyFrontendNode]],
+    services_to_assign: dict[str, TopologyFrontendNode],
+    assigned_node_ids: set[str],
+) -> None:
+    # Goal: Services are assigned to their host, if host has a lower depth
+    for service_id, service_node in sorted(services_to_assign.items()):
+        hostname = service_node.type_specific["core"]["hostname"]
+        possible_hosts = hosts_to_assign.get(hostname, [])
+        if not possible_hosts:
+            continue
+        first_host = possible_hosts[0]
+
+        host_depth = merged_results[first_host.id].mesh_depth
+        own_depth = merged_results[service_id].mesh_depth
+        if own_depth > host_depth:
+            first_host.children.append(service_node)
+            assigned_node_ids.add(service_id)
 
 
 def _build_children_hierarchy(

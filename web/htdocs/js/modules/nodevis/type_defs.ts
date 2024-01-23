@@ -133,14 +133,17 @@ export class OverlayConfig {
 }
 
 export class ComputationOptions {
-    merge_nodes = true;
-    show_services: "all" | "none" | "only_problems" = "all";
+    merge_nodes: boolean;
+    show_services: "all" | "none" | "only_problems";
+    flat_hierarchy: boolean;
     constructor(
         merge_nodes = false,
-        show_servives: "all" | "none" | "only_problems" = "all"
+        show_servives: "all" | "none" | "only_problems" = "all",
+        flat_hierarchy = false
     ) {
         this.merge_nodes = merge_nodes;
         this.show_services = show_servives;
+        this.flat_hierarchy = flat_hierarchy;
     }
 }
 
@@ -167,7 +170,8 @@ export class OverlaysConfig {
         const options = fake_object.computation_options;
         const computation_options = new ComputationOptions(
             options.merge_nodes,
-            options.show_services
+            options.show_services,
+            options.flat_hierarchy
         );
         return new OverlaysConfig(
             fake_object.available_layers,

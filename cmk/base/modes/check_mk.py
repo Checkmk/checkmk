@@ -464,7 +464,9 @@ def mode_list_checks() -> None:
     # active checks using both new and old API have to be collected
     all_checks += [
         "check_" + name
-        for name in itertools.chain(config.active_check_info, load_active_checks()[1])
+        for name in itertools.chain(
+            config.active_check_info, (p.name for p in load_active_checks()[1].values())
+        )
     ]
 
     for plugin_name in sorted(all_checks, key=str):

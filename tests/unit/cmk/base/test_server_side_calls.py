@@ -32,6 +32,7 @@ from cmk.base.server_side_calls import (
     SpecialAgentInfoFunctionResult,
 )
 
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
@@ -326,7 +327,9 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
@@ -382,7 +385,9 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
@@ -418,7 +423,9 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
@@ -453,7 +460,7 @@ def argument_function_with_exception(*args, **kwargs):
 def test_get_active_service_data(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     macros: Mapping[str, str],
@@ -484,7 +491,9 @@ def test_get_active_service_data(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=argument_function_with_exception,
@@ -510,7 +519,7 @@ def test_get_active_service_data(
 def test_test_get_active_service_data_crash(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -547,7 +556,9 @@ def test_test_get_active_service_data_crash(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=argument_function_with_exception,
@@ -573,7 +584,7 @@ def test_test_get_active_service_data_crash(
 def test_test_get_active_service_data_crash_with_debug(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -642,7 +653,9 @@ def test_test_get_active_service_data_crash_with_debug(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
@@ -687,7 +700,7 @@ def test_test_get_active_service_data_crash_with_debug(
 def test_get_active_service_data_warnings(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
@@ -806,7 +819,9 @@ def test_get_active_service_data_warnings(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
@@ -862,7 +877,7 @@ def test_get_active_service_data_warnings(
 def test_get_active_service_descriptions(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
@@ -1082,7 +1097,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1102,7 +1119,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1124,7 +1143,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1144,7 +1165,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1168,7 +1191,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1189,7 +1214,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_iter_special_agent_commands(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     host_attrs: Mapping[str, str],
     stored_passwords: Mapping[str, str],
@@ -1217,7 +1242,9 @@ def test_iter_special_agent_commands(
     [
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=argument_function_with_exception,
@@ -1232,7 +1259,7 @@ def test_iter_special_agent_commands(
     ],
 )
 def test_iter_special_agent_commands_crash(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -1268,7 +1295,9 @@ def test_iter_special_agent_commands_crash(
     [
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=argument_function_with_exception,
@@ -1283,7 +1312,7 @@ def test_iter_special_agent_commands_crash(
     ],
 )
 def test_iter_special_agent_commands_crash_with_debug(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -59,7 +59,7 @@ def test_main_calls_config_updater(
         "update_config",
         return_value=False,
     )
-    assert not main.main([])
+    assert not main.main([], ensure_site_is_stopped_callback=lambda _: None)
     mock_config_checker_call.assert_called_once()
     mock_config_udpater_call.assert_called_once()
 
@@ -93,7 +93,7 @@ def test_config_updater_executes_plugins(
     mocker.patch.object(main, "update_action_registry", reg)
     mocker.patch.object(main, "_initialize_base_environment")
 
-    assert not main.main(["-v"])
+    assert not main.main(["-v"], ensure_site_is_stopped_callback=lambda _: None)
 
     output = capsys.readouterr()
     assert output.err == ""

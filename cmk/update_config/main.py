@@ -11,10 +11,12 @@ be called manually.
 
 import argparse
 import logging
+import subprocess
 import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
+from typing import Callable
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -45,13 +47,17 @@ from .registry import pre_update_action_registry, update_action_registry
 from .update_state import UpdateState
 
 
-def main(args: Sequence[str]) -> int:
+def main(
+    args: Sequence[str], ensure_site_is_stopped_callback: Callable[[logging.Logger], None]
+) -> int:
     arguments = _parse_arguments(args)
 
     if arguments.debug:
         debug.enable()
 
     logger = _setup_logging(arguments)
+
+    ensure_site_is_stopped_callback(logger)
 
     logger.info(
         "%sATTENTION%s\n  Some steps may take a long time depending "
@@ -143,6 +149,18 @@ def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
     gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
 
     return logger
+
+
+def ensure_site_is_stopped(logger: logging.Logger) -> None:
+    if (
+        subprocess.call(["omd", "status"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        != 1
+    ):
+        logger.error(
+            "ERROR: The Checkmk site is still running. Please stop the site "
+            "before updating the configuration. You can stop the site using 'omd stop'."
+        )
+        sys.exit(1)
 
 
 def _our_logging_level_to_gui_logging_level(lvl: int) -> int:

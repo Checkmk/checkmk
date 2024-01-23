@@ -52,7 +52,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.ActiveChecks():
             return _convert_to_legacy_host_rule_spec_rulespec(
                 to_convert,
-                legacy_wato_groups.RulespecGroupIntegrateOtherServices,
+                legacy_wato_groups.RulespecGroupActiveChecks,
                 localizer,
                 config_scope_prefix=RuleGroup.ActiveChecks,
             )

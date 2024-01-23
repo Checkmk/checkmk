@@ -13,6 +13,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
 from email.message import Message as POPIMAPMessage
+from pathlib import Path
 
 from exchangelib import Message as EWSMessage  # type: ignore[import]
 
@@ -108,16 +109,15 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "CRITICAL state",
     )
 
-    default_status_dir = (
-        (os.environ["OMD_ROOT"] + "/var/check_mk")
-        if "OMD_ROOT" in os.environ
-        else "/tmp"  # nosec B108 # BNS:13b2c8
-    )
     parser.add_argument(
         "--status-dir",
-        type=str,
+        type=Path,
         metavar="PATH",
-        default=default_status_dir,
+        default=(
+            Path(os.environ["OMD_ROOT"]) / "var/check_mk"
+            if "OMD_ROOT" in os.environ
+            else Path("/tmp")  # nosec B108 # BNS:13b2c8
+        ),
         help="This plugin needs a file to store information about sent, received "
         "and expected mails. Defaults to either '/tmp/' or "
         "'/omd/sites/<sitename>/var/check_mk' when executed from within an "
@@ -150,9 +150,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def load_expected_mails(status_path: str) -> MailDict:
+def load_expected_mails(status_path: Path) -> MailDict:
     with suppress(IOError):
-        with open(status_path) as file:
+        with status_path.open() as file:
             return {
                 ts + "-" + key: (int(ts), int(key))  #
                 for line in file  #
@@ -293,11 +293,9 @@ def subject_regex(subject: str) -> re.Pattern:
 
 def check_mail_roundtrip(args: Args) -> CheckResult:
     # TODO: maybe we should use cmk.utils.paths.tmp_dir?
-    status_path = "{}/check_mail_loop{}.status".format(
-        args.status_dir,
-        (".%s" % args.status_suffix) if args.status_suffix else "",
-    )
-    logging.debug("status_path: %r", status_path)
+    status_file_components = ("check_mail_loop", args.status_suffix, "status")
+    status_path = args.status_dir / ".".join(filter(bool, status_file_components))
+    logging.debug("status_path: '%s'", status_path)
 
     expected_mails = load_expected_mails(status_path) or {}
     logging.debug("expected_mails: %r", expected_mails)

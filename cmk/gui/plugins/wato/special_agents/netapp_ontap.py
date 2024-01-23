@@ -46,7 +46,7 @@ def _valuespec_special_agents_netapp_ontap() -> Dictionary:
                 ),
             ),
         ],
-        title=_("NetApp via Ontap API"),
+        title=_("NetApp via Ontap REST API"),
         help=_(
             "This rule set selects the NetApp special agent instead of the normal Checkmk Agent "
             "and allows monitoring via the NetApp Ontap REST API."

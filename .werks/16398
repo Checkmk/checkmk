@@ -1,0 +1,11 @@
+Title: mk_jolokia: Respect Timeout Settings
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706002080
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Previously, passing a timeout parameter the agent plugin <code>mk_jolokia</code> had no effect.
+This has been fixed.

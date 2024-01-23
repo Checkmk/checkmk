@@ -1,0 +1,9 @@
+Title: Cease to provide builds for Ubuntu 23.04 (Lunar Lobster)
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1706016036
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+

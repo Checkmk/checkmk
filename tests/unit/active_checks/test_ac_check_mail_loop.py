@@ -184,10 +184,10 @@ def test_ac_check_mail_loop(
         "RE: Wg: re: subject",
     ],
 )
-def test_regex_pattern(check_mail_loop, subject):
-    assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
-        "a",
-        "b",
+def test_regex_pattern(check_mail_loop, subject: str) -> None:
+    assert check_mail_loop.subject_regex(subject).match(f"{subject} 123 45").groups() == (
+        "123",
+        "45",
     )
 
 

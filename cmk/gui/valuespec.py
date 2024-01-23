@@ -6335,7 +6335,9 @@ class Foldable(ValueSpec[T]):
             indent=False,
         ):
             html.help(self._valuespec.help())
+            html.open_div(class_="valuespec_foldable_content")
             self._valuespec.render_input(varprefix, value)
+            html.close_div()
 
     def _get_title(self, varprefix: str, value: T) -> str:
         if self._title_function:
@@ -8619,12 +8621,14 @@ class DatePicker(ValueSpec[str]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         title: str | None = None,
+        label: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
         onchange: str | None = None,
     ):
         self._onchange = onchange
+        self._label = label
         super().__init__(
             title=title,
             help=help,
@@ -8633,6 +8637,8 @@ class DatePicker(ValueSpec[str]):
         )
 
     def render_input(self, varprefix: str, value: str) -> None:
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
         html.date(
             var=varprefix,
             value=value,

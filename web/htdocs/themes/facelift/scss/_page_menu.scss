@@ -956,8 +956,7 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
         margin: 0px;
         border: none;
         border-radius: 0px;
-        border-top: 1px solid $line-color;
-        border-bottom: 1px solid $line-color;
+        border: 1px solid $line-color;
 
         &.active,
         &:hover,
@@ -1011,12 +1010,19 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
   }
 
   .foldable {
-    border-left: 2px solid $line-color;
     margin-bottom: 20px;
 
     div#advanced_opts_d_date_and_time,
     div#advanced_opts_d_notification_nr {
       margin: 0px;
+      input {
+        margin-left: $spacing;
+      }
+    }
+
+    .valuespec_foldable_content {
+      margin-left: $spacing-half;
+      border-left: 2px solid $line-color;
     }
 
     .dictelement.indent {
@@ -1026,6 +1032,7 @@ div#page_menu_popups div#popup_test_notifications #form_test_notifications {
 
   #advanced_opts_d_date_and_time {
     .title {
+      color: $font-color-dimmed;
       font-size: $font-size-normal;
       padding: 0px;
     }

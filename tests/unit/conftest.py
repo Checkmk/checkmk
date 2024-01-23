@@ -9,10 +9,10 @@ import os
 import shutil
 from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fakeredis import FakeRedis
-from pytest import MonkeyPatch
 
 # Import this fixture to not clutter this file, but it's unused here...
 from tests.testlib.certs import (  # pylint: disable=unused-import # noqa: F401
@@ -381,10 +381,11 @@ def use_fakeredis_client(monkeypatch):
     redis.get_redis_client().flushall()
 
 
-@pytest.fixture(autouse=True)
-def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
+@pytest.fixture(autouse=True, scope="session")
+def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+    with patch.object(cmk.utils.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
+        yield
 
 
 @pytest.fixture(name="monkeypatch_module", scope="module")

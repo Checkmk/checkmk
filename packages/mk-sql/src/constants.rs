@@ -13,7 +13,7 @@ pub mod log {
     pub const FILE_MAX_COUNT: usize = 5;
 }
 
-pub const SQL_QUERY_EXTENSION: &str = ".sql";
+pub const SQL_QUERY_EXTENSION: &str = "sql";
 
 pub mod environment {
     pub const CONFIG_NAME: &str = "mk-sql.yml";

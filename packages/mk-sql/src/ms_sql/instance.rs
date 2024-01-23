@@ -377,7 +377,7 @@ impl SqlInstance {
         endpoint: &Endpoint,
         section: &Section,
     ) -> String {
-        if let Some(query) = section.select_query(get_sql_dir()) {
+        if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
             let sep = section.sep();
             match section.name() {
                 names::INSTANCE => {
@@ -837,9 +837,11 @@ impl SqlInstance {
     ) -> String {
         match self.create_client(endpoint, section.main_db()).await {
             Ok(mut c) => {
-                let q = query
-                    .map(|q| q.to_owned())
-                    .unwrap_or_else(|| section.select_query(get_sql_dir()).unwrap_or_default());
+                let q = query.map(|q| q.to_owned()).unwrap_or_else(|| {
+                    section
+                        .select_query(get_sql_dir(), self.version_major())
+                        .unwrap_or_default()
+                });
                 run_custom_query(&mut c, q)
                     .await
                     .and_then(|r| section.validate_rows(r))
@@ -863,7 +865,9 @@ impl SqlInstance {
     ) -> Option<String> {
         match self.create_client(endpoint, None).await {
             Ok(mut c) => {
-                if let Some(query) = section.find_provided_query(get_sql_dir()) {
+                if let Some(query) =
+                    section.find_provided_query(get_sql_dir(), self.version_major())
+                {
                     Some(
                         run_custom_query(&mut c, query)
                             .await

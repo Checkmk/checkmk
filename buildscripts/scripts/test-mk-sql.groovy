@@ -1,11 +1,11 @@
 #!groovy
 
-/// file: test-check-sql.groovy
+/// file: test-mk-sql.groovy
 
 def main() {
     dir("${checkout_dir}") {
         docker_image_from_alias("IMAGE_TESTING").inside() {
-            stage('Compile & Test Check SQL') {
+            stage('Compile & Test mk-sql') {
                 withCredentials([string(
                     credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
                     variable:"CI_TEST_SQL_DB_ENDPOINT"

@@ -10,7 +10,7 @@ import time
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 import livestatus
 
@@ -258,11 +258,15 @@ class ABCTopologyPage(Page):
                         name="filters",
                         is_shortcut=True,
                     ),
-                    get_toggle_layout_designer_page_menu_entry(),
-                    get_compare_history_page_menu_entry(),
+                    *self._get_page_menu_entries(),
                 ],
             ),
         )
+
+    @classmethod
+    @abc.abstractmethod
+    def _get_page_menu_entries(cls) -> list[PageMenuEntry]:
+        pass
 
 
 class ParentChildTopologyPage(ABCTopologyPage):
@@ -299,6 +303,12 @@ class ParentChildTopologyPage(ABCTopologyPage):
             },
         )
 
+    @classmethod
+    def _get_page_menu_entries(cls) -> list[PageMenuEntry]:
+        return [
+            get_toggle_layout_designer_page_menu_entry(),
+        ]
+
 
 class NetworkTopologyPage(ABCTopologyPage):
     @classmethod
@@ -330,6 +340,13 @@ class NetworkTopologyPage(ABCTopologyPage):
             overlays={x: {"active": True} for x in layer_ids},
         )
 
+    @classmethod
+    def _get_page_menu_entries(cls) -> list[PageMenuEntry]:
+        return [
+            get_toggle_layout_designer_page_menu_entry(),
+            get_compare_history_page_menu_entry(),
+        ]
+
 
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> dict:
@@ -345,10 +362,9 @@ class AjaxFetchTopology(AjaxPage):
         else:
             default_overlays = ParentChildTopologyPage.get_default_overlays_config()
         topology_configuration = get_topology_configuration(topology_type, default_overlays)
-        # logger.warning(f"AJAX config {pprint.pformat(topology_configuration)}")
         if request.has_var("delete_topology_configuration"):
             _delete_topology_configuration(topology_configuration)
-            topology_configuration.frontend = FrontendTopologyConfiguration()
+            topology_configuration.layout = _get_default_layout()
         if request.has_var("save_topology_configuration"):
             _save_topology_configuration(topology_configuration)
 
@@ -573,12 +589,14 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
     def _postprocess_mesh(self) -> None:
         """The depth of parent/child nodes is specified by the parent/child relationship,
         instead of the growth depth"""
-        # Create a central node and add all monitoring sites as children
         # Compute depth
         # Site Nodes - depth 0
         # Actual hosts - depth 1+
         nodes_to_compute = dict(self._topology_nodes.items())
         updated_nodes = set()
+
+        # Cycle through nodes. Start: Find nodes without parents
+        # Repeat until no nodes left: Find children for current parent -> repeat step
         for i in range(1, 1000):
             updated_at_depth = set()
             if not nodes_to_compute:
@@ -594,7 +612,14 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
                     nodes_to_compute.pop(node_id)
                     updated_at_depth.add(node_id)
 
+            if not updated_at_depth:
+                # Empty run. There still might be circular dependencies
+                # which can't be resolved with this mechanism
+                # The depth of the remaining nodes will be computed differently
+                break
             updated_nodes.update(updated_at_depth)
+
+        _resolve_circular_mesh_depths(set(), nodes_to_compute)
 
         def topo_site_id(site: str) -> str:
             return f"site:{site}"
@@ -697,30 +722,29 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
     def get_node_specific_info(self, node: TopologyNode) -> dict[str, Any]:
         extra_info = self._node_extra_info.get(node.id)
-        if extra_info is None:
-            return {}
-
-        if "service" in extra_info:
-            result = {
-                "core": {
+        result: dict[str, Any] = {}
+        if extra_info:
+            if "service" in extra_info:
+                result["core"] = {
                     "hostname": extra_info["hostname"],
                     "service": extra_info["service"],
                     "state": extra_info["state"],
                 }
-            }
-        else:
-            result = {
-                "core": {
+            else:
+                result["core"] = {
                     "hostname": extra_info["hostname"],
                     "state": self._map_host_state(node, extra_info),
                     "num_services_warn": extra_info["num_services_warn"],
                     "num_services_crit": extra_info["num_services_crit"],
-                },
-            }
-        if icon := node.metadata.get("icon"):
-            result["core"]["icon"] = theme.detect_icon_path(icon, prefix="")
-        elif icon := extra_info.get("icon"):
-            result["core"]["icon"] = icon
+                }
+            if icon := node.metadata.get("icon"):
+                result["core"]["icon"] = theme.detect_icon_path(icon, prefix="")
+            elif icon := extra_info.get("icon"):
+                result["core"]["icon"] = icon
+        if custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
+            node.id
+        ):
+            result["custom_node_settings"] = custom_settings
         return result
 
     def _map_host_state(self, node: TopologyNode, extra_info: dict[str, Any]) -> int:
@@ -773,6 +797,8 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         #     start_node_ids = [best_node_id]
         #
 
+        # _resolve_circular_mesh_depths(start_node_ids, self._topology_nodes)
+
         traversed_nodes = set()
         next_node_ids = []
         for node_id in start_node_ids:
@@ -781,7 +807,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             traversed_nodes.add(node_id)
             next_node_ids.append(node_id)
         mesh_depth = 1
-        # Note: Using a recursive will NOT work, because of circles in the mesh
+        # Note: Using a recursive approach will NOT work, because of circles in the mesh
         while next_node_ids:
             mesh_depth += 1
             upcoming_nodes = set()
@@ -909,6 +935,40 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                 }
             else:
                 self._topology_nodes[svc_node_id].type = FrontendNodeType.TOPOLOGY_UNKNOWN
+
+
+def _resolve_circular_mesh_depths(
+    _explicit_start_nodes: set[str], circular_nodes: TopologyNodes
+) -> None:
+    nodes_by_num_connections = []
+    for node_id, node in circular_nodes.items():
+        node.mesh_depth = 1
+        total_connections = len(node.incoming.union(node.outgoing))
+        nodes_by_num_connections.append((total_connections, node))
+    nodes_by_num_connections.sort(key=lambda x: x[0], reverse=True)
+
+    traversed_nodes = set()
+    for _count, root_node in nodes_by_num_connections:
+        mesh_depth = 1
+        if root_node.id in traversed_nodes:
+            continue
+        traversed_nodes.add(root_node.id)
+        next_node_ids = [root_node.id]
+        # Note: Using a recursive approach will NOT work, because of circles in the mesh
+        #       Grow from the start, then hop once in every direction with each cycle
+        while next_node_ids:
+            mesh_depth += 1
+            upcoming_nodes = set()
+            for node_id in next_node_ids:
+                node = circular_nodes[node_id]
+                for adjacent_id in node.incoming.union(node.outgoing):
+                    if adjacent_id in traversed_nodes:
+                        continue
+                    traversed_nodes.add(node.id)
+                    if adjacent_node := circular_nodes.get(adjacent_id):
+                        adjacent_node.mesh_depth = mesh_depth
+                        upcoming_nodes.add(adjacent_id)
+            next_node_ids = sorted(upcoming_nodes)
 
 
 class Topology:
@@ -1055,8 +1115,12 @@ def compute_node_config(
                     frontend_node
                 )
 
+    # TODO: detect when assigning a default layout is applicable
     if topology_configuration.frontend.overlays_config.computation_options.flat_hierarchy:
         _flatten_hierarchy(merged_results, hosts_to_assign, services_to_assign)
+        topology_configuration.layout = _get_default_layout("radial")
+    else:
+        topology_configuration.layout = _get_default_layout("hierarchy")
 
     _assign_services_to_hosts(
         merged_results, hosts_to_assign, services_to_assign, assigned_node_ids
@@ -1067,7 +1131,7 @@ def compute_node_config(
         nodes_by_depth.setdefault(node.mesh_depth, {})[node_id] = node
 
     # logger.warning("NODES BY DEPTH")
-    # for depth, values in nodes_by_depth.items():
+    # for depth, values in sorted(list(nodes_by_depth.items())):
     #     logger.warning(f"Depth {depth}")
     #     logger.warning(pprint.pformat(values.keys()))
 
@@ -1168,6 +1232,8 @@ def _build_children_hierarchy(
         if len(assigned_node_ids) > max_nodes:
             raise MKGrowthExceeded()
 
+    # Depth 0 nodes are always automatically assigned to the topology_central node
+    assigned_node_ids.update(list(nodes_by_depth[0].keys()))
     try:
         for i in range(0, max(nodes_by_depth.keys()) + 1):
             # logger.warning(f"CHECKING LEVEL {i}")
@@ -1508,31 +1574,54 @@ def get_topology_configuration(
     # Fallback, new page, no saved settings
     frontend_configuration = FrontendTopologyConfiguration()
     frontend_configuration.overlays_config = default_overlays or OverlaysConfig()
-    default_layout = Layout()
-    default_layout.style_configs = [
-        {
-            "type": "hierarchy",
-            "options": {
-                "box_leaf_nodes": False,
-                "layer_height": 180,
-                "node_size": 15,
-                "rotation": 0,
-            },
-            "position": {
-                "x": 3,
-                "y": 50,
-            },
-            "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},
-        }
-    ]
-    default_layout.line_config = {"style": "straight"}
 
     return TopologyConfiguration(
         type=topology_type,
         frontend=frontend_configuration,
         filter=filter_configuration,
-        layout=default_layout,
+        layout=_get_default_layout(),
     )
+
+
+def _get_default_layout(style: Literal["hierarchy", "radial"] = "hierarchy") -> Layout:
+    default_layout = Layout()
+    match style:
+        case "hierarchy":
+            default_layout.style_configs = [
+                {
+                    "type": "hierarchy",
+                    "options": {
+                        "box_leaf_nodes": False,
+                        "layer_height": 180,
+                        "node_size": 15,
+                        "rotation": 0,
+                    },
+                    "position": {
+                        "x": 3,
+                        "y": 50,
+                    },
+                    "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},
+                }
+            ]
+            default_layout.line_config = {"style": "straight"}
+        case "radial":
+            default_layout.style_configs = [
+                {
+                    "type": "radial",
+                    "options": {
+                        "radius": 120,
+                        "degree": 360,
+                        "rotation": 0,
+                    },
+                    "position": {
+                        "x": 50,
+                        "y": 50,
+                    },
+                    "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},
+                }
+            ]
+            default_layout.line_config = {"style": "round"}
+    return default_layout
 
 
 def _get_topology_settings_from_filters() -> dict[str, str]:

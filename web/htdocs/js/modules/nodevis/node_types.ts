@@ -155,7 +155,7 @@ export class TopologyNode extends AbstractGUINode {
         );
     }
 
-    override get_context_menu_elements() {
+    override get_context_menu_elements(): ContextMenuElement[] {
         let elements =
             AbstractGUINode.prototype.get_context_menu_elements.call(this);
         elements = elements.concat(this._get_topology_menu_elements());
@@ -352,14 +352,16 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
 
     override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
+
+        const core_info = this.node.data.type_specific.core;
         quickinfo.push({
             name: "Host name",
-            value: this.node.data.type_specific.core.hostname,
+            value: core_info.hostname,
         });
         if (this.node.data.service)
             quickinfo.push({
                 name: "Service description",
-                value: this.node.data.service,
+                value: core_info.service,
             });
         return quickinfo;
     }
@@ -367,17 +369,20 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
     override _fetch_external_quickinfo(): void {
         this._quickinfo_fetch_in_progress = true;
         let view_url;
-        if (this.node.data.service)
+        const core_info = this.node.data.type_specific.core;
+        if (!core_info) return;
+
+        if (core_info.service)
             // TODO: add site to url
             view_url =
                 "view.py?view_name=bi_map_hover_service&display_options=I&host=" +
-                encodeURIComponent(this.node.data.type_specific.core.hostname) +
+                encodeURIComponent(core_info.hostname) +
                 "&service=" +
-                encodeURIComponent(this.node.data.service);
+                encodeURIComponent(core_info.service);
         else
             view_url =
                 "view.py?view_name=bi_map_hover_host&display_options=I&host=" +
-                encodeURIComponent(this.node.data.type_specific.core.hostname);
+                encodeURIComponent(core_info.hostname);
 
         d3.html(view_url, {credentials: "include"}).then(html =>
             this._got_quickinfo(html)
@@ -434,14 +439,6 @@ export class BIAggregatorNode extends AbstractGUINode {
 
     override get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
-
-        // Local actions
-        // TODO: provide aggregation ID (if available)
-        //        if (!this.node.parent)
-        //        // This is the aggregation root node
-        //            elements.push({text: "Edit aggregation (Missing: You need to configure an ID for this aggregation)", href: "wato.py?mode=bi_edit_rule&id=" + this.node.data.rule_id.rule +
-        //               "&pack=" + this.node.data.rule_id.pack,
-        //               img: utils.get_theme() + "/images/icon_edit.png"})
 
         elements.push({
             text: "Edit rule",

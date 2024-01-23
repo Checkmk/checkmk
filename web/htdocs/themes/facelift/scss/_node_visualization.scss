@@ -216,6 +216,9 @@ div.node_vis {
   div.radio_group {
     display: flex;
     align-items: center;
+    label.title {
+      width: 80px;
+    }
   }
 
   table.radio_group {
@@ -569,7 +572,7 @@ div.node_vis {
     cursor: pointer;
   }
 
-  li div:hover {
+  li.popup_link div:hover {
     text-decoration: underline;
   }
 

@@ -90,9 +90,9 @@ class FilterTopologyMaxNodes(FilterRange):
             _FilterRangeConfig(
                 column="topology_max_nodes",
                 title=_l("Topology max nodes"),
-                step=10,
+                step=5,
                 default=2000,
-                min=10,
+                min=5,
                 max=10000,
             )
         )

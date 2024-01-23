@@ -406,26 +406,6 @@ export class LayoutManagerLayer extends FixLayer {
         //         });
         // }
 
-        // if (layout_settings.origin_type) {
-        //     // Add generic and explicit styles
-        //     if (layout_settings.origin_type == "default_template") {
-        //         const default_style =
-        //             this.layout_applier.layout_style_factory.instantiate_style_name(
-        //                 layout_settings.default_id,
-        //                 node_config.hierarchy,
-        //                 this._world.layout_manager.get_div_selection()
-        //             );
-        //         default_style.style_config.position = {x: 50, y: 50};
-        //         this._layout.save_style(
-        //             default_style.style_config
-        //         );
-        //     } else {
-        //         this._layout.deserialize(
-        //             layout_settings.config as unknown as SerializedNodevisLayout
-        //         );
-        //     }
-        // }
-
         // // node_chunk.layout_instance.style_configs = this._merge_styles(
         // //     node_chunk.layout_instance.style_configs,
         // //     layout_settings.config.style_configs
@@ -1314,11 +1294,24 @@ class LayoutApplier {
         layout: NodeVisualizationLayout,
         trigger_force_simulation = true
     ) {
-        // TODO: Cleanup, overly complicated
+        const layout_settings = this._layout_manager.get_layout_settings();
+        if (layout_settings.origin_type) {
+            // Add generic and explicit styles
+            if (layout_settings.origin_type == "default_template") {
+                const default_style =
+                    this.layout_style_factory.instantiate_style_name(
+                        layout_settings.default_id!,
+                        node_config.hierarchy,
+                        this._layout_manager.get_div_selection()
+                    );
+                default_style.style_config.position = {x: 50, y: 50};
+                layout.clear_styles();
+                layout.save_style(default_style.style_config);
+            }
+        }
+
         let nodes_with_style: NodeWithStyle[] = [];
-
         const node_matcher = new NodeMatcher(node_config);
-
         nodes_with_style = this.find_nodes_for_layout(
             layout,
             node_matcher

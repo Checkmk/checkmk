@@ -39,6 +39,7 @@ export interface SerializedNodevisLayout {
     force_config: ForceOptions;
     style_configs: StyleConfig[];
     delayed_style_configs?: StyleConfig[];
+    default_id?: string;
     origin_info?: string;
     origin_type?: string;
 }

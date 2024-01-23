@@ -293,9 +293,10 @@ export interface NodevisLink {
 }
 
 export interface ContextMenuElement {
-    text: string;
+    text?: string;
     href?: string;
     img?: string;
+    dom?: HTMLDivElement;
     on?: (event: Event, data: any) => void;
     data?: any;
 }

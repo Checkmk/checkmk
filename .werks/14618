@@ -1,0 +1,12 @@
+Title: check_mail_loop: if configured to delete processed mails, check_mail_loop would delete all mails instead
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705993144
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+As a result of a refactoring instead of deleting just pre-filtered mails, <code>check_mail_loop</code> would
+delete all previously fetched mails.
+This change brings back the former behavior.

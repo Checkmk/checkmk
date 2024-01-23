@@ -531,7 +531,7 @@ def transform_check_mail_params(params):
             "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
         }
 
-    if {"ssl", "auth"} <= fetch_params.keys():
+    if "auth" in fetch_params:
         # old format (2.0 and below)
         return apply_fetch(
             params,

@@ -1,0 +1,12 @@
+Title: check_mailbox: update-config failed if 'ssl' key not in fetch-config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706021156
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+Older configurations for `check_mail` were not guaranteed to contain the `ssl` key, (de)activating
+TLS for connections. This change just deactivates the check for this key, keeping the
+functionality.

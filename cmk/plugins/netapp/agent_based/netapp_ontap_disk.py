@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, InventoryPlugin, Service, TableRow
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, InventoryPlugin, render, Service, TableRow
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from cmk.plugins.lib.filerdisks import (
     check_filer_disks,
@@ -81,7 +81,8 @@ def check_netapp_ontap_disk_summary(params: Mapping[str, Any], section: Section)
     check_filer_section: list[FilerDisk] = [
         FilerDisk(
             state={"broken": "failed", "spare": "spare"}.get(disk_model.container_type, "ok"),
-            identifier=f"Serial: {disk_model.serial_number}",
+            identifier=f"Serial: {disk_model.serial_number}, Size: {render.bytes(disk_model.space())}",
+            capacity=disk_model.space(),
         )
         for disk_model in section
     ]

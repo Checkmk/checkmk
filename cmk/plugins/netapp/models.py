@@ -138,7 +138,9 @@ class DiskModel(BaseModel):
     "disk-raid-info.container-type": "raid-state" -> container_type
     "disk-raid-info.position": "raid-type"  -> NA # ! not present in new api
     "disk-raid-info.used-blocks": "used-space" -> usable_size
-    "disk-raid-info.physical-blocks": "physical-space"  -> NA # ! not present in new api
+    "disk-raid-info.physical-blocks": "physical-space"  -> see below
+    bytes-per-sector → bytes_per_sector
+    capacity-sectors → sector_count
     ============
 
     """
@@ -149,6 +151,12 @@ class DiskModel(BaseModel):
     vendor: str
     container_type: str
     bay: int | None = None
+
+    bytes_per_sector: int
+    sector_count: int
+
+    def space(self) -> int:
+        return self.bytes_per_sector * self.sector_count
 
 
 class LunModel(BaseModel):

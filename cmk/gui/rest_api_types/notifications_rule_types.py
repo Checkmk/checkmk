@@ -785,21 +785,8 @@ class FromAndToEmailFields:
 # ---------------------------------------------------------------
 
 
-class MatchHostAuxTagValues(TypedDict):
-    tag_type: Literal["aux_tag"]
-    tag_id: str
-    operator: Literal["is_set", "is_not_set"]
-
-
-class MatchHostTagGroupValues(TypedDict):
-    tag_type: Literal["tag_group"]
-    tag_group_id: str
-    operator: Literal["is", "is_not"]
-    tag_id: str
-
-
 class MatchHostTagsAPIValueType(CheckboxStateType, total=False):
-    value: list[MatchHostTagGroupValues | MatchHostAuxTagValues]
+    value: list
 
 
 @dataclass
@@ -832,38 +819,7 @@ class CheckboxMatchHostTags:
         if self.value is None:
             return resp
 
-        # Can't import this at module level without causing unit test fixuture issues.
-        from cmk.gui.watolib.tags import load_all_tag_config_read_only
-
-        tag_config = load_all_tag_config_read_only()
-        aux_tags = [tag.id for tag in tag_config.aux_tag_list]
-        tag_groups_n_tags = [
-            (group.id, [tag.id for tag in group.tags]) for group in tag_config.tag_groups
-        ]
-
-        tags: list[MatchHostTagGroupValues | MatchHostAuxTagValues] = []
-
-        for tag_id in self.value:
-            raw_id = tag_id.replace("!", "")
-            if raw_id in aux_tags:
-                auxtag: MatchHostAuxTagValues = {
-                    "tag_type": "aux_tag",
-                    "tag_id": raw_id,
-                    "operator": "is_not_set" if tag_id[0] == "!" else "is_set",
-                }
-                tags.append(auxtag)
-
-            for tag_group_id, tag_ids in tag_groups_n_tags:
-                if raw_id in tag_ids:
-                    grouptag: MatchHostTagGroupValues = {
-                        "tag_type": "tag_group",
-                        "tag_group_id": tag_group_id,
-                        "operator": "is_not" if tag_id[0] == "!" else "is",
-                        "tag_id": raw_id,
-                    }
-                    tags.append(grouptag)
-
-        resp["value"] = tags
+        resp["value"] = self.value
         return resp
 
     def to_mk_file_format(self) -> list[str] | None:

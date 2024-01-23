@@ -20,7 +20,6 @@ daily_reduced: &daily_reduced
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: &internal_distros
-    - "ubuntu-23.04"
     - "ubuntu-23.10"
 
 editions:
@@ -59,5 +58,4 @@ editions:
 # We currently only need this for the internal_distros as at the point in the pipeline,
 # where we want to exclude the internal distros, we are only using the distro codes and not the distro name anymore.
 distro_to_codename:
-    ubuntu-23.04: "lunar"
     ubuntu-23.10: "mantic"

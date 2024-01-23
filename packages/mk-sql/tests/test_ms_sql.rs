@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
 use mk_sql::ms_sql::{
@@ -46,7 +47,7 @@ fn test_section_select_query() {
     ] {
         tools::create_file_with_content(&custom_sql_path, &(name.to_owned() + ".sql"), "Bu!");
     }
-    let mk_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), 100);
+    let make_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), 100);
     for name in [
         names::JOBS,
         names::AVAILABILITY_GROUPS,
@@ -54,8 +55,8 @@ fn test_section_select_query() {
         "buzz",
     ] {
         assert_eq!(
-            mk_section(name)
-                .select_query(Some(custom_sql_path.to_owned()))
+            make_section(name)
+                .select_query(Some(custom_sql_path.to_owned()), 0)
                 .unwrap(),
             "Bu!"
         );
@@ -1207,4 +1208,44 @@ mssql:
  "#,
         endpoint.user, endpoint.pwd, endpoint.host
     )
+}
+
+#[test]
+fn test_din_provided_query() {
+    let s_a = make_section("A");
+    let s_a2 = make_section("A2");
+    let s_jobs = make_section("jobs");
+
+    // Phase 1. None for Nothing
+    assert!(s_a
+        .find_provided_query(Some(PathBuf::from("aswcededcececece")), 0)
+        .is_none());
+    let dir = tools::create_temp_process_dir();
+    let dir_to_check = || Some(dir.path().to_owned());
+
+    // Phase 2. None for Empty Dir
+    assert!(s_a.find_provided_query(dir_to_check(), 0).is_none());
+
+    let _ = tools::create_file_with_content(dir.path(), "a.sql", "a.sql");
+    let _ = tools::create_file_with_content(dir.path(), "a@20.sql", "a@20.sql");
+    let _ = tools::create_file_with_content(dir.path(), "a@4.sql", "a@4.sql");
+    let _ = tools::create_file_with_content(dir.path(), "jobs@100.sql", "jobs@100.sql");
+
+    // Phase 3. section a
+    assert!(s_a2.find_provided_query(dir_to_check(), 0).is_none());
+    assert_eq!(s_a.find_provided_query(dir_to_check(), 0).unwrap(), "a.sql");
+    assert_eq!(
+        s_a.find_provided_query(dir_to_check(), 13).unwrap(),
+        "a@4.sql"
+    );
+    assert_eq!(
+        s_a.find_provided_query(dir_to_check(), 30).unwrap(),
+        "a@20.sql"
+    );
+
+    assert!(s_jobs.find_provided_query(dir_to_check(), 30).is_none());
+    assert_eq!(
+        s_jobs.find_provided_query(dir_to_check(), 100).unwrap(),
+        "jobs@100.sql"
+    );
 }

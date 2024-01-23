@@ -10,7 +10,7 @@ use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use tiberius::Row;
 
@@ -102,37 +102,47 @@ impl Section {
         }
     }
 
-    pub fn select_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
+    /// try to find the section's query in the sql directory for instance with the given version
+    /// or in the known queries if custom sql query is not provided
+    pub fn select_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
         match self.name.as_ref() {
             names::INSTANCE => find_known_query(sqls::Id::InstanceProperties)
                 .map(str::to_string)
                 .ok(),
-            _ => self.find_query(sql_dir),
+            _ => self.find_query(sql_dir, instance_version),
         }
     }
 
-    fn find_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
-        self.find_provided_query(sql_dir).or_else(|| {
-            get_sql_id(&self.name)
-                .and_then(Self::find_known_query)
-                .map(|s| s.to_owned())
-        })
+    fn find_query(&self, sql_dir: Option<PathBuf>, instance_version: u32) -> Option<String> {
+        self.find_provided_query(sql_dir, instance_version)
+            .or_else(|| {
+                get_sql_id(&self.name)
+                    .and_then(Self::find_known_query)
+                    .map(|s| s.to_owned())
+            })
     }
 
-    pub fn find_provided_query(&self, sql_dir: Option<PathBuf>) -> Option<String> {
+    pub fn find_provided_query(
+        &self,
+        sql_dir: Option<PathBuf>,
+        instance_version: u32,
+    ) -> Option<String> {
         if let Some(dir) = sql_dir {
-            let f = dir.join(self.name.to_lowercase().to_owned() + constants::SQL_QUERY_EXTENSION);
-            read_to_string(&f)
-                .map_err(|e| {
-                    log::error!("Can't read file {:?} {}", &f, &e);
-                    e
-                })
-                .ok()
-        } else {
-            None
+            if let Ok(versioned_files) = find_sql_files(&dir, &self.name) {
+                for (min_version, sql_file) in versioned_files {
+                    if instance_version >= min_version {
+                        return read_to_string(&sql_file)
+                            .map_err(|e| {
+                                log::error!("Can't read file {:?} {}", &sql_file, &e);
+                                e
+                            })
+                            .ok();
+                    }
+                }
+            };
         }
+        None
     }
-
     fn find_known_query(id: sqls::Id) -> Option<&'static str> {
         sqls::find_known_query(id)
             .map_err(|e| {
@@ -165,6 +175,46 @@ impl Section {
             Err(anyhow::anyhow!("No output from query"))
         }
     }
+}
+
+fn find_sql_files(dir: &Path, section_name: &str) -> Result<Vec<(u32, PathBuf)>> {
+    let mut paths: Vec<(u32, PathBuf)> = std::fs::read_dir(dir)?
+        .filter_map(|res| res.ok())
+        .map(|dir_entry| dir_entry.path())
+        .filter_map(|path| {
+            if path
+                .extension()
+                .map_or(false, |ext| ext == constants::SQL_QUERY_EXTENSION)
+            {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .filter_map(|path| get_file_version(&path, section_name).map(|version| (version, path)))
+        .collect::<Vec<_>>();
+    paths.sort_by_key(|p| p.0);
+    paths.reverse();
+    Ok(paths)
+}
+
+fn get_file_version(path: &Path, section_name: &str) -> Option<u32> {
+    if let Some(stem) = path.file_stem().map(|n| n.to_string_lossy().to_string()) {
+        match stem.rsplitn(2, '@').collect::<Vec<&str>>().as_slice() {
+            [min_version, name] => {
+                if name.to_lowercase() == section_name.to_lowercase() {
+                    return Some(min_version.parse::<u32>().unwrap_or(0));
+                }
+            }
+            [stem] => {
+                if stem.to_lowercase() == section_name.to_lowercase() {
+                    return Some(0);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 lazy_static::lazy_static! {
@@ -217,7 +267,7 @@ mod tests {
 
     #[test]
     fn test_section_select_query() {
-        let mk_section =
+        let make_section =
             |name: &str| Section::new(&config::section::SectionBuilder::new(name).build(), 100);
         let test_set: &[(&str, sqls::Id)] = &[
             (names::INSTANCE, sqls::Id::InstanceProperties),
@@ -236,14 +286,14 @@ mod tests {
         ];
         for (name, ids) in test_set {
             assert_eq!(
-                mk_section(name)
-                    .select_query(custom::get_sql_dir())
+                make_section(name)
+                    .select_query(custom::get_sql_dir(), 0)
                     .unwrap(),
                 find_known_query(ids).unwrap()
             );
         }
         assert_eq!(
-            mk_section("no_name").select_query(custom::get_sql_dir()),
+            make_section("no_name").select_query(custom::get_sql_dir(), 0),
             None
         )
     }

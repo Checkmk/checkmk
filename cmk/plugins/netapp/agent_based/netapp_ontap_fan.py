@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Service
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin
+from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 from cmk.plugins.lib import netapp_api
 from cmk.plugins.netapp import models
 
@@ -64,12 +63,6 @@ agent_section_netapp_ontap_fan = AgentSection(
 )
 
 
-def discovery_netapp_ontap_fan(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
-    if not params["mode"] == "single":
-        return
-    yield from (Service(item=item) for item in section)
-
-
 def check_netapp_ontap_fan(item: str, section: Section) -> CheckResult:
     yield from netapp_api.get_single_check("fan")(item, _get_section_single_instance(section))
 
@@ -78,19 +71,11 @@ check_plugin_netapp_ontap_fan = CheckPlugin(
     name="netapp_ontap_fan",
     service_name="Fan Shelf %s",
     sections=["netapp_ontap_fan"],
-    discovery_function=discovery_netapp_ontap_fan,
+    discovery_function=netapp_api.discover_single,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_fan,
 )
-
-
-def discovery_netapp_ontap_fan_summary(
-    params: Mapping[str, Any], section: Section
-) -> DiscoveryResult:
-    if not section or params["mode"] == "single":
-        return
-    yield Service(item="Summary")
 
 
 def check_netapp_ontap_fan_summary(
@@ -104,7 +89,7 @@ check_plugin_netapp_ontap_fan_summary = CheckPlugin(
     name="netapp_ontap_fan_summary",
     service_name="Fan Shelf %s",
     sections=["netapp_ontap_fan"],
-    discovery_function=discovery_netapp_ontap_fan_summary,
+    discovery_function=netapp_api.discover_summary,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_fan_summary,

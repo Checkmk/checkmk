@@ -454,6 +454,29 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
             )
 
 
+def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
+    field_query = {
+        "id",
+        "frus.id",
+        "frus.state",
+        # "fans.installed",  # ! NOT WORKING
+    }
+
+    for element in NetAppResource.Shelf.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+        list_id = element_data["id"]
+        frus = element_data["frus"]
+
+        for fan in frus:
+            yield models.ShelfPsuModel(
+                list_id=list_id,
+                id=fan["id"],
+                state=fan["state"],
+            )
+
+
 def fetch_temperatures(
     connection: HostConnection,
 ) -> Iterable[models.ShelfTemperatureModel]:
@@ -594,6 +617,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("temp", fetch_temperatures(connection), logger)
     write_section("alerts", fetch_alerts(connection, args), logger)
     write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
+    write_section("psu", fetch_psu(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

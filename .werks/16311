@@ -1,0 +1,11 @@
+Title: Fix adding of graphs to report via "Add to..."
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1706016931
+Edition: cee
+Level: 1
+Version: 2.2.0p21
+
+If you added a graph via the burger menu option "Add to report" an error like
+"Internal error: string indices must be integers, not str" occurred.

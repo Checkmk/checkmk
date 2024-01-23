@@ -8,7 +8,7 @@ description:
  is checked against a warning and a critical level, which
  can be specified in numerous ways.
 
- {Trends:} This checks supports volume {trends}. This means that the {netapp_api_volumes} check
+ {Trends:} This checks supports volume {trends}. This means that the {netapp_ontap_volumes} check
  is able to compute the {change} of the used space over the time and can
  make a forecast into the future. It can estimate the time when
  the volume will be full.

@@ -67,13 +67,17 @@ class TopologyDatasourceConfiguration:
 class ComputationOptions:
     merge_nodes: bool = True
     show_services: Literal["none", "all", "only_problems"] = "all"
+    flat_hierarchy: bool = False
 
     @classmethod
     def parse(cls, serialized_config: dict[str, Any]) -> "ComputationOptions":
         show_services: Literal["none", "all", "only_problems"] = "all"
         show_services = serialized_config.get("show_services", show_services)
+
         return cls(
-            merge_nodes=serialized_config.get("merge_nodes", True), show_services=show_services
+            merge_nodes=serialized_config.get("merge_nodes", True),
+            show_services=show_services,
+            flat_hierarchy=serialized_config.get("flat_hierarchy", False),
         )
 
 

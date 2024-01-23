@@ -320,6 +320,15 @@ class Mailbox:
             self._connection = connection
 
         assert self._connection is None
+
+        logging.debug(
+            "_connect_fetcher: %r %r %r %r",
+            self._args.fetch_protocol,
+            self._args.fetch_server,
+            self._args.fetch_port,
+            self._args.fetch_tls,
+        )
+
         try:
             if self._args.fetch_protocol == "POP3":
                 _connect_pop3()
@@ -338,6 +347,13 @@ class Mailbox:
 
     def _connect_sender(self) -> None:
         assert self._connection is None
+        logging.debug(
+            "_connect_sender: %r %r %r %r",
+            self._args.send_protocol,
+            self._args.send_server,
+            self._args.send_port,
+            self._args.send_tls,
+        )
         try:
             if self._args.send_protocol == "EWS":
                 self._connect_ews()
@@ -464,25 +480,33 @@ class Mailbox:
             return dict(enumerate(self._connection._account.inbox.all()))
 
         pattern = re.compile(subject_pattern) if subject_pattern else None
+
+        def matches(subject: None | str, re_pattern: None | re.Pattern[str]) -> bool:
+            if re_pattern and not re_pattern.match(subject or ""):
+                logging.debug("filter mail with non-matching subject %r", subject)
+                return False
+            return True
+
+        logging.debug("pattern used to receive mails: %s", pattern)
         try:
             protocol = self.protocol()
             if protocol == "POP3":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_pop3().items()
-                    if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
+                    if matches(msg.get("Subject"), pattern)  # type: ignore[attr-defined]
                 }
             if protocol == "IMAP":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_imap().items()
-                    if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
+                    if matches(msg.get("Subject"), pattern)  # type: ignore[attr-defined]
                 }
             if protocol == "EWS":
                 return {
                     num: msg
                     for num, msg in _fetch_mails_ews().items()
-                    if pattern is None or pattern.match(msg.subject)
+                    if matches(msg.subject, pattern)
                 }
             raise NotImplementedError(f"Fetching mails is not implemented for {protocol}")
         except Exception as exc:
@@ -575,7 +599,10 @@ class Mailbox:
         )  # caused by verified_result() typing horror
 
     def delete_mails(self, mails: MailMessages) -> None:
+        """Delete mails specified by @mails. Please note that for POP/IMAP we delete mails by
+        index (mail.keys()) while with EWS we delete sets of EWSMessage (mail.values())"""
         assert self._connection is not None
+        logging.debug("delete mails %s", mails)
         try:
             protocol = self.protocol()
             if protocol == "POP3":
@@ -635,6 +662,18 @@ class Mailbox:
         mail["Subject"] = "%s %d %d" % (args.subject, now, key)
         mail["Date"] = email.utils.formatdate(localtime=True)
 
+        logging.debug(
+            "send roundtrip mail with subject %r to %s from %s via %s:%r tls=%s timeout=%s username=%s",
+            mail["Subject"],
+            args.mail_to,
+            args.mail_from,
+            args.send_server,
+            args.send_port,
+            args.send_tls,
+            args.connect_timeout,
+            args.send_username,
+        )
+
         with smtplib.SMTP(
             args.send_server, args.send_port, timeout=args.connect_timeout
         ) as connection:
@@ -672,13 +711,17 @@ class Mailbox:
         except smtplib.SMTPAuthenticationError as exc:
             if exc.smtp_code == 530:
                 raise SendMailError(
-                    "Could not login to SMTP server. Looks like you have to use the --smtp-tls flag."
+                    "Could not login to SMTP server. Looks like you have to use the --send-tls flag."
                 ) from exc
             if exc.smtp_code == 535:
                 raise SendMailError(
                     "Could not login to SMTP server. Looks like you provided the wrong credentials."
                 ) from exc
             raise SendMailError("Could not login to SMTP server. (%r)" % exc) from exc
+        except smtplib.SMTPSenderRefused as exc:
+            raise SendMailError(
+                f"Could not send email, got {exc!r}, username={args.send_username}."
+            ) from exc
         except smtplib.SMTPRecipientsRefused as exc:
             raise SendMailError(
                 "Could not send email. Maybe you've sent too many mails? (%r)." % exc

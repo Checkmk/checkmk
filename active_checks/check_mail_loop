@@ -19,6 +19,7 @@ from exchangelib import Message as EWSMessage  # type: ignore[import]
 
 from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox, MailID, Message
 
+# "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
 
 
@@ -234,7 +235,7 @@ def check_mails(  # pylint: disable=too-many-branches
             # but keep waiting for other mails which have not yet reached it
             if now - send_ts >= critical:
                 logging.warning(
-                    "Found mail with critical roundtrip time: %r (%dsec)",
+                    "found mail with critical roundtrip time: %r (%dsec)",
                     ident,
                     now - send_ts,
                 )
@@ -318,6 +319,12 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
         now = int(time.time())
 
+        def filter_subject(subject: None | str, re_pattern: re.Pattern[str]) -> None | re.Match:
+            if re_pattern and not (match := re_pattern.match(subject or "")):
+                logging.debug("ignore message with subject %r", subject)
+                return None
+            return match
+
         # create a collection of all mails with their relevant details filtered
         # by subject
         # str -> (index, rx-timestamp, subject, raw_message)
@@ -329,10 +336,10 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
                 subject_and_received_timestamp_from_msg(raw_message, mailbox.protocol(), now),
             )
             # .. because we need the groups
-            if (match := re_subject.match(subject))
+            if (match := filter_subject(subject, re_subject))
             for tx_timestamp, key in (match.groups(),)
         }
-        logging.debug("received %d messages", len(message_details))
+        logging.debug("received %d check_mail_loop messages", len(message_details))
 
         # relevant messages are a subset of above received messages which we expected
         relevant_mail_loop_messages = {
@@ -356,21 +363,22 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
 
         save_expected_mails(expected_mails, status_path)
 
+        deletion_candidates = {
+            index: raw_message
+            for ts_key, (index, rx_timestamp, _subject, raw_message) in message_details.items()
+            if ts_key in expected_mails or now - rx_timestamp > 24 * 3600
+        }
+        logging.debug(
+            "candidates for deletion (expected messages + those older than 24h): %s",
+            list(deletion_candidates.keys()),
+        )
         if args.delete_messages:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
-            mailbox.delete_mails(
-                {
-                    index: raw_message
-                    for ts_key, (
-                        index,
-                        rx_timestamp,
-                        _subject,
-                        raw_message,
-                    ) in message_details.items()
-                    if ts_key in expected_mails or now - rx_timestamp > 24 * 3600
-                }
-            )
+            logging.debug("delete messages...")
+            mailbox.delete_mails(deletion_candidates)
+        else:
+            logging.debug("deletion not active (--delete-messages not provided)")
 
     return state, output, perfdata
 

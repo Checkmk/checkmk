@@ -7,11 +7,11 @@ from collections.abc import Mapping, Sequence
 
 import cmk.utils.debug
 
-from cmk.discover_plugins import discover_plugins, PluginGroup
+from cmk.discover_plugins import discover_plugins, PluginGroup, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, SpecialAgentConfig
 
 
-def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]]:
+def load_active_checks() -> tuple[Sequence[str], Mapping[PluginLocation, ActiveCheckConfig]]:
     loaded = discover_plugins(
         PluginGroup.SERVER_SIDE_CALLS,
         {ActiveCheckConfig: "active_check_"},
@@ -19,12 +19,10 @@ def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]
     )
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    return [str(e) for e in loaded.errors], {
-        plugin.name: plugin for plugin in loaded.plugins.values()
-    }
+    return [str(e) for e in loaded.errors], loaded.plugins
 
 
-def load_special_agents() -> tuple[Sequence[str], Mapping[str, SpecialAgentConfig]]:
+def load_special_agents() -> tuple[Sequence[str], Mapping[PluginLocation, SpecialAgentConfig]]:
     loaded = discover_plugins(
         PluginGroup.SERVER_SIDE_CALLS,
         {SpecialAgentConfig: "special_agent_"},
@@ -32,6 +30,4 @@ def load_special_agents() -> tuple[Sequence[str], Mapping[str, SpecialAgentConfi
     )
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    return [str(e) for e in loaded.errors], {
-        plugin.name: plugin for plugin in loaded.plugins.values()
-    }
+    return [str(e) for e in loaded.errors], loaded.plugins

@@ -23,6 +23,7 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base import plugin_contexts
 
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
@@ -318,7 +319,7 @@ def _replace_macros(string: str, macros: Mapping[str, str]) -> str:
 class ActiveCheck:
     def __init__(
         self,
-        plugins: Mapping[str, ActiveCheckConfig],
+        plugins: Mapping[PluginLocation, ActiveCheckConfig],
         legacy_plugins: Mapping[str, Mapping[str, Any]],
         host_name: HostName,
         host_config: HostConfig,
@@ -328,7 +329,7 @@ class ActiveCheck:
         stored_passwords: Mapping[str, str] | None = None,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
-        self._plugins = plugins
+        self._plugins = {p.name: p for p in plugins.values()}
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_config = host_config
@@ -590,7 +591,7 @@ class ActiveCheck:
 class SpecialAgent:
     def __init__(
         self,
-        plugins: Mapping[str, SpecialAgentConfig],
+        plugins: Mapping[PluginLocation, SpecialAgentConfig],
         legacy_plugins: Mapping[str, InfoFunc],
         host_name: HostName,
         host_address: HostAddress | None,
@@ -599,7 +600,7 @@ class SpecialAgent:
         stored_passwords: Mapping[str, str],
         macros: Mapping[str, str] | None,
     ):
-        self._plugins = plugins
+        self._plugins = {p.name: p for p in plugins.values()}
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_address = host_address

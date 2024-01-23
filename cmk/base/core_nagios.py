@@ -1461,17 +1461,16 @@ def _get_legacy_check_file_names_to_load(
     needed_check_plugin_names: set[CheckPluginNameStr],
 ) -> list[str]:
     # check info table
-    # We need to include all those plugins that are referenced in the host's
+    # We need to include all those plugins that are referenced in the hosts
     # check table.
-    ssc_api_special_agents = load_special_agents()[1]
+    ssc_api_special_agents = {p.name for p in load_special_agents()[1].values()}
     filenames: list[str] = []
 
     for check_plugin_name in needed_check_plugin_names:
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
 
-        short_plugin_name = check_plugin_name.replace("agent_", "")
-        if not paths and short_plugin_name not in ssc_api_special_agents:
+        if not paths and check_plugin_name.removeprefix("agent_") not in ssc_api_special_agents:
             raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
         for path in paths:

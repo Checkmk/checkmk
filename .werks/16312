@@ -1,0 +1,12 @@
+Title: Fix error on "Save & go to list" while editing dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1706019672
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+If you used the "Properties" option within the "Dashboard" page menu in
+dashboards and chose "Save & go to list" after editing the dashboard, you
+have seen an error like "This page was not found. Sorry.".

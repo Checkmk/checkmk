@@ -11,15 +11,15 @@ description:
  code not listed under the above link will by default result in the monitoring state {CRITICAL}.
  Furthermore, by default, the check plugin will go {WARNING} if a monitored task is not enabled.
 
- The check plugin can be configured via the rule "Windows Tasks". Here, users can customize the
+ The check plugin can be configured via the rule "Windows tasks". Here, users can customize the
  mapping from return code to monitoring state and users can also change the output produced by the
  check plugin for a given return code. Finally, this rule allows users to modify the monitoring state
  of tasks which are not enabled.
 
- The discovered services are configurable via the service discovery rule "Windows Tasks".
+ The discovered services are configurable via the service discovery rule "Windows tasks".
 
  Note that for this check plugin to discover any services at all, you need to activate the Windows
- agent plugin "Windows Task Scheduler".
+ agent plugin "Windows task scheduler".
 
 item:
  Name of the task

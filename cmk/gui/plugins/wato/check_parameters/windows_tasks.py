@@ -183,14 +183,14 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Task name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_windows_tasks,
-        title=lambda: _("Windows Tasks"),
+        title=lambda: _("Windows tasks"),
     )
 )
 
 
 def _valuespec_windows_tasks_discovery():
     return Dictionary(
-        title=_("Windows Tasks"),
+        title=_("Windows tasks"),
         elements=[
             (
                 "discover_disabled",

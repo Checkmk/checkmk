@@ -1236,10 +1236,12 @@ class ModeNotifications(ABCNotificationsMode):
                                             ),
                                         ),
                                     ],
+                                    columns=2,
                                     optional_keys=[],
                                 ),
                             ),
                         ],
+                        default_value="status_change",
                     ),
                 ),
                 (
@@ -1276,7 +1278,7 @@ class ModeNotifications(ABCNotificationsMode):
                             title_br=False,
                             elements=[
                                 DatePicker(
-                                    title=_("Event date and time"),
+                                    label=_("Event date and time"),
                                     default_value=time.strftime("%Y-%m-%d"),
                                 ),
                                 TimePicker(default_value=time.strftime("%H:%M")),

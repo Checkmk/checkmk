@@ -263,8 +263,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "condition": {},
                     "value": {
                         "severity_unmonitored": 1,
-                        "severity_changed_service_labels": 1,
-                        "severity_changed_service_params": 1,
+                        "severity_changed_service_labels": 0,
+                        "severity_changed_service_params": 0,
                         "severity_vanished": 0,
                         "severity_new_host_label": 1,
                         "check_interval": 120.0,

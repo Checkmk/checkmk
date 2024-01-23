@@ -665,7 +665,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         check_interval=60,
         severity_new_services=1,
         severity_vanished_services=0,
-        severity_changed_service_labels=1,
+        severity_changed_service_labels=0,
         severity_changed_service_params=1,
         severity_new_host_labels=0,
         rediscovery=rediscovery,

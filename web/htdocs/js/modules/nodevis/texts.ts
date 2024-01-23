@@ -52,4 +52,6 @@ const default_lookup: Record<string, string> = {
     matching_nodes: "Matching nodes",
     reference: "Reference",
     compare_to: "Compare to",
+    missing_in_ref: "Missing in reference",
+    only_in_ref: "Only in reference",
 };

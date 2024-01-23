@@ -501,10 +501,10 @@ class TopologyUnknown extends TopologyNode {
             .insert("svg:image", "image")
             .classed("unknown", true)
             .attr("xlink:href", "themes/facelift/images/icon_alert_unreach.png")
-            .attr("x", -15)
-            .attr("y", -15)
-            .attr("width", 30)
-            .attr("height", 30);
+            .attr("x", -10)
+            .attr("y", -10)
+            .attr("width", 20)
+            .attr("height", 20);
     }
 }
 
@@ -585,7 +585,7 @@ class NetworkLink extends AbstractLink {
                         .data([entry[0]])
                         .join("title")
                         .classed("topology_info", true)
-                        .text(d => d);
+                        .text(d => texts.get(d));
                 }
             });
         }

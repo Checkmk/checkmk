@@ -1,0 +1,18 @@
+Title: special_zerto: Error Message in Check_MK HW/SW Inventory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1705997675
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Previously, the agent special_zerto would show the following error message in the Check_MK HW/SW
+Inventory
+
+C+:
+NOOPParser: Ignoring invalid data b'<<<zerto_agent:sep(0)>>>Initialized OK<<<<host1.example.com>>>>
+C-:
+
+Moreover, the service <code>Zerto Agent Status</code> was not discoverable and some piggyback data would
+incorrectly be mapped to the source host. This is now fixed.

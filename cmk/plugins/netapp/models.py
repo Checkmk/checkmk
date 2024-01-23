@@ -540,3 +540,28 @@ class SvmTrafficCountersModel(BaseModel):
     svm_name: str
     table: str
     counters: Sequence[dict]
+
+
+class ShelfPsuModel(BaseModel):
+    """
+
+    api: /api/storage/shelves
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//ses.html#storage-shelf-environment-list-info
+
+
+    ============
+    OLD -> NEW:
+    ============
+    power-supply-element-no → frus.id
+    power-supply-is-not-installed → frus.installed
+    power-supply-is-error → frus.state
+    ============
+    """
+
+    list_id: str  # shelf id
+    id: int
+    installed: bool | None = None  # TODO remove None when query fixed
+    state: str  # "ok" or "error"
+
+    def item_name(self) -> str:
+        return f"{self.list_id}/{self.id}"

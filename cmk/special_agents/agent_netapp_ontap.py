@@ -210,6 +210,8 @@ def fetch_disks(connection: HostConnection) -> Iterable[models.DiskModel]:
         "container_type",
         "usable_size",
         "bay",
+        "bytes_per_sector",
+        "sector_count",
     }
     yield from (
         models.DiskModel.model_validate(element.to_dict())

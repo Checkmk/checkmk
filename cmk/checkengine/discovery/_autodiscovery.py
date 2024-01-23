@@ -703,7 +703,11 @@ def make_table(
             hosts=[host_name],
         )
         for service_transition, entry in entries.chain_with_transition()
-        if (service_name := get_service_description(host_name, *DiscoveredService.id(entry)))
+        if (
+            service_name := get_service_description(
+                host_name, DiscoveredService.check_plugin_name(entry), DiscoveredService.item(entry)
+            )
+        )
     }
 
 

@@ -623,7 +623,6 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
     plugins = DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher)
-    get_service_description = functools.partial(config.service_description, ruleset_matcher)
     on_error = OnError.IGNORE
 
     hosts_config = config_cache.hosts_config
@@ -712,7 +711,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             ignore_plugin=config_cache.check_plugin_ignored,
                             get_effective_host=config_cache.effective_host,
                             get_service_description=(
-                                functools.partial(get_service_description, ruleset_matcher)
+                                functools.partial(config.service_description, ruleset_matcher)
                             ),
                             schedule_discovery_check=_schedule_discovery_check,
                             rediscovery_parameters=params.rediscovery,

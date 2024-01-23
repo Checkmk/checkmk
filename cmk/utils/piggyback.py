@@ -223,7 +223,6 @@ def _get_piggyback_processed_file_info(
     piggyback_file_path: Path,
     time_settings: _PiggybackTimeSettingsMap,
 ) -> PiggybackFileInfo:
-
     max_cache_age = _get_max_cache_age(source_hostname, piggybacked_hostname, time_settings)
     validity_period = _get_validity_period(source_hostname, piggybacked_hostname, time_settings)
     validity_state = _get_validity_state(source_hostname, piggybacked_hostname, time_settings)
@@ -323,6 +322,11 @@ def _is_piggyback_file_outdated(
     status_file_path: Path,
     piggyback_file_path: Path,
 ) -> bool:
+    """Return True if the status file is missing or it is newer than the payload file
+
+    It will return True if the payload file is "abandoned", i.e. the source host is
+    still sending data, but no longer has data for this target ( = piggybacked) host.
+    """
     try:
         # TODO use Path.stat() but be aware of:
         # On POSIX platforms Python reads atime and mtime at nanosecond resolution
@@ -569,21 +573,25 @@ def _cleanup_old_piggybacked_files(
 
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
-            file_info = _get_piggyback_processed_file_info(
-                HostName(piggybacked_host_source.name),
-                HostName(piggybacked_host_folder.name),
-                piggybacked_host_source,
-                time_settings=time_settings,
-            )
+            src = HostName(piggybacked_host_source.name)
+            dst = HostName(piggybacked_host_folder.name)
 
-            if not file_info.successfully_processed:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s' is outdated (%s). Remove it.",
-                    piggybacked_host_source,
-                    file_info.message,
-                )
-                _remove_piggyback_file(piggybacked_host_source)
+            try:
+                file_age = cmk.utils.cachefile_age(piggybacked_host_source)
+            except MKGeneralException:
+                continue
+
+            max_cache_age = _get_max_cache_age(src, dst, time_settings)
+            validity_period = _get_validity_period(src, dst, time_settings) or 0
+            if file_age <= max_cache_age or file_age <= validity_period:
+                # Do not remove files just because they're abandoned.
+                # We don't use them anymore, but the DCD still needs to know about them for a while.
+                continue
+
+            logger.log(
+                VERBOSE, "Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source
+            )
+            _remove_piggyback_file(piggybacked_host_source)
 
         # Remove empty backed host directory
         try:

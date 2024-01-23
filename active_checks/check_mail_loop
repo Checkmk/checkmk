@@ -11,7 +11,7 @@ import os
 import re
 import time
 from collections.abc import Mapping, MutableMapping
-from contextlib import suppress
+from contextlib import ExitStack, suppress
 from email.message import Message as POPIMAPMessage
 from pathlib import Path
 
@@ -303,8 +303,18 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     # Match subjects of type "[re/was:] Check_MK-Mail-Loop <timestamp> <index>"
     re_subject = subject_regex(args.subject)
 
-    with Mailbox(args) as mailbox:
+    with ExitStack() as context:
+        mailbox = context.enter_context(Mailbox(args))
         mailbox.connect()
+
+        # re-use already connected Mailbox instance if credentials are the same
+        if _fetch_config_equals_send_config(args):
+            send_mailbox = mailbox
+        else:
+            send_mailbox = context.enter_context(Mailbox(args, "send"))
+            # note: only for EWS connect() has an effect. IMAP will connect
+            # when sending email.
+            send_mailbox.connect()
 
         now = int(time.time())
 
@@ -332,12 +342,8 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         }
         logging.debug("relevant messages: %r", relevant_mail_loop_messages)
 
-        if _fetch_config_equals_send_config(args):
-            new_mail = mailbox.send_mail(args)
-        else:
-            with Mailbox(args, "send") as send_mailbox:
-                send_mailbox.connect()
-                new_mail = send_mailbox.send_mail(args)
+        # send a 'sensor-email' with a timestamp we expect to receive next time
+        new_mail = send_mailbox.send_mail(args)
         logging.debug("sent new mail: %r", new_mail)
 
         expected_mails.update((new_mail,))

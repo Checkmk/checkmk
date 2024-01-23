@@ -14,9 +14,9 @@ Docs:
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 MEGA = 1024.0 * 1024.0
 
@@ -552,3 +552,38 @@ class SvmTrafficCountersModel(BaseModel):
     svm_name: str
     table: str
     counters: Sequence[dict]
+
+
+class EnvironmentSensorModel(BaseModel):
+    """
+    GET /api/cluster/sensors
+    cfr: https://docs.netapp.com/us-en/ontap-restmap-9131//environment.html
+    was: environment-sensors-get-iter
+
+    """
+
+    name: str
+    node_name: str
+
+
+class EnvironmentThresholdSensorModel(EnvironmentSensorModel):
+    sensor_type: Literal["thermal", "fan", "voltage", "current"]
+    value: int
+    warning_high_threshold: int | None = None
+    warning_low_threshold: int | None = None
+    critical_high_threshold: int | None = None
+    critical_low_threshold: int | None = None
+    threshold_state: str
+    value_units: str
+
+
+class EnvironmentDiscreteSensorModel(EnvironmentSensorModel):
+    sensor_type: Literal["discrete"]
+    discrete_value: str
+    discrete_state: str
+
+
+class DiscrimnatorEnvSensorModel(BaseModel):
+    sensor: Union[EnvironmentThresholdSensorModel, EnvironmentDiscreteSensorModel] = Field(
+        discriminator="sensor_type"
+    )

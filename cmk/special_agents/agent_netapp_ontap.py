@@ -600,6 +600,52 @@ def fetch_vs_traffic_counters(
             )
 
 
+def fetch_environment(connection):
+    field_query = {
+        "name",
+        "node.name",
+        "type",
+        "value",
+        "warning_high_threshold",
+        "warning_low_threshold",
+        "critical_high_threshold",
+        "critical_low_threshold",
+        "discrete_state",
+        "discrete_value",
+        "threshold_state",
+        "value_units",
+    }
+
+    for element in NetAppResource.Sensors.get_collection(
+        connection=connection, fields=",".join(field_query), type="thermal|fan|voltage|current"
+    ):
+        element_data = element.to_dict()
+        yield models.EnvironmentThresholdSensorModel(
+            name=element_data["name"],
+            node_name=element_data["node"]["name"],
+            sensor_type=element_data["type"],
+            value=element_data["value"],
+            warning_high_threshold=element_data.get("warning_high_threshold"),
+            warning_low_threshold=element_data.get("warning_low_threshold"),
+            critical_high_threshold=element_data.get("critical_high_threshold"),
+            critical_low_threshold=element_data.get("critical_low_threshold"),
+            threshold_state=element_data["threshold_state"],
+            value_units=element_data["value_units"],
+        )
+
+    for element in NetAppResource.Sensors.get_collection(
+        connection=connection, fields=",".join(field_query), type="discrete"
+    ):
+        element_data = element.to_dict()
+        yield models.EnvironmentDiscreteSensorModel(
+            name=element_data["name"],
+            node_name=element_data["node"]["name"],
+            sensor_type=element_data["type"],
+            discrete_value=element_data["discrete_value"],
+            discrete_state=element_data["discrete_state"],
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -618,6 +664,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("alerts", fetch_alerts(connection, args), logger)
     write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
     write_section("psu", fetch_psu(connection), logger)
+    write_section("environment", fetch_environment(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

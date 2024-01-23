@@ -2400,7 +2400,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         sync_and_activate(
             self._activation_id,
             self._site_snapshot_settings,
-            self.file_filter_func,
+            ActivateChangesSchedulerBackgroundJob.file_filter_func,
             self._source,
             self._prevent_activate,
         )

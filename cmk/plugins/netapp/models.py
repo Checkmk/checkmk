@@ -456,7 +456,17 @@ class NodeModel(BaseModel):
         return (self.processor_utilization_raw / self.processor_utilization_base) * 100
 
 
-class ShelfFanModel(BaseModel):
+class ShelfObjectModel(BaseModel):
+    list_id: str  # shelf id
+    id: int
+    state: str  # "ok" or "error"
+    installed: bool | None = None  # TODO remove non when query fixed
+
+    def item_name(self) -> str:
+        return f"{self.list_id}/{self.id}"
+
+
+class ShelfFanModel(ShelfObjectModel):
     """
 
     api: /api/storage/shelves
@@ -473,17 +483,10 @@ class ShelfFanModel(BaseModel):
     ============
     """
 
-    list_id: str  # shelf id
-    id: int
-    state: str  # "ok" or "error"
     rpm: int
-    installed: bool | None = None  # TODO remove non when query fixed
-
-    def item_name(self) -> str:
-        return f"{self.list_id}/{self.id}"
 
 
-class ShelfTemperatureModel(BaseModel):
+class ShelfTemperatureModel(ShelfObjectModel):
     """
 
     api: /api/storage/shelves
@@ -507,11 +510,6 @@ class ShelfTemperatureModel(BaseModel):
     ============
     """
 
-    list_id: str  # shelf id
-    id: int
-    installed: bool | None = None  # TODO remove non when query fixed
-    state: str  # "ok" or "error"
-
     temperature: int
     ambient: bool
 
@@ -520,8 +518,22 @@ class ShelfTemperatureModel(BaseModel):
     high_warning: int | None = None
     high_critical: int | None = None
 
-    def item_name(self) -> str:
-        return f"{self.list_id}/{self.id}"
+
+class ShelfPsuModel(ShelfObjectModel):
+    """
+
+    api: /api/storage/shelves
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//ses.html#storage-shelf-environment-list-info
+
+
+    ============
+    OLD -> NEW:
+    ============
+    power-supply-element-no → frus.id
+    power-supply-is-not-installed → frus.installed
+    power-supply-is-error → frus.state
+    ============
+    """
 
 
 class AlertModel(BaseModel):
@@ -540,28 +552,3 @@ class SvmTrafficCountersModel(BaseModel):
     svm_name: str
     table: str
     counters: Sequence[dict]
-
-
-class ShelfPsuModel(BaseModel):
-    """
-
-    api: /api/storage/shelves
-    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//ses.html#storage-shelf-environment-list-info
-
-
-    ============
-    OLD -> NEW:
-    ============
-    power-supply-element-no → frus.id
-    power-supply-is-not-installed → frus.installed
-    power-supply-is-error → frus.state
-    ============
-    """
-
-    list_id: str  # shelf id
-    id: int
-    installed: bool | None = None  # TODO remove None when query fixed
-    state: str  # "ok" or "error"
-
-    def item_name(self) -> str:
-        return f"{self.list_id}/{self.id}"

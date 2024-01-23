@@ -390,15 +390,17 @@ export class LayeredNodesLayer extends FixLayer {
         element_source: string,
         elements: ContextMenuElement[]
     ): void {
+        // Renders links and html elements
         let links = content
             .selectAll<HTMLAnchorElement, ContextMenuElement>(
                 "li" + "." + element_source + " a"
             )
-            .data(elements);
+            .data(elements.filter(element => !element.dom));
 
         links = links
             .join("li")
             .classed(element_source, true)
+            .classed("popup_link", true)
             .append("a")
             .classed("noselect", true);
 
@@ -423,10 +425,11 @@ export class LayeredNodesLayer extends FixLayer {
 
         // Add text
         links.each(function (d) {
-            d3.select(this)
-                .append("div")
-                .style("display", "inline-block")
-                .text(d.text);
+            if (d.text)
+                d3.select(this)
+                    .append("div")
+                    .style("display", "inline-block")
+                    .text(d.text);
         });
 
         // Add optional click handler
@@ -438,6 +441,19 @@ export class LayeredNodesLayer extends FixLayer {
                 });
             }
         });
+
+        // @ts-ignore
+        content
+            .selectAll<HTMLDivElement, ContextMenuElement>(
+                "li" + "." + element_source + " div.dom"
+            )
+            .data(elements.filter(element => element.dom))
+            .enter()
+            .append("li")
+            .classed(element_source, true)
+            .append("div")
+            .classed("dom", true)
+            .append(d => d.dom);
     }
 
     _update_position_of_context_menu(): void {

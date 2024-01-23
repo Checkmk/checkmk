@@ -267,29 +267,26 @@ export class AbstractGUINode implements TypeWithName {
         return "";
     }
 
-    get_context_menu_elements() {
+    get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
-        if (!this.node.data.type_specific.core) return elements;
+        const core_info = this.node.data.type_specific.core;
+        if (!core_info) return elements;
         elements.push({
             text: "Details of Host",
             href:
                 "view.py?host=" +
-                encodeURIComponent(this.node.data.type_specific.core.hostname) +
+                encodeURIComponent(core_info.hostname) +
                 "&view_name=host",
             img: "themes/facelift/images/icon_status.svg",
         });
-        if (this.node.data.service && this.node.data.service != "") {
+        if (core_info.service && core_info.service != "") {
             elements.push({
                 text: "Details of Service",
                 href:
                     "view.py?host=" +
-                    encodeURIComponent(
-                        this.node.data.type_specific.core.hostname
-                    ) +
+                    encodeURIComponent(core_info.hostname) +
                     "&service=" +
-                    encodeURIComponent(
-                        this.node.data.type_specific.core.service
-                    ) +
+                    encodeURIComponent(core_info.service) +
                     "&view_name=service",
                 img: "themes/facelift/images/icon_status.svg",
             });
@@ -302,7 +299,7 @@ export class AbstractGUINode implements TypeWithName {
         if (!node._children) return;
         const critical_children: NodevisNode[] = [];
         node._children.forEach(child_node => {
-            if (child_node.data.state != 0) {
+            if (child_node.data.type_specific.core.state != 0) {
                 critical_children.push(child_node);
                 this._filter_root_cause(child_node);
             } else {
@@ -660,13 +657,10 @@ export class AbstractGUINode implements TypeWithName {
     }
 }
 
-export function has_custom_node_settings(node: NodevisNode) {
-    return node.data.custom_node_settings != null;
-}
-
 export function get_custom_node_settings(node: NodevisNode) {
-    node.data.custom_node_settings = node.data.custom_node_settings || {};
-    return node.data.custom_node_settings;
+    node.data.type_specific.custom_node_settings =
+        node.data.type_specific.custom_node_settings || {};
+    return node.data.type_specific.custom_node_settings;
 }
 
 // Stores node visualization classes

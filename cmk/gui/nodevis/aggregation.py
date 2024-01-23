@@ -168,13 +168,14 @@ class NodeVisualizationBIDataMapper:
         node_data["id"] = node_id
         node_data["aggr_path_id"] = aggr_path
         node_data["aggr_path_name"] = aggr_name
-        node_data["type_specific"] = {
-            "core": {
+        node_data.setdefault("type_specific", {}).setdefault("core", {})
+        node_data["type_specific"]["core"].update(
+            {
                 "state": actual_result.state,
                 "in_downtime": actual_result.downtime_state > 0,
                 "acknowledged": actual_result.acknowledged,
             }
-        }
+        )
 
         node_data["children"] = []
         for nested_bundle in node_result_bundle.nested_results:
@@ -210,8 +211,9 @@ class NodeVisualizationBIDataMapper:
             )
             aggr_path_name.append([rule_name, rule_name_idx])
         else:
-            hostname = node_data["hostname"]
-            if service := node_data.get("service"):
+            core_info = node_data["type_specific"]["core"]
+            hostname = core_info["hostname"]
+            if service := core_info.get("service"):
                 own_id = f"{service}({self._get_sibling_index('service', parent_id + service)})"
             else:
                 own_id = f"{hostname}({self._get_sibling_index('hostname', parent_id + hostname)})"
@@ -244,11 +246,14 @@ class NodeVisualizationBIDataMapper:
         return node_data
 
     def _get_node_data_for_leaf(self, bi_compiled_leaf: BICompiledLeaf) -> dict[str, Any]:
-        node_data: dict[str, Any] = {"node_type": "bi_leaf", "hostname": bi_compiled_leaf.host_name}
+        node_data: dict[str, Any] = {
+            "node_type": "bi_leaf",
+            "type_specific": {"core": {"hostname": bi_compiled_leaf.host_name}},
+        }
         if not bi_compiled_leaf.service_description:
             node_data["name"] = bi_compiled_leaf.host_name
         else:
-            node_data["service"] = bi_compiled_leaf.service_description
+            node_data["type_specific"]["core"]["service"] = bi_compiled_leaf.service_description
             if self._is_single_host_aggregation:
                 node_data["name"] = bi_compiled_leaf.service_description
             else:

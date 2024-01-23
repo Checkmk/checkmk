@@ -9,6 +9,7 @@ export function get(name: string): string {
 }
 
 const default_lookup: Record<string, string> = {
+    default: "Default",
     live_search: "Live search active",
     live_search_help:
         "Automatically detects changes in the formular and fetches new data",
@@ -54,4 +55,7 @@ const default_lookup: Record<string, string> = {
     compare_to: "Compare to",
     missing_in_ref: "Missing in reference",
     only_in_ref: "Only in reference",
+    flat: "Flat",
+    full: "Full",
+    hierarchy: "Hierarchy",
 };

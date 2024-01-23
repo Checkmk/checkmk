@@ -16,7 +16,10 @@ import {ForceConfig} from "nodevis/force_simulation";
 import {layer_class_registry} from "nodevis/layer_utils";
 import {layout_style_class_registry} from "nodevis/layout_utils";
 import {link_type_class_registry} from "nodevis/link_utils";
-import {node_type_class_registry} from "nodevis/node_utils";
+import {
+    get_custom_node_settings,
+    node_type_class_registry,
+} from "nodevis/node_utils";
 import {SearchNodes} from "nodevis/search";
 import * as texts from "nodevis/texts";
 import {
@@ -277,11 +280,12 @@ export class TopologyVisualization extends NodeVisualization {
                 frontend_config.growth_forbidden_nodes.push(node.data.id);
             if (growth_settings.growth_continue)
                 frontend_config.growth_continue_nodes.push(node.data.id);
-            if (node.data.custom_node_settings) {
+            const custom_node_settings = get_custom_node_settings(node);
+            if (custom_node_settings) {
                 frontend_config.custom_node_settings[node.data.id] =
-                    node.data.custom_node_settings;
+                    custom_node_settings;
                 this._custom_node_settings_memory[node.data.id] =
-                    node.data.custom_node_settings;
+                    custom_node_settings;
             }
         });
         return frontend_config;

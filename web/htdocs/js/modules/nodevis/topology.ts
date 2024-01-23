@@ -18,6 +18,7 @@ import {
 } from "nodevis/node_utils";
 import * as texts from "nodevis/texts";
 import {
+    ContextMenuElement,
     d3SelectionDiv,
     d3SelectionG,
     NodevisNode,
@@ -41,35 +42,64 @@ function render_toggle_panel(
         .selectAll<HTMLDivElement, null>("div#layout_toggle_panel")
         .data([null])
         .join(enter => enter.append("div").attr("id", "layout_toggle_panel"));
-    const options = [
-        new RadioGroupOption("all", texts.get("all")),
-        new RadioGroupOption("only_problems", texts.get("only_problems")),
-        new RadioGroupOption("none", texts.get("none")),
-    ];
-
     // Parent/child does not provide service info
     if (
         overlays_config.available_layers.length > 0 &&
         !overlays_config.available_layers.includes("parent_child")
-    )
-        toggle_panel
-            .selectAll("div.radio_group")
+    ) {
+        const options = [
+            new RadioGroupOption("all", texts.get("all")),
+            new RadioGroupOption("only_problems", texts.get("only_problems")),
+            new RadioGroupOption("none", texts.get("none")),
+        ];
+
+        const services_div = toggle_panel
+            .selectAll<HTMLDivElement, null>("div.radio_group.services")
             .data([null])
             .join(enter =>
                 enter
                     .insert("div", "table#overlay_configuration")
-                    .classed("radio_group", true)
+                    .classed("radio_group services", true)
             );
+        render_radio_group(
+            services_div,
+            texts.get("services"),
+            "service_visibility",
+            options,
+            "all",
+            (new_option: string) => {
+                viewport.get_overlays_config().computation_options.show_services =
+                    new_option as "all" | "only_problems" | "none";
+                // TODO: bad reference usage
+                viewport._world_for_layers?.update_data();
+            }
+        );
+    }
+
+    const options = [
+        new RadioGroupOption("hierarchy_flat", texts.get("flat")),
+        new RadioGroupOption("hierarchy_full", texts.get("full")),
+    ];
+
+    const hierarchy_div = toggle_panel
+        .selectAll<HTMLDivElement, null>("div.radio_group.hierarchy_flat")
+        .data([null])
+        .join(enter =>
+            enter
+                .insert("div", "table#overlay_configuration")
+                .classed("radio_group hierarchy_flat", true)
+        );
     render_radio_group(
-        toggle_panel,
-        texts.get("services"),
-        "service_visibility",
+        hierarchy_div,
+        texts.get("hierarchy"),
+        "hierarchy_depth",
         options,
-        "all",
+        viewport.get_overlays_config().computation_options.flat_hierarchy
+            ? "hierarchy_flat"
+            : "hierarchy_full",
         (new_option: string) => {
-            viewport.get_overlays_config().computation_options.show_services =
-                new_option as "all" | "only_problems" | "none";
-            // TODO: bad reference usage
+            viewport.get_overlays_config().computation_options.flat_hierarchy =
+                new_option == "hierarchy_flat";
             viewport._world_for_layers?.update_data();
         }
     );
@@ -332,58 +362,43 @@ class TopologyHost extends TopologyCoreEntity {
             .classed("has_crit_services", true);
     }
 
-    override get_context_menu_elements() {
+    override get_context_menu_elements(): ContextMenuElement[] {
         const elements =
             TopologyCoreEntity.prototype.get_context_menu_elements.call(this);
 
         const custom_settings = get_custom_node_settings(this.node);
+        const options = [
+            new RadioGroupOption("default", texts.get("default")),
+            new RadioGroupOption("all", texts.get("all")),
+            new RadioGroupOption("only_problems", texts.get("only_problems")),
+            new RadioGroupOption("none", texts.get("none")),
+        ];
+        const radio_div = d3.select<HTMLDivElement, null>(
+            document.createElement("div")
+        );
 
-        if (custom_settings["show_services"]) {
-            elements.push({
-                text: texts.get("services_remove_explicit_setting"),
-                img: "themes/facelift/images/icon_status.svg",
-                on: () => {
-                    const node = this._world.viewport.get_node_by_id(this.id());
-                    if (!node) return;
-                    const custom_settings = get_custom_node_settings(node);
+        const current_service_option = custom_settings.show_services
+            ? custom_settings.show_services
+            : "default";
+        render_radio_group(
+            radio_div,
+            texts.get("services"),
+            "service_visibility_popup",
+            options,
+            current_service_option,
+            (new_option: string) => {
+                console.log("new option");
+                const custom_settings = get_custom_node_settings(this.node);
+                if (new_option == "default")
                     delete custom_settings["show_services"];
-                    this._world.update_data();
-                },
-            });
-        }
-
-        const current_value = custom_settings["show_services"] || "all";
-        let next_option_text = "";
-        let next_option_value = "";
-
-        switch (current_value) {
-            case "all": {
-                next_option_text = texts.get("only_problems");
-                next_option_value = "only_problems";
-                break;
-            }
-            case "only_problems": {
-                next_option_text = texts.get("none");
-                next_option_value = "none";
-                break;
-            }
-            case "none": {
-                next_option_text = texts.get("all");
-                next_option_value = "all";
-                console.log("soso");
-                break;
-            }
-        }
-        elements.push({
-            text: "Show services: " + next_option_text.toLowerCase(),
-            img: "themes/facelift/images/icon_status.svg",
-            on: () => {
-                const node = this._world.viewport.get_node_by_id(this.id());
-                if (!node) return;
-                const custom_settings = get_custom_node_settings(node);
-                custom_settings["show_services"] = next_option_value;
+                else custom_settings["show_services"] = new_option;
+                this._world.viewport.get_nodes_layer().hide_context_menu();
                 this._world.update_data();
-            },
+            }
+        );
+
+        elements.push({
+            dom: radio_div.node() as HTMLDivElement,
         });
         return elements;
     }

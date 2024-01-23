@@ -1041,7 +1041,7 @@ def test_convert_to_legacy_rulespec_group(
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.ActiveChecks("test_rulespec"),
                 group=_to_generated_builtin_sub_group(
-                    legacy_wato_groups.RulespecGroupIntegrateOtherServices,
+                    legacy_wato_groups.RulespecGroupActiveChecks,
                     "Applications",
                     lambda x: x,
                 ),

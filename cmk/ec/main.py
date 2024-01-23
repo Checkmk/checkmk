@@ -3461,6 +3461,11 @@ def save_active_config(
         var/mkeventd/active_config
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
+    try:
+        shutil.rmtree(str(settings.paths.active_config_dir.value))
+    except FileNotFoundError:
+        pass
+
     for path in settings.paths.config_dir.value.glob("**/*.mk"):
         target = settings.paths.active_config_dir.value / path.relative_to(
             settings.paths.config_dir.value

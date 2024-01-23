@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1705077038
 Edition: cre
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 Previously, when creating or updating a notification rule,
 the match_host_tag field would only allow for builtin tag ids.

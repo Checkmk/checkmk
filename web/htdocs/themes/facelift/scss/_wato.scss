@@ -216,6 +216,17 @@ div.warning_container {
   }
 }
 
+div#notification_analysis_container {
+  @include message-container-mixin;
+  margin-top: $spacing;
+  div.message_container {
+    margin: 5px 25px 0px;
+    h2 {
+      margin: 0;
+    }
+  }
+}
+
 div#datasources_container {
   @include message-container-mixin;
 

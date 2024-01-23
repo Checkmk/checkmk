@@ -617,7 +617,9 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     ),
                     PageMenuEntry(
-                        title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
+                        title=_("Hide analysis")
+                        if self._show_backlog and not request.var("test_notification")
+                        else _("Show analysis"),
                         icon_name={
                             "icon": "analyze",
                             "emblem": "disable" if self._show_backlog else "enable",
@@ -626,9 +628,10 @@ class ModeNotifications(ABCNotificationsMode):
                             makeactionuri(
                                 request,
                                 transactions,
-                                [
+                                addvars=[
                                     ("_show_backlog", "" if self._show_backlog else "1"),
                                 ],
+                                delvars=("test_context", "test_notification"),
                             )
                         ),
                         is_shortcut=True,
@@ -791,9 +794,12 @@ class ModeNotifications(ABCNotificationsMode):
 
     def page(self) -> None:
         context, analyse = self._analyse_result_from_request()
+        # do not show notification backlog if test notifications was performed
+        self._show_backlog = self._show_backlog and not context
         self._show_no_fallback_contact_warning()
         self._show_bulk_notifications()
-        self._show_notification_test(context, analyse)
+        self._show_notification_test_overview(context, analyse)
+        self._show_notification_test_details(context, analyse)
         self._show_notification_backlog()
         self._show_rules(analyse)
 
@@ -881,7 +887,48 @@ class ModeNotifications(ABCNotificationsMode):
                     )
         return True
 
-    def _show_notification_test(
+    def _show_notification_test_overview(
+        self,
+        context: NotificationContext | None,
+        analyse: NotifyAnalysisInfo | None,
+    ) -> None:
+        if not context or not analyse:
+            return
+        html.open_div(class_="matching_message")
+        html.icon("toggle_details")
+        html.b(_("Matching: "))
+        html.write_text(
+            _(
+                "Each parameter is defined by the first matching rule where that parameter "
+                "is set (checked)."
+            )
+        )
+        html.close_div()
+        html.open_div(id_="notification_analysis_container")
+
+        html.open_div(class_="state_bar state0")
+        html.open_span()
+        html.icon("check")
+        html.close_span()
+        html.close_div()
+
+        html.open_div(class_="message_container")
+        html.h2(_("Analysis results"))
+        analyse_rules, analyse_resulting_notifications = analyse
+        html.write_text(
+            _("%s notification rules are matching")
+            % len(tuple(entry for entry in analyse_rules if "match" in entry))
+        )
+        html.br()
+        html.write_text(_("%s resulting notifications") % len(analyse_resulting_notifications))
+        html.br()
+        if request.var("dispatch"):
+            html.write_text(_("Notifications have been sent. "))
+        html.write_text("View the following tables for more details.")
+        html.close_div()
+        html.close_div()
+
+    def _show_notification_test_details(
         self,
         context: NotificationContext | None,
         analyse: NotifyAnalysisInfo | None,
@@ -978,7 +1025,7 @@ class ModeNotifications(ABCNotificationsMode):
             return
 
         with table_element(
-            table_id="backlog", title=_("Recent notifications (for analysis)"), sortable=False
+            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()

@@ -4200,10 +4200,10 @@ def _from_periodic_service_discovery_config(values: dict) -> dict:
         return values
 
     if "severity_changed_service_labels" not in values:
-        values["severity_changed_service_labels"] = 1
+        values["severity_changed_service_labels"] = 0
 
     if "severity_changed_service_params" not in values:
-        values["severity_changed_service_params"] = 1
+        values["severity_changed_service_params"] = 0
 
     return values
 
@@ -4215,8 +4215,8 @@ def _valuespec_periodic_discovery():
             default_value={
                 "check_interval": 2 * 60,
                 "severity_unmonitored": 1,
-                "severity_changed_service_labels": 1,
-                "severity_changed_service_params": 1,
+                "severity_changed_service_labels": 0,
+                "severity_changed_service_params": 0,
                 "severity_vanished": 0,
                 "severity_new_host_label": 1,
             },

@@ -2546,8 +2546,8 @@ class ConfigCache:
             severity_new_services=int(inventory_check_severity),
             severity_vanished_services=0,
             severity_new_host_labels=1,
-            severity_changed_service_labels=1,
-            severity_changed_service_params=1,
+            severity_changed_service_labels=0,
+            severity_changed_service_params=0,
             # TODO: defaults are currently all over the place :-(
             rediscovery={},
         )
@@ -2573,10 +2573,10 @@ class ConfigCache:
                 severity_vanished_services=int(entry["severity_vanished"]),
                 # TODO: should be changed via Transform & update-action of the periodic discovery rule
                 severity_changed_service_labels=int(
-                    entry.get("severity_changed_service_labels", 1)
+                    entry.get("severity_changed_service_labels", 0)
                 ),
                 severity_changed_service_params=int(
-                    entry.get("severity_changed_service_params", 1)
+                    entry.get("severity_changed_service_params", 0)
                 ),
                 severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
                 rediscovery=entry.get("inventory_rediscovery", {}),

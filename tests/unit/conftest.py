@@ -87,7 +87,7 @@ def disable_debug():
     cmk.utils.debug.debug_mode = debug_mode
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)

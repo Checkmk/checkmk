@@ -3,4 +3,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 setup:
-	sudo ../buildscripts/infrastructure/build-nodes/scripts/install-nodejs.sh
+	cd ..
+	sudo ./buildscripts/infrastructure/build-nodes/scripts/install-everything.sh --profile frontend

@@ -1,0 +1,11 @@
+Title: size_trend: avoid 'infinite to integer' crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706105325
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+While calculating how much time is left until the resource is full, if the value of the mb in range was too low (e.g. 1e-320) the check used to crash with 'infinite to integer'.
+This has now been fixed and if the value is too low and causes division with it to result in 'inf', the check will not be executed.

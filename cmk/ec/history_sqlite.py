@@ -5,6 +5,7 @@
 """EC History sqlite backend"""
 import itertools
 import sqlite3
+import time
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from logging import Logger
@@ -77,7 +78,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
 
         query_columns.add(adjusted_column_name)
         query_conditions.append(sqlite_filter)
-
+    # TODO should be strings with placeholders instead of f-strings
     return f'SELECT * FROM history WHERE {" AND ".join(query_conditions)};'
 
 
@@ -111,38 +112,63 @@ class SQLiteHistory(History):
         self._event_columns = event_columns
         self._history_columns = history_columns
 
+        # TODO consider enabling PRAGMA journal_mode=WAL; after some performance measurements
         self.conn = sqlite3.connect(self._settings.database)
 
-        self.cursor = self.conn.cursor()
-        self.cursor.execute(
-            """CREATE TABLE IF NOT EXISTS history
-                             (time text, what text, who text, addinfo text, id INTEGER, count INTEGER,
-                             text TEXT, first FLOAT, last FLOAT,
-                             comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
-                             pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
-                             state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
-                             contact_groups TEXT, ipaddress TEXT, orig_host TEXT,
-                             contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
-                             match_groups_syslog_application TEXT);"""
-        )
-        self.conn.commit()
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute(
+                """CREATE TABLE IF NOT EXISTS history
+                                (time text, what text, who text, addinfo text, id INTEGER, count INTEGER,
+                                text TEXT, first FLOAT, last FLOAT,
+                                comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
+                                pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
+                                state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
+                                contact_groups TEXT, ipaddress TEXT, orig_host TEXT,
+                                contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
+                                match_groups_syslog_application TEXT);"""
+            )
 
     def flush(self) -> None:
         self.conn.execute("DROP TABLE IF EXISTS history;")
         self.conn.commit()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        """
-        docstring
-        """
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute(
+                """INSERT INTO history (time, what, who, addinfo, id, count, text, first, last,
+                                comment, sl, host, contact, application,
+                                pid, priority, facility, rule_id,
+                                state, phase, owner, match_groups,
+                                contact_groups, ipaddress, orig_host,
+                                contact_groups_precedence, core_host, host_in_downtime,
+                                match_groups_syslog_application)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                tuple(
+                    itertools.chain(
+                        (time.time(), what, who, addinfo),
+                        [
+                            event.get(colname.removeprefix("event_"), defval)
+                            for colname, defval in self._event_columns
+                        ],
+                    )
+                ),
+            )
 
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        """
-        docstring
-        """
-        return ()
+        sqlite_query = filters_to_sqlite_query(query.filters)
+        if query.limit:
+            # TODO make this a placeholder when filters_to_sqlite_query also returns placeholders
+            sqlite_query += f" LIMIT {query.limit + 1}"
+
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute(sqlite_query)
+            return cur.fetchall()
 
     def housekeeping(self) -> None:
-        """
-        docstring
-        """
+        days = self._config["history_lifetime"]
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute("DELETE FROM history WHERE age <= datetime('now', '-? days');", (days,))

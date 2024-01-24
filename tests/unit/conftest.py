@@ -370,15 +370,12 @@ def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
         yield mock_live
 
 
-@pytest.fixture(autouse=True)
-def use_fakeredis_client(monkeypatch):
+@pytest.fixture(scope="module")
+def use_fakeredis_client() -> Iterator[None]:
     """Use fakeredis client instead of redis.Redis"""
-    monkeypatch.setattr(
-        redis,
-        "Redis",
-        FakeRedis,
-    )
-    redis.get_redis_client().flushall()
+    with patch.object(redis, "Redis", FakeRedis) as _:
+        redis.get_redis_client().flushall()
+        yield
 
 
 @pytest.fixture(autouse=True, scope="session")

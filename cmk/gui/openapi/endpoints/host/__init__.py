@@ -198,7 +198,7 @@ def fixup_inventory_column(
     result: Generator[ResultRow, None, None]
 ) -> Generator[ResultRow, None, None]:
     for row in result:
-        if (inventory_data := row.get(INVENTORY_COLUMN)) is not None:
+        if inventory_data := row.get(INVENTORY_COLUMN):
             copy = dict(row)
             copy[INVENTORY_COLUMN] = ast.literal_eval(inventory_data.decode("utf-8"))
             yield ResultRow(copy)

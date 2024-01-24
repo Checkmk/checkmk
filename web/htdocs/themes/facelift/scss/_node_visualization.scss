@@ -475,6 +475,17 @@ div.node_vis {
     cursor: pointer;
   }
 
+  g.node_element {
+    pointer-events: all;
+    &.topology_center {
+      pointer-events: none;
+    }
+  }
+
+  g.edit .topology_center {
+    pointer-events: all;
+  }
+
   g.edit .node_element circle.style_root_node,
   g.edit .node_element .free_floating_node {
     cursor: move;

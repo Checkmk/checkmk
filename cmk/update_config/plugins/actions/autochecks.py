@@ -141,16 +141,15 @@ class UpdateAutochecks(UpdateAction):
 
             try:
                 autochecks = _AutochecksStoreV22(hostname).read()
+                AutochecksStore(hostname).write(
+                    [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
+                )
             except MKGeneralException as exc:
                 if debug.enabled():
                     raise
                 logger.error(str(exc))
                 failed_hosts.append(hostname)
                 continue
-
-            AutochecksStore(hostname).write(
-                [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
-            )
 
         if failed_hosts:
             msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"

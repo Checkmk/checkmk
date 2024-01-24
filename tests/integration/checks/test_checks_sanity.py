@@ -12,7 +12,7 @@ from tests.testlib.agent import (
     wait_until_host_receives_data,
 )
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status
+from tests.testlib.utils import get_services_with_status, ServiceInfo
 
 from cmk.utils.hostaddress import HostName
 
@@ -36,7 +36,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 
 
 @pytest.fixture(name="host_services", scope="function")
-def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
+def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInfo]]:
     hostname = HostName("host-0")
     site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
     site.activate_changes_and_wait_for_core_reload()
@@ -60,10 +60,13 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-def test_checks_sanity(host_services: dict) -> None:
+def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks."""
     ok_services = get_services_with_status(host_services, 0)
     not_ok_services = [service for service in host_services if service not in ok_services]
-    err_msg = f"The following services are not in state 0: {not_ok_services}"
+    err_msg = (
+        f"The following services are not in state 0: {not_ok_services} "
+        f"(Details: {[host_services[s] for s in not_ok_services]})"
+    )
 
     assert len(host_services) == len(get_services_with_status(host_services, 0)) > 0, err_msg

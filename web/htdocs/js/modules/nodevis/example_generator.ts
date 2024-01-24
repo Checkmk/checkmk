@@ -9,7 +9,7 @@
 // Fortunately it has no effect on the actual NodeVisualization and is just used within the BI configuration GUI
 
 import * as d3 from "d3";
-import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
     LayoutStyleBlock,
     LayoutStyleHierarchy,
@@ -17,6 +17,7 @@ import {
 } from "nodevis/layout_styles";
 import {
     AbstractLayoutStyle,
+    compute_node_position,
     render_style_options,
     StyleConfig,
     StyleOptionSpec,

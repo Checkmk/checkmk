@@ -7,7 +7,7 @@
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
 import {DatasourceManager} from "nodevis/datasources";
-import {ForceOptions} from "nodevis/force_simulation";
+import {ForceOptions} from "nodevis/force_utils";
 import {
     AbstractLayoutStyle,
     SerializedNodevisLayout,

@@ -5,9 +5,8 @@
  */
 
 import * as d3 from "d3";
-import {ForceConfig, ForceOptions} from "nodevis/force_simulation";
+import {ForceConfig, ForceOptions} from "nodevis/force_utils";
 import {AbstractNodeVisConstructor, OverlayElement} from "nodevis/layer_utils";
-import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import * as texts from "nodevis/texts";
 import {
     Coords,
@@ -109,6 +108,61 @@ export function compute_style_id(
 
 interface StyleWithDescription {
     description: () => string;
+}
+
+export function compute_node_positions_from_list_of_nodes(
+    list_of_nodes: NodevisNode[]
+): void {
+    if (list_of_nodes == undefined) return;
+    list_of_nodes.forEach(node => compute_node_position(node));
+}
+
+export function compute_node_position(node: NodevisNode) {
+    let current_positioning = {
+        weight: 0,
+        free: true,
+        type: "force",
+        fx: 0,
+        fy: 0,
+        use_transition: true,
+    };
+
+    if (
+        node.data.use_style &&
+        Object.keys(node.data.node_positioning).length == 0
+    ) {
+        return;
+    }
+
+    for (const force_id in node.data.node_positioning) {
+        const force = node.data.node_positioning[force_id];
+        if (force.weight > current_positioning.weight) {
+            current_positioning = force;
+        }
+    }
+
+    // Beside of x/y coords, the layout may have additional info
+    // E.g. text positioning
+    node.data.current_positioning = current_positioning;
+    if (current_positioning.free) {
+        node.fx = null;
+        node.fy = null;
+        node.data.transition_info.use_transition = false;
+    } else {
+        const viewport_boundary = 20000;
+        node.fx = Math.max(
+            Math.min(current_positioning.fx, viewport_boundary),
+            -viewport_boundary
+        );
+        node.fy = Math.max(
+            Math.min(current_positioning.fy, viewport_boundary),
+            -viewport_boundary
+        );
+        node.x = node.fx;
+        node.y = node.fy;
+        node.data.transition_info.use_transition =
+            current_positioning.use_transition;
+    }
 }
 
 export class AbstractLayoutStyle implements TypeWithName, StyleWithDescription {
@@ -607,6 +661,7 @@ export type StyleOptionValues = Record<string, StyleOptionValue>;
 export interface StyleOptionSpec {
     id: string;
     option_type: string;
+    hidden?: boolean;
     text: string;
     values: any;
 }
@@ -719,7 +774,11 @@ function _render_range_options(
 ): void {
     const rows = table
         .selectAll<HTMLTableRowElement, StyleOptionSpecRange>("tr.range_input")
-        .data(style_option_specs.filter(d => d.option_type == "range"))
+        .data(
+            style_option_specs.filter(
+                d => d.option_type == "range" && !d.hidden
+            )
+        )
         .join<HTMLTableRowElement>(enter =>
             enter.append("tr").classed("range_input", true)
         );
@@ -753,7 +812,11 @@ function _render_checkbox_options(
         .selectAll<HTMLTableRowElement, StyleOptionSpecCheckbox>(
             "tr.checkbox_option"
         )
-        .data(style_option_specs.filter(d => d.option_type == "checkbox"))
+        .data(
+            style_option_specs.filter(
+                d => d.option_type == "checkbox" && !d.hidden
+            )
+        )
         .join(enter => enter.append("tr").classed("checkbox_option", true));
 
     rows.selectAll<HTMLTableCellElement, StyleOptionSpecCheckbox>(

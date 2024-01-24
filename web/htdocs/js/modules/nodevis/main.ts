@@ -12,7 +12,7 @@ import {
     TopologyDatasource,
 } from "nodevis/datasources";
 import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
-import {ForceConfig} from "nodevis/force_simulation";
+import {ForceConfig} from "nodevis/force_utils";
 import {layer_class_registry} from "nodevis/layer_utils";
 import {layout_style_class_registry} from "nodevis/layout_utils";
 import {link_type_class_registry} from "nodevis/link_utils";
@@ -22,6 +22,7 @@ import {
 } from "nodevis/node_utils";
 import {SearchNodes} from "nodevis/search";
 import * as texts from "nodevis/texts";
+import {TopologyForceConfig} from "nodevis/topology";
 import {
     BackendResponse,
     d3SelectionDiv,
@@ -395,12 +396,6 @@ export class TopologyVisualization extends NodeVisualization {
             d3.select("div.titlebar a.title").text(data.headline);
 
         this._show_topology_errors(data.errors);
-        // if (ds_data["query_hash"])
-        //     d3.select("input[name=topology_query_hash_hint]").property(
-        //         "value",
-        //         ds_data["query_hash"]
-        //     );
-
         this._frontend_configuration = data.frontend_configuration;
         this._world.viewport.finalize_status_message(
             "topology_fetch",
@@ -438,6 +433,10 @@ export class TopologyVisualization extends NodeVisualization {
 
     _show_topology_errors(errors: string): void {
         d3.select("label#max_nodes_error_text").text(errors);
+    }
+
+    override _get_force_config(): typeof ForceConfig {
+        return TopologyForceConfig;
     }
 
     override update_data() {

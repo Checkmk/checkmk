@@ -8,11 +8,9 @@ import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
 import {OverlayElement} from "nodevis/layer_utils";
 import {
+    AbstractLayoutStyle,
     compute_node_position,
     compute_node_positions_from_list_of_nodes,
-} from "nodevis/layout";
-import {
-    AbstractLayoutStyle,
     layout_style_class_registry,
     NodeForce,
     StyleOptionSpec,

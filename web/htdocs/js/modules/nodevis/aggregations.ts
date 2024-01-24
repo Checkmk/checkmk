@@ -5,7 +5,7 @@
  */
 
 import * as ajax from "ajax";
-import {ForceConfig} from "nodevis/force_simulation";
+import {ForceConfig} from "nodevis/force_utils";
 import {
     SerializedNodevisLayout,
     StyleOptionSpecRange,

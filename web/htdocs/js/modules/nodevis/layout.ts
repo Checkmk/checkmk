@@ -15,6 +15,7 @@ import {LayeredNodesLayer} from "nodevis/layers";
 import {LayoutStyleFixed, LayoutStyleHierarchy} from "nodevis/layout_styles";
 import {
     AbstractLayoutStyle,
+    compute_node_position,
     compute_style_id,
     layout_style_class_registry,
     LayoutStyleFactory,
@@ -65,70 +66,6 @@ import {Viewport} from "./viewport";
 //#   |             |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|                |
 //#   |                                       |___/                        |
 //#   +--------------------------------------------------------------------+
-
-export function compute_node_positions_from_list_of_nodes(
-    list_of_nodes: NodevisNode[]
-): void {
-    if (list_of_nodes == undefined) return;
-    list_of_nodes.forEach(node => compute_node_position(node));
-}
-
-export function compute_node_position(node: NodevisNode) {
-    let current_positioning = {
-        weight: 0,
-        free: true,
-        type: "force",
-        fx: 0,
-        fy: 0,
-        use_transition: true,
-    };
-
-    if (
-        node.data.use_style &&
-        Object.keys(node.data.node_positioning).length == 0
-    ) {
-        return;
-    }
-
-    for (const force_id in node.data.node_positioning) {
-        const force = node.data.node_positioning[force_id];
-        if (force.weight > current_positioning.weight) {
-            current_positioning = force;
-        }
-    }
-
-    // Beside of x/y coords, the layout may have additional info
-    // E.g. text positioning
-    node.data.current_positioning = current_positioning;
-    if (current_positioning.free) {
-        node.fx = null;
-        node.fy = null;
-        node.data.transition_info.use_transition = false;
-    } else {
-        const viewport_boundary = 20000;
-        node.fx = Math.max(
-            Math.min(current_positioning.fx, viewport_boundary),
-            -viewport_boundary
-        );
-        node.fy = Math.max(
-            Math.min(current_positioning.fy, viewport_boundary),
-            -viewport_boundary
-        );
-        node.x = node.fx;
-        node.y = node.fy;
-        node.data.transition_info.use_transition =
-            current_positioning.use_transition;
-    }
-    // TODO: check if still required
-    // if (node.data.selection) {
-    //     node.data.selection
-    //         .selectAll("circle")
-    //         .classed("style_root_node", node.data.use_style ? true : false);
-    //     node.data.selection
-    //         .selectAll("circle")
-    //         .classed("free_floating_node", current_positioning.free == true);
-    // }
-}
 
 class LayoutHistory {
     _layout_manager: LayoutManagerLayer;

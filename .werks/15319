@@ -1,0 +1,11 @@
+Title: check_mail: create ec spool files in correct folder
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706089801
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Previously the path was prefixed with a space, so the spool files where saved in:
+<code>/omd/sites/cmk220d/var/check_mk/core/ /omd/sites/cmk220d/var/mkeventd/spool</code>

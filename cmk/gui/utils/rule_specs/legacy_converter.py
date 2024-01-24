@@ -1103,26 +1103,31 @@ def _get_predictive_levels_choice_element(
             "period",
             legacy_valuespecs.DropdownChoice(
                 choices=[
-                    ("wday", localizer("Day of the week")),
-                    ("day", localizer("Day of the month")),
-                    ("hour", localizer("Hour of the day")),
-                    ("minute", localizer("Minute of the hour")),
+                    ("wday", ruleset_api_v1.Localizable("Day of the week").localize(localizer)),
+                    ("day", ruleset_api_v1.Localizable("Day of the month").localize(localizer)),
+                    ("hour", ruleset_api_v1.Localizable("Hour of the day").localize(localizer)),
+                    (
+                        "minute",
+                        ruleset_api_v1.Localizable("Minute of the hour").localize(localizer),
+                    ),
                 ],
-                title=localizer("Base prediction on"),
-                help=localizer(
+                title=ruleset_api_v1.Localizable("Base prediction on").localize(localizer),
+                help=ruleset_api_v1.Localizable(
                     "Define the periodicity in which the repetition of the measured data is "
                     "expected (monthly, weekly, daily or hourly)"
-                ),
+                ).localize(localizer),
             ),
         ),
         (
             "horizon",
             legacy_valuespecs.Integer(
-                title=localizer("Length of historic data to consider"),
-                help=localizer(
-                    "How many days in the past Checkmk should evaluate the measurement data"
+                title=ruleset_api_v1.Localizable("Length of historic data to consider").localize(
+                    localizer
                 ),
-                unit=localizer("days"),
+                help=ruleset_api_v1.Localizable(
+                    "How many days in the past Checkmk should evaluate the measurement data"
+                ).localize(localizer),
+                unit=ruleset_api_v1.Localizable("days").localize(localizer),
                 minvalue=1,
                 default_value=90,
             ),
@@ -1325,7 +1330,9 @@ def _convert_to_legacy_metric_name(
 ) -> legacy_graphing_valuespecs.MetricName:
     converted_kwargs = {}
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = localizer("Select from a list of metrics known to Checkmk")
+        help_text = ruleset_api_v1.Localizable(
+            "Select from a list of metrics known to Checkmk"
+        ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
@@ -1343,10 +1350,12 @@ def _convert_to_legacy_monitored_host_name(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = localizer("Select from a list of host names known to Checkmk")
+        help_text = ruleset_api_v1.Localizable(
+            "Select from a list of host names known to Checkmk"
+        ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = localizer("Host name")
+        title = ruleset_api_v1.Localizable("Host name").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
@@ -1363,10 +1372,12 @@ def _convert_to_legacy_monitored_service_description(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = localizer("Select from a list of service descriptions known to Checkmk")
+        help_text = ruleset_api_v1.Localizable(
+            "Select from a list of service descriptions known to Checkmk"
+        ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = localizer("Service description")
+        title = ruleset_api_v1.Localizable("Service description").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)

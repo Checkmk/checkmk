@@ -1,0 +1,12 @@
+Title: Fix tree of folders snapin filter for statistics dashlets
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1706087860
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+If you used the "Tree of folders" snapin and the shown dashboard contained a
+dashlet "Host statistics" or "Service statistics" the wato folder was not
+filtered for that dashlet.

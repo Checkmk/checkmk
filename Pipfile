@@ -49,7 +49,6 @@ pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-html = "*"  # used to generate HTML reports for test suites
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
-pytest-profiling = "*"  # used to analyze test run performance
 pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml

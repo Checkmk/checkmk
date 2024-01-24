@@ -5,7 +5,7 @@
  */
 
 import {BaseType, Transition} from "d3";
-import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
+import {ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,

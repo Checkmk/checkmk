@@ -1767,12 +1767,12 @@ def _compute_topology_result(
     shown_mesh_links = list(filter(mesh_link_visible, mesh_links))
     for link in shown_mesh_links:
         if config := link_config.get(link):
-            topology_classes = config
+            topology_config = config
         else:
-            topology_classes = {
+            topology_config = {
                 "topology_classes": [["only_in_ref", False], ["missing_in_ref", False]]
             }
-        link.config.update(topology_classes)
+        link.config.update(topology_config)
 
     frontend_config = FrontendNodeConfig(topology_center, shown_mesh_links)
 

@@ -5,11 +5,13 @@
  */
 
 import * as d3 from "d3";
+import {ForceConfig, ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {
     DynamicToggleableLayer,
     layer_class_registry,
     LayerSelections,
 } from "nodevis/layer_utils";
+import {StyleOptionSpecRange} from "nodevis/layout_utils";
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
 import {
@@ -31,6 +33,17 @@ import {
     render_save_delete,
 } from "nodevis/utils";
 import {Viewport} from "nodevis/viewport";
+
+interface TopologyForceOptions extends ForceOptions {
+    charge_host: number;
+    charge_service: number;
+    link_distance_host2host: number;
+    link_distance_host2service: number;
+    link_distance_service2service: number;
+    link_strength_host2host: number;
+    link_strength_host2service: number;
+    link_strength_service2service: number;
+}
 
 function render_hierarchy_flat(
     viewport: Viewport,
@@ -322,23 +335,6 @@ class TopologyCoreEntity extends TopologyNode {
                 this.hide_connection(new Set<string>(), true)
             );
     }
-    //
-    // override _get_node_type_specific_force(
-    //     force_name: SimulationForce,
-    //     force_options: ForceOptions
-    // ): number {
-    //     switch (force_name) {
-    //         case "center":
-    //             return force_options.topo_center_node;
-    //         case "charge":
-    //             return force_options.topo_grav_node;
-    //         default:
-    //             return super._get_node_type_specific_force(
-    //                 force_name,
-    //                 force_options
-    //             );
-    //     }
-    // }
 }
 
 class TopologyHost extends TopologyCoreEntity {
@@ -418,6 +414,22 @@ class TopologyHost extends TopologyCoreEntity {
         if (!node) return "";
         return node.data.name;
     }
+
+    override _get_node_type_specific_force(
+        force_name: SimulationForce,
+        force_options: TopologyForceOptions
+    ): number {
+        switch (force_name) {
+            case "charge": {
+                return force_options.charge_host;
+            }
+            default:
+                return super._get_node_type_specific_force(
+                    force_name,
+                    force_options
+                );
+        }
+    }
 }
 
 class TopologyService extends TopologyCoreEntity {
@@ -441,36 +453,6 @@ class TopologyService extends TopologyCoreEntity {
         const node = this._world.viewport.get_node_by_id(node_id);
         if (!node) return "";
         return node.data.name;
-    }
-
-    override render_object() {
-        TopologyNode.prototype.render_object.call(this);
-        this.selection()
-            .on("mouseover", () => {
-                this._show_quickinfo();
-                this._highlight_links(true);
-            })
-            .on("mouseout", () => {
-                this._hide_quickinfo();
-                this._highlight_links(false);
-            });
-    }
-
-    _highlight_links(active: boolean) {
-        const shown_links = this._world.viewport
-            .get_nodes_layer()
-            .get_svg_selection()
-            .select("g#links")
-            .selectAll<SVGPathElement, string>("path");
-        const my_id = this.node.data.id;
-        shown_links.each((data, idx, nodes) => {
-            const tokens = data.split("#@#");
-            const source = this._world.viewport.get_node_by_id(tokens[0]);
-            const target = this._world.viewport.get_node_by_id(tokens[1]);
-            if (source.data.id == my_id || target.data.id == my_id) {
-                d3.select(nodes[idx]).attr("stroke-width", active ? "5" : "1");
-            }
-        });
     }
 
     override _fetch_external_quickinfo() {
@@ -509,6 +491,22 @@ class TopologyService extends TopologyCoreEntity {
             this.node.data.type_specific.core.hostname,
             this.node.data.type_specific.core.service,
         ];
+    }
+
+    override _get_node_type_specific_force(
+        force_name: SimulationForce,
+        force_options: TopologyForceOptions
+    ): number {
+        switch (force_name) {
+            case "charge": {
+                return force_options.charge_service;
+            }
+            default:
+                return super._get_node_type_specific_force(
+                    force_name,
+                    force_options
+                );
+        }
     }
 }
 
@@ -595,9 +593,6 @@ class NetworkLink extends AbstractLink {
                         : []
                 );
             });
-        if (this._link_data.config.css) {
-            this.selection().attr("class", this._link_data.config.css);
-        }
         if (this._link_data.config.topology_classes) {
             const data: [string, boolean][] =
                 this._link_data.config.topology_classes;
@@ -637,25 +632,25 @@ export class HostServiceLink extends NetworkLink {
     }
 
     override _color(): string {
-        return "grey";
+        return "white";
     }
 
-    // override _get_link_type_specific_force(
-    //     force_name: SimulationForce,
-    //     force_options: ForceOptions
-    // ): number {
-    //     switch (force_name) {
-    //         case "link_distance":
-    //             return force_options.topo_link_node_if;
-    //         case "link_strength":
-    //             return force_options.topo_str_node_if;
-    //         default:
-    //             return super._get_link_type_specific_force(
-    //                 force_name,
-    //                 force_options
-    //             );
-    //     }
-    // }
+    override _get_link_type_specific_force(
+        force_name: SimulationForce,
+        force_options: TopologyForceOptions
+    ): number {
+        switch (force_name) {
+            case "link_distance":
+                return force_options.link_distance_host2service;
+            case "link_strength":
+                return force_options.link_strength_host2service;
+            default:
+                return super._get_link_type_specific_force(
+                    force_name,
+                    force_options
+                );
+        }
+    }
 }
 
 export class HostHostLink extends NetworkLink {
@@ -667,22 +662,22 @@ export class HostHostLink extends NetworkLink {
         return "grey";
     }
 
-    // _get_link_type_specific_force(
-    //     force_name: SimulationForce,
-    //     force_options: ForceOptions
-    // ): number {
-    //     switch (force_name) {
-    //         case "link_distance":
-    //             return force_options.topo_link_node_node;
-    //         case "link_strength":
-    //             return force_options.topo_str_node_node;
-    //         default:
-    //             return super._get_link_type_specific_force(
-    //                 force_name,
-    //                 force_options
-    //             );
-    //     }
-    // }
+    override _get_link_type_specific_force(
+        force_name: SimulationForce,
+        force_options: TopologyForceOptions
+    ): number {
+        switch (force_name) {
+            case "link_distance":
+                return force_options.link_distance_host2host;
+            case "link_strength":
+                return force_options.link_strength_host2host;
+            default:
+                return super._get_link_type_specific_force(
+                    force_name,
+                    force_options
+                );
+        }
+    }
 }
 
 export class ServiceServiceLink extends NetworkLink {
@@ -694,24 +689,101 @@ export class ServiceServiceLink extends NetworkLink {
         return "darkgrey";
     }
 
-    // _get_link_type_specific_force(
-    //     force_name: SimulationForce,
-    //     force_options: ForceOptions
-    // ): number {
-    //     switch (force_name) {
-    //         case "link_distance":
-    //             return force_options.topo_link_if_if;
-    //         case "link_strength":
-    //             return force_options.topo_str_if_if;
-    //         default:
-    //             return super._get_link_type_specific_force(
-    //                 force_name,
-    //                 force_options
-    //             );
-    //     }
-    // }
+    override _get_link_type_specific_force(
+        force_name: SimulationForce,
+        force_options: TopologyForceOptions
+    ): number {
+        switch (force_name) {
+            case "link_distance":
+                return force_options.link_distance_service2service;
+            case "link_strength":
+                return force_options.link_strength_service2service;
+            default:
+                return super._get_link_type_specific_force(
+                    force_name,
+                    force_options
+                );
+        }
+    }
 }
 
 link_type_class_registry.register(HostServiceLink);
 link_type_class_registry.register(HostHostLink);
 link_type_class_registry.register(ServiceServiceLink);
+
+export class TopologyForceConfig extends ForceConfig {
+    override description = "Topology Force configuration";
+
+    override get_style_options(): StyleOptionSpecRange[] {
+        const options: StyleOptionSpecRange[] = [
+            {
+                id: "center",
+                values: {default: 0.05, min: -0.08, max: 1, step: 0.01},
+                option_type: "range",
+                text: "Center force strength",
+            },
+            {
+                id: "charge",
+                values: {default: -300, min: -1000, max: 50, step: 1},
+                option_type: "range",
+                text: "General repulsion",
+                hidden: true,
+            },
+            {
+                id: "link_distance",
+                values: {default: 30, min: -10, max: 500, step: 1},
+                option_type: "range",
+                text: "Link distance",
+                hidden: true,
+            },
+            {
+                id: "link_strength",
+                values: {default: 0.3, min: 0, max: 4, step: 0.01},
+                option_type: "range",
+                text: "Link strenght",
+                hidden: true,
+            },
+            {
+                id: "collide",
+                values: {default: 15, min: 0, max: 150, step: 1},
+                option_type: "range",
+                text: "Collision box",
+            },
+            {
+                id: "charge_host",
+                values: {default: -300, min: -1000, max: 50, step: 1},
+                option_type: "range",
+                text: "Repulsion host",
+            },
+            {
+                id: "charge_service",
+                values: {default: -300, min: -1000, max: 50, step: 1},
+                option_type: "range",
+                text: "Repulsion service",
+            },
+        ];
+
+        const settings: [string, string, number, number][] = [
+            ["service2service", "service<->service", 30, 0.3],
+            ["host2service", "host<->service", 30, 0.3],
+            ["host2host", "host<->host", 30, 0.3],
+        ];
+        settings.forEach(entry => {
+            options.push({
+                id: "link_distance_" + entry[0],
+                values: {default: entry[2], min: -10, max: 500, step: 1},
+                option_type: "range",
+                text: "Link " + entry[1],
+            });
+        });
+        settings.forEach(entry => {
+            options.push({
+                id: "link_strength_" + entry[0],
+                values: {default: entry[3], min: 0, max: 4, step: 0.01},
+                option_type: "range",
+                text: "Link strength " + entry[1],
+            });
+        });
+        return options;
+    }
+}

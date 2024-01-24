@@ -7,7 +7,8 @@
 import "nodevis/layout";
 
 import * as d3 from "d3";
-import {ForceConfig, ForceSimulation} from "nodevis/force_simulation";
+import {ForceSimulation} from "nodevis/force_simulation";
+import {ForceConfig} from "nodevis/force_utils";
 import {
     AbstractLayer,
     AbstractNodeVisConstructor,

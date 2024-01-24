@@ -5,7 +5,7 @@
  */
 
 import * as d3 from "d3";
-import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
+import {ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {
     ContextMenuElement,
     d3SelectionG,

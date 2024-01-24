@@ -398,7 +398,7 @@ class TopologyHost extends TopologyCoreEntity {
         );
 
         elements.push({
-            dom: radio_div.node() as HTMLDivElement,
+            dom: radio_div.node()! as HTMLDivElement,
         });
         return elements;
     }

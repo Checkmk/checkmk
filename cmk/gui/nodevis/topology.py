@@ -619,7 +619,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
                 break
             updated_nodes.update(updated_at_depth)
 
-        _resolve_circular_mesh_depths(set(), nodes_to_compute)
+        _resolve_circular_mesh_depths([], nodes_to_compute)
 
         def topo_site_id(site: str) -> str:
             return f"site:{site}"
@@ -785,42 +785,9 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         self._apply_service_visibility()
 
         start_node_ids = sorted((x for x, y in self._topology_nodes.items() if y.mesh_depth == 0))
-        # if len(self._topology_configuration.frontend.growth_root_nodes) == 0:
-        #     best_count = 0
-        #     best_node_id = ""
-        #     for node_id in start_node_ids:
-        #         topo_node = self._topology_nodes[node_id]
-        #         node_count = len(topo_node.outgoing) + len(topo_node.incoming)
-        #         if node_count > best_count:
-        #             best_count = node_count
-        #             best_node_id = node_id
-        #     start_node_ids = [best_node_id]
-        #
-
-        # _resolve_circular_mesh_depths(start_node_ids, self._topology_nodes)
-
-        traversed_nodes = set()
-        next_node_ids = []
-        for node_id in start_node_ids:
-            node = self._topology_nodes[node_id]
-            node.mesh_depth = 1
-            traversed_nodes.add(node_id)
-            next_node_ids.append(node_id)
-        mesh_depth = 1
-        # Note: Using a recursive approach will NOT work, because of circles in the mesh
-        while next_node_ids:
-            mesh_depth += 1
-            upcoming_nodes = set()
-            for node_id in next_node_ids:
-                node = self._topology_nodes[node_id]
-                for adjacent_id in node.incoming.union(node.outgoing):
-                    if adjacent_id in traversed_nodes:
-                        continue
-                    traversed_nodes.add(node.id)
-                    if adjacent_node := self._topology_nodes.get(adjacent_id):
-                        adjacent_node.mesh_depth = mesh_depth
-                        upcoming_nodes.add(adjacent_id)
-            next_node_ids = sorted(upcoming_nodes)
+        _resolve_circular_mesh_depths(
+            list(self._topology_nodes[x] for x in start_node_ids), self._topology_nodes
+        )
 
         root_node = f"datatype_root#{self._data_type}"
         self._topology_nodes[root_node] = TopologyNode(
@@ -938,8 +905,13 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
 
 def _resolve_circular_mesh_depths(
-    _explicit_start_nodes: set[str], circular_nodes: TopologyNodes
+    explicit_start_nodes: list[TopologyNode], circular_nodes: TopologyNodes
 ) -> None:
+    """Computes mesh_depth information for node meshes which have no actual start
+    The computed root nodes have mesh_depth 1"""
+    for node in explicit_start_nodes:
+        node.mesh_depth = 1
+
     nodes_by_num_connections = []
     for node_id, node in circular_nodes.items():
         node.mesh_depth = 1
@@ -948,12 +920,12 @@ def _resolve_circular_mesh_depths(
     nodes_by_num_connections.sort(key=lambda x: x[0], reverse=True)
 
     traversed_nodes = set()
-    for _count, root_node in nodes_by_num_connections:
+    for start_node in explicit_start_nodes + list(x[1] for x in nodes_by_num_connections):
         mesh_depth = 1
-        if root_node.id in traversed_nodes:
+        if start_node.id in traversed_nodes:
             continue
-        traversed_nodes.add(root_node.id)
-        next_node_ids = [root_node.id]
+        traversed_nodes.add(start_node.id)
+        next_node_ids = [start_node.id]
         # Note: Using a recursive approach will NOT work, because of circles in the mesh
         #       Grow from the start, then hop once in every direction with each cycle
         while next_node_ids:

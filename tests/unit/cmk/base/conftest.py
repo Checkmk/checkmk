@@ -10,14 +10,6 @@ from unittest import mock
 import pytest
 
 
-# Automatically refresh caches for each test
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches():
-    from cmk.utils.caching import cache_manager
-
-    cache_manager.clear()
-
-
 class _MockVSManager(typing.NamedTuple):
     active_service_interface: abc.Mapping[str, object]
 

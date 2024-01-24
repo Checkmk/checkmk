@@ -244,7 +244,6 @@ def site(request):
 
 def _clear_caches():
     cmk.utils.caching.cache_manager.clear()
-
     cmk_version.edition.cache_clear()
 
 
@@ -252,12 +251,14 @@ def _clear_caches():
 def clear_caches_per_module():
     """Ensures that module-scope fixtures are executed with clean caches."""
     _clear_caches()
+    yield
 
 
 @pytest.fixture(autouse=True)
 def clear_caches_per_function():
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     _clear_caches()
+    yield
 
 
 class FixRegister:

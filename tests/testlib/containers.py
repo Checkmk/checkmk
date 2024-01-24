@@ -92,21 +92,18 @@ def execute_tests_in_container(
 
         if interactive:
             logger.info("+-------------------------------------------------")
-            logger.info("| Next steps: Start whatever test you want, for example:")
+            logger.info("| Next steps: Start the test of your choice, for example:")
             logger.info("| ")
-            logger.info("| VERSION=git make -C tests test-integration")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info(
-                "| VERSION=git pytest -T integration "
-                "tests/integration/livestatus/test_livestatus.py"
-            )
+            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| VERSION=git pytest -T integration "
+                "| pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
@@ -114,11 +111,11 @@ def execute_tests_in_container(
             logger.info("|   Execute a single test")
             logger.info("| ")
             logger.info("| !!!WARNING!!!")
-            logger.info("| The version of Checkmk you test against is set using the")
-            logger.info(
-                "| VERSION variable as seen above. Only 'git' tests against the code in your repo."
-            )
-            logger.info("| VERSION defaults to the current daily build of you branch.")
+            logger.info("| The version of Checkmk you test against is set using the VERSION ")
+            logger.info("| environment variable and defaults to the current daily build of ")
+            logger.info("| your branch.")
+            logger.info("| If you want to test a patched version, you need patch it before ")
+            logger.info("| running tests.")
             logger.info("+-------------------------------------------------")
 
             if command:

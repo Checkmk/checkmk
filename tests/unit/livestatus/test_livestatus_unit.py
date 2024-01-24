@@ -25,7 +25,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 # Override top level fixture to make livestatus connects possible here
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="module")
 def prevent_livestatus_connect() -> None:
     pass
 

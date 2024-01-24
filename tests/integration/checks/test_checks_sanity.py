@@ -44,7 +44,7 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInf
     try:
         register_controller(agent_ctl, site, hostname, site_address="127.0.0.1")
         wait_until_host_receives_data(site, hostname)
-        site.openapi.bulk_discover_services([str(hostname)], wait_for_completion=True)
+        site.openapi.bulk_discover_services_and_wait_for_completion([str(hostname)])
         site.openapi.activate_changes_and_wait_for_completion()
         site.reschedule_services(hostname)
         host_services = site.get_host_services(hostname)

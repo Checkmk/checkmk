@@ -63,8 +63,8 @@ def test_update(  # pylint: disable=too-many-branches
         wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    test_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     test_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -104,8 +104,8 @@ def test_update(  # pylint: disable=too-many-branches
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    target_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     target_site.openapi.activate_changes_and_wait_for_completion()
 

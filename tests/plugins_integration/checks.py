@@ -451,7 +451,6 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    site.openapi.bulk_discover_services([host_name], bulk_size=10, wait_for_completion=True)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
@@ -522,7 +521,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
+    site.openapi.bulk_discover_services_and_wait_for_completion(host_names, bulk_size=10)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()

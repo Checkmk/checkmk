@@ -181,7 +181,7 @@ def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
         if not description:
             return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
         if description == "spool:":
-            return "spool: %s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
+            return "spool:%s/var/mkeventd/spool" % os.getenv("OMD_ROOT", "")
         if "," in description:
             prot_addr_port = description.split(",")
             return prot_addr_port[0], prot_addr_port[1], prot_addr_port[3]

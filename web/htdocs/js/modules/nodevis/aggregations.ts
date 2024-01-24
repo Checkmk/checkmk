@@ -68,10 +68,9 @@ export class LayoutAggregations {
     _render_aggregation_configuration(selection: d3SelectionDiv): void {
         const aggr_name =
             this._world.viewport.get_all_nodes()[0].data.name || "Missing data";
-        const layout_settings =
-            this._world.viewport.get_layout_manager().get_layout_settings() ||
-            {};
-        const origin_info = layout_settings.origin_info || "Missing data";
+        const layout =
+            this._world.viewport.get_layout_manager().get_layout() || {};
+        const origin_info = layout.origin_info || "Missing data";
 
         const table = selection
             .selectAll("table#layout_settings")

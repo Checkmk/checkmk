@@ -93,7 +93,10 @@ export class NodeVisualizationLayout {
         this.reference_size = data.reference_size || default_size;
         this.style_configs = data.style_configs || [];
         this.line_config = data.line_config || new LineConfig();
-        this.force_config = data.force_config || default_force;
+        this.force_config =
+            Object.entries(data.force_config).length > 0
+                ? data.force_config
+                : default_force;
         this.origin_info = data.origin_info || "";
         this.origin_type = data.origin_type || "";
     }

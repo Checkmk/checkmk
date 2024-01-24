@@ -1,0 +1,16 @@
+Title: Fix logging statement
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1706081257
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Prior to this change, you may have seen the following log output:
+
+C+:
+undefined action "{aname}, must be one of {", ".join(table.keys()}"
+C-:
+
+The variables are now interpolated correctly.

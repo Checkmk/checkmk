@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import pytest
 
@@ -263,6 +265,251 @@ def test_get_graph_templates(
     perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
+
+
+def test__get_metric_info() -> None:
+    color_counter: Counter[Literal["index"]] = Counter()
+    assert utils._get_metric_info("foo", color_counter) == {
+        "title": "Foo",
+        "unit": "",
+        "color": "12/a",
+    }
+    assert utils._get_metric_info("bar", color_counter) == {
+        "title": "Bar",
+        "unit": "",
+        "color": "13/a",
+    }
+    assert color_counter["index"] == 2
+
+
+@pytest.mark.parametrize(
+    "metric_name, predictive_metric_name, expected_title, expected_color",
+    [
+        pytest.param(
+            "messages_outbound",
+            "predict_messages_outbound",
+            "Prediction of Outbound messages (upper levels)",
+            "#9a9a9a",
+            id="upper",
+        ),
+        pytest.param(
+            "messages_outbound",
+            "predict_lower_messages_outbound",
+            "Prediction of Outbound messages (lower levels)",
+            "#676767",
+            id="lower",
+        ),
+    ],
+)
+def test_translate_metrics_with_predictive_metrics(
+    metric_name: str,
+    predictive_metric_name: str,
+    expected_title: str,
+    expected_color: str,
+) -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple(n, 0, "", None, None, None, None)
+        for n in [metric_name, predictive_metric_name]
+    ]
+    translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
+    assert translated_metrics[predictive_metric_name]["title"] == expected_title
+    assert (
+        translated_metrics[metric_name]["unit"]
+        == translated_metrics[predictive_metric_name]["unit"]
+    )
+    assert translated_metrics[predictive_metric_name]["color"] == expected_color
+
+
+@pytest.mark.parametrize(
+    "metric_names, check_command, graph_templates",
+    [
+        pytest.param(
+            [
+                "messages_outbound",
+                "predict_messages_outbound",
+                "predict_lower_messages_outbound",
+                "messages_inbound",
+                "predict_messages_inbound",
+                "predict_lower_messages_inbound",
+            ],
+            "check_mk-inbound_and_outbound_messages",
+            [
+                utils.GraphTemplate(
+                    id="inbound_and_outbound_messages",
+                    title="Inbound and Outbound Messages",
+                    scalars=[],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="messages_outbound"),
+                            line_type="stack",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="messages_inbound"),
+                            line_type="stack",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_messages_outbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_messages_outbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_messages_inbound"),
+                            line_type="line",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_messages_inbound"),
+                            line_type="line",
+                        ),
+                    ],
+                )
+            ],
+            id="matches",
+        ),
+        pytest.param(
+            [
+                "messages_outbound",
+                "messages_inbound",
+                "foo",
+                "predict_foo",
+                "predict_lower_foo",
+            ],
+            "check_mk-inbound_and_outbound_messages",
+            [
+                utils.GraphTemplate(
+                    id="inbound_and_outbound_messages",
+                    title="Inbound and Outbound Messages",
+                    scalars=[],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="messages_outbound"),
+                            line_type="stack",
+                        ),
+                        MetricDefinition(
+                            expression=Metric(name="messages_inbound"),
+                            line_type="stack",
+                        ),
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_predict_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="predict_foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="predict_foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="predict_foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+                utils.GraphTemplate(
+                    id="METRIC_predict_lower_foo",
+                    title=None,
+                    scalars=[
+                        utils.ScalarDefinition(
+                            expression=WarningOf(
+                                metric=Metric(name="predict_lower_foo"),
+                                name="warn",
+                            ),
+                            title="Warning",
+                        ),
+                        utils.ScalarDefinition(
+                            expression=CriticalOf(
+                                metric=Metric(name="predict_lower_foo"),
+                                name="crit",
+                            ),
+                            title="Critical",
+                        ),
+                    ],
+                    conflicting_metrics=[],
+                    optional_metrics=[],
+                    consolidation_function=None,
+                    range=None,
+                    omit_zero_metrics=False,
+                    metrics=[
+                        MetricDefinition(
+                            expression=Metric(name="predict_lower_foo"),
+                            line_type="area",
+                        )
+                    ],
+                ),
+            ],
+            id="does-not-match",
+        ),
+    ],
+)
+def test_get_graph_templates_with_predictive_metrics(
+    metric_names: Sequence[str],
+    check_command: str,
+    graph_templates: Sequence[utils.GraphTemplate],
+) -> None:
+    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    translated_metrics = utils.translate_metrics(perfdata, check_command)
+    found_graph_templates = list(utils.get_graph_templates(translated_metrics))
+    assert found_graph_templates == graph_templates
 
 
 @pytest.mark.parametrize(

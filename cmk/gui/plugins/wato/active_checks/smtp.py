@@ -24,6 +24,7 @@ from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_active_checks_smtp() -> Migrate:
+    ip_addr_key, ip_addr_vs = ip_address_family_element()
     return Migrate(
         valuespec=Dictionary(
             title=_("Check SMTP service access"),
@@ -69,7 +70,7 @@ def _valuespec_active_checks_smtp() -> Migrate:
                         default_value=25,
                     ),
                 ),
-                ip_address_family_element(),
+                (ip_addr_key, ip_addr_vs),
                 (
                     "expect",
                     TextInput(
@@ -187,6 +188,7 @@ def _valuespec_active_checks_smtp() -> Migrate:
             optional_keys=[
                 "hostname",
                 "port",
+                ip_addr_key,
                 "expect",
                 "commands",
                 "command_responses",

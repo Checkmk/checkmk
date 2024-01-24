@@ -22,6 +22,22 @@ class MKGrowthInterruption(MKGeneralException):
     pass
 
 
+class TopologyLinkType(Enum):
+    DEFAULT = "default"
+    HOST2HOST = "host2host"
+    SERVICE2SERVICE = "service2service"
+    HOST2SERVICE = "host2service"
+
+
+class NodeType(Enum):
+    TOPOLOGY_SITE = "topology_site"
+    TOPOLOGY_CENTER = "topology_center"
+    TOPOLOGY = "topology"
+    TOPOLOGY_HOST = "topology_host"
+    TOPOLOGY_SERVICE = "topology_service"
+    TOPOLOGY_UNKNOWN = "topology_unknown"
+
+
 @dataclass(kw_only=True)
 class TopologyFilterConfiguration:
     max_nodes: int = field(default_factory=FilterTopologyMaxNodes().range_config.default)
@@ -113,7 +129,7 @@ class Layout:
 
 
 @dataclass
-class FrontendTopologyConfiguration:
+class FrontendConfiguration:
     overlays_config: OverlaysConfig = field(default_factory=OverlaysConfig)
     growth_root_nodes: list[str] = field(default_factory=list)  # Extra Growth starts from here
     growth_forbidden_nodes: list[str] = field(default_factory=list)  # Growth stops here
@@ -130,7 +146,7 @@ class FrontendTopologyConfiguration:
         self._growth_continue_nodes_set = set(self.growth_continue_nodes)
 
     @classmethod
-    def parse(cls, serialized_config: dict[str, Any]) -> "FrontendTopologyConfiguration":
+    def parse(cls, serialized_config: dict[str, Any]) -> "FrontendConfiguration":
         return cls(
             overlays_config=OverlaysConfig.parse(serialized_config.get("overlays_config", {})),
             growth_root_nodes=serialized_config.get("growth_root_nodes", []),
@@ -169,7 +185,7 @@ class FrontendTopologyConfiguration:
 class TopologyConfiguration:
     version: int = 1
     type: str = ""
-    frontend: FrontendTopologyConfiguration = field(default_factory=FrontendTopologyConfiguration)
+    frontend: FrontendConfiguration = field(default_factory=FrontendConfiguration)
     filter: TopologyFilterConfiguration = field(default_factory=TopologyFilterConfiguration)
     layout: Layout = field(default_factory=Layout)
 
@@ -182,7 +198,7 @@ class TopologyConfiguration:
         return cls(
             version=version,
             type=serialized_config.get("type", ""),
-            frontend=FrontendTopologyConfiguration.parse(serialized_config.get("frontend", {})),
+            frontend=FrontendConfiguration.parse(serialized_config.get("frontend", {})),
             filter=TopologyFilterConfiguration.parse(serialized_config.get("filter", {})),
             layout=Layout(**serialized_config.get("layout", {})),
         )
@@ -217,33 +233,6 @@ class GrowthSettings:
     indicator_growth_root: bool = False  # indicator, growth started here
 
 
-class FrontendNodeType(Enum):
-    TOPOLOGY_SITE = "topology_site"
-    TOPOLOGY_CENTER = "topology_center"
-    TOPOLOGY = "topology"
-    TOPOLOGY_HOST = "topology_host"
-    TOPOLOGY_SERVICE = "topology_service"
-    TOPOLOGY_UNKNOWN = "topology_unknown"
-
-
-class TopologyLinkType(Enum):
-    DEFAULT = "default"
-    HOST2HOST = "host2host"
-    SERVICE2SERVICE = "service2service"
-    HOST2SERVICE = "host2service"
-
-
-@dataclass
-class TopologyFrontendLink:
-    source: str
-    target: str
-    config: dict[str, Any]
-
-    def __hash__(self):
-        tokens = tuple(sorted([self.source, self.target]))
-        return ("%s_%s" % tokens).__hash__()
-
-
 class TopologyQueryIdentifier:
     """Describes the query parameters which were used to generate the result"""
 
@@ -271,7 +260,7 @@ class TopologyNode:
     incoming: set[str] = field(default_factory=set)
     outgoing: set[str] = field(default_factory=set)
     mesh_depth: int = 1
-    type: FrontendNodeType = FrontendNodeType.TOPOLOGY
+    type: NodeType = NodeType.TOPOLOGY
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -279,28 +268,39 @@ TopologyNodes = dict[str, TopologyNode]
 
 
 #### FRONTEND DATACLASSES
+
+
+@dataclass
+class TopologyLink:
+    source: str
+    target: str
+    config: dict[str, Any]
+
+    def __hash__(self):
+        tokens = tuple(sorted([self.source, self.target]))
+        return ("%s_%s" % tokens).__hash__()
+
+
 @dataclass(kw_only=True)
-class TopologyFrontendNode:
+class HierarchyNode:
     id: str
     name: str
     node_type: str
-    children: list["TopologyFrontendNode"]
+    children: list["HierarchyNode"]
     growth_settings: GrowthSettings = field(default_factory=GrowthSettings)
     type_specific: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
-class FrontendNodeConfig:
-    hierarchy: TopologyFrontendNode
-    links: list[TopologyFrontendLink]
+class NodeConfig:
+    hierarchy: HierarchyNode
+    links: list[TopologyLink]
 
 
 @dataclass
 class TopologyResponse:
-    """Response send to the frontend"""
-
-    node_config: FrontendNodeConfig
-    frontend_configuration: FrontendTopologyConfiguration
+    node_config: NodeConfig
+    frontend_configuration: FrontendConfiguration
     layout: Layout = field(default_factory=Layout)
     headline: str | None = None
     errors: list[str] = field(default_factory=list)

@@ -2190,6 +2190,65 @@ multisite_builtin_views["inv_host_history"] = {
 #   '----------------------------------------------------------------------'
 
 
+def _compute_cell_spec(
+    value: Any,
+    hint: ColumnDisplayHint | AttributeDisplayHint,
+    retention_intervals: RetentionIntervals | None,
+) -> tuple[str, HTML]:
+    if isinstance(value, HTML):
+        tdclass = ""
+        html_value = value
+    else:
+        tdclass, code = hint.paint_function(value)
+        html_value = HTML(code)
+
+    if retention_intervals is None or retention_intervals.source == "current":
+        return tdclass, html_value
+
+    now = int(time.time())
+    valid_until = retention_intervals.cached_at + retention_intervals.cache_interval
+    keep_until = valid_until + retention_intervals.retention_interval
+    if now > keep_until:
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("svc_problems", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data is outdated and will be removed with the next check execution"),
+            ),
+        )
+    if now > valid_until:
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("service_duration", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data was provided at %s and is considered valid until %s")
+                % (
+                    cmk.utils.render.date_and_time(retention_intervals.cached_at),
+                    cmk.utils.render.date_and_time(keep_until),
+                ),
+            ),
+        )
+    return tdclass, html_value
+
+
+def _show_child_value(
+    value: Any,
+    hint: ColumnDisplayHint | AttributeDisplayHint,
+    retention_intervals: RetentionIntervals | None = None,
+) -> None:
+    html.write_html(_compute_cell_spec(value, hint, retention_intervals)[1])
+
+
 class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
@@ -2369,53 +2428,6 @@ class ABCNodeRenderer(abc.ABC):
             header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")
         return header
 
-    def _show_child_value(
-        self,
-        value: Any,
-        hint: ColumnDisplayHint | AttributeDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
-    ) -> None:
-        if isinstance(value, HTML):
-            html_value = value
-        else:
-            _tdclass, code = hint.paint_function(value)
-            html_value = HTML(code)
-
-        if retention_intervals is None or retention_intervals.source == "current":
-            html.write_html(html_value)
-            return
-
-        now = int(time.time())
-        valid_until = retention_intervals.cached_at + retention_intervals.cache_interval
-        keep_until = valid_until + retention_intervals.retention_interval
-        if now > keep_until:
-            html_value = HTMLWriter.render_span(
-                html_value
-                + HTML("&nbsp;")
-                + HTMLWriter.render_img(
-                    theme.detect_icon_path("svc_problems", "icon_"),
-                    class_=["icon"],
-                ),
-                title=_("Data is outdated and will be removed with the next check execution"),
-            )
-
-        elif now > valid_until:
-            html_value = HTMLWriter.render_span(
-                html_value
-                + HTML("&nbsp;")
-                + HTMLWriter.render_img(
-                    theme.detect_icon_path("service_duration", "icon_"),
-                    class_=["icon"],
-                ),
-                title=_("Data was provided at %s and is considered valid until %s")
-                % (
-                    cmk.utils.render.date_and_time(retention_intervals.cached_at),
-                    cmk.utils.render.date_and_time(keep_until),
-                ),
-            )
-
-        html.write_html(value)
-
 
 class NodeRenderer(ABCNodeRenderer):
     def _show_row_value(
@@ -2424,7 +2436,7 @@ class NodeRenderer(ABCNodeRenderer):
         col_hint: ColumnDisplayHint,
         retention_intervals: RetentionIntervals | None = None,
     ) -> None:
-        self._show_child_value(value, col_hint, retention_intervals)
+        _show_child_value(value, col_hint, retention_intervals)
 
     def show_attribute(
         self,
@@ -2432,7 +2444,7 @@ class NodeRenderer(ABCNodeRenderer):
         attr_hint: AttributeDisplayHint,
         retention_intervals: RetentionIntervals | None = None,
     ) -> None:
-        self._show_child_value(value, attr_hint, retention_intervals)
+        _show_child_value(value, attr_hint, retention_intervals)
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
@@ -2463,21 +2475,21 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")
-            self._show_child_value(new, hint)
+            _show_child_value(new, hint)
             html.close_span()
         elif old is not None and new is None:
             html.open_span(class_="invold")
-            self._show_child_value(old, hint)
+            _show_child_value(old, hint)
             html.close_span()
         elif old == new:
-            self._show_child_value(old, hint)
+            _show_child_value(old, hint)
         elif old is not None and new is not None:
             html.open_span(class_="invold")
-            self._show_child_value(old, hint)
+            _show_child_value(old, hint)
             html.close_span()
             html.write_text(" → ")
             html.open_span(class_="invnew")
-            self._show_child_value(new, hint)
+            _show_child_value(new, hint)
             html.close_span()
 
 

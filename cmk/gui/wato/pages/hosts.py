@@ -472,6 +472,22 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
             ),
         )
 
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host.name()),
+                    ("_test_host_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )
+
     if mode_name != "object_parameters" and user.may("wato.rulesets"):
         yield PageMenuEntry(
             title=_("Effective parameters"),

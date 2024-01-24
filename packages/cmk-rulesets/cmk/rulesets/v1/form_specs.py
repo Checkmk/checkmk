@@ -579,9 +579,9 @@ class TimeSpan:
     help_text: Localizable | None = None
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
-    prefill_value: int | None = None
-    transform: Transform[Sequence[int]] | Migrate[Sequence[int]] | None = None
-    custom_validate: Callable[[int], object] | None = None
+    prefill_value: float | None = None
+    transform: Transform[Sequence[float]] | Migrate[Sequence[float]] | None = None
+    custom_validate: Callable[[float], object] | None = None
 
 
 @dataclass(frozen=True)

@@ -250,13 +250,6 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
     assert persisted_cache[(HostName("test_host"), socket.AF_INET)]
 
 
-# TODO: Can be removed when this is not executed through a symlink anymore.
-# tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
-    cache_manager.clear()
-
-
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self) -> None:
         s = ip_lookup.IPLookupCacheSerializer()

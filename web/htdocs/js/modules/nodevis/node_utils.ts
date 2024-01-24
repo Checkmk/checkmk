@@ -253,7 +253,6 @@ export class AbstractGUINode implements TypeWithName {
                 "transform",
                 "translate(" + spawn_point_x + "," + spawn_point_y + ")"
             )
-            .style("pointer-events", "all")
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
             .on("contextmenu", event => {

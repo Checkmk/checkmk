@@ -286,14 +286,7 @@ export class TopologyCentralNode extends TopologyNode {
 
     override render_object() {
         this.selection()
-            .selectAll("circle")
-            .data([this.id()])
-            .enter()
-            .append("circle")
-            .attr("r", this.radius)
-            .classed("topology_center", true);
-
-        this.selection()
+            .classed("topology_center", true)
             .selectAll("image")
             .data([this.id()])
             .enter()

@@ -8,6 +8,7 @@ import * as d3 from "d3";
 import {ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {
     ContextMenuElement,
+    CoreInfo,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
@@ -655,6 +656,10 @@ export class AbstractGUINode implements TypeWithName {
     simulation_end_actions(): void {
         return;
     }
+}
+
+export function get_core_info(node: NodevisNode): CoreInfo | null {
+    return node.data.type_specific.core ? node.data.type_specific.core : null;
 }
 
 export function get_custom_node_settings(node: NodevisNode) {

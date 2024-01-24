@@ -275,6 +275,12 @@ export interface NodeData {
     rule_layout_style?: {[name: string]: any};
 }
 
+export interface CoreInfo {
+    hostname: string;
+    service?: string;
+    state?: number;
+}
+
 export interface LinkConfig {
     type: "default";
     width?: number;

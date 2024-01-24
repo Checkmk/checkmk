@@ -155,35 +155,35 @@ def _send_data(http_method: str | None = None) -> FixedValue | TupleDoNotUseWill
                             title=Localizable("Select type from list"),
                             elements=[
                                 SingleChoiceElement(
-                                    name="application/json",
+                                    name="application_json",
                                     title=Localizable("application/json"),
                                 ),
                                 SingleChoiceElement(
-                                    name="application/octet-stream",
+                                    name="application_octet_stream",
                                     title=Localizable("application/octet-stream"),
                                 ),
                                 SingleChoiceElement(
-                                    name="application/xml",
+                                    name="application_xml",
                                     title=Localizable("application/xml"),
                                 ),
                                 SingleChoiceElement(
-                                    name="application/zip",
+                                    name="application_zip",
                                     title=Localizable("application/zip"),
                                 ),
                                 SingleChoiceElement(
-                                    name="text/csv",
+                                    name="text_csv",
                                     title=Localizable("text/csv"),
                                 ),
                                 SingleChoiceElement(
-                                    name="text/plain",
+                                    name="text_plain",
                                     title=Localizable("text/plain"),
                                 ),
                                 SingleChoiceElement(
-                                    name="text/xml",
+                                    name="text_xml",
                                     title=Localizable("text/xml"),
                                 ),
                                 SingleChoiceElement(
-                                    name="text/html",
+                                    name="text_html",
                                     title=Localizable("text/html"),
                                 ),
                             ],
@@ -245,16 +245,16 @@ def _valuespec_connection() -> Dictionary:
                             elements=[
                                 SingleChoiceElement(name="auto", title=Localizable("Negotiate")),
                                 SingleChoiceElement(
-                                    name="1.3", title=Localizable("Enforce TLS v1.3")
+                                    name="tls_13", title=Localizable("Enforce TLS v1.3")
                                 ),
                                 SingleChoiceElement(
-                                    name="1.2", title=Localizable("Enforce TLS v1.2")
+                                    name="tls_12", title=Localizable("Enforce TLS v1.2")
                                 ),
                                 SingleChoiceElement(
-                                    name="1.1", title=Localizable("Enforce TLS v1.1")
+                                    name="tls_11", title=Localizable("Enforce TLS v1.1")
                                 ),
                                 SingleChoiceElement(
-                                    name="1", title=Localizable("Enforce TLS v1.0")
+                                    name="tls_10", title=Localizable("Enforce TLS v1.0")
                                 ),
                             ],
                         ),
@@ -265,51 +265,51 @@ def _valuespec_connection() -> Dictionary:
             "method": DictElement(
                 CascadingSingleChoice(
                     title=Localizable("HTTP method"),
-                    prefill_selection="GET",
+                    prefill_selection="get",
                     elements=[
                         CascadingSingleChoiceElement(
-                            name="GET", title=Localizable("GET"), parameter_form=_send_data("GET")
+                            name="get", title=Localizable("GET"), parameter_form=_send_data("GET")
                         ),
                         CascadingSingleChoiceElement(
-                            name="POST",
+                            name="post",
                             title=Localizable("POST"),
                             parameter_form=_send_data("POST"),
                         ),
                         CascadingSingleChoiceElement(
-                            name="PUT", title=Localizable("PUT"), parameter_form=_send_data("PUT")
+                            name="put", title=Localizable("PUT"), parameter_form=_send_data("PUT")
                         ),
                         CascadingSingleChoiceElement(
-                            name="DELETE",
+                            name="delete",
                             title=Localizable("DELETE"),
                             parameter_form=_send_data("DELETE"),
                         ),
                         CascadingSingleChoiceElement(
-                            name="OPTIONS",
+                            name="options",
                             title=Localizable("OPTIONS"),
                             parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
-                            name="TRACE",
+                            name="trace",
                             title=Localizable("TRACE"),
                             parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
-                            name="HEAD",
+                            name="head",
                             title=Localizable("HEAD"),
                             parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
-                            name="CONNECT",
+                            name="connect",
                             title=Localizable("CONNECT"),
                             parameter_form=_send_data("Connect"),
                         ),
                         CascadingSingleChoiceElement(
-                            name="CONNECT:POST",
+                            name="connect_post",
                             title=Localizable("CONNECT:POST"),
                             parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
-                            name="PROPFIND",
+                            name="propfind",
                             title=Localizable("PROPFIND"),
                             parameter_form=_send_data(),
                         ),

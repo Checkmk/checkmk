@@ -51,6 +51,7 @@ ProblemsDashboard = DashboardConfig(
                     "title": _("Host statistics"),
                     "type": "hoststats",
                     "position": (1, 1),
+                    "size": (30, 18),
                     "show_title": True,
                     "context": {
                         "wato_folder": {
@@ -65,6 +66,7 @@ ProblemsDashboard = DashboardConfig(
                     "title": _("Service statistics"),
                     "type": "servicestats",
                     "position": (31, 1),
+                    "size": (30, 18),
                     "show_title": True,
                     "context": {
                         "wato_folder": {

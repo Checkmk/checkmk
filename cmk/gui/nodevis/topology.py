@@ -37,18 +37,18 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.type_defs import (
-    FrontendNodeConfig,
-    FrontendNodeType,
-    FrontendTopologyConfiguration,
+    FrontendConfiguration,
     GrowthSettings,
+    HierarchyNode,
     Layout,
     MKGrowthExceeded,
     MKGrowthInterruption,
+    NodeConfig,
+    NodeType,
     OverlaysConfig,
     TopologyConfiguration,
     TopologyFilterConfiguration,
-    TopologyFrontendLink,
-    TopologyFrontendNode,
+    TopologyLink,
     TopologyLinkType,
     TopologyNode,
     TopologyNodes,
@@ -509,7 +509,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
         return result
 
     def _map_host_state(self, node: TopologyNode, extra_info: dict[str, Any]) -> int:
-        if node.type in (FrontendNodeType.TOPOLOGY_CENTER, FrontendNodeType.TOPOLOGY_SITE):
+        if node.type in (NodeType.TOPOLOGY_CENTER, NodeType.TOPOLOGY_SITE):
             return 0
         if not extra_info["has_been_checked"]:
             return -1
@@ -629,7 +629,7 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
                 id=internal_site_id,
                 name=_("Site %s") % site_id,
                 mesh_depth=0,
-                type=FrontendNodeType.TOPOLOGY_SITE,
+                type=NodeType.TOPOLOGY_SITE,
             )
 
         # Link nodes with depth 1(no parents) to site
@@ -743,7 +743,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         return result
 
     def _map_host_state(self, node: TopologyNode, extra_info: dict[str, Any]) -> int:
-        if node.type in (FrontendNodeType.TOPOLOGY_CENTER, FrontendNodeType.TOPOLOGY_SITE):
+        if node.type in (NodeType.TOPOLOGY_CENTER, NodeType.TOPOLOGY_SITE):
             return 0
         if not extra_info["has_been_checked"]:
             return -1
@@ -789,7 +789,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             id=root_node,
             name=self._data_type,
             mesh_depth=0,
-            type=FrontendNodeType.TOPOLOGY_SITE,
+            type=NodeType.TOPOLOGY_SITE,
             incoming={x for x, y in self._topology_nodes.items() if y.mesh_depth == 1},
         )
 
@@ -821,7 +821,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
         # Depending on the configuration, remove service nodes and link hosts directly
         for node_id, node in list(self._topology_nodes.items()):
-            if node.type != FrontendNodeType.TOPOLOGY_SERVICE:
+            if node.type != NodeType.TOPOLOGY_SERVICE:
                 continue
 
             visibility = general_service_visibility
@@ -853,12 +853,12 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                 else:
                     core_services.add(tuple(core_entity))
                 node.type = (
-                    FrontendNodeType.TOPOLOGY_SERVICE
+                    NodeType.TOPOLOGY_SERVICE
                     if isinstance(core_entity, list)
-                    else FrontendNodeType.TOPOLOGY_HOST
+                    else NodeType.TOPOLOGY_HOST
                 )
             else:
-                node.type = FrontendNodeType.TOPOLOGY_UNKNOWN
+                node.type = NodeType.TOPOLOGY_UNKNOWN
 
         core_data_provider = _core_data_provider()
         core_data_provider.fetch_host_info(core_hostnames)
@@ -879,7 +879,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                     "num_services_crit": info.num_services_crit,
                 }
             else:
-                self._topology_nodes[host_node_id].type = FrontendNodeType.TOPOLOGY_UNKNOWN
+                self._topology_nodes[host_node_id].type = NodeType.TOPOLOGY_UNKNOWN
 
         for hostname, service in core_services:
             svc_node_id = self._network_data.service.get(hostname, {}).get(service)
@@ -896,7 +896,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                     "state": info.state,
                 }
             else:
-                self._topology_nodes[svc_node_id].type = FrontendNodeType.TOPOLOGY_UNKNOWN
+                self._topology_nodes[svc_node_id].type = NodeType.TOPOLOGY_UNKNOWN
 
 
 def _resolve_circular_mesh_depths(
@@ -1047,19 +1047,19 @@ def compute_node_config(
     node_specific_infos: dict[str, Any],
     topology_configuration: TopologyConfiguration,
     growth_root_nodes: set[str],
-) -> tuple[TopologyFrontendNode, set[str]]:
-    topology_center = TopologyFrontendNode(
-        id=FrontendNodeType.TOPOLOGY_CENTER.value,
-        name=FrontendNodeType.TOPOLOGY_CENTER.value,
-        node_type=FrontendNodeType.TOPOLOGY_CENTER.value,
+) -> tuple[HierarchyNode, set[str]]:
+    topology_center = HierarchyNode(
+        id=NodeType.TOPOLOGY_CENTER.value,
+        name=NodeType.TOPOLOGY_CENTER.value,
+        node_type=NodeType.TOPOLOGY_CENTER.value,
         children=[],
     )
     all_node_ids = set(merged_results.keys())
 
     # Compute node info
-    all_frontend_nodes: dict[str, TopologyFrontendNode] = {}
+    all_frontend_nodes: dict[str, HierarchyNode] = {}
     for node_id, node in merged_results.items():
-        all_frontend_nodes[node_id] = TopologyFrontendNode(
+        all_frontend_nodes[node_id] = HierarchyNode(
             id=node.id,
             name=node.name,
             node_type=node.type.value,
@@ -1071,8 +1071,8 @@ def compute_node_config(
         )
 
     assigned_node_ids: set[str] = set()
-    hosts_to_assign: dict[HostName, list[TopologyFrontendNode]] = {}
-    services_to_assign: dict[str, TopologyFrontendNode] = {}
+    hosts_to_assign: dict[HostName, list[HierarchyNode]] = {}
+    services_to_assign: dict[str, HierarchyNode] = {}
     for node_id, frontend_node in all_frontend_nodes.items():
         if core_entity := frontend_node.type_specific.get("core"):
             if "service" in core_entity:
@@ -1122,8 +1122,8 @@ def compute_node_config(
 
 def _flatten_hierarchy(
     merged_results: TopologyNodes,
-    hosts_to_assign: dict[HostName, list[TopologyFrontendNode]],
-    services_to_assign: dict[str, TopologyFrontendNode],
+    hosts_to_assign: dict[HostName, list[HierarchyNode]],
+    services_to_assign: dict[str, HierarchyNode],
 ) -> None:
     # Goal: Step1: Move all non-root nodes to mesh_depth 1
     #       Step2: Services with a known hosts are set to mesh_depth 2
@@ -1153,8 +1153,8 @@ def _flatten_hierarchy(
 
 def _assign_services_to_hosts(
     merged_results: dict[str, TopologyNode],
-    hosts_to_assign: dict[HostName, list[TopologyFrontendNode]],
-    services_to_assign: dict[str, TopologyFrontendNode],
+    hosts_to_assign: dict[HostName, list[HierarchyNode]],
+    services_to_assign: dict[str, HierarchyNode],
     assigned_node_ids: set[str],
 ) -> None:
     # Goal: Services are assigned to their host, if host has a lower depth
@@ -1174,7 +1174,7 @@ def _assign_services_to_hosts(
 
 def _build_children_hierarchy(
     nodes_by_depth: dict[int, TopologyNodes],
-    all_frontend_nodes: dict[str, TopologyFrontendNode],
+    all_frontend_nodes: dict[str, HierarchyNode],
     assigned_node_ids: set[str],
     max_nodes: int,
 ) -> None:
@@ -1185,7 +1185,7 @@ def _build_children_hierarchy(
     for _depth, nodes in sorted(nodes_by_depth.items()):
         sorted_nodes_by_depth.extend(sorted(nodes.keys()))
 
-    def get_node_with_lowest_depth(check_ids: set[str]) -> TopologyFrontendNode:
+    def get_node_with_lowest_depth(check_ids: set[str]) -> HierarchyNode:
         # There might be unknown nodes in the node_ids, but never all unknown
         lowest_index = 100000
         for check_id in check_ids:
@@ -1196,7 +1196,7 @@ def _build_children_hierarchy(
         return all_frontend_nodes[sorted_nodes_by_depth[lowest_index]]
 
     def assign_node(
-        parent_node: TopologyFrontendNode, child_node: TopologyFrontendNode, processed_id: str
+        parent_node: HierarchyNode, child_node: HierarchyNode, processed_id: str
     ) -> None:
         parent_node.children.append(child_node)
         assigned_node_ids.add(processed_id)
@@ -1240,7 +1240,7 @@ def _compute_growth_settings(
     node: TopologyNode,
     all_node_ids: set[str],
     growth_root_nodes: set[str],
-    frontend: FrontendTopologyConfiguration,
+    frontend: FrontendConfiguration,
 ) -> GrowthSettings:
     def growth_possible(check_node: TopologyNode) -> bool:
         border_hosts = check_node.incoming.union(check_node.outgoing)
@@ -1255,41 +1255,33 @@ def _compute_growth_settings(
     )
 
 
-def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[TopologyFrontendLink]:
+def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[TopologyLink]:
     def link_type(node1: TopologyNode, node2: TopologyNode) -> str:
         # Unknown nodes are treated as hosts
         node1_type = (
-            FrontendNodeType.TOPOLOGY_HOST
-            if node1.type == FrontendNodeType.TOPOLOGY_UNKNOWN
-            else node1.type
+            NodeType.TOPOLOGY_HOST if node1.type == NodeType.TOPOLOGY_UNKNOWN else node1.type
         )
         node2_type = (
-            FrontendNodeType.TOPOLOGY_HOST
-            if node2.type == FrontendNodeType.TOPOLOGY_UNKNOWN
-            else node2.type
+            NodeType.TOPOLOGY_HOST if node2.type == NodeType.TOPOLOGY_UNKNOWN else node2.type
         )
         if node1_type == node2_type:
-            if node1_type == FrontendNodeType.TOPOLOGY_HOST:
+            if node1_type == NodeType.TOPOLOGY_HOST:
                 return TopologyLinkType.HOST2HOST.value
-            if node1_type == FrontendNodeType.TOPOLOGY_SERVICE:
+            if node1_type == NodeType.TOPOLOGY_SERVICE:
                 return TopologyLinkType.SERVICE2SERVICE.value
-        if (
-            node1_type == FrontendNodeType.TOPOLOGY_SERVICE
-            and node2_type == FrontendNodeType.TOPOLOGY_HOST
-        ) or (
-            node1_type == FrontendNodeType.TOPOLOGY_HOST
-            and node2_type == FrontendNodeType.TOPOLOGY_SERVICE
+        if (node1_type == NodeType.TOPOLOGY_SERVICE and node2_type == NodeType.TOPOLOGY_HOST) or (
+            node1_type == NodeType.TOPOLOGY_HOST and node2_type == NodeType.TOPOLOGY_SERVICE
         ):
             return TopologyLinkType.HOST2SERVICE.value
         return TopologyLinkType.DEFAULT.value
 
-    mesh_links: set[TopologyFrontendLink] = set()
+    mesh_links: set[TopologyLink] = set()
     for node_id, node in list(merged_results.items()):
         for incoming_node_id in node.incoming:
             if incoming_node_id not in merged_results:
                 continue
             mesh_links.add(
-                TopologyFrontendLink(
+                TopologyLink(
                     incoming_node_id,
                     node_id,
                     {"type": link_type(node, merged_results[incoming_node_id])},
@@ -1299,7 +1291,7 @@ def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[Topolog
             if outgoing_node_id not in merged_results:
                 continue
             mesh_links.add(
-                TopologyFrontendLink(
+                TopologyLink(
                     node_id,
                     outgoing_node_id,
                     {"type": link_type(node, merged_results[outgoing_node_id])},
@@ -1543,7 +1535,7 @@ def get_topology_configuration(
         return topology_configuration
 
     # Fallback, new page, no saved settings
-    frontend_configuration = FrontendTopologyConfiguration()
+    frontend_configuration = FrontendConfiguration()
     frontend_configuration.overlays_config = default_overlays or OverlaysConfig()
 
     return TopologyConfiguration(
@@ -1571,7 +1563,7 @@ def _get_default_layout(style: Literal["hierarchy", "radial"] = "hierarchy") -> 
                         "x": 3,
                         "y": 50,
                     },
-                    "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},
+                    "matcher": {"id": {"value": NodeType.TOPOLOGY_CENTER.value}},
                 }
             ]
             default_layout.line_config = {"style": "straight"}
@@ -1588,7 +1580,7 @@ def _get_default_layout(style: Literal["hierarchy", "radial"] = "hierarchy") -> 
                         "x": 50,
                         "y": 50,
                     },
-                    "matcher": {"id": {"value": FrontendNodeType.TOPOLOGY_CENTER.value}},
+                    "matcher": {"id": {"value": NodeType.TOPOLOGY_CENTER.value}},
                 }
             ]
             default_layout.line_config = {"style": "round"}
@@ -1653,9 +1645,9 @@ def _all_settings() -> dict[tuple[str, ...], str]:
     )
 
 
-def _get_frontend_configuration_from_request() -> None | FrontendTopologyConfiguration:
+def _get_frontend_configuration_from_request() -> None | FrontendConfiguration:
     if frontend_config := request.get_str_input("topology_frontend_configuration"):
-        return FrontendTopologyConfiguration.parse(json.loads(frontend_config))
+        return FrontendConfiguration.parse(json.loads(frontend_config))
     return None
 
 
@@ -1694,7 +1686,7 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
     ds_config = topology_configuration.frontend.datasource_configuration
     reference = Topology(topology_configuration, ds_config.reference)
 
-    link_config: dict[TopologyFrontendLink, dict[str, Any]] = {}
+    link_config: dict[TopologyLink, dict[str, Any]] = {}
     if ds_config.reference != ds_config.compare_to:
         compare_to = Topology(topology_configuration, ds_config.compare_to)
         # Compute link_config, will be used later on
@@ -1722,9 +1714,9 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
 
 
 def _compute_link_config_for_comparison(
-    reference_mesh_links: list[TopologyFrontendLink],
-    compare_to_mesh_links: list[TopologyFrontendLink],
-) -> dict[TopologyFrontendLink, dict[str, Any]]:
+    reference_mesh_links: list[TopologyLink],
+    compare_to_mesh_links: list[TopologyLink],
+) -> dict[TopologyLink, dict[str, Any]]:
     ref_by_id = {x: "" for x in reference_mesh_links}
     compare_to_by_id = {x: "" for x in compare_to_mesh_links}
 
@@ -1745,7 +1737,7 @@ def _compute_topology_result(
     merged_results: TopologyNodes,
     node_specific_infos: dict[str, Any],
     growth_root_nodes: set[str],
-    link_config: dict[TopologyFrontendLink, dict[str, Any]],
+    link_config: dict[TopologyLink, dict[str, Any]],
 ) -> TopologyResponse:
     headline = _("Topology for ") + ", ".join(layer.name() for layer in active_layers.values())
 
@@ -1762,7 +1754,7 @@ def _compute_topology_result(
     # Reduced mesh links without references
     mesh_links = _compute_mesh_links(merged_results)
 
-    def mesh_link_visible(link: TopologyFrontendLink) -> bool:
+    def mesh_link_visible(link: TopologyLink) -> bool:
         return link.source in assigned_node_ids and link.target in assigned_node_ids
 
     shown_mesh_links = list(filter(mesh_link_visible, mesh_links))
@@ -1775,7 +1767,7 @@ def _compute_topology_result(
             }
         link.config.update(topology_config)
 
-    frontend_config = FrontendNodeConfig(topology_center, shown_mesh_links)
+    frontend_config = NodeConfig(topology_center, shown_mesh_links)
 
     return TopologyResponse(
         frontend_config,

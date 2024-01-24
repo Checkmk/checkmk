@@ -1382,30 +1382,28 @@ def _register_attribute_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _compute_attribute_painter_data(
-    row: Row, inventory_path: inventory.InventoryPath
-) -> None | str | int | float:
+def _get_attributes(row: Row, inventory_path: inventory.InventoryPath) -> Attributes | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return None
-
     if not isinstance(tree := row.get("host_inventory"), StructuredDataNode):
         return None
+    return tree.get_attributes(inventory_path.path)
 
-    if (node := tree.get_node(inventory_path.path)) is None:
+
+def _compute_attribute_painter_data(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    if (attributes := _get_attributes(row, inventory_path)) is None or inventory_path.key is None:
         return None
-
-    if inventory_path.key in node.attributes.pairs:
-        return node.attributes.pairs[inventory_path.key]
-
-    return None
+    return attributes.pairs.get(inventory_path.key)
 
 
 def _paint_host_inventory_attribute(
     row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attribute_data := _compute_attribute_painter_data(row, inventory_path)) is None:
+    if (attributes := _get_attributes(row, inventory_path)) is None or inventory_path.key is None:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1416,7 +1414,7 @@ def _paint_host_inventory_attribute(
     )
 
     with output_funnel.plugged():
-        tree_renderer.show_attribute(attribute_data, hint)
+        tree_renderer.show_attribute(attributes.pairs.get(inventory_path.key), hint)
         code = HTML(output_funnel.drain())
 
     return "", code
@@ -1438,6 +1436,12 @@ def _export_attribute_as_python_or_json(
     row: Row, inventory_path: inventory.InventoryPath
 ) -> None | str | int | float:
     return _compute_attribute_painter_data(row, inventory_path)
+
+
+def _paint_host_inventory_table_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
+    if column not in row:
+        return "", ""
+    return _compute_cell_spec(row[column], hint, None)
 
 
 def _register_table_column(
@@ -1463,7 +1467,7 @@ def _register_table_column(
             "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
             "columns": [column],
-            "paint": lambda row: hint.paint_function(row.get(column)),
+            "paint": lambda row: _paint_host_inventory_table_column(row, column, hint),
             "sorter": column,
             # See views/painter/v0/base.py::Cell.painter_parameters
             # We have to add a dummy value here such that the painter_parameters are not None and

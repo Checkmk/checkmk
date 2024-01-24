@@ -867,18 +867,36 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
+def _get_metric_info(metric_name: str, color_counter: Counter[Literal["index"]]) -> MetricInfo:
+    if metric_name in metric_info:
+        return metric_info[metric_name]
+    color_counter.update({"index": 1})
+    return MetricInfo(
+        title=metric_name.title(),
+        unit="",
+        color=get_palette_color_by_index(color_counter["index"]),
+    )
+
+
 def _get_extended_metric_info(
     metric_name: str, color_counter: Counter[Literal["index"]]
 ) -> MetricInfoExtended:
-    if metric_name in metric_info:
-        mi = metric_info[metric_name]
-    else:
-        color_counter.update({"index": 1})
+    if metric_name.startswith("predict_lower_"):
+        mi_ = _get_metric_info(metric_name[14:], color_counter)
         mi = MetricInfo(
-            title=metric_name.title(),
-            unit="",
-            color=get_palette_color_by_index(color_counter["index"]),
+            title=_("Prediction of ") + mi_["title"] + _(" (lower levels)"),
+            unit=mi_["unit"],
+            color="#676767",
         )
+    elif metric_name.startswith("predict_"):
+        mi_ = _get_metric_info(metric_name[8:], color_counter)
+        mi = MetricInfo(
+            title=_("Prediction of ") + mi_["title"] + _(" (upper levels)"),
+            unit=mi_["unit"],
+            color="#9a9a9a",
+        )
+    else:
+        mi = _get_metric_info(metric_name, color_counter)
 
     mie = MetricInfoExtended(
         title=mi["title"],
@@ -923,8 +941,6 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     translated_metrics: dict[str, TranslatedMetric] = {}
     color_counter: Counter[Literal["index"]] = Counter()
     for entry in perf_data:
-        metric_name: str
-
         metric_name, normalized = _normalize_perf_data(entry, check_command)
         mi = _get_extended_metric_info(metric_name, color_counter)
         unit_conversion = mi["unit"].get("conversion", lambda v: v)
@@ -1079,6 +1095,23 @@ def get_graph_templates(
     )
 
 
+def _compute_predictive_metrics(
+    translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
+) -> Iterator[MetricDefinition]:
+    for metric_defintion in metrics_:
+        for metric in metric_defintion.expression.metrics():
+            if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
+                yield MetricDefinition(
+                    expression=Metric(predict_metric_name),
+                    line_type="line",
+                )
+            if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
+                yield MetricDefinition(
+                    expression=Metric(predict_lower_metric_name),
+                    line_type="line",
+                )
+
+
 def _get_explicit_graph_templates(
     graph_templates: Iterable[GraphTemplate],
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -1099,7 +1132,9 @@ def _get_explicit_graph_templates(
                 consolidation_function=graph_template.consolidation_function,
                 range=graph_template.range,
                 omit_zero_metrics=graph_template.omit_zero_metrics,
-                metrics=metrics_,
+                metrics=(
+                    list(metrics_) + list(_compute_predictive_metrics(translated_metrics, metrics_))
+                ),
             )
 
 
@@ -1118,7 +1153,7 @@ def applicable_metrics(
     conflicting_metrics: Iterable[str],
     optional_metrics: Sequence[str],
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> list[MetricDefinition]:
+) -> Sequence[MetricDefinition]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
         if var in translated_metrics:

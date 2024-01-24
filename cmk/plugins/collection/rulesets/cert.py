@@ -31,17 +31,15 @@ def _valuespec_response_time() -> TupleDoNotUseWillbeRemoved:
         title=Localizable("Response time"),
         elements=[
             Levels(
-                form_spec=Float,
+                form_spec_template=Float(unit=Localizable("seconds")),
                 level_direction=LevelDirection.LOWER,
                 predictive=None,
-                unit=Localizable("seconds"),
             ),
             Levels(
-                form_spec=Float,
+                form_spec_template=Float(unit=Localizable("seconds")),
                 level_direction=LevelDirection.UPPER,
                 prefill_fixed_levels=(0.001, 0.002),
                 predictive=None,
-                unit=Localizable("seconds"),
             ),
         ],
     )

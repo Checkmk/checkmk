@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import (
+    BinaryUnit,
     DataSize,
     DictElement,
     Dictionary,
@@ -44,34 +45,39 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
         elements={
             "gc_num_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec=Integer,
+                    form_spec_template=Integer(unit=Localizable("runs")),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     title=Localizable("Upper level for total number of GC runs"),
-                    unit=Localizable("runs"),
                 )
             ),
             "gc_num_rate_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec=Float,
+                    form_spec_template=Float(unit=Localizable("1/s")),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     title=Localizable("Upper level for GC run rate"),
-                    unit=Localizable("1/s"),
                 )
             ),
             "gc_num_rate_lower": DictElement(
                 parameter_form=Levels(
-                    form_spec=Float,
+                    form_spec_template=Float(unit=Localizable("1/s")),
                     level_direction=LevelDirection.LOWER,
                     predictive=None,
                     title=Localizable("Lower level for GC run rate"),
-                    unit=Localizable("1/s"),
                 )
             ),
             "gc_bytes_reclaimed_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec=DataSize,
+                    form_spec_template=DataSize(
+                        displayed_units=[
+                            BinaryUnit.BYTE,
+                            BinaryUnit.KIBIBYTE,
+                            BinaryUnit.MEBIBYTE,
+                            BinaryUnit.GIBIBYTE,
+                            BinaryUnit.TEBIBYTE,
+                        ]
+                    ),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     title=Localizable("Absolute levels for memory reclaimed by GC"),
@@ -79,7 +85,15 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_bytes_reclaimed_rate_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec=DataSize,
+                    form_spec_template=DataSize(
+                        displayed_units=[
+                            BinaryUnit.BYTE,
+                            BinaryUnit.KIBIBYTE,
+                            BinaryUnit.MEBIBYTE,
+                            BinaryUnit.GIBIBYTE,
+                            BinaryUnit.TEBIBYTE,
+                        ]
+                    ),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     title=Localizable("Upper level for rate of memory reclaimed by GC"),
@@ -87,7 +101,15 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_bytes_reclaimed_rate_lower": DictElement(
                 parameter_form=Levels(
-                    form_spec=DataSize,
+                    form_spec_template=DataSize(
+                        displayed_units=[
+                            BinaryUnit.BYTE,
+                            BinaryUnit.KIBIBYTE,
+                            BinaryUnit.MEBIBYTE,
+                            BinaryUnit.GIBIBYTE,
+                            BinaryUnit.TEBIBYTE,
+                        ]
+                    ),
                     level_direction=LevelDirection.LOWER,
                     predictive=None,
                     title=Localizable("Lower level for rate of memory reclaimed by GC"),
@@ -95,7 +117,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "runqueue_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec=Integer,
+                    form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     title=Localizable("Upper level for runtime run queue"),
@@ -103,7 +125,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "runqueue_lower": DictElement(
                 parameter_form=Levels(
-                    form_spec=Integer,
+                    form_spec_template=Integer(),
                     level_direction=LevelDirection.LOWER,
                     predictive=None,
                     title=Localizable("Lower level for runtime run queue"),

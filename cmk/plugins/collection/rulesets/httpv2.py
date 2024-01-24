@@ -503,10 +503,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                             title=Localizable("Certificate validity"),
                             parameter_form=Levels(
                                 title=Localizable("Check validity"),
-                                form_spec=Integer,
+                                form_spec_template=Integer(unit=Localizable("days")),
                                 level_direction=LevelDirection.LOWER,
                                 predictive=None,
-                                unit=Localizable("days"),
                                 help_text=Localizable(
                                     "Minimum number of days a certificate has to be valid."
                                 ),

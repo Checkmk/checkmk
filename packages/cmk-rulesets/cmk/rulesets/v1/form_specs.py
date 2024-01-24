@@ -624,7 +624,8 @@ class Levels:
     """Specifies a form for configuring levels
 
     Args:
-        form_spec: Specification for the form fields of the warning and critical levels
+        form_spec_template: Template for the specification of the form fields of the warning and
+            critical levels. If `title` or `prefill_value` are provided here, they will be ignored
         level_direction: Do the levels represent the lower or the upper bound. It's used
             only to provide labels and error messages in the UI.
         predictive: Specification for the predictive levels
@@ -633,7 +634,6 @@ class Levels:
         prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with. If None,
             the backend will decide whether to leave the field empty or to prefill it with a
             canonical value.
-        unit: Unit of the value to apply levels on (only for display)
         transform: Transformation of the stored configuration
 
     Consumer model:
@@ -683,9 +683,7 @@ class Levels:
 
     """
 
-    form_spec: type[
-        Integer | Float | DataSize | Percentage | TimeSpan
-    ]  # TODO: any numeric FormSpec
+    form_spec_template: DataSize | Float | Integer | Percentage | TimeSpan
     level_direction: LevelDirection
     predictive: PredictiveLevels | None
 

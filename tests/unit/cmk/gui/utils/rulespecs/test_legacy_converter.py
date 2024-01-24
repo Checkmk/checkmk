@@ -1691,7 +1691,7 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.Levels(
             level_direction=api_v1.form_specs.LevelDirection.UPPER,
             predictive=None,
-            form_spec=api_v1.form_specs.Integer,
+            form_spec_template=api_v1.form_specs.Integer(),
         ),
         api_v1.form_specs.BooleanChoice(),
         api_v1.form_specs.FileUpload(),
@@ -1754,7 +1754,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
     [
         pytest.param(
             api_v1.form_specs.Levels(
-                form_spec=api_v1.form_specs.Integer,
+                form_spec_template=api_v1.form_specs.Integer(),
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=(1.0, 2.0),
                 predictive=None,
@@ -1772,7 +1772,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         ),
         pytest.param(
             api_v1.form_specs.Levels(
-                form_spec=api_v1.form_specs.Integer,
+                form_spec_template=api_v1.form_specs.Integer(),
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=(1.0, 2.0),
                 predictive=None,
@@ -1788,7 +1788,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         ),
         pytest.param(
             api_v1.form_specs.Levels(
-                form_spec=api_v1.form_specs.Integer,
+                form_spec_template=api_v1.form_specs.Integer(unit=api_v1.Localizable("GiB")),
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=(1.0, 2.0),
                 predictive=api_v1.form_specs.PredictiveLevels(
@@ -1797,7 +1797,6 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     prefill_rel_diff=(50.0, 80.0),
                     prefill_stddev_diff=(2.0, 3.0),
                 ),
-                unit=api_v1.Localizable("GiB"),
                 title=api_v1.Localizable("Upper levels"),
             ),
             legacy_valuespecs.CascadingDropdown(
@@ -1961,7 +1960,188 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                 ),
                 default_value="fixed",
             ),
-            id="fixed+predictive",
+            id="fixed+predictive Integer",
+        ),
+        pytest.param(
+            api_v1.form_specs.Levels(
+                form_spec_template=api_v1.form_specs.TimeSpan(
+                    displayed_units=[
+                        api_v1.form_specs.TimeUnit.SECONDS,
+                        api_v1.form_specs.TimeUnit.MINUTES,
+                    ]
+                ),
+                level_direction=api_v1.form_specs.LevelDirection.LOWER,
+                prefill_fixed_levels=(1.0, 2.0),
+                predictive=api_v1.form_specs.PredictiveLevels(
+                    reference_metric="my_metric",
+                    prefill_abs_diff=(5.0, 10.0),
+                    prefill_rel_diff=(50.0, 80.0),
+                    prefill_stddev_diff=(2.0, 3.0),
+                ),
+                title=api_v1.Localizable("Lower levels"),
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                title=_("Lower levels"),
+                choices=(
+                    _get_legacy_no_levels_choice(),
+                    (
+                        "fixed",
+                        _("Fixed levels"),
+                        legacy_valuespecs.Tuple(
+                            elements=[
+                                legacy_valuespecs.TimeSpan(
+                                    title=_("Warning below"),
+                                    default_value=1,
+                                    display=["seconds", "minutes"],
+                                ),
+                                legacy_valuespecs.TimeSpan(
+                                    title=_("Critical below"),
+                                    default_value=2,
+                                    display=["seconds", "minutes"],
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        "predictive",
+                        _("Predictive levels (only on CMC)"),
+                        legacy_valuespecs.Transform(
+                            valuespec=legacy_valuespecs.Dictionary(
+                                elements=[
+                                    (
+                                        "period",
+                                        legacy_valuespecs.DropdownChoice(
+                                            choices=[
+                                                ("wday", _("Day of the week")),
+                                                ("day", _("Day of the month")),
+                                                ("hour", _("Hour of the day")),
+                                                ("minute", _("Minute of the hour")),
+                                            ],
+                                            title=_("Base prediction on"),
+                                            help=_(
+                                                "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "horizon",
+                                        legacy_valuespecs.Integer(
+                                            title=_("Length of historic data to consider"),
+                                            help=_(
+                                                "How many days in the past Checkmk should evaluate the measurement data"
+                                            ),
+                                            unit=_("days"),
+                                            minvalue=1,
+                                            default_value=90,
+                                        ),
+                                    ),
+                                    (
+                                        "levels",
+                                        legacy_valuespecs.CascadingDropdown(
+                                            title=_(
+                                                "Level definition in relation to the predicted value"
+                                            ),
+                                            choices=[
+                                                (
+                                                    "absolute",
+                                                    _("Absolute difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.TimeSpan(
+                                                                title=_("Warning below"),
+                                                                display=["seconds", "minutes"],
+                                                                default_value=5,
+                                                            ),
+                                                            legacy_valuespecs.TimeSpan(
+                                                                title=_("Critical below"),
+                                                                display=["seconds", "minutes"],
+                                                                default_value=10,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
+                                                        ),
+                                                    ),
+                                                ),
+                                                (
+                                                    "relative",
+                                                    _("Relative difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.Percentage(
+                                                                title=_("Warning below"),
+                                                                unit="%",
+                                                                default_value=50.0,
+                                                            ),
+                                                            legacy_valuespecs.Percentage(
+                                                                title=_("Critical below"),
+                                                                unit="%",
+                                                                default_value=80.0,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
+                                                        ),
+                                                    ),
+                                                ),
+                                                (
+                                                    "stddev",
+                                                    _("Standard deviation difference"),
+                                                    legacy_valuespecs.Tuple(
+                                                        elements=[
+                                                            legacy_valuespecs.Float(
+                                                                title=_("Warning below"),
+                                                                unit=_(
+                                                                    "times the standard deviation"
+                                                                ),
+                                                                default_value=2.0,
+                                                            ),
+                                                            legacy_valuespecs.Float(
+                                                                title=_("Critical below"),
+                                                                unit=_(
+                                                                    "times the standard deviation"
+                                                                ),
+                                                                default_value=3.0,
+                                                            ),
+                                                        ],
+                                                        help=_(
+                                                            "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
+                                                        ),
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                    (
+                                        "bound",
+                                        legacy_valuespecs.Tuple(
+                                            title=_("Fixed limits"),
+                                            help=_(
+                                                "Regardless of how the dynamic levels are computed according to the prediction: they will never be set above the following limits. This avoids false alarms during times where the predicted levels would be very high."
+                                            ),
+                                            elements=[
+                                                legacy_valuespecs.TimeSpan(
+                                                    title="Warning level is at most",
+                                                    display=["seconds", "minutes"],
+                                                ),
+                                                legacy_valuespecs.TimeSpan(
+                                                    title="Critical level is at most",
+                                                    display=["seconds", "minutes"],
+                                                ),
+                                            ],
+                                        ),
+                                    ),
+                                ],
+                                optional_keys=["bound"],
+                            ),
+                            to_valuespec=lambda x: x,
+                            from_valuespec=lambda x: x,
+                        ),
+                    ),
+                ),
+                default_value="fixed",
+            ),
+            id="fixed+predictive TimeSpan",
         ),
     ],
 )

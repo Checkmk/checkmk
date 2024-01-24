@@ -1,0 +1,12 @@
+Title: Fix error on edit of host or service statistics dashlet
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1706105202
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+If you edited the builtin dashlets "Host statistics" or "Service statistics" on
+the main dashboard (CRE) / problem dashboard (CEE) you got an error like
+"Internal error: size" on saving.

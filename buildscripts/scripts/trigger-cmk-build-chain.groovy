@@ -8,6 +8,8 @@
 /// Other artifacts:    Those of child jobs
 /// Depends on:         Nothing
 
+import java.time.LocalDate
+
 def main() {
     /// make sure the listed parameters are set
     check_job_parameters([
@@ -25,6 +27,7 @@ def main() {
 
     def edition = JOB_BASE_NAME.split("-")[-1];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters = [
@@ -43,6 +46,7 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
         [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
 
     // TODO we should take this list from a single source of truth
@@ -69,6 +73,7 @@ def main() {
         |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
+        |use_case:.............. │${use_case}│
         |===================================================
         """.stripMargin());
 

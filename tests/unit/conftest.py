@@ -327,18 +327,10 @@ def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
     yield FixPluginLegacy(fix_register)
 
 
-@pytest.fixture(autouse=True)
-def prevent_livestatus_connect(monkeypatch):
+@pytest.fixture(autouse=True, scope="module")
+def prevent_livestatus_connect() -> Iterator[None]:
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
-    monkeypatch.setattr(
-        livestatus.SingleSiteConnection,
-        "_create_socket",
-        lambda *_: pytest.fail(
-            "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"
-        ),
-    )
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
@@ -347,7 +339,16 @@ def prevent_livestatus_connect(monkeypatch):
         if self.deadsites:
             pytest.fail("Dead sites: %r" % self.deadsites)
 
-    monkeypatch.setattr(livestatus.MultiSiteConnection, "__init__", init_mock)
+    with patch.object(
+        livestatus.SingleSiteConnection,
+        "_create_socket",
+        lambda *_: pytest.fail(
+            "The test tried to use a livestatus connection. This will result in connect timeouts. "
+            "Use mock_livestatus for mocking away the livestatus API"
+        ),
+    ) as _:
+        with patch.object(livestatus.MultiSiteConnection, "__init__", init_mock) as _:
+            yield
 
 
 @pytest.fixture(name="mock_livestatus")

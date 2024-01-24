@@ -22,13 +22,24 @@ daily_reduced: &daily_reduced
     - "ubuntu-22.04"
     - "debian-10"
 
+daily_extended: &daily_extended
+    - "debian-12"
+    - "ubuntu-20.04"
+    - "ubuntu-22.04"
+    - "ubuntu-23.10"
+    - "centos-8"
+    - "almalinux-9"
+    - "sles-15sp5"
+    - "cma-3"
+    - "cma-4"
+
 # Builds for those distros will only be available internally for development purpose
 internal_distros: []
 
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: [*common, "cma-3", "cma-4"]
+        daily: [*daily_extended]
         testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
     cloud:
         release: [*common, "cma-3", "cma-4"]

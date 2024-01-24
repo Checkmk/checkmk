@@ -18,19 +18,18 @@ from cmk.utils.hostaddress import HostAddress, HostName
 import cmk.base.config as base_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.server_side_calls import (
-    _get_host_address_config,
     ActiveCheck,
-    ActiveCheckError,
     ActiveServiceData,
-    ActiveServiceDescription,
-    commandline_arguments,
-    get_host_config,
-    HostAddressConfiguration,
-    InfoFunc,
     SpecialAgent,
-    SpecialAgentCommandLine,
     SpecialAgentInfoFunctionResult,
 )
+from cmk.base.server_side_calls._active_checks import (
+    _get_host_address_config,
+    ActiveServiceDescription,
+    HostAddressConfiguration,
+)
+from cmk.base.server_side_calls._commons import ActiveCheckError, commandline_arguments, InfoFunc
+from cmk.base.server_side_calls._special_agents import SpecialAgentCommandLine
 
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
@@ -473,7 +472,9 @@ def test_get_active_service_data(
         hostname,
         HOST_CONFIG,
         host_attrs,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
         macros=macros,
         stored_passwords=stored_passwords,
     )
@@ -535,7 +536,9 @@ def test_test_get_active_service_data_crash(
         HostName("test_host"),
         HOST_CONFIG,
         HOST_ATTRS,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
     )
 
     list(active_check.get_active_service_data(active_check_rules))
@@ -599,7 +602,9 @@ def test_test_get_active_service_data_crash_with_debug(
         HostName("test_host"),
         HOST_CONFIG,
         HOST_ATTRS,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
     )
 
     with pytest.raises(
@@ -713,7 +718,9 @@ def test_get_active_service_data_warnings(
         hostname,
         HOST_CONFIG,
         host_attrs,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
@@ -888,7 +895,9 @@ def test_get_active_service_descriptions(
         hostname,
         HOST_CONFIG,
         host_attrs,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -926,7 +935,14 @@ def test_get_active_service_descriptions_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     active_check_config = ActiveCheck(
-        {}, legacy_active_check_plugins, hostname, HOST_CONFIG, host_attrs, translations={}
+        {},
+        legacy_active_check_plugins,
+        hostname,
+        HOST_CONFIG,
+        host_attrs,
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -1002,7 +1018,10 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}
     )
 
-    host_config = get_host_config(HostName("host_name"), config_cache)  # type: ignore[arg-type]
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+    )
 
     assert host_config == HostConfig(
         name="host_name",
@@ -1243,8 +1262,9 @@ def test_iter_special_agent_commands(
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         host_attrs,
-        stored_passwords,
-        {"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
+        http_proxies={},
+        stored_passwords=stored_passwords,
+        macros={"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
     assert commands == expected_result
@@ -1290,8 +1310,9 @@ def test_iter_special_agent_commands_crash(
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        {},
-        {},
+        http_proxies={},
+        stored_passwords={},
+        macros={},
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1342,8 +1363,9 @@ def test_iter_special_agent_commands_crash_with_debug(
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        {},
-        {},
+        http_proxies={},
+        stored_passwords={},
+        macros={},
     )
 
     with pytest.raises(
@@ -1357,7 +1379,15 @@ def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
 
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
+        {},
+        {},
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        host_attrs={},
+        http_proxies={},
+        stored_passwords={},
+        macros={},
     )
     agent_path = special_agent._make_source_path("test_agent")
 
@@ -1372,7 +1402,15 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     local_agent_path.touch()
 
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
+        {},
+        {},
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        host_attrs={},
+        http_proxies={},
+        stored_passwords={},
+        macros={},
     )
     agent_path = special_agent._make_source_path("test_agent")
 

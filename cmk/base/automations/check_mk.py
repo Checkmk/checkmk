@@ -65,6 +65,7 @@ from cmk.utils.paths import (
     var_dir,
 )
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
 from cmk.utils.version import edition_supports_nagvis
@@ -164,7 +165,7 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
-from cmk.base.plugins.server_side_calls import load_active_checks
+from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -439,6 +440,7 @@ def active_check_preview_rows(
     host_attrs = config_cache.get_host_attributes(host_name)
     ignored_services = config.IgnoredServices(config_cache, host_name)
     ruleset_matcher = config_cache.ruleset_matcher
+    translations = config.get_service_translations(ruleset_matcher, host_name)
 
     def make_check_source(desc: str) -> str:
         return "ignored_active" if desc in ignored_services else "active"
@@ -447,13 +449,18 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
+    def make_final_service_name(sn: ServiceName) -> ServiceName:
+        return config.get_final_service_description(sn, translations)
+
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        server_side_calls.get_host_config(host_name, config_cache),
+        config.get_ssc_host_config(host_name, config_cache),
         host_attrs,
-        config.get_service_translations(ruleset_matcher, host_name),
+        config.http_proxies,
+        make_final_service_name,
+        config.use_new_descriptions_for,
     )
 
     return list(
@@ -1303,14 +1310,16 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        host_attrs = config_cache.get_host_attributes(host_name)
+        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            server_side_calls.get_host_config(host_name, config_cache),
-            host_attrs,
-            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
+            config.get_ssc_host_config(host_name, config_cache),
+            config_cache.get_host_attributes(host_name),
+            config.http_proxies,
+            lambda x: config.get_final_service_description(x, translations),
+            config.use_new_descriptions_for,
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -2157,13 +2166,16 @@ class AutomationActiveCheck(Automation):
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
+        translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            server_side_calls.get_host_config(host_name, config_cache),
+            config.get_ssc_host_config(host_name, config_cache),
             host_attrs,
-            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
+            config.http_proxies,
+            lambda x: config.get_final_service_description(x, translations),
+            config.use_new_descriptions_for,
             macros={**host_macros, **resource_macros},
             stored_passwords=cmk.utils.password_store.load(),
         )

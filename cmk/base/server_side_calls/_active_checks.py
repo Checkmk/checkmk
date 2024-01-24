@@ -3,67 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import shlex
-import socket
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Container, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, assert_never, Callable, Iterable, Literal, Protocol
+from typing import Any, Callable, Literal
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.translations import TranslationOptions
 
-import cmk.base.config as base_config
-import cmk.base.core_config as core_config
-import cmk.base.ip_lookup as ip_lookup
+from cmk.checkengine.checking import CheckPluginNameStr
+
 from cmk.base import plugin_contexts
 
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls.v1 import (
-    ActiveCheckConfig,
-    HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    Secret,
-    SpecialAgentConfig,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig, HTTPProxy
 
-CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
+from ._commons import commandline_arguments, replace_macros, replace_passwords
 
 
 class InvalidPluginInfoError(Exception):
     pass
-
-
-class ActiveCheckError(Exception):
-    pass
-
-
-@dataclass(frozen=True)
-class ActiveServiceData:
-    plugin_name: str
-    description: ServiceName
-    command: str
-    command_display: str
-    command_line: str
-    params: Mapping[str, object]
-    expanded_args: str
-
-
-@dataclass(frozen=True)
-class ActiveServiceDescription:
-    plugin_name: str
-    description: ServiceName
-    params: Mapping[str, object]
 
 
 @dataclass(frozen=True)
@@ -85,26 +46,6 @@ class PluginInfo:
     service_generator: Callable[
         [HostAddressConfiguration, Mapping[str, object]], Iterator[tuple[str, str]]
     ] | None = None
-
-
-@dataclass(frozen=True)
-class SpecialAgentCommandLine:
-    cmdline: str
-    stdin: str | None = None
-
-
-class SpecialAgentLegacyConfiguration(Protocol):
-    args: Sequence[str]
-    # None makes the stdin of subprocess /dev/null
-    stdin: str | None
-
-
-SpecialAgentInfoFunctionResult = (
-    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentLegacyConfiguration
-)
-InfoFunc = Callable[
-    [Mapping[str, object], HostName, HostAddress | None], SpecialAgentInfoFunctionResult
-]
 
 
 def _get_host_address_config(
@@ -130,209 +71,22 @@ def _get_host_address_config(
     )
 
 
-def _get_ip_family(ip_family: ip_lookup.AddressFamily) -> IPAddressFamily:
-    match ip_family:
-        case ip_lookup.AddressFamily.NO_IP:
-            return IPAddressFamily.NO_IP
-        case ip_lookup.AddressFamily.IPv4:
-            return IPAddressFamily.IPV4
-        case ip_lookup.AddressFamily.IPv6:
-            return IPAddressFamily.IPV6
-        case ip_lookup.AddressFamily.DUAL_STACK:
-            return IPAddressFamily.DUAL_STACK
-        case _:
-            assert_never(ip_family)
+@dataclass(frozen=True)
+class ActiveServiceData:
+    plugin_name: str
+    description: ServiceName
+    command: str
+    command_display: str
+    command_line: str
+    params: Mapping[str, object]
+    expanded_args: str
 
 
-def _get_resolved_ip_family(
-    ip_family: socket.AddressFamily | None,
-) -> ResolvedIPAddressFamily | None:
-    match ip_family:
-        case socket.AF_INET:
-            return ResolvedIPAddressFamily.IPV4
-        case socket.AF_INET6:
-            return ResolvedIPAddressFamily.IPV6
-
-    return None
-
-
-def get_host_config(host_name: HostName, config_cache: base_config.ConfigCache) -> HostConfig:
-    ip_family = base_config.ConfigCache.address_family(host_name)
-    ipv4address = base_config.ipaddresses.get(host_name)
-    ipv6address = base_config.ipv6addresses.get(host_name)
-
-    additional_addresses = config_cache.additional_ipaddresses(host_name)
-    additional_ipv4addresses, additional_ipv6addresses = additional_addresses
-
-    address_config = NetworkAddressConfig(
-        ip_family=_get_ip_family(ip_family),
-        ipv4_address=str(ipv4address) if ipv4address else None,
-        ipv6_address=str(ipv6address) if ipv6address else None,
-        additional_ipv4_addresses=additional_ipv4addresses,
-        additional_ipv6_addresses=additional_ipv6addresses,
-    )
-
-    resolved_ip_family = _get_resolved_ip_family(
-        base_config.resolve_address_family(config_cache, host_name, ip_family)
-    )
-    resolved_ipv4_address = (
-        base_config.ip_address_of(config_cache, host_name, socket.AF_INET)
-        if ip_family in (ip_lookup.AddressFamily.IPv4, ip_lookup.AddressFamily.DUAL_STACK)
-        else None
-    )
-    resolved_ipv6_address = (
-        base_config.ip_address_of(config_cache, host_name, socket.AF_INET6)
-        if ip_family in (ip_lookup.AddressFamily.IPv6, ip_lookup.AddressFamily.DUAL_STACK)
-        else None
-    )
-    resolved_address = (
-        resolved_ipv4_address
-        if resolved_ip_family == ResolvedIPAddressFamily.IPV4
-        else resolved_ipv6_address
-    )
-
-    customer = (
-        getattr(base_config, "current_customer", None)
-        if cmk_version.edition() is cmk_version.Edition.CME
-        else None
-    )
-
-    return HostConfig(
-        name=host_name,
-        alias=config_cache.alias(host_name),
-        resolved_address=resolved_address,
-        resolved_ipv4_address=resolved_ipv4_address,
-        resolved_ipv6_address=resolved_ipv6_address,
-        resolved_ip_family=resolved_ip_family,
-        address_config=address_config,
-        custom_attributes=base_config.get_custom_host_attributes(config_cache, host_name),
-        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
-        labels=config_cache.labels(host_name),
-        customer=customer,
-    )
-
-
-def _prepare_check_command(
-    command_spec: CheckCommandArguments,
-    hostname: HostName,
-    description: ServiceName | None,
-    passwords_from_store: Mapping[str, str],
-) -> str:
-    """Prepares a check command for execution by Checkmk
-
-    In case a list is given it quotes element if necessary. It also prepares password store entries
-    for the command line. These entries will be completed by the executed program later to get the
-    password from the password store.
-    """
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formatted.append(str(arg))
-
-        elif isinstance(arg, str):
-            formatted.append(shlex.quote(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = passwords_from_store[pw_ident]
-            except KeyError:
-                if hostname and description:
-                    descr = f' used by service "{description}" on host "{hostname}"'
-                elif hostname:
-                    descr = f' used by host host "{hostname}"'
-                else:
-                    descr = ""
-
-                config_warnings.warn(
-                    f'The stored password "{pw_ident}"{descr} does not exist (anymore).'
-                )
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
-
-        else:
-            raise ActiveCheckError(f"Invalid argument for command line: {arg!r}")
-
-    if passwords:
-        pw = ",".join(["@".join(p) for p in passwords])
-        pw_store_arg = f"--pwstore={pw}"
-        formatted = [shlex.quote(pw_store_arg)] + formatted
-
-    return " ".join(formatted)
-
-
-def commandline_arguments(
-    hostname: HostName,
-    description: ServiceName | None,
-    commandline_args: SpecialAgentInfoFunctionResult,
-    passwords_from_store: Mapping[str, str] | None = None,
-) -> str:
-    """Commandline arguments for special agents or active checks."""
-
-    if isinstance(commandline_args, str):
-        return commandline_args
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_args, "args", commandline_args)
-
-    if not isinstance(args, list):
-        raise ActiveCheckError(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Service: %s)." % (description)
-        )
-
-    return _prepare_check_command(
-        args,
-        hostname,
-        description,
-        cmk.utils.password_store.load() if passwords_from_store is None else passwords_from_store,
-    )
-
-
-def _replace_passwords(
-    host_name: str,
-    stored_passwords: Mapping[str, str],
-    arguments: Sequence[str | Secret],
-) -> str:
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
-
-    for arg in arguments:
-        if isinstance(arg, PlainTextSecret):
-            formatted.append(shlex.quote(arg.format % arg.value))
-
-        elif isinstance(arg, StoredSecret):
-            try:
-                password = stored_passwords[arg.value]
-            except KeyError:
-                config_warnings.warn(
-                    f'The stored password "{arg.value}" used by host "{host_name}"'
-                    " does not exist."
-                )
-                password = "%%%"
-
-            pw_start_index = str(arg.format.index("%s"))
-            formatted.append(shlex.quote(arg.format % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, arg.value))
-        else:
-            formatted.append(shlex.quote(str(arg)))
-
-    if passwords:
-        pw = ",".join(["@".join(p) for p in passwords])
-        pw_store_arg = f"--pwstore={pw}"
-        formatted = [shlex.quote(pw_store_arg)] + formatted
-
-    return " ".join(formatted)
-
-
-def _replace_macros(string: str, macros: Mapping[str, str]) -> str:
-    for macro, replacement in macros.items():
-        string = string.replace(macro, str(replacement))
-    return string
+@dataclass(frozen=True)
+class ActiveServiceDescription:
+    plugin_name: str
+    description: ServiceName
+    params: Mapping[str, object]
 
 
 class ActiveCheck:
@@ -343,7 +97,9 @@ class ActiveCheck:
         host_name: HostName,
         host_config: HostConfig,
         host_attrs: Mapping[str, str],
-        translations: TranslationOptions,
+        http_proxies: Mapping[str, Mapping[str, str]],
+        service_name_finalizer: Callable[[ServiceName], ServiceName],
+        use_new_descriptions_for: Container[CheckPluginNameStr],
         macros: Mapping[str, str] | None = None,
         stored_passwords: Mapping[str, str] | None = None,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
@@ -354,10 +110,12 @@ class ActiveCheck:
         self.host_config = host_config
         self.host_alias = host_attrs["alias"]
         self.host_attrs = host_attrs
-        self.translations = translations
+        self._http_proxies = http_proxies
+        self._service_name_finalizer = service_name_finalizer
         self.macros = macros or {}
         self.stored_passwords = stored_passwords or {}
         self.escape_func = escape_func
+        self._use_new_descriptions_for = use_new_descriptions_for
 
     def get_active_service_data(
         self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
@@ -409,13 +167,13 @@ class ActiveCheck:
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         http_proxies = {
             id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
-            for id, proxy in base_config.http_proxies.items()
+            for id, proxy in self._http_proxies.items()
         }
 
         for param_dict in plugin_params:
             params = active_check.parameter_parser(param_dict)
             for service in active_check.commands_function(params, self.host_config, http_proxies):
-                arguments = _replace_passwords(
+                arguments = replace_passwords(
                     self.host_name,
                     self.stored_passwords,
                     service.command_arguments,
@@ -431,7 +189,7 @@ class ActiveCheck:
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         for params in plugin_params:
             for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
-                args_without_macros = _replace_macros(args, self.macros)
+                args_without_macros = replace_macros(args, self.macros)
                 command_line = plugin_info.command_line.replace("$ARG1$", args_without_macros)
                 yield desc, args_without_macros, command_line, params
 
@@ -478,7 +236,7 @@ class ActiveCheck:
             return command, command_line
 
         command = f"check_mk_active-{plugin_name}"
-        return command, core_config.autodetect_plugin(command_line)
+        return command, _autodetect_plugin(command_line)
 
     @staticmethod
     def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:
@@ -494,7 +252,7 @@ class ActiveCheck:
         if not plugin_info.service_description:
             raise InvalidPluginInfoError
 
-        if plugin_name == "http" and plugin_name not in base_config.use_new_descriptions_for:
+        if plugin_name == "http" and plugin_name not in self._use_new_descriptions_for:
             description_with_macros = self._old_active_http_check_service_description(params)
         else:
             description_with_macros = plugin_info.service_description(params)
@@ -503,7 +261,7 @@ class ActiveCheck:
             "$HOSTALIAS$", self.host_alias
         )
 
-        return base_config.get_final_service_description(description, self.translations)
+        return self._service_name_finalizer(description)
 
     def _iter_active_check_services(
         self,
@@ -607,88 +365,18 @@ class ActiveCheck:
             yield ActiveServiceDescription(active_check.name, desc, params)
 
 
-class SpecialAgent:
-    def __init__(
-        self,
-        plugins: Mapping[PluginLocation, SpecialAgentConfig],
-        legacy_plugins: Mapping[str, InfoFunc],
-        host_name: HostName,
-        host_address: HostAddress | None,
-        host_config: HostConfig,
-        host_attrs: Mapping[str, str],
-        stored_passwords: Mapping[str, str],
-        macros: Mapping[str, str] | None,
-    ):
-        self._plugins = {p.name: p for p in plugins.values()}
-        self._legacy_plugins = legacy_plugins
-        self.host_name = host_name
-        self.host_address = host_address
-        self.host_config = host_config
-        self.host_attrs = host_attrs
-        self.stored_passwords = stored_passwords
+# this is a hopefully temporary duplication of the function in
+# core_config (to resolve an import cycle). There's at least
+# one additional code block that is quite similar :-|
+def _autodetect_plugin(command_line: str) -> str:
+    plugin_name = command_line.split()[0]
+    if command_line[0] in ["$", "/"]:
+        return command_line
 
-        # add legacy macros
-        self.macros = {**(macros or {}), "<IP>": self.host_address or "", "<HOST>": self.host_name}
+    for directory in ["local", ""]:
+        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins"
+        if (path / plugin_name).exists():
+            command_line = f"{path}/{command_line}"
+            break
 
-    def _make_source_path(self, agent_name: str) -> Path:
-        file_name = f"agent_{agent_name}"
-        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
-
-    def _make_special_agent_cmdline(
-        self,
-        agent_name: str,
-        agent_configuration: SpecialAgentInfoFunctionResult,
-    ) -> str:
-        path = self._make_source_path(agent_name)
-        args = commandline_arguments(self.host_name, None, agent_configuration)
-        return _replace_macros(f"{path} {args}", self.macros)
-
-    def _iter_legacy_commands(
-        self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]
-    ) -> Iterator[SpecialAgentCommandLine]:
-        agent_configuration = info_func(params, self.host_name, self.host_address)
-
-        cmdline = self._make_special_agent_cmdline(
-            agent_name,
-            agent_configuration,
-        )
-        stdin = getattr(agent_configuration, "stdin", None)
-
-        yield SpecialAgentCommandLine(cmdline, stdin)
-
-    def _iter_commands(
-        self, special_agent: SpecialAgentConfig, params: Mapping[str, object]
-    ) -> Iterator[SpecialAgentCommandLine]:
-        http_proxies = {
-            id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
-            for id, proxy in base_config.http_proxies.items()
-        }
-
-        parsed_params = special_agent.parameter_parser(params)
-        for command in special_agent.commands_function(
-            parsed_params, self.host_config, http_proxies
-        ):
-            path = self._make_source_path(special_agent.name)
-            args = _replace_passwords(
-                self.host_name, self.stored_passwords, command.command_arguments
-            )
-            yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
-
-    def iter_special_agent_commands(
-        self, agent_name: str, params: Mapping[str, object]
-    ) -> Iterator[SpecialAgentCommandLine]:
-        try:
-            if (info_func := self._legacy_plugins.get(agent_name)) is not None:
-                yield from self._iter_legacy_commands(agent_name, info_func, params)
-
-            if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
-                yield from self._iter_commands(special_agent, params)
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            config_warnings.warn(
-                f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
-            )
+    return command_line

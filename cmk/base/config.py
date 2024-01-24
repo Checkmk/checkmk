@@ -137,6 +137,7 @@ from cmk.checkengine.parser import (
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base import server_side_calls
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -146,7 +147,8 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_active_checks
+
+from cmk.server_side_calls import v1 as server_side_calls_api
 
 # TODO: Prefix helper functions with "_".
 
@@ -1436,7 +1438,8 @@ def load_all_plugins(
     # Load new active checks.
     # These are just loaded here, because there currently is no other place
     # that will report the errors. Maybe a `cmk --validate-plugins` would be nice.
-    more_errors, _plugins = load_active_checks()
+    # CMK-15720
+    more_errors, _plugins = server_side_calls.load_active_checks()
 
     return [*errors, *more_errors]
 
@@ -1841,6 +1844,91 @@ def lookup_ip_address(
         override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
         is_dyndns_host=config_cache.is_dyndns_host(host_name),
         force_file_cache_renewal=not use_dns_cache,
+    )
+
+
+def _get_ssc_ip_family(ip_family: ip_lookup.AddressFamily) -> server_side_calls_api.IPAddressFamily:
+    match ip_family:
+        case ip_lookup.AddressFamily.NO_IP:
+            return server_side_calls_api.IPAddressFamily.NO_IP
+        case ip_lookup.AddressFamily.IPv4:
+            return server_side_calls_api.IPAddressFamily.IPV4
+        case ip_lookup.AddressFamily.IPv6:
+            return server_side_calls_api.IPAddressFamily.IPV6
+        case ip_lookup.AddressFamily.DUAL_STACK:
+            return server_side_calls_api.IPAddressFamily.DUAL_STACK
+        case _:
+            assert_never(ip_family)
+
+
+def _get_ssc_resolved_ip_family(
+    ip_family: socket.AddressFamily | None,
+) -> server_side_calls_api.ResolvedIPAddressFamily | None:
+    match ip_family:
+        case socket.AF_INET:
+            return server_side_calls_api.ResolvedIPAddressFamily.IPV4
+        case socket.AF_INET6:
+            return server_side_calls_api.ResolvedIPAddressFamily.IPV6
+
+    return None
+
+
+def get_ssc_host_config(
+    host_name: HostName, config_cache: ConfigCache
+) -> server_side_calls_api.HostConfig:
+    """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
+    ip_family = ConfigCache.address_family(host_name)
+    ipv4address = ipaddresses.get(host_name)
+    ipv6address = ipv6addresses.get(host_name)
+
+    additional_addresses = config_cache.additional_ipaddresses(host_name)
+    additional_addresses_ipv4, additional_addresses_ipv6 = additional_addresses
+
+    address_config = server_side_calls_api.NetworkAddressConfig(
+        ip_family=_get_ssc_ip_family(ip_family),
+        ipv4_address=str(ipv4address) if ipv4address else None,
+        ipv6_address=str(ipv6address) if ipv6address else None,
+        additional_ipv4_addresses=additional_addresses_ipv4,
+        additional_ipv6_addresses=additional_addresses_ipv6,
+    )
+
+    resolved_ip_family = _get_ssc_resolved_ip_family(
+        resolve_address_family(config_cache, host_name, ip_family)
+    )
+    resolved_ipv4_address = (
+        ip_address_of(config_cache, host_name, socket.AF_INET)
+        if ip_family in (ip_lookup.AddressFamily.IPv4, ip_lookup.AddressFamily.DUAL_STACK)
+        else None
+    )
+    resolved_ipv6_address = (
+        ip_address_of(config_cache, host_name, socket.AF_INET6)
+        if ip_family in (ip_lookup.AddressFamily.IPv6, ip_lookup.AddressFamily.DUAL_STACK)
+        else None
+    )
+    resolved_address = (
+        resolved_ipv4_address
+        if resolved_ip_family == server_side_calls_api.ResolvedIPAddressFamily.IPV4
+        else resolved_ipv6_address
+    )
+
+    customer = (
+        current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        if cmk_version.edition() is cmk_version.Edition.CME
+        else None
+    )
+
+    return server_side_calls_api.HostConfig(
+        name=host_name,
+        alias=config_cache.alias(host_name),
+        resolved_address=resolved_address,
+        resolved_ipv4_address=resolved_ipv4_address,
+        resolved_ipv6_address=resolved_ipv6_address,
+        resolved_ip_family=resolved_ip_family,
+        address_config=address_config,
+        custom_attributes=get_custom_host_attributes(config_cache, host_name),
+        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
+        labels=config_cache.labels(host_name),
+        customer=customer,
     )
 
 

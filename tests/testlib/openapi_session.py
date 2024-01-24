@@ -429,14 +429,31 @@ class CMKOpenApiSession(requests.Session):
             "running",
         ):
             time.sleep(0.5)
+
+        status = self.get_bulk_discovery_job_status(job_id)
+
+        if status["extensions"]["state"] != "finished":
+            raise RuntimeError(f"Discovery job {job_id} failed: {status}")
+
+        output = "\n".join(status["extensions"]["logs"]["progress"])
+        if "Traceback (most recent call last)" in output:
+            raise RuntimeError(f"Found traceback in job output: {output}")
+        if "0 failed" not in output:
+            raise RuntimeError(f"Found a failure in job output: {output}")
+
         return job_id
 
     def get_bulk_discovery_status(self, job_id: str) -> str:
+        job_status_response = self.get_bulk_discovery_job_status(job_id)
+        status: str = job_status_response["extensions"]["state"]
+        return status
+
+    def get_bulk_discovery_job_status(self, job_id: str) -> dict:
         response = self.get(f"/objects/discovery_run/{job_id}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        status: str = response.json()["extensions"]["state"]
-        return status
+        job_status_response: dict = response.json()
+        return job_status_response
 
     def discover_services_and_wait_for_completion(
         self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60

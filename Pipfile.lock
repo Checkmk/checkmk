@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6034b44f9fa2ab8f806b78a0173d57f230e3114e8606ef1a48eea937a6fe99c0"
+            "sha256": "38f3a7a032317dd1a1dc3b47d25c2cd13f53bbdfa2ed1c6b781a4e32876c6684"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -324,7 +324,7 @@
                 "sha256:fa3a0128b152627161ce47201262d3140edb5a5c3da88d73a1b790a959126956",
                 "sha256:fcc8eb6d5902bb1cf6dc4f187ee3ea80a1eba0a89aba40a5cb20a5087d961357"
             ],
-            "markers": "python_version >= '3.8'",
+            "markers": "platform_python_implementation != 'PyPy'",
             "version": "==1.16.0"
         },
         "charset-normalizer": {
@@ -2323,7 +2323,7 @@
                 "sha256:fa3a0128b152627161ce47201262d3140edb5a5c3da88d73a1b790a959126956",
                 "sha256:fcc8eb6d5902bb1cf6dc4f187ee3ea80a1eba0a89aba40a5cb20a5087d961357"
             ],
-            "markers": "python_version >= '3.8'",
+            "markers": "platform_python_implementation != 'PyPy'",
             "version": "==1.16.0"
         },
         "cfgv": {
@@ -2684,14 +2684,6 @@
             ],
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==0.18.3"
-        },
-        "gprof2dot": {
-            "hashes": [
-                "sha256:45b4d298bd36608fccf9511c3fd88a773f7a1abc04d6cd39445b11ba43133ec5",
-                "sha256:f165b3851d3c52ee4915eb1bd6cca571e5759823c2cd0f71a79bda93c2dc85d6"
-            ],
-            "markers": "python_version >= '2.7'",
-            "version": "==2022.7.29"
         },
         "graphql-core": {
             "hashes": [
@@ -3602,14 +3594,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==3.12.0"
-        },
-        "pytest-profiling": {
-            "hashes": [
-                "sha256:93938f147662225d2b8bd5af89587b979652426a8a6ffd7e73ec4a23e24b7f29",
-                "sha256:999cc9ac94f2e528e3f5d43465da277429984a1c237ae9818f8cfd0b06acb019"
-            ],
-            "index": "pypi",
-            "version": "==1.7.0"
         },
         "pytest-random-order": {
             "hashes": [

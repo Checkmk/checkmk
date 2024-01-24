@@ -67,18 +67,21 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
         dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
 
         # Special hack for host setup and parent/child topology links
+        host_setup_topic = []
+        parent_child_topic = []
+        service_setup_topic = []
         if info_name == "host" and is_single_info:
             host_setup_topic = _page_menu_host_setup_topic(view)
             parent_child_topic = _page_menu_networking_topic(view)
-        else:
-            host_setup_topic = []
-            parent_child_topic = []
+        elif info_name == "service" and is_single_info:
+            service_setup_topic = _page_menu_service_setup_topic(view)
 
         dropdowns.append(
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
                 topics=host_setup_topic
+                + service_setup_topic
                 + parent_child_topic
                 + list(
                     _get_context_page_menu_topics(
@@ -438,6 +441,33 @@ def _page_menu_host_setup_topic(view: View) -> list[PageMenuTopic]:
     ]
 
 
+def _page_menu_service_setup_topic(view: View) -> list[PageMenuTopic]:
+    if "service" not in view.spec["single_infos"] or "service" in view.missing_single_infos:
+        return []
+    if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
+        return []
+
+    if not active_config.wato_enabled:
+        return []
+
+    if not user.may("wato.use"):
+        return []
+
+    if not user.may("wato.hosts") and not user.may("wato.seeall"):
+        return []
+
+    return [
+        PageMenuTopic(
+            title=_("Setup"),
+            entries=list(
+                page_menu_entries_service_setup(
+                    view.context["host"]["host"], view.context["service"]["service"]
+                )
+            ),
+        )
+    ]
+
+
 def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
     return makeuri_contextless(
@@ -516,3 +546,37 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
                 )
             ),
         )
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host_name),
+                    ("_test_host_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )
+
+
+def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host_name),
+                    ("service_name", serivce_name),
+                    ("_test_service_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )

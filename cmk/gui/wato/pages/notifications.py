@@ -1355,7 +1355,12 @@ class ModeNotifications(ABCNotificationsMode):
             with html.form_context("test_notifications", method="POST"):
                 html.help(_("Test a self defined notification against your ruleset."))
                 self._vs_test_on_options()
-                self._vs_general_test_options().render_input_as_form("general_opts", {})
+                self._vs_general_test_options().render_input_as_form(
+                    "general_opts",
+                    self._get_default_options(
+                        request.var("host_name"), request.var("service_name")
+                    ),
+                )
                 self._vs_dispatched_option().render_input("dispatch", False)
                 self._vs_advanced_test_options().render_input("advanced_opts", "")
                 html.hidden_fields()
@@ -1370,10 +1375,21 @@ class ModeNotifications(ABCNotificationsMode):
 
             return HTML(output_funnel.drain())
 
+    def _get_default_options(self, hostname: str | None, servicename: str | None) -> dict[str, str]:
+        if hostname and servicename:
+            return {"hostname_choice": hostname, "service_choice": servicename}
+        if hostname:
+            return {"hostname_choice": hostname}
+        return {}
+
     def _ensure_correct_default_test_options(self) -> None:
         if request.has_var("_test_service_notifications"):
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
+            )
+        elif request.has_var("_test_host_notifications"):
+            html.final_javascript(
+                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host", true);'
             )
         else:
             html.final_javascript(

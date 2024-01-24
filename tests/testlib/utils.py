@@ -511,13 +511,21 @@ def restart_httpd() -> None:
         run(["sudo", "httpd", "-k", "restart"])
 
 
+@dataclasses.dataclass
+class ServiceInfo:
+    state: int
+    summary: str
+
+
 def get_services_with_status(
-    host_data: dict, service_status: int, skipped_services: list | tuple = ()
+    host_data: dict[str, ServiceInfo],
+    service_status: int,
+    skipped_services: list[str] | tuple[str, ...] = (),
 ) -> set:
     """Return a set of services in the given status which are not in the 'skipped' list."""
     services_list = set()
     for service in host_data:
-        if host_data[service] == service_status and service not in skipped_services:
+        if host_data[service].state == service_status and service not in skipped_services:
             services_list.add(service)
 
     LOGGER.debug(

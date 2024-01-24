@@ -34,6 +34,7 @@ from tests.testlib.utils import (
     PExpectDialog,
     repo_path,
     restart_httpd,
+    ServiceInfo,
     spawn_expect_process,
     wait_until,
     write_file,
@@ -276,14 +277,19 @@ class Site:
 
         assert len(pending_services) == 0
 
-    def get_host_services(self, hostname: str, pending: bool = False) -> dict:
-        """Return dict with key=service and value=status for all services in the given site and host.
+    def get_host_services(self, hostname: str, pending: bool = False) -> dict[str, ServiceInfo]:
+        """Return dict for all services in the given site and host.
 
         If pending=True, return the pending services only.
         """
         services = {}
-        for service in self.openapi.get_host_services(hostname, columns=["state"], pending=pending):
-            services[service["extensions"]["description"]] = service["extensions"]["state"]
+        for service in self.openapi.get_host_services(
+            hostname, columns=["state", "plugin_output"], pending=pending
+        ):
+            services[service["extensions"]["description"]] = ServiceInfo(
+                state=service["extensions"]["state"],
+                summary=service["extensions"]["plugin_output"],
+            )
         return services
 
     def set_timezone(self, timezone: str) -> None:

@@ -17,6 +17,7 @@ of plugins developed against a versionized API.
 Please keep this in mind when trying to consolidate.
 """
 
+from ._libexec import discover_executable, family_libexec_dir
 from ._python_plugins import (
     addons_plugins_local_path,
     Collector,
@@ -24,18 +25,20 @@ from ._python_plugins import (
     discover_modules,
     discover_plugins,
     DiscoveredPlugins,
-    PluginGroup,
     PluginLocation,
     plugins_local_path,
 )
+from ._wellknown import PluginGroup
 
 __all__ = [
     "addons_plugins_local_path",
     "Collector",
     "DiscoveredPlugins",
+    "discover_executable",
     "discover_families",
     "discover_modules",
     "discover_plugins",
+    "family_libexec_dir",
     "PluginGroup",
     "PluginLocation",
     "plugins_local_path",

@@ -52,10 +52,18 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
     Defines an active check
 
     One ActiveCheckConfig can create multiple Checkmk services.
+    The executable will be searched for in the following three folders, in
+    order of preference:
+
+    * ``../../libexec``, relative to the file where the corresponding instance
+      of :class:`ActiveCheckConfig` is discovered from (see example below)
+    * ``local/lib/nagios/plugins`` in the sites home directory
+    * ``lib/nagios/plugins`` in the sites home directory
+
 
     Args:
-        name: Active check name. Has to match active check executable name without the prefix
-            ´check_´.
+        name: Active check name.
+            Has to match active check executable name without the prefix ``check_``.
         parameter_parser: Translates the raw configured parameters into a validated data structure.
                 The result of the function will be passed as an argument to the command_function.
                 If you don't want to parse your parameters, use the noop_parser.
@@ -77,10 +85,20 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
         ...         )
 
         >>> active_check_example = ActiveCheckConfig(
-        ...     name="example",
+        ...     name="norris",
         ...     parameter_parser=noop_parser,
         ...     commands_function=generate_example_commands,
         ... )
+
+        If the above code belongs to the family "my_integration" and is put in the file
+        ``local/lib/python3/cmk_addons/plugins/my_integration/server_side_calls/example.py``,
+        the following executables will be searched for:
+
+        * ``local/lib/python3/cmk_addons/plugins/my_integration/libexec/check_norris``
+        * ``local/lib/nagios/plugins/check_norris``
+        * ``lib/nagios/plugins/check_norris``
+
+        The first existing file will be used.
     """
 
     name: str

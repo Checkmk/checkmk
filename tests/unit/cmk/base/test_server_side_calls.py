@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import NamedTuple
 
@@ -72,6 +73,17 @@ HOST_CONFIG = HostConfig(
         ],
     ),
 )
+
+
+@contextmanager
+def _with_file(path: Path) -> Iterator[None]:
+    present = path.exists()
+    path.touch()
+    try:
+        yield
+    finally:
+        if not present:
+            path.unlink(missing_ok=True)
 
 
 class ConfigCacheMock:
@@ -327,7 +339,9 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -385,7 +399,9 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -423,7 +439,9 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -659,7 +677,9 @@ def test_test_get_active_service_data_crash_with_debug(
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -827,7 +847,9 @@ def test_get_active_service_data_warnings(
             {},
             {
                 PluginLocation(
-                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
@@ -1375,9 +1397,7 @@ def test_iter_special_agent_commands_crash_with_debug(
         list(special_agent.iter_special_agent_commands("test_agent", {}))
 
 
-def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
-
+def test_make_source_path() -> None:
     special_agent = SpecialAgent(
         {},
         {},
@@ -1389,18 +1409,15 @@ def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
         stored_passwords={},
         macros={},
     )
-    agent_path = special_agent._make_source_path("test_agent")
 
-    assert agent_path == tmp_path / "special" / "agent_test_agent"
+    shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
+    with _with_file(shipped_path):
+        agent_path = special_agent._make_source_path("test_agent")
+
+    assert agent_path == shipped_path
 
 
-def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", tmp_path)
-
-    (tmp_path / "special").mkdir(exist_ok=True)
-    local_agent_path = tmp_path / "special" / "agent_test_agent"
-    local_agent_path.touch()
-
+def test_make_source_path_local_agent() -> None:
     special_agent = SpecialAgent(
         {},
         {},
@@ -1412,7 +1429,10 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
         stored_passwords={},
         macros={},
     )
-    agent_path = special_agent._make_source_path("test_agent")
+
+    local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
+    with _with_file(local_agent_path):
+        agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == local_agent_path
 

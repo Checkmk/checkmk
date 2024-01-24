@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import math
 import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
@@ -142,12 +142,12 @@ def size_trend(
             ),
         )
 
-    if mb_in_range > 0:
+    if mb_in_range > 0 and not math.isinf(value := (size_mb - used_mb) / mb_in_range):
         yield from check_levels(
             # CMK-13217: size_mb - used_mb < 0: the device reported nonsense, resulting in a crash:
             # ValueError("Cannot render negative timespan")
             max(
-                (size_mb - used_mb) / mb_in_range * range_sec / SEC_PER_H,
+                value * range_sec / SEC_PER_H,
                 0,
             ),
             levels_lower=levels.get("trend_timeleft"),

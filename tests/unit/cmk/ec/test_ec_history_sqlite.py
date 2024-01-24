@@ -4,15 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History sqlite backend"""
 
-
+import logging
 import sqlite3
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from cmk.utils.hostaddress import HostName
+
+from cmk.ec.event import Event
 from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite, SQLiteHistory
-from cmk.ec.query import QueryFilter
+from cmk.ec.main import StatusTableHistory
+from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
 
 @pytest.fixture(name="history_sqlite_raw")
@@ -128,3 +132,33 @@ def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
     cur = history_sqlite.conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='history';")
     assert cur.fetchall()[0] == ("history",)
+
+
+def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
+    """Add 2 documents to history, get filtered result with 1 document."""
+
+    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+
+    history_sqlite.add(event=event1, what="NEW")
+    history_sqlite.add(event=event2, what="NEW")
+
+    logger = logging.getLogger("cmk.mkeventd")
+
+    def get_table(name: str) -> StatusTable:
+        assert name == "history"
+        return StatusTableHistory(logger, history_sqlite)
+
+    query = QueryGET(
+        get_table,
+        ["GET history", "Columns: history_what host_name", "Filter: event_host = ABC1"],
+        logger,
+    )
+
+    query_result = history_sqlite.get(query)
+
+    (row,) = query_result
+    column_index = get_table("history").column_names.index
+    # -1 because sqlite does not have the "Line number in event history file"
+    assert row[column_index("history_what") - 1] == "NEW"
+    assert row[column_index("event_host") - 1] == "ABC1"

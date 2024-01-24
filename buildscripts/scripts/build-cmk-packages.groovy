@@ -57,7 +57,7 @@ def main() {
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            VERSION == "daily" ? param.USE_CASE : "release",
+            VERSION == "daily" ? params.USE_CASE : "release",
             [],
             "",
         ]);

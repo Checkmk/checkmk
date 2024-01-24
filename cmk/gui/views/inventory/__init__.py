@@ -1374,7 +1374,7 @@ def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint)
         _InventoryTreeValueInfo(
             column,
             row[column],
-            None,
+            row.get("_".join([column, "retention_interval"])),
         ),
         hint,
     )
@@ -1450,10 +1450,14 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[Mapping[SDKey, SDValue]]:
+    def _get_inv_data(
+        self, hostrow: Row
+    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
         try:
-            return inventory.load_filtered_and_merged_tree(hostrow).get_rows(
-                self._inventory_path.path
+            return (
+                inventory.load_filtered_and_merged_tree(hostrow)
+                .get_tree(self._inventory_path.path)
+                .table.rows_with_retentions
             )
         except inventory.LoadStructuredDataError:
             user_errors.add(
@@ -1465,12 +1469,19 @@ class RowTableInventory(ABCRowTable):
             )
             return []
 
-    def _prepare_rows(self, inv_data: Sequence[Mapping[SDKey, SDValue]]) -> Iterable[Row]:
-        return (
-            [{info_name + "_" + key: value for key, value in row.items()} for row in inv_data]
-            if self._info_names and (info_name := self._info_names[0])
-            else []
-        )
+    def _prepare_rows(
+        self, inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]
+    ) -> Iterable[Row]:
+        if not (self._info_names and (info_name := self._info_names[0])):
+            return []
+        rows = []
+        for inv_row in inv_data:
+            row: dict[str, int | float | str | bool | RetentionInterval | None] = {}
+            for key, (value, retention_interval) in inv_row.items():
+                row["_".join([info_name, key])] = value
+                row["_".join([info_name, key, "retention_interval"])] = retention_interval
+            rows.append(row)
+        return rows
 
 
 class ABCDataSourceInventory(ABCDataSource):
@@ -2221,7 +2232,11 @@ def _compute_cell_spec(
     # TODO separate tdclass from rendered value
     tdclass, code = hint.paint_function(value_info.value)
     html_value = HTML(code)
-    if value_info.retention_interval is None or value_info.retention_interval.source == "current":
+    if (
+        not html_value
+        or value_info.retention_interval is None
+        or value_info.retention_interval.source == "current"
+    ):
         return tdclass, html_value
 
     now = int(time.time())
@@ -2240,23 +2255,20 @@ def _compute_cell_spec(
                     class_=["icon"],
                 ),
                 title=_("Data is outdated and will be removed with the next check execution"),
+                css=["muted_text"],
             ),
         )
     if now > valid_until:
         return (
             tdclass,
             HTMLWriter.render_span(
-                html_value
-                + HTML("&nbsp;")
-                + HTMLWriter.render_img(
-                    theme.detect_icon_path("service_duration", "icon_"),
-                    class_=["icon"],
-                ),
+                html_value,
                 title=_("Data was provided at %s and is considered valid until %s")
                 % (
                     cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
                     cmk.utils.render.date_and_time(keep_until),
                 ),
+                css=["muted_text"],
             ),
         )
     return tdclass, html_value

@@ -59,17 +59,20 @@ RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
 
 INV_ROWS = [
-    {"sid": "A", "value1": 1, "value2": 4},
-    {"sid": "B", "value1": 2, "value2": 5},
-    {"sid": "C", "value1": 3, "value2": 6},
+    {"sid": ("A", None), "value1": (1, None), "value2": (4, None)},
+    {"sid": ("B", None), "value1": (2, None), "value2": (5, None)},
+    {"sid": ("C", None), "value1": (3, None), "value2": (6, None)},
 ]
 
 EXPECTED_INV_KEYS = [
     "site",
     "host_name",
     "invtesttable_sid",
+    "invtesttable_sid_retention_interval",
     "invtesttable_value1",
+    "invtesttable_value1_retention_interval",
     "invtesttable_value2",
+    "invtesttable_value2_retention_interval",
 ]
 
 INV_HIST_ROWS = [

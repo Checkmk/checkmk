@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, DiscoverySettings
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
@@ -103,6 +103,7 @@ class APIDiscoveryAction(enum.Enum):
 
 
 def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
+    # TODO: documentation should be separated for bulk discovery
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
@@ -620,16 +621,26 @@ class BulkDiscovery(BaseSchema):
 )
 def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     """Start a bulk discovery job"""
+    # TODO: documentation should be adjusted; initial fix for resolving tests
     body = params["body"]
     job = BulkDiscoveryBackgroundJob()
     if job.is_active():
         return Response(status=409)
 
+    mode = body["mode"]
+    if mode == "tabula_rasa":
+        mode = "refresh"
+    elif mode == "only_host_labels":
+        mode = "only-host-labels"
+    elif mode == "fix_all":
+        mode = "fixall"
+
+    discovery_settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(mode))
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
     start_bulk_discovery(
         job,
         hosts_to_discover,
-        body["mode"],
+        discovery_settings,
         body["do_full_scan"],
         body["ignore_errors"],
         body["bulk_size"],

@@ -786,6 +786,7 @@ async fn test_find_no_detect_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_no_detect_two_custom_instances_local() {
+    use mk_sql::types::Port;
     let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string(
         &make_local_custom_instances_config_sub_string(),
         false,
@@ -797,7 +798,7 @@ async fn test_find_no_detect_two_custom_instances_local() {
     assert_eq!(instances[0].name, "MSSQLSERVER");
     assert!(instances[0].edition.contains(" Edition"));
     assert!(instances[0].version.contains('.'));
-    assert_eq!(instances[0].port(), Some(1433));
+    assert_eq!(instances[0].port().unwrap(), Port(1433));
     let pc = instances[0].computer_name().as_ref().unwrap().clone();
     assert!(!pc.is_empty(), "{:?}", instances[0].computer_name());
 }
@@ -826,6 +827,7 @@ async fn test_find_no_detect_remote() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_no_detect_two_custom_instances_remote() {
+    use mk_sql::types::Port;
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mssql = mk_sql::config::ms_sql::Config::from_string(&make_remote_config_string(
             &endpoint.user,
@@ -841,7 +843,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         assert_eq!(instances[0].name, "MSSQLSERVER");
         assert!(instances[0].edition.contains(" Edition"));
         assert!(instances[0].version.contains('.'));
-        assert_eq!(instances[0].port(), Some(1433));
+        assert_eq!(instances[0].port().unwrap(), Port(1433));
         let pc = instances[0].computer_name().as_ref().unwrap().clone();
         assert!(
             pc.to_uppercase().contains("AGENTBUILD"),

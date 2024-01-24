@@ -5,6 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
+use crate::types::Port;
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -252,7 +253,7 @@ impl TryFrom<&str> for AuthType {
 pub struct Connection {
     hostname: String,
     fail_over_partner: Option<String>,
-    port: u16,
+    port: Port,
     socket: Option<PathBuf>,
     tls: Option<ConnectionTls>,
     timeout: u64,
@@ -271,10 +272,10 @@ impl Connection {
                     .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
                     .to_lowercase(),
                 fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
-                port: conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
+                port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
                     log::debug!("no port specified, using default");
                     defaults::CONNECTION_PORT
-                }),
+                })),
                 socket: conn.get_pathbuf(keys::SOCKET),
                 tls: ConnectionTls::from_yaml(conn)?,
                 timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
@@ -291,8 +292,8 @@ impl Connection {
     pub fn fail_over_partner(&self) -> Option<&String> {
         self.fail_over_partner.as_ref()
     }
-    pub fn port(&self) -> u16 {
-        self.port
+    pub fn port(&self) -> Port {
+        self.port.clone()
     }
     pub fn sql_browser_port(&self) -> Option<u16> {
         None
@@ -325,7 +326,7 @@ impl Default for Connection {
         Self {
             hostname: defaults::CONNECTION_HOST_NAME.to_owned(),
             fail_over_partner: None,
-            port: defaults::CONNECTION_PORT,
+            port: Port(defaults::CONNECTION_PORT),
             socket: None,
             tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
@@ -381,7 +382,7 @@ impl Endpoint {
         &self.conn
     }
 
-    pub fn port(&self) -> u16 {
+    pub fn port(&self) -> Port {
         self.conn.port()
     }
 
@@ -860,7 +861,7 @@ authentication:
             .unwrap();
         assert_eq!(c.hostname(), "alice");
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
-        assert_eq!(c.port(), 9999);
+        assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
         assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
@@ -880,7 +881,7 @@ authentication:
             .unwrap();
         assert_eq!(c.hostname(), "localhost");
         assert_eq!(c.fail_over_partner(), None);
-        assert_eq!(c.port(), 9999);
+        assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), None);
         assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
@@ -1088,7 +1089,7 @@ connection:
         assert_eq!(c.auth().access_token().unwrap(), "baz");
         assert_eq!(c.conn().hostname(), "localhost");
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
-        assert_eq!(c.conn().port(), defaults::CONNECTION_PORT);
+        assert_eq!(c.conn().port(), Port(defaults::CONNECTION_PORT));
         assert_eq!(
             c.conn().socket().unwrap(),
             &PathBuf::from(r"C:\path\to\file")

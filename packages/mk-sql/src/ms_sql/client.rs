@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint};
+use crate::types::Port;
 use anyhow::Result;
 
 #[cfg(windows)]
@@ -27,7 +28,7 @@ pub async fn create_on_endpoint(endpoint: &Endpoint) -> Result<Client> {
     create_on_endpoint_port(endpoint, endpoint.port()).await
 }
 
-pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: u16) -> Result<Client> {
+pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: Port) -> Result<Client> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -40,7 +41,7 @@ pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: u16) -> Result<C
             if let Some(credentials) = obtain_config_credentials(auth) {
                 tokio::time::timeout(
                     conn.timeout(),
-                    create_remote(conn.hostname(), port, credentials, None),
+                    create_remote(conn.hostname(), port.value(), credentials, None),
                 )
                 .await
                 .map_err(map_elapsed_to_anyhow)?
@@ -50,9 +51,11 @@ pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: u16) -> Result<C
         }
 
         #[cfg(windows)]
-        AuthType::Integrated => tokio::time::timeout(conn.timeout(), create_local(None, port))
-            .await
-            .map_err(map_elapsed_to_anyhow)?,
+        AuthType::Integrated => {
+            tokio::time::timeout(conn.timeout(), create_local(None, port.value()))
+                .await
+                .map_err(map_elapsed_to_anyhow)?
+        }
 
         _ => anyhow::bail!("Not supported authorization type"),
     };

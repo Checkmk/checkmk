@@ -93,7 +93,7 @@ def do_event_actions(
             logger.info(f'executing action "{action["title"]}" on event {event["id"]}')
             do_event_action(history, settings, config, logger, event_columns, action, event, "")
         else:
-            logger.info('undefined action "{aname}, must be one of {", ".join(table.keys()}"')
+            logger.info(f'undefined action "{aname}", must be one of {", ".join(table.keys())}')
 
 
 # Rule actions are currently done synchronously. Actions should

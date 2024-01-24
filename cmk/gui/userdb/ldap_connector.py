@@ -81,7 +81,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
-from ._connections import active_connections, connections_by_type, get_connection
+from ._connections import active_connections, get_connection, get_ldap_connections
 from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
@@ -1754,7 +1754,7 @@ def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str
     if add_this:
         choices.append((None, _("This connection")))
 
-    for connection in connections_by_type("ldap"):
+    for connection in get_ldap_connections().values():
         descr = connection["description"]
         if not descr:
             descr = connection["id"]

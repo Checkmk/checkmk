@@ -23,7 +23,13 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.userdb import get_connection, load_connection_config, save_connection_config
+from cmk.gui.userdb import (
+    ACTIVE_DIR,
+    get_connection,
+    LDAPConnectionTypedDict,
+    load_connection_config,
+    save_connection_config,
+)
 from cmk.gui.userdb.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,
@@ -723,7 +729,23 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _from_vars(self):
         self._connection_id = request.get_ascii_input("id")
-        self._connection_cfg = {}
+        directory_type: ACTIVE_DIR = ("ad", {"connect_to": ("fixed_list", {"server": ""})})
+        self._connection_cfg: LDAPConnectionTypedDict = {
+            "id": "",
+            "description": "",
+            "comment": "",
+            "docu_url": "",
+            "disabled": False,
+            "directory_type": directory_type,
+            "user_dn": "",
+            "user_scope": "sub",
+            "user_id_umlauts": "keep",
+            "group_dn": "",
+            "group_scope": "sub",
+            "active_plugins": {},
+            "cache_livetime": 300,
+            "type": "ldap",
+        }
         self._connections = load_connection_config(lock=transactions.is_transaction())
 
         if self._connection_id is None:
@@ -785,14 +807,14 @@ class ModeEditLDAPConnection(WatoMode):
 
         self._connection_cfg["type"] = "ldap"
 
+        assert self._connection_id is not None
+
         if self._new:
             self._connections.insert(0, self._connection_cfg)
             self._connection_id = self._connection_cfg["id"]
         else:
             self._connection_cfg["id"] = self._connection_id
             self._connections[self._connection_nr] = self._connection_cfg
-
-        assert self._connection_id is not None
 
         if self._new:
             log_what = "new-ldap-connection"

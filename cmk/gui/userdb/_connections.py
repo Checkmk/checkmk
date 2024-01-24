@@ -5,7 +5,9 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, cast, Literal, NotRequired
+
+from typing_extensions import TypedDict
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
@@ -15,7 +17,140 @@ from cmk.gui.hooks import request_memoize
 
 from ._connector import ConnectorType, user_connector_registry, UserConnector
 
-UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
+
+class UserConnectionTypedDictBase(TypedDict):
+    id: str
+    disabled: bool
+
+
+class UserConnection(UserConnectionTypedDictBase):
+    type: str
+
+
+class Fixed(TypedDict):
+    server: str
+    failover_servers: NotRequired[list[str]]
+
+
+class Discover(TypedDict):
+    domain: str
+
+
+class LDAPConnectionConfigFixed(TypedDict):
+    connect_to: tuple[Literal["fixed_list"], Fixed]
+
+
+class LDAPConnectionConfigDiscover(TypedDict):
+    connect_to: tuple[Literal["discover"], Discover]
+
+
+class SyncAttribute(TypedDict, total=False):
+    attr: str
+
+
+class GroupsToContactGroups(TypedDict, total=False):
+    nested: Literal[True]
+    other_connections: list[str]
+
+
+class DisableNotificationsAttribute(TypedDict):
+    disable: NotRequired[Literal[True]]
+    timerange: NotRequired[tuple[float, float]]
+
+
+DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]
+ICONS_PER_ITEM = tuple[Literal["icons_per_item"], None | Literal["entry"]]
+NAV_HIDE_ICONS_TITLE = tuple[Literal["nav_hide_icons_title"], None | Literal["hide"]]
+SHOW_MODE = tuple[
+    Literal["show_mode"],
+    None | Literal["default_show_less", "default_show_more", "enforce_show_more"],
+]
+UI_SIDEBAR_POSITIONS = tuple[Literal["ui_sidebar_position"], None | Literal["left"]]
+START_URL = tuple[Literal["start_url"], None | str]
+TEMP_UNIT = tuple[Literal["temperature_unit"], None | Literal["celsius", "fahrenheit"]]
+UI_THEME = tuple[Literal["ui_theme"], None | Literal["facelift", "modern-dark"]]
+FORCE_AUTH_USER = tuple[Literal["force_authuser"], bool]
+
+ATTRIBUTE = (
+    DISABLE_NOTIFICATIONS
+    | ICONS_PER_ITEM
+    | NAV_HIDE_ICONS_TITLE
+    | SHOW_MODE
+    | UI_SIDEBAR_POSITIONS
+    | START_URL
+    | TEMP_UNIT
+    | UI_THEME
+    | FORCE_AUTH_USER
+)
+
+
+class GroupsToSync(TypedDict):
+    cn: str
+    attribute: ATTRIBUTE
+
+
+class GroupsToAttributes(TypedDict, total=False):
+    nested: Literal[True]
+    other_connections: list[str]
+    groups: list[GroupsToSync]
+
+
+class ActivePlugins(TypedDict, total=False):
+    alias: SyncAttribute
+    auth_expire: SyncAttribute
+    groups_to_roles: dict[str, list[tuple[str, str | None]]]
+    groups_to_contactgroups: GroupsToContactGroups
+    groups_to_attributes: GroupsToAttributes
+    disable_notifications: SyncAttribute
+    email: SyncAttribute
+    icons_per_item: SyncAttribute
+    nav_hide_icons_title: SyncAttribute
+    pager: SyncAttribute
+    show_mode: SyncAttribute
+    ui_sidebar_position: SyncAttribute
+    start_url: SyncAttribute
+    temperature_unit: SyncAttribute
+    ui_theme: SyncAttribute
+    force_authuser: SyncAttribute
+
+
+DIR_SERVER_389 = tuple[Literal["389directoryserver"], LDAPConnectionConfigFixed]
+OPEN_LDAP = tuple[Literal["openldap"], LDAPConnectionConfigFixed]
+ACTIVE_DIR = tuple[Literal["ad"], LDAPConnectionConfigFixed | LDAPConnectionConfigDiscover]
+
+
+class LDAPConnectionTypedDict(UserConnectionTypedDictBase):
+    description: str
+    comment: str
+    docu_url: str
+    directory_type: DIR_SERVER_389 | OPEN_LDAP | ACTIVE_DIR
+    bind: NotRequired[tuple[str, tuple[Literal["password", "store"], str]]]
+    port: NotRequired[int]
+    use_ssl: NotRequired[Literal[True]]
+    connect_timeout: NotRequired[float]
+    version: NotRequired[Literal[2, 3]]
+    page_size: NotRequired[int]
+    response_timeout: NotRequired[int]
+    suffix: NotRequired[str]
+    user_dn: str
+    user_scope: Literal["sub", "base", "one"]
+    user_id_umlauts: Literal["keep", "replace"]
+    user_filter: NotRequired[str]
+    user_filter_group: NotRequired[str]
+    user_id: NotRequired[str]
+    lower_user_ids: NotRequired[Literal[True]]
+    create_only_on_login: NotRequired[Literal[True]]
+    group_dn: str
+    group_scope: Literal["sub", "base", "one"]
+    group_filter: NotRequired[str]
+    group_member: NotRequired[str]
+    active_plugins: ActivePlugins
+    cache_livetime: int
+    customer: NotRequired[str]
+    type: Literal["ldap"]
+
+
+UserConnectionSpec = LDAPConnectionTypedDict | dict[str, Any]
 
 
 @request_memoize(maxsize=None)
@@ -72,14 +207,30 @@ def _get_connection_configs() -> list[dict[str, Any]]:
     return builtin_connections + active_config.user_connections
 
 
-_HTPASSWD_CONNECTION = {
+_HTPASSWD_CONNECTION: UserConnection = {
     "type": "htpasswd",
     "id": "htpasswd",
     "disabled": False,
 }
 # The htpasswd connector is enabled by default and always executed first.
 # NOTE: This list may be appended to in edition specific registration functions.
-builtin_connections = [_HTPASSWD_CONNECTION]
+builtin_connections: list[UserConnection] = [_HTPASSWD_CONNECTION]
+
+
+def get_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+    ldap_connections = cast(
+        dict[str, LDAPConnectionTypedDict],
+        {c["id"]: c for c in active_config.user_connections if c["type"] == "ldap"},
+    )
+    return ldap_connections
+
+
+def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+    return {
+        ldap_id: ldap_connection
+        for ldap_id, ldap_connection in get_ldap_connections().items()
+        if not ldap_connection["disabled"]
+    }
 
 
 # The saved configuration for user connections is a bit inconsistent, let's fix

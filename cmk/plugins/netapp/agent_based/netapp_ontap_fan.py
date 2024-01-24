@@ -35,8 +35,7 @@ Section = Mapping[str, models.ShelfFanModel]
 
 def _get_section_single_instance(section: Section) -> netapp_api.SectionSingleInstance:
     # see netapp_api._DEV_KEYS["fan"]
-    error_key = "cooling-element-is-error"
-    number_key = "cooling-element-number"
+    error_key, number_key = netapp_api.DEV_KEYS["fan"]
 
     return {
         key: {error_key: str(val.state == "error").lower(), number_key: key}

@@ -508,6 +508,12 @@ div.node_vis {
     stroke-width: 4;
   }
 
+  circle.edge_marker {
+    fill: $darkgrey;
+    opacity: 0.5;
+    r: 4;
+  }
+
   .link_element {
     opacity: 0.3;
     stroke-dasharray: 10 3;

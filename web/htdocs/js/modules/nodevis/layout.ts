@@ -403,6 +403,36 @@ export class LayoutManagerLayer extends FixLayer {
             this._active_styles[idx].update_gui();
         }
         this.update_style_indicators();
+        this._render_viewport_markers();
+    }
+
+    _render_viewport_markers(): void {
+        const size = this._viewport.get_size();
+        const offset = 30;
+
+        let edge_markers: Coords[] = [];
+        if (this.edit_layout)
+            edge_markers = [
+                this._viewport.scale_to_zoom({x: offset, y: offset}),
+                this._viewport.scale_to_zoom({
+                    x: size.width - offset,
+                    y: offset,
+                }),
+                this._viewport.scale_to_zoom({
+                    x: size.width - offset,
+                    y: size.height - offset,
+                }),
+                this._viewport.scale_to_zoom({
+                    x: offset,
+                    y: size.height - offset,
+                }),
+            ];
+        this._svg_selection
+            .selectAll<SVGCircleElement, Coords>("circle.edge_marker")
+            .data(edge_markers)
+            .join("circle")
+            .classed("edge_marker", true)
+            .attr("transform", d => "translate(" + d.x + "," + d.y + ")");
     }
 
     update_style_indicators(force = false): void {

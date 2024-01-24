@@ -32,53 +32,13 @@ import {
 } from "nodevis/utils";
 import {Viewport} from "nodevis/viewport";
 
-function render_toggle_panel(
-    overlays_config: OverlaysConfig,
-    layer_toggled_callback: (layer_id: string, enabled: boolean) => void,
-    viewport: Viewport
-): void {
-    const toggle_panel = viewport
-        .get_div_selection()
-        .selectAll<HTMLDivElement, null>("div#layout_toggle_panel")
-        .data([null])
-        .join(enter => enter.append("div").attr("id", "layout_toggle_panel"));
-    // Parent/child does not provide service info
-    if (
-        overlays_config.available_layers.length > 0 &&
-        !overlays_config.available_layers.includes("parent_child")
-    ) {
-        const options = [
-            new RadioGroupOption("all", texts.get("all")),
-            new RadioGroupOption("only_problems", texts.get("only_problems")),
-            new RadioGroupOption("none", texts.get("none")),
-        ];
-
-        const services_div = toggle_panel
-            .selectAll<HTMLDivElement, null>("div.radio_group.services")
-            .data([null])
-            .join(enter =>
-                enter
-                    .insert("div", "table#overlay_configuration")
-                    .classed("radio_group services", true)
-            );
-        render_radio_group(
-            services_div,
-            texts.get("services"),
-            "service_visibility",
-            options,
-            "all",
-            (new_option: string) => {
-                viewport.get_overlays_config().computation_options.show_services =
-                    new_option as "all" | "only_problems" | "none";
-                // TODO: bad reference usage
-                viewport._world_for_layers?.update_data();
-            }
-        );
-    }
-
+function render_hierarchy_flat(
+    viewport: Viewport,
+    toggle_panel: d3SelectionDiv
+) {
     const options = [
-        new RadioGroupOption("hierarchy_flat", texts.get("flat")),
-        new RadioGroupOption("hierarchy_full", texts.get("full")),
+        new RadioGroupOption("flat", texts.get("flat")),
+        new RadioGroupOption("full", texts.get("full")),
     ];
 
     const hierarchy_div = toggle_panel
@@ -94,16 +54,71 @@ function render_toggle_panel(
         texts.get("hierarchy"),
         "hierarchy_depth",
         options,
-        viewport.get_overlays_config().computation_options.flat_hierarchy
-            ? "hierarchy_flat"
-            : "hierarchy_full",
+        viewport.get_overlays_config().computation_options.hierarchy,
         (new_option: string) => {
-            viewport.get_overlays_config().computation_options.flat_hierarchy =
-                new_option == "hierarchy_flat";
-            viewport._world_for_layers?.update_data();
+            viewport.get_overlays_config().computation_options.hierarchy =
+                new_option;
+            viewport.get_overlays_config().computation_options.enforce_hierarchy_update =
+                true;
+            viewport.try_fetch_data();
         }
     );
+}
 
+function render_toggle_services(
+    viewport: Viewport,
+    toggle_panel: d3SelectionDiv
+) {
+    const options = [
+        new RadioGroupOption("all", texts.get("all")),
+        new RadioGroupOption("only_problems", texts.get("only_problems")),
+        new RadioGroupOption("none", texts.get("none")),
+    ];
+
+    const services_div = toggle_panel
+        .selectAll<HTMLDivElement, null>("div.radio_group.services")
+        .data([null])
+        .join(enter =>
+            enter
+                .insert("div", "table#overlay_configuration")
+                .classed("radio_group services", true)
+        );
+    render_radio_group(
+        services_div,
+        texts.get("services"),
+        "service_visibility",
+        options,
+        "all",
+        (new_option: string) => {
+            viewport.get_overlays_config().computation_options.show_services =
+                new_option as "all" | "only_problems" | "none";
+            viewport.try_fetch_data();
+        }
+    );
+}
+
+function render_toggle_panel(
+    overlays_config: OverlaysConfig,
+    layer_toggled_callback: (layer_id: string, enabled: boolean) => void,
+    viewport: Viewport
+): void {
+    const toggle_panel = viewport
+        .get_div_selection()
+        .selectAll<HTMLDivElement, null>("div#layout_toggle_panel")
+        .data([null])
+        .join(enter => enter.append("div").attr("id", "layout_toggle_panel"));
+    // Parent/child does not provide service info
+    if (
+        overlays_config.available_layers.length > 0 &&
+        !overlays_config.available_layers.includes("parent_child")
+    ) {
+        render_toggle_services(viewport, toggle_panel);
+    }
+
+    render_hierarchy_flat(viewport, toggle_panel);
+
+    // Only shown on multiple datasources
+    if (viewport.get_overlays_config().available_layers.length <= 1) return;
     const table = toggle_panel
         .selectAll<HTMLTableElement, null>("table#overlay_configuration")
         .data([null])
@@ -111,24 +126,19 @@ function render_toggle_panel(
         .attr("id", "overlay_configuration");
 
     const data: [string, string, (new_value: boolean) => void, boolean][] = [];
-
-    // Only shown on multiple datasources
-    if (viewport.get_overlays_config().available_layers.length <= 1) return;
-
     data.push([
         "merge_nodes",
         texts.get("merge_data"),
         new_value => {
             viewport.get_overlays_config().computation_options.merge_nodes =
                 new_value;
-            // TODO: bad reference usage
-            viewport._world_for_layers?.update_data();
+            viewport.try_fetch_data();
         },
         viewport.get_overlays_config().computation_options.merge_nodes,
     ]);
 
     overlays_config.available_layers.forEach(layer_id => {
-        // TODO: map layer_id to i18n
+        // TODO: layer i18n
         data.push([
             layer_id,
             layer_id,

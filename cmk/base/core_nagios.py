@@ -54,7 +54,6 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_active_checks, load_special_agents
 
 from cmk.discover_plugins import PluginLocation
 
@@ -488,14 +487,17 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     # legacy checks via active_checks
     active_services = []
 
+    translations = config.get_service_translations(config_cache.ruleset_matcher, hostname)
     active_check_config = server_side_calls.ActiveCheck(
-        load_active_checks()[1],
+        server_side_calls.load_active_checks()[1],
         config.active_check_info,
         hostname,
-        server_side_calls.get_host_config(hostname, config_cache),
+        config.get_ssc_host_config(hostname, config_cache),
         host_attrs,
+        config.http_proxies,
+        lambda x: config.get_final_service_description(x, translations),
+        config.use_new_descriptions_for,
         stored_passwords=stored_passwords,
-        translations=config.get_service_translations(config_cache.ruleset_matcher, hostname),
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
@@ -1463,7 +1465,7 @@ def _get_legacy_check_file_names_to_load(
     # check info table
     # We need to include all those plugins that are referenced in the hosts
     # check table.
-    ssc_api_special_agents = {p.name for p in load_special_agents()[1].values()}
+    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
     filenames: list[str] = []
 
     for check_plugin_name in needed_check_plugin_names:

@@ -263,14 +263,30 @@ def _transformed_params(
     params: T,
     all_rulesets: RulesetCollection,
     hostname: str,
-) -> Mapping[str, object] | T:
+) -> Mapping[str, object]:
     check_plugin = register.get_check_plugin(plugin_name)
     if check_plugin is None:
-        return params
+        if not params:
+            return {}
+        if isinstance(params, dict):
+            return {str(k): v for k, v in params.items()}
+        raise MKGeneralException(
+            f"Parameters must be a dict. Can't handle {params=} for missing plugin {plugin_name!r}"
+        )
 
-    ruleset_name = RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
-    if ruleset_name not in all_rulesets.get_rulesets():
-        return params
+    ruleset_name = (
+        RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
+        if check_plugin.check_ruleset_name
+        else None
+    )
+    if ruleset_name is None or ruleset_name not in all_rulesets.get_rulesets():
+        if not params:
+            return {}
+        if isinstance(params, dict):
+            return {str(k): v for k, v in params.items()}
+        raise MKGeneralException(
+            f"Parameters must be a dict. Can't handle {params=} for plugin {plugin_name!r}"
+        )
 
     debug_info = "host={!r}, plugin={!r}, ruleset={!r}, params={!r}".format(
         hostname,
@@ -282,18 +298,11 @@ def _transformed_params(
     try:
         ruleset = all_rulesets.get_rulesets()[ruleset_name]
         new_params = _transform_params_safely(params, ruleset, ruleset_name, logger)
-
         assert new_params or not params, "non-empty params vanished"
-
-        return new_params
-
     except Exception as exc:
-        msg = f"Transform failed: {debug_info}, error={exc!r}"
-        if debug.enabled():
-            raise RuntimeError(msg) from exc
-        logger.error(msg)
+        raise MKGeneralException(f"Transform failed: {debug_info}, error={exc!r}") from exc
 
-    return params
+    return new_params
 
 
 # TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value

@@ -1,0 +1,19 @@
+Title: omd update: Abort with Exit Code 1 if "Executing ... script" Fails
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1706108952
+Edition: cre
+Level: 2
+Version: 2.1.0p39
+
+The command `omd update` triggers multiple scripts during the updating process (e.g.,
+01_mkp-disable-outdated, 02_cmk-update-config). Failures of this sort require manual intervention.
+`omd update` notifies the user of this, by printing the following error.
+```
+ERROR (exit code: 1)
+```
+During an update to a version lower than 2.1.0p39, `omd update` proceeds with the next steps
+and then exits with the exit code 0.
+If updating to Checkmk 2.1.0p39, 2.2.0 or later the update is aborted upon encountering such an
+error. Moreover, `omd update` terminates with exit code 1.

@@ -1,0 +1,16 @@
+Title: host: query on mk_inventory no longer causing crash
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1706087872
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Previously, when you had a host that had no check running,
+calling the following endpoint would cause a crash.
+
+GET /domain-type/host/collections/all?columns=mkinventory
+
+This werk addresses this issue by preventing the crash
+and now returns an appropriate response.

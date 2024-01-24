@@ -1188,6 +1188,15 @@ class ImmutableTable:
     def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
         return list(self.rows_by_ident.values())
 
+    @property
+    def rows_with_retentions(
+        self,
+    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
+        return [
+            {key: (value, self.retentions.get(ident, {}).get(key)) for key, value in row.items()}
+            for ident, row in self.rows_by_ident.items()
+        ]
+
     @classmethod
     def deserialize(cls, raw_table: SDRawTable) -> ImmutableTable:
         rows = raw_table.get("Rows", [])

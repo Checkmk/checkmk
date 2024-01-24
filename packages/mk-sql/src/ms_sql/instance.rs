@@ -17,6 +17,7 @@ use crate::ms_sql::query::{
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
+use crate::types::Port;
 use crate::utils;
 
 use anyhow::Result;
@@ -39,8 +40,8 @@ pub struct SqlInstanceBuilder {
     edition: Option<String>,
     version: Option<String>,
     cluster: Option<String>,
-    port: Option<u16>,
-    dynamic_port: Option<u16>,
+    port: Option<Port>,
+    dynamic_port: Option<Port>,
     endpoint: Option<Endpoint>,
     computer_name: Option<String>,
     environment: Option<Env>,
@@ -77,12 +78,12 @@ impl SqlInstanceBuilder {
         self.cluster = cluster.map(|s| s.into());
         self
     }
-    pub fn port<S: Into<u16>>(mut self, port: Option<S>) -> Self {
-        self.port = port.map(|s| s.into());
+    pub fn port(mut self, port: Option<Port>) -> Self {
+        self.port = port;
         self
     }
-    pub fn dynamic_port<S: Into<u16>>(mut self, port: Option<S>) -> Self {
-        self.dynamic_port = port.map(|s| s.into());
+    pub fn dynamic_port(mut self, port: Option<Port>) -> Self {
+        self.dynamic_port = port;
         self
     }
     pub fn endpoint(mut self, endpoint: &Endpoint) -> Self {
@@ -115,11 +116,13 @@ impl SqlInstanceBuilder {
             .cluster(row.get_optional_value_by_idx(4))
             .port(
                 row.get_optional_value_by_idx(5)
-                    .and_then(|s| s.parse::<u16>().ok()),
+                    .and_then(|s| s.parse::<u16>().ok())
+                    .map(Port),
             )
             .dynamic_port(
                 row.get_optional_value_by_idx(6)
-                    .and_then(|s| s.parse::<u16>().ok()),
+                    .and_then(|s| s.parse::<u16>().ok())
+                    .map(Port),
             )
     }
 
@@ -131,8 +134,12 @@ impl SqlInstanceBuilder {
         self.endpoint.as_ref()
     }
 
-    pub fn get_port(&self) -> u16 {
-        self.port.unwrap_or_else(|| self.dynamic_port.unwrap_or(0))
+    pub fn get_port(&self) -> Port {
+        self.get_port_ref().cloned().unwrap_or(Port(0))
+    }
+
+    fn get_port_ref(&self) -> Option<&Port> {
+        self.port.as_ref().or(self.dynamic_port.as_ref())
     }
 
     pub fn build(self) -> SqlInstance {
@@ -177,8 +184,8 @@ pub struct SqlInstance {
     pub version: String,
     pub edition: String,
     pub cluster: Option<String>,
-    port: Option<u16>,
-    dynamic_port: Option<u16>,
+    port: Option<Port>,
+    dynamic_port: Option<Port>,
     pub available: Option<bool>,
     endpoint: Endpoint,
     computer_name: Option<String>,
@@ -317,7 +324,9 @@ impl SqlInstance {
                 if let Some(credentials) = client::obtain_config_credentials(auth) {
                     client::create_remote(
                         conn.hostname(),
-                        self.port().unwrap_or(defaults::STANDARD_PORT),
+                        self.port()
+                            .map(|p| p.value())
+                            .unwrap_or(defaults::STANDARD_PORT),
                         credentials,
                         database,
                     )
@@ -987,8 +996,8 @@ impl SqlInstance {
             .collect()
     }
 
-    pub fn port(&self) -> Option<u16> {
-        self.port.or(self.dynamic_port)
+    pub fn port(&self) -> Option<Port> {
+        self.port.clone().or(self.dynamic_port.clone())
     }
 
     pub fn computer_name(&self) -> &Option<String> {
@@ -1530,15 +1539,15 @@ async fn find_custom_instance(
     }
 }
 
-fn detect_instance_port(name: &str, builders: &[SqlInstanceBuilder]) -> Option<u16> {
+fn detect_instance_port(name: &str, builders: &[SqlInstanceBuilder]) -> Option<Port> {
     builders
         .iter()
         .find(|b| b.get_name() == name)
         .map(|b| b.get_port())
 }
 
-fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> u16 {
-    if builder.get_port() == 0 {
+fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Port {
+    if builder.get_port() == Port(0) {
         log::info!("Connecting using port from endpoint {}", endpoint.port());
         endpoint.port()
     } else {
@@ -1754,6 +1763,7 @@ mod tests {
     };
     use crate::args::Args;
     use crate::setup::Env;
+    use crate::types::Port;
     use std::path::Path;
 
     #[test]
@@ -1870,8 +1880,8 @@ mssql:
         let standard = SqlInstanceBuilder::new()
             .name("name")
             .alias("alias")
-            .dynamic_port(Some(1u16))
-            .port(Some(2u16))
+            .dynamic_port(Some(Port(1u16)))
+            .port(Some(Port(2u16)))
             .computer_name(&Some("computer_name".to_owned()))
             .hash("hash")
             .version("version")
@@ -1880,7 +1890,7 @@ mssql:
             .id("id")
             .piggyback(Some("piggYback"));
         let cluster = standard.clone().cluster(Some("cluster"));
-        assert_eq!(standard.get_port(), 2u16);
+        assert_eq!(standard.get_port(), Port(2u16));
 
         let s = standard.build();
         assert_eq!(s.id, "id");
@@ -1890,8 +1900,8 @@ mssql:
         assert_eq!(s.version, "version");
         assert_eq!(s.edition, "edition");
         assert_eq!(s.hash, "hash");
-        assert_eq!(s.port, Some(2u16));
-        assert_eq!(s.dynamic_port, Some(1u16));
+        assert_eq!(s.port, Some(Port(2u16)));
+        assert_eq!(s.dynamic_port, Some(Port(1u16)));
 
         assert_eq!(s.piggyback().as_deref(), Some("piggyback"));
         assert_eq!(s.computer_name().as_deref(), Some("computer_name"));

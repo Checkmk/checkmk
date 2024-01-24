@@ -1068,7 +1068,12 @@ void ProtectPathFromUserAccess(const std::filesystem::path &entry,
 std::filesystem::path ExecuteCommandsAsync(
     std::wstring_view name, const std::vector<std::wstring> &commands);
 
-/// \brief Create cmd file in %Temp% and run it.
+/// Create folder in %Temp% and set only owner permissions
+///
+/// Returns path
+std::filesystem::path MakeSafeTempFolder();
+
+/// Changes Access Rights in Windows crazy manner
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsSync(

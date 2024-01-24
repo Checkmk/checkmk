@@ -702,6 +702,18 @@ world::ExternalPort::IoParam AsIoParam(
                    : std::optional<uint32_t>{},
     };
 }
+
+void PrepareTempFolder() {
+    try {
+        const auto path = wtools::MakeSafeTempFolder();
+        for (const auto &entry : std::filesystem::directory_iterator(path)) {
+            fs::remove_all(entry.path());
+        }
+        XLOG::l.i("Temp folder: {}", path);
+    } catch (const std::exception &e) {
+        XLOG::l("Failed to create temp folder: {}", e.what());
+    }
+}
 }  // namespace
 
 /// <HOSTING THREAD>
@@ -740,6 +752,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
+            PrepareTempFolder();
         } else {
             mc_.LoadDefault();
         }

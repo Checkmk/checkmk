@@ -12,7 +12,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.discover_plugins import PluginLocation
+from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentConfig
 
 from ._commons import (
@@ -44,6 +44,7 @@ class SpecialAgent:
         macros: Mapping[str, str] | None,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
+        self._modules = {p.name: l.module for l, p in plugins.items()}
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_address = host_address
@@ -55,12 +56,17 @@ class SpecialAgent:
         # add legacy macros
         self.macros = {**(macros or {}), "<IP>": self.host_address or "", "<HOST>": self.host_name}
 
-    def _make_source_path(self, agent_name: str) -> Path:
+    def _make_source_path(self, agent_name: str) -> Path | str:
         file_name = f"agent_{agent_name}"
-        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
+
+        libexec_paths = (
+            (family_libexec_dir(self._modules[agent_name]),) if agent_name in self._modules else ()
+        )
+        nagios_paths = (
+            cmk.utils.paths.local_agents_dir / "special",
+            Path(cmk.utils.paths.agents_dir, "special"),
+        )
+        return discover_executable(file_name, *libexec_paths, *nagios_paths) or file_name
 
     def _make_special_agent_cmdline(
         self,

@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import enum
 import importlib
 import os
 from collections import defaultdict
@@ -12,18 +11,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Final, Generic, Protocol, TypeVar
 
-_CMK_PLUGINS = "cmk.plugins"
-_CMK_ADDONS_PLUGINS = "cmk_addons.plugins"
-
-
-class PluginGroup(enum.Enum):
-    """Definitive list of discoverable plugin groups"""
-
-    AGENT_BASED = "agent_based"
-    CHECKMAN = "checkman"
-    GRAPHING = "graphing"
-    RULESETS = "rulesets"
-    SERVER_SIDE_CALLS = "server_side_calls"
+from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
 
 class _PluginProtocol(Protocol):
@@ -89,8 +77,8 @@ def discover_families(
         modules = [
             m
             for m in (
-                _import_optionally(_CMK_PLUGINS, raise_errors=raise_errors),
-                _import_optionally(_CMK_ADDONS_PLUGINS, raise_errors=raise_errors),
+                _import_optionally(CMK_PLUGINS, raise_errors=raise_errors),
+                _import_optionally(CMK_ADDONS_PLUGINS, raise_errors=raise_errors),
             )
             if m is not None
         ]
@@ -133,7 +121,7 @@ def plugins_local_path() -> Path:
 
     Currently there is always exactly one.
     """
-    return Path(next(_writable_module_paths(_CMK_PLUGINS)))
+    return Path(next(_writable_module_paths(CMK_PLUGINS)))
 
 
 def addons_plugins_local_path() -> Path:
@@ -141,7 +129,7 @@ def addons_plugins_local_path() -> Path:
 
     Currently there is always exactly one.
     """
-    return Path(next(_writable_module_paths(_CMK_ADDONS_PLUGINS)))
+    return Path(next(_writable_module_paths(CMK_ADDONS_PLUGINS)))
 
 
 def _writable_module_paths(m_name: str) -> Iterator[str]:

@@ -30,6 +30,7 @@ Below the family folder, plugins are categorized into plugin groups:
    * agent based plugins under the ``agent_based`` folder
    * graphing plugins under the ``graphing`` folder
    * man pages are found in ``checkman``
+   * executables (to be run by the code, for instance) go into ``libexec``
 
 In order for Checkmk to load your plugin, you have to follow the folder structure described above.
 Checkmk will load an agent based plugin only if it's located under ``cmk/plugins/{family_name}/agent_based`` or ``cmk_addons/plugins/{family_name}/agent_based`` folder.

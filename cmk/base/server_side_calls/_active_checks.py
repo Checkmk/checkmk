@@ -5,6 +5,7 @@
 
 from collections.abc import Container, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable, Literal
 
 import cmk.utils.config_warnings as config_warnings
@@ -17,7 +18,7 @@ from cmk.checkengine.checking import CheckPluginNameStr
 
 from cmk.base import plugin_contexts
 
-from cmk.discover_plugins import PluginLocation
+from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig, HTTPProxy
 
 from ._commons import commandline_arguments, replace_macros, replace_passwords
@@ -105,6 +106,7 @@ class ActiveCheck:
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
         self._plugins = {p.name: p for p in plugins.values()}
+        self._modules = {p.name: l.module for l, p in plugins.items()}
         self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_config = host_config
@@ -236,7 +238,9 @@ class ActiveCheck:
             return command, command_line
 
         command = f"check_mk_active-{plugin_name}"
-        return command, _autodetect_plugin(command_line)
+        return command, _autodetect_plugin(
+            command_line, self._modules.get(plugin_name.removeprefix("check_"))
+        )
 
     @staticmethod
     def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:
@@ -365,18 +369,22 @@ class ActiveCheck:
             yield ActiveServiceDescription(active_check.name, desc, params)
 
 
-# this is a hopefully temporary duplication of the function in
-# core_config (to resolve an import cycle). There's at least
-# one additional code block that is quite similar :-|
-def _autodetect_plugin(command_line: str) -> str:
-    plugin_name = command_line.split()[0]
+def _autodetect_plugin(command_line: str, module_name: str | None, *fallbacks: Path) -> str:
+    # This condition can only be true in the legacy case.
+    # Remove it when possible!
     if command_line[0] in ["$", "/"]:
         return command_line
 
-    for directory in ["local", ""]:
-        path = cmk.utils.paths.omd_root / directory / "lib/nagios/plugins"
-        if (path / plugin_name).exists():
-            command_line = f"{path}/{command_line}"
-            break
+    libexec_paths = (family_libexec_dir(module_name),) if module_name else ()
+    nagios_paths = (
+        cmk.utils.paths.local_lib_dir / "nagios/plugins",
+        Path(cmk.utils.paths.lib_dir, "nagios/plugins"),
+    )
+    # When the above case is gone, we can probably pull this
+    # function up the callstack and won't have to to do this
+    # join - split - rejoin dance.
+    plugin_name, *args = command_line.split(None, 1)
+    if (full_path := discover_executable(plugin_name, *libexec_paths, *nagios_paths)) is None:
+        return command_line
 
-    return command_line
+    return " ".join((str(full_path), *args))

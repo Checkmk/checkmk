@@ -311,11 +311,15 @@ export class LayoutManagerLayer extends FixLayer {
     update_layout(layout_settings: SerializedNodevisLayout) {
         this._toolbar._layout_history.render();
 
+        let force_config = this._viewport.get_default_force_config();
+        if (layout_settings.force_config)
+            force_config = layout_settings.force_config;
+
         this._layout_settings = layout_settings;
         this._layout.deserialize(
             layout_settings,
             this._viewport.get_size(),
-            this._viewport.get_default_force_config()
+            force_config
         );
     }
 
@@ -1201,6 +1205,7 @@ class LayoutApplier {
         trigger_force_simulation = true
     ) {
         const layout_settings = this._layout_manager.get_layout_settings();
+        // TODO: move this code into the backend
         if (layout_settings.origin_type) {
             // Add generic and explicit styles
             if (layout_settings.origin_type == "default_template") {
@@ -1234,6 +1239,10 @@ class LayoutApplier {
 
         nodes_with_style = boxed_styles.concat(nodes_with_style);
 
+        // TODO: better access
+        this._layout_manager._viewport._force_simulation.set_force_options(
+            layout.force_config
+        );
         this._update_node_specific_styles(nodes_with_style);
 
         if (trigger_force_simulation)

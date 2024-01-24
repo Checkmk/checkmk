@@ -445,8 +445,6 @@ export class TopologyVisualization extends NodeVisualization {
         this.update_browser_url();
 
         const frontend_config = this._compute_frontend_config();
-        //this.update_filters(frontend_config);
-
         const fetch_params = new SearchFilters().get_filter_params();
         fetch_params["topology_frontend_configuration"] =
             JSON.stringify(frontend_config);

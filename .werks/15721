@@ -5,7 +5,7 @@ Component: core
 Date: 1705654051
 Edition: cee
 Level: 1
-Version: 2.2.0p20
+Version: 2.2.0p21
 
 This change fixes a bug in the Nagios Core edition detection logic which could occur when using the
 Nagios core with another edition than the Raw Edition. This is a rare use case, but can happen

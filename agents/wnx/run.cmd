@@ -194,7 +194,7 @@ goto :eof
 
 :: CHECK for MSVC
 :check_msvc
-if not "%arg_setup%" == "1" goto :eof
+if not "%arg_build%" == "1" goto :eof
 powershell Write-Host "Looking for MSVC 2022..." -Foreground White
 set msbuild_exe=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
 if not exist "%msbuild_exe%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red & call :halt 8

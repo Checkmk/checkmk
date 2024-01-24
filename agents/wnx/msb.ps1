@@ -12,6 +12,12 @@ if( "$make_exe" -eq "" ){
         return 1
 }
 
+$msbuild_exe = $Env:msbuild_exe
+if( "$msbuild_exe" -eq "" ){
+	Write-Host "msbuild_exe should be defined for  the build" -foreground Red
+        return 1
+}
+
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName

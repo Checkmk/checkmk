@@ -53,11 +53,7 @@ ProblemsDashboard = DashboardConfig(
                     "position": (1, 1),
                     "size": (30, 18),
                     "show_title": True,
-                    "context": {
-                        "wato_folder": {
-                            "wato_folder": "",
-                        }
-                    },
+                    "context": {},
                     "single_infos": [],
                 }
             ),
@@ -68,11 +64,7 @@ ProblemsDashboard = DashboardConfig(
                     "position": (31, 1),
                     "size": (30, 18),
                     "show_title": True,
-                    "context": {
-                        "wato_folder": {
-                            "wato_folder": "",
-                        }
-                    },
+                    "context": {},
                     "single_infos": [],
                 }
             ),

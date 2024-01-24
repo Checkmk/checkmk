@@ -45,10 +45,17 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
     Defines a special agent
 
     One SpecialAgentConfig can result in multiple calls of the special agent.
+    The executable will be searched for in the following three folders, in
+    order of preference:
+
+    * ``../../libexec``, relative to the file where the corresponding instance
+      of :class:`SpecialAgentConfig` is discovered from (see example below)
+    * ``local/share/check_mk/agents/special`` in the sites home directory
+    * ``share/check_mk/agents/special`` in the sites home directory
 
     Args:
-        name: Special agent name. Has to match special agent executable name without
-                the prefix ´agent_´.
+        name: Special agent name.
+            Has to match special agent executable name without the prefix ``agent_``.
         parameter_parser: Translates the raw configured parameters into a validated data structure.
                         The result of the function will be passed as an argument to
                         the command_function. If you don't want to parse your parameters,
@@ -71,10 +78,20 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
         ...     yield SpecialAgentCommand(command_arguments=args)
 
         >>> special_agent_example = SpecialAgentConfig(
-        ...     name="example",
+        ...     name="smith",
         ...     parameter_parser=ExampleParams.model_validate,
         ...     commands_function=generate_example_commands,
         ... )
+
+        If the above code belongs to the family "my_integration" and is put in the file
+        ``local/lib/python3/cmk_addons/plugins/my_integration/server_side_calls/example.py``,
+        the following executables will be searched for:
+
+        * ``local/lib/python3/cmk_addons/plugins/my_integration/libexec/agent_smith``
+        * ``local/share/check_mk/agents/special/agent_smith``
+        * ``share/check_mk/agents/special/agent_smith``
+
+        The first existing file will be used.
     """
 
     name: str

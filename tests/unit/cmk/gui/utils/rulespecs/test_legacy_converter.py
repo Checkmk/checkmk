@@ -1690,7 +1690,6 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
         api_v1.form_specs.TimeSpan(),
         api_v1.form_specs.Levels(
             level_direction=api_v1.form_specs.LevelDirection.UPPER,
-            fixed=api_v1.form_specs.FixedLevels(),
             predictive=None,
             form_spec=api_v1.form_specs.Integer,
         ),
@@ -1757,7 +1756,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.Levels(
                 form_spec=api_v1.form_specs.Integer,
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
-                fixed=api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
+                prefill_fixed_levels=(1.0, 2.0),
                 predictive=None,
                 title=api_v1.Localizable("Lower levels"),
             ),
@@ -1775,7 +1774,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.Levels(
                 form_spec=api_v1.form_specs.Integer,
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
-                fixed=api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
+                prefill_fixed_levels=(1.0, 2.0),
                 predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
@@ -1791,7 +1790,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.Levels(
                 form_spec=api_v1.form_specs.Integer,
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
-                fixed=api_v1.form_specs.FixedLevels(prefill_value=(1.0, 2.0)),
+                prefill_fixed_levels=(1.0, 2.0),
                 predictive=api_v1.form_specs.PredictiveLevels(
                     reference_metric="my_metric",
                     prefill_abs_diff=(5.0, 10.0),

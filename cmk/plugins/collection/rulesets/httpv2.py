@@ -10,7 +10,6 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    FixedLevels,
     FixedValue,
     Float,
     Integer,
@@ -505,7 +504,6 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                             parameter_form=Levels(
                                 title=Localizable("Check validity"),
                                 form_spec=Integer,
-                                fixed=FixedLevels(),
                                 level_direction=LevelDirection.LOWER,
                                 predictive=None,
                                 unit=Localizable("days"),

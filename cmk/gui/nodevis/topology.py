@@ -6,6 +6,7 @@ import abc
 import glob
 import json
 import os
+import re
 import time
 import traceback
 from dataclasses import asdict, dataclass, field
@@ -1114,7 +1115,7 @@ def compute_node_config(
 
     topology_center.children = [all_frontend_nodes[x] for x, y in nodes_by_depth.get(0, {}).items()]
     for frontend_node in all_frontend_nodes.values():
-        frontend_node.children.sort(key=lambda x: x.id)
+        frontend_node.children.sort(key=lambda x: _convert_to_sort_tuple(x.name))
 
     return topology_center, assigned_node_ids
 
@@ -1811,3 +1812,13 @@ def _integrate_node_changes_in_reference(
             ["missing_in_ref", False],
             ["only_in_ref", True],
         ]
+
+
+def _convert_to_sort_tuple(name: str) -> tuple:
+    def try_int(value: str) -> str | int:
+        try:
+            return int(value)
+        except ValueError:
+            return value
+
+    return tuple(map(try_int, re.split(r"(\d+)", name)))

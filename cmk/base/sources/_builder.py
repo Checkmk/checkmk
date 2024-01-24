@@ -40,7 +40,7 @@ import cmk.base.server_side_calls as server_side_calls
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_special_agents
+from cmk.base.server_side_calls import load_special_agents
 
 from ._api import Source
 from ._sources import (
@@ -174,8 +174,9 @@ class _Builder:
                     config.special_agent_info,
                     self.host_name,
                     self.ipaddress,
-                    server_side_calls.get_host_config(self.host_name, self.config_cache),
+                    config.get_ssc_host_config(self.host_name, self.config_cache),
                     host_attrs,
+                    config.http_proxies,
                     cmk.utils.password_store.load(),
                     macros=macros,
                 )

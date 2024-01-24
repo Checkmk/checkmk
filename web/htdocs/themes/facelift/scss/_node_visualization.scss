@@ -185,7 +185,7 @@ div.node_vis {
     background-color: $bg-color-secondary;
 
     div {
-      display: flex;
+      display: inline-block;
       align-items: center;
     }
   }

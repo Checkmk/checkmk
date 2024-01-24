@@ -380,37 +380,6 @@ export class LayoutManagerLayer extends FixLayer {
             this._viewport.get_size(),
             this._viewport.get_default_force_config()
         );
-        // if (layout_settings.config) {
-        //     if (!layout_settings.config.ignore_rule_styles)
-        //         node_config.hierarchy.descendants().forEach(node => {
-        //             if (
-        //                 node.data.rule_layout_style != undefined &&
-        //                 node.data.rule_layout_style.type != "none"
-        //             ) {
-        //                 const style_name =
-        //                     node.data.rule_layout_style.type;
-        //                 const style_options =
-        //                     node.data.rule_layout_style.style_config;
-        //                 const new_style =
-        //                     this.layout_applier.layout_style_factory.instantiate_style_name(
-        //                         style_name,
-        //                         node,
-        //                         this._world.layout_manager.get_div_selection()
-        //                     );
-        //                 new_style.style_config.options = style_options;
-
-        //                 this._layout.save_style(
-        //                     new_style.style_config
-        //                 );
-        //             }
-        //         });
-        // }
-
-        // // node_chunk.layout_instance.style_configs = this._merge_styles(
-        // //     node_chunk.layout_instance.style_configs,
-        // //     layout_settings.config.style_configs
-        // // );
-        // // layout_settings.config.style_configs.length = 0;
     }
 
     apply_current_layout(trigger_force_simulation = true) {

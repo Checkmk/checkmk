@@ -219,11 +219,7 @@ class ABCTopologyPage(Page):
         topology_configuration = get_topology_configuration(
             self.visual_spec()["name"], self.get_default_overlays_config()
         )
-        # logger.warning(f"Initial topology {pprint.pformat(topology_configuration)}")
         result = _compute_topology_response(topology_configuration)
-
-        # logger.warning(f"Initial topology result {pprint.pformat(result)}")
-
         html.javascript(
             f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},{json.dumps(topology_configuration.type)});"
         )
@@ -369,9 +365,7 @@ class AjaxFetchTopology(AjaxPage):
             _save_topology_configuration(topology_configuration)
 
         try:
-            result = _compute_topology_response(topology_configuration)
-            # logger.warning(f"Result {pprint.pformat(result)}")
-            return result
+            return _compute_topology_response(topology_configuration)
         except Exception as e:
             logger.warning("".join(traceback.format_exception(e)))
         return None
@@ -1087,12 +1081,16 @@ def compute_node_config(
                     frontend_node
                 )
 
-    # TODO: detect when assigning a default layout is applicable
-    if topology_configuration.frontend.overlays_config.computation_options.flat_hierarchy:
+    computation_options = topology_configuration.frontend.overlays_config.computation_options
+    if computation_options.hierarchy == "flat":
         _flatten_hierarchy(merged_results, hosts_to_assign, services_to_assign)
-        topology_configuration.layout = _get_default_layout("radial")
-    else:
-        topology_configuration.layout = _get_default_layout("hierarchy")
+    if computation_options.enforce_hierarchy_update:
+        match computation_options.hierarchy:
+            case "flat":
+                topology_configuration.layout = _get_default_layout("radial")
+            case "full":
+                topology_configuration.layout = _get_default_layout("hierarchy")
+    computation_options.enforce_hierarchy_update = False
 
     _assign_services_to_hosts(
         merged_results, hosts_to_assign, services_to_assign, assigned_node_ids
@@ -1691,6 +1689,7 @@ def _get_hostnames_from_core(topology_configuration: TopologyConfiguration) -> s
 
 
 def _compute_topology_response(topology_configuration: TopologyConfiguration) -> dict[str, Any]:
+    # logger.warning(f"Initial topology {pprint.pformat(topology_configuration)}")
     ds_config = topology_configuration.frontend.datasource_configuration
     reference = Topology(topology_configuration, ds_config.reference)
 
@@ -1716,6 +1715,7 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
         link_config,
     )
 
+    # logger.warning(f"Result {pprint.pformat(result)}")
     return asdict(result)
 
 

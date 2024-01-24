@@ -107,7 +107,7 @@ wrapt = "==1.15.0"  # needed by vcrpy
 yarl = "==1.9.3"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl
 idna = "==3.4"  # needed by yarl
-vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions in some special agents (only)
+vcrpy = "==6.0.0"  # used by various unit tests to mock HTTP transactions in some special agents (only)
 cryptography = "*"
 bcrypt = "*"
 paramiko = "*"

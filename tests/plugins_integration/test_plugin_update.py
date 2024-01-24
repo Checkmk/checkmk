@@ -68,7 +68,9 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             f"in target-version: {not_found_status_0_services}"
         )
 
-    test_site_update.openapi.bulk_discover_services(get_host_names(test_site_update))
+    test_site_update.openapi.bulk_discover_services_and_wait_for_completion(
+        get_host_names(test_site_update)
+    )
 
     target_data_sd = {}
     target_data_sd_status_0 = {}

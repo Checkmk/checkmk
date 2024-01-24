@@ -402,14 +402,13 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def bulk_discover_services(
+    def bulk_discover_services_and_wait_for_completion(
         self,
         hostnames: list[str],
         mode: str = "new",
         do_full_scan: bool = True,
         bulk_size: int = 10,
         ignore_errors: bool = True,
-        wait_for_completion: bool = False,
     ) -> str:
         response = self.post(
             "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
@@ -424,7 +423,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         job_id: str = response.json()["id"]
-        while wait_for_completion and self.get_bulk_discovery_status(job_id) in (
+        while self.get_bulk_discovery_status(job_id) in (
             "initialized",
             "running",
         ):

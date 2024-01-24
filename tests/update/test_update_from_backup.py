@@ -22,10 +22,10 @@ from tests.testlib.utils import (
     qa_test_data_path,
 )
 from tests.testlib.version import CMKVersion, version_from_env
-from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
 
+from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +92,8 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         wait_until_host_receives_data(base_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    base_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    base_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     base_site.openapi.activate_changes_and_wait_for_completion()
 

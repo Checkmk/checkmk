@@ -312,10 +312,10 @@ export class LayoutManagerLayer extends FixLayer {
         this._toolbar._layout_history.render();
 
         let force_config = this._viewport.get_default_force_config();
-        if (layout_settings.force_config)
+        this._layout_settings = layout_settings;
+        if (Object.entries(layout_settings.force_config).length > 0)
             force_config = layout_settings.force_config;
 
-        this._layout_settings = layout_settings;
         this._layout.deserialize(
             layout_settings,
             this._viewport.get_size(),
@@ -326,7 +326,6 @@ export class LayoutManagerLayer extends FixLayer {
     apply_current_layout(trigger_force_simulation = true) {
         this.layout_applier.apply_layout(
             this._viewport._node_config,
-            this._layout,
             trigger_force_simulation
         );
     }
@@ -1199,16 +1198,13 @@ class LayoutApplier {
         this._layout_manager.create_undo_step();
     }
 
-    apply_layout(
-        node_config: NodeConfig,
-        layout: NodeVisualizationLayout,
-        trigger_force_simulation = true
-    ) {
+    apply_layout(node_config: NodeConfig, trigger_force_simulation = true) {
+        const layout = this._layout_manager.get_layout();
         const layout_settings = this._layout_manager.get_layout_settings();
         // TODO: move this code into the backend
-        if (layout_settings.origin_type) {
+        if (layout.origin_type) {
             // Add generic and explicit styles
-            if (layout_settings.origin_type == "default_template") {
+            if (layout.origin_type == "default_template") {
                 const default_style =
                     this.layout_style_factory.instantiate_style_name(
                         layout_settings.default_id!,

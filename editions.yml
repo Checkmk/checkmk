@@ -39,19 +39,23 @@ internal_distros: []
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: [*daily_extended]
+        daily: *daily_extended
+        weekly: [*common, "cma-3", "cma-4"]
         testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
     cloud:
         release: [*common, "cma-3", "cma-4"]
         daily: *daily_reduced
+        weekly: *daily_reduced
         testbuild: []
     managed:
         release: [*common, "cma-3", "cma-4"]
         daily: []
+        weekly: []
         testbuild: []
     raw:
-        release: [*common]
+        release: *common
         daily: *daily_reduced
+        weekly: *daily_reduced
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

@@ -8,6 +8,8 @@
 /// Other artifacts:    Those of child jobs
 /// Depends on:         Nothing
 
+import java.time.LocalDate
+
 def main() {
 
     /// make sure the listed parameters are set
@@ -26,6 +28,7 @@ def main() {
 
     def edition = JOB_BASE_NAME.split("-")[-1];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+    def use_case = LocalDate.now().getDayOfWeek() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily"
 
     /// NOTE: this way ALL parameter are being passed through..
     def job_parameters = [
@@ -47,6 +50,7 @@ def main() {
         [$class: 'BooleanParameterValue', name: 'BUILD_CLOUD_IMAGES', value: true],
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         [$class: 'BooleanParameterValue', name: 'PUBLISH_IN_MARKETPLACE', value: false],
+        [$class: 'StringParameterValue',  name: 'USE_CASE', value: use_case],
     ];
 
     // TODO we should take this list from a single source of truth
@@ -70,6 +74,7 @@ def main() {
         |run_integration_tests:. │${run_integration_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
+        |use_case:.............. │${use_case}│
         |===================================================
         """.stripMargin());
 

@@ -2778,10 +2778,8 @@ fs::path MakeCmdFileInTemp(std::wstring_view name,
         static int counter = 0;
         counter++;
 
-        std::error_code ec;
-        auto temp_folder = fs::temp_directory_path(ec);
-        auto tmp_file =
-            temp_folder / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
+        auto tmp_file = MakeSafeTempFolder() /
+                        fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
         std::ofstream ofs(tmp_file, std::ios::trunc);
         for (const auto &c : commands) {
             ofs << ToUtf8(c) << "\n";
@@ -2794,6 +2792,178 @@ fs::path MakeCmdFileInTemp(std::wstring_view name,
     }
 }
 }  // namespace
+
+class Sid {
+public:
+    enum class Type { admin, everyone };
+    Sid(const Sid &) = delete;
+
+    Sid(Sid &&rhs) {
+        sid_ = rhs.sid_;
+        type_ = rhs.type_;
+        rhs.sid_ = nullptr;
+    }
+
+    Sid &operator=(const Sid &) = delete;
+    Sid &operator=(Sid &&) = delete;
+    explicit Sid(Type type) : type_{type} {
+        XLOG::l.i("sid");
+        switch (type_) {
+            case Type::admin: {
+                SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
+                AllocateAndInitializeSid(
+                    &SIDAuthNT, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                    DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &sid_);
+                break;
+            }
+            case Type::everyone: {
+                SID_IDENTIFIER_AUTHORITY SIDAuthWorld =
+                    SECURITY_WORLD_SID_AUTHORITY;
+                AllocateAndInitializeSid(&SIDAuthWorld, 1, SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0, &sid_);
+                break;
+            }
+        }
+    }
+    ~Sid() {
+        if (sid_ != nullptr) {
+            FreeSid(sid_);
+        }
+    }
+
+    PSID sid() const { return sid_; }
+    TRUSTEE_TYPE trusteeType() const {
+        switch (type_) {
+            case Type::admin:
+                return TRUSTEE_IS_GROUP;
+            case Type::everyone:
+                return TRUSTEE_IS_WELL_KNOWN_GROUP;
+        }
+        // unreachable
+        return TRUSTEE_IS_WELL_KNOWN_GROUP;
+    }
+
+private:
+    PSID sid_;
+    Type type_;
+};
+
+class Acl {
+    class Store {
+    public:
+        Store(std::vector<std::pair<Sid::Type, uint32_t>> input) {
+            for (const auto &[type, permission] : input) {
+                auto s = Sid{type};
+                sids_.emplace_back(std::move(s));
+                eas_.emplace_back(EXPLICIT_ACCESS{
+                    .grfAccessPermissions = permission,
+                    .grfAccessMode = SET_ACCESS,
+                    .grfInheritance = NO_INHERITANCE,
+                    .Trustee = {
+                        .TrusteeForm = TRUSTEE_IS_SID,
+                        .TrusteeType = sids_.back().trusteeType(),
+                        .ptstrName = static_cast<wchar_t *>(sids_.back().sid()),
+                    }});
+            }
+        }
+        std::vector<EXPLICIT_ACCESS> &eas() { return eas_; }
+
+    private:
+        std::vector<EXPLICIT_ACCESS> eas_;
+        std::vector<Sid> sids_;
+    };
+
+public:
+    Acl(const std::vector<std::pair<Sid::Type, uint32_t>> &input)
+        : store_{input} {
+        std::vector<EXPLICIT_ACCESS> &eas = store_.eas();
+        if (SetEntriesInAcl(static_cast<ULONG>(eas.size()), eas.data(), nullptr,
+                            &acl_) != ERROR_SUCCESS) {
+            return;
+        }
+    }
+    Acl(const Acl &) = delete;
+    Acl &operator=(const Acl &) = delete;
+
+    PACL acl() const { return acl_; }
+
+    ~Acl() {
+        if (acl_ != nullptr) {
+            LocalFree(acl_);
+        }
+    }
+
+private:
+    Store store_;
+    PACL acl_{nullptr};
+};
+
+class Sd {
+public:
+    Sd(const Acl &acl) {
+        sd_ = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR,
+                                               SECURITY_DESCRIPTOR_MIN_LENGTH);
+        if (sd_ == nullptr) {
+            return;
+        }
+        if (!InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION)) {
+            return;
+        }
+        // Add the ACL to the security descriptor.
+        if (!SetSecurityDescriptorDacl(sd_,
+                                       TRUE,  // bDaclPresent flag
+                                       acl.acl(),
+                                       FALSE))  // not a default DACL
+        {
+            XLOG::l("Failed to set acl");
+            return;
+        }
+    }
+    Sd(const Sd &) = delete;
+    Sd &operator=(const Sd &) = delete;
+
+    PSECURITY_DESCRIPTOR sd() const { return sd_; }
+    ~Sd() {
+        if (sd_ != nullptr) {
+            LocalFree(sd_);
+        }
+    }
+
+private:
+    PSECURITY_DESCRIPTOR sd_{nullptr};
+};
+
+class SecurityAttribute {
+public:
+    explicit SecurityAttribute(
+        const std::vector<std::pair<Sid::Type, uint32_t>> &input)
+        : acl_{input}, sd_{acl_} {
+        sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_.lpSecurityDescriptor = sd_.sd();
+        sa_.bInheritHandle = FALSE;
+    }
+
+    SECURITY_ATTRIBUTES *securityAttributes() {
+        if (sa_.lpSecurityDescriptor == nullptr) {
+            return nullptr;
+        }
+        return &sa_;
+    }
+
+private:
+    Acl acl_;
+    Sd sd_;
+    SECURITY_ATTRIBUTES sa_;
+};
+
+fs::path MakeSafeTempFolder() {
+    SecurityAttribute sa{
+        {{Sid::Type::everyone, 0}, {Sid::Type::admin, GENERIC_ALL}}};
+    std::error_code ec;
+    const auto temp_folder = fs::temp_directory_path(ec) / "check_mk_agent";
+    CreateDirectoryW(temp_folder.wstring().data(), sa.securityAttributes());
+    return temp_folder;
+}
 
 fs::path ExecuteCommands(std::wstring_view name,
                          const std::vector<std::wstring> &commands,

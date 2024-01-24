@@ -1055,6 +1055,11 @@ std::filesystem::path ExecuteCommands(std::wstring_view name,
                                       const std::vector<std::wstring> &commands,
                                       ExecuteMode mode);
 
+/// Create folder in %Temp% and set only owner permissions
+///
+/// Returns path
+std::filesystem::path MakeSafeTempFolder();
+
 /// Changes Access Rights in Windows crazy manner
 ///
 ///

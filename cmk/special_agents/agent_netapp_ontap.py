@@ -505,6 +505,78 @@ def fetch_alerts(connection: HostConnection, args: Args) -> Iterable[models.Aler
     yield from (models.AlertModel.model_validate(record) for record in records["records"])
 
 
+def fetch_vs_traffic_counters(
+    connection: HostConnection,
+) -> Iterable[models.SvmTrafficCountersModel]:
+    query_data = {
+        # table: counters
+        "lif": {
+            "received_data",
+            "sent_data",
+            "received_errors",
+            "sent_errors",
+            "received_packets",
+            "sent_packets",
+        },
+        "fcp_lif": {
+            "average_read_latency",
+            "average_write_latency",
+            "read_data",
+            "write_data",
+            "read_ops",
+            "write_ops",
+        },
+        "svm_cifs": {
+            "average_read_latency",
+            "average_write_latency",
+            "total_read_ops",
+            "total_write_ops",
+        },
+        "iscsi_lif": {
+            "average_read_latency",
+            "average_write_latency",
+            "read_data",
+            "write_data",
+            "iscsi_read_ops",
+            "iscsi_write_ops",
+        },
+        "svm_nfs_v3": {"read_throughput", "write_throughput", "read_ops", "write_ops", "ops"},
+        "svm_nfs_v4": {
+            "total.read_throughput",
+            "total.write_throughput",
+            "ops",
+        },
+        "svm_nfs_v41": {
+            "total.read_throughput",
+            "total.write_throughput",
+            "ops",
+        },
+    }
+
+    for key, values in query_data.items():
+        for element in NetAppResource.CounterRow.get_collection(
+            key,
+            connection=connection,
+            fields="properties,counters",
+            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            **{"counters.name": "|".join(values)},
+        ):
+            element_data = element.to_dict()
+
+            svm_name = None
+            for prop in element["properties"]:
+                if prop["name"] == "svm.name":
+                    svm_name = prop["value"]
+                    break
+
+            if svm_name is None:
+                continue
+
+            yield models.SvmTrafficCountersModel(
+                svm_name=svm_name, table=key, counters=element_data["counters"]
+            )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -521,6 +593,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("fan", fetch_fans(connection), logger)
     write_section("temp", fetch_temperatures(connection), logger)
     write_section("alerts", fetch_alerts(connection, args), logger)
+    write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

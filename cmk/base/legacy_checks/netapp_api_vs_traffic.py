@@ -35,6 +35,10 @@ def inventory_netapp_api_vs_traffic(parsed):
 
 
 def check_netapp_api_vs_traffic(item, _no_params, parsed):
+    """
+    In the case of migration, a utility function is available for this check here:
+    cmk/plugins/lib/netapp_api.py -> check_netapp_vs_traffic
+    """
     protocol_map = {
         "lif:vserver": (
             "Ethernet",

@@ -8,7 +8,16 @@ from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import get_rate, GetRateError, Metric, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    get_rate,
+    GetRateError,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.df import df_check_filesystem_single
@@ -591,3 +600,46 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
                 state=State(speed_state),
                 summary="Interfaces do not have the same speed",
             )
+
+
+def check_netapp_vs_traffic(
+    item_counters: Mapping[str, int],
+    protocol_name: str,
+    protocol_map: Mapping,
+    latency_calc_ref: Mapping,
+    now: float,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    protoname, values = protocol_map.get(protocol_name, (None, None))
+    if protoname is None or values is None:
+        return None
+
+    def get_ref(protocol: str, what: str, item_counters: Mapping[str, int]) -> int | None:
+        # According to "NetApp® Unified Storage Performance Management",
+        # latency calculation is a function of the number of ops.
+        refname = latency_calc_ref.get(protocol, {}).get(what)
+        try:
+            return int(item_counters[refname])
+        except KeyError:
+            return None
+
+    for what, perfname, perftext, scale, format_func in values:
+        if what not in item_counters:
+            continue
+
+        ref = get_ref(protocol_name, what, item_counters)
+        try:
+            rate = get_rate(
+                value_store,
+                f"{protocol_name}.{what}",
+                ref if ref is not None else now,
+                int(item_counters[what]) * scale,
+                raise_overflow=True,
+            )
+            yield Result(
+                state=State.OK,
+                summary=f"{protoname} {perftext}: {format_func(rate)}",
+            )
+            yield Metric(name=perfname, value=rate)
+        except IgnoreResultsError:
+            yield Result(state=State.OK, summary=f"{protoname} {perftext}: -")

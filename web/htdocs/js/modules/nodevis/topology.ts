@@ -15,6 +15,7 @@ import {StyleOptionSpecRange} from "nodevis/layout_utils";
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
 import {
+    get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
 } from "nodevis/node_utils";
@@ -632,7 +633,7 @@ export class HostServiceLink extends NetworkLink {
     }
 
     override _color(): string {
-        return "white";
+        return "grey";
     }
 
     override _get_link_type_specific_force(
@@ -650,6 +651,17 @@ export class HostServiceLink extends NetworkLink {
                     force_options
                 );
         }
+    }
+
+    override render_into(selection: d3SelectionG): void {
+        super.render_into(selection);
+        const core_source = get_core_info(this._link_data.source);
+        const core_target = get_core_info(this._link_data.target);
+        if (!core_source || !core_target) return;
+        this._root_selection!.classed(
+            "host_service_link",
+            core_source.hostname == core_target.hostname
+        );
     }
 }
 

@@ -1283,12 +1283,12 @@ def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[Topolog
             return TopologyLinkType.HOST2SERVICE.value
         return TopologyLinkType.DEFAULT.value
 
-    mesh_links: list[TopologyFrontendLink] = []
+    mesh_links: set[TopologyFrontendLink] = set()
     for node_id, node in list(merged_results.items()):
         for incoming_node_id in node.incoming:
             if incoming_node_id not in merged_results:
                 continue
-            mesh_links.append(
+            mesh_links.add(
                 TopologyFrontendLink(
                     incoming_node_id,
                     node_id,
@@ -1298,14 +1298,14 @@ def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[Topolog
         for outgoing_node_id in node.outgoing:
             if outgoing_node_id not in merged_results:
                 continue
-            mesh_links.append(
+            mesh_links.add(
                 TopologyFrontendLink(
                     node_id,
                     outgoing_node_id,
                     {"type": link_type(node, merged_results[outgoing_node_id])},
                 )
             )
-    return mesh_links
+    return list(mesh_links)
 
 
 class TopologyLayerRegistry(cmk.utils.plugin_registry.Registry[type[ABCTopologyNodeDataGenerator]]):
@@ -1716,6 +1716,7 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
         link_config,
     )
 
+    # import pprint
     # logger.warning(f"Result {pprint.pformat(result)}")
     return asdict(result)
 

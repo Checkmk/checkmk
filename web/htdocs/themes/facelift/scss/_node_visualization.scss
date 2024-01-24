@@ -508,14 +508,26 @@ div.node_vis {
     stroke-width: 4;
   }
 
-  .link_element .critical {
-    stroke: $danger !important;
-    stroke-width: 4;
-  }
+  .link_element {
+    opacity: 0.3;
+    stroke-dasharray: 10 3;
+    &.host_service_link {
+      line,
+      path {
+        stroke-dasharray: none;
+        stroke-width: 2;
+      }
+    }
 
-  .link_element .white_focus {
-    stroke: $grey-1 !important;
-    stroke-width: 4;
+    .critical {
+      stroke: $danger !important;
+      stroke-width: 4;
+    }
+
+    .white_focus {
+      stroke: $grey-1 !important;
+      stroke-width: 4;
+    }
   }
 
   .only_in_ref {

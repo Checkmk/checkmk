@@ -113,7 +113,6 @@ export class AbstractLink implements TypeWithName {
             this.selection().style("stroke-opacity", 0);
             return;
         }
-        this.selection().style("stroke-opacity", 0.3);
         const x1 = source.data.target_coords.x;
         const y1 = source.data.target_coords.y;
         const x2 = target.data.target_coords.x;

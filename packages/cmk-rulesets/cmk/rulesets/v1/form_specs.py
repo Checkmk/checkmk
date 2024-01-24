@@ -585,18 +585,6 @@ class TimeSpan:
 
 
 @dataclass(frozen=True)
-class FixedLevels:
-    """Definition for levels that remain static. Usable only in conjunction with `Levels`
-
-    Args:
-        prefill_value: Value to pre-populate the form fields with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
-    """
-
-    prefill_value: tuple[float, float] | None = None
-
-
-@dataclass(frozen=True)
 class PredictiveLevels:
     """Definition for levels that change over time based on a prediction of the monitored value.
     Usable only in conjunction with `Levels`
@@ -639,10 +627,12 @@ class Levels:
         form_spec: Specification for the form fields of the warning and critical levels
         level_direction: Do the levels represent the lower or the upper bound. It's used
             only to provide labels and error messages in the UI.
-        fixed: Specification for the fixed levels
         predictive: Specification for the predictive levels
         title: Human readable title
         help_text: Description to help the user with the configuration
+        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with. If None,
+            the backend will decide whether to leave the field empty or to prefill it with a
+            canonical value.
         unit: Unit of the value to apply levels on (only for display)
         transform: Transformation of the stored configuration
 
@@ -675,7 +665,7 @@ class Levels:
 
           The configured value will be presented to consumers as a 2-tuple consisting of
           level type identifier and one of the 3 types: None, 2-tuple of numbers or a
-          3-tuple containing the name of the referencere metric used for prediction,
+          3-tuple containing the name of the reference metric used for prediction,
           the predicted value and the resulting levels tuple.
 
         **Example**:
@@ -697,12 +687,12 @@ class Levels:
         Integer | Float | DataSize | Percentage | TimeSpan
     ]  # TODO: any numeric FormSpec
     level_direction: LevelDirection
-    fixed: FixedLevels
     predictive: PredictiveLevels | None
 
     title: Localizable | None = None
     help_text: Localizable | None = None
     unit: Localizable | None = None
+    prefill_fixed_levels: tuple[float, float] | None = None
 
     transform: Transform[object] | Migrate[object] | None = None
 

@@ -12,7 +12,6 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    FixedLevels,
     FixedValue,
     Float,
     Integer,
@@ -33,15 +32,14 @@ def _valuespec_response_time() -> TupleDoNotUseWillbeRemoved:
         elements=[
             Levels(
                 form_spec=Float,
-                fixed=FixedLevels(),
                 level_direction=LevelDirection.LOWER,
                 predictive=None,
                 unit=Localizable("seconds"),
             ),
             Levels(
                 form_spec=Float,
-                fixed=FixedLevels(prefill_value=(0.001, 0.002)),
                 level_direction=LevelDirection.UPPER,
+                prefill_fixed_levels=(0.001, 0.002),
                 predictive=None,
                 unit=Localizable("seconds"),
             ),

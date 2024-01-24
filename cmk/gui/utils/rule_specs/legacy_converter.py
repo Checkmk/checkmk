@@ -980,7 +980,7 @@ def _get_legacy_level_spec(
 
 def _get_fixed_levels_choice_element(
     form_spec: type[_TNumericSpec],
-    levels: ruleset_api_v1.form_specs.FixedLevels,
+    prefill_levels: tuple[float, float] | None,
     level_direction: ruleset_api_v1.form_specs.LevelDirection,
     unit: str,
     localizer: Callable[[str], str],
@@ -990,8 +990,8 @@ def _get_fixed_levels_choice_element(
     prefill_value: tuple[float, float] | tuple[
         legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
     ] = (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
-    if levels.prefill_value is not None:
-        prefill_value = levels.prefill_value
+    if prefill_levels is not None:
+        prefill_value = prefill_levels
 
     return legacy_valuespecs.Tuple(
         elements=[
@@ -1265,7 +1265,11 @@ def _convert_to_legacy_levels(
             _LevelDynamicChoice.FIXED.value,
             localizer("Fixed levels"),
             _get_fixed_levels_choice_element(
-                to_convert.form_spec, to_convert.fixed, to_convert.level_direction, unit, localizer
+                to_convert.form_spec,
+                to_convert.prefill_fixed_levels,
+                to_convert.level_direction,
+                unit,
+                localizer,
             ),
         ),
     ]

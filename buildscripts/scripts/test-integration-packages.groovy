@@ -9,6 +9,7 @@ def main() {
         "EDITION",
         "VERSION",
         "OVERRIDE_DISTROS",
+        "USE_CASE"
     ]);
 
     check_environment_variables([

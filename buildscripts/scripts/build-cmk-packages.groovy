@@ -22,6 +22,7 @@ def main() {
         "DEPLOY_TO_WEBSITE_ONLY",
         "DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
+        "USE_CASE",
     ]);
 
     check_environment_variables([
@@ -56,7 +57,7 @@ def main() {
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            VERSION == "daily" ? "daily" : "release",
+            VERSION == "daily" ? param.USE_CASE : "release",
             [],
             "",
         ]);

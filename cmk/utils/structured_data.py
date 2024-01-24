@@ -690,6 +690,13 @@ class Table:
     def rows(self) -> list[SDRow]:
         return list(self._rows.values())
 
+    @property
+    def rows_with_retentions(self) -> list[SDRow]:
+        return [
+            {key: (value, self.retentions.get(ident, {}).get(key)) for key, value in row.items()}
+            for ident, row in self._rows.items()
+        ]
+
     #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:

@@ -1414,7 +1414,11 @@ def _paint_host_inventory_attribute(
     )
 
     with output_funnel.plugged():
-        tree_renderer.show_attribute(attributes.pairs.get(inventory_path.key), hint)
+        tree_renderer.show_attribute(
+            attributes.pairs.get(inventory_path.key),
+            hint,
+            attributes.get_retention_intervals(inventory_path.key),
+        )
         code = HTML(output_funnel.drain())
 
     return "", code
@@ -1441,7 +1445,11 @@ def _export_attribute_as_python_or_json(
 def _paint_host_inventory_table_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
     if column not in row:
         return "", ""
-    return _compute_cell_spec(row[column], hint, None)
+    return _compute_cell_spec(
+        row[column],
+        hint,
+        row.get("_".join([column, "retention_interval"])),
+    )
 
 
 def _register_table_column(
@@ -1533,11 +1541,16 @@ class RowTableInventory(ABCRowTable):
         return _get_table_rows(merged_tree, self._inventory_path)
 
     def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
-        return (
-            [{info_name + "_" + key: value for key, value in row.items()} for row in inv_data]
-            if self._info_names and (info_name := self._info_names[0])
-            else []
-        )
+        if not (self._info_names and (info_name := self._info_names[0])):
+            return []
+        rows = []
+        for inv_row in inv_data:
+            row: dict[str, int | float | str | bool | RetentionIntervals | None] = {}
+            for key, (value, retention_interval) in inv_row.items():
+                row["_".join([info_name, key])] = value
+                row["_".join([info_name, key, "retention_interval"])] = retention_interval
+            rows.append(row)
+        return rows
 
 
 class ABCDataSourceInventory(ABCDataSource):
@@ -2206,7 +2219,7 @@ def _compute_cell_spec(
         tdclass, code = hint.paint_function(value)
         html_value = HTML(code)
 
-    if retention_intervals is None or retention_intervals.source == "current":
+    if not html_value or retention_intervals is None or retention_intervals.source == "current":
         return tdclass, html_value
 
     now = int(time.time())
@@ -2223,23 +2236,20 @@ def _compute_cell_spec(
                     class_=["icon"],
                 ),
                 title=_("Data is outdated and will be removed with the next check execution"),
+                css=["muted_text"],
             ),
         )
     if now > valid_until:
         return (
             tdclass,
             HTMLWriter.render_span(
-                html_value
-                + HTML("&nbsp;")
-                + HTMLWriter.render_img(
-                    theme.detect_icon_path("service_duration", "icon_"),
-                    class_=["icon"],
-                ),
+                html_value,
                 title=_("Data was provided at %s and is considered valid until %s")
                 % (
                     cmk.utils.render.date_and_time(retention_intervals.cached_at),
                     cmk.utils.render.date_and_time(keep_until),
                 ),
+                css=["muted_text"],
             ),
         )
     return tdclass, html_value
@@ -2579,5 +2589,5 @@ def _get_table_rows(
         []
         if inventory_path.source != inventory.TreeSource.table
         or (table := tree.get_table(inventory_path.path)) is None
-        else table.rows
+        else table.rows_with_retentions
     )

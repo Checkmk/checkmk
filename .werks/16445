@@ -1,0 +1,11 @@
+Title: HW/SW Inventory: Improve displaying retention information
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1706096145
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Fix missing retention information in views with HW/SW inventory columns. Do not
+display retention icon if retention information is valid but not outdated.

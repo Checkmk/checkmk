@@ -4,11 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export function get(name: string): string {
-    return default_lookup[name] || "MISSING TRANSLATION";
+export function get(key: keyof typeof default_lookup): string {
+    return default_lookup[key] || "MISSING TRANSLATION";
 }
 
-const default_lookup: Record<string, string> = {
+const default_lookup = {
     default: "Default",
     live_search: "Live search active",
     live_search_help:
@@ -59,3 +59,5 @@ const default_lookup: Record<string, string> = {
     full: "Full",
     hierarchy: "Hierarchy",
 };
+
+export type TranslationKey = keyof typeof default_lookup;

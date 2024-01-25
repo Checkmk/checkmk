@@ -20,6 +20,7 @@ import {
     node_type_class_registry,
 } from "nodevis/node_utils";
 import * as texts from "nodevis/texts";
+import {TranslationKey} from "nodevis/texts";
 import {
     ContextMenuElement,
     d3SelectionDiv,
@@ -595,12 +596,12 @@ class NetworkLink extends AbstractLink {
                 );
             });
         if (this._link_data.config.topology_classes) {
-            const data: [string, boolean][] =
-                this._link_data.config.topology_classes;
+            const data: [TranslationKey, boolean][] = this._link_data.config
+                .topology_classes as unknown as [TranslationKey, boolean][];
             this.selection().selectAll("title.topology_info").remove();
             data.forEach(entry => {
                 this._root_selection!.classed(entry[0], entry[1]);
-                if (entry[1] == true) {
+                if (entry[1]) {
                     this.selection()
                         .selectAll("title.topology_info")
                         .data([entry[0]])

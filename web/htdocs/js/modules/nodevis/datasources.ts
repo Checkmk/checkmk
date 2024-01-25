@@ -100,6 +100,7 @@ export class AbstractDatasource extends Object {
     _fetch_url: string | null = null;
     _fetch_params: BodyInit | null = null;
     _fetch_start = 0;
+    _waiting_for_hash: string | null = null;
 
     static id(): string {
         return "abstract_datasource";
@@ -149,11 +150,17 @@ export class AbstractDatasource extends Object {
             headers: {
                 "Content-type": "application/x-www-form-urlencoded",
             },
-        }).then(json_data =>
-            this._set_data(
-                json_data as unknown as CMKAjaxReponse<AjaxFetchTopologyData>
+        }).then(json_data => {
+            const response =
+                json_data as unknown as CMKAjaxReponse<AjaxFetchTopologyData>;
+            if (
+                this._waiting_for_hash != null &&
+                response.result.query_hash != this._waiting_for_hash
             )
-        );
+                return;
+            this._waiting_for_hash = null;
+            this._set_data(response);
+        });
     }
 
     get_data(): Record<string, any> {
@@ -209,7 +216,12 @@ export class TopologyDatasource extends AbstractDatasource {
         return "topology";
     }
 
-    fetch_hosts(fetch_params: BodyInit | null) {
-        this.fetch("ajax_fetch_topology.py", fetch_params);
+    fetch_hosts(fetch_params: Record<string, any>) {
+        this._waiting_for_hash = Date.now().toString();
+        fetch_params["query_hash"] = this._waiting_for_hash;
+        this.fetch(
+            "ajax_fetch_topology.py",
+            new URLSearchParams(fetch_params).toString()
+        );
     }
 }

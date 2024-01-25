@@ -25,7 +25,6 @@ daily_extended: &daily_extended
     - "centos-8"
     - "almalinux-9"
     - "sles-15sp5"
-    - "cma-4"
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: &internal_distros
@@ -34,7 +33,7 @@ internal_distros: &internal_distros
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: [*daily_extended, *internal_distros]
+        daily: [*daily_extended, *internal_distros, "cma-4"]
         daily_tests: [*daily_extended, *internal_distros]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_extended]

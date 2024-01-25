@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, NamedTuple
 
 from typing_extensions import TypedDict
 
@@ -64,6 +64,17 @@ STATUS_MAP = {
     "check_and_display": 0,
 }
 INFO_INCLUDED_MAP = {"dont_show_and_check": False}
+
+
+class Qtree(NamedTuple):
+    quota: str
+    quota_users: str
+    quota_type: str
+    volume: str
+    disk_limit: str
+    disk_used: str
+    files_used: str = ""
+    file_limit: str = ""
 
 
 def parse_netapp_api_multiple_instances(
@@ -638,3 +649,59 @@ def check_netapp_vs_traffic(
             yield Metric(name=perfname, value=rate)
         except IgnoreResultsError:
             yield Result(state=State.OK, summary=f"{protoname} {perftext}: -")
+
+
+def discover_netapp_qtree_quota(
+    params: Mapping[str, Any], section: Mapping[str, Qtree]
+) -> DiscoveryResult:
+    def _get_item_names(qtree: Qtree):  # type: ignore[no-untyped-def]
+        short_name = ".".join([n for n in [qtree.quota, qtree.quota_users] if n])
+        long_name = f"{qtree.volume}/{short_name}" if qtree.volume else short_name
+        return short_name, long_name
+
+    exclude_volume = params.get("exclude_volume", False)
+    for name, qtree in section.items():
+        if qtree.disk_limit.isdigit():
+            short_name, long_name = _get_item_names(qtree)
+
+            if (exclude_volume and name == short_name) or (
+                not exclude_volume and name == long_name
+            ):
+                yield Service(item=name)
+
+
+def check_netapp_qtree_quota(
+    item_name: str,
+    qtree: Qtree,
+    params: Mapping[str, Any],
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    disk_limit = qtree.disk_limit
+
+    if not disk_limit.isdigit():
+        yield Result(state=State.UNKNOWN, summary="Qtree has no disk limit set")
+        return
+
+    if not qtree.disk_used.isdigit():
+        yield Result(state=State.UNKNOWN, summary="Qtree has no used space data set")
+        return
+
+    size_total = int(disk_limit) / 1024.0
+    size_avail = size_total - int(qtree.disk_used) / 1024.0
+    if qtree.files_used.isdigit() and qtree.file_limit.isdigit():
+        inodes_total = int(qtree.file_limit)
+        inodes_avail = inodes_total - int(qtree.files_used)
+    else:
+        inodes_total = None
+        inodes_avail = None
+
+    yield from df_check_filesystem_single(
+        value_store=value_store,
+        mountpoint=item_name,
+        filesystem_size=size_total,
+        free_space=size_avail,
+        reserved_space=0,
+        inodes_total=inodes_total,
+        inodes_avail=inodes_avail,
+        params=params,
+    )

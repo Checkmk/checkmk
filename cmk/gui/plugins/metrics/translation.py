@@ -448,6 +448,7 @@ check_metrics["check_mk-libelle_business_shadow_archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_luns"] = df_translation
 check_metrics["check_mk-netapp_ontap_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
+check_metrics["check_mk-netapp_ontap_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation

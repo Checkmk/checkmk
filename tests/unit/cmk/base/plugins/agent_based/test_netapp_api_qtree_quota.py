@@ -16,9 +16,10 @@ from cmk.checkengine.checking import CheckPluginName
 import cmk.base.plugins.agent_based.netapp_api_qtree_quota as qtree_quota
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names, Qtree
+from cmk.base.plugins.agent_based.netapp_api_qtree_quota import get_item_names
 
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.netapp_api import Qtree
 
 
 @pytest.fixture(name="value_store_patch")

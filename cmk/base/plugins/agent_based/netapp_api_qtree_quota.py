@@ -11,24 +11,13 @@
 # quota fdo03   quota-type tree disk-limit 2684354560   volume vol_bronze1_fdo2 disk-used 788905236
 
 from collections.abc import Generator, Mapping
-from typing import Any, NamedTuple
+from typing import Any
 
 from cmk.plugins.lib import df, netapp_api
+from cmk.plugins.lib.netapp_api import Qtree
 
-from .agent_based_api.v1 import get_value_store, register, Result, Service, State
+from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-
-
-class Qtree(NamedTuple):
-    quota: str
-    quota_users: str
-    quota_type: str
-    volume: str
-    disk_limit: str
-    disk_used: str
-    files_used: str
-    file_limit: str
-
 
 Section = Mapping[str, Qtree]
 
@@ -73,15 +62,7 @@ def get_item_names(qtree: Qtree):  # type: ignore[no-untyped-def]
 
 
 def discover_netapp_api_qtree_quota(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
-    exclude_volume = params.get("exclude_volume", False)
-    for name, qtree in section.items():
-        if qtree.disk_limit.isdigit():
-            short_name, long_name = get_item_names(qtree)
-
-            if (exclude_volume and name == short_name) or (
-                not exclude_volume and name == long_name
-            ):
-                yield Service(item=name)
+    yield from netapp_api.discover_netapp_qtree_quota(params, section)
 
 
 def check_netapp_api_qtree_quota(
@@ -91,30 +72,7 @@ def check_netapp_api_qtree_quota(
     if not qtree:
         return
 
-    disk_limit = qtree.disk_limit
-    if not disk_limit.isdigit():
-        yield Result(state=State.UNKNOWN, summary="Qtree has no disk limit set")
-        return
-
-    size_total = int(disk_limit) / 1024.0
-    size_avail = size_total - int(qtree.disk_used) / 1024.0
-    if qtree.files_used.isdigit() and qtree.file_limit.isdigit():
-        inodes_total = int(qtree.file_limit)
-        inodes_avail = inodes_total - int(qtree.files_used)
-    else:
-        inodes_total = None
-        inodes_avail = None
-
-    yield from df.df_check_filesystem_single(
-        value_store=get_value_store(),
-        mountpoint=item,
-        filesystem_size=size_total,
-        free_space=size_avail,
-        reserved_space=0,
-        inodes_total=inodes_total,
-        inodes_avail=inodes_avail,
-        params=params,
-    )
+    yield from netapp_api.check_netapp_qtree_quota(item, qtree, params, get_value_store())
 
 
 register.agent_section(name="netapp_api_qtree_quota", parse_function=parse_netapp_api_qtree_quota)

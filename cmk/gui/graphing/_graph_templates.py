@@ -165,7 +165,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
             )
         except (ValueError, KeyError):
             return _("n/a")
-        return result.unit_info["render"](result.value)
+        return result.unit_info["render"](result.value).strip()
 
     return regex.regex(r"%\([^)]*\)").sub(eval_to_string, text)
 

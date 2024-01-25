@@ -646,6 +646,32 @@ def fetch_environment(connection):
         )
 
 
+def fetch_qtree_quota(
+    connection: HostConnection,
+) -> Iterable[models.QtreeQuotaModel]:
+    field_query = {
+        "type",
+        "qtree.name",
+        "volume.name",
+        "space.hard_limit",
+        "space.used.total",
+        "users",
+    }
+
+    for element in NetAppResource.QuotaReport.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+        yield models.QtreeQuotaModel(
+            type_=element_data["type"],
+            name=element_data["qtree"]["name"],
+            volume=element_data["volume"]["name"],
+            hard_limit=element_data.get("space", {}).get("hard_limit"),
+            used_total=element_data.get("space", {}).get("used", {}).get("total"),
+            users=element_data.get("users", {}).get("name"),
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -665,6 +691,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("vs_traffic", fetch_vs_traffic_counters(connection), logger)
     write_section("psu", fetch_psu(connection), logger)
     write_section("environment", fetch_environment(connection), logger)
+    write_section("qtree_quota", fetch_qtree_quota(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

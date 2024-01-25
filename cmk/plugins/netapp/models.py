@@ -587,3 +587,30 @@ class DiscrimnatorEnvSensorModel(BaseModel):
     sensor: Union[EnvironmentThresholdSensorModel, EnvironmentDiscreteSensorModel] = Field(
         discriminator="sensor_type"
     )
+
+
+class QtreeQuotaModel(BaseModel):
+    """
+
+    api: GET /api/storage/quota/reports
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//quota.html#quota-report-iter
+
+
+    ============
+    OLD -> NEW:
+    ============
+    "tree" -> name
+    "volume" -> volume.name
+    "disk-limit" -> space.hard_limit
+    "disk-used" -> space.used.total
+    "quota-type" -> type # NA
+    "quota-users.quota-user.quota-user-name" -> users
+    ============
+    """
+
+    type_: str
+    name: str
+    volume: str
+    hard_limit: int | None = None
+    used_total: int | None = None
+    users: str | None = None

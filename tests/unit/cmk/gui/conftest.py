@@ -51,9 +51,7 @@ import cmk.gui.watolib.groups as groups
 import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
-from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
@@ -251,18 +249,19 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
-# TODO: The list of registries is not complete. It would be better to selectively solve this
-# A good next step would be to prevent modifications of registries during test execution and
-# only allow them selectively with an automatic cleanup after the test finished.
-@pytest.fixture(autouse=True)
-def reset_gui_registries() -> Iterator[None]:
-    """Fixture to reset registries to its default entries."""
-    registries: list[Registry[Any]] = [
-        dashlet_registry,
-        permission_registry,
-        permission_section_registry,
-    ]
-    with reset_registries(registries):
+@pytest.fixture(name="registry_list")
+def fixture_registry_list() -> list[None | Registry[Any]]:
+    """Returns list of the registries to be reset after test-case execution.
+
+    Override this fixture by defining it within a test-module.
+    """
+    return []
+
+
+@pytest.fixture(name="reset_gui_registries")
+def fixture_reset_gui_registries(registry_list: list[Registry[Any]]) -> Iterator[None]:
+    """Fixture to reset a list of registries to their default entries."""
+    with reset_registries(registry_list):
         yield
 
 
@@ -447,7 +446,7 @@ def with_host(
     root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
 

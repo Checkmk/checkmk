@@ -443,7 +443,7 @@ def _check_heartbeat_crm_resources(
     for resource in resources:
         yield Result(state=State.OK, summary=" ".join(resource))
 
-        if len(resource) == 3 and resource[2] != "Started":
+        if len(resource) in {3, 4} and resource[2] != "Started":
             yield Result(state=State.CRIT, summary='Resource is in state "%s"' % (resource[2],))
         elif (
             (target_node := params["expected_node"])

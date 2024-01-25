@@ -1,0 +1,12 @@
+Title: heartbeat_crm_resources: unmanaged stopped resources could not go critical
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706189999
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Stopped resources are marked <code>CRIT</code>.
+
+If a resources was stopped and unmanaged, it was not marked as <code>CRIT</code>.

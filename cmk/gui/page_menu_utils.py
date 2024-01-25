@@ -505,8 +505,8 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     is_cluster = False
     if is_cluster:
         yield PageMenuEntry(
-            title=_("Connection tests"),
-            icon_name="diagnose",
+            title=_("Test connection"),
+            icon_name="analysis",
             item=make_simple_link(
                 makeuri_contextless(
                     request,

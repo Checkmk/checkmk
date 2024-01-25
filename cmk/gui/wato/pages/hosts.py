@@ -465,8 +465,8 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
 
     if mode_name != "diag_host" and not host.is_cluster():
         yield PageMenuEntry(
-            title=_("Connection tests"),
-            icon_name="diagnose",
+            title=_("Test connection"),
+            icon_name="analysis",
             item=make_simple_link(
                 folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
             ),

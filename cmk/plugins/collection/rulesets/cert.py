@@ -178,18 +178,18 @@ def _valuespec_specific_values() -> Dictionary:
                                         ),
                                     ),
                                     CascadingSingleChoiceElement(
-                                        name="gost-r3410",
+                                        name="gost_r3410",
                                         title=Localizable("GOST R 34.10-2001"),
                                         parameter_form=FixedValue(
-                                            value="gost-r3410",
+                                            value=None,
                                             title=Localizable("GOST R 34.10-2001"),
                                         ),
                                     ),
                                     CascadingSingleChoiceElement(
-                                        name="gost-r3410-2012",
+                                        name="gost_r3410_2012",
                                         title=Localizable("GOST R 34.10-2012"),
                                         parameter_form=FixedValue(
-                                            value="gost-r3410",
+                                            value=None,
                                             title=Localizable("GOST R 34.10-2012"),
                                         ),
                                     ),

@@ -973,6 +973,17 @@ def test_get_host_address_config(
     assert host_config == expected_result
 
 
+def mock_ip_address_of(
+    config_cache: base_config.ConfigCache,
+    host_name: HostName,
+    family: socket.AddressFamily | ip_lookup.AddressFamily,
+) -> HostAddress | None:
+    if family == socket.AF_INET:
+        return HostAddress("0.0.0.1")
+
+    return HostAddress("::1")
+
+
 def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = ConfigCacheMock(
         "alias",
@@ -986,7 +997,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(base_config, "ipv6addresses", {"host_name": HostAddress("::1")})
     monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
     monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
-    monkeypatch.setattr(base_config, "ip_address_of", lambda *args: HostAddress("::1"))
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
     monkeypatch.setattr(
         base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}
     )
@@ -997,6 +1008,8 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         name="host_name",
         alias="alias",
         resolved_address="::1",
+        resolved_ipv4_address="0.0.0.1",
+        resolved_ipv6_address="::1",
         address_config=NetworkAddressConfig(
             ip_family=IPAddressFamily.DUAL_STACK,
             ipv4_address=None,

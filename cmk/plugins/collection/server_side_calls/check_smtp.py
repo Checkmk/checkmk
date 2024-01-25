@@ -44,10 +44,15 @@ def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Li
         "ipv6" if resolved_family is ResolvedIPAddressFamily.IPV6 else "ipv4"
     )
 
-    if address_family == "ipv6" and resolved_family != ResolvedIPAddressFamily.IPV6:
-        raise ValueError("No IPv6 address available for host")
+    if address_family == "ipv6":
+        if host_config.resolved_ipv6_address is None:
+            raise ValueError("IPv6 address is not available")
+        return host_config.resolved_ipv6_address, "-6"
 
-    return host_config.resolved_address or "", "-6" if address_family == "ipv6" else "-4"
+    if host_config.resolved_ipv4_address is None:
+        raise ValueError("IPv4 address is not available")
+
+    return host_config.resolved_ipv4_address, "-4"
 
 
 def check_smtp_arguments(  # pylint: disable=too-many-branches

@@ -61,15 +61,16 @@ class HostSettings:
 
     def get_fallback_address(self, host_config: HostConfig) -> str:
         family = self.get_ip_address_family(host_config)
-        resolved_family = host_config.resolved_ip_family
 
-        if (
-            family is Family.enforce_ipv4
-            and resolved_family != ResolvedIPAddressFamily.IPV4
-            or family is Family.enforce_ipv6
-            and resolved_family != ResolvedIPAddressFamily.IPV6
-        ):
-            raise ValueError("IP address for the enforced family isn't available")
+        if family is Family.enforce_ipv4:
+            if host_config.resolved_ipv4_address is None:
+                raise ValueError("IPv4 address is not available")
+            return host_config.resolved_ipv4_address
+
+        if family is Family.enforce_ipv6:
+            if host_config.resolved_ipv6_address is None:
+                raise ValueError("IPv6 address is not available")
+            return host_config.resolved_ipv6_address
 
         return host_config.resolved_address or ""
 

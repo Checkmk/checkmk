@@ -172,7 +172,24 @@ def get_host_config(host_name: HostName, config_cache: base_config.ConfigCache) 
         additional_ipv6_addresses=additional_ipv6addresses,
     )
 
-    resolved_ip_family = base_config.resolve_address_family(config_cache, host_name, ip_family)
+    resolved_ip_family = _get_resolved_ip_family(
+        base_config.resolve_address_family(config_cache, host_name, ip_family)
+    )
+    resolved_ipv4_address = (
+        base_config.ip_address_of(config_cache, host_name, socket.AF_INET)
+        if ip_family in (ip_lookup.AddressFamily.IPv4, ip_lookup.AddressFamily.DUAL_STACK)
+        else None
+    )
+    resolved_ipv6_address = (
+        base_config.ip_address_of(config_cache, host_name, socket.AF_INET6)
+        if ip_family in (ip_lookup.AddressFamily.IPv6, ip_lookup.AddressFamily.DUAL_STACK)
+        else None
+    )
+    resolved_address = (
+        resolved_ipv4_address
+        if resolved_ip_family == ResolvedIPAddressFamily.IPV4
+        else resolved_ipv6_address
+    )
 
     customer = (
         getattr(base_config, "current_customer", None)
@@ -183,8 +200,10 @@ def get_host_config(host_name: HostName, config_cache: base_config.ConfigCache) 
     return HostConfig(
         name=host_name,
         alias=config_cache.alias(host_name),
-        resolved_address=base_config.ip_address_of(config_cache, host_name, ip_family),
-        resolved_ip_family=_get_resolved_ip_family(resolved_ip_family),
+        resolved_address=resolved_address,
+        resolved_ipv4_address=resolved_ipv4_address,
+        resolved_ipv6_address=resolved_ipv6_address,
+        resolved_ip_family=resolved_ip_family,
         address_config=address_config,
         custom_attributes=base_config.get_custom_host_attributes(config_cache, host_name),
         tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},

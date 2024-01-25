@@ -95,10 +95,16 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     Args:
         name: Host name
         alias: Host alias
-        resolved_address: If IP address isn't configured in the host config, it will be resolved
-            from the host name.
+        resolved_address: Will be equal to resolved_ipv4_address or
+            resolved_ipv6_address depending on the resolved IP family.
         resolved_ip_family: Resolved IP address family
         address_config: Address settings defined in the host configuration
+        resolved_ipv4_address: If IPv4 address isn't configured in the host config,
+            it will be resolved from the host name. Present if host has IPv4 or dual-stack
+            family configured.
+        resolved_ipv6_address: If IPv6 address isn't configured in the host config,
+            it will be resolved from the host name. Present if host has IPv6 or dual-stack
+            family configured.
         custom_attributes: Custom attributes of the host
         tags: Tags of the host
         labels: Labels of the host
@@ -125,6 +131,8 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     alias: str
     resolved_address: str | None
     address_config: NetworkAddressConfig
+    resolved_ipv4_address: str | None = None
+    resolved_ipv6_address: str | None = None
     resolved_ip_family: ResolvedIPAddressFamily | None = None
     custom_attributes: Mapping[str, str] = field(default_factory=dict)
     tags: Mapping[str, str] = field(default_factory=dict)

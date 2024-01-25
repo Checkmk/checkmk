@@ -30,6 +30,7 @@ from cmk.server_side_calls.v1 import (
 HOST_CONFIG = HostConfig(
     name="hostname",
     resolved_address="0.0.0.1",
+    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,
     address_config=NetworkAddressConfig(
@@ -664,7 +665,7 @@ def test_proxy_host_virtual_host(
                 "mode": ("url", {}),
             },
             ValueError,
-            "IP address for the enforced family isn't available",
+            "IPv6 address is not available",
             id="missing address for enforced family",
         ),
         pytest.param(

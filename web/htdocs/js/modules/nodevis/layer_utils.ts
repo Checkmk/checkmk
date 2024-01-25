@@ -36,9 +36,6 @@ export class AbstractLayer extends Object implements TypeWithName {
         this._world = world;
         this._div_selection = selections.div;
         this._svg_selection = selections.svg;
-
-        // TODO: sort index for div and svg layers
-        // d3js can rearrange dom with sorting
     }
 
     is_dynamic_instance_template() {

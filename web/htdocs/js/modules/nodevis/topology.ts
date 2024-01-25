@@ -633,10 +633,6 @@ export class HostServiceLink extends NetworkLink {
         return "host2service";
     }
 
-    override _color(): string {
-        return "grey";
-    }
-
     override _get_link_type_specific_force(
         force_name: SimulationForce,
         force_options: TopologyForceOptions
@@ -671,10 +667,6 @@ export class HostHostLink extends NetworkLink {
         return "host2host";
     }
 
-    override _color(): string {
-        return "grey";
-    }
-
     override _get_link_type_specific_force(
         force_name: SimulationForce,
         force_options: TopologyForceOptions
@@ -696,10 +688,6 @@ export class HostHostLink extends NetworkLink {
 export class ServiceServiceLink extends NetworkLink {
     override class_name() {
         return "service2service";
-    }
-
-    override _color(): string {
-        return "darkgrey";
     }
 
     override _get_link_type_specific_force(

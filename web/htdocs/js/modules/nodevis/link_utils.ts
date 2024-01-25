@@ -66,8 +66,7 @@ export class AbstractLink implements TypeWithName {
             .attr("stroke-width", function (d) {
                 // @ts-ignore
                 return Math.max(1, 2 - d.depth);
-            })
-            .style("stroke", this._color());
+            });
 
         // Elbow and round style
         const path_selection = selection
@@ -75,18 +74,13 @@ export class AbstractLink implements TypeWithName {
             .data(this._line_config.style != "straight" ? [this.id()] : [])
             .join("path")
             .attr("fill", "none")
-            .attr("stroke-width", 1)
-            .style("stroke", this._color());
+            .attr("stroke-width", 1);
 
         // @ts-ignore
         this._selection =
             this._line_config.style == "straight"
                 ? line_selection
                 : path_selection;
-    }
-
-    _color(): string {
-        return "darkgrey";
     }
 
     update_position(_enforce_transition = false) {

@@ -1338,20 +1338,46 @@ def _register_attribute_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
+def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return None
+    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
-    return row.get("host_inventory", ImmutableTree()).get_attribute(path, key)
+
+def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
+    if (attributes := _get_attributes(row, path)) is None:
+        return None
+    return attributes.pairs.get(key)
 
 
 def _paint_host_inventory_attribute(
     row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
 ) -> CellSpec:
-    _tdclass, code = hint.paint_function(_compute_attribute_painter_data(row, path, key))
-    return "", code
+    if (attributes := _get_attributes(row, path)) is None:
+        return "", ""
+    return _compute_cell_spec(
+        _InventoryTreeValueInfo(
+            key,
+            attributes.pairs.get(key),
+            attributes.retentions.get(key),
+        ),
+        hint,
+    )
+
+
+def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
+    if column not in row:
+        return "", ""
+    return _compute_cell_spec(
+        _InventoryTreeValueInfo(
+            column,
+            row[column],
+            None,
+        ),
+        hint,
+    )
 
 
 def _register_table_column(
@@ -1377,7 +1403,7 @@ def _register_table_column(
             "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
             "columns": [column],
-            "paint": lambda row: hint.paint_function(row.get(column)),
+            "paint": lambda row: _paint_host_inventory_column(row, column, hint),
             "sorter": column,
             # See views/painter/v0/base.py::Cell.painter_parameters
             # We have to add a dummy value here such that the painter_parameters are not None and

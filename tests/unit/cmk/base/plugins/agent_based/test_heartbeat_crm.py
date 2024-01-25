@@ -395,7 +395,6 @@ def test_check_heartbeat_crm_resources_only() -> None:
             state=State.OK,
             summary="checkmk_http (systemd:httpd): Started xxxxxxxx-rrrrr (unmanaged)",
         ),
-        Result(
-            state=State.OK, summary="checkmk_omd (ocf::custom:omd): Stopped (unmanaged)"
-        ),  # THIS IS A BUG! it should be crit
+        Result(state=State.OK, summary="checkmk_omd (ocf::custom:omd): Stopped (unmanaged)"),
+        Result(state=State.CRIT, summary='Resource is in state "Stopped"'),
     ]

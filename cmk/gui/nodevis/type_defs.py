@@ -304,3 +304,4 @@ class TopologyResponse:
     layout: Layout = field(default_factory=Layout)
     headline: str | None = None
     errors: list[str] = field(default_factory=list)
+    query_hash: str | None = None

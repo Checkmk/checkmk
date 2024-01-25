@@ -485,9 +485,7 @@ export class TopologyVisualization extends NodeVisualization {
             "topology_fetch",
             "Topology: Fetching data.."
         );
-        this._topology_datasource.fetch_hosts(
-            new URLSearchParams(fetch_params).toString()
-        );
+        this._topology_datasource.fetch_hosts(fetch_params);
     }
 
     _update_overlay_config(overlays_config: OverlayConfig[]) {

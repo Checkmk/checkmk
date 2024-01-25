@@ -1780,6 +1780,8 @@ def _compute_topology_result(
         topology_configuration.frontend,
         topology_configuration.layout,
         headline,
+        [],
+        query_hash=request.get_str_input("query_hash"),
     )
 
 

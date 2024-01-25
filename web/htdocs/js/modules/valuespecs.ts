@@ -1196,7 +1196,7 @@ function select2_ajax_vs_autocomplete(
             : ["hostname", "service", "label"].find(el =>
                   autocompleter.ident.includes(el)
               )
-            ? elem.value
+            ? elem.options[elem.selectedIndex]?.innerText || ""
             : "";
 
     return {

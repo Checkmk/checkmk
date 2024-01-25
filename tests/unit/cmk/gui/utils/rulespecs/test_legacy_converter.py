@@ -608,7 +608,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.BooleanChoice(),
-            legacy_valuespecs.Checkbox(),
+            legacy_valuespecs.Checkbox(default_value=False),
             id="minimal BooleanChoice",
         ),
         pytest.param(
@@ -747,7 +747,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First"))
                 ]
             ),
-            legacy_valuespecs.ListChoice(choices=[("first", _("First"))]),
+            legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=()),
             id="minimal MultipleChoice",
         ),
         pytest.param(

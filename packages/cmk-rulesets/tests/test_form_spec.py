@@ -52,7 +52,7 @@ def test_dictionary_ident_validation() -> None:
 
 
 def test_multiple_choice_validation() -> None:
-    with pytest.raises(ValueError, match="Default element is not one of the specified elements"):
+    with pytest.raises(ValueError, match="Invalid prefill element"):
         MultipleChoice(
             elements=[MultipleChoiceElement(name="element_abc", title=Localizable("Element ABC"))],
             prefill_selections=["element_xyz"],

@@ -2531,8 +2531,10 @@ def _execute_active_check_inventory(
         )
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
+            console.verbose("Archive current inventory tree.\n")
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
+            console.verbose("Save new inventory tree.\n")
             tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
@@ -2559,7 +2561,7 @@ def _get_save_tree_actions(
         return _SaveTreeActions(do_archive=False, do_save=True)
 
     if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed. Add history entry.\n")
+        console.verbose("Inventory tree has changed.\n")
 
     if update_result.save_tree:
         console.verbose(str(update_result))

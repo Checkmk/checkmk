@@ -380,6 +380,7 @@ class ABCTopologyNodeDataGenerator:
         root_hostnames_from_core: set[str],
         topology_configuration: TopologyConfiguration,
         data_folder: Path,
+        add_data_root_node: bool = True,
     ):
         self._topology_configuration = topology_configuration
         self._root_hostnames_from_core = root_hostnames_from_core
@@ -387,6 +388,7 @@ class ABCTopologyNodeDataGenerator:
         self._current_mesh_depth = 0
         self._topology_nodes: TopologyNodes = {}
         self._errors: list[str] = []
+        self._add_data_root_node = add_data_root_node
         self._generate_data()
 
     @abc.abstractmethod
@@ -700,6 +702,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         root_hostnames_from_core: set[HostName],
         topology_configuration: TopologyConfiguration,
         data_folder: Path,
+        add_data_root_node: bool,
     ):
         self._data_type = data_type
         self._network_data = _get_network_data(data_folder, data_type)
@@ -707,7 +710,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         network_data_ids = self._network_data.translate_hostnames_to_network_id(
             root_hostnames_from_core
         )
-        super().__init__(network_data_ids, topology_configuration, data_folder)
+        super().__init__(network_data_ids, topology_configuration, data_folder, add_data_root_node)
 
     def unique_id(self) -> str:
         return _dynamic_network_data_id(self._data_type)
@@ -784,14 +787,20 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             list(self._topology_nodes[x] for x in start_node_ids), self._topology_nodes
         )
 
-        root_node = f"datatype_root#{self._data_type}"
-        self._topology_nodes[root_node] = TopologyNode(
-            id=root_node,
-            name=self._data_type,
-            mesh_depth=0,
-            type=NodeType.TOPOLOGY_SITE,
-            incoming={x for x, y in self._topology_nodes.items() if y.mesh_depth == 1},
-        )
+        if self._add_data_root_node:
+            # Add root node for all nodes in this datasource. Useful when having multiple datasources
+            root_node = f"datatype_root#{self._data_type}"
+            self._topology_nodes[root_node] = TopologyNode(
+                id=root_node,
+                name=self._data_type,
+                mesh_depth=0,
+                type=NodeType.TOPOLOGY_SITE,
+                incoming={x for x, y in self._topology_nodes.items() if y.mesh_depth == 1},
+            )
+        else:
+            # Shift all nodes towards toplevel
+            for node in self._topology_nodes.values():
+                node.mesh_depth = node.mesh_depth - 1
 
     def _apply_service_visibility(self):
         general_service_visibility = (
@@ -978,13 +987,13 @@ class Topology:
 
     def _get_computed_layers(self, data_folder: Path) -> dict[str, ABCTopologyNodeDataGenerator]:
         computed_layers = {}
+        active_layer_ids = [
+            layer_id
+            for layer_id, overlay_config in self._topology_configuration.frontend.overlays_config.overlays.items()
+            if overlay_config.get("active")
+        ]
 
-        for (
-            layer_id,
-            overlay_config,
-        ) in self._topology_configuration.frontend.overlays_config.overlays.items():
-            if not overlay_config.get("active"):
-                continue
+        for layer_id in active_layer_ids:
             layer_class = topology_layer_registry.get(layer_id)
             layer = None
             if layer_class:
@@ -992,6 +1001,7 @@ class Topology:
                     set(map(str, self._root_hostnames_from_core)),
                     self._topology_configuration,
                     data_folder,
+                    add_data_root_node=len(active_layer_ids) > 1,
                 )
             else:
                 # Create generic class instances for dynamic layers
@@ -1001,6 +1011,7 @@ class Topology:
                         self._root_hostnames_from_core,
                         self._topology_configuration,
                         data_folder,
+                        add_data_root_node=len(active_layer_ids) > 1,
                     )
             if layer:
                 computed_layers[layer_id] = layer
@@ -1125,30 +1136,16 @@ def _flatten_hierarchy(
     hosts_to_assign: dict[HostName, list[HierarchyNode]],
     services_to_assign: dict[str, HierarchyNode],
 ) -> None:
-    # Goal: Step1: Move all non-root nodes to mesh_depth 1
-    #       Step2: Services with a known hosts are set to mesh_depth 2
-    root_nodes = []
-    for node_id, node in merged_results.items():
-        if node.mesh_depth == 0:
-            root_nodes.append(node)
-            continue
-        node.mesh_depth = 1
+    # Goal: Step1: Move all non-root nodes to mesh_depth 0
+    #       Step2: Services with a known hosts are set to mesh_depth 1
+    for node in merged_results.values():
+        node.mesh_depth = 0
 
     for service_id, service_node in sorted(services_to_assign.items()):
         hostname = service_node.type_specific["core"]["hostname"]
         possible_hosts = hosts_to_assign.get(hostname, [])
         if len(possible_hosts) == 1:
-            merged_results[service_id].mesh_depth = 2
-
-    # Create a (hidden) connection from the first root node to all nodes at mesh_depth_1
-    first_root_node = root_nodes[0]
-    first_root_adjacents_ids = first_root_node.outgoing.union(first_root_node.incoming)
-    for node_id, node in merged_results.items():
-        if node.mesh_depth != 1:
-            continue
-        if node_id in first_root_adjacents_ids:
-            continue
-        first_root_node.incoming.add(node_id)
+            merged_results[service_id].mesh_depth = 1
 
 
 def _assign_services_to_hosts(

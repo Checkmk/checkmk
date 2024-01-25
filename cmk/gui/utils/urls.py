@@ -411,7 +411,7 @@ class DocReference(Enum):
     DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
     DASHBOARDS = "dashboards"
     DCD = "dcd"  # dynamic host configuration
-    DEVEL_CHECK_PLUGINS = "devel_check_plugins"
+    DEVEL_CHECK_PLUGINS = "devel_intro"
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"

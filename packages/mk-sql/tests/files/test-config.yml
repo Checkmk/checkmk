@@ -40,6 +40,9 @@ mssql:
   #    then you must also describe it in `main.instances`
   #
   main: # mandatory, defines main SQL check to be executed
+    system: # optional
+      max_connections: 16 # optional, default: absent, 16
+      max_queries: 64 # optional, default: absent, 64
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -94,6 +97,7 @@ mssql:
     mode: "port" # optional, default: "port" / can be "socket", "port" or "special"
   configs: # optional, defines additional SQL checks to be executed
     - main:
+      system: # optional, if absent will use main
       authentication: # optional, if absent will use main
         username: "foo" # mandatory
       connection: # optional, if absent will use main

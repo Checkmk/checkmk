@@ -75,6 +75,7 @@ def get_toggle_layout_designer_page_menu_entry():
         item=make_javascript_link(
             "const new_state = node_instance.toggle_layout_designer();"
             "d3.select('.suggestion.topology_layout_designer').select('img').classed('on', new_state);"
+            "d3.select('#menu_shortcut_edit_layout').select('img').classed('on', new_state);"
         ),
         name="edit_layout",
         css_classes=["topology_layout_designer", "noselect"],

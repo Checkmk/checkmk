@@ -37,16 +37,17 @@ class Parameters(BaseModel):
 
 
 def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Literal["-6", "-4"]]:
+    resolved_family = host_config.resolved_ip_family
+
     # Use the address family of the monitored host by default
     address_family = params.address_family or (
-        "ipv6" if host_config.resolved_ip_family is ResolvedIPAddressFamily.IPV6 else "ipv4"
+        "ipv6" if resolved_family is ResolvedIPAddressFamily.IPV6 else "ipv4"
     )
 
-    if address_family == "ipv6":
-        # FIXME: migrating to the new API revealed that these can be none. Should we raise?
-        # I think this is what happend before (silly as it is)
-        return host_config.address_config.ipv6_address or "", "-6"
-    return host_config.address_config.ipv4_address or "", "-4"
+    if address_family == "ipv6" and resolved_family != ResolvedIPAddressFamily.IPV6:
+        raise ValueError("No IPv6 address available for host")
+
+    return host_config.resolved_address or "", "-6" if address_family == "ipv6" else "-4"
 
 
 def check_smtp_arguments(  # pylint: disable=too-many-branches

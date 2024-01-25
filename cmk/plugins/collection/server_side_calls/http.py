@@ -60,9 +60,18 @@ class HostSettings:
         return Family(family)
 
     def get_fallback_address(self, host_config: HostConfig) -> str:
-        if self.get_ip_address_family(host_config) is Family.enforce_ipv6:
-            return str(host_config.address_config.ipv6_address)
-        return str(host_config.address_config.ipv4_address)
+        family = self.get_ip_address_family(host_config)
+        resolved_family = host_config.resolved_ip_family
+
+        if (
+            family is Family.enforce_ipv4
+            and resolved_family != ResolvedIPAddressFamily.IPV4
+            or family is Family.enforce_ipv6
+            and resolved_family != ResolvedIPAddressFamily.IPV6
+        ):
+            raise ValueError("IP address for the enforced family isn't available")
+
+        return host_config.resolved_address or ""
 
 
 @dataclass(frozen=True)

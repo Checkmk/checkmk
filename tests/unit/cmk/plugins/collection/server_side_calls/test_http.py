@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Type
 
 import pytest
 
@@ -340,7 +340,7 @@ HOST_CONFIG = HostConfig(
             [
                 "--sni",
                 "-I",
-                "0.0.0.2",
+                "0.0.0.1",
                 "-H",
                 "virtual.host",
             ],
@@ -354,7 +354,7 @@ HOST_CONFIG = HostConfig(
             [
                 "--sni",
                 "-I",
-                "0.0.0.2",
+                "0.0.0.1",
             ],
         ),
         pytest.param(
@@ -363,21 +363,20 @@ HOST_CONFIG = HostConfig(
                 "host": {
                     "address": ("proxy", {"address": "proxy", "port": 123}),
                     "port": 43,
-                    "address_family": "ipv6",
+                    "address_family": "ipv4",
                 },
                 "mode": ("url", {}),
             },
             [
                 "-j",
                 "CONNECT",
-                "-6",
                 "--sni",
                 "-p",
                 "123",
                 "-I",
                 "proxy",
                 "-H",
-                "fe80::240:43",
+                "0.0.0.1:43",
             ],
             id="proxy + virtual host (which is ignored)",
         ),
@@ -474,7 +473,7 @@ HOST_CONFIG = HostConfig(
                 "host": {},
                 "mode": ("url", {"expect_regex": ("checkmk", False, False, False)}),
             },
-            ["-r", "checkmk", "--sni", "-I", "0.0.0.2"],
+            ["-r", "checkmk", "--sni", "-I", "0.0.0.1"],
             id="check url, regex without additional options",
         ),
     ],
@@ -637,8 +636,8 @@ def test_direct_host_virtual_host(
     [
         pytest.param("0.0.0.1", 443, "0.0.0.1:443", id="virtual address, port"),
         pytest.param("0.0.0.1", None, "0.0.0.1", id="virtual address, no port"),
-        pytest.param(None, 443, "0.0.0.2:443", id="host config address, port"),
-        pytest.param(None, None, "0.0.0.2", id="host config address, no port"),
+        pytest.param(None, 443, "0.0.0.1:443", id="host config address, port"),
+        pytest.param(None, None, "0.0.0.1", id="host config address, no port"),
         pytest.param("$HOSTNAME$", 443, "hostname:443", id="virtual address with macro, port"),
         pytest.param("$HOSTNAME$", None, "hostname", id="virtual address with macro, no port"),
     ],
@@ -651,3 +650,50 @@ def test_proxy_host_virtual_host(
     proxy_host = ProxyHost(proxy_settings, host_settings)
 
     assert proxy_host.virtual_host(True, HOST_CONFIG) == expected_address
+
+
+@pytest.mark.parametrize(
+    "params,exception,error_message",
+    [
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": {
+                    "address_family": "ipv6",
+                },
+                "mode": ("url", {}),
+            },
+            ValueError,
+            "IP address for the enforced family isn't available",
+            id="missing address for enforced family",
+        ),
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": {
+                    "address_family": "ipv4",
+                },
+                "mode": {"url": {}},
+            },
+            TypeError,
+            "Invalid parameters",
+            id="mode parameters of invalid type",
+        ),
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": ("invalid", "parameters"),
+                "mode": ("url", {}),
+            },
+            TypeError,
+            "Invalid parameters",
+            id="host parameters of invalid type",
+        ),
+    ],
+)
+def test_invalid_config(
+    params: Mapping[str, Any], exception: Type[Exception], error_message: str
+) -> None:
+    with pytest.raises(exception, match=error_message):
+        parsed_params = active_check_http.parameter_parser(params)
+        list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))

@@ -58,6 +58,9 @@ const default_lookup = {
     flat: "Flat",
     full: "Full",
     hierarchy: "Hierarchy",
+    allow_hops: "Allow growing here",
+    forbid_hops: "Stop growing here",
+    continue_hop: "Continue growth here",
 };
 
 export type TranslationKey = keyof typeof default_lookup;

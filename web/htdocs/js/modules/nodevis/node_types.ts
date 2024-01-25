@@ -117,7 +117,7 @@ export class TopologyNode extends AbstractGUINode {
                     .classed("growth_forbidden", true)
                     .attr(
                         "xlink:href",
-                        "themes/facelift/images/icon_no_entry.svg"
+                        "themes/facelift/images/icon_topic_general.png"
                     )
                     .attr("width", 16)
                     .attr("height", 16)
@@ -135,7 +135,7 @@ export class TopologyNode extends AbstractGUINode {
                     .classed("growth_continue", true)
                     .attr(
                         "xlink:href",
-                        "themes/facelift/images/icon_perm_yes.png"
+                        "themes/facelift/images/icon_topic_agents.png"
                     )
                     .attr("width", 16)
                     .attr("height", 16)
@@ -200,11 +200,10 @@ export class TopologyNode extends AbstractGUINode {
         });
 
         // Forbid further growth
-        let growth_forbidden_text = "Forbid further hops";
-        if (growth_settings.growth_forbidden)
-            growth_forbidden_text = "Allow further hops";
         elements.push({
-            text: growth_forbidden_text,
+            text: growth_settings.growth_forbidden
+                ? texts.get("allow_hops")
+                : texts.get("forbid_hops"),
             on: () => {
                 const nodevis_node =
                     this._world.viewport.get_node_by_id(node_id);
@@ -213,6 +212,20 @@ export class TopologyNode extends AbstractGUINode {
                 this._world.update_data();
             },
         });
+
+        // Continue here
+        if (growth_settings.indicator_growth_possible)
+            elements.push({
+                text: texts.get("continue_hop"),
+                on: () => {
+                    const nodevis_node =
+                        this._world.viewport.get_node_by_id(node_id);
+                    if (!nodevis_node) return;
+                    _toggle_growth_continue(nodevis_node);
+                    this._world.update_data();
+                },
+            });
+
         return elements;
     }
 }

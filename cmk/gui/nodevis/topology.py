@@ -430,19 +430,28 @@ class ABCTopologyNodeDataGenerator:
         self._grow_continue_nodes(border_nodes)
 
     def _grow_to_mesh_depth(self, border_nodes: set[str]) -> set[str]:
+        previous_border_nodes = set()
+
         while self._current_mesh_depth <= self._topology_configuration.filter.mesh_depth:
+            previous_border_nodes = border_nodes
             border_nodes = self._process_nodes(border_nodes)
             self._check_mesh_size()
             self._current_mesh_depth += 1
-        return border_nodes
+        return previous_border_nodes
 
     def _grow_continue_nodes(self, border_nodes: set[str]) -> None:
-        growth_continue_nodes = self._topology_configuration.frontend.growth_continue_nodes
+        growth_continue_nodes = set(self._topology_configuration.frontend.growth_continue_nodes)
         while growth_continue_nodes:
-            growth_nodes = border_nodes.intersection(growth_continue_nodes)
+            adjacent_nodes = set()
+            for node_id in list(growth_continue_nodes):
+                if node_id in self._topology_nodes:
+                    adjacent_nodes.update(self._topology_nodes[node_id].outgoing)
+                    adjacent_nodes.update(self._topology_nodes[node_id].incoming)
+                    growth_continue_nodes.remove(node_id)
+            growth_nodes = adjacent_nodes - set(self._topology_nodes.keys())
             if not growth_nodes:
                 break
-            border_nodes = self._process_nodes(growth_nodes)
+            self._process_nodes(growth_nodes)
 
     def _process_nodes(self, border_nodes: set[str]) -> set[str]:
         unknown_border_nodes = border_nodes - set(self._topology_nodes.keys())
@@ -1679,7 +1688,7 @@ def _get_hostnames_from_core(topology_configuration: TopologyConfiguration) -> s
 
 
 def _compute_topology_response(topology_configuration: TopologyConfiguration) -> dict[str, Any]:
-    # logger.warning(f"Initial topology {pprint.pformat(topology_configuration)}")
+    # logger.warning(f"Initial topology {pprint.pformat(topology_configuration.frontend)}")
     ds_config = topology_configuration.frontend.datasource_configuration
     reference = Topology(topology_configuration, ds_config.reference)
 

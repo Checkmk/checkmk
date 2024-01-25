@@ -153,7 +153,6 @@ export class Viewport {
             .append("div")
             .attr("id", "log_messages")
             .append("table")
-            .style("background", "#1c2228")
             .style("table-layout", "fixed");
 
         // Initialize viewport size and scales before loading the layers

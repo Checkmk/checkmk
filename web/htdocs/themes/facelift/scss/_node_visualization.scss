@@ -478,12 +478,12 @@ div.node_vis {
   g.node_element {
     pointer-events: all;
     &.topology_center {
-      pointer-events: none;
+      display: none;
     }
   }
 
   g.edit .topology_center {
-    pointer-events: all;
+    display: unset;
   }
 
   g.edit .node_element circle.style_root_node,
@@ -514,8 +514,8 @@ div.node_vis {
     stroke-width: 3;
   }
 
-  .node_element.white_focus circle {
-    stroke: $grey-1 !important;
+  .node_element.highlight circle {
+    stroke: $font-color !important;
     stroke-width: 4;
   }
 
@@ -527,12 +527,12 @@ div.node_vis {
 
   .link_element {
     opacity: 0.3;
-    stroke-dasharray: 10 3;
+    stroke-dasharray: 2 3;
     &.host_service_link {
       line,
       path {
         stroke-dasharray: none;
-        stroke-width: 2;
+        stroke-width: 1;
       }
     }
 
@@ -541,8 +541,8 @@ div.node_vis {
       stroke-width: 4;
     }
 
-    .white_focus {
-      stroke: $grey-1 !important;
+    .highlight {
+      stroke: $font-color !important;
       stroke-width: 4;
     }
   }
@@ -558,7 +558,7 @@ div.node_vis {
       stroke-width: 3;
     }
   }
-  .only_in_ref.white_focus {
+  .only_in_ref.highlight {
     circle {
       stroke: $tag-added-color-light !important;
       stroke-width: 5;
@@ -580,7 +580,7 @@ div.node_vis {
       stroke-width: 3;
     }
   }
-  .missing_in_ref.white_focus {
+  .missing_in_ref.highlight {
     circle {
       stroke: $tag-removed-color-light !important;
       stroke-width: 5;

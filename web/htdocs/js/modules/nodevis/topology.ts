@@ -298,7 +298,7 @@ class TopologyCoreEntity extends TopologyNode {
     highlight_connection(traversed_id: Set<string>, start = false) {
         if (traversed_id.has(this.id())) return;
         traversed_id.add(this.id());
-        this.selection().classed("white_focus", true);
+        this.selection().classed("highlight", true);
         if (start)
             this._world.viewport
                 .get_nodes_layer()
@@ -312,7 +312,7 @@ class TopologyCoreEntity extends TopologyNode {
     hide_connection(traversed_ids: Set<string>, _start = false) {
         if (traversed_ids.has(this.id())) return;
         traversed_ids.add(this.id());
-        this.selection().classed("white_focus", false);
+        this.selection().classed("highlight", false);
         this._world.viewport
             .get_nodes_layer()
             .get_links_for_node(this.node.data.id)
@@ -540,7 +540,7 @@ class NetworkLink extends AbstractLink {
     highlight_connection(traversed_ids: Set<string>) {
         if (traversed_ids.has(this.id())) return;
         traversed_ids.add(this.id());
-        this.selection().classed("white_focus", true);
+        this.selection().classed("highlight", true);
         [
             this._link_data.source.data.id,
             this._link_data.target.data.id,
@@ -556,7 +556,7 @@ class NetworkLink extends AbstractLink {
     hide_connection(traversed_ids: Set<string>) {
         if (traversed_ids.has(this.id())) return;
         traversed_ids.add(this.id());
-        this.selection().classed("white_focus", false);
+        this.selection().classed("highlight", false);
         [
             this._link_data.source.data.id,
             this._link_data.target.data.id,

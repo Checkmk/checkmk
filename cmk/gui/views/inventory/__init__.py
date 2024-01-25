@@ -2188,18 +2188,15 @@ def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHi
     return HTML(code)
 
 
-def _show_value(
-    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+def _compute_cell_spec(
+    value_info: _InventoryTreeValueInfo,
     hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
-    if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info.value, hint)
-        return
-
-    html_value = _get_html_value(value_info.value, hint)
+) -> tuple[str, HTML]:
+    # TODO separate tdclass from rendered value
+    tdclass, code = hint.paint_function(value_info.value)
+    html_value = HTML(code)
     if value_info.retention_interval is None or value_info.retention_interval.source == "current":
-        html.write_html(html_value)
-        return
+        return tdclass, html_value
 
     now = int(time.time())
     valid_until = (
@@ -2207,32 +2204,46 @@ def _show_value(
     )
     keep_until = valid_until + value_info.retention_interval.retention_interval
     if now > keep_until:
-        html_value = HTMLWriter.render_span(
-            html_value
-            + HTML("&nbsp;")
-            + HTMLWriter.render_img(
-                theme.detect_icon_path("svc_problems", "icon_"),
-                class_=["icon"],
-            ),
-            title=_("Data is outdated and will be removed with the next check execution"),
-        )
-
-    elif now > valid_until:
-        html_value = HTMLWriter.render_span(
-            html_value
-            + HTML("&nbsp;")
-            + HTMLWriter.render_img(
-                theme.detect_icon_path("service_duration", "icon_"),
-                class_=["icon"],
-            ),
-            title=_("Data was provided at %s and is considered valid until %s")
-            % (
-                cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
-                cmk.utils.render.date_and_time(keep_until),
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("svc_problems", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data is outdated and will be removed with the next check execution"),
             ),
         )
+    if now > valid_until:
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("service_duration", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data was provided at %s and is considered valid until %s")
+                % (
+                    cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
+                    cmk.utils.render.date_and_time(keep_until),
+                ),
+            ),
+        )
+    return tdclass, html_value
 
-    html.write_html(html_value)
+
+def _show_value(
+    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+) -> None:
+    if isinstance(value_info, _DeltaTreeValueInfo):
+        _show_delta_value(value_info.value, hint)
+        return
+    html.write_html(_compute_cell_spec(value_info, hint)[1])
 
 
 def _show_delta_value(

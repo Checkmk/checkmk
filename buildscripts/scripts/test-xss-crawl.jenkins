@@ -24,7 +24,7 @@ timeout(time: 12, unit: 'HOURS') {
             DOCKER_GROUP_ID = docker_util.get_docker_group_id()
         }
         try {
-            integration.build(
+            integration.run(
                 DOCKER_GROUP_ID: DOCKER_GROUP_ID,
                 DISTRO_LIST: ["ubuntu-20.04"],
                 EDITION: "enterprise",

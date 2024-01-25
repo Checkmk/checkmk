@@ -1,6 +1,6 @@
 // library for managing shared integration like test logic
 
-def build(Map args) {
+def run(Map args) {
     def DOCKER_BUILDS = [:]
     def download_dir = "${WORKSPACE}/downloaded_packages_for_integration_tests"
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -15,7 +15,18 @@ def build(Map args) {
 
             sh("""rm -rf "${download_dir}" """)
             if(args.DISTRO_LIST == ["ubuntu-20.04"]) {
-                upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${download_dir}/${IMAGE_VERSION}", args.EDITION, "focal")
+                try {
+                    upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${download_dir}/${IMAGE_VERSION}", args.EDITION, "focal")
+                }
+                catch(Exception e) {
+                    println("Could not find package - could be due to the switch from daily to weekly builds. Triggering a daily build for 20.04.");
+                    build(job: "checkmk/cmk_210/nightly-cee/build-cmk-packages", parameters: [
+                        string(name: 'VERSION', value: 'daily'),
+                        string(name: 'EDITION', value: args.EDITION),
+                        string(name: 'DISTROS', value: args.DISTRO_LIST[0])
+                    ])
+                    upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, IMAGE_VERSION, "${download_dir}/${IMAGE_VERSION}", args.EDITION, "focal")
+                }
             }
             else if(args.DISTRO_LIST.size() == 1) {
                 throw new Exception("Please add a case to download only the needed package for ${args.DISTRO_LIST}")

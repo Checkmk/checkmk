@@ -128,7 +128,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Hostname (regex)"),
             sort_index=100,
             info="host",
-            autocompleter=AutocompleterConfig(ident="monitored_hostname"),
+            autocompleter=AutocompleterConfig(ident="monitored_hostname", escape_regex=True),
             query_filter=query_filters.TextQuery(
                 ident="hostregex",
                 column="host_name",
@@ -175,7 +175,9 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Service (regex)"),
             sort_index=200,
             info="service",
-            autocompleter=AutocompleterConfig(ident="monitored_service_description"),
+            autocompleter=AutocompleterConfig(
+                ident="monitored_service_description", escape_regex=True
+            ),
             query_filter=query_filters.TextQuery(
                 ident="serviceregex",
                 column="service_description",

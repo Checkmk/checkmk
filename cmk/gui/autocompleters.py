@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Callable, Collection, Iterable, Sequence
 from itertools import chain
 
@@ -65,6 +66,9 @@ def __live_query_to_choices(
     with sites.only_sites(selected_sites), sites.set_limit(limit):
         query_result = query_callback(sites.live())
         choices = [(h, h) for h in sorted(query_result, key=lambda h: h.lower())]
+
+    if params.get("escape_regex"):
+        choices = [(re.escape(val), display) for (val, display) in choices]
 
     if len(choices) > limit:
         choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))

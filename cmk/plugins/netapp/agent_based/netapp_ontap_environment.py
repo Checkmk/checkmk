@@ -8,9 +8,9 @@ import json
 from collections.abc import Mapping
 from typing import Callable
 
-from cmk.agent_based.v2 import (
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (  # check_levels,
     AgentSection,
-    check_levels,
     CheckPlugin,
     get_value_store,
     Result,
@@ -120,7 +120,7 @@ def check_netapp_ontap_environment_threshold(
         metric_name=data.sensor_type,
         # we don't want to see decimal rpms
         # we want to see the voltage and current in more detail
-        render_function=_fan_render,
+        render_func=_fan_render,
     )
 
 

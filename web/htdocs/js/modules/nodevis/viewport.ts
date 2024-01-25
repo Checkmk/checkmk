@@ -530,19 +530,17 @@ export class Viewport {
         return this._svg_content_selection;
     }
 
-    zoom_to_coords(x: number, y: number): void {
+    zoom_to_coords(x: number, y: number, scale: number | null = null): void {
+        const use_scale = scale ? scale : this.last_zoom.k;
         DefaultTransition.add_transition(this._svg_content_selection).call(
             this._zoom_behaviour.transform,
-            () => this._zoom_coords(x, y)
+            () => {
+                return d3.zoomIdentity
+                    .translate(this.width / 2, this.height / 2)
+                    .scale(use_scale)
+                    .translate(x, y);
+            }
         );
-    }
-
-    // TODO: integrate in zoom_to_coords
-    _zoom_coords(x: number, y: number) {
-        return d3.zoomIdentity
-            .translate(this.width / 2, this.height / 2)
-            .scale(this.last_zoom.k)
-            .translate(x, y);
     }
 
     zoom_reset() {
@@ -555,33 +553,24 @@ export class Viewport {
     zoom_fit() {
         const coords: Coords[] = [];
         this.get_all_nodes().forEach(node => {
-            if (node.x != undefined) coords.push({x: node.x, y: node.y});
+            if (node.x != undefined && node.data.node_type != "topology_center")
+                coords.push({x: node.x, y: node.y});
         });
+
         const rect = get_bounding_rect(coords);
+        // Task: move rect x_min + width/2 into center
         const size = this.get_size();
+        // TODO: leave some space on the right side because of the fi
+        size.width -= 200;
         let new_scale = Math.min(
             size.width / rect.width,
             size.height / rect.height
         );
-        console.log("new scale", new_scale);
         new_scale *= 0.8;
-
-        const rect_middle = rect.width / 2;
-        const size_middle = size.width / 2;
-        const left_start = size_middle - rect_middle;
-        const delta_x = left_start - rect.x_min;
-
-        const rect_vmiddle = rect.height / 2;
-        const size_vmiddle = size.height / 2;
-        const left_vstart = size_vmiddle - rect_vmiddle;
-        const delta_y = left_vstart - rect.y_min;
-
-        this._zoom_behaviour.scaleTo(
-            this._svg_content_selection
-                .transition()
-                .duration(DefaultTransition.duration()),
-            new_scale,
-            [size.width / 2 + delta_x, delta_y]
+        this.zoom_to_coords(
+            -(rect.x_min + rect.width / 2),
+            -(rect.y_min + rect.height / 2),
+            new_scale
         );
     }
 

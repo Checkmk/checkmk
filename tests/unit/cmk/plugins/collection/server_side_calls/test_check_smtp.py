@@ -20,6 +20,7 @@ from cmk.server_side_calls.v1 import (
 TEST_HOST_CONFIG = HostConfig(
     name="my_host",
     resolved_address="1.2.3.4",
+    resolved_ipv4_address="1.2.3.4",
     alias="host_alias",
     address_config=NetworkAddressConfig(
         ip_family=IPAddressFamily.IPV4,
@@ -108,7 +109,7 @@ def test_invalid_family_config() -> None:
         "address_family": "ipv6",
     }
 
-    with pytest.raises(ValueError, match="No IPv6 address available for host"):
+    with pytest.raises(ValueError, match="IPv6 address is not available"):
         list(
             active_check_smtp.commands_function(
                 active_check_smtp.parameter_parser(params), TEST_HOST_CONFIG, {}

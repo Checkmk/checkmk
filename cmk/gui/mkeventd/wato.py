@@ -2622,12 +2622,21 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         vs = self._valuespec()
         rule_pack_dict = vs.from_html_vars("rule_pack")
         vs.validate_value(rule_pack_dict, "rule_pack")
-        self._rule_pack = ec.ECRulePackSpec(
-            id=rule_pack_dict["id"],
-            title=rule_pack_dict["title"],
-            disabled=rule_pack_dict["disabled"],
-            rules=existing_rules,
-        )
+        if edition() is Edition.CME and "customer" in rule_pack_dict:
+            self._rule_pack = ec.ECRulePackSpec(
+                id=rule_pack_dict["id"],
+                title=rule_pack_dict["title"],
+                disabled=rule_pack_dict["disabled"],
+                rules=existing_rules,
+                customer=rule_pack_dict["customer"],
+            )
+        else:
+            self._rule_pack = ec.ECRulePackSpec(
+                id=rule_pack_dict["id"],
+                title=rule_pack_dict["title"],
+                disabled=rule_pack_dict["disabled"],
+                rules=existing_rules,
+            )
 
         new_id = self._rule_pack["id"]
 

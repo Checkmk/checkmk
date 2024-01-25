@@ -32,7 +32,7 @@ TEST_HOST_CONFIG = HostConfig(
 @pytest.mark.parametrize(
     "params,expected_name,expected_args",
     [
-        ({"name": "foo"}, "SMTP foo", ["-4", "-H", "my.ipv4.address"]),
+        ({"name": "foo"}, "SMTP foo", ["-4", "-H", "1.2.3.4"]),
         (
             {
                 "name": "^My Name",
@@ -84,7 +84,7 @@ TEST_HOST_CONFIG = HostConfig(
                 "-D",
                 "42,23",
                 "-H",
-                "my.ipv4.address",
+                "1.2.3.4",
             ],
         ),
     ],
@@ -100,3 +100,17 @@ def test_check_smtp_argument_parsing(
     )
     assert cmd.service_description == expected_name
     assert cmd.command_arguments == expected_args
+
+
+def test_invalid_family_config() -> None:
+    params = {
+        "name": "^My Name",
+        "address_family": "ipv6",
+    }
+
+    with pytest.raises(ValueError, match="No IPv6 address available for host"):
+        list(
+            active_check_smtp.commands_function(
+                active_check_smtp.parameter_parser(params), TEST_HOST_CONFIG, {}
+            )
+        )

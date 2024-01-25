@@ -2960,7 +2960,7 @@ fs::path MakeSafeTempFolder() {
     SecurityAttribute sa{
         {{Sid::Type::everyone, 0}, {Sid::Type::admin, GENERIC_ALL}}};
     std::error_code ec;
-    const auto temp_folder = fs::temp_directory_path(ec) / "check_mk_agent";
+    auto temp_folder = fs::temp_directory_path(ec) / "check_mk_agent";
     CreateDirectoryW(temp_folder.wstring().data(), sa.securityAttributes());
     return temp_folder;
 }

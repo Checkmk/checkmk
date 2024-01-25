@@ -25,7 +25,6 @@ daily_extended: &daily_extended
     - "centos-8"
     - "almalinux-9"
     - "sles-15sp5"
-    - "cma-4"
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: &internal_distros

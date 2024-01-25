@@ -26,6 +26,13 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
     def __call__(self, conflict_mode: ConflictMode) -> None:
+        while self._disable_failure_and_reload_plugins(conflict_mode):
+            pass
+
+    def _disable_failure_and_reload_plugins(
+        self,
+        conflict_mode: ConflictMode,
+    ) -> bool:
         path_config = get_path_config()
         package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
@@ -56,9 +63,11 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 path_config,
             ):
                 disabled_packages.add(package_id)
-                continue
+                return True
 
             raise MKUserError(None, "incompatible local file")
+
+        return False
 
 
 pre_update_action_registry.register(

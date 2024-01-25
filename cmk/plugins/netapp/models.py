@@ -16,6 +16,7 @@ Docs:
 from collections.abc import Sequence
 from typing import Any, Literal, Union
 
+import isodate  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
 MEGA = 1024.0 * 1024.0
@@ -614,3 +615,34 @@ class QtreeQuotaModel(BaseModel):
     hard_limit: int | None = None
     used_total: int | None = None
     users: str | None = None
+
+
+class SnapMirrorModel(BaseModel):
+    """
+    doc: https://docs.netapp.com/us-en/ontap-restmap-98/snapmirror.html#snapmirror-get
+
+    destination-volume -> NA
+    destination-volume-node -> NA
+
+    policy -> policy.type, policy.name
+    "mirror-state" -> state
+    "source-vserver" -> source.svm.name, source.svm.uuid
+    "lag-time" -> lag_time
+    "relationship-status" -> state
+    "destination-location" ->  destination.path
+    """
+
+    destination_svm: str
+    policy_name: str | None = None
+    policy_type: str
+    state: str | None = None
+    source_svm_name: str | None = None
+    lag_time: str | None = None
+    destination: str
+
+    def lagtime(self) -> int | None:
+        if self.lag_time is None:
+            return None
+
+        isodate.parse_duration(self.lag_time)
+        return int(isodate.parse_duration(self.lag_time).total_seconds())

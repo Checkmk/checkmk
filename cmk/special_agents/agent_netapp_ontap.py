@@ -672,6 +672,36 @@ def fetch_qtree_quota(
         )
 
 
+def fetch_snapmirror(
+    connection: HostConnection,
+) -> Iterable[models.SnapMirrorModel]:
+    field_query = {
+        "state",
+        "policy.name",
+        "policy.type",
+        "source.svm.name",
+        "source.svm.uuid",
+        "lag_time",
+        "destination.path",
+        "destination.svm.name",
+    }
+
+    for element in NetAppResource.SnapmirrorRelationship.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+
+        yield models.SnapMirrorModel(
+            destination_svm=element_data["destination"]["svm"]["name"],
+            policy_name=element_data["policy"]["name"],
+            policy_type=element_data["policy"]["type"],
+            state=element_data.get("state"),
+            source_svm_name=element_data["source"]["svm"]["name"],
+            lag_time=element_data.get("lag_time"),
+            destination=element_data["destination"]["path"],
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -692,6 +722,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("psu", fetch_psu(connection), logger)
     write_section("environment", fetch_environment(connection), logger)
     write_section("qtree_quota", fetch_qtree_quota(connection), logger)
+    write_section("snapvault", fetch_snapmirror(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

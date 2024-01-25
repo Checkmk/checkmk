@@ -3,6 +3,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+a#menu_shortcut_compare_history {
+  display: none;
+}
+
 div#viewport_information {
   position: absolute;
   top: 0px;
@@ -73,14 +77,18 @@ div#viewport_information {
 }
 
 div.topology_layout_designer,
-div.topology_compare_history {
+a#menu_shortcut_edit_layout {
   img {
     content: url("images/icon_toggle_off.svg") !important;
-  }
-  img.on {
-    content: url("images/icon_toggle_on.svg") !important;
-  }
 
+    &.on {
+      content: url("images/icon_toggle_on.svg") !important;
+    }
+  }
+}
+
+div.topology_layout_designer,
+div.topology_compare_history {
   span.choices {
     height: 100%;
     pointer-events: all;

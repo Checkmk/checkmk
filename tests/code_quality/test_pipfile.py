@@ -353,7 +353,7 @@ CEE_UNUSED_PACKAGES = [
 def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
     if not is_enterprise_repo():
-        known_unused_packages.update(("PyPDF3", "numpy", "roman"))
+        known_unused_packages.update(("PyPDF", "numpy", "roman"))
 
     unused_dependencies = set(get_unused_dependencies())
 

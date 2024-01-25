@@ -163,7 +163,7 @@ def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedM
             result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics
             )
-        except ValueError:
+        except (ValueError, KeyError):
             return _("n/a")
         return result.unit_info["render"](result.value)
 

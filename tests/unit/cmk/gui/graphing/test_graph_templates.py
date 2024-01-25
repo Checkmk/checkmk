@@ -153,6 +153,15 @@ def test_replace_expression() -> None:
     )
 
 
+def test__replace_expressions_missing_scalars() -> None:
+    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", None, None, None, None) for n in ["load1"]]
+    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+    assert (
+        gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        == "CPU Load - n/a CPU Cores"
+    )
+
+
 @pytest.mark.parametrize(
     "perf_string, result",
     [

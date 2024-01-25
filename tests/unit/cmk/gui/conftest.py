@@ -83,20 +83,13 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture(autouse=True)
-def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.search.updates_requested",
-        return_value=False,
-    )
-
-
-@pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
+    mocker: MockerFixture,
     request_context: None,
-    deactivate_search_index_building_at_requenst_end: None,
 ) -> Iterator[None]:
+    # deactivate_search_index_building_at_requenst_end.
+    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
     yield
-
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
     # clear event after each request.
     hooks.call("request-end")

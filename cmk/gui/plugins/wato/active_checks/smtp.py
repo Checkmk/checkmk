@@ -192,7 +192,7 @@ def _valuespec_active_checks_smtp() -> Migrate:
                 "expect",
                 "commands",
                 "command_responses",
-                "from",
+                "from_address",
                 "fqdn",
                 "cert_days",
                 "starttls",

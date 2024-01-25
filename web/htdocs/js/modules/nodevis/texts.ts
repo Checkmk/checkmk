@@ -47,8 +47,8 @@ const default_lookup = {
     services_remove_explicit_setting: "Services: Remove explicit setting",
     services: "Services",
     merge_data: "Merge nodes with equal ID",
-    set_root_node: "Start with this hostname",
-    add_root_node: "Additionally start from these nodes",
+    set_root_node: "Start hierarchy only with this hostname",
+    add_root_node: "Start hierarchy also with this node",
     remove_root_node: "Do not grow from here",
     matching_nodes: "Matching nodes",
     reference: "Reference",
@@ -61,6 +61,7 @@ const default_lookup = {
     allow_hops: "Allow growing here",
     forbid_hops: "Stop growing here",
     continue_hop: "Continue growth here",
+    stop_continue_hop: "Do no longer continue here",
 };
 
 export type TranslationKey = keyof typeof default_lookup;

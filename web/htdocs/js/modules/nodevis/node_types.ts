@@ -216,7 +216,9 @@ export class TopologyNode extends AbstractGUINode {
         // Continue here
         if (growth_settings.indicator_growth_possible)
             elements.push({
-                text: texts.get("continue_hop"),
+                text: growth_settings.growth_continue
+                    ? texts.get("stop_continue_hop")
+                    : texts.get("continue_hop"),
                 on: () => {
                     const nodevis_node =
                         this._world.viewport.get_node_by_id(node_id);

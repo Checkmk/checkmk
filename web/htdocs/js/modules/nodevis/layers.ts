@@ -21,6 +21,7 @@ import {
 } from "nodevis/link_utils";
 import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
 import * as texts from "nodevis/texts";
+import {TranslationKey} from "nodevis/texts";
 import {
     ContextMenuElement,
     Coords,
@@ -311,7 +312,7 @@ export class LayeredNodesLayer extends FixLayer {
         );
         const hide_icons = nodes_class_list.contains("hide_icons");
 
-        const data: [string, boolean][] = [
+        const data: [TranslationKey, boolean][] = [
             ["host_labels", !hide_host_labels],
             ["service_labels", !hide_service_labels],
             ["icons", !hide_icons],

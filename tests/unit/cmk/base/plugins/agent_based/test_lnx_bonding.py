@@ -93,13 +93,13 @@ def configured_params() -> Params:
 
 
 def data_for_test() -> Iterator[tuple[str, str]]:
-    yield "mode_0", "balance-rr"
+    yield "mode_0", "round-robin"
     yield "mode_1", "active-backup"
-    yield "mode_2", "balance-xor"
+    yield "mode_2", "xor"
     yield "mode_3", "broadcast"
     yield "mode_4", "802.3ad"
-    yield "mode_5", "balance-tlb"
-    yield "mode_6", "balance-alb"
+    yield "mode_5", "transmit"
+    yield "mode_6", "adaptive"
 
 
 @pytest.mark.parametrize("mode, mode_str", data_for_test())

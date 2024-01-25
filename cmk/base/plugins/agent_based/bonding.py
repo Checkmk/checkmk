@@ -63,13 +63,13 @@ def _check_ieee_302_3ad_specific(params: Mapping[str, Any], status: bonding.Bond
 
 
 mode_map = {
-    "mode_0": "balance-rr",
+    "mode_0": "round-robin",
     "mode_1": "active-backup",
-    "mode_2": "balance-xor",
+    "mode_2": "xor",
     "mode_3": "broadcast",
     "mode_4": "802.3ad",
-    "mode_5": "balance-tlb",
-    "mode_6": "balance-alb",
+    "mode_5": "transmit",
+    "mode_6": "adaptive",
 }
 
 

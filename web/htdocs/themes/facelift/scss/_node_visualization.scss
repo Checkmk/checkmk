@@ -249,7 +249,6 @@ div.node_vis {
 
       border-top: solid $ux-theme-6;
       border-bottom: solid $ux-theme-6;
-      background-color: $ux-theme-0;
 
       &:hover {
         cursor: pointer;
@@ -606,6 +605,9 @@ div.node_vis {
 
   div#popup_menu {
     background-color: $bg-color;
+    label {
+      color: $font-color;
+    }
   }
 
   /* Context popup Popup */

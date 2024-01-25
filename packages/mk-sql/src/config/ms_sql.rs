@@ -5,7 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::types::Port;
+use crate::types::{MaxConnections, MaxQueries, Port};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -24,6 +24,22 @@ pub struct Config {
     custom_instances: Vec<CustomInstance>,
     configs: Vec<Config>,
     hash: String,
+    system: System,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct System {
+    max_connections: MaxConnections,
+    max_queries: MaxQueries,
+}
+
+impl Default for System {
+    fn default() -> Self {
+        Self {
+            max_connections: MaxConnections(defaults::MAX_CONNECTIONS),
+            max_queries: MaxQueries(defaults::MAX_QUERIES),
+        }
+    }
 }
 
 impl Default for Config {
@@ -38,6 +54,7 @@ impl Default for Config {
             custom_instances: vec![],
             configs: vec![],
             hash: String::new(),
+            system: System::default(),
         }
     }
 }
@@ -97,6 +114,7 @@ impl Config {
             custom_instances: custom_instances?,
             configs: configs?,
             hash,
+            system: System::default(),
         }))
     }
     pub fn endpoint(&self) -> Endpoint {
@@ -793,6 +811,7 @@ piggyback:
                 custom_instances: vec![],
                 configs: vec![],
                 hash: String::new(),
+                system: System::default(),
             }
         );
     }

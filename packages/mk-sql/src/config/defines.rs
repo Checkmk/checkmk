@@ -66,6 +66,9 @@ pub mod values {
 
 pub mod defaults {
     use super::values;
+    pub const MAX_CONNECTIONS: u32 = 16;
+    pub const MAX_QUERIES: u32 = 64;
+
     #[cfg(windows)]
     pub const AUTH_TYPE: &str = values::INTEGRATED;
     #[cfg(unix)]

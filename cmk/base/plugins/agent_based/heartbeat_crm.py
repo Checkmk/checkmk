@@ -480,6 +480,13 @@ def check_heartbeat_crm_resources(
     if (resources := section.resources.resources.get(item)) is None:
         return
 
+    yield from _check_heartbeat_crm_resources(resources, params)
+
+
+def _check_heartbeat_crm_resources(
+    resources: Sequence[Sequence[str]],
+    params: Mapping[str, str | None],
+) -> CheckResult:
     if not resources:
         yield Result(state=State.OK, summary="No resources found")
 

@@ -135,6 +135,7 @@ include \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
     packages/check-cert/check-cert.make \
+    packages/check-http/check-http.make \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \

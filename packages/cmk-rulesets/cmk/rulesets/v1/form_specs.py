@@ -355,7 +355,7 @@ class CascadingSingleChoice:
         the consumer model of the selected form specification.
 
         **Example**: A CascadingSingleChoice with a selected :class:`Dictionary` form specification
-       would result in ``("my_value", {...})``
+        would result in ``("my_value", {...})``
     """
 
     elements: Sequence[CascadingSingleChoiceElement]
@@ -386,8 +386,8 @@ class DictElement:
     """
 
     parameter_form: "FormSpec"
-    required: bool | None = False
-    read_only: bool | None = False
+    required: bool = False
+    read_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -520,6 +520,7 @@ class FixedValue:
         title: Human readable title
         label: Text displayed underneath the title
         help_text: Description to help the user with the configuration
+        transform: Transformation of the stored configuration
     """
 
     value: int | float | str | bool | None
@@ -527,8 +528,8 @@ class FixedValue:
     label: Localizable | None = None
     help_text: Localizable | None = None
 
-    transform: Transform[Sequence[int | float | str | bool | None]] | Migrate[
-        Sequence[int | float | str | bool | None]
+    transform: Transform[int | float | str | bool | None] | Migrate[
+        int | float | str | bool | None
     ] | None = None
 
     def __post_init__(self) -> None:
@@ -626,60 +627,59 @@ class Levels:
     Args:
         form_spec_template: Template for the specification of the form fields of the warning and
             critical levels. If `title` or `prefill_value` are provided here, they will be ignored
-        level_direction: Do the levels represent the lower or the upper bound. It's used
-            only to provide labels and error messages in the UI.
+        level_direction: Do the levels represent the lower or the upper bound.
+            It's used only to provide labels and error messages in the UI.
         predictive: Specification for the predictive levels
         title: Human readable title
         help_text: Description to help the user with the configuration
-        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with. If None,
-            the backend will decide whether to leave the field empty or to prefill it with a
-            canonical value.
+        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
+            If None, the backend will decide whether to leave the field empty or to prefill it
+            with a canonical value.
         transform: Transformation of the stored configuration
 
     Consumer model:
-        **Type**: ``object``
+        **Type**: ``_NoLevels | _FixedLevels | _PredictiveLevels``
 
-        The value presented to consumers will be crafted in a way that makes it a proper
-          This is the type definition of
-          the consumer model::
-            _NoLevels | _FixedLevels | _PredictiveLevels
+        The value presented to consumers will be crafted in a way that makes it a suitable
+        argument for the ``check_levels`` function of the agent based API.
+        These are the tree possible types defined in the consumer model::
 
-          where the tree possible types are defined
-          as follows::
-            _NoLevels = tuple[
-                Literal["no_levels"],
-                None,
-            ]
+          _NoLevels = tuple[
+              Literal["no_levels"],
+              None,
+          ]
 
-            _FixedLevels = tuple[
-                Literal["fixed"],
-                # (warn, crit)
-                tuple[int, int] | tuple[float, float],
-            ]
+          _FixedLevels = tuple[
+              Literal["fixed"],
+              # (warn, crit)
+              tuple[int, int] | tuple[float, float],
+          ]
 
-            _PredictiveLevels = tuple[
-                Literal["predictive"],
-                # (reference_metric, predicted_value, levels_tuple)
-                tuple[str, float | None, tuple[float, float] | None],
-            ]
+          _PredictiveLevels = tuple[
+              Literal["predictive"],
+              # (reference_metric, predicted_value, levels_tuple)
+              tuple[str, float | None, tuple[float, float] | None],
+          ]
 
-          The configured value will be presented to consumers as a 2-tuple consisting of
-          level type identifier and one of the 3 types: None, 2-tuple of numbers or a
-          3-tuple containing the name of the reference metric used for prediction,
-          the predicted value and the resulting levels tuple.
+        The configured value will be presented to consumers as a 2-tuple consisting of
+        level type identifier and one of the 3 types: None, 2-tuple of numbers or a
+        3-tuple containing the name of the reference metric used for prediction,
+        the predicted value and the resulting levels tuple.
 
-        **Example**:
-            Levels used to configure no levels will look
-            like this::
-                ("no_levels", None)
+        **Example**: Levels used to configure no levels will look
+        like this::
 
-            Levels used to configure fixed lower levels might look
-            like this::
-                ("fixed", (5.0, 1.0))
+            ("no_levels", None)
 
-            Levels resulting from configured upper predictive levels might look
-            like this::
-                ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
+        Levels used to configure fixed lower levels might look
+        like this::
+
+            ("fixed", (5.0, 1.0))
+
+        Levels resulting from configured upper predictive levels might look
+        like this::
+
+            ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
 
     """
 
@@ -703,16 +703,14 @@ class BooleanChoice:
         label: Text displayed as an extension to the input field
         title: Human readable title
         help_text: Description to help the user with the configuration
-        prefill_value: Boolean value to pre-populate the form fields with. If None, the backend
-            will decide whether to leave the field empty or to prefill it with
-            a canonical value.
+        prefill_value: Boolean value to pre-populate the choice with.
         transform: Transformation of the stored configuration
     """
 
     label: Localizable | None = None
     title: Localizable | None = None
     help_text: Localizable | None = None
-    prefill_value: bool | None = None
+    prefill_value: bool = False
     transform: Transform[bool] | Migrate[bool] | None = None
 
 
@@ -721,24 +719,26 @@ class FileUpload:
     """Specifies a file upload form.
 
     Args:
-        extensions: The extensions of the files to choose from.
-        mime_types: The allowed mime types of uploaded files.
+        extensions: The extensions of the files to choose from. If set to `None`,
+            all extensions are selectable.
+        mime_types: The allowed mime types of uploaded files. If set to `None`,
+            all mime types will be uploadable.
         title: Human readable title.
-        help_text: Description to help the user with the configuration
-        custom_validate: Custom validation function. Will be executed in addition to any
-         builtin validation logic. Needs to raise a ValidationError in case
-        validation fails. The return value of the function will not be used.
+        help_text: Description to help the user with the configuration.
+        custom_validate: Custom validation function.
+            Will be executed in addition to any builtin validation logic.
+            Needs to raise a ValidationError in case validation fails.
+            The return value of the function will not be used.
 
     Consumer model:
-        **Type**:
-            ``tuple[str, str, bytes]``
+        **Type**: ``tuple[str, str, bytes]``
 
-            The configured value will be presented as a 3-tuple consisting of the name of
-            the uploaded file, its mime type, and the files content as bytes.
+        The configured value will be presented as a 3-tuple consisting of the name of
+        the uploaded file, its mime type, and the files content as bytes.
 
-        **Example**:
-          Choosing a pem file to upload would result
-          in::
+        **Example**: Choosing a pem file to upload would result
+        in::
+
             (
                 "my_cert.pem",
                 "application/octet-stream",
@@ -791,15 +791,14 @@ class MultipleChoice:
             validation fails. The return value of the function will not be used.
 
     Consumer model:
-        **Type**:
-            ``list[str]``
+        **Type**: ``list[str]``
 
-            The configured value will be presented as a list consisting of the names
-            of the selected elements.
+        The configured value will be presented as a list consisting of the names
+        of the selected elements.
 
-        **Example**:
-          MultipleChoice with two selected elements would result
-          in::
+        **Example**: MultipleChoice with two selected elements would result
+        in::
+
             ["choice1", "choice2"]
 
     """
@@ -810,16 +809,14 @@ class MultipleChoice:
     title: Localizable | None = None
     help_text: Localizable | None = None
 
-    prefill_selections: Sequence[str] | None = None
+    prefill_selections: Sequence[str] = ()
     transform: Transform[Sequence[str]] | Migrate[Sequence[str]] | None = None
     custom_validate: Callable[[Sequence[str]], object] | None = None
 
     def __post_init__(self) -> None:
-        avail_idents = [elem.name for elem in self.elements]
-        if self.prefill_selections is not None and any(
-            ident not in avail_idents for ident in self.prefill_selections
-        ):
-            raise ValueError("Default element is not one of the specified elements")
+        avail_idents = {elem.name for elem in self.elements}
+        if invalid := {ident for ident in self.prefill_selections if ident not in avail_idents}:
+            raise ValueError(f"Invalid prefill element(s): {', '.join(invalid)}")
 
 
 @dataclass(frozen=True)
@@ -831,24 +828,24 @@ class MultilineText:
         label: Text displayed in front of the input field
         title: Human readable title
         help_text: Description to help the user with the configuration
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-            whether to leave the field empty or to prefill it with a canonical value.
+        prefill_value: Value to pre-populate the form field with.
+            If None, the backend will decide whether to leave the field
+            empty or to prefill it with a canonical value.
         transform: Transformation of the stored configuration
-        custom_validate: Custom validation function. Will be executed in addition to any
-            builtin validation logic. Needs to raise a ValidationError in case
-            validation fails. The return value of the function will not be used.
+        custom_validate: Custom validation function.
+            Will be executed in addition to any builtin validation logic.
+            Needs to raise a ValidationError in case validation fails.
+            The return value of the function will not be used.
 
     Consumer model:
-        **Type**:
-            ``str``
+        **Type**: ``str``
 
-            The configured value will be presented as a string.
+        The configured value will be presented as a string.
 
-        **Example**:
-          Inputting "some text" in a MultilineText form would result
-          in::
-            "some text\n"
+        **Example**: Inputting "some text" in a MultilineText form would result
+        in::
 
+            "some text\\n"
     """
 
     monospaced: bool = False

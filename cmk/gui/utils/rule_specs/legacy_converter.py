@@ -1291,16 +1291,11 @@ def _convert_to_legacy_http_proxy(
 def _convert_to_legacy_checkbox(
     to_convert: ruleset_api_v1.form_specs.BooleanChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Checkbox:
-    checkbox_default: bool | legacy_valuespecs.Sentinel = (
-        to_convert.prefill_value
-        if to_convert.prefill_value is not None
-        else legacy_valuespecs.DEF_VALUE
-    )
     return legacy_valuespecs.Checkbox(
         label=_localize_optional(to_convert.label, localizer),
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
-        default_value=checkbox_default,
+        default_value=to_convert.prefill_value,
     )
 
 
@@ -1403,9 +1398,8 @@ def _convert_to_legacy_list_choice(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
+        "default_value": to_convert.prefill_selections,
     }
-    if to_convert.prefill_selections is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_selections
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(

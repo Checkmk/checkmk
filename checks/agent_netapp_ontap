@@ -9,14 +9,20 @@ from typing import Any, Mapping, Optional, Sequence
 def agent_netapp_ontap_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[str]:
-    return [
+    args = [
         "--hostname",
         ipaddress or hostname,
         "--username",
         params["username"],
         "--password",
         passwordstore_get_cmdline("%s", params["password"]),
-    ] + [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
+    ]
+
+    if params["no-cert-check"]:
+        args += ["--no-cert-check"]
+
+    args += [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
+    return args
 
 
 special_agent_info["netapp_ontap"] = agent_netapp_ontap_arguments

@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.special_agents.common import (
     MigrateToIndividualOrStoredPassword,
     RulespecGroupDatasourceProgramsHardware,
 )
-from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, ListChoice, TextInput
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -28,6 +28,19 @@ def _valuespec_special_agents_netapp_ontap() -> Dictionary:
                 MigrateToIndividualOrStoredPassword(
                     title=_("Password"),
                     allow_empty=False,
+                ),
+            ),
+            (
+                "no-cert-check",
+                Alternative(
+                    title=_("SSL certificate verification"),
+                    elements=[
+                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
+                        FixedValue(
+                            value=True, title=_("Ignore certificate errors (unsecure)"), totext=""
+                        ),
+                    ],
+                    default_value=False,
                 ),
             ),
             (

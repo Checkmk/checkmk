@@ -6,7 +6,7 @@
 
 import http
 import shlex
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, NamedTuple, NewType, NotRequired, Self
@@ -867,15 +867,17 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
+def _get_metric_info(
+    metric_name: str, color_counter: Counter[Literal["index"]]
+) -> MetricInfoExtended:
     if metric_name in metric_info:
         mi = metric_info[metric_name]
     else:
-        color_index += 1
+        color_counter.update({"index": 1})
         mi = MetricInfo(
             title=metric_name.title(),
             unit="",
-            color=get_palette_color_by_index(color_index),
+            color=get_palette_color_by_index(color_counter["index"]),
         )
 
     mie = MetricInfoExtended(
@@ -888,7 +890,11 @@ def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExten
     if "render" in mi:
         mie["render"] = mi["render"]
 
-    return mie, color_index
+    return mie
+
+
+def get_metric_info(metric_name: str) -> MetricInfoExtended:
+    return _get_metric_info(metric_name, Counter())
 
 
 def _translated_metric_scalar(
@@ -915,12 +921,12 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
     translated_metrics: dict[str, TranslatedMetric] = {}
-    color_index = 0
+    color_counter: Counter[Literal["index"]] = Counter()
     for entry in perf_data:
         metric_name: str
 
         metric_name, normalized = _normalize_perf_data(entry, check_command)
-        mi, color_index = get_metric_info(metric_name, color_index)
+        mi = _get_metric_info(metric_name, color_counter)
         unit_conversion = mi["unit"].get("conversion", lambda v: v)
 
         # https://github.com/python/mypy/issues/6462

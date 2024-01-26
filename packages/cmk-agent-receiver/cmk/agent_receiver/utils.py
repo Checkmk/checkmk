@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, NewType, Self
 
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -76,5 +77,10 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         return "[CSR parsing failed]"
 
 
-def internal_credentials() -> bytes:
-    return internal_secret_path().read_bytes()
+B64SiteInternalSecret = NewType("B64SiteInternalSecret", str)
+
+
+def internal_credentials() -> B64SiteInternalSecret:
+    return B64SiteInternalSecret(
+        base64.b64encode(internal_secret_path().read_bytes()).decode("ascii")
+    )

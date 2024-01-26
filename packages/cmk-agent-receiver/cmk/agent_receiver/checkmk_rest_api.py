@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from base64 import b64encode
 from collections.abc import Callable
 from enum import Enum
 from http import HTTPStatus
@@ -18,6 +17,7 @@ from pydantic import BaseModel, UUID4
 from .log import logger
 from .models import ConnectionMode
 from .site_context import site_config_path, site_name
+from .utils import B64SiteInternalSecret
 
 
 class CMKEdition(Enum):
@@ -133,11 +133,13 @@ class ControllerCertSettings(BaseModel, frozen=True):
 
 
 @log_http_exception
-def controller_certificate_settings(site_internal_secret: bytes) -> ControllerCertSettings:
+def controller_certificate_settings(
+    site_internal_secret: B64SiteInternalSecret,
+) -> ControllerCertSettings:
     response = requests.get(
         f"{_local_rest_api_url()}/agent_controller_certificates_settings",
         headers={
-            "Authorization": f"InternalToken {b64encode(site_internal_secret).decode()}",
+            "Authorization": f"InternalToken {site_internal_secret}",
         },
         timeout=30,
     )

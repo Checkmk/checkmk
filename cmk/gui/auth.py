@@ -294,7 +294,7 @@ def _check_internal_token() -> SiteInternalPseudoUser | None:
 
     _tokenname, token = auth_header.split("InternalToken ", maxsplit=1)
 
-    if SiteInternalSecret().check(Secret(base64.b64decode(token))):
+    if SiteInternalSecret().check(Secret.from_b64(token)):
         return SiteInternalPseudoUser()
     return None
 

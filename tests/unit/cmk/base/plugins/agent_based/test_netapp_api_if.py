@@ -8,6 +8,7 @@ import pytest
 from cmk.base.plugins.agent_based import netapp_api_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.utils import interfaces
+from cmk.base.plugins.agent_based.utils.netapp_api import check_netapp_interfaces
 
 
 @pytest.mark.parametrize(
@@ -450,7 +451,7 @@ def test_netapp_api_if_regression(
 
     for item, params, expected_results in items_params_results:
         generated_results = list(
-            netapp_api_if._check_netapp_api_if(
+            check_netapp_interfaces(
                 item,
                 (params),
                 section,

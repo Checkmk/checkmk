@@ -32,7 +32,6 @@ from cmk.rulesets.v1.form_specs import (
     ServiceState,
     SingleChoice,
     String,
-    TupleDoNotUseWillbeRemoved,
 )
 
 VueVisitorMethodResult = tuple[VueFormSpecComponent, Any]
@@ -113,8 +112,6 @@ class VueFormSpecVisitor:
             return self._visit_percentage
         if isinstance(form_spec, Dictionary):
             return self._visit_dictionary
-        if isinstance(form_spec, TupleDoNotUseWillbeRemoved):
-            return self._visit_tuple
         if isinstance(form_spec, CascadingSingleChoice):
             return self._visit_cascading_dropdown
         if isinstance(form_spec, SingleChoice):
@@ -195,27 +192,6 @@ class VueFormSpecVisitor:
                 },
             ),
             value,
-        )
-
-    def _visit_tuple(
-        self, form_spec: TupleDoNotUseWillbeRemoved, value: tuple
-    ) -> VueVisitorMethodResult:
-        raw_value = []
-        component_elements = []
-        for element, val in zip(form_spec.elements, value):
-            component_result, component_value = self._visit(element, val)
-            component_elements.append(self._component_to_dict(component_result))
-            raw_value.append(component_value)
-
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="list",
-                config={
-                    "elements": component_elements,
-                },
-            ),
-            tuple(raw_value),
         )
 
     def _visit_dictionary(
@@ -387,15 +363,7 @@ class VueFormSpecVisitor:
 
 # Vue is able to render these types in the frontend
 VueFormSpecTypes = (
-    Integer
-    | Float
-    | Percentage
-    | String
-    | TupleDoNotUseWillbeRemoved
-    | SingleChoice
-    | CascadingSingleChoice
-    | Dictionary
-    | List
+    Integer | Float | Percentage | String | SingleChoice | CascadingSingleChoice | Dictionary | List
 )
 
 
@@ -417,11 +385,6 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
 
 def compute_default_value(form_spec: FormSpec) -> Any:
     form_spec = _convert_to_supported_form_spec(form_spec)
-    if isinstance(form_spec, TupleDoNotUseWillbeRemoved):
-        elements = []
-        for x in form_spec.elements:
-            elements.append(compute_default_value(x))
-        return tuple(elements)
     if isinstance(form_spec, (Integer, Percentage, Float)):
         return form_spec.prefill.value
     if isinstance(form_spec, CascadingSingleChoice):

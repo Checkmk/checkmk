@@ -23,8 +23,8 @@ def parse_http_params(raw_params: Mapping[str, object]) -> HTTPParams:
     return [
         Endpoint.model_validate(
             {
-                "name": endpoint["service_name"][1],
-                "protocol_prefix": endpoint["service_name"][0] == "auto",
+                "name": endpoint["service_name"]["name"],
+                "protocol_prefix": endpoint["service_name"]["prefix"] == "auto",
                 "url": endpoint["url"],
             }
         )

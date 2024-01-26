@@ -9,10 +9,9 @@
 #include "Row.h"
 #include "Sorter.h"
 
-struct IntSorter : Sorter {
-    [[nodiscard]] StrongOrdering compare(Row /*row*/) const override {
-        return StrongOrdering::notimplemented;
-    }
+class IntSorter : public Sorter {
+public:
+    IntSorter() = default;
 };
 
 #endif

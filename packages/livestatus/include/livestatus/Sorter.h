@@ -8,17 +8,10 @@
 
 class Row;
 
-// StrongOrdering::notimplemented is a place holder to let us
-// implement the ordering of the different column types one
-// after the other.
-// See also:
-// https://en.cppreference.com/w/cpp/language/default_comparisons
-enum StrongOrdering { equal, less, greater, notimplemented };
-
-struct Sorter {
+class Sorter {
+public:
     Sorter() = default;
     virtual ~Sorter() = default;
-    [[nodiscard]] virtual StrongOrdering compare(Row) const = 0;
 };
 
 #endif

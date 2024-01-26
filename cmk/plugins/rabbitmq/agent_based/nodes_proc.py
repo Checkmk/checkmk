@@ -6,8 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, Metric, render, Result
+from cmk.agent_based.v2 import check_levels, CheckPlugin, CheckResult, Metric, render, Result
 from cmk.plugins.lib.rabbitmq import discover_key, Section
 
 
@@ -26,7 +25,7 @@ def check_rabbitmq_nodes_proc(
 
     perc_value = 100.0 * used / total
 
-    if (levels := params.get("levels")) is None:
+    if (levels := params.get("levels")) is None or levels[1][0] == "no_levels":
         yield from check_levels(
             value=used,
             levels_upper=None,
@@ -37,7 +36,7 @@ def check_rabbitmq_nodes_proc(
         )
         return
 
-    level_choice, (warn, crit) = levels
+    level_choice, (level_type, (warn, crit)) = levels
 
     if level_choice == "fd_abs":
         check_value = used
@@ -51,7 +50,7 @@ def check_rabbitmq_nodes_proc(
     else:
         raise NotImplementedError(level_choice)
 
-    for check_result in check_levels(value=check_value, levels_upper=(warn, crit)):
+    for check_result in check_levels(value=check_value, levels_upper=(level_type, (warn, crit))):
         if isinstance(check_result, Result):
             yield Result(state=check_result.state, summary=summary)
     yield Metric("processes", used, levels=metric_levels, boundaries=(0, total))

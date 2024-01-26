@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <sstream>
 #include <utility>
+#include <variant>
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/ChronoUtils.h"
@@ -18,6 +19,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Table.h"
@@ -59,6 +61,13 @@ void Query::badGateway(const std::string &message) const {
 
 bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
+bool Query::hasOrderBy() const { return !parsed_query_.order_by.empty(); }
+
+const OrderBy &Query::orderBy() const {
+    // We only handle a single OrderBy
+    return parsed_query_.order_by[0];
+}
+
 bool Query::process() {
     output_.setResponseHeader(parsed_query_.response_header);
     if (parsed_query_.error) {
@@ -71,6 +80,9 @@ bool Query::process() {
         renderColumnHeaders();
     }
     table_.answerQuery(*this, *user_, core_);
+    if (hasOrderBy()) {
+        renderSorters();
+    }
     // Non-Stats queries output all rows directly, so there's nothing left
     // to do in that case.
     if (doStats()) {
@@ -135,8 +147,9 @@ bool Query::processDataset(Row row) {
         return true;
     }
 
-    current_line_++;
-    if (parsed_query_.limit && current_line_ > *parsed_query_.limit) {
+    if (!hasOrderBy() && parsed_query_.limit &&
+        ++current_line_ > *parsed_query_.limit) {
+        // `hasOrderBy()` needs to process the whole dataset to sort it.
         return false;
     }
 
@@ -150,10 +163,42 @@ bool Query::processDataset(Row row) {
         for (const auto &aggregator : getAggregatorsFor(row)) {
             aggregator->consume(row, *user_, parsed_query_.timezone_offset);
         }
+    } else if (hasOrderBy()) {
+        // Query::getAggregatorsFor(Row)
+        std::ostringstream os{};
+        {
+            auto renderer = makeRenderer(os);
+            QueryRenderer q{*renderer, EmitBeginEnd::off};
+            renderColumns(row, q);
+        }
+        const RowFragment row_fragment{os.str()};
+
+        const auto order_by = orderBy();
+        const auto sorter = order_by.column->createSorter();
+        const auto key = sorter->getKey(row, order_by.key, *user_,
+                                        parsed_query_.timezone_offset);
+
+        sorted_rows_.emplace_back(key, row_fragment);
     } else {
         renderColumns(row, query_renderer_);
     }
     return true;
+}
+
+void Query::renderSorters() {
+    // See also Query::renderAggregators()
+    const auto &o = orderBy();
+    std::sort(
+        sorted_rows_.begin(), sorted_rows_.end(), [&o](auto &&x, auto &&y) {
+            return o.direction == OrderByDirection::ascending ? x < y : x > y;
+        });
+    for (auto &&[k, row_fragment] : sorted_rows_) {
+        if (parsed_query_.limit && ++current_line_ > *parsed_query_.limit) {
+            break;
+        }
+        RowRenderer r{query_renderer_};
+        r.output(row_fragment);
+    }
 }
 
 void Query::renderAggregators() {

@@ -15,12 +15,14 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "livestatus/Aggregator.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/User.h"
 
 class ICore;
@@ -75,10 +77,14 @@ private:
     int current_line_;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         stats_groups_;
+    std::vector<std::pair<Sorter::key_type, RowFragment>> sorted_rows_;
 
     bool doStats() const;
+    bool hasOrderBy() const;
+    [[nodiscard]] const OrderBy &orderBy() const;
     std::unique_ptr<Renderer> makeRenderer(std::ostream &os);
     void renderColumnHeaders();
+    void renderSorters();
     void renderAggregators();
     void doWait();
 

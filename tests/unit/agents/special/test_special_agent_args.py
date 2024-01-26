@@ -22,6 +22,7 @@ NOT_TESTED_YET = {
     "agent_hp_msa",
     "agent_ipmi_sensors",
     "agent_jolokia",
+    "agent_netapp_ontap",
     "agent_prism",
     "agent_random",
     "agent_ruckus_spot",

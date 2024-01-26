@@ -280,7 +280,6 @@ CEE_UNUSED_PACKAGES = [
     "wrapt",
     "yarl",
     "zipp",
-    "netapp-ontap",  # will be removed soon (will be used by the NetApp checks & plugins)
 ]
 
 

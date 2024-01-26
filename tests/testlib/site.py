@@ -1387,28 +1387,33 @@ class SiteFactory:
 
         Such update process is performed interactively via Pexpect.
         """
+        base_version = test_site.version
         self.version = target_version
-        site = self.get_existing_site(test_site.id)
+
+        # refresh site object to install the correct target version
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id, init_livestatus=False)
+
         site.install_cmk()
         site.stop()
 
         logger.info(
             "Updating %s site from %s version to %s version...",
-            test_site.id,
-            test_site.version.version,
+            site.id,
+            base_version.version,
             target_version.version_directory(),
         )
 
         pexpect_dialogs = []
-        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        version_supported = self._version_supported(base_version.version, min_version.version)
         if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
                 [
                     PExpectDialog(
                         expect=(
-                            f"You are going to update the site {test_site.id} "
-                            f"from version {test_site.version.version_directory()} "
+                            f"You are going to update the site {site.id} "
+                            f"from version {base_version.version_directory()} "
                             f"to version {target_version.version_directory()}."
                         ),
                         send="u\r",
@@ -1427,7 +1432,7 @@ class SiteFactory:
                     PExpectDialog(
                         expect=(
                             f"ERROR: You are trying to update from "
-                            f"{test_site.version.version_directory()} to "
+                            f"{base_version.version_directory()} to "
                             f"{target_version.version_directory()} which is not supported."
                         ),
                         send="\r",
@@ -1447,7 +1452,7 @@ class SiteFactory:
                 target_version.version_directory(),
                 "update",
                 f"--conflict={conflict_mode}",
-                test_site.id,
+                site.id,
             ],
             dialogs=pexpect_dialogs,
             logfile_path=logfile_path,
@@ -1456,18 +1461,17 @@ class SiteFactory:
             assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
-            pytest.skip(f"{test_site.version} is not a supported version for {target_version}")
+            pytest.skip(f"{base_version} is not a supported version for {target_version}")
 
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # refresh the site object after creating the site
-        self._base_ident = ""
         site = self.get_existing_site(test_site.id)
 
         # restoring the tmpfs was broken and has been fixed with
         # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
-        from_version = Version.from_str(test_site.version.version)
+        from_version = Version.from_str(base_version.version)
         if (
             (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
             or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))

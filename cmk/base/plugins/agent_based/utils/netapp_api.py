@@ -6,7 +6,10 @@
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, Dict, List, Literal, Optional, TypedDict
 
-from ..agent_based_api.v1 import get_rate, GetRateError, Metric, Result, Service, State, type_defs
+from cmk.base.plugins.agent_based.utils.df import df_check_filesystem_single
+
+from ..agent_based_api.v1 import get_rate, GetRateError, Metric, render, Result, Service, State
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 CPUSection = TypedDict(
     "CPUSection",
@@ -31,7 +34,7 @@ _DEV_KEYS = {
 
 
 def parse_netapp_api_multiple_instances(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionMultipleInstances:
@@ -114,7 +117,7 @@ def parse_netapp_api_multiple_instances(
 
 
 def parse_netapp_api_single_instance(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionSingleInstance:
@@ -157,9 +160,7 @@ def _single_configured(params: Mapping[str, Any]) -> bool:
     return params["mode"] == "single"
 
 
-def discover_single(
-    params: Mapping[str, Any], section: SectionSingleInstance
-) -> type_defs.DiscoveryResult:
+def discover_single(params: Mapping[str, Any], section: SectionSingleInstance) -> DiscoveryResult:
     if not _single_configured(params):
         return
     yield from (Service(item=item) for item in section)
@@ -168,7 +169,7 @@ def discover_single(
 def discover_summary(
     params: Mapping[str, Any],
     section: SectionSingleInstance,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     if not section or _single_configured(params):
         return
     yield Service(item="Summary")
@@ -176,13 +177,13 @@ def discover_summary(
 
 def get_single_check(
     device_type: Literal["fan", "power supply unit"]
-) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
+) -> Callable[[str, SectionSingleInstance], CheckResult]:
     error_key, number_key = _DEV_KEYS[device_type]
 
     def check_single(
         item: str,
         section: SectionSingleInstance,
-    ) -> type_defs.CheckResult:
+    ) -> CheckResult:
         if not (device := section.get(item)):
             return
 
@@ -203,13 +204,13 @@ def _pluralize(thing: str, count: int) -> str:
 
 def get_summary_check(
     device_type: Literal["fan", "power supply unit"]
-) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
+) -> Callable[[str, SectionSingleInstance], CheckResult]:
     error_key, _number_key = _DEV_KEYS[device_type]
 
     def check_summary(
         item: str,
         section: SectionSingleInstance,
-    ) -> type_defs.CheckResult:
+    ) -> CheckResult:
         total = len(section)
         erred = [k for k, v in section.items() if v.get(error_key) == "true"]
         ok_count = total - len(erred)
@@ -333,3 +334,45 @@ def combine_netapp_api_volumes(
                 combined_volume[k] = float(vs) / n_vols_online
 
     return combined_volume, volumes_not_online
+
+
+def check_netapp_luns(
+    item: str,
+    volume_name: str,
+    server_name: str,
+    online: bool,
+    read_only: bool,
+    size_total_bytes: int,
+    size_total: float,
+    size_available: float,
+    now: float,
+    value_store: MutableMapping[str, Any],
+    params: Mapping[str, Any],
+) -> CheckResult:
+    # v2.3 has 2 Results more: volume name + server name
+
+    if not online:
+        yield Result(state=State.CRIT, summary="LUN is offline")
+
+    if read_only != params.get("read_only"):
+        expected = str(params.get("read_only")).lower()
+        yield Result(
+            state=State.WARN,
+            summary=f"read-only is {str(read_only).lower()} (expected: {expected})",
+        )
+
+    if params.get("ignore_levels"):
+        yield Result(state=State.OK, summary=f"Total size: {render.bytes(size_total_bytes)}")
+        yield Result(state=State.OK, summary="Used space is ignored")
+    else:
+        yield from df_check_filesystem_single(
+            value_store,
+            item,
+            size_total,
+            size_available,
+            0,
+            None,
+            None,
+            params,
+            this_time=now,
+        )

@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 
 import time_machine
 
-from cmk.base.plugins.agent_based import mssql_backup as msb
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.mssql.agent_based import backup as msb
 
 STRING_TABLE = [
     ["MSSQL_SQL0x4", "master", "2016-07-08 20:20:27", "D"],

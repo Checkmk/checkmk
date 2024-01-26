@@ -44,6 +44,7 @@ class DockerImage(NamedTuple):
 class Registry:
     editions: Sequence[str]
     url: str = field(init=False)
+    credentials: Credentials = field(init=False)
     client: docker.DockerClient = field(init=False)
     image_exists: Callable[[DockerImage, str], bool] = field(init=False)
 
@@ -62,7 +63,7 @@ class Registry:
             image.tag
             in requests.get(
                 f"{self.url}/v2/{edition}/check-mk-{edition}/tags/list",
-                auth=(CREDENTIALS.username, CREDENTIALS.password),
+                auth=(self.credentials.username, self.credentials.password),
             ).json()["tags"]
         )
         if exists:
@@ -73,6 +74,7 @@ class Registry:
 
     def __post_init__(self):
         self.client = docker.client.from_env()
+        self.credentials = get_credentials()
         match self.editions:
             case ["enterprise", "managed"]:
                 self.url = "https://registry.checkmk.com"
@@ -93,23 +95,12 @@ def get_credentials() -> Credentials:
     return Credentials(username=username, password=password)
 
 
-CREDENTIALS = get_credentials()
-REGISTRIES = [
-    Registry(
-        editions=["enterprise", "managed"],
-    ),
-    Registry(
-        editions=["raw", "cloud"],
-    ),
-]
-
-
 def hash_file(artifact_name: str) -> str:
     return f"{artifact_name}.hash"
 
 
-def edition_to_registry(ed: str) -> Registry:
-    for r in REGISTRIES:
+def edition_to_registry(ed: str, registries: list[Registry]) -> Registry:
+    for r in registries:
         if ed in r.editions:
             return r
     raise RuntimeError(f"Cannot determine registry for edition: {ed}!")
@@ -130,8 +121,7 @@ def build_docker_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> 
 
 
 def build_docker_image_name_and_registry(
-    arguments: argparse.Namespace,
-    loaded_yaml: dict,
+    arguments: argparse.Namespace, loaded_yaml: dict, registries: list[Registry]
 ) -> Iterator[tuple[DockerImage, str, Registry]]:
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
@@ -144,7 +134,7 @@ def build_docker_image_name_and_registry(
                 raise RuntimeError(f"Unknown edition {ed}")
 
     for edition in loaded_yaml["editions"]:
-        registry = edition_to_registry(edition)
+        registry = edition_to_registry(edition, registries)
         yield (
             DockerImage(
                 tag=arguments.version, image_name=f"{build_folder(edition)}/check-mk-{edition}"
@@ -184,14 +174,23 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
 
 
 def assert_build_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
+    credentials = get_credentials()
+    registries = [
+        Registry(
+            editions=["enterprise", "managed"],
+        ),
+        Registry(
+            editions=["raw", "cloud"],
+        ),
+    ]
     for artifact_name in build_source_artifacts(arguments, loaded_yaml):
         assert file_exists_on_download_server(
-            artifact_name, arguments.version, CREDENTIALS
+            artifact_name, arguments.version, credentials
         ), f"{artifact_name} should be available on download server!"
 
     for artifact_name, internal_only in build_package_artifacts(arguments, loaded_yaml):
         assert (
-            file_exists_on_download_server(artifact_name, arguments.version, CREDENTIALS)
+            file_exists_on_download_server(artifact_name, arguments.version, credentials)
             != internal_only
         ), (
             f"{artifact_name} should {'not' if internal_only else ''} "
@@ -200,11 +199,11 @@ def assert_build_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> 
 
     for artifact_name in build_docker_artifacts(arguments, loaded_yaml):
         assert file_exists_on_download_server(
-            artifact_name, arguments.version, CREDENTIALS
+            artifact_name, arguments.version, credentials
         ), f"{artifact_name} should be available on download server!"
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
-        arguments, loaded_yaml
+        arguments, loaded_yaml, registries
     ):
         assert registry.image_exists(image_name, edition), f"{image_name} not found!"
 

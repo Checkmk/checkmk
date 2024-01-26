@@ -104,9 +104,9 @@ def _valuespec_document() -> Dictionary:
     )
 
 
-def _valuespec_expected_regex() -> Dictionary:
+def _valuespec_expected_regex_header() -> Dictionary:
     return Dictionary(
-        title=Localizable("Regular expression to expect"),
+        title=Localizable("Regular expressions to expect"),
         # orientation="vertical",
         # show_titles=False,
         elements={
@@ -116,7 +116,7 @@ def _valuespec_expected_regex() -> Dictionary:
                     elements={
                         "name": DictElement(
                             Text(
-                                label=Localizable("Name"),
+                                label=Localizable("Header name pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
                             ),
@@ -124,7 +124,7 @@ def _valuespec_expected_regex() -> Dictionary:
                         ),
                         "value": DictElement(
                             Text(
-                                label=Localizable("Value"),
+                                label=Localizable("Header value pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
                             ),
@@ -135,7 +135,48 @@ def _valuespec_expected_regex() -> Dictionary:
                 required=True,
             ),
             "case_insensitive": DictElement(
-                BooleanChoice(label=Localizable("Case insensitive (only applies to header value)")),
+                BooleanChoice(
+                    label=Localizable(
+                        "Case insensitive matching (only applies to header value pattern)"
+                    )
+                ),
+                required=True,
+            ),
+            "invert": DictElement(
+                BooleanChoice(label=Localizable("return CRITICAL if found, OK if not")),
+                required=True,
+            ),
+        },
+    )
+
+
+def _valuespec_expected_regex_body() -> Dictionary:
+    return Dictionary(
+        title=Localizable("Regular expression to expect"),
+        # orientation="vertical",
+        # show_titles=False,
+        elements={
+            # TODO Regex currently not implemented in ruleset API
+            "regex": DictElement(
+                Text(
+                    label=Localizable("Pattern"),
+                    # mode=RegExp.infix,
+                    # maxlen=1023,
+                ),
+                required=True,
+            ),
+            "case_insensitive": DictElement(
+                BooleanChoice(label=Localizable("Case insensitive matching")),
+                required=True,
+            ),
+            "multiline": DictElement(
+                BooleanChoice(
+                    label=Localizable("Line-based matching"),
+                    help_text=Localizable(
+                        'When checked, the anchors "^" and "$" match on every line, while '
+                        '"*" doesn\'t match on newline characters'
+                    ),
+                ),
                 required=True,
             ),
             "invert": DictElement(
@@ -484,7 +525,7 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="regex",
                             title=Localizable("Regular expression"),
-                            parameter_form=_valuespec_expected_regex(),
+                            parameter_form=_valuespec_expected_regex_header(),
                         ),
                     ],
                 ),
@@ -502,7 +543,7 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="regex",
                             title=Localizable("Regular expression"),
-                            parameter_form=_valuespec_expected_regex(),
+                            parameter_form=_valuespec_expected_regex_body(),
                         ),
                     ],
                 )

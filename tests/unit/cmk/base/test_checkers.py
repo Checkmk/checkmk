@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Iterable, Mapping
+from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -20,6 +22,11 @@ import cmk.base.checkers as checkers
 import cmk.base.config as config
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    PredictionInfo,
+    PredictionParameters,
+)
 from cmk.agent_based.v1 import Metric, Result, State
 
 
@@ -170,3 +177,60 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
+
+
+def test_prediction_injection_legacy() -> None:
+    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p: dict[str, object] = {
+        "pagefile": (
+            "predictive",
+            {
+                "__injected__": None,
+                "period": "day",
+                "horizon": 60,
+                "levels_upper": ("absolute", (0.5, 1.0)),
+            },
+        )
+    }
+    assert checkers._inject_prediction_params_recursively(p, inject) == {
+        "pagefile": (
+            "predictive",
+            {
+                "__injected__": inject.model_dump(),
+                "period": "day",
+                "horizon": 60,
+                "levels_upper": ("absolute", (0.5, 1.0)),
+            },
+        )
+    }
+
+
+def _make_hash(params: PredictionParameters, direction: Literal["upper"], metric: str) -> int:
+    # particular values of prediction parameters are irrelevant for this test.
+    return hash(PredictionInfo.make(metric, direction, params, time.time()))
+
+
+def test_prediction_injection() -> None:
+    # particular values of prediction parameters are irrelevant for this test.
+    params = PredictionParameters(period="day", horizon=90, levels=("stdev", (2.0, 4.0)))
+    metric = "my_reference_metric"
+    prediction = (42.0, (50.0, 60.0))
+
+    inject = InjectedParameters(
+        meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
+    )
+    p: dict[str, object] = {
+        "levels_upper": {
+            "__reference_metric__": "my_reference_metric",
+            "__direction__": "upper",
+            "period": params.period,
+            "horizon": params.horizon,
+            "levels": params.levels,
+        },
+    }
+    assert checkers._inject_prediction_params_recursively(p, inject) == {
+        "levels_upper": (
+            "predictive",
+            ("my_reference_metric", *prediction),
+        )
+    }

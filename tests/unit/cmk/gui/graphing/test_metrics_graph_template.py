@@ -245,12 +245,11 @@ def test_metric_unit_color(
         "color": result_color,
         "unit": unit_id,
     }
-    assert (
-        gt.metric_unit_color(
-            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
-        )
-        == reference
+    metric_definition = MetricDefinition(
+        expression=parse_expression(expression, translated_metrics),
+        line_type="line",
     )
+    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) == reference
 
 
 @pytest.mark.parametrize(
@@ -263,12 +262,11 @@ def test_metric_unit_color_skip(
     expression: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
-    assert (
-        gt.metric_unit_color(
-            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
-        )
-        is None
+    metric_definition = MetricDefinition(
+        expression=parse_expression(expression, translated_metrics),
+        line_type="line",
     )
+    assert metric_definition.compute_unit_color(translated_metrics, ["test"]) is None
 
 
 @pytest.mark.parametrize(
@@ -281,7 +279,9 @@ def test_metric_unit_color_exception(
     expression: str, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = translate_perf_data(perf_string, check_command)
+    metric_definition = MetricDefinition(
+        expression=parse_expression(expression, translated_metrics),
+        line_type="line",
+    )
     with pytest.raises(MKGeneralException):
-        gt.metric_unit_color(
-            parse_expression(expression, translated_metrics), translated_metrics, ["test"]
-        )
+        metric_definition.compute_unit_color(translated_metrics, ["test"])

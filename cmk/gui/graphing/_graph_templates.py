@@ -49,7 +49,6 @@ from ._utils import (
     get_graph_templates,
     GraphTemplate,
     MetricDefinition,
-    MetricUnitColor,
     ScalarDefinition,
     translated_metrics_from_row,
 )
@@ -201,13 +200,12 @@ def create_graph_recipe_from_template(
     specification: GraphSpecification,
 ) -> GraphRecipe:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
+        unit_color = metric_definition.compute_unit_color(
+            translated_metrics,
+            graph_template.optional_metrics,
+        )
         return GraphMetric(
-            title=metric_line_title(
-                metric_definition,
-                metric_definition.expression,
-                translated_metrics,
-            ),
+            title=metric_definition.compute_title(translated_metrics),
             line_type=metric_definition.line_type,
             operation=metric_expression_to_graph_recipe_expression(
                 metric_definition.expression,
@@ -406,35 +404,3 @@ def metric_expression_to_graph_recipe_expression(
         lq_row,
         enforced_consolidation_function,
     )
-
-
-def metric_line_title(
-    metric_definition: MetricDefinition,
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> str:
-    if metric_definition.title:
-        return metric_definition.title
-    return translated_metrics[next(metric_expression.metrics()).name]["title"]
-
-
-def metric_unit_color(
-    metric_expression: MetricExpression,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    optional_metrics: Sequence[str] | None = None,
-) -> MetricUnitColor | None:
-    try:
-        result = metric_expression.evaluate(translated_metrics)
-    except KeyError as err:  # because metric_name is not in translated_metrics
-        metric_name = err.args[0]
-        if optional_metrics and metric_name in optional_metrics:
-            return None
-        raise MKGeneralException(
-            _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
-            % (
-                metric_expression,
-                metric_name,
-                ", ".join(sorted(translated_metrics.keys())) or "None",
-            )
-        )
-    return MetricUnitColor(unit=result.unit_info["id"], color=result.color)

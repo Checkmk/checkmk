@@ -9,8 +9,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Final, NamedTuple
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DAY_IN_SECONDS = 24 * 60 * 60
 
@@ -84,7 +85,7 @@ def parse_cisco_prime_wlan_controller(string_table: StringTable) -> dict[str, Wl
     }
 
 
-register.agent_section(
+agent_section_cisco_prime_wlan_controller = AgentSection(
     name="cisco_prime_wlan_controller",
     parse_function=parse_cisco_prime_wlan_controller,
 )
@@ -114,7 +115,7 @@ def check_wlan_controller_metadata(item: str, section: dict[str, WlanController]
         yield Result(state=State.OK, summary=f"Mobility group name: {data.mobility_group_name}")
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_metadata = CheckPlugin(
     name="cisco_prime_wlan_controller_metadata",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s",
@@ -134,7 +135,7 @@ def check_wlan_controller_alarm_status(
     yield Result(state=state, summary=data.alarm_status.name)
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_alarm_status = CheckPlugin(
     name="cisco_prime_wlan_controller_alarm_status",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s Alarm Status",
@@ -159,7 +160,7 @@ def check_wlan_controller_access_points(
     )
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_access_points = CheckPlugin(
     name="cisco_prime_wlan_controller_access_points",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s Access Points",
@@ -186,7 +187,7 @@ def check_wlan_controller_clients(
     )
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_clients = CheckPlugin(
     name="cisco_prime_wlan_controller_clients",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s Clients",
@@ -211,7 +212,7 @@ def check_wlan_controller_reachability(
     yield Result(state=State.CRIT, summary="UNREACHABLE")
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_reachability = CheckPlugin(
     name="cisco_prime_wlan_controller_reachability",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s Reachability",
@@ -239,7 +240,7 @@ def check_wlan_controller_last_backup(
     )
 
 
-register.check_plugin(
+check_plugin_cisco_prime_wlan_controller_last_backup = CheckPlugin(
     name="cisco_prime_wlan_controller_last_backup",
     sections=["cisco_prime_wlan_controller"],
     service_name="Cisco Prime WLAN Controller %s Last Backup",

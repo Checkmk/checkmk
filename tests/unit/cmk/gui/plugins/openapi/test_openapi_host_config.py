@@ -1235,6 +1235,32 @@ def test_openapi_host_config_effective_attributes_includes_tags_regression(
     assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
 
 
+def test_openapi_host_config_effective_attributes_labels_from_parent_folder(
+    clients: ClientRegistry,
+) -> None:
+    """Tests inheritance of host labels from parent folder"""
+    clients.Folder.create(
+        folder_name="test_folder",
+        title="Test folder",
+        parent="/",
+        attributes={"labels": {"foo1": "bar1"}},
+    )
+    clients.HostConfig.create(
+        host_name="test_host",
+        attributes={"labels": {"foo2": "bar2"}},
+        folder="/test_folder",
+    )
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["labels"] == {
+        "foo1": "bar1",
+        "foo2": "bar2",
+    }
+    assert resp.json["extensions"]["attributes"]["labels"] == {
+        "foo2": "bar2",
+    }
+
+
 @managedtest
 @freeze_time("2022-11-05")
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(

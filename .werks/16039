@@ -1,0 +1,18 @@
+Title: host_config: add inherited labels to effective attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1706268055
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Previously, when using the effective attributes query parameter with the
+
+C+:
+GET /objects/host_config/{host_name}
+C-:
+
+endpoint, only the labels of the current host have been returned.
+
+Now all of the effective labels are aggregated and returned.

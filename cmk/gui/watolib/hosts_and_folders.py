@@ -1429,14 +1429,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = update_metadata(host.attributes(), created_by=user.id)
+            host_labels[hostname] = effective["labels"]
 
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
-
-            labels = host.labels()
-            if labels:
-                host_labels[hostname] = labels
 
             if host.is_cluster():
                 clusters[hostname] = host.cluster_nodes()
@@ -3235,6 +3232,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         effective = self.folder().effective_attributes()
         effective.update(self.attributes())
+        effective["labels"] = self.labels()
         self._cache_effective_attributes(effective)
         return effective
 

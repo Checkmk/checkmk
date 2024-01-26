@@ -13,6 +13,8 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
+from collections.abc import Sequence
+
 from pydantic import BaseModel
 
 MEGA = 1024.0 * 1024.0
@@ -248,3 +250,85 @@ class SvmModel(BaseModel):
     # default None inherited from old NetApp API logic
     state: str | None = None
     subtype: str | None = None
+
+
+class InterfaceLocation(BaseModel):
+    """
+    Cfr: class IpInterfaceLocationSchema from NetApp module
+    """
+
+    class IfLocationNode(BaseModel):
+        name: str
+        # uuid: str  # FIXME: useless?
+
+    class IfLocationPort(BaseModel):
+        name: str
+        # node: Mapping[str, str]  # FIXME: useless?
+        # uuid: str  # FIXME: useless?
+
+    node: IfLocationNode  # FIXME: use Node class
+    port: IfLocationPort  # FIXME: use Port class
+    failover: str  # was: failover policy
+
+
+class IpInterfaceModel(BaseModel):
+    """Wraps information coming from "/api/network/ip/interfaces", see
+    - https://library.netapp.com/ecmdocs/ECMLP2885799/html/index.html#/networking/network_ip_interfaces_get
+    - https://docs.netapp.com/us-en/ontap-restmap-9131//net.html?q=net-interface-get-iter#net-interface-get-iter
+
+
+    ============
+    OLD -> NEW:
+    ============
+    "interface-name" -> name
+    "link-status" -> state
+    "failover_ports" -> Moved to failover in port model
+    "operational-speed" -> speed
+    "mac-address" -> mac_address
+    ============
+
+    """
+
+    name: str
+    uuid: str
+    state: str
+    enabled: bool
+    location: InterfaceLocation
+
+
+class BroadcastDomain(BaseModel):
+    name: str
+
+
+class PortModel(BaseModel):
+    """
+    api: /api/network/ethernet/ports
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//net.html#net-port-get
+
+    ============
+    OLD -> NEW:
+    ============
+    "node" -> node
+    "port" -> name
+    ============
+
+    """
+
+    uuid: str
+    name: str
+    state: str
+    speed: int | None = None
+    port_type: str
+    broadcast_domain: BroadcastDomain | None = None
+
+
+class InterfaceCounter(BaseModel):
+    name: str
+    value: int | float
+
+
+class InterfaceCountersRowModel(BaseModel):
+    # node_name:svm_name:volume_name:volume_uuid
+    # "mcc_darz_a-01:FlexPodXCS_NFS_Frank:Test_300T:00b3e6b1-5781-11ee-b0c8-00a098c54c0b"
+    id: str
+    counters: Sequence[InterfaceCounter]

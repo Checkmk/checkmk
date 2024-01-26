@@ -300,6 +300,7 @@ def fetch_ports(connection: HostConnection) -> Iterable[netapp_ontap_models.Port
     field_query = {
         "uuid",
         "name",
+        "node.name",
         "state",
         "speed",
         "type",
@@ -314,6 +315,7 @@ def fetch_ports(connection: HostConnection) -> Iterable[netapp_ontap_models.Port
         yield netapp_ontap_models.PortModel(
             uuid=element_data["uuid"],
             name=element_data["name"],
+            node_name=element_data["node"]["name"],
             state=element_data["state"],
             speed=element_data.get("speed"),
             port_type=element_data["type"],
@@ -356,7 +358,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("luns", fetch_luns(connection), logger)
     write_section("aggr", fetch_aggr(connection), logger)
     write_section("vs_status", fetch_vs_status(connection), logger)
-    write_section("ports_rest", fetch_ports(connection), logger)
+    write_section("ports", fetch_ports(connection), logger)
     interfaces = list(fetch_interfaces(connection))
     write_section("interfaces_rest", interfaces, logger)
     write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)

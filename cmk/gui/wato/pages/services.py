@@ -1052,9 +1052,13 @@ class DiscoveryPageRenderer:
             self._show_check_parameters(entry)
 
         if self._options.show_discovered_labels:
-            table.cell(_("Previously discovered"))
+            table.cell(
+                _("Previously discovered")
+                if entry.check_source == DiscoveryState.CHANGED
+                else _("Discovered service labels")
+            )
             self._show_discovered_labels(entry.old_labels)
-            if entry.check_source == "changed":
+            if entry.check_source == DiscoveryState.CHANGED:
                 unchanged_labels = {
                     label: value
                     for label, value in entry.new_labels.items()

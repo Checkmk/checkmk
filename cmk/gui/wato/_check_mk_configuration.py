@@ -4303,22 +4303,6 @@ def _vs_periodic_discovery() -> Dictionary:
                 ),
             ),
             (
-                "severity_changed_service_params",
-                DropdownChoice(
-                    title=_("Severity of services with changed parameters"),
-                    help=_(
-                        "Please select which alarm state the service discovery check services "
-                        "shall assume in case that parameters of services have changed."
-                    ),
-                    choices=[
-                        (0, _("OK - do not alert, just display")),
-                        (1, _("Warning")),
-                        (2, _("Critical")),
-                        (3, _("Unknown")),
-                    ],
-                ),
-            ),
-            (
                 "severity_new_host_label",
                 DropdownChoice(
                     title=_("Severity of new host labels"),

@@ -372,6 +372,31 @@ def fetch_nodes(connection: HostConnection) -> Iterable[netapp_ontap_models.Node
         )
 
 
+def fetch_fans(connection: HostConnection) -> Iterable[netapp_ontap_models.ShelfFanModel]:
+    field_query = {
+        "id",
+        "fans.id",
+        "fans.state",
+        "fans.rpm",
+        # "fans.installed",  # ! NOT WORKING
+    }
+
+    for element in NetAppResource.Shelf.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+        list_id = element_data["id"]
+        fans = element_data["fans"]
+
+        for fan in fans:
+            yield netapp_ontap_models.ShelfFanModel(
+                list_id=list_id,
+                id=fan["id"],
+                state=fan["state"],
+                rpm=fan["rpm"],
+            )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -385,6 +410,7 @@ def write_sections(connection: HostConnection, logger: logging.Logger) -> None:
     write_section("interfaces_rest", interfaces, logger)
     write_section("interfaces_counters", fetch_interfaces_counters(connection, interfaces), logger)
     write_section("node", fetch_nodes(connection), logger)
+    write_section("fan", fetch_fans(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

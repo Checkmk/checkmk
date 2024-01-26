@@ -375,3 +375,30 @@ class NodeModel(BaseModel):
     version: Version
     cpu_count: int | None = None  # default None inherited from old NetApp API logic
     battery_state: str
+
+
+class ShelfFanModel(BaseModel):
+    """
+
+    api: /api/storage/shelves
+    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//ses.html#storage-shelf-environment-list-info
+
+
+    ============
+    OLD -> NEW:
+    ============
+    cooling-element-number -> fans.id
+    cooling-element-is-not-installed -> fans.installed  # comment: fans.installed is the inverse of cooling-element-is-not-installed in REST !! NOT WORKING, waiting for discord answer
+    cooling-element-is-error -> fans.state  # comment: cooling-element-is-error is simplified to "ok" and "error" in REST
+    rpm -> fans.rpm
+    ============
+    """
+
+    list_id: str  # shelf id
+    id: int
+    state: str  # "ok" or "error"
+    rpm: int
+    installed: bool | None = None  # TODO remove non when query fixed
+
+    def item_name(self) -> str:
+        return f"{self.list_id}/{self.id}"

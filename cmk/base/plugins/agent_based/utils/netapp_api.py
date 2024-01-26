@@ -27,7 +27,7 @@ CustomKeys = Optional[Sequence[str]]
 ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
-_DEV_KEYS = {
+DEV_KEYS = {
     "fan": ("cooling-element-is-error", "cooling-element-number"),
     "power supply unit": ("power-supply-is-error", "power-supply-element-number"),
 }
@@ -178,7 +178,7 @@ def discover_summary(
 def get_single_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], CheckResult]:
-    error_key, number_key = _DEV_KEYS[device_type]
+    error_key, number_key = DEV_KEYS[device_type]
 
     def check_single(
         item: str,
@@ -198,14 +198,10 @@ def get_single_check(
     return check_single
 
 
-def _pluralize(thing: str, count: int) -> str:
-    return thing if count == 1 else f"{thing}s"
-
-
 def get_summary_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], CheckResult]:
-    error_key, _number_key = _DEV_KEYS[device_type]
+    error_key, _number_key = DEV_KEYS[device_type]
 
     def check_summary(
         item: str,

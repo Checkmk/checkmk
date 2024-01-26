@@ -72,6 +72,20 @@ def parse_azure_datetime(datetime_string: str) -> datetime:
     return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S")
 
 
+def azure_tags_to_valid_labels(tags: Mapping[str, str]) -> Mapping[str, str]:
+    # Make sure we only generate valid labels, i.e.
+    # 1) no empty values - we insert "true" for now, but empty values will be allowed in the future
+    #    see CMK-10380
+    # 2) no colons allowed in either key or value
+    labels: dict[str, str] = {}
+    for key, value in tags.items():
+        key = key.replace(":", "_")
+        # TODO: allow empty values once CMK-10380 is done
+        value = value.replace(":", "_") if value else "true"
+        labels[key] = value
+    return labels
+
+
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
 #   |                     |  _ \ __ _ _ __ ___  ___                        |
@@ -172,7 +186,8 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 
 
 def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[ServiceLabel]:
-    return [ServiceLabel(f"cmk/azure/tag/{key}", value) for key, value in tags.items()]
+    labels = azure_tags_to_valid_labels(tags)
+    return [ServiceLabel(f"cmk/azure/tag/{key}", value) for key, value in labels.items()]
 
 
 def create_discover_by_metrics_function(

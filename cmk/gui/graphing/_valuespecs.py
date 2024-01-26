@@ -276,12 +276,15 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(metric_name: MetricName_) -> PageResult:
+    def resolve_units(metric_name: MetricName_ | None) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         known_units = list(unit_info.keys())
-        required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
+        if metric_name:
+            required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
+        else:
+            required_unit = ""
 
         try:
             index = known_units.index(required_unit)

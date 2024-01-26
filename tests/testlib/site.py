@@ -44,6 +44,7 @@ from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
+from cmk.utils.crypto.secrets import Secret
 from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition, Version
 
@@ -1143,14 +1144,14 @@ class Site:
 
         return secret
 
-    def get_site_internal_secret(self) -> bytes:
+    def get_site_internal_secret(self) -> Secret:
         secret_path = "etc/site_internal.secret"
         secret = self.read_binary_file(secret_path)
 
         if secret == b"":
             raise Exception("Failed to read secret from %s" % secret_path)
 
-        return secret
+        return Secret(secret)
 
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None

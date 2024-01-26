@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from base64 import b64encode
-
 from tests.testlib import CMKWebSession
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
@@ -220,7 +218,7 @@ def test_local_secret_no_sessions(site: Site) -> None:
 
     - a session must not be established
     """
-    b64_token = b64encode(site.get_site_internal_secret()).decode("utf-8")
+    b64_token = site.get_site_internal_secret().b64_str
     session = CMKWebSession(site)
     response = session.get(
         f"/{site.id}/check_mk/api/1.0/version",
@@ -251,7 +249,7 @@ def test_local_secret_permissions(site: Site) -> None:
     add tests here to make sure the functionallity works..."""
 
     session = CMKWebSession(site)
-    b64_token = b64encode(site.get_site_internal_secret()).decode("utf-8")
+    b64_token = site.get_site_internal_secret().b64_str
     response = session.get(
         f"/{site.id}/check_mk/api/1.0/agent_controller_certificates_settings",
         headers={

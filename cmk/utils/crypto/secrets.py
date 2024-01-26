@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
 import secrets
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from pathlib import Path
+from typing import AnyStr
 
 import cmk.utils.paths as paths
 from cmk.utils.user import UserId
@@ -22,6 +24,14 @@ class Secret:
 
     def compare(self, other: Secret) -> bool:
         return secrets.compare_digest(self._value, other._value)
+
+    @property
+    def b64_str(self) -> str:
+        return base64.b64encode(self._value).decode("ascii")
+
+    @classmethod
+    def from_b64(cls, b64_value: AnyStr) -> Secret:
+        return cls(base64.b64decode(b64_value))
 
 
 class _LocalSecret(ABC):

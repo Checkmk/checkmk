@@ -47,7 +47,21 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
         ),
         pytest.param(
             "rabbit@my-rabbit",
-            {"levels": ("fd_abs", (400, 500))},
+            {"levels": ("fd_abs", ("no_levels", None))},
+            {
+                "rabbit@my-rabbit": {
+                    "proc": {"proc_used": 431, "proc_total": 1048576},
+                }
+            },
+            [
+                Result(state=State.OK, summary="Erlang processes used: 431 of 1048576, 0.04%"),
+                Metric(name="processes", value=431, boundaries=(0, 1048576)),
+            ],
+            id="(no_levels, None)",
+        ),
+        pytest.param(
+            "rabbit@my-rabbit",
+            {"levels": ("fd_abs", ("fixed", (400, 500)))},
             {
                 "rabbit@my-rabbit": {
                     "proc": {"proc_used": 431, "proc_total": 1048576},
@@ -64,7 +78,7 @@ from cmk.plugins.rabbitmq.agent_based.nodes_proc import check_rabbitmq_nodes_pro
         ),
         pytest.param(
             "rabbit@my-rabbit",
-            {"levels": ("fd_perc", (50.0, 90.0))},
+            {"levels": ("fd_perc", ("fixed", (50.0, 90.0)))},
             {
                 "rabbit@my-rabbit": {
                     "proc": {"proc_used": 996148, "proc_total": 1048576},

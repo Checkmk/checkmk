@@ -10,38 +10,43 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    InputHint,
     Integer,
+    LevelDirection,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
     Percentage,
-    TupleDoNotUseWillbeRemoved,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
-    fd_perc = CascadingSingleChoiceElement(
+    fd_perc = CascadingSingleChoiceElement[SimpleLevelsConfigModel[float]](
         name="fd_perc",
         title=Title("Percentual levels for used processes"),
-        parameter_form=TupleDoNotUseWillbeRemoved(
-            elements=[
-                Percentage(title=Title("Warning at usage of")),  # prefill_value=80.0),
-                Percentage(title=Title("Critical at usage of")),  # prefill_value=90.0),
-            ],
+        parameter_form=SimpleLevels[float](
+            level_direction=LevelDirection.UPPER,
+            form_spec_template=Percentage(),
+            prefill_fixed_levels=DefaultValue(value=(80.0, 90.0)),
+            migrate=migrate_to_float_simple_levels,
         ),
     )
-    fd_abs = CascadingSingleChoiceElement(
+    fd_abs = CascadingSingleChoiceElement[SimpleLevelsConfigModel[int]](
         name="fd_abs",
         title=Title("Absolute levels for total number of used processes"),
-        parameter_form=TupleDoNotUseWillbeRemoved(
-            elements=[
-                Integer(title=Title("Warning at"), label=Label("Processes:")),
-                Integer(title=Title("Critical at"), label=Label("Processes:")),
-            ],
+        parameter_form=SimpleLevels[int](
+            level_direction=LevelDirection.UPPER,
+            form_spec_template=Integer(label=Label("number of processes")),
+            prefill_fixed_levels=InputHint(value=(0, 0)),
+            migrate=migrate_to_integer_simple_levels,
         ),
     )
 
     return Dictionary(
         elements={
-            "levels": DictElement(
+            "levels": DictElement[tuple[str, object]](
                 parameter_form=CascadingSingleChoice(
                     title=Title("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],

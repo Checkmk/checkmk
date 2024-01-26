@@ -29,6 +29,7 @@ class ICore;
 class OutputBuffer;
 class Row;
 class Table;
+class Logger;
 
 class Query {
 public:
@@ -79,6 +80,7 @@ private:
         stats_groups_;
     std::vector<std::pair<Sorter::key_type, RowFragment>> sorted_rows_;
 
+    [[nodiscard]] Logger *logger() const;
     bool doStats() const;
     bool hasOrderBy() const;
     [[nodiscard]] const OrderBy &orderBy() const;

@@ -9,6 +9,7 @@
 #include <compare>
 #include <cstddef>
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 #include <variant>
 
@@ -58,6 +59,8 @@ void Query::invalidRequest(const std::string &message) const {
 void Query::badGateway(const std::string &message) const {
     output_.setError(OutputBuffer::ResponseCode::bad_gateaway, message);
 }
+
+Logger *Query::logger() const { return core_.loggerLivestatus(); }
 
 bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
@@ -174,11 +177,16 @@ bool Query::processDataset(Row row) {
         const RowFragment row_fragment{os.str()};
 
         const auto order_by = orderBy();
-        const auto sorter = order_by.column->createSorter();
-        const auto key = sorter->getKey(row, order_by.key, *user_,
-                                        parsed_query_.timezone_offset);
+        try {
+            const auto sorter = order_by.column->createSorter();
+            const auto key = sorter->getKey(row, order_by.key, *user_,
+                                            parsed_query_.timezone_offset);
 
-        sorted_rows_.emplace_back(key, row_fragment);
+            sorted_rows_.emplace_back(key, row_fragment);
+        } catch (const std::runtime_error &e) {
+            Error(logger()) << "invalid request: " << e.what();
+            return false;
+        }
     } else {
         renderColumns(row, query_renderer_);
     }

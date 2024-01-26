@@ -42,6 +42,16 @@ impl Default for System {
     }
 }
 
+impl System {
+    pub fn max_connections(&self) -> MaxConnections {
+        self.max_connections.clone()
+    }
+
+    pub fn max_queries(&self) -> MaxQueries {
+        self.max_queries.clone()
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
@@ -117,6 +127,11 @@ impl Config {
             system: System::default(),
         }))
     }
+
+    pub fn system(&self) -> &System {
+        &self.system
+    }
+
     pub fn endpoint(&self) -> Endpoint {
         Endpoint::new(&self.auth, &self.conn)
     }
@@ -627,6 +642,8 @@ impl Piggyback {
 
 #[cfg(test)]
 mod tests {
+    use tests::defaults::{MAX_CONNECTIONS, MAX_QUERIES};
+
     use self::data::TEST_CONFIG;
 
     use super::*;
@@ -814,6 +831,13 @@ piggyback:
                 system: System::default(),
             }
         );
+    }
+
+    #[test]
+    fn test_system_default() {
+        let s = System::default();
+        assert_eq!(s.max_connections(), MAX_CONNECTIONS.into());
+        assert_eq!(s.max_queries(), MAX_QUERIES.into());
     }
 
     #[test]

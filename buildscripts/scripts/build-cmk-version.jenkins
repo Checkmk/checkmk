@@ -394,7 +394,12 @@ def create_and_upload_bom(WORKSPACE, BRANCH_VERSION, VERSION) {
     stage('Create BOM') {
         dir(SCANNER_DIR) {
             SCANNER_IMAGE.inside("-v ${CMK_DIR}:${CMK_DIR}") {
-                sh("python3 -m dependencyscanner  --stage prod --outfile '${BOM_PATH}' '${CMK_DIR}'")
+                sh("""python3 -m dependencyscanner \
+                --stage prod \
+                --outfile '${BOM_PATH}' \
+                --research_file researched_2.1.0.yml \
+                --license_cache license_cache_2.1.0.json \
+                '${CMK_DIR}'""");
             }
         }
     }

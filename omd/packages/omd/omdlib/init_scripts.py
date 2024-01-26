@@ -31,10 +31,9 @@ def call_init_scripts(
     # preserves the order.
     if command == "restart":
         log_security_event(SiteStartStoppedEvent(event="restart"))
-        # TODO: Why is the result of call_init_scripts not returned?
-        call_init_scripts(site_dir, "stop", daemon)
-        call_init_scripts(site_dir, "start", daemon)
-        return 0
+        code_stop = call_init_scripts(site_dir, "stop", daemon)
+        code_start = call_init_scripts(site_dir, "start", daemon)
+        return max(code_stop, code_start)
 
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site_dir):

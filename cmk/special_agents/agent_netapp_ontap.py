@@ -394,6 +394,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[netapp_ontap_models.Node
         "serial_number",
         "system_id",
         "controller.cpu.processor",
+        "statistics.processor_utilization_raw",
+        "statistics.processor_utilization_base",
     }
 
     for element in NetAppResource.Node.get_collection(
@@ -412,6 +414,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[netapp_ontap_models.Node
             serial_number=element_data["serial_number"],
             system_id=element_data["system_id"],
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
+            processor_utilization_raw=element_data["statistics"]["processor_utilization_raw"],
+            processor_utilization_base=element_data["statistics"]["processor_utilization_base"],
         )
 
 

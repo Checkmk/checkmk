@@ -80,8 +80,6 @@ class Registry:
                 self.url = "https://registry.checkmk.com"
                 self.image_exists = self.image_exists_enterprise
             case ["raw", "cloud"]:
-                self.env_for_user = "DOCKER_USERNAME_DOCKERHUB"
-                self.env_for_password = "DOCKER_PASSPHRASE_DOCKERHUB"
                 self.url = "https://docker.io"
                 self.image_exists = self.image_exists_docker_hub
             case _:

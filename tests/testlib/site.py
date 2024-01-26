@@ -1516,20 +1516,24 @@ class SiteFactory:
         ),
         conflict_mode: str = "keepold",
     ) -> Site:
-        version_supported = self._version_supported(test_site.version.version, min_version.version)
-        if not version_supported:
-            pytest.skip(
-                f"{test_site.version} is not a supported version for {target_version.version}"
-            )
+        base_version = test_site.version
         self.version = target_version
-        site = self.get_existing_site("central", init_livestatus=False)
+
+        version_supported = self._version_supported(base_version.version, min_version.version)
+        if not version_supported:
+            pytest.skip(f"{base_version} is not a supported version for {target_version.version}")
+
+        # refresh site object to install the correct target version
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id, init_livestatus=False)
+
         site.install_cmk()
         site.stop()
 
         logger.info(
             "Updating %s site from %s version to %s version...",
-            test_site.id,
-            test_site.version.version,
+            site.id,
+            base_version.version,
             target_version.version_directory(),
         )
 
@@ -1541,13 +1545,13 @@ class SiteFactory:
             "update",
             f"--conflict={conflict_mode}",
         ]
-        test_site.stop()
-        process = test_site.execute(cmd)
+
+        process = site.execute(cmd)
         rc = process.wait()
         assert rc == 0, process.stderr
 
         # refresh the site object after creating the site
-        site = self.get_existing_site("central")
+        site = self.get_existing_site(site.id)
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
         # start the site after manually installing it
@@ -1565,7 +1569,7 @@ class SiteFactory:
 
         site.openapi.activate_changes_and_wait_for_completion()
 
-        return test_site
+        return site
 
     @staticmethod
     def _version_supported(version: str, min_version: str) -> bool:

@@ -13,6 +13,7 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel
@@ -529,3 +530,13 @@ class AlertModel(BaseModel):
     """
 
     name: str
+
+
+class SvmTrafficCountersModel(BaseModel):
+    """
+    cfr: https://docs.netapp.com/us-en/ontap-pcmap-9141/
+    """
+
+    svm_name: str
+    table: str
+    counters: Sequence[dict]

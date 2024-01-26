@@ -865,56 +865,45 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         core_hostnames = set()
         core_services = set()
         for node_id, node in self._topology_nodes.items():
+            node.type = NodeType.TOPOLOGY_UNKNOWN
             if core_entity := self._network_data.core_entity_for_id(node_id):
                 if isinstance(core_entity, str):
                     core_hostnames.add(core_entity)
                 else:
                     core_services.add(tuple(core_entity))
-                node.type = (
-                    NodeType.TOPOLOGY_SERVICE
-                    if isinstance(core_entity, list)
-                    else NodeType.TOPOLOGY_HOST
-                )
-            else:
-                node.type = NodeType.TOPOLOGY_UNKNOWN
 
         core_data_provider = _core_data_provider()
         core_data_provider.fetch_host_info(core_hostnames)
         core_data_provider.fetch_service_info(core_services)
 
-        for hostname in core_hostnames:
-            host_node_id = self._network_data.hostname[hostname]
-            if info := core_data_provider.core_hosts.get(hostname):
-                self._node_extra_info[host_node_id] = {
-                    "site": info.site,
-                    "hostname": info.hostname,
-                    "icon": theme.detect_icon_path(info.icon_image, "icon_")
-                    if info.icon_image
-                    else None,
-                    "state": info.state,
-                    "has_been_checked": info.has_been_checked,
-                    "num_services_warn": info.num_services_warn,
-                    "num_services_crit": info.num_services_crit,
-                }
-            else:
-                self._topology_nodes[host_node_id].type = NodeType.TOPOLOGY_UNKNOWN
-
-        for hostname, service in core_services:
-            svc_node_id = self._network_data.service.get(hostname, {}).get(service)
-            if not svc_node_id:
-                continue
-            if info := core_data_provider.core_services.get((hostname, service)):
-                self._node_extra_info[svc_node_id] = {
-                    "site": info.site,
-                    "hostname": info.hostname,
-                    "service": info.name,
-                    "icon": theme.detect_icon_path(info.icon_image, "icon_")
-                    if info.icon_image
-                    else None,
-                    "state": info.state,
-                }
-            else:
-                self._topology_nodes[svc_node_id].type = NodeType.TOPOLOGY_UNKNOWN
+        for node_id, node in self._topology_nodes.items():
+            if core_entity := self._network_data.core_entity_for_id(node_id):
+                if isinstance(core_entity, str):
+                    if info := core_data_provider.core_hosts.get(core_entity):
+                        node.type = NodeType.TOPOLOGY_HOST
+                        self._node_extra_info[node_id] = {
+                            "site": info.site,
+                            "hostname": info.hostname,
+                            "icon": theme.detect_icon_path(info.icon_image, "icon_")
+                            if info.icon_image
+                            else None,
+                            "state": info.state,
+                            "has_been_checked": info.has_been_checked,
+                            "num_services_warn": info.num_services_warn,
+                            "num_services_crit": info.num_services_crit,
+                        }
+                else:
+                    if info := core_data_provider.core_services.get(tuple(core_entity)):
+                        node.type = NodeType.TOPOLOGY_SERVICE
+                        self._node_extra_info[node_id] = {
+                            "site": info.site,
+                            "hostname": info.hostname,
+                            "service": info.name,
+                            "icon": theme.detect_icon_path(info.icon_image, "icon_")
+                            if info.icon_image
+                            else None,
+                            "state": info.state,
+                        }
 
 
 def _resolve_circular_mesh_depths(

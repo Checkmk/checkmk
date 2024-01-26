@@ -6,12 +6,32 @@
 #ifndef StringSorter_h
 #define StringSorter_h
 
+#include <chrono>
+#include <functional>
+#include <optional>
+#include <string>
+#include <utility>
+
 #include "Row.h"
 #include "Sorter.h"
 
+class User;
+
 class StringSorter : public Sorter {
+    using callback_t =
+        std::function<std::string(Row, const std::optional<std::string> &)>;
+
 public:
-    StringSorter() = default;
+    explicit StringSorter(callback_t getValue)
+        : getValue_{std::move(getValue)} {}
+    [[nodiscard]] Sorter::key_type getKey(
+        Row row, const std::optional<std::string> &key, const User & /*user*/,
+        std::chrono::seconds /*timezone_offset*/) const override {
+        return getValue_(row, key);
+    }
+
+private:
+    callback_t getValue_;
 };
 
 #endif

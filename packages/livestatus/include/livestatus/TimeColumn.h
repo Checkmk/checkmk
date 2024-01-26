@@ -55,7 +55,16 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<TimeSorter>();
+        return std::make_unique<TimeSorter>(
+            [this](Row row, const std::optional<std::string> &key,
+                   std::chrono::seconds timezone_offset) {
+                if (key) {
+                    throw std::runtime_error("time column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row, timezone_offset);
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

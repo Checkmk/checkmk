@@ -63,7 +63,16 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<IntSorter>();
+        return std::make_unique<IntSorter>(
+            [this](Row row, const std::optional<std::string> &key,
+                   const User &user) {
+                if (key) {
+                    throw std::runtime_error("int column '" + name() +
+                                             "' does not expect key '" +
+                                             (*key) + "'");
+                }
+                return getValue(row, user);
+            });
     }
 
     // TODO(sp): The only 2 places where auth_user is actually used are

@@ -286,6 +286,7 @@ pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
 mod tests {
     use super::*;
 
+    // build
     #[test]
     fn test_paths() {
         let home_dir = std::path::Path::new("/a/b/c");

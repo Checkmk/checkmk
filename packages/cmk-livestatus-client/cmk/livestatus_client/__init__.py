@@ -1475,8 +1475,13 @@ def get_rrd_data(
 
     lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
-    if (response := connection.query_value(lql)) is None:
-        raise MKLivestatusQueryError("Cannot get historic data")
+    try:
+        response = connection.query_value(lql)
+    except MKLivestatusNotFoundError:
+        return None
+
+    if response is None:  # It is not obvious to me if this can be the case or not.
+        return None
 
     raw_start, raw_end, raw_step, *values = response
 

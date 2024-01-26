@@ -5,14 +5,9 @@
 
 import json
 from collections.abc import Mapping
-from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Service
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.utils import netapp_api
 from cmk.base.plugins.agent_based.utils import netapp_ontap_models as models
 
@@ -69,12 +64,6 @@ register.agent_section(
 )
 
 
-def discovery_netapp_ontap_fan(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
-    if not params["mode"] == "single":
-        return
-    yield from (Service(item=item) for item in section)
-
-
 def check_netapp_ontap_fan(item: str, section: Section) -> CheckResult:
     yield from netapp_api.get_single_check("fan")(item, _get_section_single_instance(section))
 
@@ -83,19 +72,11 @@ register.check_plugin(
     name="netapp_ontap_fan",
     service_name="Fan Shelf %s",
     sections=["netapp_ontap_fan"],
-    discovery_function=discovery_netapp_ontap_fan,
+    discovery_function=netapp_api.discover_single,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_fan,
 )
-
-
-def discovery_netapp_ontap_fan_summary(
-    params: Mapping[str, Any], section: Section
-) -> DiscoveryResult:
-    if not section or params["mode"] == "single":
-        return
-    yield Service(item="Summary")
 
 
 def check_netapp_ontap_fan_summary(
@@ -109,7 +90,7 @@ register.check_plugin(
     name="netapp_ontap_fan_summary",
     service_name="Fan Shelf %s",
     sections=["netapp_ontap_fan"],
-    discovery_function=discovery_netapp_ontap_fan_summary,
+    discovery_function=netapp_api.discover_summary,
     discovery_ruleset_name="discovery_netapp_api_fan_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_fan_summary,

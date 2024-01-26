@@ -1,0 +1,12 @@
+Title: authentication: remove user profile dir when unknown user and failed to login
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1706284791
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Previously, failed login attempts with an unknown user would create a
+user profile directory.  This is no longer the case.  The profile
+directory is now only created for valid users.

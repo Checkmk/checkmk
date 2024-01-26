@@ -20,7 +20,6 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     Text,
     TimeSpan,
-    TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
@@ -81,123 +80,146 @@ def _valuespec_document() -> Dictionary:
                 ),
             ),
             "page_size": DictElement(
-                TupleDoNotUseWillbeRemoved(
+                Dictionary(
                     title=Localizable("Size"),
-                    elements=[
-                        Integer(
-                            title=Localizable("Minimum"),
-                            unit=Localizable("Bytes"),
+                    elements={
+                        "min": DictElement(
+                            Integer(
+                                title=Localizable("Minimum"),
+                                unit=Localizable("Bytes"),
+                            ),
+                            required=False,
                         ),
-                        Integer(
-                            title=Localizable("Maximum"),
-                            unit=Localizable("Bytes"),
+                        "max": DictElement(
+                            Integer(
+                                title=Localizable("Maximum"),
+                                unit=Localizable("Bytes"),
+                            ),
+                            required=False,
                         ),
-                    ],
+                    },
                 ),
             ),
         },
     )
 
 
-def _valuespec_expected_regex() -> TupleDoNotUseWillbeRemoved:
-    return TupleDoNotUseWillbeRemoved(
+def _valuespec_expected_regex() -> Dictionary:
+    return Dictionary(
         title=Localizable("Regular expression to expect"),
         # orientation="vertical",
         # show_titles=False,
-        elements=[
+        elements={
             # TODO Regex currently not implemented in ruleset API
-            TupleDoNotUseWillbeRemoved(
-                elements=[
-                    TupleDoNotUseWillbeRemoved(
-                        elements=[
+            "regex": DictElement(
+                Dictionary(
+                    elements={
+                        "name": DictElement(
                             Text(
                                 label=Localizable("Name"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
                             ),
+                            required=True,
+                        ),
+                        "value": DictElement(
                             Text(
                                 label=Localizable("Value"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
                             ),
-                        ],
-                    ),
-                ]
+                            required=True,
+                        ),
+                    },
+                ),
+                required=True,
             ),
-            BooleanChoice(label=Localizable("Case insensitive (only applies to header value)")),
-            BooleanChoice(label=Localizable("return CRITICAL if found, OK if not")),
-        ],
+            "case_insensitive": DictElement(
+                BooleanChoice(label=Localizable("Case insensitive (only applies to header value)")),
+                required=True,
+            ),
+            "invert": DictElement(
+                BooleanChoice(label=Localizable("return CRITICAL if found, OK if not")),
+                required=True,
+            ),
+        },
     )
 
 
-def _send_data(http_method: str | None = None) -> FixedValue | TupleDoNotUseWillbeRemoved:
+def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
     if not http_method:
         return FixedValue(
             value=None,
             label=Localizable("No additional configuration options for this method."),
         )
 
-    return TupleDoNotUseWillbeRemoved(
-        elements=[
-            Text(
-                title=Localizable("Data to send"),
-                help_text=Localizable("Please make sure, that the data is URL-encoded."),
+    return Dictionary(
+        elements={
+            "body_text": DictElement(
+                Text(
+                    title=Localizable("Data to send"),
+                    help_text=Localizable("Please make sure, that the data is URL-encoded."),
+                ),
+                required=True,
             ),
-            CascadingSingleChoice(
-                title=Localizable("Content-Type"),
-                prefill_selection="common",
-                elements=[
-                    CascadingSingleChoiceElement(
-                        name="common",
-                        title=Localizable("Type selection"),
-                        parameter_form=SingleChoice(
-                            title=Localizable("Select type from list"),
-                            elements=[
-                                SingleChoiceElement(
-                                    name="application_json",
-                                    title=Localizable("application/json"),
-                                ),
-                                SingleChoiceElement(
-                                    name="application_octet_stream",
-                                    title=Localizable("application/octet-stream"),
-                                ),
-                                SingleChoiceElement(
-                                    name="application_xml",
-                                    title=Localizable("application/xml"),
-                                ),
-                                SingleChoiceElement(
-                                    name="application_zip",
-                                    title=Localizable("application/zip"),
-                                ),
-                                SingleChoiceElement(
-                                    name="text_csv",
-                                    title=Localizable("text/csv"),
-                                ),
-                                SingleChoiceElement(
-                                    name="text_plain",
-                                    title=Localizable("text/plain"),
-                                ),
-                                SingleChoiceElement(
-                                    name="text_xml",
-                                    title=Localizable("text/xml"),
-                                ),
-                                SingleChoiceElement(
-                                    name="text_html",
-                                    title=Localizable("text/html"),
-                                ),
-                            ],
+            "content_type": DictElement(
+                CascadingSingleChoice(
+                    title=Localizable("Content-Type"),
+                    prefill_selection="common",
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="common",
+                            title=Localizable("Type selection"),
+                            parameter_form=SingleChoice(
+                                title=Localizable("Select type from list"),
+                                elements=[
+                                    SingleChoiceElement(
+                                        name="application_json",
+                                        title=Localizable("application/json"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="application_octet_stream",
+                                        title=Localizable("application/octet-stream"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="application_xml",
+                                        title=Localizable("application/xml"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="application_zip",
+                                        title=Localizable("application/zip"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="text_csv",
+                                        title=Localizable("text/csv"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="text_plain",
+                                        title=Localizable("text/plain"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="text_xml",
+                                        title=Localizable("text/xml"),
+                                    ),
+                                    SingleChoiceElement(
+                                        name="text_html",
+                                        title=Localizable("text/html"),
+                                    ),
+                                ],
+                            ),
                         ),
-                    ),
-                    CascadingSingleChoiceElement(
-                        name="custom",
-                        title=Localizable("Use custom type"),
-                        parameter_form=Text(
-                            input_hint="text/plain",
+                        CascadingSingleChoiceElement(
+                            name="custom",
+                            title=Localizable("Use custom type"),
+                            parameter_form=Text(
+                                input_hint="text/plain",
+                            ),
                         ),
-                    ),
-                ],
+                    ],
+                ),
+                required=True,
             ),
-        ],
+        },
     )
 
 
@@ -237,28 +259,35 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "tls_versions": DictElement(
-                TupleDoNotUseWillbeRemoved(
+                Dictionary(
                     title=Localizable("SSL version"),
-                    elements=[
-                        SingleChoice(
-                            elements=[
-                                SingleChoiceElement(name="auto", title=Localizable("Negotiate")),
-                                SingleChoiceElement(
-                                    name="tls_13", title=Localizable("Enforce TLS v1.3")
-                                ),
-                                SingleChoiceElement(
-                                    name="tls_12", title=Localizable("Enforce TLS v1.2")
-                                ),
-                                SingleChoiceElement(
-                                    name="tls_11", title=Localizable("Enforce TLS v1.1")
-                                ),
-                                SingleChoiceElement(
-                                    name="tls_10", title=Localizable("Enforce TLS v1.0")
-                                ),
-                            ],
+                    elements={
+                        "min_version": DictElement(
+                            SingleChoice(
+                                elements=[
+                                    SingleChoiceElement(
+                                        name="auto", title=Localizable("Negotiate")
+                                    ),
+                                    SingleChoiceElement(
+                                        name="tls_13", title=Localizable("Enforce TLS v1.3")
+                                    ),
+                                    SingleChoiceElement(
+                                        name="tls_12", title=Localizable("Enforce TLS v1.2")
+                                    ),
+                                    SingleChoiceElement(
+                                        name="tls_11", title=Localizable("Enforce TLS v1.1")
+                                    ),
+                                    SingleChoiceElement(
+                                        name="tls_10", title=Localizable("Enforce TLS v1.0")
+                                    ),
+                                ],
+                            ),
+                            required=True,
                         ),
-                        BooleanChoice(label=Localizable("Allow higher versions")),
-                    ],
+                        "allow_higher": DictElement(
+                            BooleanChoice(label=Localizable("Allow higher versions")), required=True
+                        ),
+                    },
                 ),
             ),
             "method": DictElement(
@@ -366,11 +395,15 @@ def _valuespec_connection() -> Dictionary:
             "add_headers": DictElement(
                 List(
                     title=Localizable("Additional header lines"),
-                    parameter_form=TupleDoNotUseWillbeRemoved(
-                        elements=[
-                            Text(label=Localizable("Name")),
-                            Text(label=Localizable("Value")),
-                        ]
+                    parameter_form=Dictionary(
+                        elements={
+                            "header_name": DictElement(
+                                Text(label=Localizable("Name")), required=True
+                            ),
+                            "header_value": DictElement(
+                                Text(label=Localizable("Value")), required=True
+                            ),
+                        }
                     ),
                 ),
             ),
@@ -382,29 +415,39 @@ def _valuespec_connection() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="user_auth",
                             title=Localizable("User based authentication"),
-                            parameter_form=TupleDoNotUseWillbeRemoved(
+                            parameter_form=Dictionary(
                                 title=Localizable("User based authentication"),
                                 help_text=Localizable("Credentials for HTTP Basic Authentication"),
-                                elements=[
-                                    Text(
-                                        title=Localizable("Username"),
-                                        custom_validate=DisallowEmpty(),
+                                elements={
+                                    "user": DictElement(
+                                        Text(
+                                            title=Localizable("Username"),
+                                            custom_validate=DisallowEmpty(),
+                                        ),
+                                        required=True,
                                     ),
-                                    Password(
-                                        title=Localizable("Password"),
+                                    "password": DictElement(
+                                        Password(
+                                            title=Localizable("Password"),
+                                        ),
+                                        required=True,
                                     ),
-                                ],
+                                },
                             ),
                         ),
                         CascadingSingleChoiceElement(
                             name="token_auth",
                             title=Localizable("Token based authentication"),
-                            parameter_form=TupleDoNotUseWillbeRemoved(
+                            parameter_form=Dictionary(
                                 title=Localizable("Token based authentication"),
-                                elements=[
-                                    Text(title=Localizable("API key header")),
-                                    Password(title=Localizable("API key")),
-                                ],
+                                elements={
+                                    "header": DictElement(
+                                        Text(title=Localizable("API key header")), required=True
+                                    ),
+                                    "password": DictElement(
+                                        Password(title=Localizable("API key")), required=True
+                                    ),
+                                },
                             ),
                         ),
                     ],
@@ -426,12 +469,16 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="string",
                             title=Localizable("Fixed string"),
-                            parameter_form=TupleDoNotUseWillbeRemoved(
+                            parameter_form=Dictionary(
                                 title=Localizable("Fixed string"),
-                                elements=[
-                                    Text(label=Localizable("Name")),
-                                    Text(label=Localizable("Value")),
-                                ],
+                                elements={
+                                    "header_name": DictElement(
+                                        Text(label=Localizable("Name")), required=True
+                                    ),
+                                    "header_value": DictElement(
+                                        Text(label=Localizable("Value")), required=True
+                                    ),
+                                },
                             ),
                         ),
                         CascadingSingleChoiceElement(
@@ -474,23 +521,14 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
         elements={
             "connection": DictElement(_valuespec_connection()),
             "response_time": DictElement(
-                TupleDoNotUseWillbeRemoved(
+                Levels(
                     title=Localizable("Response time"),
-                    elements=[
-                        # TODO this should be ms but only seconds are supported
-                        # by the API right now
-                        Float(
-                            title=Localizable("Warning if above"),
-                            unit=Localizable("s"),
-                            prefill_value=0.1,
-                        ),
-                        Float(
-                            title=Localizable("Critical if above"),
-                            unit=Localizable("s"),
-                            prefill_value=0.2,
-                        ),
-                    ],
-                )
+                    form_spec_template=Float(unit=Localizable("ms")),
+                    level_direction=LevelDirection.UPPER,
+                    predictive=None,
+                    help_text=Localizable("Maximum time the request may take."),
+                    prefill_fixed_levels=(0.1, 0.2),
+                ),
             ),
             "server_response": DictElement(_valuespec_response()),
             "cert": DictElement(
@@ -535,28 +573,34 @@ def _valuespec_endpoints() -> List:
         parameter_form=Dictionary(
             elements={
                 "service_name": DictElement(
-                    TupleDoNotUseWillbeRemoved(
+                    Dictionary(
                         title=Localizable("Service description"),
-                        elements=[
-                            SingleChoice(
-                                title=Localizable("Prefix"),
-                                elements=[
-                                    SingleChoiceElement(
-                                        name="auto",
-                                        title=Localizable("Use protocol name: HTTP(S)"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="none",
-                                        title=Localizable("Do not use a prefix"),
-                                    ),
-                                ],
+                        elements={
+                            "prefix": DictElement(
+                                SingleChoice(
+                                    title=Localizable("Prefix"),
+                                    elements=[
+                                        SingleChoiceElement(
+                                            name="auto",
+                                            title=Localizable("Use protocol name: HTTP(S)"),
+                                        ),
+                                        SingleChoiceElement(
+                                            name="none",
+                                            title=Localizable("Do not use a prefix"),
+                                        ),
+                                    ],
+                                ),
+                                required=True,
                             ),
-                            Text(
-                                title=Localizable("Suffix"),
-                                custom_validate=DisallowEmpty(),
-                                input_hint="Name to be used for the Checkmk service",
+                            "name": DictElement(
+                                Text(
+                                    title=Localizable("Name"),
+                                    custom_validate=DisallowEmpty(),
+                                    input_hint="Name to be used for the Checkmk service",
+                                ),
+                                required=True,
                             ),
-                        ],
+                        },
                     ),
                     required=True,
                 ),

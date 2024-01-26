@@ -101,8 +101,8 @@ def get_compare_history_page_menu_entry():
 
 class CoreDataProvider:
     def __init__(self) -> None:
-        self._fake_missing_hosts = False
-        self._fake_missing_services = False
+        self._fake_missing_hosts = True
+        self._fake_missing_services = True
         self._core_hosts: dict[HostName, CMCHostObject] = {}
         self._core_services: dict[tuple[HostName, ServiceName], CMCServiceObject] = {}
 

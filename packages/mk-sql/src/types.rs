@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use derive_more::From;
+use derive_more::{From, Into};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Port(pub u16);
@@ -19,8 +19,8 @@ impl std::fmt::Display for Port {
     }
 }
 
-#[derive(PartialEq, From, Debug)]
+#[derive(PartialEq, From, Into, Debug, Clone)]
 pub struct MaxConnections(pub u32);
 
-#[derive(PartialEq, From, Debug)]
+#[derive(PartialEq, From, Debug, Clone)]
 pub struct MaxQueries(pub u32);

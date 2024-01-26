@@ -51,10 +51,9 @@ def call_init_scripts(
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        # TODO: Why is the result of call_init_scripts not returned?
-        call_init_scripts(site, "stop", daemon)
-        call_init_scripts(site, "start", daemon)
-        return 0
+        code_stop = call_init_scripts(site, "stop", daemon)
+        code_start = call_init_scripts(site, "start", daemon)
+        return max(code_stop, code_start)
 
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site.dir):

@@ -37,7 +37,7 @@ from cmk.gui.visuals import livestatus_query_bare
 
 from ._graph_render_config import GraphRenderConfigBase
 from ._unit_info import unit_info
-from ._utils import metric_info, metric_title, parse_perf_data, perfvar_translation
+from ._utils import get_extended_metric_info, metric_info, parse_perf_data, perfvar_translation
 
 
 def migrate_graph_render_options_title_format(
@@ -281,10 +281,7 @@ class ValuesWithUnits(CascadingDropdown):
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         known_units = list(unit_info.keys())
-        if metric_name in metric_info:
-            required_unit = metric_info[metric_name]["unit"]
-        else:
-            required_unit = ""
+        required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
 
         try:
             index = known_units.index(required_unit)
@@ -361,7 +358,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, metric_title(metric_name)
+        yield metric_name, str(get_extended_metric_info(metric_name)["title"])
 
 
 def metrics_of_query(

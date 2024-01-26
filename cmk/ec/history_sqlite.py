@@ -49,6 +49,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
     Construct the sqlite filtering specification.
 
     Used in SQLiteHistory.get() method.
+    Always return all columns, since they are filtered elsewhere.
     """
 
     query_columns: set[str] = set()
@@ -63,11 +64,11 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
             raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
 
         sqlite_filter: str = {
-            "=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
-            ">": f"{adjusted_column_name} {f.operator_name} {f.argument}",
-            "<": f"{adjusted_column_name} {f.operator_name} {f.argument}",
-            ">=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
-            "<=": f"{adjusted_column_name} {f.operator_name} {f.argument}",
+            "=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
+            ">": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
+            "<": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
+            ">=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
+            "<=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
             "~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
             "=~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
             "~~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
@@ -77,7 +78,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
         query_columns.add(adjusted_column_name)
         query_conditions.append(sqlite_filter)
 
-    return f'SELECT {", ".join(sorted(query_columns))} FROM history WHERE {" AND ".join(query_conditions)};'
+    return f'SELECT * FROM history WHERE {" AND ".join(query_conditions)};'
 
 
 @dataclass

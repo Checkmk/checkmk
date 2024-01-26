@@ -78,7 +78,7 @@ def test_history_file_to_sqlite_exceptions(
                     argument="test_event",
                 ),
             ],
-            "SELECT text FROM history WHERE text = test_event;",
+            "SELECT * FROM history WHERE text = 'test_event';",
         ),
         (
             [
@@ -95,7 +95,7 @@ def test_history_file_to_sqlite_exceptions(
                     argument=1234,
                 ),
             ],
-            "SELECT time FROM history WHERE time < 123456789 AND time > 1234;",
+            "SELECT * FROM history WHERE time < '123456789' AND time > '1234';",
         ),
         (
             [
@@ -112,7 +112,7 @@ def test_history_file_to_sqlite_exceptions(
                     argument="user",
                 ),
             ],
-            "SELECT owner, who FROM history WHERE who LIKE '%admin%' AND owner LIKE '%user%';",
+            "SELECT * FROM history WHERE who LIKE '%admin%' AND owner LIKE '%user%';",
         ),
     ],
 )

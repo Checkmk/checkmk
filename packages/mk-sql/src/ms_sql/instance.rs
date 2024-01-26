@@ -1681,8 +1681,9 @@ async fn generate_result(
         .map(move |instance| instance.generate_sections(ms_sql, sections));
 
     // processing here
+    let s: u32 = ms_sql.system().max_connections().into();
     let results = stream::iter(tasks)
-        .buffer_unordered(6) // MAX_CONCURRENT is the limit of concurrent tasks you want to allow.
+        .buffer_unordered(s as usize)
         .collect::<Vec<_>>()
         .await;
 

@@ -7,16 +7,17 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    AgentSection,
     check_levels,
+    CheckPlugin,
     IgnoreResultsError,
-    register,
     render,
     Result,
     Service,
     State,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS1 test123 1331207325
@@ -107,7 +108,7 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
     return parsed
 
 
-register.agent_section(
+agent_section_mssql_backup = AgentSection(
     name="mssql_backup",
     parse_function=parse_mssql_backup,
 )
@@ -159,12 +160,12 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             age,
             metric_name=perfkey,
             levels_upper=params.get(backup_type_var),
-            render_func=render.timespan,
+            render_function=render.timespan,
             label="Time since last backup",
         )
 
 
-register.check_plugin(
+check_plugin_mssql_backup = CheckPlugin(
     name="mssql_backup",
     service_name="MSSQL %s Backup",
     discovery_function=discover_mssql_backup,
@@ -173,14 +174,14 @@ register.check_plugin(
     check_function=check_mssql_backup,
     check_ruleset_name="mssql_backup",
     check_default_parameters={
-        "database": (None, None),
-        "database_diff": (None, None),
-        "log": (None, None),
-        "file_or_filegroup": (None, None),
-        "file_diff": (None, None),
-        "partial": (None, None),
-        "partial_diff": (None, None),
-        "unspecific": (None, None),
+        "database": ("no_levels", None),
+        "database_diff": ("no_levels", None),
+        "log": ("no_levels", None),
+        "file_or_filegroup": ("no_levels", None),
+        "file_diff": ("no_levels", None),
+        "partial": ("no_levels", None),
+        "partial_diff": ("no_levels", None),
+        "unspecific": ("no_levels", None),
     },
 )
 
@@ -233,7 +234,7 @@ def check_mssql_backup_per_type(
                     age,
                     metric_name="backup_age",
                     levels_upper=params.get("levels"),
-                    render_func=render.timespan,
+                    render_function=render.timespan,
                     label="Time since last backup",
                 )
                 return
@@ -242,7 +243,7 @@ def check_mssql_backup_per_type(
     raise IgnoreResultsError("Failed to connect to database")
 
 
-register.check_plugin(
+check_plugin_mssql_backup_per_type = CheckPlugin(
     name="mssql_backup_per_type",
     service_name="MSSQL %s Backup",
     sections=["mssql_backup"],

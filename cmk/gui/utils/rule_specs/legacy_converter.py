@@ -432,7 +432,7 @@ def _extract_dictionary_key_props(
     return key_props
 
 
-def _convert_to_inner_legacy_valuespec(  # pylint: disable=too-many-branches
+def _convert_to_inner_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     match to_convert:
@@ -872,7 +872,17 @@ def _convert_to_legacy_cascading_dropdown(
     if to_convert.prefill_selection is None:
         converted_kwargs["no_preselect_title"] = ""
     else:
-        converted_kwargs["default_value"] = to_convert.prefill_selection
+        # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
+        default_choice = next(
+            legacy_choice
+            for legacy_choice in legacy_choices
+            if legacy_choice[0] == str(to_convert.prefill_selection)
+        )
+        converted_kwargs["default_value"] = (
+            str(to_convert.prefill_selection),
+            default_choice[2].default_value(),
+        )
+
     return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
 
@@ -1285,10 +1295,19 @@ def _convert_to_legacy_levels(
                 ),
             )
         )
+
+    match to_convert.form_spec_template:
+        case ruleset_api_v1.form_specs.basic.Integer() | ruleset_api_v1.form_specs.basic.DataSize():
+            default_value: tuple[int, int] | tuple[float, float] = (0, 0)
+        case ruleset_api_v1.form_specs.basic.Float() | ruleset_api_v1.form_specs.basic.Percentage() | ruleset_api_v1.form_specs.basic.TimeSpan():
+            default_value = (0.0, 0.0)
+        case other:
+            assert_never(other)
+
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
         choices=choices,
-        default_value=_LevelDynamicChoice.FIXED.value,
+        default_value=(_LevelDynamicChoice.FIXED.value, default_value),
     )
 
 

@@ -394,7 +394,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("parent title"),
                 help=_("parent help"),
                 label=_("parent label"),
-                default_value="first",
+                default_value=("first", ""),
             ),
             id="CascadingDropdown",
         ),
@@ -880,6 +880,88 @@ def test_convert_to_legacy_valuespec(
     new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
     _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
+
+
+def _get_cascading_single_choice_with_prefill_selection(
+    prefill_selection: str,
+) -> api_v1.form_specs.composed.CascadingSingleChoice:
+    return api_v1.form_specs.composed.CascadingSingleChoice(
+        elements=[
+            api_v1.form_specs.composed.CascadingSingleChoiceElement(
+                name="no_prefill",
+                title=api_v1.Localizable("no prefill"),
+                parameter_form=api_v1.form_specs.basic.Integer(),
+            ),
+            api_v1.form_specs.composed.CascadingSingleChoiceElement(
+                name="simple_prefill",
+                title=api_v1.Localizable("simple prefill"),
+                parameter_form=api_v1.form_specs.basic.Text(prefill_value="prefill_text"),
+            ),
+            api_v1.form_specs.composed.CascadingSingleChoiceElement(
+                name="nested",
+                title=api_v1.Localizable("nested"),
+                parameter_form=api_v1.form_specs.composed.Dictionary(
+                    elements={
+                        "key1": api_v1.form_specs.composed.DictElement(
+                            parameter_form=api_v1.form_specs.basic.Integer()
+                        ),
+                        "key2": api_v1.form_specs.composed.DictElement(
+                            parameter_form=api_v1.form_specs.basic.Integer()
+                        ),
+                    }
+                ),
+            ),
+            api_v1.form_specs.composed.CascadingSingleChoiceElement(
+                name="nested_prefill",
+                title=api_v1.Localizable("nested prefill"),
+                parameter_form=api_v1.form_specs.composed.Dictionary(
+                    elements={
+                        "key1": api_v1.form_specs.composed.DictElement(
+                            parameter_form=api_v1.form_specs.basic.Integer(prefill_value=1),
+                            required=True,
+                        ),
+                        "key2": api_v1.form_specs.composed.DictElement(
+                            parameter_form=api_v1.form_specs.basic.Integer(prefill_value=2),
+                            required=True,
+                        ),
+                    }
+                ),
+            ),
+        ],
+        prefill_selection=prefill_selection,
+    )
+
+
+@pytest.mark.parametrize(
+    ["prefilled_spec", "expected_default_value"],
+    [
+        pytest.param(
+            _get_cascading_single_choice_with_prefill_selection("no_prefill"),
+            ("no_prefill", 0),
+            id="no_prefill",
+        ),
+        pytest.param(
+            _get_cascading_single_choice_with_prefill_selection("simple_prefill"),
+            ("simple_prefill", "prefill_text"),
+            id="simple_prefill",
+        ),
+        pytest.param(
+            _get_cascading_single_choice_with_prefill_selection("nested"),
+            ("nested", {}),
+            id="nested",
+        ),
+        pytest.param(
+            _get_cascading_single_choice_with_prefill_selection("nested_prefill"),
+            ("nested_prefill", {"key1": 1, "key2": 2}),
+            id="nested_prefill",
+        ),
+    ],
+)
+def test_cascading_singe_choice_prefill_selection_conversion(
+    prefilled_spec: api_v1.form_specs.composed.CascadingSingleChoice, expected_default_value: tuple
+) -> None:
+    converted_prefilled_spec = _convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
+    assert expected_default_value == converted_prefilled_spec.default_value()
 
 
 @pytest.mark.parametrize(
@@ -1672,7 +1754,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     _get_legacy_no_levels_choice(),
                     _get_legacy_fixed_levels_choice("below"),
                 ],
-                default_value="fixed",
+                default_value=("fixed", (0.0, 0.0)),
             ),
             id="lower fixed",
         ),
@@ -1688,7 +1770,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     _get_legacy_no_levels_choice(),
                     _get_legacy_fixed_levels_choice("at"),
                 ],
-                default_value="fixed",
+                default_value=("fixed", (0.0, 0.0)),
             ),
             id="upper fixed",
         ),
@@ -1864,7 +1946,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                         ),
                     ),
                 ),
-                default_value="fixed",
+                default_value=("fixed", (0.0, 0.0)),
             ),
             id="fixed+predictive Integer",
         ),
@@ -2045,7 +2127,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                         ),
                     ),
                 ),
-                default_value="fixed",
+                default_value=("fixed", (0.0, 0.0)),
             ),
             id="fixed+predictive TimeSpan",
         ),

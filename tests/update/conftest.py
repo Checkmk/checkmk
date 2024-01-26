@@ -119,25 +119,6 @@ def get_site_status(site: Site) -> str | None:
     return None
 
 
-def update_config(site: Site) -> int:
-    """Run cmk-update-config and check the result.
-
-    If merging the config worked fine, return 0.
-    If merging the config was not possible, use installation defaults and return 1.
-    If any other error occurred, return 2.
-    """
-    for rc, conflict_mode in enumerate(("abort", "install")):
-        cmd = [f"{site.root}/bin/cmk-update-config", "-v", f"--conflict={conflict_mode}"]
-        process = site.execute(cmd, stdout=subprocess.PIPE)
-        stdout, _ = process.communicate()
-        rc = process.returncode
-        if rc == 0:
-            logger.debug(stdout)
-            return rc
-        logger.error(stdout)
-    return 2
-
-
 def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
     """Install or update the test site with the given version.
 

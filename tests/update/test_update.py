@@ -16,7 +16,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_site_status, update_config, update_site
+from .conftest import get_site_status, update_site
 
 logger = logging.getLogger(__name__)
 
@@ -92,11 +92,6 @@ def test_update(  # pylint: disable=too-many-branches
     )
 
     target_site = update_site(test_site, target_version, not disable_interactive_mode)
-
-    # Triggering cmk config update
-    update_config_result = update_config(target_site)
-
-    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"

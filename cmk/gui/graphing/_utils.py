@@ -867,7 +867,7 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
-def _get_metric_info(
+def _get_extended_metric_info(
     metric_name: str, color_counter: Counter[Literal["index"]]
 ) -> MetricInfoExtended:
     if metric_name in metric_info:
@@ -893,8 +893,8 @@ def _get_metric_info(
     return mie
 
 
-def get_metric_info(metric_name: str) -> MetricInfoExtended:
-    return _get_metric_info(metric_name, Counter())
+def get_extended_metric_info(metric_name: str) -> MetricInfoExtended:
+    return _get_extended_metric_info(metric_name, Counter())
 
 
 def _translated_metric_scalar(
@@ -926,7 +926,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
         metric_name: str
 
         metric_name, normalized = _normalize_perf_data(entry, check_command)
-        mi = _get_metric_info(metric_name, color_counter)
+        mi = _get_extended_metric_info(metric_name, color_counter)
         unit_conversion = mi["unit"].get("conversion", lambda v: v)
 
         # https://github.com/python/mypy/issues/6462

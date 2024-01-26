@@ -13,7 +13,7 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final, Literal, TypeVar
+from typing import Final, Literal
 
 import livestatus
 
@@ -786,25 +786,30 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
     return False
 
 
-_TParams = TypeVar("_TParams", object, list[object], tuple[object, ...], dict[str, object])
-
-
 def _inject_prediction_params_recursively(
-    params: _TParams,
+    params: LegacyCheckParameters | Mapping[str, object],
     injected_p: InjectedParameters,
-) -> _TParams:
+) -> LegacyCheckParameters | Mapping[str, object]:
+    """This currently supports two ways to handle predictive levels.
+
+    The "__injected__" case is legacy, the other case is the new one.
+    Once the legacy case is removed, this can be simplified significantly.
+
+    Hopefully we can move this out of this scope entirely someday (and get
+    rid of the recursion).
+    """
     match params:
         case tuple():
-            return tuple(_inject_prediction_params_iterable(params, injected_p))
+            return tuple(_inject_prediction_params_recursively(v, injected_p) for v in params)
         case list():
-            return list(_inject_prediction_params_iterable(params, injected_p))
+            return list(_inject_prediction_params_recursively(v, injected_p) for v in params)
         case dict():
             return {
-                k: (
-                    _inject_prediction_params(v, injected_p)
-                    if (
-                        isinstance(v, dict) and ("__injected__" in v or "__reference_metric__" in v)
-                    )
+                k: injected_p.model_dump()
+                if k == "__injected__"
+                else (
+                    _get_prediction_and_levels(v, injected_p)
+                    if isinstance(v, dict) and "__reference_metric__" in v
                     else _inject_prediction_params_recursively(v, injected_p)
                 )
                 for k, v in params.items()
@@ -812,20 +817,9 @@ def _inject_prediction_params_recursively(
     return params
 
 
-def _inject_prediction_params(
+def _get_prediction_and_levels(
     params: dict, injected_p: InjectedParameters
-) -> dict | tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
-    """This currently supports two ways to handle predictive levels.
-
-    The "__injected__" case is legacy, the other case is the new one.
-    Once the legacy case is removed, this can be simplified significantly.
-    """
-    if "__injected__" in params:
-        return {
-            **params,
-            "__injected__": injected_p.model_dump(),
-        }
-
+) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
     metric = params["__reference_metric__"]
     return (
         "predictive",
@@ -841,13 +835,6 @@ def _inject_prediction_params(
             ),
         ),
     )
-
-
-def _inject_prediction_params_iterable(
-    params: Iterable[_TParams],
-    injected_p: InjectedParameters,
-) -> Iterable[_TParams]:
-    return (_inject_prediction_params_recursively(v, injected_p) for v in params)
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

@@ -413,7 +413,12 @@ def create_and_upload_bom(workspace, branch_version, version) {
         stage('Create BOM') {
             on_dry_run_omit(LONG_RUNNING, "Create BOM") {
                 scanner_image.inside("-v ${checkout_dir}:${checkout_dir}") {
-                    sh("python3 -m dependencyscanner  --stage prod --outfile '${bom_path}' '${checkout_dir}'");
+                    sh("""python3 -m dependencyscanner \
+                    --stage prod \
+                    --outfile '${bom_path}' \
+                    --research_file researched_master.yml \
+                    --license_cache license_cache_master.json \
+                    '${checkout_dir}'""");
                 }
             }
         }

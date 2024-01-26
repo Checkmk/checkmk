@@ -1,0 +1,12 @@
+Title: omd restart: Exit Code is 2 on Failure
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1706275639
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+<code>omd restart</code> executes <code>omd start</code> and <code>omd stop</code>, both of which can terminate with exit code zero
+or two. Previously, the exit code of these commands would be ignored. <code>omd restart</code> now reports the
+worst exit code reported by the two commands.

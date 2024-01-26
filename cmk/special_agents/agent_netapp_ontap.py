@@ -211,6 +211,8 @@ def fetch_disks(connection: HostConnection) -> Iterable[netapp_ontap_models.Disk
         "container_type",
         "usable_size",
         "bay",
+        "bytes_per_sector",
+        "sector_count",
     }
     yield from (
         netapp_ontap_models.DiskModel.validate(element.to_dict())

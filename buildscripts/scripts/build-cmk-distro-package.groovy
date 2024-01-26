@@ -40,7 +40,7 @@ def main() {
 
     // FIXME
     // def branch_name = versioning.safe_branch_name(scm);
-    def branch_name = "master";
+    def branch_name = "2.3.0";
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     // FIXME

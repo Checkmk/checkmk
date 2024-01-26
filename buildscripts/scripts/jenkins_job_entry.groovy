@@ -30,7 +30,7 @@ def main(job_definition_file) {
     build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
 
     // FIXME: should be defined elsewhere
-    DOCKER_TAG_FOLDER = "master-latest";
+    DOCKER_TAG_FOLDER = "2.3.0-latest";
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {

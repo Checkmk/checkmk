@@ -33,10 +33,10 @@ def main() {
         DISTRO_LIST: distros,
         EDITION: EDITION,
         VERSION: "daily",
-        DOCKER_TAG: "master-latest",
+        DOCKER_TAG: "2.3.0-latest",
         MAKE_TARGET: make_target,
-        BRANCH: "master",
-        cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
+        BRANCH: "2.3.0",
+        cmk_version: versioning.get_cmk_version("2.3.0", branch_version, "daily"),
     );
 }
 

@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 # mypy: disable-error-code="arg-type"
+
+
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
 
-def check_sql_arguments(params):  # pylint: disable=too-many-branches
+def check_sql_arguments(
+    params: Mapping[str, Any]
+) -> Sequence[str]:  # pylint: disable=too-many-branches
     args = []
 
     if "host" in params:
@@ -32,15 +37,8 @@ def check_sql_arguments(params):  # pylint: disable=too-many-branches
             if "input" in params["procedure"]:
                 args.append("--inputvars=%s" % params["procedure"]["input"])
 
-    if "levels" in params:
-        upper = params["levels"]
-    else:
-        upper = "", ""
-
-    if "levels_low" in params:
-        lower = params["levels_low"]
-    else:
-        lower = "", ""
+    upper = _extract_levels(params, "levels")
+    lower = _extract_levels(params, "levels_low")
 
     if "perfdata" in params:
         if (metrics := params.get("perfdata")) is not None:
@@ -63,6 +61,17 @@ def check_sql_arguments(params):  # pylint: disable=too-many-branches
     args.append("%s" % sql_tmp.replace("\n", r"\n").replace(";", r"\;"))
 
     return args
+
+
+def _extract_levels(params: Mapping[str, Any], levels_key: str) -> tuple[str, str]:
+    if levels_key in params:
+        extracted = params[levels_key]
+        if extracted[0] == "no_levels":
+            return "", ""
+        if extracted[0] == "fixed":
+            return extracted[1]
+        raise NotImplementedError(extracted)
+    return "", ""
 
 
 active_check_info["sql"] = {

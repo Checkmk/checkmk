@@ -59,7 +59,17 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<StringSorter>();
+        return std::make_unique<StringSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (!key) {
+                    throw std::runtime_error("ordering on dictionary column '" +
+                                             name() +
+                                             "' requires a dictionary key");
+                }
+                const auto map = this->getValue(row);
+                const auto iter = map.find(*key);
+                return iter != map.end() ? iter->second : std::string{};
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
@@ -109,7 +119,17 @@ public:
     }
 
     [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
-        return std::make_unique<DoubleSorter>();
+        return std::make_unique<DoubleSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (!key) {
+                    throw std::runtime_error("ordering on dictionary column '" +
+                                             name() +
+                                             "' requires a dictionary key");
+                }
+                const auto map = this->getValue(row);
+                const auto iter = map.find(*key);
+                return iter != map.end() ? iter->second : 0.0;
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

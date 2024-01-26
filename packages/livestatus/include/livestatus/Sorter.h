@@ -6,12 +6,24 @@
 #ifndef Sorter_h
 #define Sorter_h
 
+#include <chrono>
+#include <optional>
+#include <string>
+#include <variant>
+
+class RowRenderer;
 class Row;
+class User;
 
 class Sorter {
 public:
+    using key_type = std::variant<std::string, double, int,
+                                  std::chrono::system_clock::time_point>;
     Sorter() = default;
     virtual ~Sorter() = default;
+    [[nodiscard]] virtual key_type getKey(
+        Row, const std::optional<std::string> &key, const User &user,
+        std::chrono::seconds timezone_offset) const = 0;
 };
 
 #endif

@@ -1238,6 +1238,9 @@ class LDAPUserConnector(UserConnector):
         return result
 
     def _connection_id_of_user(self, user_id: UserId) -> str | None:
+        if not Path.exists(cmk.utils.paths.profile_dir / user_id):
+            return None
+
         user = load_cached_profile(user_id)
         if user is None:
             return None

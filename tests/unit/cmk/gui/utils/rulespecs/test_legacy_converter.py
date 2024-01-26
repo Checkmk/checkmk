@@ -307,30 +307,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="RegularExpression",
         ),
         pytest.param(
-            api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[]),
-            legacy_valuespecs.Tuple(elements=[]),
-            id="minimal Tuple",
-        ),
-        pytest.param(
-            api_v1.form_specs.TupleDoNotUseWillbeRemoved(
-                elements=[
-                    api_v1.form_specs.String(title=api_v1.Title("child title 1")),
-                    api_v1.form_specs.String(title=api_v1.Title("child title 2")),
-                ],
-                title=api_v1.Title("parent title"),
-                help_text=api_v1.Help("parent help"),
-            ),
-            legacy_valuespecs.Tuple(
-                elements=[
-                    legacy_valuespecs.TextInput(title=_("child title 1"), placeholder=""),
-                    legacy_valuespecs.TextInput(title=_("child title 2"), placeholder=""),
-                ],
-                title=_("parent title"),
-                help=_("parent help"),
-            ),
-            id="Tuple",
-        ),
-        pytest.param(
             api_v1.form_specs.SingleChoice(elements=[]),
             legacy_valuespecs.DropdownChoice(
                 choices=[], invalid_choice="complain", no_preselect_title="Please choose"
@@ -404,11 +380,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown",
         ),
         pytest.param(
-            api_v1.form_specs.List(
-                element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[])
-            ),
+            api_v1.form_specs.List(element_template=api_v1.form_specs.Dictionary(elements={})),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Tuple(elements=[]),
+                valuespec=legacy_valuespecs.Dictionary(elements=[]),
                 add_label="Add new entry",
                 del_label="Remove this entry",
                 text_if_empty="No entries",
@@ -417,11 +391,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.List(
-                element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
-                    elements=[
-                        api_v1.form_specs.String(),
-                        api_v1.form_specs.Integer(unit_symbol="km"),
-                    ]
+                element_template=api_v1.form_specs.Dictionary(
+                    elements={
+                        "key1": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.String()
+                        ),
+                        "key2": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(unit_symbol="km")
+                        ),
+                    }
                 ),
                 title=api_v1.Title("list title"),
                 help_text=api_v1.Help("list help"),
@@ -431,10 +409,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 no_element_label=api_v1.Label("No items"),
             ),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Tuple(
+                valuespec=legacy_valuespecs.Dictionary(
                     elements=[
-                        legacy_valuespecs.TextInput(placeholder=""),
-                        legacy_valuespecs.Integer(unit="km"),
+                        ("key1", legacy_valuespecs.TextInput(placeholder="")),
+                        ("key2", legacy_valuespecs.Integer(unit="km")),
                     ]
                 ),
                 title="list title",
@@ -1556,8 +1534,10 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.form_specs.validators.ValidationError(api_v1.Message("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.List(
-        element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
-            elements=[api_v1.form_specs.String()]
+        element_template=api_v1.form_specs.Dictionary(
+            elements={
+                "key1": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.String())
+            }
         ),
         custom_validate=_v1_custom_list_validate,
     )
@@ -1585,17 +1565,6 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             2,
             4,
             id="integer migration",
-        ),
-        pytest.param(
-            api_v1.form_specs.TupleDoNotUseWillbeRemoved(
-                elements=[
-                    api_v1.form_specs.Integer(migrate=lambda x: _narrow_type(x, int) * 2),
-                    api_v1.form_specs.Percentage(migrate=lambda x: _narrow_type(x, float) * 2),
-                ]
-            ),
-            (2, 2.0),
-            (4, 4.0),
-            id="migrate nested element",
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(
@@ -1647,7 +1616,6 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.DataSize(displayed_magnitudes=tuple(api_v1.form_specs.IECMagnitude)),
         api_v1.form_specs.Percentage(),
         api_v1.form_specs.String(),
-        api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[]),
         api_v1.form_specs.Dictionary(elements={}),
         api_v1.form_specs.SingleChoice(
             elements=[

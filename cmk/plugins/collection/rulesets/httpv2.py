@@ -301,7 +301,7 @@ def _valuespec_connection() -> Dictionary:
             ),
             "tls_versions": DictElement(
                 Dictionary(
-                    title=Localizable("SSL version"),
+                    title=Localizable("TLS version"),
                     elements={
                         "min_version": DictElement(
                             SingleChoice(
@@ -429,7 +429,7 @@ def _valuespec_connection() -> Dictionary:
             "user_agent": DictElement(
                 Text(
                     title=Localizable("User Agent"),
-                    prefill_value="checkmk",
+                    prefill_value="checkmk/check_http",
                     help_text=Localizable('String to be sent in http header as "User Agent"'),
                 ),
             ),

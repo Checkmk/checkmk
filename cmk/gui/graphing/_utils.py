@@ -73,10 +73,41 @@ class ScalarDefinition(NamedTuple):
     title: str
 
 
+class MetricUnitColor(TypedDict):
+    unit: str
+    color: str
+
+
 class MetricDefinition(NamedTuple):
     expression: MetricExpression
     line_type: LineType
     title: str = ""
+
+    def compute_title(self, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
+        if self.title:
+            return self.title
+        return translated_metrics[next(self.expression.metrics()).name]["title"]
+
+    def compute_unit_color(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+        optional_metrics: Sequence[str],
+    ) -> MetricUnitColor | None:
+        try:
+            result = self.expression.evaluate(translated_metrics)
+        except KeyError as err:  # because metric_name is not in translated_metrics
+            metric_name = err.args[0]
+            if optional_metrics and metric_name in optional_metrics:
+                return None
+            raise MKGeneralException(
+                _("Graph recipe '%s' uses undefined metric '%s', available are: %s")
+                % (
+                    self.expression,
+                    metric_name,
+                    ", ".join(sorted(translated_metrics.keys())) or "None",
+                )
+            )
+        return MetricUnitColor(unit=result.unit_info["id"], color=result.color)
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -445,11 +476,6 @@ class GraphTemplate:
             to = None
 
         return from_, to
-
-
-class MetricUnitColor(TypedDict):
-    unit: str
-    color: str
 
 
 class CheckMetricEntry(TypedDict, total=False):

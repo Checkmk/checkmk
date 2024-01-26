@@ -187,7 +187,7 @@ class LunModel(BaseModel):
 
 class AggregateSpace(BaseModel):
     class BlockStorage(BaseModel):
-        # default None taken from old netapp api logic
+        # default None inherited from old NetApp API logic
         available: int | None = None
         size: int | None = None
 
@@ -224,3 +224,27 @@ class AggregateModel(BaseModel):
             if self.space.block_storage.available is not None
             else None
         )
+
+
+class SvmModel(BaseModel):
+    """
+    api: /api/svm/svms
+    docs: https://docs.netapp.com/us-en/ontap-restmap-9121//vserver.html#vserver-get-iter
+    Section was: netapp_api_vs_status - vserver
+
+    ============
+    OLD -> NEW:
+    ============
+    "vserver-name" -> name
+    "state" -> state
+    "vserver-subtype" -> subtype
+    ============
+
+    Wraps information coming from /svm/svms
+    see https://library.netapp.com/ecmdocs/ECMLP2885799/html/index.html#/svm/svm_collection_get
+    """
+
+    name: str
+    # default None inherited from old NetApp API logic
+    state: str | None = None
+    subtype: str | None = None

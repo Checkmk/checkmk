@@ -689,7 +689,6 @@ class Levels:
 
     title: Localizable | None = None
     help_text: Localizable | None = None
-    unit: Localizable | None = None
     prefill_fixed_levels: tuple[float, float] | None = None
 
     transform: Transform[object] | Migrate[object] | None = None

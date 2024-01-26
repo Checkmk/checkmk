@@ -127,7 +127,7 @@ def parse_netapp_ontap_volumes_counters(
     return {
         counter_obj.item_name(): counter_obj
         for line in string_table
-        if (counter_obj := models.VolumeCountersModel.validate(json.loads(line[0])))
+        if (counter_obj := models.VolumeCountersModel(**json.loads(line[0])))
     }
 
 

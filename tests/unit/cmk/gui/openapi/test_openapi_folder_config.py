@@ -332,12 +332,12 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "/NO_SITE/check_mk/api/1.0/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "criticality",
+                "id": "criticality",
                 "title": "criticality",
                 "topic": "nothing",
                 "tags": [
                     {
-                        "ident": "discovered",
+                        "id": "discovered",
                         "title": "discovered",
                     }
                 ],

@@ -24,7 +24,7 @@ def test_openapi_host_tag_group_update(
     clients.HostTagGroup.create(
         ident="invalid%$",
         title="foobar",
-        tags=[{"ident": "pod", "title": "Pod"}],
+        tags=[{"id": "pod", "title": "Pod"}],
         expect_ok=False,
     ).assert_status_code(400)
 
@@ -33,12 +33,12 @@ def test_openapi_host_tag_group_update(
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "foo",
+                "id": "foo",
                 "title": "foobar",
                 "topic": "nothing",
                 "tags": [
                     {
-                        "ident": "tester",
+                        "id": "tester",
                         "title": "something",
                     }
                 ],
@@ -56,7 +56,7 @@ def test_openapi_host_tag_group_update(
             {
                 "tags": [
                     {
-                        "ident": "tutu",
+                        "id": "tutu",
                         "title": "something",
                     }
                 ]
@@ -103,12 +103,12 @@ def test_openapi_host_tag_group_delete(aut_user_auth_wsgi_app: WebTestAppForCMK)
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "foo",
+                "id": "foo",
                 "title": "foobar",
                 "topic": "nothing",
                 "tags": [
                     {
-                        "ident": "tester",
+                        "id": "tester",
                         "title": "something",
                     }
                 ],
@@ -144,11 +144,11 @@ def test_openapi_host_tag_group_invalid_id(aut_user_auth_wsgi_app: WebTestAppFor
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "1",
+                "id": "1",
                 "title": "Kubernetes",
                 "topic": "Data Sources",
                 "help": "Kubernetes Pods",
-                "tags": [{"ident": "pod", "title": "Pod"}],
+                "tags": [{"id": "pod", "title": "Pod"}],
             }
         ),
         headers={"Accept": "application/json"},
@@ -186,7 +186,7 @@ def test_openapi_host_tag_group_built_in(aut_user_auth_wsgi_app: WebTestAppForCM
             {
                 "tags": [
                     {
-                        "ident": "tutu",
+                        "id": "tutu",
                         "title": "something",
                     }
                 ]
@@ -215,11 +215,11 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "group_id999",
+                "id": "group_id999",
                 "title": "Kubernetes",
                 "topic": "Data Sources",
                 "help": "Kubernetes Pods",
-                "tags": [{"ident": "pod", "title": "Pod"}],
+                "tags": [{"id": "pod", "title": "Pod"}],
             }
         ),
         headers={"Accept": "application/json"},
@@ -235,7 +235,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
                 "title": "Kubernetes",
                 "topic": "Data Sources",
                 "help": "Kubernetes Pods",
-                "tags": [{"ident": "pod", "title": "Pod"}],
+                "tags": [{"id": "pod", "title": "Pod"}],
             }
         ),
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
@@ -263,11 +263,11 @@ def test_openapi_host_tag_with_only_one_option(
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "group_id999",
+                "id": "group_id999",
                 "title": "Kubernetes",
                 "topic": "Data Sources",
                 "help": "Kubernetes Pods",
-                "tags": [{"ident": "pod", "title": "Pod"}],
+                "tags": [{"id": "pod", "title": "Pod"}],
             }
         ),
         headers={"Accept": "application/json"},
@@ -333,10 +333,10 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
         base + "/domain-types/host_tag_group/collections/all",
         params=json.dumps(
             {
-                "ident": "group_id999",
+                "id": "group_id999",
                 "title": "Kubernetes",
                 "help": "Kubernetes Pods",
-                "tags": [{"ident": "pod", "title": "Pod"}],
+                "tags": [{"id": "pod", "title": "Pod"}],
             }
         ),
         headers={"Accept": "application/json"},
@@ -374,7 +374,7 @@ def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
         ident="group_id999",
         title="Kubernetes",
         help_text="Kubernetes Pods",
-        tags=[{"ident": "pod", "title": "Pod"}],
+        tags=[{"id": "pod", "title": "Pod"}],
     )
 
     clients.HostTagGroup.edit(
@@ -391,7 +391,7 @@ def test_openapi_delete_dependant_host_tag(
         ident="group_id999",
         title="Kubernetes",
         help_text="Kubernetes Pods",
-        tags=[{"ident": "pod", "title": "Pod"}],
+        tags=[{"id": "pod", "title": "Pod"}],
     )
     clients.HostConfig.create(
         host_name="example.com",
@@ -426,12 +426,12 @@ def test_host_tag_group_ident_with_newline(
         ident=group_id,
         title="not_important",
         help_text="not_important",
-        tags=[{"ident": "pod", "title": "Pod"}],
+        tags=[{"id": "pod", "title": "Pod"}],
         expect_ok=False,
     )
 
     resp.assert_status_code(400)
-    assert resp.json["fields"]["ident"][0].startswith(f"Invalid tag ID: {group_id!r}")
+    assert resp.json["fields"]["id"][0].startswith(f"Invalid tag ID: {group_id!r}")
 
 
 def test_openapi_host_tag_group_creation_when_aux_tag_exists(
@@ -449,6 +449,19 @@ def test_openapi_host_tag_group_creation_when_aux_tag_exists(
     clients.HostTagGroup.create(
         ident=tag_id,
         title="test",
-        tags=[{"ident": "test", "title": "test"}],
+        tags=[{"id": "test", "title": "test"}],
         expect_ok=False,
     ).assert_status_code(400)
+
+
+def test_openapi_identifiation_field(clients: ClientRegistry) -> None:
+    clients.HostTagGroup.create(
+        ident="test_group",
+        title="Test group",
+        help_text="My test groupd",
+        tags=[{"id": "test", "title": "Test Tag"}],
+    )
+
+    res = clients.HostTagGroup.get(ident="test_group")
+    assert "id" in res.json
+    assert "id" in res.json["extensions"]["tags"][0]

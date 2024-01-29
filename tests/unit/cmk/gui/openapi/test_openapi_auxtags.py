@@ -185,7 +185,7 @@ def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None
         ident="tag_group_id_1",
         title="tag_group_1",
         tags=[
-            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+            {"id": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
         ],
     )
 
@@ -193,7 +193,7 @@ def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None
         ident="tag_group_id_2",
         title="tag_group_2",
         tags=[
-            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+            {"id": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
         ],
     )
 

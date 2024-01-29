@@ -1123,7 +1123,7 @@ def compute_node_config(
     )
 
     topology_center.children = [all_frontend_nodes[x] for x, y in nodes_by_depth.get(0, {}).items()]
-    for frontend_node in all_frontend_nodes.values():
+    for frontend_node in list(all_frontend_nodes.values()) + [topology_center]:
         frontend_node.children.sort(key=lambda x: _convert_to_sort_tuple(x.name))
 
     return topology_center, assigned_node_ids

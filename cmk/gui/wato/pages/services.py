@@ -203,7 +203,7 @@ class ModeDiscovery(WatoMode):
 
     def _async_progress_msg_container(self) -> None:
         html.open_div(id_="async_progress_msg")
-        html.show_message(_("Discovery running. Please standby."))
+        html.show_message(_("Loading. This may take a few seconds."))
         html.close_div()
 
 

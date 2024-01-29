@@ -74,6 +74,10 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
         permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
         permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
         permissions.Optional(permissions.Perm("wato.services")),
+        permissions.Undocumented(permissions.Perm("background_jobs.stop_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.stop_foreign_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.delete_jobs")),
+        permissions.Undocumented(permissions.Perm("background_jobs.delete_foreign_jobs")),
         permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
     ]
 )
@@ -317,8 +321,9 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
     host = Host.load_host(params["host_name"])
     job = ServiceDiscoveryBackgroundJob(host.name())
-    job_id = job.get_job_id()
-    job_status = job.get_status()
+    snapshot = job.get_status_snapshot()
+    job_id = snapshot.job_id
+    job_status = snapshot.status
     return serve_json(
         constructors.domain_object(
             domain_type="service_discovery_run",
@@ -359,13 +364,14 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     """
     host = Host.load_host(params["host_name"])
     job = ServiceDiscoveryBackgroundJob(host.name())
-    if not job.exists():
+    snapshot = job.get_status_snapshot()
+    if not snapshot.exists:
         raise ProblemException(
             status=404,
             title="The requested service discovery job was not found",
             detail=f"Could not find a service discovery for host {host.name()}",
         )
-    if job.is_active():
+    if snapshot.is_active:
         response = Response(status=302)
         response.location = urlparse(request.url).path
         return response
@@ -439,7 +445,8 @@ def execute(params: Mapping[str, Any]) -> Response:
 
 def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHost) -> Response:
     service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
-    if service_discovery_job.is_active():
+    job_snapshot = service_discovery_job.get_status_snapshot()
+    if job_snapshot.is_active:
         return Response(status=409)
     discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
     if not has_discovery_action_specific_permissions(discovery_options.action, None):

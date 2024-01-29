@@ -30,8 +30,6 @@ daily_extended: &daily_extended
     - "centos-8"
     - "almalinux-9"
     - "sles-15sp5"
-    - "cma-3"
-    - "cma-4"
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: []
@@ -39,12 +37,14 @@ internal_distros: []
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: *daily_extended
+        daily: [*daily_extended, "cma-4"]
         weekly: [*common, "cma-3", "cma-4"]
+        daily_tests: [*daily_extended]
         testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
     cloud:
         release: [*common, "cma-3", "cma-4"]
         daily: *daily_reduced
+        daily_tests: *daily_reduced
         weekly: *daily_reduced
         testbuild: []
     managed:
@@ -55,6 +55,7 @@ editions:
     raw:
         release: *common
         daily: *daily_reduced
+        daily_tests: *daily_reduced
         weekly: *daily_reduced
         testbuild: []
 

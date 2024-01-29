@@ -23,7 +23,7 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, USE_CASE);
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
 
     def branch_name = versioning.safe_branch_name(scm);
 

@@ -4,99 +4,99 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-3to2 = "*"  # used for converting agent plugins from py3 to 2
-astroid = "*"  # used by testlib.pylint_checker_localization
-autoflake = "*"  # used to remove unused import statements
-azure-mgmt-resource = "*"  # used by the release process to publish the azure image to the marketplace
-azure-mgmt-compute = "*"  # used by the release process to add a new image version
-bandit = "*"  # used by test/Makefile's test-bandit target
-"beautifulsoup4" = "*"  # used by the GUI crawler and various tests
+3to2 = "==1.1.1"  # used for converting agent plugins from py3 to 2
+astroid = "==3.0.2"  # used by testlib.pylint_checker_localization
+autoflake = "==2.2.1"  # used to remove unused import statements
+azure-mgmt-resource = "==23.0.1"  # used by the release process to publish the azure image to the marketplace
+azure-mgmt-compute = "==30.5.0"  # used by the release process to add a new image version
+bandit = "==1.7.7"  # used by test/Makefile's test-bandit target
+beautifulsoup4 = "==4.12.3"  # used by the GUI crawler and various tests
 boto3-stubs = {extras = ["logs"], version = "==1.34.15"}  # used for type checking, keep version in sync with boto3
 botocore-stubs = "==1.34.15"  # used for type checking, keep version in sync with botocore
-bson = "*"  # used by test_mk_mongodb unit test
+bson = "==0.5.10"  # used by test_mk_mongodb unit test
 checkmk-dev-tools = "~=0.1.42"  # provides tooling for build artifacts
-compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
-devpi-client = "*" # Managing the devpi server
-dill = "*"
-docker = "*"  # used by test_docker test and mk_docker agent plugin
-dockerpty = "*"  # used by dockerized tests for opening debug shells
+compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
+devpi-client = "==7.0.2" # Managing the devpi server
+dill = "==0.3.8"
+docker = "==7.0.0"  # used by test_docker test and mk_docker agent plugin
+dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells
 fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
-fastapi = "*"  # needed to run fake idp for cse tests
-flake8 = "*"
+fastapi = "==0.103.2"  # needed to run fake idp for cse tests
+flake8 = "==7.0.0"
 freezegun = "==1.2.2"  # used by various unit tests, pinned because of 36 unit test failures (to be analyzed, probably https://github.com/spulec/freezegun/issues/521, hopefully fixed when https://github.com/spulec/freezegun/pull/525 is landed)
-hypothesis = "*"    # used by unit tests
+hypothesis = "==6.97.1"    # used by unit tests
 hypothesis-jsonschema = "==0.22.1"  # pinned for: AttributeError: module 'jsonschema.exceptions' has no attribute '_RefResolutionError'. Did you mean: 'RefResolutionError'?
-isort = "*"  # used as a plugin for editors
-jsonschema = "*"
-msrest = "*"
-mypy = "*"  # used by test/static/Makefile's test-mypy target
-mypy-protobuf = "*" # for mypy
-networkx = "*" # needed for py-import-cycles
-pexpect = "*" # used for update testing
-pipfile = "*" # for generating import names during int tests
-playwright = "*"  # used for in-browser testing
-polyfactory = "*" # used for generating mock data for unit tests
-pre-commit = "*"  # used to fix / find issues before committing changes
-preprocess = "*" # implicit dependency of pytest-testmon, might be removed when testmon is updated
-py = "*" # used by pytest, shim is not fully working: https://github.com/pytest-dev/pytest/issues/10479
-py-import-cycles = "*"  # used in tests/Makefile
-pylint = "*"  # used by test/Makefile's test-pylint target
-pylint-pydantic = "*"
-pyls-isort = "*"  # isort plugin for python-lsp-server
-pylsp-mypy = "*"  # mypy plugin for python-lsp-server
-pymongo = "*"  # used by mk_mongodb agent plugin
-pytest = "*"  # used by various test/Makefile targets
-pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
-pytest-html = "*"  # used to generate HTML reports for test suites
-pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
-pytest-random-order = "*"  # used to test resiliency
-pytest-repeat = "*"  # used to test resiliency
-pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
-pytest-xdist = "*" # used to limit number of procs in e2e tests
-python-lsp-black = "*"  # black plugin for python-lsp-server
-python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
-responses = "*"  # used for unit tests
-ruff = "*"
-schemathesis = "*"  # used for openapi tests
-semver = "*"
+isort = "==5.13.2"  # used as a plugin for editors
+jsonschema = "==4.21.1"
+msrest = "==0.7.1"
+mypy = "==1.8.0"  # used by test/static/Makefile's test-mypy target
+mypy-protobuf = "==3.3.0" # for mypy
+networkx = "==3.2.1" # needed for py-import-cycles
+pexpect = "==4.9.0" # used for update testing
+pipfile = "==0.0.2" # for generating import names during int tests
+playwright = "==1.41.1"  # used for in-browser testing
+polyfactory = "==2.14.1" # used for generating mock data for unit tests
+pre-commit = "==3.6.0"  # used to fix / find issues before committing changes
+preprocess = "==2.0.0" # implicit dependency of pytest-testmon, might be removed when testmon is updated
+py = "==1.11.0" # used by pytest, shim is not fully working: https://github.com/pytest-dev/pytest/issues/10479
+py-import-cycles = "==0.2.1"  # used in tests/Makefile
+pylint = "==3.0.3"  # used by test/Makefile's test-pylint target
+pylint-pydantic = "==0.3.2"
+pyls-isort = "==0.2.2"  # isort plugin for python-lsp-server
+pylsp-mypy = "==0.6.8"  # mypy plugin for python-lsp-server
+pymongo = "==4.6.1"  # used by mk_mongodb agent plugin
+pytest = "==7.4.4"  # used by various test/Makefile targets
+pytest-cov = "==4.1.0"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
+pytest-html = "==4.1.1"  # used to generate HTML reports for test suites
+pytest-mock = "==3.12.0"  # used by quite a few unit/integration tests via the mocker fixture
+pytest-random-order = "==1.1.1"  # used to test resiliency
+pytest-repeat = "==0.9.3"  # used to test resiliency
+pytest-testmon = "==2.1.0"  # used for pre-commit checking via .pre-commit-config.yaml
+pytest-xdist = "==3.5.0" # used to limit number of procs in e2e tests
+python-lsp-black = "==1.3.0"  # black plugin for python-lsp-server
+python-lsp-server = "==1.10.0"  # Note: There are extras, but the default seems sensible.
+responses = "==0.24.1"  # used for unit tests
+ruff = "==0.1.14"
+schemathesis = "==3.21.2"  # used for openapi tests
+semver = "==3.0.2"
 sphinx = "==6.2.1"  # used for the plugin API documentation, pinned for now  see https://github.com/kivy/kivy/issues/8230)
-sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
-sphinx-rtd-theme = "*"  # used for the plugin API documentation
-sphinxcontrib-plantuml = "*"  # used for the API and architecture
-sphinxcontrib-spelling = "*"
-telnetlib3 = "*"  # used by Windows Agent tests
-time-machine = "*" # used by various unit tests. Substitute for freezegun
-twine = "*" # used to upload packages to internal PyPi mirror
-types-beautifulsoup4 = "*"  # used for type checking
-types-docutils = "*"  # used for type checking
-types-jmespath = "*"  # used for type checking
-types-jsonschema = "*"  # used for type checking
-types-lxml = "*"  # used for type checking
-types-mypy-extensions = "*"  # used for type checking
-types-oauthlib = "*"  # used for type checking
-types-paho-mqtt = "*"  # used for type checking
-types-paramiko = "*"  # used for type checking
-types-pillow = "*"  # used for type checking
-types-protobuf = "*"  # used for type checking
-types-psutil = "*"  # used for type checking
-types-pyasn1 = "*"  # used for type checking
-types-pymssql = "*"  # used for type checking
-types-pymysql = "*"  # used for type checking
-types-pyopenssl = "*"  # used for type checking
-types-pysaml2 = "*"  # used for type checking
-types-python-dateutil = "*"  # used for type checking
-types-pytz = "*"  # used for type checking
-types-pyyaml = "*"  # used for type checking
-types-redis = "*"  # used for type checking
-types-requests = "*"  # used for type checking
-types-s3transfer = "*"  # used for type checking
-types-setuptools = "*"  # used for type checking
-types-simplejson = "*"  # used for type checking
-types-six = "*"  # used for type checking
-types-urllib3 = "*"  # used for type checking
-types-xmltodict = "*" # used by xmltodict
-uvicorn = "*"
-webtest = "*"  # used by WSGI based tests
+sphinx-autodoc-typehints = "==1.23.0"  # used for the plugin API documentation
+sphinx-rtd-theme = "==2.0.0"  # used for the plugin API documentation
+sphinxcontrib-plantuml = "==0.27"  # used for the API and architecture
+sphinxcontrib-spelling = "==8.0.0"
+telnetlib3 = "==2.0.4"  # used by Windows Agent tests
+time-machine = "==2.13.0" # used by various unit tests. Substitute for freezegun
+twine = "==4.0.2" # used to upload packages to internal PyPi mirror
+types-beautifulsoup4 = "==4.12.0.20240106"  # used for type checking
+types-docutils = "==0.20.0.20240126"  # used for type checking
+types-jmespath = "==1.0.2.20240106"  # used for type checking
+types-jsonschema = "==4.21.0.20240118"  # used for type checking
+types-lxml = "==2023.10.21"  # used for type checking
+types-mypy-extensions = "==1.0.0.5"  # used for type checking
+types-oauthlib = "==3.2.0.20240124"  # used for type checking
+types-paho-mqtt = "==1.6.0.20240106"  # used for type checking
+types-paramiko = "==3.4.0.20240120"  # used for type checking
+types-pillow = "==10.2.0.20240125"  # used for type checking
+types-protobuf = "==4.24.0.20240106"  # used for type checking
+types-psutil = "==5.9.5.20240106"  # used for type checking
+types-pyasn1 = "==0.5.0.20240106"  # used for type checking
+types-pymssql = "==2.1.0"  # used for type checking
+types-pymysql = "==1.1.0.1"  # used for type checking
+types-pyopenssl = "==23.3.0.20240106"  # used for type checking
+types-pysaml2 = "==1.0.1"  # used for type checking
+types-python-dateutil = "==2.8.19.20240106"  # used for type checking
+types-pytz = "==2023.3.1.1"  # used for type checking
+types-pyyaml = "==6.0.12.12"  # used for type checking
+types-redis = "==4.6.0.20240106"  # used for type checking
+types-requests = "==2.31.0.6"  # used for type checking
+types-s3transfer = "==0.10.0"  # used for type checking
+types-setuptools = "==69.0.0.20240125"  # used for type checking
+types-simplejson = "==3.19.0.2"  # used for type checking
+types-six = "==1.16.21.20240106"  # used for type checking
+types-urllib3 = "==1.26.25.14"  # used for type checking
+types-xmltodict = "==0.13.0.3" # used by xmltodict
+uvicorn = "==0.20.0"
+webtest = "==3.0.0"  # used by WSGI based tests
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

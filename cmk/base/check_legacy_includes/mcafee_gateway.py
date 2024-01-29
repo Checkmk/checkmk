@@ -24,7 +24,9 @@ def inventory_mcafee_gateway_generic(info):
 
 
 def scan_mcafee_webgateway(oid):
-    return "mcafee web gateway" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    return "mcafee web gateway" in oid(
+        ".1.3.6.1.2.1.1.1.0"
+    ).lower() or "1.3.6.1.4.1.1230.2.7.1.1" in oid(".1.3.6.1.2.1.1.2.0")
 
 
 # .

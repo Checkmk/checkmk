@@ -1182,7 +1182,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1204,7 +1204,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1226,7 +1226,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1248,7 +1248,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1266,7 +1266,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1288,7 +1288,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1306,7 +1306,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1328,7 +1328,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.NOTIFICATIONS,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 condition=api_v1.rule_specs.HostCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1347,7 +1347,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.VIRTUALIZATION,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 condition=api_v1.rule_specs.HostAndServiceCondition(),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1367,7 +1367,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.SERVER_HARDWARE,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(
@@ -1389,7 +1389,7 @@ def test_convert_to_legacy_rulespec_group(
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.rule_specs.Topic.CLOUD,
                 eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.basic.Text),
+                parameter_form=lambda: api_v1.form_specs.composed.Dictionary(elements={}),
                 help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.HostRulespec(

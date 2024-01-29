@@ -9,6 +9,7 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import json
 import logging
 import re
 import subprocess
@@ -38,6 +39,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
+    BackgroundStatusSnapshot,
     InitialStatusArgs,
     JobStatusSpec,
 )
@@ -314,6 +316,22 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
         str(
             do_remote_automation(
                 site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+            )
+        )
+    )
+
+
+def fetch_service_discovery_background_job_status(
+    site_id: SiteId, hostname: str
+) -> BackgroundStatusSnapshot:
+    return BackgroundStatusSnapshot(
+        **json.loads(
+            str(
+                do_remote_automation(
+                    site=get_site_config(site_id),
+                    command="service-discovery-job-snapshot",
+                    vars_=[("hostname", hostname)],
+                )
             )
         )
     )

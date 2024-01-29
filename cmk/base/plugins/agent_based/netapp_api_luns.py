@@ -14,7 +14,7 @@ from cmk.plugins.lib.df import (
     TREND_DEFAULT_PARAMS,
 )
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _MEBI = 1048576
@@ -62,13 +62,14 @@ def _check_netapp_api_luns(
     if (lun := section.get(item)) is None:
         return
 
+    yield Result(state=State.OK, summary=f"Volume: {lun['volume']}")
+    yield Result(state=State.OK, summary=f"Vserver: {lun['vserver']}")
+
     size_total_bytes = int(lun["size"])
     size_avail_bytes = size_total_bytes - int(lun["size-used"])
 
     yield from netapp_api.check_netapp_luns(
         item=item,
-        volume_name=lun["volume"],
-        server_name=lun["vserver"],
         online=lun.get("online") == "true",
         read_only=lun.get("read-only") == "true",
         size_total_bytes=size_total_bytes,

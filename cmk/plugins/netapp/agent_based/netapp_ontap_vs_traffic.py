@@ -228,7 +228,7 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
 
 check_plugin_netapp_ontap_vs_traffic = CheckPlugin(
     name="netapp_ontap_vs_traffic",
-    service_name="Traffic vServer %s",
+    service_name="Traffic SVM %s",
     discovery_function=discovery_netapp_ontap_vs_traffic,
     check_function=check_netapp_ontap_vs_traffic,
 )

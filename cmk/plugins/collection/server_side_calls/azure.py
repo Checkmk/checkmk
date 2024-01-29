@@ -42,6 +42,7 @@ class AzureParams(BaseModel):
     config: Config
     piggyback_vms: str | None = None
     sequential: bool = False
+    import_tags: str | tuple[str, str] | None = None
 
 
 def generate_azure_command(  # pylint: disable=too-many-branches
@@ -86,6 +87,11 @@ def generate_azure_command(  # pylint: disable=too-many-branches
             args += ["--require-tag", tag]
         elif isinstance(requirement, tuple) and requirement[0] == "value":
             args += ["--require-tag-value", tag, requirement[1]]
+
+    if (tags_param := params.import_tags) is None:
+        args.append("--ignore-all-tags")
+    elif isinstance(tags_param, tuple) and tags_param[0] == "filter_tags":
+        args += ["--import-matching-tags-as-labels", tags_param[1]]
 
     yield SpecialAgentCommand(command_arguments=args)
 

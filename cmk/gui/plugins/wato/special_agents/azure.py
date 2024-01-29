@@ -19,6 +19,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Migrate,
     MigrateNotUpdated,
+    RegExp,
     TextInput,
     Tuple,
     ValueSpec,
@@ -248,8 +249,45 @@ def _valuespec_special_agents_azure():
                         ],
                     ),
                 ),
+                (
+                    "import_tags",
+                    CascadingDropdown(
+                        title=("Import tags as host/service labels"),
+                        choices=[
+                            (
+                                "all_tags",
+                                _("Import all valid tags"),
+                                None,
+                            ),
+                            (
+                                "filter_tags",
+                                _("Filter valid tags by key pattern"),
+                                RegExp(
+                                    mode=RegExp.infix,
+                                    allow_empty=False,
+                                    size=50,
+                                ),
+                            ),
+                        ],
+                        orientation="horizontal",
+                        help=_(
+                            "By default, Checkmk imports all Azure tags as host/service labels. "
+                            "The imported tags are added as host labels for resource groups and "
+                            "VMs monitored as hosts and as service labels for resources monitored "
+                            "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
+                            "Additionally, each host representing a resource group is given the "
+                            "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
+                            "hosts are given the host label 'cmk/azure/vm:instance', which is done "
+                            "independent of this option.<br>"
+                            "You can further restrict the imported tags by specifying a pattern "
+                            "which Checkmk searches for in the key of the Azure tag, or you can "
+                            "disable the import of Azure tags altogether."
+                        ),
+                    ),
+                ),
             ],
-            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "import_tags", "piggyback_vms", "sequential"],
+            default_keys=["import_tags"],
         ),
         migrate=_migrate_services,
     )

@@ -181,8 +181,9 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         header_msg = html.render_h3(html.render_b("Successfully generated 10 backup codes"))
         message1 = html.render_p(
             _(
-                "Each code may be used only once. Download and store these backup codes in a safe place. "
-                "If you lose access to your authentication device and backup codes, you'll have to contact your Checkmk admin to recover your account."
+                "Each code may be used only once. Store these backup codes in a safe place. "
+                "If you lose access to your authentication device and backup codes, you'll have to "
+                "contact your Checkmk admin to recover your account."
             )
         )
         codesdiv = html.render_div(
@@ -196,7 +197,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             "copy codes",
             type_="button",
             onclick=f"cmk.utils.copy_to_clipboard({json.dumps(backup_codes)}, {json.dumps(success_message)})",
-            value=_("Copy codes"),
+            value=_("Copy codes to clipboard"),
             class_=["button buttonlink"],
         )
         return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])

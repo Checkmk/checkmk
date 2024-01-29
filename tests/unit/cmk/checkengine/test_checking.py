@@ -84,7 +84,7 @@ def test_missing_data_single() -> None:
             # ok, but in summary we return a warning:
         )
     ] == [
-        (1, "Missing monitoring data for plugins: "),
+        (0, "Missing monitoring data for plugins"),
         (0, "not"),
     ]
 
@@ -120,7 +120,10 @@ def test_missing_data_default_config() -> None:
             ExitSpec(),
         )
     ] == [
-        (1, "Missing monitoring data for plugins: not_1, not_2, not_3"),
+        (0, "Missing monitoring data for plugins"),
+        (1, "not_1"),
+        (1, "not_2"),
+        (1, "not_3"),
     ]
 
 
@@ -132,8 +135,10 @@ def test_missing_data_regex() -> None:
             ExitSpec(specific_missing_sections=[("not_2$", 3)]),
         )
     ] == [
-        (1, "Missing monitoring data for plugins: not_1, not_3"),
+        (0, "Missing monitoring data for plugins"),
+        (1, "not_1"),
         (3, "not_2"),
+        (1, "not_3"),
     ]
 
 
@@ -145,6 +150,8 @@ def test_missing_data_regex_and_default() -> None:
             ExitSpec(specific_missing_sections=[("not_2$", 3)], missing_sections=0),
         )
     ] == [
-        (0, "Missing monitoring data for plugins: not_1, not_3"),
+        (0, "Missing monitoring data for plugins"),
+        (0, "not_1"),
         (3, "not_2"),
+        (0, "not_3"),
     ]

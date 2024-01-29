@@ -6,6 +6,7 @@
 
 import itertools
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from typing import NamedTuple
 
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
@@ -142,6 +143,11 @@ def _do_inventory_actions_during_checking_for(
         tree_store.save(host_name=host_name, tree=status_data_tree)
 
 
+class PluginState(NamedTuple):
+    state: int
+    name: CheckPluginName
+
+
 def check_plugins_missing_data(
     service_results: Sequence[AggregatedResult],
     exit_spec: ExitSpec,
@@ -169,24 +175,16 @@ def check_plugins_missing_data(
         r.service.check_plugin_name for r in service_results if not r.data_received
     }
 
-    specific_plugins, generic_plugins = set(), set()
-    for check_plugin_name in plugins_missing_data:
+    yield ActiveCheckResult(0, "Missing monitoring data for plugins")
+
+    for check_plugin_name in sorted(plugins_missing_data):
         for pattern, status in specific_plugins_missing_data_spec:
             reg = regex(pattern)
             if reg.match(str(check_plugin_name)):
-                specific_plugins.add((check_plugin_name, status))
+                yield ActiveCheckResult(status, str(check_plugin_name))
                 break
         else:  # no break
-            generic_plugins.add(str(check_plugin_name))
-
-    plugin_list = ", ".join(sorted(generic_plugins))
-    yield ActiveCheckResult(
-        missing_status,
-        f"Missing monitoring data for plugins: {plugin_list}",
-    )
-    yield from (
-        ActiveCheckResult(status, str(plugin)) for plugin, status in sorted(specific_plugins)
-    )
+            yield ActiveCheckResult(missing_status, str(check_plugin_name))
 
 
 def check_host_services(

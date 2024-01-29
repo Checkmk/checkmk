@@ -4,13 +4,13 @@
 ::
 :: 'exec.cmd script PY_VER PY_SUBVER'
 ::
-:: Example: exec.cmd install_legacy.cmd 3.9 7
+:: Example: exec.cmd install_legacy.cmd 3.12 0
 :: Always return back to current dir
 :: *********************************************
 
 @echo off
 
-if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.9 7" -foreground red && exit /b 1
+if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.12 0" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
 :: remove dot from the PY_VER

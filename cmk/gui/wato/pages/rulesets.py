@@ -854,7 +854,10 @@ class ModeEditRuleset(WatoMode):
         self._host: Host | None = None
         self._hostname: HostName | None = None
         if hostname:
-            self._hostname = HostName(hostname)
+            try:
+                self._hostname = HostName(hostname)
+            except ValueError:
+                raise MKUserError("host", _("Invalid host name: %s") % hostname)
             host = self._folder.host(self._hostname)
             self._host = host
             if not self._host:

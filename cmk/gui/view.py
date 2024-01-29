@@ -288,8 +288,11 @@ class View:
              |
              + service views
         """
-        host_name = self.context["host"]["host"]
-        breadcrumb = make_host_breadcrumb(HostName(host_name))
+        try:
+            host_name = HostName(self.context["host"]["host"])
+        except ValueError:
+            raise MKUserError("host", _("Invalid host name"))
+        breadcrumb = make_host_breadcrumb(host_name)
 
         if self.name == "host":
             # In case we are on the host homepage, we have the final breadcrumb
@@ -303,14 +306,14 @@ class View:
                     title=view_title(self.spec, self.context),
                     url=makeuri_contextless(
                         request,
-                        [("view_name", self.name), ("host", host_name)],
+                        [("view_name", self.name), ("host", str(host_name))],
                     ),
                 )
             )
             return breadcrumb
 
         breadcrumb = make_service_breadcrumb(
-            HostName(host_name), ServiceName(self.context["service"]["service"])
+            host_name, ServiceName(self.context["service"]["service"])
         )
 
         if self.name == "service":
@@ -325,7 +328,7 @@ class View:
                     request,
                     [
                         ("view_name", self.name),
-                        ("host", host_name),
+                        ("host", str(host_name)),
                         ("service", self.context["service"]["service"]),
                     ],
                 ),

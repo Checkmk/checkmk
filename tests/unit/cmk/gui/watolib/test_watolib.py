@@ -57,6 +57,7 @@ def test_registered_automation_commands() -> None:
         "get-config-sync-state",
         "receive-config-sync",
         "service-discovery-job",
+        "service-discovery-job-snapshot",
         "checkmk-remote-automation-start",
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",

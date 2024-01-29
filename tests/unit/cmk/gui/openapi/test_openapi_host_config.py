@@ -1247,7 +1247,7 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:
-    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"ident": "bar", "title": "bar"}])
+    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"id": "bar", "title": "bar"}])
     clients.HostConfig.create(host_name="test_host", attributes={"tag_foo": "bar"})
 
     resp = clients.HostConfig.get("test_host", effective_attributes=True)

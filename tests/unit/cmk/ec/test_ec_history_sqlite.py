@@ -162,3 +162,22 @@ def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
     # -1 because sqlite does not have the "Line number in event history file"
     assert row[column_index("history_what") - 1] == "NEW"
     assert row[column_index("event_host") - 1] == "ABC1"
+
+
+def test_housekeeping(history_sqlite: SQLiteHistory) -> None:
+    """Add 2 events to history, drop the older one."""
+
+    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    history_sqlite.add(event=event1, what="NEW")
+    history_sqlite.add(event=event2, what="NEW")
+
+    with history_sqlite.conn as connection:
+        cur = connection.cursor()
+        cur.execute("SELECT count(*) FROM history;")
+        assert cur.fetchall()[0] == (2,)
+
+        cur.execute("UPDATE history set time = 123456 where host = 'ABC1'")
+        history_sqlite.housekeeping()
+        cur.execute("SELECT count(*) FROM history;")
+        assert cur.fetchall()[0] == (1,)

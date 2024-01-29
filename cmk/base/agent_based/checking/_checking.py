@@ -259,6 +259,9 @@ def _check_plugins_missing_data(
         else:  # no break
             generic_plugins.add(str(check_plugin_name))
 
+    if not generic_plugins:
+        # if there are no generic plugins missing, we should not yield the generic plugin status
+        missing_status = 0
     plugin_list = ", ".join(sorted(generic_plugins))
     yield ActiveCheckResult(
         missing_status,

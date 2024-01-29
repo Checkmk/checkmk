@@ -364,8 +364,7 @@ def test_missing_data_single() -> None:
             # ok, but in summary we return a warning:
         )
     ] == [
-        # TODO: here is a bug: we explicitly map the only missing plugin to OK, so we expect two 0 here.
-        (1, "Missing monitoring data for plugins: "),
+        (0, "Missing monitoring data for plugins: "),
         (0, "not"),
     ]
 

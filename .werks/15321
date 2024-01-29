@@ -1,0 +1,18 @@
+Title: Fix "State if specific check plugins receive no monitoring data" of Rule "Status of the Checkmk service"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706532543
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Rule "Status of the Checkmk service" provides a setting called "State if
+specific check plugins receive no monitoring data" where you can specify a
+regular expression to match specific check plugins, and assign a status for
+the "Check_MK" service if this check plugins receives no data.
+
+The feature did work correctly if you specified a Status worse than "WARN".
+
+But the "Check_MK" service went to "WARN" even if there was an rule to set the
+status to "OK" if the specific section did not receive any data. This is fixed now.

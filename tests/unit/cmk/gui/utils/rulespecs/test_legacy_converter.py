@@ -35,6 +35,7 @@ from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
+from cmk.gui.watolib import timeperiods as legacy_timeperiods
 
 import cmk.rulesets.v1 as api_v1
 
@@ -836,6 +837,22 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 default_value="default text",
             ),
             id="MultilineText",
+        ),
+        pytest.param(
+            api_v1.preconfigured.TimePeriod(),
+            legacy_timeperiods.TimeperiodSelection(),
+            id="minimal TimePeriod",
+        ),
+        pytest.param(
+            api_v1.preconfigured.TimePeriod(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_timeperiods.TimeperiodSelection(
+                title="title",
+                help="help text",
+            ),
+            id="TimePeriod",
         ),
     ],
 )

@@ -27,6 +27,7 @@ from cmk.gui.wato import pages as legacy_page_groups
 from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
+from cmk.gui.watolib import timeperiods as legacy_timeperiods
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -547,6 +548,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case ruleset_api_v1.form_specs.MultilineText():
             return _convert_to_legacy_text_area(to_convert, localizer)
+
+        case ruleset_api_v1.preconfigured.TimePeriod():
+            return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
 
         case other:
             assert_never(other)
@@ -1440,4 +1444,13 @@ def _convert_to_legacy_text_area(
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
         **converted_kwargs,
+    )
+
+
+def _convert_to_legacy_timeperiod_selection(
+    to_convert: ruleset_api_v1.preconfigured.TimePeriod, localizer: Callable[[str], str]
+) -> legacy_timeperiods.TimeperiodSelection:
+    return legacy_timeperiods.TimeperiodSelection(
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
     )

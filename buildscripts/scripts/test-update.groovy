@@ -10,9 +10,11 @@ def main() {
         "DOCKER_TAG",
     ]);
 
+    def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_tests");
+
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
-        DISTRO_LIST: ["ubuntu-20.04", "ubuntu-22.04", "debian-11", "centos-8", "almalinux-9", "sles-15sp4"],
+        DISTRO_LIST: distros,
         EDITION: "enterprise",
         VERSION: "daily",
         DOCKER_TAG: "2.2.0-latest",

@@ -84,11 +84,13 @@ source "azure-arm" "builder" {
   vm_size                             = "Standard_DS2_v2"
 }
 
+# https://cloud-images.ubuntu.com/locator/ec2/
+# filter for region=eu-central-1, arch=amd64, version=latest lts
 source "amazon-ebs" "builder" {
   region        = "us-east-1"
   access_key    = var.aws_access_key
   secret_key    = var.aws_secret_key
-  source_ami    = "ami-00874d747dde814fa"
+  source_ami    = "ami-04d9351fa78a6efea"
   instance_type = "t2.micro"
   ssh_username  = "ubuntu"
   ami_name      = var.aws_ami_name

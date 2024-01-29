@@ -20,6 +20,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, DiscoverySettings
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.background_job import BackgroundStatusSnapshot
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -38,7 +39,11 @@ from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.automations import MKAutomationException
+from cmk.gui.site_config import site_is_local
+from cmk.gui.watolib.automations import (
+    fetch_service_discovery_background_job_status,
+    MKAutomationException,
+)
 from cmk.gui.watolib.bulk_discovery import (
     bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
@@ -308,8 +313,7 @@ def _update_single_service_phase(
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
     host = Host.load_host(params["host_name"])
-    job = ServiceDiscoveryBackgroundJob(host.name())
-    snapshot = job.get_status_snapshot()
+    snapshot = _job_snapshot(host)
     job_id = snapshot.job_id
     job_status = snapshot.status
     return serve_json(
@@ -351,15 +355,13 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
     host = Host.load_host(params["host_name"])
-    job = ServiceDiscoveryBackgroundJob(host.name())
-    snapshot = job.get_status_snapshot()
+    snapshot = _job_snapshot(host)
     if not snapshot.exists:
         raise ProblemException(
             status=404,
             title="The requested service discovery job was not found",
             detail=f"Could not find a service discovery for host {host.name()}",
         )
-
     if snapshot.is_active:
         response = Response(status=302)
         response.location = urlparse(request.url).path
@@ -433,8 +435,7 @@ def execute(params: Mapping[str, Any]) -> Response:
 
 
 def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
-    service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
-    job_snapshot = service_discovery_job.get_status_snapshot()
+    job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
         return Response(status=409)
 
@@ -689,6 +690,14 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
             detail=f"Could not find a background job with id {job_id}.",
         )
     return _serve_background_job(job)
+
+
+def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
+    if site_is_local(host.site_id()):
+        job = ServiceDiscoveryBackgroundJob(host.name())
+        return job.get_status_snapshot()
+
+    return fetch_service_discovery_background_job_status(host.site_id(), host.name())
 
 
 def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:

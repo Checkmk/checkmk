@@ -26,6 +26,7 @@ from cmk.special_agents.agent_azure import (
     process_resource_health,
     process_vm,
     Section,
+    TagsImportPatternOption,
     usage_details,
     write_group_info,
     write_remaining_reads,
@@ -205,7 +206,7 @@ def test_process_vm(
     expected_tags: Mapping[str, str],
     expected_piggyback_targets: Sequence[str],
 ) -> None:
-    vmach = AzureResource(vmach_info)
+    vmach = AzureResource(vmach_info, TagsImportPatternOption.import_all)
     process_vm(mgmt_client, vmach, args)
 
     assert vmach.info == expected_info
@@ -225,7 +226,8 @@ def test_process_vm(
                     "location": "westeurope",
                     "tags": {"my-unique-tag": "unique", "tag4all": "True"},
                     "group": "BurningMan",
-                }
+                },
+                TagsImportPatternOption.import_all,
             ),
             {
                 "BurningMan": {
@@ -287,7 +289,12 @@ def test_get_vm_labels_section(
                     "my-resource-tag": "my-resource-value",
                 }
             },
-            Args(piggyback_vms="self", debug=False, services=["Microsoft.Compute/virtualMachines"]),
+            Args(
+                piggyback_vms="self",
+                debug=False,
+                services=["Microsoft.Compute/virtualMachines"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             [
                 (
                     LabelsSection,
@@ -345,6 +352,7 @@ def test_get_vm_labels_section(
                 piggyback_vms="grouphost",
                 debug=False,
                 services=["Microsoft.Compute/virtualMachines"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
             ),
             [
                 (
@@ -395,6 +403,7 @@ def test_get_vm_labels_section(
                 piggyback_vms="grouphost",
                 debug=False,
                 services=[""],
+                tag_key_pattern=TagsImportPatternOption.ignore_all,
             ),
             [],
             id="vm_disabled_service",
@@ -410,7 +419,7 @@ def test_process_resource(
     args: Args,
     expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
 ) -> None:
-    resource = AzureResource(resource_info)
+    resource = AzureResource(resource_info, args.tag_key_pattern)
     function_args = (mgmt_client, resource, group_tags, args)
     sections = process_resource(function_args)
     assert len(sections) == len(expected_result)
@@ -435,7 +444,7 @@ def test_process_resource(
 def test_get_group_labels(
     mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
 ) -> None:
-    group_tags = get_group_labels(mgmt_client, monitored_groups)
+    group_tags = get_group_labels(mgmt_client, monitored_groups, TagsImportPatternOption.import_all)
     assert group_tags == expected_result
 
 
@@ -453,7 +462,8 @@ def test_get_group_labels(
                         "location": "westeurope",
                         "tags": {"my-unique-tag": "unique", "tag4all": "True"},
                         "group": "BurningMan",
-                    }
+                    },
+                    TagsImportPatternOption.import_all,
                 ),
             ],
             {
@@ -517,28 +527,40 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
     "args, usage_data, exception, expected_result",
     [
         pytest.param(
-            Args(debug=False, services=[]),
+            Args(debug=False, services=[], tag_key_pattern=TagsImportPatternOption.import_all),
             None,
             None,
             "",
             id="usage section not enabled",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             None,
             ApiError("offer MS-AZR-0145P"),
             "",
             id="api error no consumption offer",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             None,
             ApiError("Customer does not have the privilege to see the cost (Request ID: xxxx)"),
             "",
             id="api error customer not privileged",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             None,
             ApiError("unknown offer"),
             "<<<<>>>>\n"
@@ -555,7 +577,11 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             id="api error unknown offer",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             None,
             Exception(),
             "<<<<>>>>\n"
@@ -572,7 +598,11 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             id="exception in the api call",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             [],
             None,
             "<<<<>>>>\n"
@@ -582,7 +612,11 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             id="empty usage data",
         ),
         pytest.param(
-            Args(debug=False, services=["usage_details"]),
+            Args(
+                debug=False,
+                services=["usage_details"],
+                tag_key_pattern=TagsImportPatternOption.import_all,
+            ),
             [
                 {
                     "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
@@ -640,7 +674,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
@@ -648,7 +682,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             '"subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -656,14 +690,14 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -671,14 +705,14 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
-            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "tags": {}, "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n",
             id="no errors, usage data exists",
         ),
@@ -718,6 +752,7 @@ def test_usage_details(
                         "group": "test1",
                         "provider": "Microsoft.Compute",
                     },
+                    TagsImportPatternOption.import_all,
                 )
             ],
             {
@@ -761,6 +796,7 @@ def test_usage_details(
                         "provider": "Microsoft.Compute",
                         "tags": {"tag1": "value1"},
                     },
+                    TagsImportPatternOption.import_all,
                 )
             ],
             {

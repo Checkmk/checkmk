@@ -6,7 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels, CheckPlugin, Metric, render, Result, Service, State
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckPlugin, Metric, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.netapp import models
 
@@ -90,7 +91,7 @@ def check_netapp_ontap_snapshots(
         used_percent,
         levels_upper=params.get("levels"),
         label="Reserve used",
-        render_function=lambda v: f"{v:.1f}% ({render.bytes(snapshot_used)})",
+        render_func=lambda v: f"{v:.1f}% ({render.bytes(snapshot_used)})",
     )
 
     volume_total = volume.space_total + volume.snapshot_reserve_size

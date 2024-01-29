@@ -8,6 +8,7 @@ import json
 import pprint
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
+from dataclasses import asdict
 from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
@@ -19,6 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostName
 from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry
@@ -79,6 +81,7 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
     perform_host_label_discovery,
     perform_service_discovery,
+    ServiceDiscoveryBackgroundJob,
     StartDiscoveryRequest,
     UpdateType,
 )
@@ -178,6 +181,26 @@ class ModeDiscovery(WatoMode):
         html.open_div(id_="async_progress_msg")
         html.show_message(_("Loading..."))
         html.close_div()
+
+
+@automation_command_registry.register
+class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
+    """Fetch the service discovery background job snapshot on a remote site"""
+
+    def command_name(self) -> str:
+        return "service-discovery-job-snapshot"
+
+    def get_request(self) -> HostName:
+        return HostName(request.get_str_input_mandatory("hostname"))
+
+    def execute(self, api_request: HostName) -> str:
+        host = Host.load_host(api_request)
+        job = ServiceDiscoveryBackgroundJob(host.name())
+        job_snapshot = asdict(job.get_status_snapshot())
+        if "status" in job_snapshot:
+            # additional conversion due to pydantic usage for status only
+            job_snapshot["status"] = json.loads(job_snapshot["status"].json())
+        return json.dumps(job_snapshot)
 
 
 @automation_command_registry.register

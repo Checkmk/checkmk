@@ -62,7 +62,7 @@ def test_history_file_to_sqlite(tmp_path: Path, history_sqlite_raw: sqlite3.Conn
 def test_history_file_to_sqlite_exceptions(
     tmp_path: Path, history_sqlite_raw: sqlite3.Connection
 ) -> None:
-    """History file saved correctly into sqlite inmemory DB."""
+    """history_file_to_sqlite should raise exceptions."""
     path = tmp_path / "history_to_sqlite_test.log"
     path.write_text("malformed file")
 
@@ -82,7 +82,7 @@ def test_history_file_to_sqlite_exceptions(
                     argument="test_event",
                 ),
             ],
-            "SELECT * FROM history WHERE text = 'test_event';",
+            ("SELECT * FROM history WHERE text = ?;", ["test_event"]),
         ),
         (
             [
@@ -99,7 +99,7 @@ def test_history_file_to_sqlite_exceptions(
                     argument=1234,
                 ),
             ],
-            "SELECT * FROM history WHERE time < '123456789' AND time > '1234';",
+            ("SELECT * FROM history WHERE time < ? AND time > ?;", [123456789, 1234]),
         ),
         (
             [
@@ -116,14 +116,46 @@ def test_history_file_to_sqlite_exceptions(
                     argument="user",
                 ),
             ],
-            "SELECT * FROM history WHERE who LIKE '%admin%' AND owner LIKE '%user%';",
+            ("SELECT * FROM history WHERE who LIKE '%?%' AND owner LIKE '%?%';", ["admin", "user"]),
         ),
     ],
 )
-def test_filters_to_sqlite_query(filters: list[QueryFilter], expected_sqlite_query: str) -> None:
-    """History file saved correctly into sqlite inmemory DB."""
+def test_filters_to_sqlite_query(
+    filters: list[QueryFilter], expected_sqlite_query: tuple[str, object]
+) -> None:
+    """filters_to_sqlite_query converts to correct sql select statement."""
 
     assert filters_to_sqlite_query(filters) == expected_sqlite_query
+
+
+def test_filters_to_sqlite_query_raises_ValueError() -> None:
+    """Wrong column name in filter raise ValueError."""
+
+    wrong_filters = [
+        QueryFilter(
+            column_name="impossible_column_name",
+            operator_name="=",
+            predicate=lambda x: True,
+            argument="test_event",
+        )
+    ]
+    with pytest.raises(ValueError):
+        filters_to_sqlite_query(wrong_filters)
+
+
+def test_filters_to_sqlite_query_raises_KeyError() -> None:
+    """Wrong operator name in filter raise KeyError."""
+
+    wrong_filters = [
+        QueryFilter(
+            column_name="event_text",
+            operator_name="=asdf or true;",  # type: ignore[arg-type]
+            predicate=lambda x: True,
+            argument="test_event",
+        )
+    ]
+    with pytest.raises(KeyError):
+        filters_to_sqlite_query(wrong_filters)
 
 
 def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:

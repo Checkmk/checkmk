@@ -11,12 +11,47 @@ from dataclasses import dataclass
 from datetime import timedelta
 from logging import Logger
 from pathlib import Path
+from typing import Final
 
 from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
 from .query import Columns, QueryFilter, QueryGET
 from .settings import Options, Paths, Settings
+
+TABLE_COLUMNS: Final = frozenset(
+    {
+        "time",
+        "what",
+        "who",
+        "addinfo",
+        "id",
+        "count",
+        "text",
+        "first",
+        "last",
+        "comment",
+        "sl",
+        "host",
+        "contact",
+        "application",
+        "pid",
+        "priority",
+        "facility",
+        "rule_id",
+        "state",
+        "phase",
+        "owner",
+        "match_groups",
+        "contact_groups",
+        "ipaddress",
+        "orig_host",
+        "contact_groups_precedence",
+        "core_host",
+        "host_in_downtime",
+        "match_groups_syslog_application",
+    }
+)
 
 
 def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
@@ -46,7 +81,7 @@ def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
         )
 
 
-def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
+def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[object]]:
     """
     Construct the sqlite filtering specification.
 
@@ -56,6 +91,7 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
 
     query_columns: set[str] = set()
     query_conditions: list[str] = []
+    query_arguments: list[object] = []
 
     for f in filters:
         adjusted_column_name = ""
@@ -65,22 +101,25 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> str:
         else:
             raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
 
+        if adjusted_column_name not in TABLE_COLUMNS:
+            raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
+
         sqlite_filter: str = {
-            "=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
-            ">": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
-            "<": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
-            ">=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
-            "<=": f"{adjusted_column_name} {f.operator_name} '{f.argument}'",
-            "~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
-            "=~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
-            "~~": f"{adjusted_column_name} LIKE '%{f.argument}%'",
-            "in": f"{adjusted_column_name} in '%{f.argument}%'",
+            "=": f"{adjusted_column_name} {f.operator_name} ?",
+            ">": f"{adjusted_column_name} {f.operator_name} ?",
+            "<": f"{adjusted_column_name} {f.operator_name} ?",
+            ">=": f"{adjusted_column_name} {f.operator_name} ?",
+            "<=": f"{adjusted_column_name} {f.operator_name} ?",
+            "~": f"{adjusted_column_name} LIKE '%?%'",
+            "=~": f"{adjusted_column_name} LIKE '%?%'",
+            "~~": f"{adjusted_column_name} LIKE '%?%'",
+            "in": f"{adjusted_column_name} in '%?%'",
         }[f.operator_name]
 
         query_columns.add(adjusted_column_name)
         query_conditions.append(sqlite_filter)
-    # TODO should be strings with placeholders instead of f-strings
-    return f'SELECT * FROM history WHERE {" AND ".join(query_conditions)};'
+        query_arguments.append(f.argument)
+    return f'SELECT * FROM history WHERE {" AND ".join(query_conditions)};', query_arguments
 
 
 @dataclass
@@ -158,14 +197,14 @@ class SQLiteHistory(History):
             )
 
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        sqlite_query = filters_to_sqlite_query(query.filters)
+        sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         if query.limit:
-            # TODO make this a placeholder when filters_to_sqlite_query also returns placeholders
-            sqlite_query += f" LIMIT {query.limit + 1}"
+            sqlite_query += " LIMIT ?"
+            sqlite_arguments += f" {query.limit+1}"
 
         with self.conn as connection:
             cur = connection.cursor()
-            cur.execute(sqlite_query)
+            cur.execute(sqlite_query, sqlite_arguments)
             return cur.fetchall()
 
     def housekeeping(self) -> None:

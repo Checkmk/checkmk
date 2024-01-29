@@ -28,8 +28,8 @@ daily_extended: &daily_extended
 
 # Max L runs on the latest ubuntu and does not want to reinstall his machine
 daily_saas: &daily_saas
-   - "ubuntu-22.04"
-   - "ubuntu-23.10"
+    - "ubuntu-22.04"
+    - "ubuntu-23.10"
 
 # Builds for those distros will only be available internally for development purpose
 internal_distros: &internal_distros
@@ -38,7 +38,8 @@ internal_distros: &internal_distros
 # README:
 # - the following sections defines what will be build/tested under which "use-case"
 # - as a consequence, you need to consider e.g.:
-#   - if we want to test the update for the combination edition A / distro B, we may also need the builds for that!
+#   - if we want to test the update for the combination edition A / distro B,
+#     we may also need the builds for that!
 #   - so keep that in mind when changing those settings!
 editions:
     enterprise:
@@ -78,6 +79,7 @@ editions:
 
 # TODO: Sync this with our omd/distros/*.mk files
 # We currently only need this for the internal_distros as at the point in the pipeline,
-# where we want to exclude the internal distros, we are only using the distro codes and not the distro name anymore.
+# where we want to exclude the internal distros, we are only using the distro codes and not the
+# distro name anymore.
 distro_to_codename:
     ubuntu-23.10: "mantic"

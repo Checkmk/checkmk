@@ -728,7 +728,7 @@ class ModeNotifications(ABCNotificationsMode):
                 int(simulation_mode[1]["host_states"][0])
             )
             context["HOSTSTATE"] = host_state_name(int(simulation_mode[1]["host_states"][1]))
-            context["HOSTSTATEID"] = simulation_mode[1]["host_states"][1]
+            context["HOSTSTATEID"] = str(simulation_mode[1]["host_states"][1])
         else:
             context["NOTIFICATIONTYPE"] = "DOWNTIME"
             context["PREVIOUSHOSTHARDSTATE"] = "UP"
@@ -754,7 +754,7 @@ class ModeNotifications(ABCNotificationsMode):
                 else service_state_name(int(simulation_mode[1]["svc_states"][1]))
             )
             context["SERVICESTATEID"] = (
-                "0" if "downtime" in simulation_mode else simulation_mode[1]["svc_states"][1]
+                "0" if "downtime" in simulation_mode else str(simulation_mode[1]["svc_states"][1])
             )
         else:
             context["WHAT"] = "HOST"

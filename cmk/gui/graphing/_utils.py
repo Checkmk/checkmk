@@ -764,6 +764,34 @@ def parse_perf_data(
     return perf_data, check_command
 
 
+def parse_perf_data_from_performance_data_livestatus_column(
+    perf_data_mapping: Mapping[str, float], check_command: str | None = None
+) -> tuple[Perfdata, str]:
+    """Convert new_perf_data into perf_data"""
+    # Strip away arguments like in "check_http!-H checkmk.com"
+    if check_command is None:
+        check_command = ""
+    elif hasattr(check_command, "split"):
+        check_command = check_command.split("!")[0]
+
+    check_command = check_command.replace(".", "_")  # see function maincheckify
+
+    perf_data: Perfdata = [
+        PerfDataTuple(
+            varname,
+            value,
+            "",
+            None,
+            None,
+            None,
+            None,
+        )
+        for varname, value in perf_data_mapping.items()
+    ]
+
+    return perf_data, check_command
+
+
 def _float_or_int(val: str | None) -> int | float | None:
     """ "45.0" -> 45.0, "45" -> 45"""
     if val is None:

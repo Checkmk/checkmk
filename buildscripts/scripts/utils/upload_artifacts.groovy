@@ -152,7 +152,9 @@ def deploy_to_website(CMK_VERS) {
 def cleanup_rc_candidates_of_version(CMK_VERS) {
     def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
     execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");
-    execute_cmd_on_tst_server("rm -rf ${tstbuilds_path}${TARGET_VERSION}-rc*;");
+    // TODO: This clean up comes to early:
+    //  * for the build-cmk-container we need the rc candiates available
+    // execute_cmd_on_tst_server("rm -rf ${tstbuilds_path}${TARGET_VERSION}-rc*;");
 }
 
 return this;

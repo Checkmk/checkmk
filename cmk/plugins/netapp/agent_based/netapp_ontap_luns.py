@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Service
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
@@ -74,10 +74,11 @@ def _check_netapp_ontap_luns(
     if (lun := section.get(item)) is None:
         return
 
+    yield Result(state=State.OK, summary=f"Volume: {lun.volume_name}")
+    yield Result(state=State.OK, summary=f"SVM: {lun.svm_name}")
+
     yield from check_netapp_luns(
         item=item,
-        volume_name=lun.volume_name,
-        server_name=lun.svm_name,
         online=lun.enabled,
         read_only=lun.read_only,
         size_total_bytes=lun.space_size,

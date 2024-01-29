@@ -367,8 +367,6 @@ def combine_netapp_api_volumes(
 
 def check_netapp_luns(
     item: str,
-    volume_name: str,
-    server_name: str,
     online: bool,
     read_only: bool,
     size_total_bytes: int,
@@ -378,9 +376,6 @@ def check_netapp_luns(
     value_store: MutableMapping[str, Any],
     params: Mapping[str, Any],
 ) -> CheckResult:
-    yield Result(state=State.OK, summary=f"Volume: {volume_name}")
-    yield Result(state=State.OK, summary=f"Vserver: {server_name}")
-
     if not online:
         yield Result(state=State.CRIT, summary="LUN is offline")
 

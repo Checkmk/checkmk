@@ -6,7 +6,7 @@
 import copy
 
 from cmk.gui.plugins.wato.special_agents.azure import (
-    _migrate_services,
+    _migrate_azure_rule_vs,
     CCE_AZURE_SERVICES,
     RAW_AZURE_SERVICES,
 )
@@ -14,8 +14,8 @@ from cmk.gui.plugins.wato.special_agents.azure import (
 from cmk.special_agents.agent_azure import ALL_METRICS
 
 
-def test_migrate_services():
-    migrated_data = _migrate_services({})
+def test_migrate_azure_rule_vs():
+    migrated_data = _migrate_azure_rule_vs({})
     some_expected_services = {
         "ad_connect",
         "usage_details",
@@ -26,12 +26,13 @@ def test_migrate_services():
     assert some_expected_services.issubset(enabled_services)
 
 
-def test_migrate_services_already_migrated():
+def test_migrate_azure_rule_vs_already_migrated():
     original_data = {"services": ["ad_connect", "Microsoft.Compute/virtualMachines"]}
-    migrated_data = _migrate_services(copy.deepcopy(original_data))
+    migrated_data = _migrate_azure_rule_vs(copy.deepcopy(original_data))
     assert migrated_data == {
         "services": ["ad_connect", "Microsoft.Compute/virtualMachines"],
         "authority": "global",
+        "import_tags": "all_tags",
     }
 
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import abc
 import argparse
 import datetime
+import enum
 import json
 import logging
 import re
@@ -172,6 +173,14 @@ ALL_METRICS: dict[str, list[tuple]] = {
 }
 
 
+class TagsImportPatternOption(enum.Enum):
+    ignore_all = "IGNORE_ALL"
+    import_all = "IMPORT_ALL"
+
+
+TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPatternOption.import_all]
+
+
 def parse_arguments(argv: Sequence[str]) -> Args:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -273,6 +282,26 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         required=True,
         help="Authority to be used",
     )
+
+    group_import_tags = parser.add_mutually_exclusive_group()
+    group_import_tags.add_argument(
+        "--ignore-all-tags",
+        action="store_const",
+        const=TagsImportPatternOption.ignore_all,
+        dest="tag_key_pattern",
+        help="By default, all Azure tags are written to the agent output, validated to meet the "
+        "Checkmk label requirements and added as host labels to their respective piggyback host "
+        "and/or as service labels to the respective service using the syntax "
+        "'cmk/azure/tag/{key}:{value}'. With this option you can disable the import of Azure "
+        "tags.",
+    )
+    group_import_tags.add_argument(
+        "--import-matching-tags-as-labels",
+        dest="tag_key_pattern",
+        help="You can restrict the imported tags by specifying a pattern which the agent searches "
+        "for in the key of the tag.",
+    )
+    group_import_tags.set_defaults(tag_key_pattern=TagsImportPatternOption.import_all)
     args = parser.parse_args(argv)
 
     if args.vcrtrace:
@@ -927,11 +956,15 @@ def get_attrs_from_uri(uri):
 
 
 class AzureResource:
-    def __init__(self, info) -> None:  # type: ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        info,
+        tag_key_pattern: TagsOption,
+    ) -> None:
         super().__init__()
-        self.info = info
+        self.tags = self._filter_tags(info.get("tags", {}), tag_key_pattern)
+        self.info = {**info, "tags": self.tags}
         self.info.update(get_attrs_from_uri(info["id"]))
-        self.tags = self.info.get("tags", {})
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
@@ -947,6 +980,13 @@ class AzureResource:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
         return lines
+
+    def _filter_tags(self, tags: dict[str, str], tag_key_pattern: TagsOption) -> dict[str, str]:
+        if tag_key_pattern == TagsImportPatternOption.import_all:
+            return tags
+        if tag_key_pattern == TagsImportPatternOption.ignore_all:
+            return {}
+        return {key: value for key, value in tags.items() if re.search(tag_key_pattern, key)}
 
 
 def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
@@ -1386,12 +1426,25 @@ def process_resource(
     return sections
 
 
-def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]) -> GroupLabels:
+def get_group_labels(
+    mgmt_client: MgmtApiClient,
+    monitored_groups: Sequence[str],
+    tag_key_pattern: TagsOption,
+) -> GroupLabels:
     group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
         name = group["name"]
-        tags = group.get("tags", {})
+
+        if tag_key_pattern == TagsImportPatternOption.ignore_all:
+            tags = {}
+        else:
+            tags = group.get("tags", {})
+            if tag_key_pattern != TagsImportPatternOption.import_all:
+                tags = {
+                    key: value for key, value in tags.items() if re.search(tag_key_pattern, key)
+                }
+
         if name in monitored_groups:
             group_labels[name] = tags
 
@@ -1558,12 +1611,13 @@ def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
 def write_usage_section(
     usage_data: Sequence[object],
     monitored_groups: list[str],
+    tag_key_pattern: TagsOption,
 ) -> None:
     if not usage_data:
         AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
 
     for usage in usage_data:
-        usage_resource = AzureResource(usage)
+        usage_resource = AzureResource(usage, tag_key_pattern)
         piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
 
         section = AzureSection(usage_resource.section, piggytargets)
@@ -1583,7 +1637,7 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
             )
             return
 
-        write_usage_section(usage_section, monitored_groups)
+        write_usage_section(usage_section, monitored_groups, args.tag_key_pattern)
 
     except NoConsumptionAPIError:
         LOGGER.debug("Azure offer doesn't support querying the cost API")
@@ -1594,7 +1648,7 @@ def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args:
             raise
         LOGGER.warning("%s", exc)
         write_exception_to_agent_info_section(exc, "Usage client")
-        write_usage_section([], monitored_groups)
+        write_usage_section([], monitored_groups, args.tag_key_pattern)
 
 
 def _get_monitored_resource(
@@ -1658,7 +1712,7 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
 
-        all_resources = (AzureResource(r) for r in mgmt_client.resources())
+        all_resources = (AzureResource(r, args.tag_key_pattern) for r in mgmt_client.resources())
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
@@ -1669,7 +1723,7 @@ def main_subscription(args: Args, selector: Selector, subscription: str) -> None
         write_exception_to_agent_info_section(exc, "Management client")
         return
 
-    group_labels = get_group_labels(mgmt_client, monitored_groups)
+    group_labels = get_group_labels(mgmt_client, monitored_groups, args.tag_key_pattern)
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
     usage_details(mgmt_client, monitored_groups, args)

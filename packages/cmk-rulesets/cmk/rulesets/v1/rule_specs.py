@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Localizable
-from .form_specs import FormSpec
 from .form_specs.basic import SingleChoice, Text
 from .form_specs.composed import Dictionary
 
@@ -86,7 +85,7 @@ class Host:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -110,7 +109,7 @@ class Service:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     condition: HostCondition | HostAndServiceCondition
@@ -166,7 +165,7 @@ class EnforcedService:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec] | None
+    parameter_form: Callable[[], Dictionary] | None
     name: str
     condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
@@ -195,7 +194,7 @@ class DiscoveryParameters:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -218,7 +217,7 @@ class ActiveCheck:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -241,7 +240,7 @@ class AgentConfig:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -264,7 +263,7 @@ class SpecialAgent:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -287,7 +286,7 @@ class AgentAccess:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -310,7 +309,7 @@ class NotificationParameters:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -333,7 +332,7 @@ class SNMP:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
@@ -356,7 +355,7 @@ class InventoryParameters:
 
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False

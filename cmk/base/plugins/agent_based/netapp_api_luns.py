@@ -61,8 +61,6 @@ def _check_netapp_api_luns(
 
     yield from netapp_api.check_netapp_luns(
         item=item,
-        volume_name=lun["volume"],
-        server_name=lun["vserver"],
         online=lun.get("online") == "true",
         read_only=lun.get("read-only") == "true",
         size_total_bytes=size_total_bytes,

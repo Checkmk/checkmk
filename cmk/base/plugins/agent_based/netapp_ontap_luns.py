@@ -86,12 +86,10 @@ def _check_netapp_ontap_luns(
         return
 
     yield Result(state=State.OK, summary=f"Volume: {lun.volume_name}")
-    yield Result(state=State.OK, summary=f"Vserver: {lun.svm_name}")
+    yield Result(state=State.OK, summary=f"SVM: {lun.svm_name}")
 
     yield from check_netapp_luns(
         item=item,
-        volume_name=lun.volume_name,
-        server_name=lun.svm_name,
         online=lun.enabled,
         read_only=lun.read_only,
         size_total_bytes=lun.space_size,

@@ -60,7 +60,7 @@ def check_netapp_ontap_vs_status(item: str, section: Section) -> CheckResult:
 
 register.check_plugin(
     name="netapp_ontap_vs_status",
-    service_name="Svm Status %s",
+    service_name="SVM Status %s",
     discovery_function=discover_netapp_ontap_vs_status,
     check_function=check_netapp_ontap_vs_status,
 )

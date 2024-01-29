@@ -166,7 +166,10 @@ class _CombinedVisualsCache(Generic[TVisual]):
             self._update_cache_info_timestamp()
             return False
 
-        if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+        try:
+            if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
+                return False
+        except FileNotFoundError:
             return False
 
         return True

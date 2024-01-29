@@ -1919,10 +1919,10 @@ def setup_host_tags_on_site(clients: ClientRegistry) -> None:
         title="Criticality",
         help_text="",
         tags=[
-            {"ident": "prod", "title": "Productive system"},
-            {"ident": "critical", "title": "Business critical"},
-            {"ident": "test", "title": "Test system"},
-            {"ident": "offline", "title": "Do not monitor this host"},
+            {"id": "prod", "title": "Productive system"},
+            {"id": "critical", "title": "Business critical"},
+            {"id": "test", "title": "Test system"},
+            {"id": "offline", "title": "Do not monitor this host"},
         ],
     )
 
@@ -1931,9 +1931,9 @@ def setup_host_tags_on_site(clients: ClientRegistry) -> None:
         title="Networking Segment",
         help_text="",
         tags=[
-            {"ident": "lan", "title": "Local network (low latency)"},
-            {"ident": "wan", "title": "WAN (high latency)"},
-            {"ident": "dmz", "title": "DMZ (low latency, secure access)"},
+            {"id": "lan", "title": "Local network (low latency)"},
+            {"id": "wan", "title": "WAN (high latency)"},
+            {"id": "dmz", "title": "DMZ (low latency, secure access)"},
         ],
     )
 

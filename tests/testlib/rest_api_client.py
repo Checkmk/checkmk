@@ -1253,9 +1253,11 @@ class HostTagGroupClient(RestApiClient):
         tags: list[dict[str, str | list[str]]],
         topic: str | None = None,
         help_text: str | None = None,
+        identification_field_name: str = "id",
         expect_ok: bool = True,
     ) -> Response:
-        body = {"ident": ident, "title": title, "tags": tags}
+        body = {"title": title, "tags": tags}
+        body[identification_field_name] = ident
         if help_text is not None:
             body["help"] = help_text
         if topic is not None:
@@ -1291,7 +1293,7 @@ class HostTagGroupClient(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         etag = self.get(ident).headers["ETag"]
-        body: dict[str, Any] = {"ident": ident}
+        body: dict[str, Any] = {"id": ident}
         if title is not None:
             body["title"] = title
         if help_text is not None:

@@ -264,6 +264,12 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
     )
 
 
+header_dict_elements = {
+    "header_name": DictElement(Text(label=Localizable("Name")), required=True),
+    "header_value": DictElement(Text(label=Localizable("Value")), required=True),
+}
+
+
 def _valuespec_connection() -> Dictionary:
     return Dictionary(
         title=Localizable("Connection details"),
@@ -436,16 +442,7 @@ def _valuespec_connection() -> Dictionary:
             "add_headers": DictElement(
                 List(
                     title=Localizable("Additional header lines"),
-                    parameter_form=Dictionary(
-                        elements={
-                            "header_name": DictElement(
-                                Text(label=Localizable("Name")), required=True
-                            ),
-                            "header_value": DictElement(
-                                Text(label=Localizable("Value")), required=True
-                            ),
-                        }
-                    ),
+                    parameter_form=Dictionary(elements=header_dict_elements),
                 ),
             ),
             "auth": DictElement(
@@ -512,14 +509,7 @@ def _valuespec_content() -> Dictionary:
                             title=Localizable("Fixed string"),
                             parameter_form=Dictionary(
                                 title=Localizable("Fixed string"),
-                                elements={
-                                    "header_name": DictElement(
-                                        Text(label=Localizable("Name")), required=True
-                                    ),
-                                    "header_value": DictElement(
-                                        Text(label=Localizable("Value")), required=True
-                                    ),
-                                },
+                                elements=header_dict_elements,
                             ),
                         ),
                         CascadingSingleChoiceElement(

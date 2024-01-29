@@ -38,10 +38,17 @@ def load_pipfile() -> Pipfile:
 
 
 def test_all_deployment_packages_pinned(loaded_pipfile: Pipfile) -> None:
-    unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
+    # Test implements process as decribed in:
+    # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies
+    unpinned_packages = [
+        f"'{n}'"
+        for p_type in ("default", "develop")
+        for n, v in loaded_pipfile.data[p_type].items()
+        if v == "*"
+    ]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
-        "For the sake of reproducibility, all deployment packages must be pinned to a version!"
+        "For the sake of reproducibility, all packages must be pinned to a version!"
     ) % " ,".join(unpinned_packages)
 
 

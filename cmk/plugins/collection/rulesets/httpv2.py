@@ -114,7 +114,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
             "regex": DictElement(
                 Dictionary(
                     elements={
-                        "name": DictElement(
+                        "header_name_pattern": DictElement(
                             Text(
                                 label=Localizable("Header name pattern"),
                                 # mode=RegExp.infix,
@@ -122,7 +122,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             ),
                             required=True,
                         ),
-                        "value": DictElement(
+                        "header_value_pattern": DictElement(
                             Text(
                                 label=Localizable("Header value pattern"),
                                 # mode=RegExp.infix,
@@ -291,11 +291,11 @@ def _valuespec_connection() -> Dictionary:
                             title=Localizable("Negotiate"),
                         ),
                         SingleChoiceElement(
-                            name="http2",
+                            name="http_2",
                             title=Localizable("Use HTTP/2"),
                         ),
                         SingleChoiceElement(
-                            name="http11",
+                            name="http_1_1",
                             title=Localizable("Use HTTP/1.1"),
                         ),
                         SingleChoiceElement(
@@ -316,16 +316,16 @@ def _valuespec_connection() -> Dictionary:
                                         name="auto", title=Localizable("Negotiate")
                                     ),
                                     SingleChoiceElement(
-                                        name="tls_13", title=Localizable("Enforce TLS v1.3")
+                                        name="tls_1_3", title=Localizable("Enforce TLS v1.3")
                                     ),
                                     SingleChoiceElement(
-                                        name="tls_12", title=Localizable("Enforce TLS v1.2")
+                                        name="tls_1_2", title=Localizable("Enforce TLS v1.2")
                                     ),
                                     SingleChoiceElement(
-                                        name="tls_11", title=Localizable("Enforce TLS v1.1")
+                                        name="tls_1_1", title=Localizable("Enforce TLS v1.1")
                                     ),
                                     SingleChoiceElement(
-                                        name="tls_10", title=Localizable("Enforce TLS v1.0")
+                                        name="tls_1_0", title=Localizable("Enforce TLS v1.0")
                                     ),
                                 ],
                             ),
@@ -482,7 +482,7 @@ def _valuespec_connection() -> Dictionary:
                                     "header": DictElement(
                                         Text(title=Localizable("API key header")), required=True
                                     ),
-                                    "password": DictElement(
+                                    "token": DictElement(
                                         Password(title=Localizable("API key")), required=True
                                     ),
                                 },

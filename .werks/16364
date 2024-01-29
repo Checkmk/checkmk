@@ -1,0 +1,40 @@
+Title: tag_group: change the identification field from 'ident' to 'id'
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1706534034
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Before this Werk, when creating a tag group, the <strong>ident</strong> field was used to provide its identification as well as that of the tags associated to the group, however the information was returned in the <strong>id</strong> field. This Werk unifies the names and now the <strong>ident</strong> fields are renamed to <strong>id</strong>. Users should adapt their scripts accordingly.
+
+For comptatibility reasons CheckMK 2.2.0 and 2.3.0 will support both <strong>id</strong> and <strong>ident</strong>, but <strong>ident</strong> will be removed on the next version.
+
+The following example shows the changes that need to be applied to the payload to use this endpoint:
+
+Original payload:
+
+C+:
+{
+    "ident": "test_group",
+    "title": "Test group",
+    "help_text": "My test groupd",
+    "tags": [
+        {"ident": "test", "title": "Test Tag"}
+    ]
+}
+C-:
+
+Updated payload:
+
+C+:
+{
+    "id": "test_group",
+    "title": "Test group",
+    "help_text": "My test groupd",
+    "tags": [
+        {"id": "test", "title": "Test Tag"}
+    ]
+}
+C-:

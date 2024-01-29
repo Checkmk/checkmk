@@ -5,12 +5,14 @@
 import re
 from typing import Any
 
+from marshmallow import pre_load
+
 from cmk.utils.regex import REGEX_ID
-from cmk.utils.tags import TAG_GROUP_NAME_PATTERN
+from cmk.utils.tags import TAG_GROUP_NAME_PATTERN, TagID
 
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.watolib.tags import tag_group_exists
+from cmk.gui.watolib.tags import load_all_tag_config_read_only, tag_group_exists
 
 from cmk import fields
 
@@ -87,15 +89,25 @@ class HostTagGroupId(fields.String):
         if group_exists:
             raise self.make_error("used", name=value)
 
+        if load_all_tag_config_read_only().aux_tag_list.exists(TagID(value)):
+            raise self.make_error("used", name=value)
+
 
 class HostTag(BaseSchema):
-    ident = fields.String(
+    id = fields.String(
         required=False,
         example="tag_id",
         description="An unique id for the tag",
         load_default=None,
         attribute="id",
     )
+    ident = HostTagGroupId(
+        required=False,
+        example="tag_id",
+        description="An unique id for the tag. This field is deprecated and will be removed in a future version. Use id instead.",
+        metadata={"deprecated": True},
+    )
+
     title = fields.String(
         required=True,
         example="Tag",
@@ -112,13 +124,26 @@ class HostTag(BaseSchema):
         load_default=list,
     )
 
+    @pre_load
+    def handle_deprecated_ident_field(self, data, **kwargs):
+        if "id" not in data and "ident" in data:
+            data["id"] = data.pop("ident")
+
+        return data
+
 
 class InputHostTagGroup(BaseSchema):
-    ident = HostTagGroupId(
+    id = HostTagGroupId(
         required=True,
         example="group_id",
         description="An id for the host tag group",
         attribute="id",
+    )
+    ident = HostTagGroupId(
+        required=False,
+        example="group_id",
+        description="An id for the host tag group. This field is deprecated and will be removed in a future version. Use id instead.",
+        metadata={"deprecated": True},
     )
     title = fields.String(
         required=True,
@@ -139,10 +164,17 @@ class InputHostTagGroup(BaseSchema):
     tags = Tags(
         fields.Nested(HostTag),
         required=True,
-        example=[{"ident": "pod", "title": "Pod"}],
+        example=[{"id": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
         minLength=1,
     )
+
+    @pre_load
+    def handle_deprecated_ident_field(self, data, **kwargs):
+        if "id" not in data and "ident" in data:
+            data["id"] = data.pop("ident")
+
+        return data
 
 
 class UpdateHostTagGroup(BaseSchema):
@@ -165,7 +197,7 @@ class UpdateHostTagGroup(BaseSchema):
     tags = Tags(
         fields.Nested(HostTag),
         required=False,
-        example=[{"ident": "pod", "title": "Pod"}],
+        example=[{"id": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
         minLength=1,
     )

@@ -1,0 +1,26 @@
+Title: NetApp: addition of datasource program and check plugins for NetApp ONTAP
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1706530527
+Edition: cre
+Level: 1
+Version: 2.2.0p21
+
+Since NetApp has discontinued support for their old API this werk adds datasource program and check plugins for the new NetApp ONTAP REST API.
+
+However, the new API does not provide certain metrics that were available in the old API. As a result, the new check plugins have been modified accordingly.
+
+The plugins that have been migrated with this werk are the ones that monitor:
+
+LI: NetApp aggregates
+LI: NetApp node's CPUs
+LI: NetApp disks
+LI: NetApp sensors of environment and shelves
+LI: NetApp node's fans
+LI: NetApp node's interfaces
+LI: NetApp LUNs
+LI: NetApp node's ports
+LI: NetApp power supply units
+LI: NetApp volumes (and snapshots)
+LI: NetApp (SVMs) Storage Virtual Machine's (formerly called "vservers”) traffic and status

@@ -88,8 +88,7 @@ PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
 # We're separating the python version used in the windows agent modules as they are not directly connected.
 # However, we should keep them as close as possible.
-# TODO(sk): Bump to 3.12 as soon as windows nodes are ready
-PYTHON_VERSION_WINDOWS := 3.11.5
+PYTHON_VERSION_WINDOWS := 3.12.0
 
 # convenience stuff derived from PYTHON_VERSION_WINDOWS
 PY_ARRAY_WINDOWS		:= $(subst ., ,$(PYTHON_VERSION_WINDOWS))

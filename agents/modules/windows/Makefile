@@ -110,7 +110,9 @@ $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
 	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER)
 
-venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
+python_pipfile: $(PYTHON_PIPFILE_LOCK)
+
+venv: python_install python_pipfile ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
 	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
 	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)

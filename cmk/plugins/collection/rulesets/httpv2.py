@@ -298,10 +298,6 @@ def _valuespec_connection() -> Dictionary:
                             name="http_1_1",
                             title=Localizable("Use HTTP/1.1"),
                         ),
-                        SingleChoiceElement(
-                            name="http10",
-                            title=Localizable("Use HTTP/1.0"),
-                        ),
                     ],
                 ),
             ),

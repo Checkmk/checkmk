@@ -8,6 +8,7 @@ import sqlite3
 import time
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
+from datetime import timedelta
 from logging import Logger
 from pathlib import Path
 
@@ -168,7 +169,7 @@ class SQLiteHistory(History):
             return cur.fetchall()
 
     def housekeeping(self) -> None:
-        days = self._config["history_lifetime"]
+        delta = time.time() - timedelta(days=self._config["history_lifetime"]).total_seconds()
         with self.conn as connection:
             cur = connection.cursor()
-            cur.execute("DELETE FROM history WHERE age <= datetime('now', '-? days');", (days,))
+            cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))

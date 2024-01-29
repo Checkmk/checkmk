@@ -39,7 +39,10 @@ def load_pipfile():
 def test_all_deployment_packages_pinned(loaded_pipfile) -> None:
     # certifi is just a collection of CA certificates
     unpinned_packages = [
-        f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*" and n != "certifi"
+        f"'{n}'"
+        for p_type in ("default", "develop")
+        for n, v in loaded_pipfile.data[p_type].items()
+        if v == "*" and n != "certifi"
     ]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "

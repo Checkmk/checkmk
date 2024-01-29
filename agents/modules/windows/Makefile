@@ -106,13 +106,11 @@ $(PYTHON_PIPFILE): $(SRC_PIPFILE) ## pifile copy and patch
 	@copy /Y $< $@
 	@$(PYTHON_SYSTEM_EXE) patch_pipfile.py $@
 
-python_pipfile: $(PYTHON_PIPFILE_LOCK)
-
 $(PYTHON_PIPFILE_LOCK): $(PYTHON_PIPFILE) ## piplock building
 	@powershell Write-Host "Target $@" -foreground white
 	@call exec_cmd.bat build_pipfile_lock.cmd $(PY_VER) $(PY_SUBVER)
 
-venv: python_install python_pipfile ## venv building
+venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	@powershell Write-Host "Target '$@'" -foreground white
 	exec_cmd.bat build_environment.cmd $(PY_VER) $(PY_SUBVER)
 	exec_cmd.bat clean_environment.cmd $(PY_VER) $(PY_SUBVER)

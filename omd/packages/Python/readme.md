@@ -1,1 +1,0 @@
-Python-X.Y.Z.tar.xz are used to build python for Windows

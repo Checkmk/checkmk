@@ -87,6 +87,7 @@ class AjaxFetchAggregationData(AjaxPage):
                     layout["explicit_id"] = aggr_name
                 else:
                     layout.update(self._get_template_based_layout_settings(aggr_settings))
+                layout.setdefault("force_config", {})
 
                 if "ignore_rule_styles" not in layout:
                     layout["ignore_rule_styles"] = aggr_settings.get("ignore_rule_styles", False)

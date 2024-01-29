@@ -8,10 +8,13 @@ import datetime
 import typing
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
-from cmk.agent_based.v2 import contains, get_rate, GetRateError, Result, State, type_defs
+from cmk.agent_based.v2 import any_of, contains, get_rate, GetRateError, Result, State, type_defs
 
 DETECT_EMAIL_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway")
-DETECT_WEB_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")
+DETECT_WEB_GATEWAY = any_of(
+    contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway"),
+    contains(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.1230.2.7.1.1"),
+)
 
 ValueStore = typing.MutableMapping[str, typing.Any]
 

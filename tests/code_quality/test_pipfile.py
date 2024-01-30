@@ -330,6 +330,7 @@ CEE_UNUSED_PACKAGES = [
     "cython",
     "grpcio",
     "idna",
+    "isodate",
     "itsdangerous",
     "jmespath",
     "markupsafe",

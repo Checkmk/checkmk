@@ -12,6 +12,7 @@ from collections.abc import Generator, Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.testlib.agent import (
     agent_controller_daemon,
@@ -86,6 +87,19 @@ class BaseVersions:
 
 
 @dataclasses.dataclass
+class InteractiveModeDistros:
+    @staticmethod
+    def get_supported_distros():
+        with open(Path(__file__).parent.resolve() / "../../editions.yml", "r") as stream:
+            yaml_file = yaml.safe_load(stream)
+
+        return yaml_file["daily_extended"]
+
+    DISTROS = ["ubuntu-22.04", "almalinux-9"]
+    assert set(DISTROS).issubset(set(get_supported_distros()))
+
+
+@dataclasses.dataclass
 class TestParams:
     """Pytest parameters used in the test."""
 
@@ -99,7 +113,7 @@ class TestParams:
             BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
         )
         # interactive mode enabled for some specific distros
-        if interactive_mode == (os.environ.get("DISTRO") in ["ubuntu-22.04", "almalinux-9"])
+        if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)
     ]
 
 

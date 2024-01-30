@@ -112,6 +112,13 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                             ),
                                         ),
                                         (
+                                            "update_changed_service_labels",
+                                            Checkbox(
+                                                label=_("Update changed service labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
                                             "update_host_labels",
                                             Checkbox(
                                                 label=_("Update host labels"),

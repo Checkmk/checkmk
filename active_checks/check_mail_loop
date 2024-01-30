@@ -22,6 +22,8 @@ from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox, Mai
 # "<sent-timestamp>-<key>" -> (sent-timestamp, key)
 MailDict = MutableMapping[str, MailID]
 
+DEPRECATION_AGE = 2 * 3600
+
 
 def create_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -361,10 +363,10 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         deletion_candidates = {
             index: raw_message
             for ts_key, (index, rx_timestamp, _subject, raw_message) in message_details.items()
-            if ts_key in expected_mails_keys or now - rx_timestamp > 24 * 3600
+            if ts_key in expected_mails_keys or now - rx_timestamp > DEPRECATION_AGE
         }
         logging.debug(
-            "candidates for deletion (expected messages + those older than 24h): %s",
+            f"candidates for deletion (expected messages + those older than {DEPRECATION_AGE}s): %s",
             list(deletion_candidates.keys()),
         )
         if args.delete_messages:

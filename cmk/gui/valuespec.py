@@ -1144,6 +1144,7 @@ class RegExp(TextInput):
         maxlen: int | None = None,
         onkeyup: str | None = None,
         autocomplete: bool = True,
+        placeholder: str | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1170,6 +1171,7 @@ class RegExp(TextInput):
             help=help,
             default_value=default_value,
             validate=validate,
+            placeholder=placeholder,
         )
 
         self._mode = mode

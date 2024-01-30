@@ -31,24 +31,6 @@ class Migrate(Generic[_T]):
 
 
 @dataclass(frozen=True)
-class Transform(Generic[_T]):
-    """Creates a transformation that is performed every time the value is loaded/stored.
-
-    E.g. could be used to allow a different unit to be shown/entered than that is used by
-    the consumers of the stored value.
-
-    Args:
-        model_to_form: Transforms the value presented to the consumers ("consumer model")
-                       to a value compatible with the current form specification.
-        form_to_model: Transforms the value created by the form specification to the
-                        value presented to the consumers (e.g. check plugins).
-    """
-
-    model_to_form: Callable[[object], _T]
-    form_to_model: Callable[[_T], object]
-
-
-@dataclass(frozen=True)
 class Integer:
     """Specifies an input field for whole numbers
 
@@ -75,7 +57,7 @@ class Integer:
     unit: Localizable | None = None
     prefill_value: int | None = None
 
-    transform: Transform[int] | Migrate[int] | None = None
+    transform: Migrate[int] | None = None
 
     custom_validate: Callable[[int], object] | None = None
 
@@ -105,7 +87,7 @@ class Float:
 
     prefill_value: float | None = None
 
-    transform: Transform[float] | Migrate[float] | None = None
+    transform: Migrate[float] | None = None
 
     custom_validate: Callable[[float], object] | None = None
 
@@ -172,7 +154,7 @@ class DataSize:
     displayed_units: Sequence[BinaryUnit] | None = None
     prefill_value: int | None = None
 
-    transform: Transform[int] | Migrate[int] | None = None
+    transform: Migrate[int] | None = None
 
     custom_validate: Callable[[int], object] | None = None
 
@@ -201,7 +183,7 @@ class Percentage:
 
     prefill_value: float | None = None
 
-    transform: Transform[float] | Migrate[float] | None = None
+    transform: Migrate[float] | None = None
 
     custom_validate: Callable[[float], object] | None = None
 
@@ -228,7 +210,7 @@ class Text:
 
     prefill_value: str | None = None
 
-    transform: Transform[str] | Migrate[str] | None = None
+    transform: Migrate[str] | None = None
 
     custom_validate: Callable[[str], object] | None = None
 
@@ -240,7 +222,7 @@ class TupleDoNotUseWillbeRemoved:
     title: Localizable | None = None
     help_text: Localizable | None = None
 
-    transform: Transform[tuple[object, ...]] | Migrate[tuple[object, ...]] | None = None
+    transform: Migrate[tuple[object, ...]] | None = None
 
     custom_validate: Callable[[tuple[object, ...]], object] | None = None
 
@@ -307,7 +289,7 @@ class SingleChoice:
 
     deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
-    transform: Transform[str] | Migrate[str] | None = None
+    transform: Migrate[str] | None = None
 
     custom_validate: Callable[[str], object] | None = None
 
@@ -366,7 +348,7 @@ class CascadingSingleChoice:
 
     prefill_selection: str | None = None
 
-    transform: Transform[tuple[str, object]] | Migrate[tuple[str, object]] | None = None
+    transform: Migrate[tuple[str, object]] | None = None
 
     def __post_init__(self) -> None:
         avail_idents = [elem.name for elem in self.elements]
@@ -419,7 +401,7 @@ class Dictionary:
     no_elements_text: Localizable | None = None
 
     deprecated_elements: tuple[str, ...] = field(default_factory=tuple)
-    transform: Transform[Mapping[str, object]] | Migrate[Mapping[str, object]] | None = None
+    transform: Migrate[Mapping[str, object]] | None = None
 
     custom_validate: Callable[[Mapping[str, object]], object] | None = None
 
@@ -449,7 +431,7 @@ class ServiceState:
 
     prefill_value: Literal[0, 1, 2, 3] = 0
 
-    transform: Transform[Literal[0, 1, 2, 3]] | Migrate[Literal[0, 1, 2, 3]] | None = None
+    transform: Migrate[Literal[0, 1, 2, 3]] | None = None
 
 
 @dataclass(frozen=True)
@@ -471,7 +453,7 @@ class HostState:
 
     prefill_value: Literal[0, 1, 2] = 0
 
-    transform: Transform[Literal[0, 1, 2]] | Migrate[Literal[0, 1, 2]] | None = None
+    transform: Migrate[Literal[0, 1, 2]] | None = None
 
 
 @dataclass(frozen=True)
@@ -504,7 +486,7 @@ class List:
     list_empty_label: Localizable | None = None
 
     prefill_value: Sequence[object] | None = None
-    transform: Transform[Sequence[object]] | Migrate[Sequence[object]] | None = None
+    transform: Migrate[Sequence[object]] | None = None
     custom_validate: Callable[[Sequence[object]], object] | None = None
 
 
@@ -528,9 +510,7 @@ class FixedValue:
     label: Localizable | None = None
     help_text: Localizable | None = None
 
-    transform: Transform[int | float | str | bool | None] | Migrate[
-        int | float | str | bool | None
-    ] | None = None
+    transform: Migrate[int | float | str | bool | None] | None = None
 
     def __post_init__(self) -> None:
         try:
@@ -581,7 +561,7 @@ class TimeSpan:
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
     prefill_value: float | None = None
-    transform: Transform[Sequence[float]] | Migrate[Sequence[float]] | None = None
+    transform: Migrate[Sequence[float]] | None = None
     custom_validate: Callable[[float], object] | None = None
 
 
@@ -691,7 +671,7 @@ class Levels:
     help_text: Localizable | None = None
     prefill_fixed_levels: tuple[float, float] | None = None
 
-    transform: Transform[object] | Migrate[object] | None = None
+    transform: Migrate[object] | None = None
 
 
 @dataclass(frozen=True)
@@ -710,7 +690,7 @@ class BooleanChoice:
     title: Localizable | None = None
     help_text: Localizable | None = None
     prefill_value: bool = False
-    transform: Transform[bool] | Migrate[bool] | None = None
+    transform: Migrate[bool] | None = None
 
 
 @dataclass(frozen=True)
@@ -809,7 +789,7 @@ class MultipleChoice:
     help_text: Localizable | None = None
 
     prefill_selections: Sequence[str] = ()
-    transform: Transform[Sequence[str]] | Migrate[Sequence[str]] | None = None
+    transform: Migrate[Sequence[str]] | None = None
     custom_validate: Callable[[Sequence[str]], object] | None = None
 
     def __post_init__(self) -> None:
@@ -854,7 +834,7 @@ class MultilineText:
     help_text: Localizable | None = None
 
     prefill_value: str | None = None
-    transform: Transform[str] | Migrate[str] | None = None
+    transform: Migrate[str] | None = None
     custom_validate: Callable[[str], object] | None = None
 
 

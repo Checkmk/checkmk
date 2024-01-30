@@ -306,6 +306,43 @@ class Percentage(FormSpec):
     custom_validate: Callable[[float], object] | None = None
 
 
+class MatchingScope(enum.Enum):
+    PREFIX = enum.auto()
+    INFIX = enum.auto()
+    FULL = enum.auto()
+
+
+@dataclass(frozen=True, kw_only=True)
+class RegularExpression(FormSpec):
+    """
+    Specifies an input field for regular expressions
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        predefined_help_text: Adds pre-formulated help text on how the pattern will be used to match
+                              for commonly used matching behavior.
+        label: Text displayed as an extension to the input field
+        input_hint: A short hint to aid the user with data entry (e.g. an example)
+        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
+                       whether to leave the field empty or to prefill it with a canonical value.
+        transform: Transformation of the stored configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    predefined_help_text: MatchingScope
+    label: Localizable | None = None
+    input_hint: str | None = None
+
+    prefill_value: str | None = None
+
+    transform: Migrate[str] | None = None
+
+    custom_validate: Callable[[str], object] | None = None
+
+
 @dataclass(frozen=True, kw_only=True)
 class ServiceState(FormSpec):
     """Specifies the configuration of a service state.

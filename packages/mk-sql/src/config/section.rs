@@ -65,6 +65,14 @@ const ASYNC_SECTIONS: [&str; 4] = [
     names::JOBS,
 ];
 
+const PER_DATABASE_SECTIONS: [&str; 5] = [
+    names::DATABASES,
+    names::TRANSACTION_LOG,
+    names::TABLE_SPACES,
+    names::DATAFILES,
+    names::CLUSTERS,
+];
+
 const FIRST_LINE_SECTIONS: [&str; 2] = [names::MIRRORING, names::JOBS];
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum SectionKind {
@@ -180,6 +188,13 @@ fn get_predefined_sections() -> Vec<Section> {
     PREDEFINED_SECTIONS
         .iter()
         .map(|&s| Section::new(s))
+        .collect()
+}
+
+pub fn get_per_database_sections() -> Vec<String> {
+    PER_DATABASE_SECTIONS
+        .iter()
+        .map(|&s| s.to_string())
         .collect()
 }
 

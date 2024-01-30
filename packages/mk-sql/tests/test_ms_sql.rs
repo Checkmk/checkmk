@@ -449,8 +449,14 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
 async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
+    let databases = instance.generate_databases(client).await;
     let result = instance
-        .generate_databases_section(client, find_known_query(sqls::Id::Databases).unwrap(), '|')
+        .generate_databases_section(
+            client,
+            &databases,
+            find_known_query(sqls::Id::Databases).unwrap(),
+            '|',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -481,8 +487,14 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
 async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
+    let databases = instance.generate_databases(client).await;
     let result = instance
-        .generate_databases_section(client, find_known_query(sqls::Id::BadQuery).unwrap(), '|')
+        .generate_databases_section(
+            client,
+            &databases,
+            find_known_query(sqls::Id::BadQuery).unwrap(),
+            '|',
+        )
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();

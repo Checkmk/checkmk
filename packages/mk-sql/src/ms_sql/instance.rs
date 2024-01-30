@@ -5,6 +5,7 @@
 use super::client::{self, Client};
 use super::custom::get_sql_dir;
 use super::section::{Section, SectionKind};
+use crate::config::section;
 use crate::config::{
     self,
     ms_sql::{AuthType, CustomInstance, Endpoint},
@@ -295,6 +296,10 @@ impl SqlInstance {
     ) -> String {
         let header = self.generate_header();
         let endpoint = &ms_sql.endpoint();
+
+        // if yes - call generate_section with database parameter
+        // else - call generate_section without database parameter
+
         let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
                 self._generate_sections(&mut client, endpoint, sections)
@@ -310,6 +315,23 @@ impl SqlInstance {
         header + &body + &self.generate_footer()
     }
 
+    /// Gather databases based on sections content: only if any of sections is database based
+    async fn gather_databases(&self, client: &mut Client, sections: &[Section]) -> Vec<String> {
+        let database_based_sections = section::get_per_database_sections();
+        let need = database_based_sections.iter().any(|s| {
+            sections
+                .iter()
+                .map(|s| s.name().to_string())
+                .collect::<Vec<String>>()
+                .contains(s)
+        });
+        if need {
+            self.generate_databases(client).await
+        } else {
+            Vec::new()
+        }
+    }
+
     pub async fn _generate_sections(
         &self,
         client: &mut Client,
@@ -317,8 +339,12 @@ impl SqlInstance {
         sections: &[Section],
     ) -> String {
         let mut data: Vec<String> = Vec::new();
+        let databases = self.gather_databases(client, sections).await;
         for section in sections.iter() {
-            data.push(self.generate_section(client, endpoint, section).await);
+            data.push(
+                self.generate_section(client, endpoint, section, &databases)
+                    .await,
+            );
         }
         data.join("")
     }
@@ -377,11 +403,14 @@ impl SqlInstance {
         client: &mut Client,
         endpoint: &Endpoint,
         section: &Section,
+        databases: &[String],
     ) -> String {
         let body = match self.read_data_from_cache(section.name(), section.cache_age() as u64) {
             Some(from_cache) => from_cache,
             None => {
-                let from_sql = self.generate_section_body(client, endpoint, section).await;
+                let from_sql = self
+                    .generate_section_body(client, endpoint, section, databases)
+                    .await;
                 if section.kind() == &SectionKind::Async {
                     self.write_data_in_cache(section.name(), &from_sql);
                 };
@@ -396,6 +425,7 @@ impl SqlInstance {
         client: &mut Client,
         endpoint: &Endpoint,
         section: &Section,
+        databases: &[String],
     ) -> String {
         if let Some(query) = section.select_query(get_sql_dir(), self.version_major()) {
             let sep = section.sep();
@@ -409,14 +439,19 @@ impl SqlInstance {
                 names::BLOCKED_SESSIONS => {
                     self.generate_sessions_section(client, &query, sep).await
                 }
-                names::DATABASES => self.generate_databases_section(client, &query, sep).await,
+                names::DATABASES => {
+                    self.generate_databases_section(client, databases, &query, sep)
+                        .await
+                }
                 names::CONNECTIONS => self.generate_connections_section(client, &query, sep).await,
                 names::TRANSACTION_LOG
                 | names::TABLE_SPACES
                 | names::DATAFILES
                 | names::CLUSTERS => {
-                    self.generate_database_indexed_section(client, endpoint, section, &query, sep)
-                        .await
+                    self.generate_database_indexed_section(
+                        databases, endpoint, section, &query, sep,
+                    )
+                    .await
                 }
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     self.generate_unified_section(endpoint, section, None).await
@@ -541,7 +576,7 @@ impl SqlInstance {
     pub async fn generate_table_spaces_section(
         &self,
         endpoint: &Endpoint,
-        databases: &Vec<String>,
+        databases: &[String],
         query: &str,
         sep: char,
     ) -> String {
@@ -604,28 +639,27 @@ impl SqlInstance {
 
     pub async fn generate_database_indexed_section(
         &self,
-        client: &mut Client,
+        databases: &[String],
         endpoint: &Endpoint,
         section: &Section,
         query: &str,
         sep: char,
     ) -> String {
-        let databases = self.generate_databases(client).await;
         match section.name() {
             names::TRANSACTION_LOG => {
-                self.generate_transaction_logs_section(endpoint, &databases, query, sep)
+                self.generate_transaction_logs_section(endpoint, databases, query, sep)
                     .await
             }
             names::TABLE_SPACES => {
-                self.generate_table_spaces_section(endpoint, &databases, query, sep)
+                self.generate_table_spaces_section(endpoint, databases, query, sep)
                     .await
             }
             names::DATAFILES => {
-                self.generate_datafiles_section(endpoint, &databases, query, sep)
+                self.generate_datafiles_section(endpoint, databases, query, sep)
                     .await
             }
             names::CLUSTERS => {
-                self.generate_clusters_section(endpoint, &databases, query, sep)
+                self.generate_clusters_section(endpoint, databases, query, sep)
                     .await
             }
             _ => format!("{} not implemented\n", section.name()).to_string(),
@@ -635,7 +669,7 @@ impl SqlInstance {
     pub async fn generate_transaction_logs_section(
         &self,
         endpoint: &Endpoint,
-        databases: &Vec<String>,
+        databases: &[String],
         query: &str,
         sep: char,
     ) -> String {
@@ -669,7 +703,7 @@ impl SqlInstance {
     pub async fn generate_datafiles_section(
         &self,
         endpoint: &Endpoint,
-        databases: &Vec<String>,
+        databases: &[String],
         query: &str,
         sep: char,
     ) -> String {
@@ -693,10 +727,10 @@ impl SqlInstance {
     pub async fn generate_databases_section(
         &self,
         client: &mut Client,
+        databases: &[String],
         query: &str,
         sep: char,
     ) -> String {
-        let databases = self.generate_databases(client).await;
         run_custom_query(client, query)
             .await
             .map(|rows| to_databases_entries(&self.name, &rows, sep))
@@ -738,7 +772,7 @@ impl SqlInstance {
     pub async fn generate_clusters_section(
         &self,
         endpoint: &Endpoint,
-        databases: &Vec<String>,
+        databases: &[String],
         query: &str,
         sep: char,
     ) -> String {

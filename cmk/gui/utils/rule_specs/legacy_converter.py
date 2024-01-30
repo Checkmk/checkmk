@@ -433,7 +433,7 @@ def _extract_dictionary_key_props(
 
 
 def _convert_to_inner_legacy_valuespec(
-    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     match to_convert:
         case ruleset_api_v1.form_specs.Integer():
@@ -514,7 +514,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.preconfigured.MonitoredHost():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.MonitoredService():
+        case ruleset_api_v1.preconfigured.MonitoredService():
             return _convert_to_legacy_monitored_service_description(to_convert, localizer)
 
         case ruleset_api_v1.preconfigured.Password():
@@ -530,11 +530,11 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
 
         case other:
-            assert_never(other)
+            raise NotImplementedError(other)
 
 
 def _convert_to_legacy_valuespec(
-    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     if hasattr(to_convert, "transform"):
         if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Migrate):

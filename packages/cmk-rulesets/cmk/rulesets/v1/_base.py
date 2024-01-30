@@ -3,16 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import form_specs, migrations, preconfigured, rule_specs, validators
-from ._base import FormSpec
+from dataclasses import dataclass
+
 from ._localize import Localizable
 
-__all__ = [
-    "FormSpec",
-    "form_specs",
-    "Localizable",
-    "migrations",
-    "preconfigured",
-    "rule_specs",
-    "validators",
-]
+
+@dataclass(frozen=True, kw_only=True)
+class FormSpec:
+    """
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None

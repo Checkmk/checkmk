@@ -8,7 +8,7 @@ from collections.abc import Sequence, Sized
 from typing import Final
 from urllib.parse import urlparse
 
-from cmk.rulesets.v1._localize import Localizable
+from ._localize import Localizable
 
 
 class ValidationError(ValueError):

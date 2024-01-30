@@ -197,7 +197,7 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(
+def _get_site(  # pylint: disable=too-many-branches
     version: CMKVersion, base_site: Optional[Site] = None, interactive: bool = True
 ) -> Site:
     """Install or update the test site with the given version.
@@ -244,7 +244,16 @@ def _get_site(
         # bypass SiteFactory for interactive installations
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
         # install the release
-        site.install_cmk()
+        try:
+            site.install_cmk()
+        except Exception as e:
+            if f"Version {version.version} could not be installed" in str(e):
+                pytest.skip(
+                    f"Base-version {version.version} not available in "
+                    f'{os.environ.get("DISTRO")}'
+                )
+            else:
+                raise
 
         # Run the CLI installer interactively and respond to expected dialogs.
 
@@ -341,7 +350,16 @@ def _get_site(
             site.start()
         else:
             # use SiteFactory for non-interactive site creation
-            site = sf.get_site("central")
+            try:
+                site = sf.get_site("central")
+            except Exception as e:
+                if f"Version {version.version} could not be installed" in str(e):
+                    pytest.skip(
+                        f"Base-version {version.version} not available in "
+                        f'{os.environ.get("DISTRO")}'
+                    )
+                else:
+                    raise
 
     verify_admin_password(site)
 

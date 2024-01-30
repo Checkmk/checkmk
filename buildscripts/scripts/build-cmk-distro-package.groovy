@@ -53,6 +53,12 @@ def main() {
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
     /* groovylint-enable LineLength */
 
+    def causes = currentBuild.getBuildCauses();
+    def triggerd_by = "";
+    for(cause in causes) {
+        triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
+    }
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -65,6 +71,7 @@ def main() {
         |docker_args:.............. │${docker_args}│
         |checkout_dir:............. │${checkout_dir}│
         |container_name:........... │${checkout_dir}│
+        |triggerd_by:.............. |${triggerd_by}|
         |===================================================
         """.stripMargin());
 

@@ -31,7 +31,7 @@ def _valuespec_response() -> Dictionary:
         title=Localizable("Status code"),
         elements={
             "expected": DictElement(
-                List(
+                parameter_form=List(
                     title=Localizable("Expected"),
                     parameter_form=Integer(prefill_value=200),
                 ),
@@ -53,7 +53,7 @@ def _valuespec_document() -> Dictionary:
         title=Localizable("Document"),
         elements={
             "document_body": DictElement(
-                SingleChoice(
+                parameter_form=SingleChoice(
                     title=Localizable("Document body"),
                     prefill_selection="fetch",
                     elements=[
@@ -72,7 +72,7 @@ def _valuespec_document() -> Dictionary:
             ),
             "max_age": DictElement(
                 # TODO How to use AGE correctly?!
-                TimeSpan(
+                parameter_form=TimeSpan(
                     title=Localizable("Age"),
                     label=Localizable("Warn, if the age is older than"),
                     help_text=Localizable("Warn, if the age of the page is older than this"),
@@ -80,18 +80,18 @@ def _valuespec_document() -> Dictionary:
                 ),
             ),
             "page_size": DictElement(
-                Dictionary(
+                parameter_form=Dictionary(
                     title=Localizable("Size"),
                     elements={
                         "min": DictElement(
-                            Integer(
+                            parameter_form=Integer(
                                 title=Localizable("Minimum"),
                                 unit=Localizable("Bytes"),
                             ),
                             required=False,
                         ),
                         "max": DictElement(
-                            Integer(
+                            parameter_form=Integer(
                                 title=Localizable("Maximum"),
                                 unit=Localizable("Bytes"),
                             ),
@@ -112,10 +112,10 @@ def _valuespec_expected_regex_header() -> Dictionary:
         elements={
             # TODO Regex currently not implemented in ruleset API
             "regex": DictElement(
-                Dictionary(
+                parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement(
-                            Text(
+                            parameter_form=Text(
                                 label=Localizable("Header name pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
@@ -123,7 +123,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement(
-                            Text(
+                            parameter_form=Text(
                                 label=Localizable("Header value pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
@@ -135,7 +135,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 required=True,
             ),
             "case_insensitive": DictElement(
-                BooleanChoice(
+                parameter_form=BooleanChoice(
                     label=Localizable(
                         "Case insensitive matching (only applies to header value pattern)"
                     )
@@ -143,7 +143,9 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 required=True,
             ),
             "invert": DictElement(
-                BooleanChoice(label=Localizable("return CRITICAL if found, OK if not")),
+                parameter_form=BooleanChoice(
+                    label=Localizable("return CRITICAL if found, OK if not")
+                ),
                 required=True,
             ),
         },
@@ -158,7 +160,7 @@ def _valuespec_expected_regex_body() -> Dictionary:
         elements={
             # TODO Regex currently not implemented in ruleset API
             "regex": DictElement(
-                Text(
+                parameter_form=Text(
                     label=Localizable("Pattern"),
                     # mode=RegExp.infix,
                     # maxlen=1023,
@@ -166,11 +168,11 @@ def _valuespec_expected_regex_body() -> Dictionary:
                 required=True,
             ),
             "case_insensitive": DictElement(
-                BooleanChoice(label=Localizable("Case insensitive matching")),
+                parameter_form=BooleanChoice(label=Localizable("Case insensitive matching")),
                 required=True,
             ),
             "multiline": DictElement(
-                BooleanChoice(
+                parameter_form=BooleanChoice(
                     label=Localizable("Line-based matching"),
                     help_text=Localizable(
                         'When checked, the anchors "^" and "$" match on every line, while '
@@ -180,7 +182,9 @@ def _valuespec_expected_regex_body() -> Dictionary:
                 required=True,
             ),
             "invert": DictElement(
-                BooleanChoice(label=Localizable("return CRITICAL if found, OK if not")),
+                parameter_form=BooleanChoice(
+                    label=Localizable("return CRITICAL if found, OK if not")
+                ),
                 required=True,
             ),
         },
@@ -197,14 +201,14 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
     return Dictionary(
         elements={
             "body_text": DictElement(
-                Text(
+                parameter_form=Text(
                     title=Localizable("Data to send"),
                     help_text=Localizable("Please make sure, that the data is URL-encoded."),
                 ),
                 required=True,
             ),
             "content_type": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Content-Type"),
                     prefill_selection="common",
                     elements=[
@@ -265,8 +269,8 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
 
 
 header_dict_elements = {
-    "header_name": DictElement(Text(label=Localizable("Name")), required=True),
-    "header_value": DictElement(Text(label=Localizable("Value")), required=True),
+    "header_name": DictElement(parameter_form=Text(label=Localizable("Name")), required=True),
+    "header_value": DictElement(parameter_form=Text(label=Localizable("Value")), required=True),
 }
 
 
@@ -283,7 +287,7 @@ def _valuespec_connection() -> Dictionary:
             #    ),
             # ),
             "http_versions": DictElement(
-                SingleChoice(
+                parameter_form=SingleChoice(
                     title=Localizable("HTTP version"),
                     elements=[
                         SingleChoiceElement(
@@ -294,19 +298,16 @@ def _valuespec_connection() -> Dictionary:
                             name="http_2",
                             title=Localizable("Use HTTP/2"),
                         ),
-                        SingleChoiceElement(
-                            name="http_1_1",
-                            title=Localizable("Use HTTP/1.1"),
-                        ),
+                        SingleChoiceElement(name="http_1_1", title=Localizable("Use HTTP/1.1")),
                     ],
                 ),
             ),
             "tls_versions": DictElement(
-                Dictionary(
+                parameter_form=Dictionary(
                     title=Localizable("TLS version"),
                     elements={
                         "min_version": DictElement(
-                            SingleChoice(
+                            parameter_form=SingleChoice(
                                 elements=[
                                     SingleChoiceElement(
                                         name="auto", title=Localizable("Negotiate")
@@ -328,13 +329,16 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                         "allow_higher": DictElement(
-                            BooleanChoice(label=Localizable("Allow higher versions")), required=True
+                            parameter_form=BooleanChoice(
+                                label=Localizable("Allow higher versions")
+                            ),
+                            required=True,
                         ),
                     },
                 ),
             ),
             "method": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("HTTP method"),
                     prefill_selection="get",
                     elements=[
@@ -390,7 +394,7 @@ def _valuespec_connection() -> Dictionary:
             # Not yet implemented
             # "proxy": HTTPProxyReference())
             "redirects": DictElement(
-                SingleChoice(
+                parameter_form=SingleChoice(
                     title=Localizable("Redirects"),
                     elements=[
                         SingleChoiceElement(
@@ -422,27 +426,27 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "timeout": DictElement(
-                Integer(
+                parameter_form=Integer(
                     title=Localizable("Connection timeout"),
                     unit=Localizable("sec"),
                     prefill_value=10,
                 ),
             ),
             "user_agent": DictElement(
-                Text(
+                parameter_form=Text(
                     title=Localizable("User Agent"),
                     prefill_value="checkmk/check_http",
                     help_text=Localizable('String to be sent in http header as "User Agent"'),
                 ),
             ),
             "add_headers": DictElement(
-                List(
+                parameter_form=List(
                     title=Localizable("Additional header lines"),
                     parameter_form=Dictionary(elements=header_dict_elements),
                 ),
             ),
             "auth": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Authentication"),
                     prefill_selection="user_auth",
                     elements=[
@@ -454,14 +458,14 @@ def _valuespec_connection() -> Dictionary:
                                 help_text=Localizable("Credentials for HTTP Basic Authentication"),
                                 elements={
                                     "user": DictElement(
-                                        Text(
+                                        parameter_form=Text(
                                             title=Localizable("Username"),
                                             custom_validate=DisallowEmpty(),
                                         ),
                                         required=True,
                                     ),
                                     "password": DictElement(
-                                        Password(
+                                        parameter_form=Password(
                                             title=Localizable("Password"),
                                         ),
                                         required=True,
@@ -476,10 +480,12 @@ def _valuespec_connection() -> Dictionary:
                                 title=Localizable("Token based authentication"),
                                 elements={
                                     "header": DictElement(
-                                        Text(title=Localizable("API key header")), required=True
+                                        parameter_form=Text(title=Localizable("API key header")),
+                                        required=True,
                                     ),
                                     "token": DictElement(
-                                        Password(title=Localizable("API key")), required=True
+                                        parameter_form=Password(title=Localizable("API key")),
+                                        required=True,
                                     ),
                                 },
                             ),
@@ -496,7 +502,7 @@ def _valuespec_content() -> Dictionary:
         title=Localizable("String validation"),
         elements={
             "header": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Header"),
                     prefill_selection="string",
                     elements=[
@@ -517,14 +523,14 @@ def _valuespec_content() -> Dictionary:
                 ),
             ),
             "body": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Body"),
                     prefill_selection="string",
                     elements=[
                         CascadingSingleChoiceElement(
                             name="string",
                             title=Localizable("Fixed string"),
-                            parameter_form=Text(Localizable("Fixed string")),
+                            parameter_form=Text(title=Localizable("Fixed string")),
                         ),
                         CascadingSingleChoiceElement(
                             name="regex",
@@ -546,9 +552,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
         if is_standard
         else Localizable("Individual settings"),
         elements={
-            "connection": DictElement(_valuespec_connection()),
+            "connection": DictElement(parameter_form=_valuespec_connection()),
             "response_time": DictElement(
-                Levels(
+                parameter_form=Levels(
                     title=Localizable("Response time"),
                     form_spec_template=Float(unit=Localizable("ms")),
                     level_direction=LevelDirection.UPPER,
@@ -557,9 +563,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     prefill_fixed_levels=(0.1, 0.2),
                 ),
             ),
-            "server_response": DictElement(_valuespec_response()),
+            "server_response": DictElement(parameter_form=_valuespec_response()),
             "cert": DictElement(
-                CascadingSingleChoice(
+                parameter_form=CascadingSingleChoice(
                     title=Localizable("Certificate validity"),
                     prefill_selection="validate",
                     elements=[
@@ -587,8 +593,8 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     ],
                 )
             ),
-            "document": DictElement(_valuespec_document()),
-            "content": DictElement(_valuespec_content()),
+            "document": DictElement(parameter_form=_valuespec_document()),
+            "content": DictElement(parameter_form=_valuespec_content()),
         },
     )
 
@@ -600,11 +606,11 @@ def _valuespec_endpoints() -> List:
         parameter_form=Dictionary(
             elements={
                 "service_name": DictElement(
-                    Dictionary(
+                    parameter_form=Dictionary(
                         title=Localizable("Service description"),
                         elements={
                             "prefix": DictElement(
-                                SingleChoice(
+                                parameter_form=SingleChoice(
                                     title=Localizable("Prefix"),
                                     elements=[
                                         SingleChoiceElement(
@@ -620,7 +626,7 @@ def _valuespec_endpoints() -> List:
                                 required=True,
                             ),
                             "name": DictElement(
-                                Text(
+                                parameter_form=Text(
                                     title=Localizable("Name"),
                                     custom_validate=DisallowEmpty(),
                                     input_hint="Name to be used for the Checkmk service",
@@ -632,13 +638,15 @@ def _valuespec_endpoints() -> List:
                     required=True,
                 ),
                 "url": DictElement(
-                    Text(
+                    parameter_form=Text(
                         title=Localizable("URL"),
                         input_hint="https://subdomain.domain.tld:port/path/to/filename",
                     ),
                     required=True,
                 ),
-                "individual_settings": DictElement(_valuespec_settings(is_standard=False)),
+                "individual_settings": DictElement(
+                    parameter_form=_valuespec_settings(is_standard=False)
+                ),
             },
         ),
     )
@@ -647,8 +655,8 @@ def _valuespec_endpoints() -> List:
 def _form_active_checks_httpv2() -> Dictionary:
     return Dictionary(
         elements={
-            "endpoints": DictElement(_valuespec_endpoints(), required=True),
-            "standard_settings": DictElement(_valuespec_settings()),
+            "endpoints": DictElement(parameter_form=_valuespec_endpoints(), required=True),
+            "standard_settings": DictElement(parameter_form=_valuespec_settings()),
         },
     )
 

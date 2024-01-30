@@ -32,6 +32,7 @@ def _parameter_valuespec_bgp_peer():
                     title=_("Peer States"),
                     elements=[
                         ("idle", MonitoringState(title="idle")),
+                        ("connect", MonitoringState(title="connect")),
                         ("active", MonitoringState(title="active")),
                         ("opensent", MonitoringState(title="opensent")),
                         ("openconfirm", MonitoringState(title="openconfirm")),

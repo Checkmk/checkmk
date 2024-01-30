@@ -31,9 +31,7 @@ from cmk.rulesets.v1.form_specs import (
     Percentage,
     ServiceState,
     SingleChoice,
-    SingleChoiceElement,
     Text,
-    Transform,
     TupleDoNotUseWillbeRemoved,
 )
 
@@ -299,9 +297,7 @@ class VueFormSpecVisitor:
                     "value": str(value),
                 },
             ),
-            form_spec.transform.form_to_model(value)
-            if isinstance(form_spec.transform, Transform)
-            else value,
+            value,
         )
 
     def _visit_list(self, form_spec: List, value: list) -> VueVisitorMethodResult:
@@ -408,30 +404,12 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
 
     # All other types require a conversion to the basic types
     if isinstance(custom_form_spec, ServiceState):
-        return _convert_service_state(custom_form_spec)
+        # TODO handle ServiceState
+        Text(title=Localizable("UNKNOWN custom_form_spec ServiceState"))
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
     return Text(title=Localizable("UNKNOWN custom_form_spec {custom_form_spec}"))
-
-
-def _convert_service_state(form_spec: ServiceState) -> SingleChoice:
-    states = [
-        (0, Localizable("OK")),
-        (1, Localizable("WARN")),
-        (2, Localizable("CRIT")),
-        (3, Localizable("UNKNOWN")),
-    ]
-    return SingleChoice(
-        title=form_spec.title,
-        help_text=form_spec.help_text,
-        elements=[SingleChoiceElement(str(x), y) for x, y in states],
-        transform=Transform(
-            model_to_form=lambda x: str(x),  # pylint: disable=unnecessary-lambda
-            form_to_model=lambda x: int(x),  # pylint: disable=unnecessary-lambda
-        ),
-        prefill_selection=str(form_spec.prefill_value),
-    )
 
 
 def compute_default_value(form_spec: FormSpec) -> Any:

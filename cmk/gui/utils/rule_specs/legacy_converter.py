@@ -565,12 +565,6 @@ def _convert_to_legacy_valuespec(
                 valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
                 migrate=to_convert.transform.model_to_form,
             )
-        if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Transform):
-            return legacy_valuespecs.Transform(
-                valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-                to_valuespec=to_convert.transform.model_to_form,
-                from_valuespec=to_convert.transform.form_to_model,
-            )
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 

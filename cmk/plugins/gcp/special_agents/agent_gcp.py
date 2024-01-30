@@ -17,7 +17,7 @@ from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
-from google.oauth2 import service_account  # type: ignore[attr-defined]
+from google.oauth2 import service_account  # type: ignore[import-untyped]
 from googleapiclient.discovery import build, Resource  # type: ignore[import]
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
 

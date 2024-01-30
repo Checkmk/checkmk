@@ -1,0 +1,11 @@
+Title: BGP Peer State Mapping: add connect state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706620148
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+BGP Peer States can be in "connect". This state was missing in checkmk and thus
+the service was in "UNKNOWN" state.

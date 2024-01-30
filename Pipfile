@@ -125,6 +125,7 @@ requests = "~=2.31"
 pykerberos = "==1.2.4"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
 markupsafe = "==2.1.2"  # needed by jinja2
+isodate = "==0.6.1"  # used by netapp ontap agent
 itsdangerous = "==2.1.2"  # needed by flask
 jinja2 = "==3.1.2"  # needed by flask
 more-itertools = "==9.1.0"  # needed by connexion through zipp, pytest

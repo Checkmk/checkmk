@@ -92,7 +92,7 @@ def check_netapp_ontap_cpu_utilization(
 
 check_plugin_netapp_ontap_cpu = CheckPlugin(
     name="netapp_ontap_cpu",
-    service_name="CPU Node %s",
+    service_name="CPU utilization Node %s",
     discovery_function=inventory_netapp_ontap_cpu,
     sections=["netapp_ontap_node"],
     check_function=check_netapp_ontap_cpu_utilization,

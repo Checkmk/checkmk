@@ -16,9 +16,6 @@ from cmk.rulesets.v1.rule_specs import (
     CheckParameters,
     DiscoveryParameters,
     EnforcedService,
-    ExtraHostConfEventConsole,
-    ExtraHostConfHostMonitoring,
-    ExtraServiceConf,
     Host,
     InventoryParameters,
     NotificationParameters,
@@ -32,9 +29,6 @@ RuleSpec = (
     | AgentConfig
     | AgentAccess
     | EnforcedService
-    | ExtraServiceConf
-    | ExtraHostConfHostMonitoring
-    | ExtraHostConfEventConsole
     | CheckParameters
     | Host
     | InventoryParameters
@@ -62,9 +56,6 @@ def load_api_v1_rule_specs(
             AgentConfig: "rule_spec_",
             AgentAccess: "rule_spec_",
             EnforcedService: "rule_spec_",
-            ExtraServiceConf: "rule_spec_",
-            ExtraHostConfHostMonitoring: "rule_spec_",
-            ExtraHostConfEventConsole: "rule_spec_",
             CheckParameters: "rule_spec_",
             Host: "rule_spec_",
             InventoryParameters: "rule_spec_",

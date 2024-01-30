@@ -293,23 +293,34 @@ impl SqlInstance {
         ms_sql: &config::ms_sql::Config,
         sections: &[Section],
     ) -> String {
-        let mut result = self.generate_header();
+        let header = self.generate_header();
         let endpoint = &ms_sql.endpoint();
-        match self.create_client(endpoint, None).await {
+        let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
-                for section in sections.iter() {
-                    result += &self.generate_section(&mut client, endpoint, section).await;
-                }
+                self._generate_sections(&mut client, endpoint, sections)
+                    .await
             }
             Err(err) => {
-                let instance_section = Section::make_instance_section(); // this is important section always present
-                result += &instance_section.to_plain_header();
-                result += &self.generate_state_entry(false, instance_section.sep());
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
+                let instance_section = Section::make_instance_section(); // this is important section always present
+                instance_section.to_plain_header()
+                    + &self.generate_state_entry(false, instance_section.sep())
             }
         };
-        result += &self.generate_footer();
-        result
+        header + &body + &self.generate_footer()
+    }
+
+    pub async fn _generate_sections(
+        &self,
+        client: &mut Client,
+        endpoint: &Endpoint,
+        sections: &[Section],
+    ) -> String {
+        let mut data: Vec<String> = Vec::new();
+        for section in sections.iter() {
+            data.push(self.generate_section(client, endpoint, section).await);
+        }
+        data.join("")
     }
 
     /// Create a client for an Instance based on Config

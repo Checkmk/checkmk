@@ -149,6 +149,7 @@ DEFAULT_ADMIN_STATE_MAPPING: AdminStateMapping = {
 
 DEFAULT_PEER_STATE_MAPPING: PeerStateMapping = {
     "idle": 0,
+    "connect": 0,
     "active": 0,
     "opensent": 0,
     "openconfirm": 0,

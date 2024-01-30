@@ -1,0 +1,17 @@
+Title: Fix for 'ERROR: Failed to read config  of site' of existing site when creating a new one
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1706696943
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+When creating a new site while having other sites the new site tries to determine the used ports of the other sites with checking their 'etc/omd/site.conf'.
+If this file is not accessible an error 'ERROR: Failed to read config of site ...' is shown.
+This happens e.g. if a root user with a restictive umask (e.g. 0077) creates a site.
+The site folder has then only owner and group permissions set while "other" does not have any permissions. After this site folder and the site user is created omd switches to that user and creates the file and folder structure with defined permissions. So that 'etc/omd/site.conf' is other-readable.
+Since the site folder is missing the executable permission for other this folder is not traversable therefore the files and folders beneath are inaccessible.
+With this change we make sure that the site folder has at least the executable permission for other.
+For already existing sites this change has no affect. If the error 'ERROR: Failed to read config of site ...' is still shown make sure that existing site folders have that other executable permission,
+e.g. by 'chmod o+x /omd/sites/\<SITENAME\>'.

@@ -2307,6 +2307,9 @@ def create_site_dir(site: SiteContext) -> None:
         if e.errno != errno.EEXIST:
             raise
     os.chown(site.dir, user_id(site.name), group_id(site.name))
+    # If the site-dir is not world executable files in the site are all not readable/writeable
+    # Make it at least other executable
+    os.chmod(site.dir, os.stat(site.dir).st_mode | 0o111)
 
 
 def main_disable(

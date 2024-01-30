@@ -142,7 +142,6 @@ def register(
     config_variable_registry.register(ConfigVariableHardQueryLimit)
     config_variable_registry.register(ConfigVariableQuicksearchDropdownLimit)
     config_variable_registry.register(ConfigVariableQuicksearchSearchOrder)
-    config_variable_registry.register(ConfigVariableExperimentalFeatures)
     config_variable_registry.register(ConfigVariableTableRowLimit)
     config_variable_registry.register(ConfigVariableStartURL)
     config_variable_registry.register(ConfigVariablePageHeading)
@@ -814,43 +813,6 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
             ),
             title=_("Quicksearch search order"),
             add_label=_("Add search filter"),
-        )
-
-
-class ConfigVariableExperimentalFeatures(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupUserInterface
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "experimental_features"
-
-    def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Experimental features"),
-            elements=[
-                (
-                    "render_mode",
-                    DropdownChoice(
-                        title=_("Rendering mode for valuespecs and tables"),
-                        choices=[
-                            ("backend", "Backend"),
-                            ("frontend", "Frontend"),
-                            ("backend_and_frontend", "Backend and Frontend"),
-                        ],
-                    ),
-                ),
-                (
-                    "inject_js_profiling_code",
-                    Checkbox(
-                        title=_("Inject JavaScript profiling code"),
-                        default_value=False,
-                    ),
-                ),
-            ],
-            optional_keys=False,
         )
 
 

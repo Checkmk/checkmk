@@ -101,7 +101,6 @@ class ActiveCheck:
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         use_new_descriptions_for: Container[CheckPluginNameStr],
-        macros: Mapping[str, str] | None = None,
         stored_passwords: Mapping[str, str] | None = None,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
@@ -114,7 +113,6 @@ class ActiveCheck:
         self.host_attrs = host_attrs
         self._http_proxies = http_proxies
         self._service_name_finalizer = service_name_finalizer
-        self.macros = macros or {}
         self.stored_passwords = stored_passwords or {}
         self.escape_func = escape_func
         self._use_new_descriptions_for = use_new_descriptions_for
@@ -191,7 +189,7 @@ class ActiveCheck:
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         for params in plugin_params:
             for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
-                args_without_macros = replace_macros(args, self.macros)
+                args_without_macros = replace_macros(args, self.host_config.macros)
                 command_line = plugin_info.command_line.replace("$ARG1$", args_without_macros)
                 yield desc, args_without_macros, command_line, params
 

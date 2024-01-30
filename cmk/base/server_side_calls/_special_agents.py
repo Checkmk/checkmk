@@ -41,7 +41,6 @@ class SpecialAgent:
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         stored_passwords: Mapping[str, str],
-        macros: Mapping[str, str] | None,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -52,9 +51,6 @@ class SpecialAgent:
         self.host_attrs = host_attrs
         self._http_proxies = http_proxies
         self.stored_passwords = stored_passwords
-
-        # add legacy macros
-        self.macros = {**(macros or {}), "<IP>": self.host_address or "", "<HOST>": self.host_name}
 
     def _make_source_path(self, agent_name: str) -> Path | str:
         file_name = f"agent_{agent_name}"
@@ -75,7 +71,7 @@ class SpecialAgent:
     ) -> str:
         path = self._make_source_path(agent_name)
         args = commandline_arguments(self.host_name, None, agent_configuration)
-        return replace_macros(f"{path} {args}", self.macros)
+        return replace_macros(f"{path} {args}", self.host_config.macros)
 
     def _iter_legacy_commands(
         self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]

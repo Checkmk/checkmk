@@ -1320,21 +1320,6 @@ def resolve_address_family(
     return socket.AF_INET
 
 
-def get_custom_host_attributes(config_cache: ConfigCache, host_name: HostName) -> Mapping[str, str]:
-    attrs: dict[str, str] = {}
-
-    for key, value in config_cache.explicit_host_attributes(host_name).items():
-        attrs[key] = str(value)
-
-    for key, ruleset in extra_host_conf.items():
-        if key not in attrs:
-            values = config_cache.ruleset_matcher.get_host_values(host_name, ruleset)
-            if values:
-                attrs[key] = str(values[0])
-
-    return attrs
-
-
 # .
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1876,7 +1861,7 @@ def _get_ssc_resolved_ip_family(
 
 
 def get_ssc_host_config(
-    host_name: HostName, config_cache: ConfigCache
+    host_name: HostName, config_cache: ConfigCache, legacy_macros: Mapping[str, str]
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     ip_family = ConfigCache.address_family(host_name)
@@ -1913,6 +1898,42 @@ def get_ssc_host_config(
         else resolved_ipv6_address
     )
 
+    alias = config_cache.alias(host_name)
+    ip_family_macro = (
+        "4" if resolved_ip_family == server_side_calls_api.ResolvedIPAddressFamily.IPV4 else "6"
+    )
+    tags = {str(k): str(v) for k, v in config_cache.tags(host_name).items()}
+    labels = config_cache.labels(host_name)
+    custom_attributes = {
+        k[1:]: v
+        for k, v in config_cache.explicit_host_attributes(host_name).items()
+        if k.startswith("_")
+    }
+
+    indexed_ipv4_macros = {
+        f"$HOST_IPV4_ADDRESS_{i}$": a for i, a in enumerate(additional_addresses_ipv4, start=1)
+    }
+    indexed_ipv6_macros = {
+        f"$HOST_IPV6_ADDRESS_{i}$": a for i, a in enumerate(additional_addresses_ipv6, start=1)
+    }
+
+    macros = {
+        "$HOST_NAME$": host_name,
+        "$HOST_ALIAS$": alias,
+        "$HOST_ADDRESS$": resolved_address,
+        "$HOST_IP_FAMILY$": ip_family_macro,
+        "$HOST_IPV4_ADDRESS$": resolved_ipv4_address,
+        "$HOST_IPV6_ADDRESS$": resolved_ipv6_address,
+        "$HOST_IPV4_ADDRESSES$": " ".join(additional_addresses_ipv4),
+        "$HOST_IPV6_ADDRESSES$": " ".join(additional_addresses_ipv6),
+        **indexed_ipv4_macros,
+        **indexed_ipv6_macros,
+        **{f"$HOST_TAG_{k}$": v for k, v in tags.items()},
+        **{f"$HOST_LABEL_{k}$": v for k, v in labels.items()},
+        **{f"$HOST_{k}$": v for k, v in custom_attributes.items()},
+        **legacy_macros,
+    }
+
     customer = (
         current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
         if cmk_version.edition() is cmk_version.Edition.CME
@@ -1921,15 +1942,16 @@ def get_ssc_host_config(
 
     return server_side_calls_api.HostConfig(
         name=host_name,
-        alias=config_cache.alias(host_name),
+        alias=alias,
         resolved_address=resolved_address,
         resolved_ipv4_address=resolved_ipv4_address,
         resolved_ipv6_address=resolved_ipv6_address,
         resolved_ip_family=resolved_ip_family,
         address_config=address_config,
-        custom_attributes=get_custom_host_attributes(config_cache, host_name),
-        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
-        labels=config_cache.labels(host_name),
+        macros=macros,
+        custom_attributes=custom_attributes,
+        tags=tags,
+        labels=labels,
         customer=customer,
     )
 

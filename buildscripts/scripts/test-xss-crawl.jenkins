@@ -9,7 +9,7 @@ withFolderProperties{
 
 properties([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([cron("0 3 * * *")]),
+    pipelineTriggers([cron("0 17 * * 7")]), // Sunday 17:00, has been daily 03:00
 ])
 
 timeout(time: 12, unit: 'HOURS') {

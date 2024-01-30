@@ -550,11 +550,14 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
         return parent_border_nodes
 
     def _fetch_data(self, node_ids: set[str]) -> TopologyNodes:
+        response: TopologyNodes = {}
         hostname_filters = []
-        if node_ids:
-            for hostname in node_ids:
-                hostname_filters.append("Filter: host_name = %s" % livestatus.lqencode(hostname))
-            hostname_filters.append("Or: %d" % len(node_ids))
+        if not node_ids:
+            return response
+
+        for hostname in node_ids:
+            hostname_filters.append("Filter: host_name = %s" % livestatus.lqencode(hostname))
+        hostname_filters.append("Or: %d" % len(node_ids))
 
         with sites.prepend_site():
             columns = [
@@ -572,7 +575,6 @@ class ParentChildDataGenerator(ABCTopologyNodeDataGenerator):
 
         headers = ["site"] + columns
         core_info = [dict(zip(headers, x)) for x in query_result]
-        response: TopologyNodes = {}
         for entry in core_info:
             if entry["name"] in self._topology_nodes:
                 # Node already known

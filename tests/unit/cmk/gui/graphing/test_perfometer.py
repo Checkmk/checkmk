@@ -274,6 +274,7 @@ class TestMetricometerRendererLegacyLinear:
         self,
         unit_info: UnitInfo,
         expected_result: MetricRendererStack,
+        request_context: None,
     ) -> None:
         assert self._renderer(unit_info).get_stack() == expected_result
 
@@ -689,6 +690,7 @@ def test_perfometer_renderer_stack(
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     value_projections: Sequence[tuple[float, str]],
+    request_context: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
         perfometers.Perfometer(
@@ -700,7 +702,7 @@ def test_perfometer_renderer_stack(
     ).get_stack() == [list(value_projections) + [(14.73, "#bdbdbd")]]
 
 
-def test_perfometer_renderer_stack_same_values() -> None:
+def test_perfometer_renderer_stack_same_values(request_context: None) -> None:
     assert MetricometerRendererPerfometer(
         perfometers.Perfometer(
             name="name",

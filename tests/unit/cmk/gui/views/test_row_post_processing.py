@@ -30,7 +30,9 @@ def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
     assert not rows
 
 
-def test_post_process_rows_adds_inventory_data(mock_livestatus: MockLiveStatusConnection) -> None:
+def test_post_process_rows_adds_inventory_data(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
+) -> None:
     inv_view = inventory_view()
     host_row = {"site": "ding", "host_name": "dong"}
     rows: Rows = [host_row]

@@ -48,9 +48,9 @@ def test_urlencode(inp: str | None, out: str) -> None:
     assert urlencode(inp) == out
 
 
-def test_empty_doc_reference() -> None:
+def test_empty_doc_reference(request_context: None) -> None:
     assert doc_reference_url() == user.get_docs_base_url()
 
 
-def test_doc_references() -> None:
+def test_doc_references(request_context: None) -> None:
     assert [doc_reference_url(r) for r in DocReference]

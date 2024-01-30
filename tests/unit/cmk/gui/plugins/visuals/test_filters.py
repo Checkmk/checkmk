@@ -114,7 +114,7 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", filter_registry.keys())
 def test_filters_filter_with_empty_request(
-    filter_ident: str, live: MockLiveStatusConnection
+    filter_ident: str, live: MockLiveStatusConnection, request_context: None
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -608,7 +608,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
+def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:
     with set_config(
         wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
         tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
@@ -1114,7 +1114,9 @@ filter_table_tests = [
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_filters_filter_table(
+    test: FilterTableTest, monkeypatch: pytest.MonkeyPatch, request_context: None
+) -> None:
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -1286,7 +1288,9 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
+def test_filters_display_with_empty_request(
+    live: MockLiveStatusConnection, request_context: None
+) -> None:
     with live:
         for filt in filter_registry.values():
             with output_funnel.plugged():

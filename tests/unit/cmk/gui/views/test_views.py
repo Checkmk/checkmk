@@ -38,7 +38,7 @@ from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 
 
-def test_registered_painter_options() -> None:
+def test_registered_painter_options(request_context: None) -> None:
     expected = [
         "aggr_expand",
         "aggr_onlyproblems",

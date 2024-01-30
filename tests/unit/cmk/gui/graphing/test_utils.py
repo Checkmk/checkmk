@@ -1080,6 +1080,7 @@ def test_translate_metrics(
     default_temperature_unit: TemperatureUnit,
     expected_value: float,
     expected_scalars: Mapping[str, float],
+    request_context: None,
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
     translated_metric = utils.translate_metrics(

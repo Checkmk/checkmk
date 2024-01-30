@@ -38,7 +38,7 @@ class TestValueSpecFloat:
         assert vs.Float(default_value=lambda: 77).canonical_value() == 0
         assert vs.Float(default_value=lambda: 77, minvalue=10).canonical_value() == 10
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(integer="123"):
             assert vs.Float().from_html_vars("integer") == 123
 

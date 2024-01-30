@@ -83,7 +83,9 @@ class TestCheckmkAutomationBackgroundJob:
         "check_mk_local_automation_serialized",
         "save_text_to_file",
     )
-    def test_execute_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_automation_current_version(
+        self, monkeypatch: pytest.MonkeyPatch, request_context: None
+    ) -> None:
         with monkeypatch.context() as m:
             m.setattr(request, "headers", {"x-checkmk-version": "2.2.0i1"})
             api_request = automations.CheckmkAutomationRequest(
@@ -109,7 +111,7 @@ class TestCheckmkAutomationBackgroundJob:
         "save_text_to_file",
     )
     def test_execute_automation_previous_version(
-        self, set_version: bool, monkeypatch: pytest.MonkeyPatch
+        self, set_version: bool, monkeypatch: pytest.MonkeyPatch, request_context: None
     ) -> None:
         with monkeypatch.context() as m:
             if set_version:

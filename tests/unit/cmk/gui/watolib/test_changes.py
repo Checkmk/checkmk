@@ -278,7 +278,7 @@ def test_log_audit_with_lazystring() -> None:
     ]
 
 
-def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
+def test_disable_activate_changes_writer(mocker: MockerFixture, request_context: None) -> None:
     add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
 
     add_change("ding", "dong", sites=[SiteId("a")])

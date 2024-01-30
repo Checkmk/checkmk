@@ -199,14 +199,22 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     return expected
 
 
-def test_get_replication_paths_defaults(edition: cmk_version.Edition) -> None:
+def test_get_replication_paths_defaults(
+    edition: cmk_version.Edition, request_context: None
+) -> None:
     expected = _expected_replication_paths(edition)
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
-def test_get_replication_components(edition, monkeypatch, replicate_ec, replicate_mkps):
+def test_get_replication_components(
+    edition: cmk_version.Edition,
+    monkeypatch: pytest.MonkeyPatch,
+    replicate_ec: bool | None,
+    replicate_mkps: bool | None,
+    request_context: None,
+) -> None:
     partial_site_config = SiteConfiguration({})
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
     # pylint: disable=unsupported-assignment-operation
@@ -228,7 +236,7 @@ def test_get_replication_components(edition, monkeypatch, replicate_ec, replicat
     )
 
 
-def test_add_replication_paths() -> None:
+def test_add_replication_paths(request_context: None) -> None:
     activate_changes.add_replication_paths(
         [
             ReplicationPath("dir", "abc", "path/to/abc", ["e1", "e2"]),
@@ -240,7 +248,7 @@ def test_add_replication_paths() -> None:
     )
 
 
-def test_automation_get_config_sync_state() -> None:
+def test_automation_get_config_sync_state(request_context: None) -> None:
     get_state = activate_changes.AutomationGetConfigSyncState()
     response = get_state.execute([ReplicationPath("dir", "abc", "etc", [])])
     assert response == (
@@ -395,7 +403,7 @@ def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
     base_dir.joinpath("links/working-symlink-to-file").symlink_to("../etc/d3/xyz")
 
 
-def test_get_file_names_to_sync() -> None:
+def test_get_file_names_to_sync(request_context: None) -> None:
     remote, central = _get_test_file_infos()
     sync_delta = activate_changes.get_file_names_to_sync(
         site_id=SiteId("remote"),
@@ -607,6 +615,7 @@ class TestAutomationReceiveConfigSync:
         self,
         monkeypatch: pytest.MonkeyPatch,
         tmp_path: Path,
+        request_context: None,
     ) -> None:
         remote_path = tmp_path / "remote"
         monkeypatch.setattr(cmk.utils.paths, "omd_root", remote_path)
@@ -672,6 +681,7 @@ class TestAutomationReceiveConfigSync:
     def test_get_request(
         self,
         monkeypatch: pytest.MonkeyPatch,
+        request_context: None,
     ) -> None:
         request = Request({})
         request.set_var("site_id", "NO_SITE")

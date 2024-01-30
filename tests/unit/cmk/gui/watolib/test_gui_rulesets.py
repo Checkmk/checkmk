@@ -39,7 +39,7 @@ GEN_ID_COUNT = {"c": 0}
 
 
 @pytest.fixture(autouse=True)
-def fixture_gen_id(monkeypatch):
+def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
     def _gen_id():
@@ -71,7 +71,7 @@ def fixture_gen_id(monkeypatch):
     ],
 )
 def test_rule_from_ruleset_defaults(
-    request_context: None, ruleset_name: str, default_value: RuleValue, is_binary: bool
+    ruleset_name: str, default_value: RuleValue, is_binary: bool
 ) -> None:
     ruleset = _ruleset(ruleset_name)
     rule = rulesets.Rule.from_ruleset_defaults(folder_tree().root_folder(), ruleset)
@@ -87,9 +87,7 @@ def test_rule_from_ruleset_defaults(
     assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
 
-def test_rule_from_config_unhandled_format(
-    request_context,
-):
+def test_rule_from_config_unhandled_format():
     ruleset = _ruleset("inventory_processes_rules")
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
@@ -338,7 +336,6 @@ def test_rule_from_config_unhandled_format(
     ],
 )
 def test_rule_from_config_dict(
-    request_context: None,
     ruleset_name: str,
     rule_spec: RuleSpec,
     expected_attributes: Mapping[str, object],
@@ -412,7 +409,6 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config(
-    request_context: None,
     monkeypatch: pytest.MonkeyPatch,
     wato_use_git: bool,
     expected_result: str,
@@ -512,7 +508,7 @@ def test_ruleset_to_config_sub_folder(
         assert ruleset.to_config(folder) == expected_result
 
 
-def test_rule_clone(request_context: None) -> None:
+def test_rule_clone() -> None:
     rule = rulesets.Rule.from_config(
         folder_tree().root_folder(),
         _ruleset("clustered_services"),
@@ -662,31 +658,31 @@ def rule_helper(request: FixtureRequest) -> _RuleHelper:
     return request.param
 
 
-def test_to_log_masks_secrets(request_context: None) -> None:
+def test_to_log_masks_secrets() -> None:
     log = str(_RuleHelper.gcp_rule().to_log())
     assert "'password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
 
-def test_diff_rules_new_rule(request_context: None, rule_helper: _RuleHelper) -> None:
+def test_diff_rules_new_rule(rule_helper: _RuleHelper) -> None:
     new = rule_helper.rule()
     diff = new.ruleset.diff_rules(None, new)
     assert rule_helper.secret_attr in diff, "Attribute is added in new rule"
     assert "******" in diff, "Attribute is masked"
 
 
-def test_diff_to_no_changes(request_context: None, rule_helper: _RuleHelper) -> None:
+def test_diff_to_no_changes(rule_helper: _RuleHelper) -> None:
     rule = rule_helper.rule()
     assert rule.diff_to(rule) == "Nothing was changed."
 
 
-def test_diff_to_secret_changed(request_context: None, rule_helper: _RuleHelper) -> None:
+def test_diff_to_secret_changed(rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret
     assert old.diff_to(new) == "Redacted secrets changed."
 
 
-def test_diff_to_secret_unchanged(request_context: None, rule_helper: _RuleHelper) -> None:
+def test_diff_to_secret_unchanged(rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.other_attr] = "new_value"
     diff = old.diff_to(new)
@@ -694,9 +690,7 @@ def test_diff_to_secret_unchanged(request_context: None, rule_helper: _RuleHelpe
     assert 'changed from "old_value" to "new_value".' in diff
 
 
-def test_diff_to_secret_and_other_attribute_changed(
-    request_context: None, rule_helper: _RuleHelper
-) -> None:
+def test_diff_to_secret_and_other_attribute_changed(rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.secret_attr] = rule_helper.new_secret
     new.value[rule_helper.other_attr] = "new_value"

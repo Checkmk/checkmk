@@ -242,7 +242,10 @@ class IconRenderResult(NamedTuple):
     ],
 )
 def test_icon_options(
-    args: IconRenderArgs, result: IconRenderResult, monkeypatch: pytest.MonkeyPatch
+    args: IconRenderArgs,
+    result: IconRenderResult,
+    monkeypatch: pytest.MonkeyPatch,
+    request_context: None,
 ) -> None:
     """Creation of title and url for links to event console entries of host"""
     icon = icon_and_action_registry["mkeventd"]()

@@ -1856,6 +1856,7 @@ def test_paint_custom_notes(
     notes_file: Path,
     row: Row,
     notes: list[str],
+    request_context: None,
 ) -> None:
     notes_dir.mkdir(parents=True)
     with open(notes_file, "w") as f:
@@ -2087,6 +2088,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     service_name: str | None,
     notes_dirs: list[Path],
     notes: list[dict[str, Any]],
+    request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
 

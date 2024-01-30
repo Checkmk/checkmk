@@ -7,11 +7,13 @@ from __future__ import annotations
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
-def test_swagger_ui_http_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+def test_swagger_ui_http_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=401)
 
 
-def test_swagger_ui_resource_urls_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+def test_swagger_ui_resource_urls_unauthenticated(
+    wsgi_app: WebTestAppForCMK, request_context: None
+) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=401)
 
 

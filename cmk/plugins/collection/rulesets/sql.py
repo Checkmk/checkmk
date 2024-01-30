@@ -97,14 +97,14 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     ),
                     elements={
                         "useprocs": form_specs.DictElement(
-                            form_specs.FixedValue(
+                            parameter_form=form_specs.FixedValue(
                                 value=True,
                                 label=Localizable("procedure call is used"),
                             ),
                             required=True,
                         ),
                         "input": form_specs.DictElement(
-                            form_specs.Text(
+                            parameter_form=form_specs.Text(
                                 title=Localizable("Input Parameters"),
                                 help_text=Localizable(
                                     "Input parameters, if required by the database procedure. "

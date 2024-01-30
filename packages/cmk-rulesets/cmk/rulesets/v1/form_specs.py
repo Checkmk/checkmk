@@ -30,7 +30,7 @@ class Migrate(Generic[_T]):
     model_to_form: Callable[[object], _T]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Integer:
     """Specifies an input field for whole numbers
 
@@ -62,7 +62,7 @@ class Integer:
     custom_validate: Callable[[int], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Float:
     """Specifies an input field for floating point numbers
 
@@ -129,7 +129,7 @@ IEC_BINARY_UNIT = (
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DataSize:
     """Specifies an input field for data storage capacity
 
@@ -159,7 +159,7 @@ class DataSize:
     custom_validate: Callable[[int], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Percentage:
     """Specifies an input field for percentages
 
@@ -188,7 +188,7 @@ class Percentage:
     custom_validate: Callable[[float], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Text:
     """
     Args:
@@ -215,7 +215,7 @@ class Text:
     custom_validate: Callable[[str], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TupleDoNotUseWillbeRemoved:
     elements: Sequence["FormSpec"]
 
@@ -256,7 +256,7 @@ class SingleChoiceElement:
             raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SingleChoice:
     """Specification for a (single-)selection from multiple options
 
@@ -299,7 +299,7 @@ class SingleChoice:
             raise ValueError("Default element is not one of the specified elements")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceElement:
     """Specifies an element of a single choice cascading form
 
@@ -317,7 +317,7 @@ class CascadingSingleChoiceElement:
             raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoice:
     """Specification for a single-selection from multiple options. Selection is another spec
 
@@ -356,7 +356,7 @@ class CascadingSingleChoice:
             raise ValueError("Default element is not one of the specified elements")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DictElement:
     """Specifies an element of a dictionary form
 
@@ -372,7 +372,7 @@ class DictElement:
     read_only: bool = False
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Dictionary:
     """
     Specifies a (multi-)selection of configuration options.
@@ -411,7 +411,7 @@ class Dictionary:
                 raise ValueError(f"'{key}' is not a valid Python identifier")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ServiceState:
     """Specifies the configuration of a service state.
 
@@ -434,7 +434,7 @@ class ServiceState:
     transform: Migrate[Literal[0, 1, 2, 3]] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HostState:
     """Specifies the configuration of a host state.
 
@@ -456,7 +456,7 @@ class HostState:
     transform: Migrate[Literal[0, 1, 2]] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class List:
     """
     Specifies a list of configuration elements of the same type.
@@ -490,7 +490,7 @@ class List:
     custom_validate: Callable[[Sequence[object]], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FixedValue:
     """
     Specifies a fixed non-editable value
@@ -533,7 +533,7 @@ class TimeUnit(enum.Enum):
     DAYS = "days"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TimeSpan:
     """Specifies an input field for time span
 
@@ -565,7 +565,7 @@ class TimeSpan:
     custom_validate: Callable[[float], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PredictiveLevels:
     """Definition for levels that change over time based on a prediction of the monitored value.
     Usable only in conjunction with `Levels`
@@ -600,7 +600,7 @@ class LevelDirection(enum.Enum):
     LOWER = "lower"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Levels:
     """Specifies a form for configuring levels
 
@@ -674,7 +674,7 @@ class Levels:
     transform: Migrate[object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BooleanChoice:
     """Specifies a form for configuring a choice between boolean values
 
@@ -693,7 +693,7 @@ class BooleanChoice:
     transform: Migrate[bool] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FileUpload:
     """Specifies a file upload form.
 
@@ -735,7 +735,7 @@ class FileUpload:
     custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MultipleChoiceElement:
     """Specifies an element of a multiple choice form
 
@@ -752,7 +752,7 @@ class MultipleChoiceElement:
             raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MultipleChoice:
     """Specifies a multiple choice form
 
@@ -798,7 +798,7 @@ class MultipleChoice:
             raise ValueError(f"Invalid prefill element(s): {', '.join(invalid)}")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MultilineText:
     """Specifies a multiline text form
 

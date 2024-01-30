@@ -49,16 +49,16 @@ def _valuespec_validity() -> Dictionary:
     return Dictionary(
         title=Localizable("Check certificate validity"),
         elements={
-            "remaining": DictElement(_valuespec_remaining_validity()),
+            "remaining": DictElement(parameter_form=_valuespec_remaining_validity()),
             "maximum": DictElement(
-                Integer(
+                parameter_form=Integer(
                     title=Localizable("Maximum allowed validity"),
                     unit=Localizable("days"),
                     custom_validate=InRange(min_value=0),
                 )
             ),
             "self_signed": DictElement(
-                BooleanChoice(
+                parameter_form=BooleanChoice(
                     label=Localizable("Allow self-signed certificates"),
                 ),
                 required=True,
@@ -72,7 +72,7 @@ def _valuespec_specific_values() -> Dictionary:
         title=Localizable("Check for specific values"),
         elements={
             "serialnumber": DictElement(
-                Text(
+                parameter_form=Text(
                     title=Localizable("Serial number"),
                     input_hint="5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F",
                 )
@@ -121,36 +121,42 @@ def _valuespec_specific_values() -> Dictionary:
                 )
             ),
             "issuer": DictElement(
-                Dictionary(
+                parameter_form=Dictionary(
                     title=Localizable("Issuer"),
                     elements={
                         "common_name": DictElement(
-                            Text(title=Localizable("Common name (CN)")),
+                            parameter_form=Text(title=Localizable("Common name (CN)")),
                             required=True,
                         ),
-                        "organization": DictElement(Text(title=Localizable("Organization (O)"))),
-                        "org_unit": DictElement(
-                            Text(title=Localizable("Organizational unit (OU)"))
+                        "organization": DictElement(
+                            parameter_form=Text(title=Localizable("Organization (O)"))
                         ),
-                        "state": DictElement(Text(title=Localizable("State (ST)"))),
-                        "country": DictElement(Text(title=Localizable("Country (C)"))),
+                        "org_unit": DictElement(
+                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
+                        ),
+                        "state": DictElement(parameter_form=Text(title=Localizable("State (ST)"))),
+                        "country": DictElement(
+                            parameter_form=Text(title=Localizable("Country (C)"))
+                        ),
                     },
                 )
             ),
             "subject": DictElement(
-                Dictionary(
+                parameter_form=Dictionary(
                     title=Localizable("Subject"),
                     elements={
                         "common_name": DictElement(
-                            Text(title=Localizable("Common name (CN)")),
+                            parameter_form=Text(title=Localizable("Common name (CN)")),
                             required=True,
                         ),
-                        "organization": DictElement(Text(title=Localizable("Organization (O)"))),
+                        "organization": DictElement(
+                            parameter_form=Text(title=Localizable("Organization (O)"))
+                        ),
                         "org_unit": DictElement(
-                            Text(title=Localizable("Organizational unit (OU)"))
+                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
                         ),
                         "pubkey_algorithm": DictElement(
-                            CascadingSingleChoice(
+                            parameter_form=CascadingSingleChoice(
                                 title=Localizable("Public key algorithm"),
                                 prefill_selection="rsa",
                                 elements=[
@@ -194,12 +200,14 @@ def _valuespec_specific_values() -> Dictionary:
                                 ],
                             )
                         ),
-                        "pubkeysize": DictElement(Text(title=Localizable("Public key size"))),
+                        "pubkeysize": DictElement(
+                            parameter_form=Text(title=Localizable("Public key size"))
+                        ),
                     },
                 )
             ),
             "altnames": DictElement(
-                List(
+                parameter_form=List(
                     parameter_form=Text(),
                     title=Localizable("Certificate subject alternative name"),
                 ),
@@ -239,28 +247,30 @@ def _valuespec_host_settings() -> List:
         parameter_form=Dictionary(
             elements={
                 "connection": DictElement(
-                    Dictionary(
+                    parameter_form=Dictionary(
                         elements={
                             "address": DictElement(
-                                Text(
+                                parameter_form=Text(
                                     title=Localizable("Host address or name"),
                                     input_hint="my.host.tld or 192.168.0.73",
                                     custom_validate=DisallowEmpty(),
                                 ),
                                 required=True,
                             ),
-                            "port": DictElement(_valuespec_port()),
+                            "port": DictElement(parameter_form=_valuespec_port()),
                         },
                     ),
                     required=True,
                 ),
                 "individual_settings": DictElement(
-                    Dictionary(
+                    parameter_form=Dictionary(
                         title=Localizable("Individual settings"),
                         elements={
-                            "response_time": DictElement(_valuespec_response_time()),
-                            "validity": DictElement(_valuespec_validity()),
-                            "cert_details": DictElement(_valuespec_specific_values()),
+                            "response_time": DictElement(parameter_form=_valuespec_response_time()),
+                            "validity": DictElement(parameter_form=_valuespec_validity()),
+                            "cert_details": DictElement(
+                                parameter_form=_valuespec_specific_values()
+                            ),
                         },
                     )
                 ),
@@ -273,10 +283,10 @@ def _valuespec_standard_settings() -> Dictionary:
     return Dictionary(
         title=Localizable("Standard settings"),
         elements={
-            "port": DictElement(_valuespec_port()),
-            "response_time": DictElement(_valuespec_response_time()),
-            "validity": DictElement(_valuespec_validity()),
-            "cert_details": DictElement(_valuespec_specific_values()),
+            "port": DictElement(parameter_form=_valuespec_port()),
+            "response_time": DictElement(parameter_form=_valuespec_response_time()),
+            "validity": DictElement(parameter_form=_valuespec_validity()),
+            "cert_details": DictElement(parameter_form=_valuespec_specific_values()),
         },
     )
 
@@ -285,10 +295,10 @@ def _form_active_checks_cert() -> Dictionary:
     return Dictionary(
         elements={
             "host_settings": DictElement(
-                _valuespec_host_settings(),
+                parameter_form=_valuespec_host_settings(),
                 required=True,
             ),
-            "standard_settings": DictElement(_valuespec_standard_settings()),
+            "standard_settings": DictElement(parameter_form=_valuespec_standard_settings()),
         },
     )
 

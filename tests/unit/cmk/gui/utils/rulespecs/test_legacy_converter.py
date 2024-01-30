@@ -116,11 +116,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.Dictionary(
                 elements={
                     "key_req": api_v1.form_specs.DictElement(
-                        api_v1.form_specs.ServiceState(title=api_v1.Localizable("title")),
+                        parameter_form=api_v1.form_specs.ServiceState(
+                            title=api_v1.Localizable("title")
+                        ),
                         required=True,
                     ),
                     "key_read_only": api_v1.form_specs.DictElement(
-                        api_v1.form_specs.ServiceState(title=api_v1.Localizable("title")),
+                        parameter_form=api_v1.form_specs.ServiceState(
+                            title=api_v1.Localizable("title")
+                        ),
                         read_only=True,
                     ),
                 },
@@ -745,7 +749,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.MultipleChoice(
                 elements=[
-                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First"))
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="first", title=api_v1.Localizable("First")
+                    )
                 ]
             ),
             legacy_valuespecs.ListChoice(choices=[("first", _("First"))], default_value=()),
@@ -756,8 +762,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("my title"),
                 help_text=api_v1.Localizable("help text"),
                 elements=[
-                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First")),
-                    api_v1.form_specs.MultipleChoiceElement("second", api_v1.Localizable("Second")),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="first", title=api_v1.Localizable("First")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="second", title=api_v1.Localizable("Second")
+                    ),
                 ],
                 show_toggle_all=True,
                 prefill_selections=["first", "second"],
@@ -776,20 +786,38 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("my title"),
                 help_text=api_v1.Localizable("help text"),
                 elements=[
-                    api_v1.form_specs.MultipleChoiceElement("first", api_v1.Localizable("First")),
-                    api_v1.form_specs.MultipleChoiceElement("second", api_v1.Localizable("Second")),
-                    api_v1.form_specs.MultipleChoiceElement("third", api_v1.Localizable("Third")),
-                    api_v1.form_specs.MultipleChoiceElement("fourth", api_v1.Localizable("Fourth")),
-                    api_v1.form_specs.MultipleChoiceElement("fifth", api_v1.Localizable("Fifth")),
-                    api_v1.form_specs.MultipleChoiceElement("sixth", api_v1.Localizable("Sixth")),
                     api_v1.form_specs.MultipleChoiceElement(
-                        "seventh", api_v1.Localizable("Seventh")
+                        name="first", title=api_v1.Localizable("First")
                     ),
-                    api_v1.form_specs.MultipleChoiceElement("eight", api_v1.Localizable("Eight")),
-                    api_v1.form_specs.MultipleChoiceElement("ninth", api_v1.Localizable("Ninth")),
-                    api_v1.form_specs.MultipleChoiceElement("tenth", api_v1.Localizable("Tenth")),
                     api_v1.form_specs.MultipleChoiceElement(
-                        "eleventh", api_v1.Localizable("Eleventh")
+                        name="second", title=api_v1.Localizable("Second")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="third", title=api_v1.Localizable("Third")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="fourth", title=api_v1.Localizable("Fourth")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="fifth", title=api_v1.Localizable("Fifth")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="sixth", title=api_v1.Localizable("Sixth")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="seventh", title=api_v1.Localizable("Seventh")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="eight", title=api_v1.Localizable("Eight")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="ninth", title=api_v1.Localizable("Ninth")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="tenth", title=api_v1.Localizable("Tenth")
+                    ),
+                    api_v1.form_specs.MultipleChoiceElement(
+                        name="eleventh", title=api_v1.Localizable("Eleventh")
                     ),
                 ],
                 show_toggle_all=True,
@@ -893,7 +921,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.form_specs.Dictionary,
                     elements={
                         "key": api_v1.form_specs.DictElement(
-                            api_v1.form_specs.ServiceState(
+                            parameter_form=api_v1.form_specs.ServiceState(
                                 title=api_v1.Localizable("valuespec title")
                             )
                         ),
@@ -928,7 +956,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.form_specs.Dictionary,
                     elements={
                         "key": api_v1.form_specs.DictElement(
-                            api_v1.form_specs.ServiceState(
+                            parameter_form=api_v1.form_specs.ServiceState(
                                 title=api_v1.Localizable("valuespec title")
                             )
                         ),
@@ -960,7 +988,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.form_specs.Dictionary,
                     elements={
                         "key": api_v1.form_specs.DictElement(
-                            api_v1.form_specs.ServiceState(
+                            parameter_form=api_v1.form_specs.ServiceState(
                                 title=api_v1.Localizable("valuespec title")
                             )
                         ),
@@ -1015,7 +1043,7 @@ def test_convert_to_legacy_rulespec_group(
                     api_v1.form_specs.Dictionary,
                     elements={
                         "key": api_v1.form_specs.DictElement(
-                            api_v1.form_specs.ServiceState(
+                            parameter_form=api_v1.form_specs.ServiceState(
                                 title=api_v1.Localizable("valuespec title")
                             )
                         ),

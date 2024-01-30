@@ -11,7 +11,7 @@ def _parameter_form_discover_rmon() -> form_specs.Dictionary:
     return form_specs.Dictionary(
         elements={
             "discover": form_specs.DictElement(
-                form_specs.BooleanChoice(
+                parameter_form=form_specs.BooleanChoice(
                     label=Localizable("Discover RMON statistics services"),
                     prefill_value=True,
                     help_text=Localizable(

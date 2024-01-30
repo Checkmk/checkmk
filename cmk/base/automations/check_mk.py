@@ -456,7 +456,7 @@ def active_check_preview_rows(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        config.get_ssc_host_config(host_name, config_cache),
+        config.get_ssc_host_config(host_name, config_cache, {}),
         host_attrs,
         config.http_proxies,
         make_final_service_name,
@@ -1315,7 +1315,7 @@ class AutomationAnalyseServices(Automation):
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache),
+            config.get_ssc_host_config(host_name, config_cache, {}),
             config_cache.get_host_attributes(host_name),
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -2167,16 +2167,16 @@ class AutomationActiveCheck(Automation):
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
+        legacy_macros = {**host_macros, **resource_macros}
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache),
+            config.get_ssc_host_config(host_name, config_cache, legacy_macros),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            macros={**host_macros, **resource_macros},
             stored_passwords=cmk.utils.password_store.load(),
         )
 

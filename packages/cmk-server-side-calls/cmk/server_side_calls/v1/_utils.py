@@ -105,6 +105,7 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
         resolved_ipv6_address: If IPv6 address isn't configured in the host config,
             it will be resolved from the host name. Present if host has IPv6 or dual-stack
             family configured.
+        macros: Macro mapping that are being replaced for the host
         custom_attributes: Custom attributes of the host
         tags: Tags of the host
         labels: Labels of the host
@@ -134,6 +135,7 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     resolved_ipv4_address: str | None = None
     resolved_ipv6_address: str | None = None
     resolved_ip_family: ResolvedIPAddressFamily | None = None
+    macros: Mapping[str, str] = field(default_factory=dict)
     custom_attributes: Mapping[str, str] = field(default_factory=dict)
     tags: Mapping[str, str] = field(default_factory=dict)
     labels: Mapping[str, str] = field(default_factory=dict)

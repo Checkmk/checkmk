@@ -74,6 +74,31 @@ HOST_CONFIG = HostConfig(
     ),
 )
 
+HOST_CONFIG_WITH_MACROS = HostConfig(
+    name="hostname",
+    resolved_address="0.0.0.1",
+    alias="host_alias",
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    address_config=NetworkAddressConfig(
+        ip_family=IPAddressFamily.DUAL_STACK,
+        ipv4_address="0.0.0.2",
+        ipv6_address="fe80::240",
+        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
+        additional_ipv6_addresses=[
+            "fe80::241",
+            "fe80::242",
+            "fe80::243",
+        ],
+    ),
+    macros={
+        "$HOSTNAME$": "test_host",
+        "$HOSTADDRESS$": "0.0.0.0",
+        "$HOSTALIAS$": "myalias",
+        "<IP>": "127.0.0.1",
+        "<HOST>": "test_host",
+    },
+)
+
 
 @contextmanager
 def _with_file(path: Path) -> Iterator[None]:
@@ -107,6 +132,9 @@ class ConfigCacheMock:
     def additional_ipaddresses(self, _host_name: str) -> tuple[Sequence[str], Sequence[str]]:
         return self._additional_ipaddresses
 
+    def explicit_host_attributes(self, _host_name: str) -> Mapping[str, str]:
+        return {"_attr1": "value1"}
+
     def alias(self, _host_name: str) -> str:
         return self._alias
 
@@ -127,7 +155,7 @@ def argument_function_with_exception(*args, **kwargs):
 
 
 @pytest.mark.parametrize(
-    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, macros, stored_passwords, expected_result",
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, host_config, stored_passwords, expected_result",
     [
         pytest.param(
             [
@@ -143,7 +171,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -178,7 +206,7 @@ def argument_function_with_exception(*args, **kwargs):
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -207,7 +235,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {"$HOSTALIAS$": "myalias"},
+            HOST_CONFIG_WITH_MACROS,
             {},
             [
                 ActiveServiceData(
@@ -242,7 +270,7 @@ def argument_function_with_exception(*args, **kwargs):
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -275,7 +303,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -317,7 +345,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -355,7 +383,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -387,7 +415,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [],
             id="unimplemented_check_plugin",
@@ -417,7 +445,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -457,7 +485,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {"stored_password": "mypassword"},
             [
                 ActiveServiceData(
@@ -480,7 +508,7 @@ def test_get_active_service_data(
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
-    macros: Mapping[str, str],
+    host_config: HostConfig,
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
 ) -> None:
@@ -488,12 +516,11 @@ def test_get_active_service_data(
         active_check_plugins,
         legacy_active_check_plugins,
         hostname,
-        HOST_CONFIG,
+        host_config,
         host_attrs,
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
-        macros=macros,
         stored_passwords=stored_passwords,
     )
 
@@ -1036,13 +1063,15 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
     monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
     monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
-    monkeypatch.setattr(
-        base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}
-    )
 
     host_config = base_config.get_ssc_host_config(
         HostName("host_name"),
         config_cache,  # type: ignore[arg-type]
+        {
+            "$HOSTNAME$": "test_host",
+            "$HOSTADDRESS$": "0.0.0.0",
+            "HOSTALIAS": "test alias",
+        },
     )
 
     assert host_config == HostConfig(
@@ -1063,16 +1092,45 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         tags={"tag1": "value1", "tag2": "value2"},
         labels={"label1": "value1", "label2": "value2"},
         customer=None,
+        macros={
+            "$HOSTADDRESS$": "0.0.0.0",
+            "$HOSTNAME$": "test_host",
+            "$HOST_ADDRESS$": "::1",
+            "$HOST_ALIAS$": "alias",
+            "$HOST_IPV4_ADDRESS$": "0.0.0.1",
+            "$HOST_IPV4_ADDRESSES$": "",
+            "$HOST_IPV6_ADDRESS$": "::1",
+            "$HOST_IPV6_ADDRESSES$": "fe80::241 fe80::242 fe80::243",
+            "$HOST_IPV6_ADDRESS_1$": "fe80::241",
+            "$HOST_IPV6_ADDRESS_2$": "fe80::242",
+            "$HOST_IPV6_ADDRESS_3$": "fe80::243",
+            "$HOST_IP_FAMILY$": "6",
+            "$HOST_LABEL_label1$": "value1",
+            "$HOST_LABEL_label2$": "value2",
+            "$HOST_NAME$": "host_name",
+            "$HOST_TAG_tag1$": "value1",
+            "$HOST_TAG_tag2$": "value2",
+            "$HOST_attr1$": "value1",
+            "HOSTALIAS": "test alias",
+        },
     )
 
 
 @pytest.mark.parametrize(
-    ("plugins", "legacy_plugins", "host_attrs", "stored_passwords", "expected_result"),
+    (
+        "plugins",
+        "legacy_plugins",
+        "host_attrs",
+        "host_config",
+        "stored_passwords",
+        "expected_result",
+    ),
     [
         pytest.param(
             {},
             {"test_agent": lambda a, b, c: "arg0 arg;1"},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
             id="legacy plugin string args",
@@ -1081,6 +1139,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: ["arg0", "arg;1"]},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
             id="legacy plugin list args",
@@ -1089,6 +1148,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(["arg0"], None)},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0", None)],
             id="legacy plugin TestSpecialAgentConfiguration",
@@ -1101,6 +1161,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
             id="legacy plugin TestSpecialAgentConfiguration, escaped arg",
@@ -1113,6 +1174,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", None)],
             id="legacy plugin TestSpecialAgentConfiguration, arg list",
@@ -1125,6 +1187,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
             id="legacy plugin with stdin, escaped arg",
@@ -1137,6 +1200,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
             id="legacy plugin with stdin",
@@ -1145,6 +1209,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: ["-h", "$HOSTNAME$", "-a", "<IP>"]},
             {},
+            HOST_CONFIG_WITH_MACROS,
             {},
             [SpecialAgentCommandLine("agent_path -h 'test_host' -a '127.0.0.1'", None)],
             id="legacy plugin with macros",
@@ -1167,6 +1232,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None)],
             id="one command, escaped arg",
@@ -1188,6 +1254,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [
                 SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None),
@@ -1213,6 +1280,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path --pwstore=2@0@mypassword --password '***'", None)],
             id="missing stored password",
@@ -1235,6 +1303,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {"mypassword": "123456"},
             [
                 SpecialAgentCommandLine(
@@ -1261,6 +1330,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {"mypassword": "123456"},
             [SpecialAgentCommandLine("agent_path -h '<HOST>' -a '$HOSTADDRESS$'", None)],
             id="command with macros",
@@ -1271,6 +1341,7 @@ def test_iter_special_agent_commands(
     plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     host_attrs: Mapping[str, str],
+    host_config: HostConfig,
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
@@ -1282,11 +1353,10 @@ def test_iter_special_agent_commands(
         legacy_plugins,
         HostName("test_host"),
         HostAddress("127.0.0.1"),
-        HOST_CONFIG,
+        host_config,
         host_attrs,
         http_proxies={},
         stored_passwords=stored_passwords,
-        macros={"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
     assert commands == expected_result
@@ -1334,7 +1404,6 @@ def test_iter_special_agent_commands_crash(
         HOST_ATTRS,
         http_proxies={},
         stored_passwords={},
-        macros={},
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1387,7 +1456,6 @@ def test_iter_special_agent_commands_crash_with_debug(
         HOST_ATTRS,
         http_proxies={},
         stored_passwords={},
-        macros={},
     )
 
     with pytest.raises(
@@ -1407,7 +1475,6 @@ def test_make_source_path() -> None:
         host_attrs={},
         http_proxies={},
         stored_passwords={},
-        macros={},
     )
 
     shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
@@ -1427,7 +1494,6 @@ def test_make_source_path_local_agent() -> None:
         host_attrs={},
         http_proxies={},
         stored_passwords={},
-        macros={},
     )
 
     local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")

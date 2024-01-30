@@ -492,7 +492,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         server_side_calls.load_active_checks()[1],
         config.active_check_info,
         hostname,
-        config.get_ssc_host_config(hostname, config_cache),
+        config.get_ssc_host_config(hostname, config_cache, {}),
         host_attrs,
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),

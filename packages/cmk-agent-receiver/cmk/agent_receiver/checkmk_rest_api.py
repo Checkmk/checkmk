@@ -34,7 +34,7 @@ class CMKEdition(Enum):
         >>> CMKEdition.cce.supports_register_new()
         True
         """
-        return self is CMKEdition.cce or self is CMKEdition.cse
+        return self is CMKEdition.cce or self is CMKEdition.cse or self is CMKEdition.cme
 
 
 def _local_apache_port() -> int:

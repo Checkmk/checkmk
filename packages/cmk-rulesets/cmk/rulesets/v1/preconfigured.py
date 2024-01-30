@@ -5,7 +5,7 @@
 import enum
 from dataclasses import dataclass
 
-from ._localize import Localizable
+from ._base import FormSpec
 
 
 class ProxySchema(enum.StrEnum):
@@ -18,7 +18,7 @@ class ProxySchema(enum.StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Proxy:
+class Proxy(FormSpec):
     """Specifies a form for configuring a proxy
 
     Args:
@@ -37,12 +37,10 @@ class Proxy:
             ProxySchema.SOCKS5H,
         }
     )
-    title: Localizable | None = None
-    help_text: Localizable | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class Metric:
+class Metric(FormSpec):
     """Specifies a form selecting from a list of metrics registered in Checkmk
 
     Args:
@@ -50,12 +48,9 @@ class Metric:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class MonitoredHost:
+class MonitoredHost(FormSpec):
     """Specifies a form selecting from a list of hosts configured in Checkmk
 
     Args:
@@ -63,12 +58,9 @@ class MonitoredHost:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class MonitoredService:
+class MonitoredService(FormSpec):
     """Specifies a form selecting from a list of currently monitored services in Checkmk
 
     Args:
@@ -76,12 +68,9 @@ class MonitoredService:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class Password:
+class Password(FormSpec):
     """Specifies a form for configuring passwords (explicit or from password store)
 
     Args:
@@ -89,18 +78,12 @@ class Password:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class TimePeriod:
+class TimePeriod(FormSpec):
     """Specifies a form selecting from a list of time periods configured in Checkmk
 
     Args:
         title: Human readable title
         help_text: Description to help the user with the configuration
     """
-
-    title: Localizable | None = None
-    help_text: Localizable | None = None

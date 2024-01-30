@@ -7,8 +7,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
 
+from ._base import FormSpec
 from ._localize import Localizable
-from .form_specs import Dictionary, FormSpec, ItemFormSpec, SingleChoice, Text
+from .form_specs import Dictionary, ItemFormSpec, SingleChoice, Text
 
 
 class Topic(Enum):

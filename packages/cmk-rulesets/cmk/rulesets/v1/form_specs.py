@@ -9,8 +9,8 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import ClassVar, Generic, Literal, TypeVar
 
+from ._base import FormSpec
 from ._localize import Localizable
-from .preconfigured import Metric, MonitoredHost, MonitoredService, Password, Proxy
 
 _T = TypeVar("_T")
 
@@ -31,7 +31,7 @@ class Migrate(Generic[_T]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Integer:
+class Integer(FormSpec):
     """Specifies an input field for whole numbers
 
     Args:
@@ -51,8 +51,6 @@ class Integer:
         The configured value will be presented as an integer to consumers.
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
     unit: Localizable | None = None
     prefill_value: int | None = None
@@ -63,7 +61,7 @@ class Integer:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Float:
+class Float(FormSpec):
     """Specifies an input field for floating point numbers
 
     Args:
@@ -79,8 +77,6 @@ class Float:
                          validation fails. The return value of the function will not be used.
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
     unit: Localizable | None = None
     display_precision: int | None = None
@@ -130,7 +126,7 @@ IEC_BINARY_UNIT = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class DataSize:
+class DataSize(FormSpec):
     """Specifies an input field for data storage capacity
 
     Args:
@@ -148,8 +144,6 @@ class DataSize:
                          validation fails. The return value of the function will not be used.
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
     displayed_units: Sequence[BinaryUnit] | None = None
     prefill_value: int | None = None
@@ -160,7 +154,7 @@ class DataSize:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Percentage:
+class Percentage(FormSpec):
     """Specifies an input field for percentages
 
     Args:
@@ -175,8 +169,6 @@ class Percentage:
                          validation fails. The return value of the function will not be used.
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
 
     display_precision: int | None = None
@@ -189,12 +181,12 @@ class Percentage:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Text:
+class Text(FormSpec):
     """
     Args:
         title: Human readable title
-        label: Text displayed in front of the input field
         help_text: Description to help the user with the configuration
+        label: Text displayed in front of the input field
         input_hint: A short hint to aid the user with data entry (e.g. an example)
         prefill_value: Value to pre-populate the form field with. If None, the backend will decide
                        whether to leave the field empty or to prefill it with a canonical value.
@@ -203,9 +195,7 @@ class Text:
                          validation fails. The return value of the function will not be used.
     """
 
-    title: Localizable | None = None
     label: Localizable | None = None
-    help_text: Localizable | None = None
     input_hint: str | None = None
 
     prefill_value: str | None = None
@@ -216,11 +206,8 @@ class Text:
 
 
 @dataclass(frozen=True, kw_only=True)
-class TupleDoNotUseWillbeRemoved:
-    elements: Sequence["FormSpec"]
-
-    title: Localizable | None = None
-    help_text: Localizable | None = None
+class TupleDoNotUseWillbeRemoved(FormSpec):
+    elements: Sequence[FormSpec]
 
     transform: Migrate[tuple[object, ...]] | None = None
 
@@ -257,16 +244,16 @@ class SingleChoiceElement:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SingleChoice:
+class SingleChoice(FormSpec):
     """Specification for a (single-)selection from multiple options
 
     Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
         elements: Elements to choose from
         no_elements_text: Text to show if no elements are given
         frozen: If the value can be changed after initial configuration, e.g. for identifiers
-        title: Human readable title
         label: Text displayed in front of the input field
-        help_text: Description to help the user with the configuration
         prefill_selection: Pre-selected choice.
         deprecated_elements: Elements that can still be present in stored user configurations, but
                              are no longer offered
@@ -281,9 +268,7 @@ class SingleChoice:
 
     frozen: bool = False
 
-    title: Localizable | None = None
     label: Localizable | None = None
-    help_text: Localizable | None = None
 
     prefill_selection: str | None = None
 
@@ -310,7 +295,7 @@ class CascadingSingleChoiceElement:
 
     name: str
     title: Localizable
-    parameter_form: "FormSpec"
+    parameter_form: FormSpec
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
@@ -318,13 +303,13 @@ class CascadingSingleChoiceElement:
 
 
 @dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoice:
+class CascadingSingleChoice(FormSpec):
     """Specification for a single-selection from multiple options. Selection is another spec
 
     Args:
-        elements: Elements to choose from
         title: Human readable title
         help_text: Description to help the user with the configuration
+        elements: Elements to choose from
         label: Text displayed in front of the input field
         prefill_selection: Name of pre-selected choice. If not set, the user is required to make a
                            selection
@@ -342,8 +327,6 @@ class CascadingSingleChoice:
 
     elements: Sequence[CascadingSingleChoiceElement]
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
 
     prefill_selection: str | None = None
@@ -367,22 +350,22 @@ class DictElement:
         read_only: Element that can't be edited. Can be used to store the discovered parameters.
     """
 
-    parameter_form: "FormSpec"
+    parameter_form: FormSpec
     required: bool = False
     read_only: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
-class Dictionary:
+class Dictionary(FormSpec):
     """
     Specifies a (multi-)selection of configuration options.
 
     Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
         elements: key-value mapping where the key identifies the selected option and the value
                   specifies how the option can be configured. The key has to be a valid Python
                   identifier.
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -395,8 +378,6 @@ class Dictionary:
     """
 
     elements: Mapping[str, DictElement]
-    title: Localizable | None = None
-    help_text: Localizable | None = None
 
     no_elements_text: Localizable | None = None
 
@@ -412,7 +393,7 @@ class Dictionary:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ServiceState:
+class ServiceState(FormSpec):
     """Specifies the configuration of a service state.
 
     >>> state_form_spec = ServiceState(
@@ -426,16 +407,13 @@ class ServiceState:
     CRIT: ClassVar[Literal[2]] = 2
     UNKNOWN: ClassVar[Literal[3]] = 3
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
     prefill_value: Literal[0, 1, 2, 3] = 0
 
     transform: Migrate[Literal[0, 1, 2, 3]] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class HostState:
+class HostState(FormSpec):
     """Specifies the configuration of a host state.
 
     >>> state_form_spec = HostState(
@@ -448,23 +426,20 @@ class HostState:
     DOWN: ClassVar[Literal[1]] = 1
     UNREACH: ClassVar[Literal[2]] = 2
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
     prefill_value: Literal[0, 1, 2] = 0
 
     transform: Migrate[Literal[0, 1, 2]] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class List:
+class List(FormSpec):
     """
     Specifies a list of configuration elements of the same type.
 
     Args:
-        spec: Configuration specification of the list elements
         title: Human readable title
         help_text: Description to help the user with the configuration
+        parameter_form: Configuration specification of the list elements
         custom_validate: Custom validation function. Will be executed in addition to any
             builtin validation logic. Needs to raise a ValidationError in case
             validation fails. The return value of the function will not be used.
@@ -477,9 +452,7 @@ class List:
         list_empty_label: Label used in the rule summary if the list is empty.
     """
 
-    parameter_form: "FormSpec"
-    title: Localizable | None = None
-    help_text: Localizable | None = None
+    parameter_form: FormSpec
     order_editable: bool = True
     add_element_label: Localizable | None = None
     remove_element_label: Localizable | None = None
@@ -491,24 +464,22 @@ class List:
 
 
 @dataclass(frozen=True, kw_only=True)
-class FixedValue:
+class FixedValue(FormSpec):
     """
     Specifies a fixed non-editable value
 
     Can be used in a CascadingSingleChoice and Dictionary to represent a fixed value option.
 
     Args:
-        value: Atomic value produced by the form spec
         title: Human readable title
-        label: Text displayed underneath the title
         help_text: Description to help the user with the configuration
+        value: Atomic value produced by the form spec
+        label: Text displayed underneath the title
         transform: Transformation of the stored configuration
     """
 
     value: int | float | str | bool | None
-    title: Localizable | None = None
     label: Localizable | None = None
-    help_text: Localizable | None = None
 
     transform: Migrate[int | float | str | bool | None] | None = None
 
@@ -534,7 +505,7 @@ class TimeUnit(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimeSpan:
+class TimeSpan(FormSpec):
     """Specifies an input field for time span
 
     Args:
@@ -556,8 +527,6 @@ class TimeSpan:
         The configured value will be presented as a float to consumers.
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
     prefill_value: float | None = None
@@ -601,17 +570,17 @@ class LevelDirection(enum.Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Levels:
+class Levels(FormSpec):
     """Specifies a form for configuring levels
 
     Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
         form_spec_template: Template for the specification of the form fields of the warning and
             critical levels. If `title` or `prefill_value` are provided here, they will be ignored
         level_direction: Do the levels represent the lower or the upper bound.
             It's used only to provide labels and error messages in the UI.
         predictive: Specification for the predictive levels
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
             If None, the backend will decide whether to leave the field empty or to prefill it
             with a canonical value.
@@ -667,43 +636,39 @@ class Levels:
     level_direction: LevelDirection
     predictive: PredictiveLevels | None
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     prefill_fixed_levels: tuple[float, float] | None = None
 
     transform: Migrate[object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class BooleanChoice:
+class BooleanChoice(FormSpec):
     """Specifies a form for configuring a choice between boolean values
 
     Args:
-        label: Text displayed as an extension to the input field
         title: Human readable title
         help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
         prefill_value: Boolean value to pre-populate the choice with.
         transform: Transformation of the stored configuration
     """
 
     label: Localizable | None = None
-    title: Localizable | None = None
-    help_text: Localizable | None = None
     prefill_value: bool = False
     transform: Migrate[bool] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class FileUpload:
+class FileUpload(FormSpec):
     """Specifies a file upload form.
 
     Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
         extensions: The extensions of the files to choose from. If set to `None`,
             all extensions are selectable.
         mime_types: The allowed mime types of uploaded files. If set to `None`,
             all mime types will be uploadable.
-        title: Human readable title.
-        help_text: Description to help the user with the configuration.
         custom_validate: Custom validation function.
             Will be executed in addition to any builtin validation logic.
             Needs to raise a ValidationError in case validation fails.
@@ -729,9 +694,6 @@ class FileUpload:
     extensions: tuple[str, ...] | None = None
     mime_types: tuple[str, ...] | None = None
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
     custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
 
 
@@ -753,14 +715,14 @@ class MultipleChoiceElement:
 
 
 @dataclass(frozen=True, kw_only=True)
-class MultipleChoice:
+class MultipleChoice(FormSpec):
     """Specifies a multiple choice form
 
     Args:
-        elements: Elements to choose from
-        show_toggle_all: Show toggle all elements option in the UI
         title: Human readable title
         help_text: Description to help the user with the configuration
+        elements: Elements to choose from
+        show_toggle_all: Show toggle all elements option in the UI
         prefill_selections: List of element names to check by default. If None, the backend
             will decide whether to leave the selection empty or to prefill it with
             a canonical value.
@@ -785,9 +747,6 @@ class MultipleChoice:
     elements: Sequence[MultipleChoiceElement]
     show_toggle_all: bool = False
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
-
     prefill_selections: Sequence[str] = ()
     transform: Migrate[Sequence[str]] | None = None
     custom_validate: Callable[[Sequence[str]], object] | None = None
@@ -799,14 +758,14 @@ class MultipleChoice:
 
 
 @dataclass(frozen=True, kw_only=True)
-class MultilineText:
+class MultilineText(FormSpec):
     """Specifies a multiline text form
 
     Args:
-        monospaced: Display text in the form as monospaced
-        label: Text displayed in front of the input field
         title: Human readable title
         help_text: Description to help the user with the configuration
+        monospaced: Display text in the form as monospaced
+        label: Text displayed in front of the input field
         prefill_value: Value to pre-populate the form field with.
             If None, the backend will decide whether to leave the field
             empty or to prefill it with a canonical value.
@@ -830,8 +789,6 @@ class MultilineText:
     monospaced: bool = False
 
     label: Localizable | None = None
-    title: Localizable | None = None
-    help_text: Localizable | None = None
 
     prefill_value: str | None = None
     transform: Migrate[str] | None = None
@@ -839,31 +796,3 @@ class MultilineText:
 
 
 ItemFormSpec = Text | SingleChoice
-
-
-FormSpec = (
-    Integer
-    | Float
-    | DataSize
-    | Percentage
-    | Text
-    | TupleDoNotUseWillbeRemoved
-    | SingleChoice
-    | CascadingSingleChoice
-    | Dictionary
-    | ServiceState
-    | HostState
-    | List
-    | FixedValue
-    | TimeSpan
-    | Levels
-    | Proxy
-    | BooleanChoice
-    | FileUpload
-    | Metric
-    | MonitoredHost
-    | MonitoredService
-    | Password
-    | MultipleChoice
-    | MultilineText
-)

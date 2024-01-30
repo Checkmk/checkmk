@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 from functools import partial
-from typing import assert_never, TypeVar
+from typing import TypeVar
 
 import pytest
 
@@ -37,6 +37,7 @@ from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
 
 import cmk.rulesets.v1 as api_v1
+from cmk.rulesets.v1._base import FormSpec
 
 
 def _v1_custom_text_validate(value: str) -> None:
@@ -884,7 +885,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ],
 )
 def test_convert_to_legacy_valuespec(
-    new_valuespec: api_v1.form_specs.FormSpec, expected: legacy_valuespecs.ValueSpec
+    new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
     _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
 
@@ -1541,7 +1542,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     ],
 )
 def test_migrate(
-    parameter_form: api_v1.form_specs.FormSpec,
+    parameter_form: FormSpec,
     old_value: object,
     expected_transformed_value: object,
 ) -> None:
@@ -1550,7 +1551,7 @@ def test_migrate(
     assert expected_transformed_value == actual_transformed_value
 
 
-def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
+def _exposed_form_specs() -> Sequence[FormSpec]:
     return [
         api_v1.form_specs.Integer(),
         api_v1.form_specs.Float(),
@@ -1582,22 +1583,53 @@ def _exposed_form_specs() -> Sequence[api_v1.form_specs.FormSpec]:
 
 
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
-def test_form_spec_transform(form_spec: api_v1.form_specs.FormSpec) -> None:
-    match form_spec:
-        case api_v1.form_specs.Integer() | api_v1.form_specs.Float() | api_v1.form_specs.DataSize() | api_v1.form_specs.Percentage() | api_v1.form_specs.Text() | api_v1.form_specs.TupleDoNotUseWillbeRemoved() | api_v1.form_specs.Dictionary() | api_v1.form_specs.SingleChoice() | api_v1.form_specs.CascadingSingleChoice() | api_v1.form_specs.ServiceState() | api_v1.form_specs.HostState() | api_v1.form_specs.List() | api_v1.form_specs.FixedValue() | api_v1.form_specs.TimeSpan() | api_v1.form_specs.Levels() | api_v1.form_specs.BooleanChoice() | api_v1.form_specs.MultipleChoice() | api_v1.form_specs.MultilineText():
-            try:
-                _ = form_spec.transform
-            except AttributeError:
-                assert False
-        case api_v1.form_specs.FileUpload() | api_v1.preconfigured.Metric() | api_v1.preconfigured.MonitoredHost() | api_v1.preconfigured.MonitoredService() | api_v1.preconfigured.Password() | api_v1.preconfigured.Proxy():
-            # these don't have a transform
-            assert True
-        case other_form_spec:
-            assert_never(other_form_spec)
+def test_form_spec_transform(form_spec: FormSpec) -> None:
+    if isinstance(
+        form_spec,
+        (
+            api_v1.form_specs.Integer,
+            api_v1.form_specs.Float,
+            api_v1.form_specs.DataSize,
+            api_v1.form_specs.Percentage,
+            api_v1.form_specs.Text,
+            api_v1.form_specs.TupleDoNotUseWillbeRemoved,
+            api_v1.form_specs.Dictionary,
+            api_v1.form_specs.SingleChoice,
+            api_v1.form_specs.CascadingSingleChoice,
+            api_v1.form_specs.ServiceState,
+            api_v1.form_specs.HostState,
+            api_v1.form_specs.List,
+            api_v1.form_specs.FixedValue,
+            api_v1.form_specs.TimeSpan,
+            api_v1.form_specs.Levels,
+            api_v1.form_specs.BooleanChoice,
+            api_v1.form_specs.MultipleChoice,
+            api_v1.form_specs.MultilineText,
+        ),
+    ):
+        try:
+            _ = form_spec.transform
+        except AttributeError:
+            assert False
+    elif isinstance(
+        form_spec,
+        (
+            api_v1.form_specs.FileUpload,
+            api_v1.preconfigured.Metric,
+            api_v1.preconfigured.MonitoredHost,
+            api_v1.preconfigured.MonitoredService,
+            api_v1.preconfigured.Password,
+            api_v1.preconfigured.Proxy,
+        ),
+    ):
+        # these don't have a transform
+        assert True
+    else:
+        raise NotImplementedError(form_spec)
 
 
 @pytest.mark.parametrize("form_spec", _exposed_form_specs())
-def test_form_spec_title(form_spec: api_v1.form_specs.FormSpec) -> None:
+def test_form_spec_title(form_spec: FormSpec) -> None:
     try:
         _ = form_spec.title
     except AttributeError:

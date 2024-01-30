@@ -20,12 +20,11 @@ from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
 
-from cmk.rulesets.v1.form_specs import Localizable  # type: ignore[attr-defined]
+from cmk.rulesets.v1 import FormSpec, Localizable
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,
     Float,
-    FormSpec,
     Integer,
     List,
     Percentage,
@@ -133,7 +132,7 @@ class VueFormSpecVisitor:
             if self._do_validate:
                 _log_indent(f"  validate {node.__class__.__name__}")
                 try:
-                    custom_validate = node.custom_validate  # type: ignore[union-attr]
+                    custom_validate = node.custom_validate  # type: ignore[attr-defined]
                 except Exception:
                     # Basic exception handling -> TODO: inspect, etc.
                     # Not every formspec has a custom validate callable

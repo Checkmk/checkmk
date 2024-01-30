@@ -148,7 +148,7 @@ def _convert_user_idle_timeout(
 
     logger.log(VERBOSE, "Converting global setting 'user_idle_timeout' to new format")
     # None, deactivated by user
-    if idle_timeout := global_config.get("user_idle_timeout") is None:
+    if (idle_timeout := global_config.get("user_idle_timeout")) is None:
         return {"session_mgmt": {}}
 
     return {

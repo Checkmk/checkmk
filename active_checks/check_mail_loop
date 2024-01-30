@@ -293,6 +293,9 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
     expected_mails = load_expected_mails(status_path) or {}
     logging.debug("expected_mails: %r", expected_mails)
 
+    # Store the unmodified list of expected mails for later deletion
+    expected_mails_keys = set(expected_mails.keys())
+
     # Match subjects of type "[re/was:] Check_MK-Mail-Loop <timestamp> <index>"
     re_subject = subject_regex(args.subject)
 
@@ -358,7 +361,7 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
         deletion_candidates = {
             index: raw_message
             for ts_key, (index, rx_timestamp, _subject, raw_message) in message_details.items()
-            if ts_key in expected_mails or now - rx_timestamp > 24 * 3600
+            if ts_key in expected_mails_keys or now - rx_timestamp > 24 * 3600
         }
         logging.debug(
             "candidates for deletion (expected messages + those older than 24h): %s",

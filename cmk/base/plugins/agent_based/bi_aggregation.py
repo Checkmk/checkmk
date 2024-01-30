@@ -62,9 +62,17 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         return
 
     overall_state = bi_data["state_computed_by_agent"]
+    # The state of an aggregation may be PENDING (-1). Map it to OK.
+    bi_state_map = {
+        0: "Ok",
+        1: "Warning",
+        2: "Critical",
+        3: "Unknown",
+        -1: "Pending",
+    }
     yield Result(
-        state=State(overall_state),
-        summary="Aggregation state: %s" % ["Ok", "Warning", "Critical", "Unknown"][overall_state],
+        state=(0 if overall_state == -1 else overall_state),
+        summary="Aggregation state: %s" % bi_state_map[overall_state],
     )
 
     yield Result(

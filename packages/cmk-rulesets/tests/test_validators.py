@@ -16,6 +16,7 @@ from cmk.rulesets.v1.validators import (
     InRange,
     MatchRegex,
     NetworkPort,
+    RegexGroupsInRange,
     Url,
     UrlProtocol,
     ValidationError,
@@ -25,7 +26,15 @@ from cmk.rulesets.v1.validators import (
 @pytest.mark.parametrize(
     ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
     [
-        pytest.param({}, None, 0, does_not_raise(), None, id="no limits specified"),
+        pytest.param(
+            {},
+            None,
+            0,
+            pytest.raises(ValidationError),
+            "Either the minimum or maximum allowed value must be configured, otherwise this "
+            "validator is meaningless.",
+            id="no limits specified",
+        ),
         pytest.param({"min_value": 5.0}, None, 5.0, does_not_raise(), None, id="equal lower limit"),
         pytest.param(
             {"max_value": 50.0}, None, 50.0, does_not_raise(), None, id="equal upper limit"
@@ -83,6 +92,92 @@ def test_in_range(
 ) -> None:
     with expected_raises as e:
         InRange(**input_args, error_msg=input_message)(test_value)
+
+    assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
+
+
+@pytest.mark.parametrize(
+    ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
+    [
+        pytest.param(
+            {},
+            None,
+            r"[A-Z]",
+            pytest.raises(ValidationError),
+            "Either the minimum or maximum number of allowed groups must be configured, otherwise "
+            "this validator is meaningless.",
+            id="no limits specified",
+        ),
+        pytest.param(
+            {"min_groups": 1}, None, r"(\b[A-Z]+\b)", does_not_raise(), None, id="equal lower limit"
+        ),
+        pytest.param(
+            {"max_groups": 2},
+            None,
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            does_not_raise(),
+            None,
+            id="equal upper limit",
+        ),
+        pytest.param(
+            {"min_groups": 2, "max_groups": 2},
+            None,
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            does_not_raise(),
+            None,
+            id="equal both limits",
+        ),
+        pytest.param(
+            {"min_groups": 3},
+            None,
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            pytest.raises(ValidationError),
+            "The minimum allowed number of regex groups is 3.",
+            id="outside lower limit",
+        ),
+        pytest.param(
+            {"max_groups": 1},
+            None,
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            pytest.raises(ValidationError),
+            "The maximum allowed number of regex groups is 1.",
+            id="outside upper limit",
+        ),
+        pytest.param(
+            {"min_groups": 1, "max_groups": 3},
+            None,
+            r"",
+            pytest.raises(ValidationError),
+            "Allowed number of regex groups ranges from 1 to 3.",
+            id="outside both limits",
+        ),
+        pytest.param(
+            {"min_groups": 3},
+            Localizable("My own message"),
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            pytest.raises(ValidationError),
+            "My own message",
+            id="outside lower limit with custom message",
+        ),
+        pytest.param(
+            {"max_groups": 1},
+            Localizable("My own message"),
+            r"(\b[A-Z]+\b).+(\b\d+)",
+            pytest.raises(ValidationError),
+            "My own message",
+            id="outside upper limit with custom message",
+        ),
+    ],
+)
+def test_regex_groups_in_range(
+    input_args: Mapping[str, int],
+    input_message: Localizable | None,
+    test_value: str,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
+    expected_message: str | None,
+) -> None:
+    with expected_raises as e:
+        RegexGroupsInRange(**input_args, error_msg=input_message)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 

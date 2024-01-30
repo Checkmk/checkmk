@@ -56,7 +56,12 @@ class InRange:  # pylint: disable=too-few-public-methods
     def _get_default_errmsg(min_: float | None, max_: float | None) -> Localizable:
         if min_ is None:
             if max_ is None:
-                return Localizable("This message is not supposed to be used. Ever.")
+                raise ValidationError(
+                    Localizable(
+                        "Either the minimum or maximum allowed value must be "
+                        "configured, otherwise this validator is meaningless."
+                    )
+                )
             return Localizable("The maximum allowed value is %s.") % str(max_)
 
         if max_ is None:
@@ -67,6 +72,47 @@ class InRange:  # pylint: disable=too-few-public-methods
         if self.range[0] is not None and value < self.range[0]:
             raise ValidationError(self.error_msg)
         if self.range[1] is not None and self.range[1] < value:
+            raise ValidationError(self.error_msg)
+
+
+class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated value is in a given interval."""
+
+    def __init__(
+        self,
+        min_groups: int | None = None,
+        max_groups: int | None = None,
+        error_msg: Localizable | None = None,
+    ) -> None:
+        self.range: Final = (min_groups, max_groups)
+        self.error_msg: Final = (
+            self._get_default_errmsg(min_groups, max_groups) if error_msg is None else error_msg
+        )
+
+    @staticmethod
+    def _get_default_errmsg(min_: float | None, max_: float | None) -> Localizable:
+        if min_ is None:
+            if max_ is None:
+                raise ValidationError(
+                    Localizable(
+                        "Either the minimum or maximum number of allowed groups must be configured,"
+                        " otherwise this validator is meaningless."
+                    )
+                )
+            return Localizable("The maximum allowed number of regex groups is %s.") % str(max_)
+
+        if max_ is None:
+            return Localizable("The minimum allowed number of regex groups is %s.") % str(min_)
+        return Localizable("Allowed number of regex groups ranges from %s to %s.") % (
+            str(min_),
+            str(max_),
+        )
+
+    def __call__(self, pattern: str) -> None:
+        compiled = re.compile(pattern)
+        if self.range[0] is not None and compiled.groups < self.range[0]:
+            raise ValidationError(self.error_msg)
+        if self.range[1] is not None and self.range[1] < compiled.groups:
             raise ValidationError(self.error_msg)
 
 

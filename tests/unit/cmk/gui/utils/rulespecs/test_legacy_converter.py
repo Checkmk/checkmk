@@ -37,7 +37,6 @@ from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
 
 import cmk.rulesets.v1 as api_v1
-import cmk.rulesets.v1.form_specs.basic
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
@@ -278,6 +277,33 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="TextInput",
         ),
         pytest.param(
+            api_v1.form_specs.basic.RegularExpression(
+                predefined_help_text=api_v1.form_specs.basic.MatchingScope.INFIX,
+            ),
+            legacy_valuespecs.RegExp(mode=legacy_valuespecs.RegExp.infix, case_sensitive=True),
+            id="minimal RegularExpression",
+        ),
+        pytest.param(
+            api_v1.form_specs.basic.RegularExpression(
+                predefined_help_text=api_v1.form_specs.basic.MatchingScope.PREFIX,
+                title=api_v1.Localizable("spec title"),
+                label=api_v1.Localizable("spec label"),
+                help_text=api_v1.Localizable("help text"),
+                prefill_value="mypattern$",
+                custom_validate=_v1_custom_text_validate,
+            ),
+            legacy_valuespecs.RegExp(
+                mode=legacy_valuespecs.RegExp.prefix,
+                case_sensitive=True,
+                title=_("spec title"),
+                label=_("spec label"),
+                help=_("help text"),
+                default_value="mypattern$",
+                validate=_legacy_custom_text_validate,
+            ),
+            id="RegularExpression",
+        ),
+        pytest.param(
             api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[]),
             legacy_valuespecs.Tuple(elements=[]),
             id="minimal Tuple",
@@ -302,17 +328,17 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Tuple",
         ),
         pytest.param(
-            cmk.rulesets.v1.form_specs.basic.SingleChoice(elements=[]),
+            api_v1.form_specs.basic.SingleChoice(elements=[]),
             legacy_valuespecs.DropdownChoice(choices=[], invalid_choice="complain"),
             id="minimal DropdownChoice",
         ),
         pytest.param(
-            cmk.rulesets.v1.form_specs.basic.SingleChoice(
+            api_v1.form_specs.basic.SingleChoice(
                 elements=[
-                    cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                    api_v1.form_specs.basic.SingleChoiceElement(
                         name="true", title=api_v1.Localizable("Enabled")
                     ),
-                    cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                    api_v1.form_specs.basic.SingleChoiceElement(
                         name="false", title=api_v1.Localizable("Disabled")
                     ),
                 ],
@@ -323,8 +349,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
                 prefill_selection="true",
-                invalid_element_validation=cmk.rulesets.v1.form_specs.basic.InvalidElementValidator(
-                    mode=cmk.rulesets.v1.form_specs.basic.InvalidElementMode.KEEP,
+                invalid_element_validation=api_v1.form_specs.basic.InvalidElementValidator(
+                    mode=api_v1.form_specs.basic.InvalidElementMode.KEEP,
                     display=api_v1.Localizable("invalid choice title"),
                     error_msg=api_v1.Localizable("invalid choice msg"),
                 ),
@@ -1526,7 +1552,7 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.basic.Text(),
         api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[]),
         api_v1.form_specs.composed.Dictionary(elements={}),
-        cmk.rulesets.v1.form_specs.basic.SingleChoice(elements=[]),
+        api_v1.form_specs.basic.SingleChoice(elements=[]),
         api_v1.form_specs.composed.CascadingSingleChoice(elements=[]),
         api_v1.form_specs.basic.ServiceState(),
         api_v1.form_specs.basic.HostState(),
@@ -1545,6 +1571,9 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.preconfigured.MonitoredHost(),
         api_v1.form_specs.preconfigured.MonitoredService(),
         api_v1.form_specs.preconfigured.Password(),
+        api_v1.form_specs.basic.RegularExpression(
+            predefined_help_text=api_v1.form_specs.basic.MatchingScope.FULL
+        ),
     ]
 
 
@@ -1558,9 +1587,10 @@ def test_form_spec_transform(form_spec: FormSpec) -> None:
             api_v1.form_specs.basic.DataSize,
             api_v1.form_specs.basic.Percentage,
             api_v1.form_specs.basic.Text,
+            api_v1.form_specs.basic.RegularExpression,
             api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved,
             api_v1.form_specs.composed.Dictionary,
-            cmk.rulesets.v1.form_specs.basic.SingleChoice,
+            api_v1.form_specs.basic.SingleChoice,
             api_v1.form_specs.composed.CascadingSingleChoice,
             api_v1.form_specs.basic.ServiceState,
             api_v1.form_specs.basic.HostState,

@@ -451,6 +451,9 @@ def _convert_to_inner_legacy_valuespec(  # pylint: disable=too-many-branches
         case ruleset_api_v1.form_specs.basic.Text():
             return _convert_to_legacy_text_input(to_convert, localizer)
 
+        case ruleset_api_v1.form_specs.basic.RegularExpression():
+            return _convert_to_legacy_regular_expression(to_convert, localizer)
+
         case ruleset_api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved():
             return _convert_to_legacy_tuple(to_convert, localizer)
 
@@ -708,6 +711,39 @@ def _convert_to_legacy_text_input(
         )
 
     return legacy_valuespecs.TextInput(**converted_kwargs)
+
+
+def _convert_to_legacy_regular_expression(
+    to_convert: ruleset_api_v1.form_specs.basic.RegularExpression, localizer: Callable[[str], str]
+) -> legacy_valuespecs.RegExp:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+
+    if to_convert.input_hint is not None:
+        converted_kwargs["placeholder"] = to_convert.input_hint
+
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    match to_convert.predefined_help_text:
+        case ruleset_api_v1.form_specs.basic.MatchingScope.PREFIX:
+            mode: Literal["infix", "prefix", "complete"] = legacy_valuespecs.RegExp.prefix
+        case ruleset_api_v1.form_specs.basic.MatchingScope.INFIX:
+            mode = legacy_valuespecs.RegExp.infix
+        case ruleset_api_v1.form_specs.basic.MatchingScope.FULL:
+            mode = legacy_valuespecs.RegExp.complete
+        case other_match:
+            assert_never(other_match)
+
+    return legacy_valuespecs.RegExp(mode=mode, case_sensitive=True, **converted_kwargs)
 
 
 def _convert_to_legacy_tuple(

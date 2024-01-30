@@ -366,7 +366,8 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             if ts_key in expected_mails_keys or now - rx_timestamp > DEPRECATION_AGE
         }
         logging.debug(
-            f"candidates for deletion (expected messages + those older than {DEPRECATION_AGE}s): %s",
+            "candidates for deletion (expected messages + those older than %ds): %s",
+            DEPRECATION_AGE,
             list(deletion_candidates.keys()),
         )
         if args.delete_messages:

@@ -19,38 +19,36 @@ from .history import History, HistoryWhat
 from .query import Columns, QueryFilter, QueryGET
 from .settings import Options, Paths, Settings
 
-TABLE_COLUMNS: Final = frozenset(
-    {
-        "time",
-        "what",
-        "who",
-        "addinfo",
-        "id",
-        "count",
-        "text",
-        "first",
-        "last",
-        "comment",
-        "sl",
-        "host",
-        "contact",
-        "application",
-        "pid",
-        "priority",
-        "facility",
-        "rule_id",
-        "state",
-        "phase",
-        "owner",
-        "match_groups",
-        "contact_groups",
-        "ipaddress",
-        "orig_host",
-        "contact_groups_precedence",
-        "core_host",
-        "host_in_downtime",
-        "match_groups_syslog_application",
-    }
+TABLE_COLUMNS: Final = (
+    "time",
+    "what",
+    "who",
+    "addinfo",
+    "id",
+    "count",
+    "text",
+    "first",
+    "last",
+    "comment",
+    "sl",
+    "host",
+    "contact",
+    "application",
+    "pid",
+    "priority",
+    "facility",
+    "rule_id",
+    "state",
+    "phase",
+    "owner",
+    "match_groups",
+    "contact_groups",
+    "ipaddress",
+    "orig_host",
+    "contact_groups_precedence",
+    "core_host",
+    "host_in_downtime",
+    "match_groups_syslog_application",
 )
 
 
@@ -69,14 +67,7 @@ def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
     with open(file, "r") as f, connection as con:
         cur = con.cursor()
         cur.executemany(
-            """INSERT INTO history (time, what, who, addinfo, id, count, text, first, last,
-                                comment, sl, host, contact, application,
-                                pid, priority, facility, rule_id,
-                                state, phase, owner, match_groups,
-                                contact_groups, ipaddress, orig_host,
-                                contact_groups_precedence, core_host, host_in_downtime,
-                                match_groups_syslog_application)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
             __iter(f),
         )
 
@@ -177,14 +168,7 @@ class SQLiteHistory(History):
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(
-                """INSERT INTO history (time, what, who, addinfo, id, count, text, first, last,
-                                comment, sl, host, contact, application,
-                                pid, priority, facility, rule_id,
-                                state, phase, owner, match_groups,
-                                contact_groups, ipaddress, orig_host,
-                                contact_groups_precedence, core_host, host_in_downtime,
-                                match_groups_syslog_application)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+                f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
                 tuple(
                     itertools.chain(
                         (time.time(), what, who, addinfo),

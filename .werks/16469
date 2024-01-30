@@ -1,0 +1,11 @@
+Title: Fix crash on invalid regex in filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1706602636
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+When an invalid regex was entered in a regex filter (like service or hostname)
+a livestatus error was caused. Instead, a warning will now be displayed.

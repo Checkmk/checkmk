@@ -27,7 +27,7 @@ def fixture_plugin() -> UpdateAuditLog:
     return test
 
 
-def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture) -> None:
+def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture, request_context: None) -> None:
     """
     Create new audit log, execute update action and check for result
     """

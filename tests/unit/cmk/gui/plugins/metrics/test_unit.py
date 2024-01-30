@@ -16,11 +16,11 @@ from cmk.gui.config import active_config
 from cmk.gui.graphing._unit_info import unit_info
 
 
-def test_temperature_unit_default() -> None:
+def test_temperature_unit_default(request_context: None) -> None:
     assert unit_info["c"]["title"] == "Degree Celsius"
 
 
-def test_temperature_unit_global_setting() -> None:
+def test_temperature_unit_global_setting(request_context: None) -> None:
     active_config.default_temperature_unit = "fahrenheit"
     assert unit_info["c"]["title"] == "Degree Fahrenheit"
 
@@ -44,6 +44,7 @@ def test_temperature_unit_user_celsius(
     run_as_user: Callable[[UserId], ContextManager[None]],
     user_setting_temperature_unit: str,
     expected_temperature_unit_title: str,
+    request_context: None,
 ) -> None:
     with create_and_destroy_user(
         username="harald",

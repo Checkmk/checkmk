@@ -29,7 +29,7 @@ class TestCheckbox:
         assert vs.Checkbox(true_label="an").value_to_html(True) == "an"
         assert vs.Checkbox(false_label="aus").value_to_html(False) == "aus"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(checkbox="on"):
             assert vs.Checkbox().from_html_vars("checkbox") is True
         assert vs.Checkbox().from_html_vars("checkbox") is False

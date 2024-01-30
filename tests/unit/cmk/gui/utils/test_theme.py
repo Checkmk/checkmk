@@ -126,12 +126,12 @@ def test_theme_choices_empty() -> None:
     assert theme_choices() == []
 
 
-@pytest.mark.usefixtures("my_theme")
+@pytest.mark.usefixtures("request_context", "my_theme")
 def test_theme_choices_normal() -> None:
     assert theme_choices() == [("my_theme", "Määh Theme :-)")]
 
 
-@pytest.mark.usefixtures("my_theme")
+@pytest.mark.usefixtures("request_context", "my_theme")
 def test_theme_choices_local_theme(theme_dirs: tuple[Path, Path]) -> None:
     local_theme_path = theme_dirs[1]
 
@@ -149,7 +149,7 @@ def test_theme_choices_local_theme(theme_dirs: tuple[Path, Path]) -> None:
     )
 
 
-@pytest.mark.usefixtures("my_theme")
+@pytest.mark.usefixtures("request_context", "my_theme")
 def test_theme_choices_override(theme_dirs: tuple[Path, Path]) -> None:
     local_theme_path = theme_dirs[1]
 
@@ -166,7 +166,7 @@ def test_theme_choices_override(theme_dirs: tuple[Path, Path]) -> None:
     )
 
 
-def test_theme_broken_meta(my_theme: Path) -> None:
+def test_theme_broken_meta(request_context: None, my_theme: Path) -> None:
     (my_theme / "theme.json").open(mode="w", encoding="utf-8").write('{"titlewrong": xyz"bla"}')
 
     assert theme_choices() == sorted(

@@ -36,7 +36,7 @@ def search_up(search_path: str, start_path: str) -> str:
         current_path = new_path
 
 
-def test_wsgi_app() -> None:
+def test_wsgi_app(request_context: None) -> None:
     app_file = search_up("cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__))
     imported = _import_file(app_file)
     wsgi_app = imported.Application

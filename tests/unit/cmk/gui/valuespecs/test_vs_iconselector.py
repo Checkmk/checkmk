@@ -24,7 +24,7 @@ ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore
 
 
 class TestValueSpecFloat:
-    def test_validate(self) -> None:
+    def test_validate(self, request_context: None) -> None:
         # ## value may be a string, or a dictionary.
         # ## first test string...
         expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")

@@ -44,7 +44,7 @@ class TestAbsoluteDate:
     def test_mask(self) -> None:
         assert vs.AbsoluteDate().mask(1631397600.0) == 1631397600.0
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with set_timezone("UTC-2"):
             with request_var(a_year="2021", a_month="9", a_day="12"):
                 assert vs.AbsoluteDate().from_html_vars("a") == 1631397600.0

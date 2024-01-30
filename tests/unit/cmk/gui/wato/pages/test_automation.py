@@ -79,6 +79,7 @@ class TestPageAutomation:
         request.set_var("timeout", mk_repr(None).decode())
 
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
@@ -95,6 +96,7 @@ class TestPageAutomation:
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
@@ -118,6 +120,7 @@ class TestPageAutomation:
         ],
     )
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",

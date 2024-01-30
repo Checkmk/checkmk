@@ -38,6 +38,7 @@ def fixture_activate_changes(mocker: MockerFixture) -> MagicMock:
 def test_remove_hosts_no_rules_early_return(
     mocker: MockerFixture,
     activate_changes_mock: MagicMock,
+    request_context: None,
 ) -> None:
     automatic_host_removal._remove_hosts(mocker.MagicMock())
     activate_changes_mock.assert_not_called()

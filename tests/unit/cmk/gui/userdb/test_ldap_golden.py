@@ -174,7 +174,7 @@ class AnyOrderMatcher:
         return f"AnyOrderMatcher({self.args})"
 
 
-def test_do_sync(mocker: MockerFixture) -> None:
+def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     loaded_users: Users = {
         UserId("alice"): {"connector": "htpasswd"},
@@ -199,7 +199,7 @@ def test_do_sync(mocker: MockerFixture) -> None:
     )
 
 
-def test_check_credentials_valid(mocker: MockerFixture) -> None:
+def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj
@@ -211,7 +211,7 @@ def test_check_credentials_valid(mocker: MockerFixture) -> None:
     assert result == UserId("carol_id@LDAP_SUFFIX")
 
 
-def test_check_credentials_invalid(mocker: MockerFixture) -> None:
+def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj

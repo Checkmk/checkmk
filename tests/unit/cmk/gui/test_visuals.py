@@ -222,6 +222,7 @@ def test_get_merged_context(
     infos: SingleInfos | None,
     context_vis: VisualContext,
     expected_context: VisualContext,
+    request_context: None,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)

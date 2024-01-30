@@ -48,6 +48,7 @@ def test_profile_switcher_under_various_settings(
     url: str,
     profiling_enabled_expected: bool,
     set_config: SetConfig,
+    request_context: None,
 ) -> None:
     with set_config(**setting):
         environ = werkzeug.test.create_environ(url, method="GET")

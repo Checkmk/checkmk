@@ -39,7 +39,7 @@ class TestValueSpecTimeSpan:
         assert TimeSpan().value_to_html(7 * 60 * 60 * 24 + 10) == "7 days 10 seconds"
         assert TimeSpan().value_to_html(7 * 60 * 60 * 24 + 10.213) == "7 days 10 seconds 213 ms"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(
             v_days="1", v_hours="2", v_minutes="3", v_seconds="4", v_milliseconds="345"
         ):

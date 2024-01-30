@@ -30,7 +30,7 @@ def test_get_start_url_default_config(set_config: SetConfig) -> None:
         assert cmk.gui.main._get_start_url() == "bla.py"
 
 
-def test_get_start_url_user_config(set_config: SetConfig) -> None:
+def test_get_start_url_user_config(set_config: SetConfig, request_context: None) -> None:
     class MockUser:
         ident = id = "17"  # session wants us to have an id to be able to set it there
 

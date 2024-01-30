@@ -125,7 +125,9 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
 
 @managedtest
 def test_openapi_user_minimal_settings(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     with (
         time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
@@ -279,7 +281,9 @@ def test_openapi_user_config(
 
 @managedtest
 def test_openapi_user_internal_with_notifications(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     name = UserId(_random_string(10))
 
@@ -473,7 +477,9 @@ def test_openapi_incomplete_auth_options(clients: ClientRegistry, auth_type: str
 
 @managedtest
 def test_openapi_user_internal_auth_handling(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.userdb.htpasswd.hash_password",
@@ -614,7 +620,9 @@ def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: Mo
 
 @managedtest
 def test_managed_global_internal(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
 

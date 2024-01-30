@@ -21,7 +21,7 @@ def run_plugin() -> None:
     )(logging.getLogger(), {})
 
 
-def test_update_tuple_contact_groups_in_folder() -> None:
+def test_update_tuple_contact_groups_in_folder(request_context: None) -> None:
     folder = folder_tree().root_folder()
     # Old data format which is not handled by our code
     folder.attributes["contactgroups"] = (False, [])  # type: ignore[typeddict-item]

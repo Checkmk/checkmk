@@ -48,7 +48,7 @@ def test_fixed_value_validation_fails(value: int | float | str | bool | None) ->
 
 def test_dictionary_ident_validation() -> None:
     with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        Dictionary(elements={"element\abc": DictElement(FixedValue(None))})
+        Dictionary(elements={"element\abc": DictElement(parameter_form=FixedValue(value=None))})
 
 
 def test_multiple_choice_validation() -> None:
@@ -74,7 +74,7 @@ def test_cascading_single_choice_validation() -> None:
                 CascadingSingleChoiceElement(
                     name="element_abc",
                     title=Localizable("Element ABC"),
-                    parameter_form=FixedValue(None),
+                    parameter_form=FixedValue(value=None),
                 )
             ],
             prefill_selection="element_xyz",
@@ -96,5 +96,5 @@ def test_cascading_single_choice_element_validation() -> None:
         CascadingSingleChoiceElement(
             name="element\abc",
             title=Localizable("Element ABC"),
-            parameter_form=FixedValue(None),
+            parameter_form=FixedValue(value=None),
         )

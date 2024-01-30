@@ -17,7 +17,7 @@ class ProxySchema(enum.StrEnum):
     SOCKS5H = "socks5h"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Proxy:
     """Specifies a form for configuring a proxy
 
@@ -41,7 +41,7 @@ class Proxy:
     help_text: Localizable | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Metric:
     """Specifies a form selecting from a list of metrics registered in Checkmk
 
@@ -54,7 +54,7 @@ class Metric:
     help_text: Localizable | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MonitoredHost:
     """Specifies a form selecting from a list of hosts configured in Checkmk
 
@@ -67,7 +67,7 @@ class MonitoredHost:
     help_text: Localizable | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MonitoredService:
     """Specifies a form selecting from a list of currently monitored services in Checkmk
 
@@ -80,7 +80,7 @@ class MonitoredService:
     help_text: Localizable | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Password:
     """Specifies a form for configuring passwords (explicit or from password store)
 
@@ -93,7 +93,7 @@ class Password:
     help_text: Localizable | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TimePeriod:
     """Specifies a form selecting from a list of time periods configured in Checkmk
 

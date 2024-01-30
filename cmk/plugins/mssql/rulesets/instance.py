@@ -12,7 +12,7 @@ def _parameter_form_mssql_instance() -> Dictionary:
     return Dictionary(
         elements={
             "map_connection_state": DictElement(
-                ServiceState(
+                parameter_form=ServiceState(
                     title=Localizable("Connection status"), prefill_value=ServiceState.CRIT
                 )
             ),

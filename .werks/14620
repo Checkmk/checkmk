@@ -1,0 +1,14 @@
+Title: Sets deprecation age for mails sent by check_mail_loop from 24h to 2h
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1706618999
+Edition: cre
+Level: 1
+Version: 2.1.0p39
+
+Mails sent by <code>check_mail_loop</code> had been deprecated only after 24h, which potentially resulted
+in thousands of mails in circumstances when sent mails could not be processed for whatever
+reasons.
+This change lowers this age to 2h resulting in 'only' 120 mails (for this active check being
+executed every minute).

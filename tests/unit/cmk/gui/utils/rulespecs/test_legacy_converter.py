@@ -18,7 +18,6 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
@@ -1148,69 +1147,6 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="dict",
             ),
             id="AgentConfigRuleSpec",
-        ),
-        pytest.param(
-            api_v1.rule_specs.ExtraHostConfHostMonitoring(
-                name="test_rulespec",
-                title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.Text),
-                help_text=api_v1.Localizable("help text"),
-            ),
-            legacy_rulespecs.HostRulespec(
-                name=RuleGroup.ExtraHostConf("test_rulespec"),
-                group=_to_generated_builtin_sub_group(
-                    legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
-                    "Applications",
-                    lambda x: x,
-                ),
-                title=lambda: _("rulespec title"),
-                valuespec=partial(legacy_valuespecs.TextInput),
-                match_type="dict",
-            ),
-            id="ExtraHostConfHostMonitoringRuleSpec",
-        ),
-        pytest.param(
-            api_v1.rule_specs.ExtraHostConfEventConsole(
-                name="test_rulespec",
-                title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.Text),
-                help_text=api_v1.Localizable("help text"),
-            ),
-            legacy_rulespecs.HostRulespec(
-                name=RuleGroup.ExtraHostConf("test_rulespec"),
-                group=_to_generated_builtin_sub_group(
-                    legacy_mkeventd_groups.RulespecGroupEventConsole,
-                    "Applications",
-                    lambda x: x,
-                ),
-                title=lambda: _("rulespec title"),
-                valuespec=partial(legacy_valuespecs.TextInput),
-                match_type="dict",
-            ),
-            id="ExtraHostConfEventConsoleRuleSpec",
-        ),
-        pytest.param(
-            api_v1.rule_specs.ExtraServiceConf(
-                name="test_rulespec",
-                title=api_v1.Localizable("rulespec title"),
-                topic=api_v1.rule_specs.Topic.APPLICATIONS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
-                parameter_form=partial(api_v1.form_specs.Text),
-                help_text=api_v1.Localizable("help text"),
-            ),
-            legacy_rulespecs.ServiceRulespec(
-                name=RuleGroup.ExtraServiceConf("test_rulespec"),
-                item_type="service",
-                group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
-                title=lambda: _("rulespec title"),
-                valuespec=partial(legacy_valuespecs.TextInput),
-                match_type="dict",
-            ),
-            id="ExtraServiceConfRuleSpec",
         ),
         pytest.param(
             api_v1.rule_specs.Host(

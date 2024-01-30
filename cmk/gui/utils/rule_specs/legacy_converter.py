@@ -18,7 +18,6 @@ from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.mkeventd import wato as legacy_mkeventd_groups
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
@@ -75,26 +74,6 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.rule_specs.EnforcedService():
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, edition_only, localizer
-            )
-        case ruleset_api_v1.rule_specs.ExtraHostConfEventConsole():
-            return _convert_to_legacy_host_rule_spec_rulespec(
-                to_convert,
-                legacy_mkeventd_groups.RulespecGroupEventConsole,
-                localizer,
-                config_scope_prefix=RuleGroup.ExtraHostConf,
-            )
-        case ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoring():
-            return _convert_to_legacy_host_rule_spec_rulespec(
-                to_convert,
-                legacy_rulespec_groups.RulespecGroupHostsMonitoringRules,
-                localizer,
-                config_scope_prefix=RuleGroup.ExtraHostConf,
-            )
-        case ruleset_api_v1.rule_specs.ExtraServiceConf():
-            return _convert_to_legacy_service_rule_spec_rulespec(
-                to_convert,
-                localizer,
-                config_scope_prefix=RuleGroup.ExtraServiceConf,
             )
         case ruleset_api_v1.rule_specs.Host():
             return _convert_to_legacy_host_rule_spec_rulespec(
@@ -249,8 +228,6 @@ def _convert_to_legacy_host_rule_spec_rulespec(
     to_convert: ruleset_api_v1.rule_specs.ActiveCheck
     | ruleset_api_v1.rule_specs.AgentConfig
     | ruleset_api_v1.rule_specs.AgentAccess
-    | ruleset_api_v1.rule_specs.ExtraHostConfEventConsole
-    | ruleset_api_v1.rule_specs.ExtraHostConfHostMonitoring
     | ruleset_api_v1.rule_specs.Host
     | ruleset_api_v1.rule_specs.NotificationParameters
     | ruleset_api_v1.rule_specs.InventoryParameters
@@ -275,7 +252,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
 
 
 def _convert_to_legacy_service_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.Service | ruleset_api_v1.rule_specs.ExtraServiceConf,
+    to_convert: ruleset_api_v1.rule_specs.Service,
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
 ) -> legacy_rulespecs.ServiceRulespec:

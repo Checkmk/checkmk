@@ -1,0 +1,9 @@
+Title: Parent/Child topology: No longer ignoring additionally configured filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1706623903
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+

@@ -260,6 +260,7 @@ CEE_UNUSED_PACKAGES = [
     "gunicorn",
     "idna",
     "importlib_metadata",
+    "isodate",
     "jmespath",
     "more-itertools",
     "multidict",

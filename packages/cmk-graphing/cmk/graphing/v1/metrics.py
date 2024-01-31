@@ -72,7 +72,7 @@ class Constant:
     Example:
 
         >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
-        Constant(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+        Constant(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 value=23.5)
     """
 
@@ -238,7 +238,7 @@ class Product:
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Product(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+        Product(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 factors=['metric-name-1', 'metric-name-2'])
     """
 
@@ -346,7 +346,7 @@ class Fraction:
         ...     dividend="metric-name-1",
         ...     divisor="metric-name-2",
         ... )
-        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
+        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 dividend='metric-name-1', divisor='metric-name-2')
     """
 

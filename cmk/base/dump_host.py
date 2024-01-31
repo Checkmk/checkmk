@@ -103,11 +103,9 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     out.output("\n")
     hosts_config = config_cache.hosts_config
     if hostname in hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise RuntimeError()
+        assert config_cache.nodes(hostname)
         color = tty.bgmagenta
-        add_txt = " (cluster of " + (", ".join(nodes)) + ")"
+        add_txt = " (cluster of " + (", ".join(config_cache.nodes(hostname))) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
@@ -155,11 +153,10 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
-        parents_list = config_cache.nodes_of(hostname)
-        if parents_list is None:
-            raise RuntimeError()
+        parents_list = config_cache.nodes(hostname)
     else:
         parents_list = config_cache.parents(hostname)
+
     if parents_list:
         out.output(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"

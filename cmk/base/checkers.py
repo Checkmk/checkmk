@@ -274,9 +274,9 @@ class CMKFetcher:
             Snapshot,
         ]
     ]:
-        nodes = self.config_cache.nodes_of(host_name)
         hosts_config = self.config_cache.hosts_config
-        if nodes is None:
+        is_cluster = host_name in hosts_config.clusters
+        if not is_cluster:
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
             # address is unknown). When called as non keepalive ipaddress may be None or
             # is already an address (2nd argument)
@@ -284,7 +284,10 @@ class CMKFetcher:
                 (host_name, ip_address or config.lookup_ip_address(self.config_cache, host_name))
             ]
         else:
-            hosts = [(node, config.lookup_ip_address(self.config_cache, node)) for node in nodes]
+            hosts = [
+                (node, config.lookup_ip_address(self.config_cache, node))
+                for node in self.config_cache.nodes(host_name)
+            ]
 
         return _fetch_all(
             itertools.chain.from_iterable(
@@ -295,10 +298,10 @@ class CMKFetcher:
                     config_cache=self.config_cache,
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
-                        self.force_snmp_cache_refresh if nodes is None else False
+                        self.force_snmp_cache_refresh if not is_cluster else False
                     ),
-                    selected_sections=self.selected_sections if nodes is None else NO_SELECTION,
-                    on_scan_error=self.on_error if nodes is None else OnError.RAISE,
+                    selected_sections=self.selected_sections if not is_cluster else NO_SELECTION,
+                    on_scan_error=self.on_error if not is_cluster else OnError.RAISE,
                     simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
                     file_cache_max_age=(
@@ -409,7 +412,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
-                cluster_nodes=self.config_cache.nodes_of(host_name) or (),
+                cluster_nodes=self.config_cache.nodes(host_name),
                 providers=providers,
                 service=service,
                 plugin=plugin,

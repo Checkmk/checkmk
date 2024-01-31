@@ -1958,8 +1958,8 @@ def test__discover_services_on_cluster(
     scenario = cluster_scenario
     config_cache = scenario.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
-    nodes = config_cache.nodes_of(scenario.parent)
-    assert nodes is not None
+    nodes = config_cache.nodes(scenario.parent)
+    assert nodes
 
     discovered_services = _get_cluster_services(
         scenario.parent,
@@ -1983,8 +1983,8 @@ def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
 ) -> None:
     scenario = cluster_scenario
-    nodes = scenario.config_cache.nodes_of(scenario.parent)
-    assert nodes is not None
+    nodes = scenario.config_cache.nodes(scenario.parent)
+    assert nodes
 
     host_label_result, kept_labels = analyse_cluster_labels(
         scenario.parent,

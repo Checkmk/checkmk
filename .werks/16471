@@ -1,0 +1,11 @@
+Title: Hide private topics in dropdowns
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1706774864
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Private topics were showing up in dropdowns (e.g. when editing dashboards).
+Now they are hidden if the user does not have permissions for them.

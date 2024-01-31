@@ -146,7 +146,9 @@ class SQLiteHistory(History):
             self._settings.database.touch(exist_ok=True)
 
         # TODO consider enabling PRAGMA journal_mode=WAL; after some performance measurements
-        self.conn = sqlite3.connect(self._settings.database)
+        # TODO lookup our ec backend thread safety.
+        # check_same_thread=False the connection may be accessed in multiple threads.
+        self.conn = sqlite3.connect(self._settings.database, check_same_thread=False)
 
         with self.conn as connection:
             cur = connection.cursor()

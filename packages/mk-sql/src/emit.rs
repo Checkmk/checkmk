@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::types::PiggybackHostName;
+
 use super::config::defines::defaults;
 const PREFIX: &str = "mssql";
 
@@ -14,12 +16,12 @@ pub fn header(name: &str, separator: char) -> String {
     }
 }
 
-pub fn piggyback_header(name: &str) -> String {
-    format!("<<<<{name}>>>>\n")
+pub fn piggyback_header(piggyback_host_name: &PiggybackHostName) -> String {
+    format!("<<<<{piggyback_host_name}>>>>\n")
 }
 
 pub fn piggyback_footer() -> String {
-    piggyback_header("")
+    piggyback_header(&"".to_string().into())
 }
 
 #[cfg(test)]
@@ -35,7 +37,10 @@ mod test {
 
     #[test]
     fn test_piggyback() {
-        assert_eq!(piggyback_header("name"), "<<<<name>>>>\n");
+        assert_eq!(
+            piggyback_header(&"name".to_string().into()),
+            "<<<<name>>>>\n"
+        );
         assert_eq!(piggyback_footer(), "<<<<>>>>\n");
     }
 }

@@ -19,7 +19,8 @@ use crate::ms_sql::query::{
 use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::types::{
-    InstanceCluster, InstanceEdition, InstanceId, InstanceName, InstanceVersion, Port,
+    ComputerName, ConfigHash, InstanceCluster, InstanceEdition, InstanceId, InstanceName,
+    InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils;
 
@@ -46,10 +47,10 @@ pub struct SqlInstanceBuilder {
     port: Option<Port>,
     dynamic_port: Option<Port>,
     endpoint: Option<Endpoint>,
-    computer_name: Option<String>,
+    computer_name: Option<ComputerName>,
     environment: Option<Env>,
-    hash: Option<String>,
-    piggyback: Option<String>,
+    hash: Option<ConfigHash>,
+    piggyback: Option<PiggybackHostName>,
 }
 
 impl SqlInstanceBuilder {
@@ -93,8 +94,8 @@ impl SqlInstanceBuilder {
         self.endpoint = Some(endpoint.clone());
         self
     }
-    pub fn computer_name<S: ToString>(mut self, computer_name: &Option<S>) -> Self {
-        self.computer_name = computer_name.as_ref().map(|s| s.to_string());
+    pub fn computer_name(mut self, computer_name: Option<ComputerName>) -> Self {
+        self.computer_name = computer_name;
         self
     }
 
@@ -102,12 +103,12 @@ impl SqlInstanceBuilder {
         self.environment = environment.clone().into();
         self
     }
-    pub fn hash<S: Into<String>>(mut self, hash: S) -> Self {
-        self.hash = Some(hash.into());
+    pub fn hash(mut self, hash: &ConfigHash) -> Self {
+        self.hash = Some(hash.clone());
         self
     }
-    pub fn piggyback<S: Into<String>>(mut self, piggyback: Option<S>) -> Self {
-        self.piggyback = piggyback.map(|s| s.into().to_lowercase());
+    pub fn piggyback(mut self, piggyback: Option<PiggybackHostName>) -> Self {
+        self.piggyback = piggyback.map(|s| s.to_string().to_lowercase().into());
         self
     }
 
@@ -192,10 +193,10 @@ pub struct SqlInstance {
     dynamic_port: Option<Port>,
     pub available: Option<bool>,
     endpoint: Endpoint,
-    computer_name: Option<String>,
+    computer_name: Option<ComputerName>,
     environment: Env,
-    hash: String,
-    piggyback: Option<String>,
+    hash: ConfigHash,
+    piggyback: Option<PiggybackHostName>,
     version_table: [u32; 3],
 }
 
@@ -224,7 +225,7 @@ impl SqlInstance {
         format!("{}/{}", self.endpoint.hostname(), self.name)
     }
 
-    pub fn hash(&self) -> &str {
+    pub fn hash(&self) -> &ConfigHash {
         &self.hash
     }
 
@@ -232,7 +233,7 @@ impl SqlInstance {
         self.environment.temp_dir()
     }
 
-    pub fn piggyback(&self) -> &Option<String> {
+    pub fn piggyback(&self) -> &Option<PiggybackHostName> {
         &self.piggyback
     }
 
@@ -258,7 +259,7 @@ impl SqlInstance {
             return cluster.into();
         }
         if let Some(computer_name) = &self.computer_name {
-            computer_name
+            computer_name.into()
         } else {
             ""
         }
@@ -279,7 +280,7 @@ impl SqlInstance {
     pub fn generate_header(&self) -> String {
         self.piggyback
             .as_ref()
-            .map(|h| emit::piggyback_header(h))
+            .map(emit::piggyback_header)
             .unwrap_or_default()
             .to_owned()
     }
@@ -483,7 +484,7 @@ impl SqlInstance {
         }
         if let Some(path) = self
             .environment
-            .obtain_cache_sub_dir(self.hash())
+            .obtain_cache_sub_dir(self.hash().to_string().as_str())
             .map(|d| d.join(self.make_cache_entry_name(name)))
         {
             match utils::get_modified_age(&path) {
@@ -504,7 +505,10 @@ impl SqlInstance {
     }
 
     fn write_data_in_cache(&self, name: &str, body: &str) {
-        if let Some(dir) = self.environment.obtain_cache_sub_dir(self.hash()) {
+        if let Some(dir) = self
+            .environment
+            .obtain_cache_sub_dir(self.hash().to_string().as_str())
+        {
             let file_name = self.make_cache_entry_name(name);
             std::fs::write(dir.join(file_name), body)
                 .unwrap_or_else(|e| log::error!("Error {e} writing cache"));
@@ -1049,7 +1053,7 @@ impl SqlInstance {
         self.port.clone().or(self.dynamic_port.clone())
     }
 
-    pub fn computer_name(&self) -> &Option<String> {
+    pub fn computer_name(&self) -> &Option<ComputerName> {
         &self.computer_name
     }
 }
@@ -1058,7 +1062,7 @@ impl SqlInstance {
 pub struct SqlInstanceProperties {
     pub name: InstanceName,
     pub version: InstanceVersion,
-    pub machine_name: String,
+    pub computer_name: ComputerName,
     pub edition: InstanceEdition,
     pub product_level: String,
     pub net_bios: String,
@@ -1069,7 +1073,7 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
         let row = &row[0];
         let name = row.get_value_by_name("InstanceName");
         let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
-        let machine_name = row.get_value_by_name("MachineName");
+        let computer_name: ComputerName = row.get_value_by_name("MachineName").into();
         let edition: InstanceEdition = row.get_value_by_name("Edition").into();
         let product_level = row.get_value_by_name("ProductLevel");
         let net_bios = row.get_value_by_name("NetBios");
@@ -1081,7 +1085,7 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
             })
             .into(),
             version,
-            machine_name,
+            computer_name,
             edition,
             product_level,
             net_bios,
@@ -1395,20 +1399,23 @@ fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
 fn generate_signaling_blocks(ms_sql: &config::ms_sql::Config, instances: &[SqlInstance]) -> String {
     instances
         .iter()
-        .map(|i| i.piggyback().as_deref().unwrap_or_default().to_string())
-        .collect::<HashSet<String>>()
+        .map(|i| i.piggyback().as_ref().cloned())
+        .collect::<Vec<Option<PiggybackHostName>>>()
         .into_iter()
         .map(|h| generate_signaling_block(ms_sql, &h))
         .collect::<Vec<String>>()
         .join("")
 }
 
-fn generate_signaling_block(ms_sql: &config::ms_sql::Config, piggyback_host: &str) -> String {
+fn generate_signaling_block(
+    ms_sql: &config::ms_sql::Config,
+    piggyback_host: &Option<PiggybackHostName>,
+) -> String {
     let body = generate_dumb_header(ms_sql) + &Section::make_instance_section().to_plain_header();
-    if piggyback_host.is_empty() {
-        body
-    } else {
+    if let Some(piggyback_host) = piggyback_host.as_ref() {
         emit::piggyback_header(piggyback_host) + &body + &emit::piggyback_footer()
+    } else {
+        body
     }
 }
 
@@ -1468,7 +1475,11 @@ async fn find_usable_instances(
 
     Ok(builders
         .into_iter()
-        .map(|b: SqlInstanceBuilder| b.environment(environment).hash(ms_sql.hash()).build())
+        .map(|b: SqlInstanceBuilder| {
+            b.environment(environment)
+                .hash(&ms_sql.hash().to_string().into())
+                .build()
+        })
         .collect::<Vec<SqlInstance>>())
 }
 
@@ -1496,7 +1507,7 @@ pub async fn find_all_instance_builders(
             .collect()
     }
     .into_iter()
-    .map(|b| b.piggyback(ms_sql.piggyback_host()))
+    .map(|b| b.piggyback(ms_sql.piggyback_host().map(|h| h.to_string().into())))
     .collect();
     let customizations: HashMap<&InstanceName, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.name(), i)).collect();
@@ -1643,7 +1654,7 @@ fn to_instance_builder(
 ) -> SqlInstanceBuilder {
     SqlInstanceBuilder::new()
         .name(properties.name.clone())
-        .computer_name(&Some(properties.machine_name.clone()))
+        .computer_name(Some(properties.computer_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
         .port(Some(endpoint.conn().port()))
@@ -1718,7 +1729,12 @@ fn apply_customization(
     customization: &CustomInstance,
 ) -> SqlInstanceBuilder {
     builder
-        .piggyback(customization.piggyback().map(|p| p.hostname()))
+        .piggyback(
+            customization
+                .piggyback()
+                .map(|p| p.hostname())
+                .map(|h| h.clone().into()),
+        )
         .alias(
             customization
                 .alias()
@@ -1802,13 +1818,13 @@ async fn exec_win_registry_sql_instances_query(
 fn to_sql_instance(
     rows: &Answer,
     endpoint: &Endpoint,
-    computer_name: Option<String>,
+    computer_name: Option<ComputerName>,
 ) -> Vec<SqlInstanceBuilder> {
     rows.iter()
         .map(|r| {
             SqlInstanceBuilder::new()
                 .row(r)
-                .computer_name(&computer_name)
+                .computer_name(computer_name.clone())
                 .endpoint(endpoint)
         })
         .collect::<Vec<SqlInstanceBuilder>>()
@@ -1842,7 +1858,9 @@ mod tests {
     fn make_instances() -> Vec<SqlInstance> {
         let builders = vec![
             SqlInstanceBuilder::new().name("A"),
-            SqlInstanceBuilder::new().name("B").piggyback(Some("Y")),
+            SqlInstanceBuilder::new()
+                .name("B")
+                .piggyback(Some("Y".to_string().into())),
         ];
 
         builders
@@ -1913,7 +1931,9 @@ mssql:
         assert!(blocks.contains(EXPECTED_PB_BLOCK));
         assert_eq!(
             blocks.len(),
-            EXPECTED_OK_BLOCK.len() + EXPECTED_PB_BLOCK.len()
+            EXPECTED_OK_BLOCK.len() + EXPECTED_PB_BLOCK.len(),
+            "{}",
+            blocks
         );
     }
 
@@ -1924,7 +1944,7 @@ mssql:
         assert_eq!(normal.generate_footer(), "");
         let piggyback = SqlInstanceBuilder::new()
             .name("test_name")
-            .piggyback(Some("Y"))
+            .piggyback(Some("Y".to_string().into()))
             .build();
         assert_eq!(piggyback.generate_header(), "<<<<y>>>>\n");
         assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
@@ -1941,13 +1961,13 @@ mssql:
             .alias("alias")
             .dynamic_port(Some(Port(1u16)))
             .port(Some(Port(2u16)))
-            .computer_name(&Some("computer_name".to_owned()))
-            .hash("hash")
+            .computer_name(Some("computer_name".to_string().into()))
+            .hash(&"hash".to_string().into())
             .version(&"version".to_string().into())
             .edition(&"edition".to_string().into())
             .environment(&Env::new(&args))
             .id("id")
-            .piggyback(Some("piggYback"));
+            .piggyback(Some("piggYback".to_string().into()));
         assert_eq!(standard.get_port(), Port(2u16));
         let cluster = standard.clone().cluster(Some("cluster".to_string().into()));
 
@@ -1958,12 +1978,12 @@ mssql:
         assert!(s.cluster.is_none());
         assert_eq!(s.version.to_string(), "version");
         assert_eq!(s.edition.to_string(), "edition");
-        assert_eq!(s.hash, "hash");
+        assert_eq!(s.hash, "hash".to_string().into());
         assert_eq!(s.port, Some(Port(2u16)));
         assert_eq!(s.dynamic_port, Some(Port(1u16)));
 
-        assert_eq!(s.piggyback().as_deref(), Some("piggyback"));
-        assert_eq!(s.computer_name().as_deref(), Some("computer_name"));
+        assert_eq!(s.piggyback(), &Some("piggyback".to_string().into()));
+        assert_eq!(s.computer_name(), &Some("computer_name".to_string().into()));
         assert_eq!(s.temp_dir(), Some(Path::new(".")));
         assert_eq!(s.full_name(), "localhost/NAME");
         assert_eq!(s.mssql_name(), "MSSQL_NAME");

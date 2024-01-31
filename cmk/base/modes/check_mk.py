@@ -1093,7 +1093,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
             for host in frozenset(hosts_config.hosts)
             if config_cache.is_active(host)
             and config_cache.is_online(host)
-            and config_cache.is_snmp_host(host)
+            and config_cache.computed_datasources(host).is_snmp
         )
 
     assert hostnames

@@ -7,6 +7,8 @@ use crate::types::Port;
 use anyhow::Result;
 
 #[cfg(windows)]
+use crate::types::InstanceName; // only on windows possible to connect by name
+#[cfg(windows)]
 use tiberius::SqlBrowser;
 use tiberius::{AuthMethod, Config};
 use tokio::net::TcpStream;
@@ -197,7 +199,7 @@ pub async fn create_local(_database: Option<String>, _port: u16) -> Result<Clien
 /// * `port` - Port of MS SQL server BROWSER,  1434 - default
 #[cfg(windows)]
 pub async fn create_instance_local(
-    instance_name: &str,
+    instance_name: &InstanceName,
     sql_browser_port: Option<u16>,
     database: Option<String>,
 ) -> anyhow::Result<Client> {

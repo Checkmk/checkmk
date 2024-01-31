@@ -5,7 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::types::{MaxConnections, MaxQueries, Port};
+use crate::types::{InstanceName, MaxConnections, MaxQueries, Port};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -505,7 +505,8 @@ impl TryFrom<&str> for Mode {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct CustomInstance {
-    sid: String,
+    /// also known as sid
+    name: InstanceName,
     auth: Authentication,
     conn: Connection,
     alias: Option<String>,
@@ -519,13 +520,14 @@ impl CustomInstance {
         main_conn: &Connection,
         sections: &Sections,
     ) -> Result<Self> {
-        let sid = yaml
-            .get_string(keys::SID)
-            .context("Bad/Missing sid in instance")?
-            .to_uppercase();
-        let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &sid)?;
+        let name = InstanceName(
+            yaml.get_string(keys::SID)
+                .context("Bad/Missing sid in instance")?
+                .to_uppercase(),
+        );
+        let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &name)?;
         Ok(Self {
-            sid,
+            name,
             auth,
             conn,
             alias: yaml.get_string(keys::ALIAS),
@@ -540,7 +542,7 @@ impl CustomInstance {
         yaml: &Yaml,
         main_auth: &Authentication,
         main_conn: &Connection,
-        sid: &str,
+        sid: &InstanceName,
     ) -> Result<(Authentication, Connection)> {
         let mut auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
         let mut conn = Connection::from_yaml(yaml, Some(&auth))?.unwrap_or(main_conn.clone());
@@ -580,8 +582,9 @@ impl CustomInstance {
         Ok((auth, conn))
     }
 
-    pub fn sid(&self) -> &String {
-        &self.sid
+    /// also known as sid
+    pub fn name(&self) -> &InstanceName {
+        &self.name
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -1075,7 +1078,7 @@ discovery:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.sid(), "INST1");
+        assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.conn().hostname(), "localhost");
         assert_eq!(instance.calc_real_host(), "localhost");
@@ -1102,7 +1105,7 @@ connection:
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.sid(), "INST1");
+        assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
         assert_eq!(instance.conn().hostname(), "localhost");
         assert_eq!(instance.calc_real_host(), "localhost");
@@ -1117,8 +1120,8 @@ connection:
             c.instances()[0].piggyback().unwrap().hostname(),
             "myPiggybackHost"
         );
-        assert_eq!(c.instances()[0].sid(), "INST1");
-        assert_eq!(c.instances()[1].sid(), "INST2");
+        assert_eq!(c.instances()[0].name().to_string(), "INST1");
+        assert_eq!(c.instances()[1].name().to_string(), "INST2");
         assert_eq!(c.mode(), &Mode::Port);
         assert_eq!(
             c.discovery().include(),

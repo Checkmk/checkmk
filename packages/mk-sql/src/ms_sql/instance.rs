@@ -18,7 +18,7 @@ use crate::ms_sql::query::{
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
-use crate::types::Port;
+use crate::types::{InstanceName, Port};
 use crate::utils;
 
 use anyhow::Result;
@@ -36,7 +36,7 @@ pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 #[derive(Clone, Debug, Default)]
 pub struct SqlInstanceBuilder {
     alias: Option<String>,
-    pub name: Option<String>,
+    pub name: Option<InstanceName>,
     id: Option<String>,
     edition: Option<String>,
     version: Option<String>,
@@ -56,7 +56,7 @@ impl SqlInstanceBuilder {
     }
 
     pub fn name<S: Into<String>>(mut self, name: S) -> Self {
-        self.name = Some(name.into());
+        self.name = Some(InstanceName::from(name.into().to_uppercase()));
         self
     }
     pub fn alias<S: Into<String>>(mut self, alias: S) -> Self {
@@ -127,8 +127,8 @@ impl SqlInstanceBuilder {
             )
     }
 
-    pub fn get_name(&self) -> String {
-        self.name.clone().unwrap_or_default().to_uppercase()
+    pub fn get_name(&self) -> InstanceName {
+        self.name.clone().unwrap_or_default()
     }
 
     pub fn get_endpoint(&self) -> Option<&Endpoint> {
@@ -147,7 +147,7 @@ impl SqlInstanceBuilder {
         let version_table = parse_version(&self.version);
         SqlInstance {
             alias: self.alias,
-            name: self.name.unwrap_or_default().to_uppercase(),
+            name: self.name.unwrap_or_default(),
             id: self.id.unwrap_or_default(),
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
@@ -180,7 +180,7 @@ fn parse_version(version: &Option<String>) -> [u32; 3] {
 #[derive(Clone, Debug)]
 pub struct SqlInstance {
     pub alias: Option<String>,
-    pub name: String,
+    pub name: InstanceName,
     pub id: String,
     pub version: String,
     pub edition: String,
@@ -239,7 +239,7 @@ impl SqlInstance {
 
     /// not tested, because it is a bit legacy
     pub fn legacy_name(&self) -> String {
-        if self.name != "MSSQLSERVER" {
+        if self.name.to_string() != "MSSQLSERVER" {
             return format!("{}/{}", self.legacy_name_prefix(), self.name);
         }
 
@@ -375,6 +375,7 @@ impl SqlInstance {
 
             #[cfg(windows)]
             AuthType::Integrated => {
+                //let s: String = String::from(&self.name);
                 client::create_instance_local(&self.name, conn.sql_browser_port(), database).await?
             }
 
@@ -1052,7 +1053,7 @@ impl SqlInstance {
 
 #[derive(Debug)]
 pub struct SqlInstanceProperties {
-    pub name: String,
+    pub name: InstanceName,
     pub version: String,
     pub machine_name: String,
     pub edition: String,
@@ -1070,11 +1071,11 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
         let product_level = row.get_value_by_name("ProductLevel");
         let net_bios = row.get_value_by_name("NetBios");
         Self {
-            name: if name.is_empty() {
+            name: InstanceName(if name.is_empty() {
                 "MSSQLSERVER".to_string()
             } else {
-                name
-            },
+                name.to_uppercase()
+            }),
             version,
             machine_name,
             edition,
@@ -1143,7 +1144,7 @@ fn to_table_spaces_entry(
 }
 
 fn to_transaction_logs_entries(
-    instance_name: &str,
+    instance_name: &InstanceName,
     database_name: &str,
     rows: &[Vec<Row>],
     sep: char,
@@ -1160,7 +1161,7 @@ fn to_transaction_logs_entries(
 
 fn to_transaction_logs_entry(
     row: &Row,
-    instance_name: &str,
+    instance_name: &InstanceName,
     database_name: &str,
     sep: char,
 ) -> String {
@@ -1184,7 +1185,7 @@ fn to_transaction_logs_entry(
 }
 
 fn to_datafiles_entries(
-    instance_name: &str,
+    instance_name: &InstanceName,
     database_name: &str,
     rows: &[Vec<Row>],
     sep: char,
@@ -1199,7 +1200,12 @@ fn to_datafiles_entries(
         .join("")
 }
 
-fn to_datafiles_entry(row: &Row, instance_name: &str, database_name: &str, sep: char) -> String {
+fn to_datafiles_entry(
+    row: &Row,
+    instance_name: &InstanceName,
+    database_name: &str,
+    sep: char,
+) -> String {
     let name = row.get_value_by_name("name");
     let physical_name = row.get_value_by_name("physical_name");
     let max_size = row.get_bigint_by_name("MaxSize");
@@ -1219,7 +1225,7 @@ fn to_datafiles_entry(row: &Row, instance_name: &str, database_name: &str, sep: 
     )
 }
 
-fn to_databases_entries(instance_name: &str, rows: &[Vec<Row>], sep: char) -> String {
+fn to_databases_entries(instance_name: &InstanceName, rows: &[Vec<Row>], sep: char) -> String {
     if rows.is_empty() {
         return String::new();
     }
@@ -1230,7 +1236,7 @@ fn to_databases_entries(instance_name: &str, rows: &[Vec<Row>], sep: char) -> St
         .join("")
 }
 
-fn to_databases_entry(row: &Row, instance_name: &str, sep: char) -> String {
+fn to_databases_entry(row: &Row, instance_name: &InstanceName, sep: char) -> String {
     let name = row.get_value_by_name("name");
     let status = row.get_value_by_name("Status");
     let recovery = row.get_value_by_name("Recovery");
@@ -1325,7 +1331,7 @@ fn to_counter_entry(row: &Row, sep: char) -> String {
     counter.into_string(sep)
 }
 
-fn to_blocked_session_entry(instance_name: &str, row: &Row, sep: char) -> String {
+fn to_blocked_session_entry(instance_name: &InstanceName, row: &Row, sep: char) -> String {
     let session_id = row.get_value_by_idx(0).trim().to_string();
     let wait_duration_ms = row.get_bigint_by_idx(1).to_string();
     let wait_type = row.get_value_by_idx(2).trim().to_string();
@@ -1488,8 +1494,8 @@ pub async fn find_all_instance_builders(
     .into_iter()
     .map(|b| b.piggyback(ms_sql.piggyback_host()))
     .collect();
-    let customizations: HashMap<&String, &CustomInstance> =
-        ms_sql.instances().iter().map(|i| (i.sid(), i)).collect();
+    let customizations: HashMap<&InstanceName, &CustomInstance> =
+        ms_sql.instances().iter().map(|i| (i.name(), i)).collect();
     let builders = apply_customizations(detected, &customizations);
     add_custom_instance_builders(builders, &customizations).await
 }
@@ -1510,7 +1516,7 @@ async fn find_detectable_instance_builders(
 /// may NOT work - should be approved during testing
 async fn add_custom_instance_builders(
     builders: Vec<SqlInstanceBuilder>,
-    customizations: &HashMap<&String, &CustomInstance>,
+    customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let reconnects = determine_reconnect(builders, customizations);
 
@@ -1554,7 +1560,7 @@ async fn get_custom_instance_builder(
 
 async fn find_custom_instance(
     endpoint: &Endpoint,
-    instance_name: &str,
+    instance_name: &InstanceName,
 ) -> Option<SqlInstanceBuilder> {
     let builders = get_instance_builders(endpoint).await.unwrap_or_else(|e| {
         log::error!("Error creating client for instance `{instance_name}`: {e}",);
@@ -1575,7 +1581,7 @@ async fn find_custom_instance(
                 "Impossible to detect port for `{instance_name}` known: `{}`",
                 builders
                     .iter()
-                    .map(|i| i.get_name())
+                    .map(|i| i.get_name().into())
                     .collect::<Vec<String>>()
                     .join(", ")
             );
@@ -1584,10 +1590,10 @@ async fn find_custom_instance(
     }
 }
 
-fn detect_instance_port(name: &str, builders: &[SqlInstanceBuilder]) -> Option<Port> {
+fn detect_instance_port(name: &InstanceName, builders: &[SqlInstanceBuilder]) -> Option<Port> {
     builders
         .iter()
-        .find(|b| b.get_name() == name)
+        .find(|b| b.get_name() == *name)
         .map(|b| b.get_port())
 }
 
@@ -1604,7 +1610,10 @@ fn get_reasonable_port(builder: &SqlInstanceBuilder, endpoint: &Endpoint) -> Por
     }
 }
 
-async fn obtain_properties(client: &mut Client, name: &str) -> Option<SqlInstanceProperties> {
+async fn obtain_properties(
+    client: &mut Client,
+    name: &InstanceName,
+) -> Option<SqlInstanceProperties> {
     match SqlInstanceProperties::obtain_by_query(client).await {
         Ok(properties) => {
             if properties.name == *name {
@@ -1629,7 +1638,7 @@ fn to_instance_builder(
     properties: &SqlInstanceProperties,
 ) -> SqlInstanceBuilder {
     SqlInstanceBuilder::new()
-        .name(properties.name.to_uppercase())
+        .name(properties.name.clone())
         .computer_name(&Some(properties.machine_name.clone()))
         .version(&properties.version)
         .edition(&properties.edition)
@@ -1639,9 +1648,9 @@ fn to_instance_builder(
 /// - SQL instances with custom endpoint if any
 fn determine_reconnect(
     builders: Vec<SqlInstanceBuilder>,
-    customizations: &HashMap<&String, &CustomInstance>,
+    customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Vec<(SqlInstanceBuilder, Option<Endpoint>)> {
-    let mut found: HashSet<String> = HashSet::new();
+    let mut found: HashSet<InstanceName> = HashSet::new();
     let mut b = builders
         .into_iter()
         .map(|instance_builder| {
@@ -1672,9 +1681,9 @@ fn determine_reconnect(
     customizations
         .iter()
         .filter(|(&k, _)| !found.contains(k))
-        .map(|(name, customization)| {
+        .map(|(&name, customization)| {
             log::info!("Add custom instance {} ", name);
-            let builder = SqlInstanceBuilder::new().name(name.to_uppercase());
+            let builder = SqlInstanceBuilder::new().name(name.clone());
             (
                 apply_customization(builder, customization),
                 Some(customization.endpoint()),
@@ -1687,7 +1696,7 @@ fn determine_reconnect(
 
 fn apply_customizations(
     detected: Vec<SqlInstanceBuilder>,
-    customizations: &HashMap<&String, &CustomInstance>,
+    customizations: &HashMap<&InstanceName, &CustomInstance>,
 ) -> Vec<SqlInstanceBuilder> {
     detected
         .into_iter()
@@ -1940,7 +1949,7 @@ mssql:
 
         let s = standard.build();
         assert_eq!(s.id, "id");
-        assert_eq!(s.name, "NAME");
+        assert_eq!(s.name.to_string(), "NAME");
         assert_eq!(s.alias.as_deref(), Some("alias"));
         assert!(s.cluster.is_none());
         assert_eq!(s.version, "version");

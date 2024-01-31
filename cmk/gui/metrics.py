@@ -62,13 +62,12 @@ from cmk.gui.i18n import _
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
     add_graphing_plugins(load_graphing_plugins())
     parse_perfometers(perfometer_info)
 
 
-def _register_pre_21_plugin_api() -> None:
+def register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plugin API"
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.

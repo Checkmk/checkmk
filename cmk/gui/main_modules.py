@@ -17,6 +17,8 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
+from .metrics import register_pre_21_plugin_api
+
 
 @contextmanager
 def suppress_module_not_found(name: str) -> Iterator[None]:
@@ -69,6 +71,7 @@ def _imports() -> Iterator[str]:
 def load_plugins() -> None:
     """Loads and initializes main modules and plugins into the application
     Only built-in main modules are already imported."""
+    register_pre_21_plugin_api()
     local_main_modules = _import_local_main_modules()
     main_modules = _cmk_gui_top_level_modules() + local_main_modules
     _import_main_module_plugins(main_modules)

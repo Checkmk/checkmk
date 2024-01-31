@@ -243,7 +243,10 @@ def create_history(
             return MongoDBHistory(settings, config, logger, event_columns, history_columns)
         case "sqlite":
             return SQLiteHistory(
-                SQLiteSettings.from_settings(settings=settings),
+                SQLiteSettings.from_settings(
+                    settings=settings,
+                    database=Path(settings.paths.history_dir.value / "history.sqlite"),
+                ),
                 config,
                 logger,
                 event_columns,

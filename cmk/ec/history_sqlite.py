@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from .config import Config
 from .event import Event
@@ -117,15 +117,13 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
 class SQLiteSettings:
     paths: Paths
     options: Options
-    database: str | Path
+    database: Literal[":memory:"] | Path
 
     @classmethod
-    def from_settings(cls, settings: Settings, db: str | Path = "") -> "SQLiteSettings":
-        return cls(
-            paths=settings.paths,
-            options=settings.options,
-            database=db or Path(settings.paths.history_dir.value / "history.sqlite"),
-        )
+    def from_settings(
+        cls, settings: Settings, *, database: Literal[":memory:"] | Path
+    ) -> "SQLiteSettings":
+        return cls(paths=settings.paths, options=settings.options, database=database)
 
 
 class SQLiteHistory(History):
@@ -142,6 +140,10 @@ class SQLiteHistory(History):
         self._logger = logger
         self._event_columns = event_columns
         self._history_columns = history_columns
+
+        if isinstance(self._settings.database, Path):
+            self._settings.database.parent.mkdir(parents=True, exist_ok=True)
+            self._settings.database.touch(exist_ok=True)
 
         # TODO consider enabling PRAGMA journal_mode=WAL; after some performance measurements
         self.conn = sqlite3.connect(self._settings.database)

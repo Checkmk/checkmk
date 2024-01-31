@@ -104,7 +104,7 @@ def fixture_history_sqlite(settings: Settings, config: Config) -> Iterator[SQLit
     """history_sqlite with history file path set to :memory:"""
 
     history = SQLiteHistory(
-        SQLiteSettings.from_settings(settings, ":memory:"),
+        SQLiteSettings.from_settings(settings, database=":memory:"),
         {**config, "archive_mode": "sqlite"},
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,

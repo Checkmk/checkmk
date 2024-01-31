@@ -1,0 +1,14 @@
+Title: notification_rule: cancel previous notifications now working with custom plugin scripts
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1706714129
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+When creating or updating notification rules, the option to "cancel_previous_notifications"
+was previously not available when the plugin name selected was a custom plugin script.
+
+This werk addresses this issue and now allows for custom plugin scripts when setting the
+option to cancel.

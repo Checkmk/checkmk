@@ -21,7 +21,6 @@ class GuiTimingsPage(Page):
             self._title(),
             breadcrumb=breadcrumb,
         )
-        html.final_javascript('cmk.render_stats_table("#stats_tables");')
 
         html.open_div(id_="info_title")
         html.h1("Client side GUI timings")
@@ -29,10 +28,13 @@ class GuiTimingsPage(Page):
 
         html.div(None, id_="info_underline")
 
-        html.open_div(id_="stats_tables")
-        html.close_div()
+        html.call_ts_function(
+            container="div",
+            function_name="render_stats_table",
+            options=None,
+        )
 
-        html.write_final_javascript()
+        html.final_javascript_code()
         html.close_body()
         return None
 

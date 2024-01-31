@@ -48,6 +48,10 @@ from .tag_rendering import (
 FinalJavaScript = typing.Callable[[], str] | str
 
 
+# See web/htdocs/js/index.ts:callable_functions
+KnownTSFunction = typing.Literal["render_stats_table",]
+
+
 def maybecall(entry: FinalJavaScript) -> str:
     if callable(entry):
         return entry()
@@ -606,6 +610,27 @@ class HTMLWriter:
     @staticmethod
     def render_x(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("x", content, **kwargs)
+
+    def call_ts_function(
+        self,
+        *,
+        container: str,
+        function_name: KnownTSFunction,
+        options: dict[str, str] | None = None,
+    ) -> None:
+        json_options: str
+        if options is None:
+            json_options = "{}"
+        else:
+            json_options = json.dumps(options)
+        self.write_html(
+            render_start_tag(
+                container,
+                data_cmk_call_ts_function=function_name,
+                data_cmk_call_ts_options=json_options,
+            )
+        )
+        self.write_html(render_end_tag(container))
 
     def open_div(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("div", close_tag=False, **kwargs))

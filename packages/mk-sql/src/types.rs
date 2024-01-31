@@ -26,7 +26,13 @@ pub struct MaxConnections(pub u32);
 pub struct MaxQueries(pub u32);
 
 #[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
-pub struct InstanceName(pub String);
+pub struct InstanceName(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default)]
-pub struct InstanceId(pub String);
+pub struct InstanceId(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct InstanceEdition(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct InstanceVersion(String);

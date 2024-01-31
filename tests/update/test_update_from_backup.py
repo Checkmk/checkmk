@@ -13,6 +13,7 @@ from tests.testlib.agent import (
     register_controller,
     wait_until_host_receives_data,
 )
+from tests.update.conftest import BaseVersions
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
@@ -25,7 +26,6 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
-from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,7 @@ def _base_site_demo(site_factory_demo):
     "This will be fixed starting from base-version 2.2.0p8",
 )
 @pytest.mark.cee
+@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()
@@ -154,6 +155,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
+@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

@@ -56,7 +56,7 @@ check_plugin_netapp_ontap_psu = CheckPlugin(
     service_name="Power Supply Shelf %s",
     sections=["netapp_ontap_psu"],
     discovery_function=netapp_api.discover_single,
-    discovery_ruleset_name="discovery_netapp_api_fan_rules",
+    discovery_ruleset_name="discovery_netapp_api_psu_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_psu,
 )
@@ -76,7 +76,7 @@ check_plugin_netapp_ontap_psu_summary = CheckPlugin(
     service_name="Power Supply Shelf %s",
     sections=["netapp_ontap_psu"],
     discovery_function=netapp_api.discover_summary,
-    discovery_ruleset_name="discovery_netapp_api_fan_rules",
+    discovery_ruleset_name="discovery_netapp_api_psu_rules",
     discovery_default_parameters={"mode": "single"},
     check_function=check_netapp_ontap_psu_summary,
 )

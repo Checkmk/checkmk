@@ -46,3 +46,19 @@ impl<'a> From<&'a InstanceCluster> for &'a str {
         instance_cluster.0.as_str()
     }
 }
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct ComputerName(String);
+
+// used once, may be removed in the future
+impl<'a> From<&'a ComputerName> for &'a str {
+    fn from(computer_name: &'a ComputerName) -> &'a str {
+        computer_name.0.as_str()
+    }
+}
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct ConfigHash(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into, Hash, Eq)]
+pub struct PiggybackHostName(String);

@@ -501,7 +501,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
         This does not only need a flag in the page itself, but also the
         permission from its owner to publish it."""
-        if self._["public"] is False:
+        if self._["public"] is False or self._["public"] is None:
             return False
 
         return self.publish_is_allowed()

@@ -1,0 +1,16 @@
+Title: Fix topics being falsely shown as public
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1706774499
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Previously, pagetypes (bookmarks, custom graphs, topics etc.) were falsely
+handled as public, rather than private. Items published only to specific groups
+are not affected and were handled correctly.
+
+This change may cause users to no longer see public overwrites by admins for
+example. Please ensure your permissions and publish states are configured
+correctly.

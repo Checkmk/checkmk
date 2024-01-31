@@ -52,7 +52,7 @@ responses = "==0.18.0"  # used for unit tests
 webtest = "==3.0.0"  # used by WSGI based tests
 pre-commit = "==2.17.0"  # used to fix / find issues before commiting changes
 flake8 = "==4.0.1"
-sphinx = "==4.4.0"  # used for the plugin API documentation
+sphinx = "==5.0.0"  # used for the plugin API documentation
 sphinx-autodoc-typehints = "==1.17.0"  # used for the plugin API documentation
 sphinx-rtd-theme = "==1.0.0"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "==0.22"  # used for the API and architecture

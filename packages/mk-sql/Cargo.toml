@@ -36,7 +36,12 @@ yaml-rust = "0.4.5"
 lazy_static = { version = "1.4" }
 futures = { version = "0.3.25" }
 # used for New Types derives, may be removed
-derive_more = { version = "0.99", features = ["from", "display", "into"] }
+derive_more = { version = "0.99", features = [
+    "from",
+    "display",
+    "into",
+    "default",
+] }
 
 [dev-dependencies]
 tempfile = { version = "*" }

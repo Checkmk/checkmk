@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use mk_sql::types::InstanceName;
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
@@ -25,13 +26,17 @@ use mk_sql::config::{
 };
 use tempfile::TempDir;
 
-fn expected_instances() -> Vec<String> {
+fn expected_instances() -> HashSet<InstanceName> {
     const EXPECTED_INSTANCES: [&str; 3] = ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"];
 
     EXPECTED_INSTANCES
         .iter()
-        .map(|&s| str::to_string(s))
+        .map(|&s| InstanceName(str::to_string(s)))
         .collect()
+}
+
+fn main_instance_name() -> InstanceName {
+    InstanceName("MSSQLSERVER".to_string())
 }
 
 #[test]
@@ -72,12 +77,12 @@ async fn test_local_connection() {
     let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
         .await
         .unwrap();
-    assert_eq!(properties.name, "MSSQLSERVER");
+    assert_eq!(properties.name, main_instance_name());
 }
 
 fn is_instance_good(i: &SqlInstance) -> bool {
-    !i.name.is_empty()
-        && i.id.contains(&i.name[..4])
+    !String::from(i.name.clone()).is_empty()
+        && i.id.contains(&String::from(i.name.clone())[..4])
         && i.id.contains("MSSQL")
         && i.version.chars().filter(|&c| c == '.').count() == 3
         && i.port().is_some()
@@ -94,8 +99,8 @@ async fn test_obtain_all_instances_from_registry_local() {
         .unwrap();
     let all: Vec<SqlInstance> = to_instances([&builders.0[..], &builders.1[..]].concat());
     assert!(all.iter().all(is_instance_good), "{:?}", all);
-    let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
-    names.sort();
+    assert_eq!(all.len(), expected_instances().len());
+    let names: HashSet<InstanceName> = all.into_iter().map(|i| i.name).collect();
 
     assert_eq!(names, expected_instances(), "During connecting to `local`");
 }
@@ -108,7 +113,7 @@ async fn test_validate_all_instances_local() {
     let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
         .await
         .unwrap();
-    let names: Vec<String> = [&builders.0[..], &builders.1[..]]
+    let names: Vec<InstanceName> = [&builders.0[..], &builders.1[..]]
         .concat()
         .into_iter()
         .map(|i| i.get_name())
@@ -150,7 +155,7 @@ async fn test_remote_connection() {
         let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
             .await
             .unwrap();
-        assert_eq!(properties.name, "MSSQLSERVER");
+        assert_eq!(properties.name, main_instance_name());
     } else {
         panic!(
             "Skipping remote connection test: environment variable {} not set",
@@ -174,8 +179,9 @@ async fn test_find_all_instances_remote() {
             .unwrap();
         let all = to_instances([&builders.0[..], &builders.1[..]].concat());
         assert!(all.iter().all(is_instance_good));
-        let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
-        names.sort();
+        assert_eq!(all.len(), expected_instances().len());
+
+        let names: HashSet<InstanceName> = all.into_iter().map(|i| i.name).collect();
 
         assert_eq!(
             names,
@@ -393,7 +399,7 @@ async fn validate_transaction_logs(
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
-        assert_eq!(values[0], instance.name, "wrong: {l}");
+        assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
@@ -428,7 +434,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoin
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 8);
-        assert_eq!(values[0], instance.name, "wrong: {l}");
+        assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
@@ -466,7 +472,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 6);
-        assert_eq!(values[0], instance.name, "wrong: {l}");
+        assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
@@ -504,7 +510,7 @@ async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 6, "wrong: {l}");
-        assert_eq!(values[0], instance.name, "wrong: {l}");
+        assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
@@ -533,7 +539,7 @@ async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split(' ').collect::<Vec<&str>>();
         assert_eq!(values.len(), 3);
-        assert_eq!(values[0], instance.name, "wrong: {l}");
+        assert_eq!(values[0], instance.name.to_string(), "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
@@ -564,7 +570,7 @@ async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
-    assert_eq!(lines[0], instance.name);
+    assert_eq!(lines[0], instance.name.to_string());
     assert!(lines[2].is_empty());
     let values = lines[1].split('\t').collect::<Vec<&str>>();
     assert!(
@@ -607,7 +613,7 @@ async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint)
         .map(|l| l.to_string())
         .collect();
     assert_eq!(lines.len(), 2, "{:?} at {}", lines, section.name());
-    assert_eq!(lines[0], instance.name);
+    assert_eq!(lines[0], instance.name.to_string(), "bad line {}", lines[0]);
     assert!(lines[1].is_empty(), "bad line {}", lines[1]);
 }
 
@@ -807,7 +813,7 @@ async fn test_find_no_detect_two_custom_instances_local() {
     .unwrap();
     let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
     assert_eq!(instances.len(), 1);
-    assert_eq!(instances[0].name, "MSSQLSERVER");
+    assert_eq!(instances[0].name, main_instance_name());
     assert!(instances[0].edition.contains(" Edition"));
     assert!(instances[0].version.contains('.'));
     assert_eq!(instances[0].port().unwrap(), Port(1433));
@@ -852,7 +858,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         .unwrap();
         let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
         assert_eq!(instances.len(), 1);
-        assert_eq!(instances[0].name, "MSSQLSERVER");
+        assert_eq!(instances[0].name, main_instance_name());
         assert!(instances[0].edition.contains(" Edition"));
         assert!(instances[0].version.contains('.'));
         assert_eq!(instances[0].port().unwrap(), Port(1433));

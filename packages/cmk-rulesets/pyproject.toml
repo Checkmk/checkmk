@@ -49,6 +49,10 @@ score = "no"
 [tool.pylint.messages_control]
 disable = "missing-docstring,fixme,too-many-instance-attributes"
 
+[tool.pylint.similarities]
+min-similarity-lines = 5
+
+
 [tool.pytest.ini_options]
 pythonpath = [ "." ]
 testpaths = [ "cmk", "tests" ]

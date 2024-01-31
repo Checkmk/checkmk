@@ -1174,11 +1174,8 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     ) = _get_needed_plugin_names(config_cache, hostname)
 
     if hostname in config_cache.hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise TypeError()
-
-        for node in nodes:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
@@ -1310,11 +1307,8 @@ if '-d' in sys.argv:
         {},
     )
     if hostname in config_cache.hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise TypeError()
-
-        for node in nodes:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
             if AddressFamily.IPv4 in ConfigCache.address_family(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AF_INET

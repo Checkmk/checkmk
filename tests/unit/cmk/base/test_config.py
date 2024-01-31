@@ -1805,23 +1805,23 @@ def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
 
 
 def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
-    assert cluster_config.clusters_of(HostName("node1")) == ["cluster1"]
-    assert cluster_config.clusters_of(HostName("host1")) == []
-    assert cluster_config.clusters_of(HostName("cluster1")) == []
+    assert list(cluster_config.clusters_of(HostName("node1"))) == ["cluster1"]
+    assert not list(cluster_config.clusters_of(HostName("host1")))
+    assert not list(cluster_config.clusters_of(HostName("cluster1")))
 
 
-def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
-    assert cluster_config.nodes_of(HostName("node1")) is None
-    assert cluster_config.nodes_of(HostName("host1")) is None
-    assert cluster_config.nodes_of(HostName("cluster1")) == ["node1"]
+def test_config_cache_nodes(cluster_config: ConfigCache) -> None:
+    assert not list(cluster_config.nodes(HostName("node1")))
+    assert not list(cluster_config.nodes(HostName("host1")))
+    assert list(cluster_config.nodes(HostName("cluster1"))) == ["node1"]
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
-    assert cluster_config.parents(HostName("node1")) == []
-    assert cluster_config.parents(HostName("host1")) == []
+    assert not list(cluster_config.parents(HostName("node1")))
+    assert not list(cluster_config.parents(HostName("host1")))
     # TODO: Move cluster/node parent handling to HostConfig
     # assert cluster_config.make_cee_host_config("cluster1").parents == ["node1"]
-    assert cluster_config.parents(HostName("cluster1")) == []
+    assert not list(cluster_config.parents(HostName("cluster1")))
 
 
 def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
@@ -2422,9 +2422,8 @@ def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> Non
     ts = Scenario()
     clu = HostName("clu")
     ts.add_cluster(clu)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    config_cache = ts.config_cache
     assert clu in config_cache.hosts_config.clusters
     assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
     assert (

@@ -297,7 +297,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 results[hostname] = automation_discovery(
                     hostname,
                     is_cluster=hostname in config_cache.hosts_config.clusters,
-                    cluster_nodes=config_cache.nodes_of(hostname) or (),
+                    cluster_nodes=config_cache.nodes(hostname),
                     active_hosts={
                         hn
                         for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -543,7 +543,7 @@ def _execute_discovery(
             host_name,
             ip_address,
             is_cluster=is_cluster,
-            cluster_nodes=config_cache.nodes_of(host_name) or (),
+            cluster_nodes=config_cache.nodes(host_name),
             parser=parser,
             fetcher=fetcher,
             summarizer=CMKSummarizer(
@@ -702,7 +702,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         discovery_result, activate_host = autodiscovery(
                             host_name,
                             is_cluster=host_name in config_cache.hosts_config.clusters,
-                            cluster_nodes=config_cache.nodes_of(host_name) or (),
+                            cluster_nodes=config_cache.nodes(host_name),
                             active_hosts={
                                 hn
                                 for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -833,7 +833,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         if hostname in config_cache.hosts_config.clusters:
             set_autochecks_of_cluster(
-                config_cache.nodes_of(hostname) or (),
+                config_cache.nodes(hostname),
                 hostname,
                 new_services,
                 config_cache.effective_host,
@@ -1352,7 +1352,7 @@ class AutomationAnalyseServices(Automation):
         services = (
             [
                 service
-                for node in config_cache.nodes_of(host_name) or []
+                for node in config_cache.nodes(host_name)
                 for service in config_cache.get_autochecks_of(node)
                 if host_name == config_cache.effective_host(node, service.description)
             ]

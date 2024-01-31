@@ -600,6 +600,53 @@ def fetch_vs_traffic_counters(
             )
 
 
+def fetch_fc_interfaces_counters(
+    connection: HostConnection,
+) -> Iterable[models.FcInterfaceTrafficCountersModel]:
+    query_data = {
+        # table: counters
+        "fcp_lif:port": {
+            "average_read_latency",
+            "average_write_latency",
+            "read_data",
+            "write_data",
+            "read_ops",
+            "write_ops",
+            "total_ops",
+        },
+    }
+
+    for key, values in query_data.items():
+        for element in NetAppResource.CounterRow.get_collection(
+            key,
+            connection=connection,
+            fields="properties,counters",
+            max_records=None,  # type: ignore # pylint disable=arg-type not working
+            **{"counters.name": "|".join(values)},
+        ):
+            element_data = element.to_dict()
+
+            svm_name, name, port_wwpn = None, None, None
+            for prop in element["properties"]:
+                if prop["name"] == "svm.name":
+                    svm_name = prop["value"]
+                elif prop["name"] == "name":
+                    name = prop["value"]
+                elif prop["name"] == "port.wwpn":
+                    port_wwpn = prop["value"]
+
+            if svm_name is None or name is None or port_wwpn is None:
+                continue
+
+            yield models.FcInterfaceTrafficCountersModel(
+                svm_name=svm_name,
+                table=key,
+                counters=element_data["counters"],
+                name=name,
+                port_wwpn=port_wwpn,
+            )
+
+
 def fetch_environment(connection):
     field_query = {
         "name",
@@ -702,6 +749,38 @@ def fetch_snapmirror(
         )
 
 
+def fetch_fc_ports(connection: HostConnection) -> Iterable[models.FcPortModel]:
+    field_query = {
+        "supported_protocols",
+        "wwpn",
+        "wwnn",
+        "physical_protocol",
+        "state",
+        "name",
+        "description",
+        "enabled",
+        "node.name",
+        "fabric.connected_speed",
+    }
+
+    for element in NetAppResource.FcPort.get_collection(
+        connection=connection, fields=",".join(field_query)
+    ):
+        element_data = element.to_dict()
+        yield models.FcPortModel(
+            supported_protocols=element_data["supported_protocols"],
+            wwpn=element_data["wwpn"],
+            wwnn=element_data["wwnn"],
+            physical_protocol=element_data["physical_protocol"],
+            state=element_data["state"],
+            name=element_data["name"],
+            description=element_data["description"],
+            enabled=element_data["enabled"],
+            node_name=element_data["node"]["name"],
+            connected_speed=element_data.get("fabric", {}).get("connected_speed"),
+        )
+
+
 def write_sections(connection: HostConnection, logger: logging.Logger, args: Args) -> None:
     volumes = list(fetch_volumes(connection))
     write_section("volumes", volumes, logger)
@@ -723,6 +802,8 @@ def write_sections(connection: HostConnection, logger: logging.Logger, args: Arg
     write_section("environment", fetch_environment(connection), logger)
     write_section("qtree_quota", fetch_qtree_quota(connection), logger)
     write_section("snapvault", fetch_snapmirror(connection), logger)
+    write_section("fc_ports", fetch_fc_ports(connection), logger)
+    write_section("fc_interfaces_counters", fetch_fc_interfaces_counters(connection), logger)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

@@ -80,8 +80,8 @@ function timeSince(timestamp: number): string {
     return parts.length > 0 ? parts.join(", ") + " ago" : "just now";
 }
 
-export async function render_stats_table(selector: string) {
-    const node = d3.select(selector);
+export async function render_stats_table(dom_element: HTMLElement) {
+    const node = d3.select(dom_element);
     const columnsNames = [
         "metric",
         "min",

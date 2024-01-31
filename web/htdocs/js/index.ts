@@ -98,6 +98,19 @@ if (process.env.ENTERPRISE !== "no") {
     license_usage_timeseries_graph = null;
 }
 
+type CallableFunctionOptions = {[key: string]: string};
+type CallableFunction = (
+    node: HTMLElement,
+    options: CallableFunctionOptions
+) => Promise<void>;
+
+// See cmk.gui.htmllib.generator:KnownTSFunction
+// The type on the Python side and the available keys in this dictionary MUST MATCH.
+const callable_functions: {[name: string]: CallableFunction} = {
+    render_stats_table: render_stats_table,
+    //   "render_qr_codes": render_qr_codes,
+};
+
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -105,6 +118,24 @@ $(() => {
     element_dragging.register_event_handlers();
     keyboard_shortcuts.register_shortcuts();
     // add a confirmation popup for each for that has a valid confirmation text
+
+    // See cmk.gui.htmllib.generator:HTMLWriter.call_ts_function
+    document
+        .querySelectorAll<HTMLElement>("*[data-cmk_call_ts_function]")
+        .forEach((container, _) => {
+            const data = container.dataset;
+            const function_name: string = data.cmk_call_ts_function!;
+            let options: CallableFunctionOptions;
+            if (data.cmk_call_ts_options) {
+                options = JSON.parse(data.cmk_call_ts_options);
+            } else {
+                options = {};
+            }
+            const ts_function = callable_functions[function_name];
+            // The function has the responsibility to take the container and do it's thing with it.
+            ts_function(container, options);
+        });
+
     document
         .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
         .forEach((form, _) => {

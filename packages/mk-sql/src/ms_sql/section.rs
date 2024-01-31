@@ -6,7 +6,7 @@ use super::sqls::{self, find_known_query};
 use crate::config::section::get_plain_section_names;
 use crate::config::{self, section, section::names};
 use crate::emit::header;
-use crate::{constants, utils};
+use crate::{constants, types::InstanceName, utils};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::read_to_string;
@@ -92,11 +92,9 @@ impl Section {
         }
     }
 
-    pub fn first_line<T: AsRef<str>>(&self, value: Option<T>) -> String {
+    pub fn first_line(&self, value: Option<&InstanceName>) -> String {
         if self.decorated {
-            value
-                .map(|v| format!("{}\n", v.as_ref()))
-                .unwrap_or_default()
+            value.map(|v| format!("{}\n", v)).unwrap_or_default()
         } else {
             String::new()
         }

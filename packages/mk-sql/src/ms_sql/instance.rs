@@ -18,7 +18,7 @@ use crate::ms_sql::query::{
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
-use crate::types::{InstanceId, InstanceName, Port};
+use crate::types::{InstanceEdition, InstanceId, InstanceName, InstanceVersion, Port};
 use crate::utils;
 
 use anyhow::Result;
@@ -38,8 +38,8 @@ pub struct SqlInstanceBuilder {
     alias: Option<String>,
     pub name: Option<InstanceName>,
     id: Option<InstanceId>,
-    edition: Option<String>,
-    version: Option<String>,
+    edition: Option<InstanceEdition>,
+    version: Option<InstanceVersion>,
     cluster: Option<String>,
     port: Option<Port>,
     dynamic_port: Option<Port>,
@@ -67,12 +67,12 @@ impl SqlInstanceBuilder {
         self.id = Some(InstanceId::from(id.into()));
         self
     }
-    pub fn edition<S: Into<String>>(mut self, edition: S) -> Self {
-        self.edition = Some(edition.into());
+    pub fn edition(mut self, edition: &InstanceEdition) -> Self {
+        self.edition = Some(edition.clone());
         self
     }
-    pub fn version<S: Into<String>>(mut self, version: S) -> Self {
-        self.version = Some(version.into());
+    pub fn version(mut self, version: &InstanceVersion) -> Self {
+        self.version = Some(version.clone());
         self
     }
     pub fn cluster<S: Into<String>>(mut self, cluster: Option<S>) -> Self {
@@ -112,8 +112,8 @@ impl SqlInstanceBuilder {
     pub fn row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
             .id(row.get_value_by_idx(1))
-            .edition(row.get_value_by_idx(2))
-            .version(row.get_value_by_idx(3))
+            .edition(&row.get_value_by_idx(2).into())
+            .version(&row.get_value_by_idx(3).into())
             .cluster(row.get_optional_value_by_idx(4))
             .port(
                 row.get_optional_value_by_idx(5)
@@ -165,8 +165,9 @@ impl SqlInstanceBuilder {
     }
 }
 
-fn parse_version(version: &Option<String>) -> [u32; 3] {
+fn parse_version(version: &Option<InstanceVersion>) -> [u32; 3] {
     if let Some(version) = version {
+        let version = version.to_string();
         let mut parts = version.split('.');
         let major = parts.next().and_then(|s| s.parse::<u32>().ok());
         let minor = parts.next().and_then(|s| s.parse::<u32>().ok());
@@ -182,8 +183,8 @@ pub struct SqlInstance {
     pub alias: Option<String>,
     pub name: InstanceName,
     pub id: InstanceId,
-    pub version: String,
-    pub edition: String,
+    pub version: InstanceVersion,
+    pub edition: InstanceEdition,
     pub cluster: Option<String>,
     port: Option<Port>,
     dynamic_port: Option<Port>,
@@ -1054,9 +1055,9 @@ impl SqlInstance {
 #[derive(Debug)]
 pub struct SqlInstanceProperties {
     pub name: InstanceName,
-    pub version: String,
+    pub version: InstanceVersion,
     pub machine_name: String,
-    pub edition: String,
+    pub edition: InstanceEdition,
     pub product_level: String,
     pub net_bios: String,
 }
@@ -1065,17 +1066,18 @@ impl From<&Vec<Row>> for SqlInstanceProperties {
     fn from(row: &Vec<Row>) -> Self {
         let row = &row[0];
         let name = row.get_value_by_name("InstanceName");
-        let version = row.get_value_by_name("ProductVersion");
+        let version: InstanceVersion = row.get_value_by_name("ProductVersion").into();
         let machine_name = row.get_value_by_name("MachineName");
-        let edition = row.get_value_by_name("Edition");
+        let edition: InstanceEdition = row.get_value_by_name("Edition").into();
         let product_level = row.get_value_by_name("ProductLevel");
         let net_bios = row.get_value_by_name("NetBios");
         Self {
-            name: InstanceName(if name.is_empty() {
+            name: (if name.is_empty() {
                 "MSSQLSERVER".to_string()
             } else {
                 name.to_uppercase()
-            }),
+            })
+            .into(),
             version,
             machine_name,
             edition,
@@ -1939,8 +1941,8 @@ mssql:
             .port(Some(Port(2u16)))
             .computer_name(&Some("computer_name".to_owned()))
             .hash("hash")
-            .version("version")
-            .edition("edition")
+            .version(&"version".to_string().into())
+            .edition(&"edition".to_string().into())
             .environment(&Env::new(&args))
             .id("id")
             .piggyback(Some("piggYback"));
@@ -1952,8 +1954,8 @@ mssql:
         assert_eq!(s.name.to_string(), "NAME");
         assert_eq!(s.alias.as_deref(), Some("alias"));
         assert!(s.cluster.is_none());
-        assert_eq!(s.version, "version");
-        assert_eq!(s.edition, "edition");
+        assert_eq!(s.version.to_string(), "version");
+        assert_eq!(s.edition.to_string(), "edition");
         assert_eq!(s.hash, "hash");
         assert_eq!(s.port, Some(Port(2u16)));
         assert_eq!(s.dynamic_port, Some(Port(1u16)));

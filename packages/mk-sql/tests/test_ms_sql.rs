@@ -31,12 +31,12 @@ fn expected_instances() -> HashSet<InstanceName> {
 
     EXPECTED_INSTANCES
         .iter()
-        .map(|&s| InstanceName(str::to_string(s)))
+        .map(|&s| InstanceName::from(str::to_string(s)))
         .collect()
 }
 
 fn main_instance_name() -> InstanceName {
-    InstanceName("MSSQLSERVER".to_string())
+    InstanceName::from("MSSQLSERVER".to_string())
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn is_instance_good(i: &SqlInstance) -> bool {
     !i.name.to_string().is_empty()
         && i.id.to_string().contains(&i.name.to_string()[..4])
         && i.id.to_string().contains("MSSQL")
-        && i.version.chars().filter(|&c| c == '.').count() == 3
+        && i.version.to_string().chars().filter(|&c| c == '.').count() == 3
         && i.port().is_some()
         && i.cluster.is_none()
         && i.version_major() >= 12
@@ -814,8 +814,8 @@ async fn test_find_no_detect_two_custom_instances_local() {
     let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
     assert_eq!(instances.len(), 1);
     assert_eq!(instances[0].name, main_instance_name());
-    assert!(instances[0].edition.contains(" Edition"));
-    assert!(instances[0].version.contains('.'));
+    assert!(instances[0].edition.to_string().contains(" Edition"));
+    assert!(instances[0].version.to_string().contains('.'));
     assert_eq!(instances[0].port().unwrap(), Port(1433));
     let pc = instances[0].computer_name().as_ref().unwrap().clone();
     assert!(!pc.is_empty(), "{:?}", instances[0].computer_name());
@@ -859,8 +859,8 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         let instances = to_instances(instance::find_all_instance_builders(&mssql).await.unwrap());
         assert_eq!(instances.len(), 1);
         assert_eq!(instances[0].name, main_instance_name());
-        assert!(instances[0].edition.contains(" Edition"));
-        assert!(instances[0].version.contains('.'));
+        assert!(instances[0].edition.to_string().contains(" Edition"));
+        assert!(instances[0].version.to_string().contains('.'));
         assert_eq!(instances[0].port().unwrap(), Port(1433));
         let pc = instances[0].computer_name().as_ref().unwrap().clone();
         assert!(

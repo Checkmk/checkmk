@@ -19,7 +19,7 @@ from pathlib import Path
 from queue import Empty as QueueEmpty
 from typing import Any, List, Mapping, Optional, Sequence, Tuple, Type
 
-import adal  # type: ignore[import] # pylint: disable=import-error
+import msal  # type: ignore[import]
 import requests
 
 import cmk.utils.password_store
@@ -249,14 +249,17 @@ class BaseApiClient(abc.ABC):
         pass
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(
+        client_app = msal.ConfidentialClientApplication(
+            client,
+            secret,
             "%s/%s" % (self.AUTHORITY, tenant),
             proxies=self._http_proxy_config.to_requests_proxies(),
         )
-        token = context.acquire_token_with_client_credentials(self.resource, client, secret)
+        token = client_app.acquire_token_for_client([self.resource + "/.default"])
+
         self._headers.update(
             {
-                "Authorization": "Bearer %s" % token["accessToken"],
+                "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
             }
         )

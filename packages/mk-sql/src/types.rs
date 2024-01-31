@@ -62,3 +62,6 @@ pub struct ConfigHash(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into, Hash, Eq)]
 pub struct PiggybackHostName(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct InstanceAlias(String);

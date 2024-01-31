@@ -2317,6 +2317,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         return [
             (p.name(), p.title())
             for p in sorted(instances.instances(), key=lambda p: p.sort_index())
+            if p.is_permitted()
         ]
 
     @classmethod

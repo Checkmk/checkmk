@@ -18,7 +18,9 @@ use crate::ms_sql::query::{
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
-use crate::types::{InstanceEdition, InstanceId, InstanceName, InstanceVersion, Port};
+use crate::types::{
+    InstanceCluster, InstanceEdition, InstanceId, InstanceName, InstanceVersion, Port,
+};
 use crate::utils;
 
 use anyhow::Result;
@@ -40,7 +42,7 @@ pub struct SqlInstanceBuilder {
     id: Option<InstanceId>,
     edition: Option<InstanceEdition>,
     version: Option<InstanceVersion>,
-    cluster: Option<String>,
+    cluster: Option<InstanceCluster>,
     port: Option<Port>,
     dynamic_port: Option<Port>,
     endpoint: Option<Endpoint>,
@@ -75,8 +77,8 @@ impl SqlInstanceBuilder {
         self.version = Some(version.clone());
         self
     }
-    pub fn cluster<S: Into<String>>(mut self, cluster: Option<S>) -> Self {
-        self.cluster = cluster.map(|s| s.into());
+    pub fn cluster(mut self, cluster: Option<InstanceCluster>) -> Self {
+        self.cluster = cluster;
         self
     }
     pub fn port(mut self, port: Option<Port>) -> Self {
@@ -114,7 +116,7 @@ impl SqlInstanceBuilder {
             .id(row.get_value_by_idx(1))
             .edition(&row.get_value_by_idx(2).into())
             .version(&row.get_value_by_idx(3).into())
-            .cluster(row.get_optional_value_by_idx(4))
+            .cluster(row.get_optional_value_by_idx(4).map(|s| s.into()))
             .port(
                 row.get_optional_value_by_idx(5)
                     .and_then(|s| s.parse::<u16>().ok())
@@ -185,7 +187,7 @@ pub struct SqlInstance {
     pub id: InstanceId,
     pub version: InstanceVersion,
     pub edition: InstanceEdition,
-    pub cluster: Option<String>,
+    pub cluster: Option<InstanceCluster>,
     port: Option<Port>,
     dynamic_port: Option<Port>,
     pub available: Option<bool>,
@@ -210,7 +212,7 @@ impl SqlInstance {
             self.mssql_name(),
             self.version,
             self.edition,
-            self.cluster.as_deref().unwrap_or_default()
+            self.cluster.clone().unwrap_or_default()
         )
     }
 
@@ -245,7 +247,7 @@ impl SqlInstance {
         }
 
         if let Some(cluster) = &self.cluster {
-            cluster.clone()
+            cluster.clone().into()
         } else {
             "(local)".to_string()
         }
@@ -253,7 +255,7 @@ impl SqlInstance {
 
     fn legacy_name_prefix(&self) -> &str {
         if let Some(cluster) = &self.cluster {
-            return cluster;
+            return cluster.into();
         }
         if let Some(computer_name) = &self.computer_name {
             computer_name
@@ -1946,8 +1948,8 @@ mssql:
             .environment(&Env::new(&args))
             .id("id")
             .piggyback(Some("piggYback"));
-        let cluster = standard.clone().cluster(Some("cluster"));
         assert_eq!(standard.get_port(), Port(2u16));
+        let cluster = standard.clone().cluster(Some("cluster".to_string().into()));
 
         let s = standard.build();
         assert_eq!(s.id.to_string(), "id");
@@ -1970,8 +1972,9 @@ mssql:
             s.generate_leading_entry('.'),
             "MSSQL_NAME.config.version.edition.\n"
         );
+
         let c = cluster.build();
-        assert_eq!(c.cluster.as_deref(), Some("cluster"));
+        assert_eq!(c.cluster, Some("cluster".to_string().into()));
         assert_eq!(c.legacy_name(), "cluster/NAME");
         assert_eq!(
             c.generate_leading_entry('.'),

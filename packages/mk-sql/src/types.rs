@@ -36,3 +36,13 @@ pub struct InstanceEdition(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceVersion(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct InstanceCluster(String);
+
+// used once, may be removed in the future
+impl<'a> From<&'a InstanceCluster> for &'a str {
+    fn from(instance_cluster: &'a InstanceCluster) -> &'a str {
+        instance_cluster.0.as_str()
+    }
+}

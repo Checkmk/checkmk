@@ -1,0 +1,12 @@
+Title: netapp_ontap_psu: fix discovery ruleset
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1706706487
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+This problem affected users who wanted to discover the 'summary' mode of PSU service: it was not possible to configure the appropriate discovery rule. This werk fixes this behaviour.
+
+A rediscovery is required for the change to take effect.

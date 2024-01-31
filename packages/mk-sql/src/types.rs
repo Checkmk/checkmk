@@ -65,3 +65,6 @@ pub struct PiggybackHostName(String);
 
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceAlias(String);
+
+#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
+pub struct HostName(String);

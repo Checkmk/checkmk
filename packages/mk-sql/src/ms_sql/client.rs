@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint};
-use crate::types::Port;
+use crate::types::{HostName, Port};
 use anyhow::Result;
 
 #[cfg(windows)]
@@ -89,7 +89,7 @@ pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Optio
 /// * `credentials` - defines connection type and credentials itself
 /// * `instance_name` - name of the instance to connect to
 pub async fn create_remote(
-    host: &str,
+    host: &HostName,
     port: u16,
     credentials: Credentials<'_>,
     database: Option<String>,
@@ -131,7 +131,7 @@ pub async fn create_remote(
 }
 
 pub async fn _create_remote_client(
-    host: &str,
+    host: &HostName,
     port: u16,
     credentials: &Credentials<'_>,
     encryption: tiberius::EncryptionLevel,

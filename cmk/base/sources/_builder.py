@@ -130,20 +130,18 @@ class _Builder:
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
+        self._cds: Final = config_cache.computed_datasources(host_name)
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
-        if self.config_cache.is_tcp_host(self.host_name) and not self._elems:
+        if self._cds.is_tcp and not self._elems:
             # User wants a special agent, a CheckMK agent, or both.  But
             # we didn't configure anything.  Let's report that.
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
         if not (
-            (
-                self.config_cache.is_snmp_host(self.host_name)
-                and not self.config_cache.is_tcp_host(self.host_name)
-            )
+            (self._cds.is_snmp and not self._cds.is_tcp)
             or "no-piggyback" in self.config_cache.tag_list(self.host_name)
         ):
             self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
@@ -201,16 +199,16 @@ class _Builder:
         # API, no Checkmk agent      True                False            True
         # no API, no Checkmk agent   False               False            False
 
-        if self.config_cache.is_all_agents_host(self.host_name):
+        if self._cds.is_all_agents_host:
             self._add_agent()
             for elem in special_agents:
                 self._add(elem)
 
-        elif self.config_cache.is_all_special_agents_host(self.host_name):
+        elif self._cds.is_all_special_agents_host:
             for elem in special_agents:
                 self._add(elem)
 
-        elif self.config_cache.is_tcp_host(self.host_name):
+        elif self._cds.is_tcp:
             if special_agents:
                 self._add(special_agents[0])
             else:
@@ -233,7 +231,7 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self.config_cache.is_snmp_host(self.host_name):
+        if not self._cds.is_snmp:
             return
 
         self._initialize_snmp_plugin_store()

@@ -1839,7 +1839,7 @@ def lookup_ip_address(
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=(
             config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
-            and config_cache.is_snmp_host(host_name)
+            and config_cache.computed_datasources(host_name).is_snmp
         ),
         override_dns=HostAddress(fake_dns) if fake_dns is not None else None,
         is_dyndns_host=config_cache.is_dyndns_host(host_name),
@@ -2147,7 +2147,7 @@ class ConfigCache:
         return ip_lookup.IPLookupConfig(
             hostname=host_name,
             address_family=ConfigCache.address_family(host_name),
-            is_snmp_host=self.is_snmp_host(host_name),
+            is_snmp_host=self.computed_datasources(host_name).is_snmp,
             snmp_backend=self.get_snmp_backend(host_name),
             default_address_family=self.default_address_family(host_name),
             management_address=self.management_address(host_name),
@@ -2554,12 +2554,6 @@ class ConfigCache:
             host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags(host_name))
         )
 
-    def is_tcp_host(self, host_name: HostName) -> bool:
-        return self.computed_datasources(host_name).is_tcp
-
-    def is_snmp_host(self, host_name: HostName | HostAddress) -> bool:
-        return self.computed_datasources(host_name).is_snmp
-
     def is_piggyback_host(self, host_name: HostName) -> bool:
         def get_is_piggyback_host() -> bool:
             tag_groups: Final = ConfigCache.tags(host_name)
@@ -2584,9 +2578,10 @@ class ConfigCache:
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
     def is_ping_host(self, host_name: HostName) -> bool:
+        cds = self.computed_datasources(host_name)
         return not (
-            self.is_snmp_host(host_name)
-            or self.is_tcp_host(host_name)
+            cds.is_snmp
+            or cds.is_tcp
             or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
         )
@@ -2618,12 +2613,6 @@ class ConfigCache:
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)
-
-    def is_all_agents_host(self, host_name: HostName) -> bool:
-        return self.computed_datasources(host_name).is_all_agents_host
-
-    def is_all_special_agents_host(self, host_name: HostName) -> bool:
-        return self.computed_datasources(host_name).is_all_special_agents_host
 
     def discovery_check_parameters(self, host_name: HostName) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""

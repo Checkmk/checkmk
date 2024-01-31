@@ -10,6 +10,7 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.paths import tmp_dir
+from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.snmplib import SNMPBackendEnum
@@ -84,14 +85,14 @@ def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
     return type(fetcher).__name__
 
 
-def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
-    if config_cache.is_all_agents_host(host_name):
+def _agent_description(cds: ComputedDataSources) -> str:
+    if cds.is_all_agents_host:
         return "Normal Checkmk agent, all configured special agents"
 
-    if config_cache.is_all_special_agents_host(host_name):
+    if cds.is_all_special_agents_host:
         return "No Checkmk agent, all configured special agents"
 
-    if config_cache.is_tcp_host(host_name):
+    if cds.is_tcp:
         return "Normal Checkmk agent, or special agent if configured"
 
     return "No agent"
@@ -197,7 +198,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         agenttypes.append("PING only")
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(_agent_description(config_cache, hostname) + "\n")
+    out.output(_agent_description(config_cache.computed_datasources(hostname)) + "\n")
 
     out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

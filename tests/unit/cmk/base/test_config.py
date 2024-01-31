@@ -607,7 +607,7 @@ def test_is_tcp_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_tcp_host(hostname) == result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_tcp == result
 
 
 @pytest.mark.parametrize(
@@ -673,7 +673,7 @@ def test_is_snmp_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_snmp_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_snmp is result
 
 
 def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -718,7 +718,7 @@ def test_is_all_agents_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_all_agents_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_all_agents_host is result
 
 
 @pytest.mark.parametrize(
@@ -736,7 +736,7 @@ def test_is_all_special_agents_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_all_special_agents_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_all_special_agents_host is result
 
 
 @pytest.mark.parametrize(

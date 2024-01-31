@@ -2015,27 +2015,36 @@ class PluginSelector(OneOfSchema):
     }
 
 
-class PluginOptionSchema(BaseSchema):
-    option = fields.String(
-        enum=[
-            PluginOptions.CANCEL.value,
-            PluginOptions.WITH_PARAMS.value,
-            PluginOptions.WITH_CUSTOM_PARAMS.value,
-        ],
-        required=False,
-        description="Create notifications with parameters or cancel previous notifications",
-        example="cancel_previous_notifications",
+class PluginNameBuiltInOrCustom(BaseSchema):
+    plugin_name = fields.String(
+        enum=[n for (n, _) in user_script_choices("notifications")],
+        required=True,
+        description="The plugin name.",
+        example="mail",
     )
 
 
-class PluginBase(PluginOptionSchema):
+class PluginWithoutParams(BaseSchema):
+    option = fields.Constant(
+        PluginOptions.CANCEL.value,
+        required=True,
+        description="Cancel previous notifications",
+        example=PluginOptions.CANCEL.value,
+    )
+
     plugin_params = fields.Nested(
-        PluginName,
+        PluginNameBuiltInOrCustom,
         required=True,
     )
 
 
-class PluginWithParams(PluginOptionSchema):
+class PluginWithParams(BaseSchema):
+    option = fields.Constant(
+        PluginOptions.WITH_PARAMS.value,
+        required=True,
+        description="Create notifications with parameters",
+        example=PluginOptions.WITH_PARAMS.value,
+    )
     plugin_params = fields.Nested(
         PluginSelector,
         required=True,
@@ -2102,7 +2111,13 @@ class CustomPlugin(BaseSchema):
         return original_data
 
 
-class CustomPluginWithParams(PluginOptionSchema):
+class CustomPluginWithParams(BaseSchema):
+    option = fields.Constant(
+        PluginOptions.WITH_CUSTOM_PARAMS.value,
+        required=True,
+        description="Create notifications with custom parameters",
+        example=PluginOptions.WITH_CUSTOM_PARAMS.value,
+    )
     plugin_params = fields.Nested(
         CustomPlugin,
         required=True,
@@ -2331,7 +2346,7 @@ class RuleProperties(BaseSchema):
 
 class PluginOptionsSelector(OptionOneOfSchema):
     type_schemas = {
-        PluginOptions.CANCEL.value: PluginBase,
+        PluginOptions.CANCEL.value: PluginWithoutParams,
         PluginOptions.WITH_PARAMS.value: PluginWithParams,
         PluginOptions.WITH_CUSTOM_PARAMS.value: CustomPluginWithParams,
     }

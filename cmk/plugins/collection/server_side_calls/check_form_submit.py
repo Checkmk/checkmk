@@ -63,9 +63,7 @@ def commands_function(
     if details.num_succeeded:
         args += ["--levels", *(str(e) for e in details.num_succeeded)]
 
-    yield ActiveCheckCommand(
-        service_description=f"FORM {details.form_name}", command_arguments=args
-    )
+    yield ActiveCheckCommand(service_description=f"FORM {params.name}", command_arguments=args)
 
 
 active_check_config = ActiveCheckConfig(

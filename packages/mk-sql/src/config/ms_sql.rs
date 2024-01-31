@@ -5,7 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::types::{InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port};
+use crate::types::{HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -284,7 +284,7 @@ impl TryFrom<&str> for AuthType {
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
-    hostname: String,
+    hostname: HostName,
     fail_over_partner: Option<String>,
     port: Port,
     socket: Option<PathBuf>,
@@ -303,7 +303,8 @@ impl Connection {
                 hostname: conn
                     .get_string(keys::HOSTNAME)
                     .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
-                    .to_lowercase(),
+                    .to_lowercase()
+                    .into(),
                 fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
                 port: Port(conn.get_int::<u16>(keys::PORT).unwrap_or_else(|| {
                     log::debug!("no port specified, using default");
@@ -319,7 +320,7 @@ impl Connection {
             .ensure(auth),
         ))
     }
-    pub fn hostname(&self) -> &str {
+    pub fn hostname(&self) -> &HostName {
         &self.hostname
     }
     pub fn fail_over_partner(&self) -> Option<&String> {
@@ -344,7 +345,7 @@ impl Connection {
     fn ensure(mut self, auth: Option<&Authentication>) -> Self {
         match auth {
             Some(auth) if auth.auth_type() == &AuthType::Integrated => {
-                self.hostname = "localhost".to_string();
+                self.hostname = "localhost".to_string().into();
                 self.fail_over_partner = None;
                 self.socket = None;
             }
@@ -357,7 +358,7 @@ impl Connection {
 impl Default for Connection {
     fn default() -> Self {
         Self {
-            hostname: defaults::CONNECTION_HOST_NAME.to_owned(),
+            hostname: defaults::CONNECTION_HOST_NAME.to_string().into(),
             fail_over_partner: None,
             port: Port(defaults::CONNECTION_PORT),
             socket: None,
@@ -423,13 +424,12 @@ impl Endpoint {
         (self.auth(), self.conn())
     }
 
-    pub fn hostname(&self) -> String {
+    pub fn hostname(&self) -> HostName {
         if self.auth().auth_type() == &AuthType::Integrated {
-            "localhost"
+            "localhost".to_string().into()
         } else {
-            self.conn().hostname()
+            self.conn().hostname().clone()
         }
-        .to_string()
     }
 }
 
@@ -556,7 +556,7 @@ impl CustomInstance {
             {
                 log::warn!("Fall back to main conn host {main_host}");
                 conn = Connection {
-                    hostname: main_host.to_string(),
+                    hostname: main_host,
                     ..conn
                 };
             } else if auth.auth_type() == &AuthType::Integrated {
@@ -575,7 +575,7 @@ impl CustomInstance {
         }
         if auth.auth_type() == &AuthType::Integrated {
             conn = Connection {
-                hostname: "localhost".to_string(),
+                hostname: "localhost".to_string().into(),
                 ..conn
             };
         }
@@ -601,16 +601,16 @@ impl CustomInstance {
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
     }
-    pub fn calc_real_host(&self) -> String {
+    pub fn calc_real_host(&self) -> HostName {
         calc_real_host(&self.auth, &self.conn)
     }
 }
 
-pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> String {
+pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
     if auth.auth_type() == &AuthType::Integrated {
-        "localhost".to_string()
+        "localhost".to_string().into()
     } else {
-        conn.hostname().to_owned().to_lowercase()
+        conn.hostname().clone()
     }
 }
 
@@ -905,7 +905,7 @@ authentication:
         let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), None)
             .unwrap()
             .unwrap();
-        assert_eq!(c.hostname(), "alice");
+        assert_eq!(c.hostname(), &"alice".to_string().into());
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
@@ -925,7 +925,7 @@ authentication:
         let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), Some(&a))
             .unwrap()
             .unwrap();
-        assert_eq!(c.hostname(), "localhost");
+        assert_eq!(c.hostname(), &"localhost".to_string().into());
         assert_eq!(c.fail_over_partner(), None);
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), None);
@@ -1080,8 +1080,8 @@ discovery:
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
-        assert_eq!(instance.conn().hostname(), "localhost");
-        assert_eq!(instance.calc_real_host(), "localhost");
+        assert_eq!(instance.conn().hostname(), &"localhost".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
         assert_eq!(instance.alias(), &Some("a1".to_string().into()));
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
@@ -1107,8 +1107,8 @@ connection:
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
-        assert_eq!(instance.conn().hostname(), "localhost");
-        assert_eq!(instance.calc_real_host(), "localhost");
+        assert_eq!(instance.conn().hostname(), &"localhost".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
 
     #[test]
@@ -1133,7 +1133,7 @@ connection:
         assert_eq!(c.auth().password().unwrap(), "bar");
         assert_eq!(c.auth().auth_type(), &AuthType::SqlServer);
         assert_eq!(c.auth().access_token().unwrap(), "baz");
-        assert_eq!(c.conn().hostname(), "localhost");
+        assert_eq!(c.conn().hostname(), &"localhost".to_string().into());
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
         assert_eq!(c.conn().port(), Port(defaults::CONNECTION_PORT));
         assert_eq!(
@@ -1226,7 +1226,7 @@ mssql:
     #[test]
     fn test_calc_effective_host() {
         let conn_to_bar = Connection {
-            hostname: "bAr".to_string(),
+            hostname: "bAr".to_string().into(),
             ..Default::default()
         };
         let auth_integrated = Authentication {
@@ -1238,8 +1238,14 @@ mssql:
             ..Default::default()
         };
 
-        assert_eq!(calc_real_host(&auth_integrated, &conn_to_bar), "localhost");
-        assert_eq!(calc_real_host(&auth_sql_server, &conn_to_bar), "bar");
+        assert_eq!(
+            calc_real_host(&auth_integrated, &conn_to_bar),
+            "localhost".to_string().into()
+        );
+        assert_eq!(
+            calc_real_host(&auth_sql_server, &conn_to_bar),
+            "bAr".to_string().into()
+        );
     }
 
     #[test]

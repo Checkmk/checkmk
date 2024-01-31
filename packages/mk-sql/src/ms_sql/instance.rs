@@ -19,8 +19,8 @@ use crate::ms_sql::query::{
 use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, ConfigHash, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
-    InstanceName, InstanceVersion, PiggybackHostName, Port,
+    ComputerName, ConfigHash, HostName, InstanceAlias, InstanceCluster, InstanceEdition,
+    InstanceId, InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils;
 
@@ -237,7 +237,7 @@ impl SqlInstance {
         &self.piggyback
     }
 
-    pub fn hostname(&self) -> String {
+    pub fn hostname(&self) -> HostName {
         self.endpoint.hostname()
     }
 

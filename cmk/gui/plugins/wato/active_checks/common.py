@@ -8,6 +8,9 @@ from typing import Literal
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 
+# courtesy to RS: leave this in until 2.4 for MKP compatibility
+from cmk.gui.wato import RulespecGroupIntegrateOtherServices  # pylint: disable=unused-import
+
 
 def ip_address_family_element() -> tuple[Literal["address_family"], DropdownChoice]:
     return (

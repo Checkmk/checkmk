@@ -19,8 +19,8 @@ use crate::ms_sql::query::{
 use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, ConfigHash, InstanceCluster, InstanceEdition, InstanceId, InstanceName,
-    InstanceVersion, PiggybackHostName, Port,
+    ComputerName, ConfigHash, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
+    InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils;
 
@@ -38,7 +38,7 @@ pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
 #[derive(Clone, Debug, Default)]
 pub struct SqlInstanceBuilder {
-    alias: Option<String>,
+    alias: Option<InstanceAlias>,
     pub name: Option<InstanceName>,
     id: Option<InstanceId>,
     edition: Option<InstanceEdition>,
@@ -59,11 +59,11 @@ impl SqlInstanceBuilder {
     }
 
     pub fn name<S: Into<String>>(mut self, name: S) -> Self {
-        self.name = Some(InstanceName::from(name.into().to_uppercase()));
+        self.name = Some(name.into().to_uppercase().into());
         self
     }
-    pub fn alias<S: Into<String>>(mut self, alias: S) -> Self {
-        self.alias = Some(alias.into());
+    pub fn alias(mut self, alias: &Option<InstanceAlias>) -> Self {
+        self.alias = alias.clone();
         self
     }
     pub fn id<S: Into<String>>(mut self, id: S) -> Self {
@@ -183,7 +183,7 @@ fn parse_version(version: &Option<InstanceVersion>) -> [u32; 3] {
 
 #[derive(Clone, Debug)]
 pub struct SqlInstance {
-    pub alias: Option<String>,
+    pub alias: Option<InstanceAlias>,
     pub name: InstanceName,
     pub id: InstanceId,
     pub version: InstanceVersion,
@@ -1735,12 +1735,7 @@ fn apply_customization(
                 .map(|p| p.hostname())
                 .map(|h| h.clone().into()),
         )
-        .alias(
-            customization
-                .alias()
-                .map(|i| str::to_string(i))
-                .unwrap_or_default(),
-        )
+        .alias(customization.alias())
 }
 
 /// Intelligent async processing of the data
@@ -1958,7 +1953,7 @@ mssql:
         };
         let standard = SqlInstanceBuilder::new()
             .name("name")
-            .alias("alias")
+            .alias(&Some("alias".to_string().into()))
             .dynamic_port(Some(Port(1u16)))
             .port(Some(Port(2u16)))
             .computer_name(Some("computer_name".to_string().into()))
@@ -1974,7 +1969,7 @@ mssql:
         let s = standard.build();
         assert_eq!(s.id.to_string(), "id");
         assert_eq!(s.name.to_string(), "NAME");
-        assert_eq!(s.alias.as_deref(), Some("alias"));
+        assert_eq!(s.alias, Some("alias".to_string().into()));
         assert!(s.cluster.is_none());
         assert_eq!(s.version.to_string(), "version");
         assert_eq!(s.edition.to_string(), "edition");

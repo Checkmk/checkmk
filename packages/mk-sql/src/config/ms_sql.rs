@@ -5,7 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::types::{InstanceName, MaxConnections, MaxQueries, Port};
+use crate::types::{InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -509,7 +509,7 @@ pub struct CustomInstance {
     name: InstanceName,
     auth: Authentication,
     conn: Connection,
-    alias: Option<String>,
+    alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
 }
 
@@ -530,7 +530,7 @@ impl CustomInstance {
             name,
             auth,
             conn,
-            alias: yaml.get_string(keys::ALIAS),
+            alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
     }
@@ -595,8 +595,8 @@ impl CustomInstance {
     pub fn endpoint(&self) -> Endpoint {
         Endpoint::new(&self.auth, &self.conn)
     }
-    pub fn alias(&self) -> Option<&String> {
-        self.alias.as_ref()
+    pub fn alias(&self) -> &Option<InstanceAlias> {
+        &self.alias
     }
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
@@ -1082,7 +1082,7 @@ discovery:
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.conn().hostname(), "localhost");
         assert_eq!(instance.calc_real_host(), "localhost");
-        assert_eq!(instance.alias().unwrap(), "a1");
+        assert_eq!(instance.alias(), &Some("a1".to_string().into()));
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
     }

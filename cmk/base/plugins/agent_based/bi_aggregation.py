@@ -71,7 +71,7 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         -1: "Pending",
     }
     yield Result(
-        state=(0 if overall_state == -1 else overall_state),
+        state=State(0 if overall_state == -1 else overall_state),
         summary="Aggregation state: %s" % bi_state_map[overall_state],
     )
 

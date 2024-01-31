@@ -23,7 +23,7 @@ from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
-import adal  # type: ignore[import] # pylint: disable=import-error
+import msal  # type: ignore[import]
 import requests
 
 from cmk.utils import password_store
@@ -423,14 +423,17 @@ class BaseApiClient(abc.ABC):
         self._http_proxy_config = http_proxy_config
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(
+        client_app = msal.ConfidentialClientApplication(
+            client,
+            secret,
             f"{self._login_url}/{tenant}",
             proxies=self._http_proxy_config.to_requests_proxies(),
         )
-        token = context.acquire_token_with_client_credentials(self._resource_url, client, secret)
+        token = client_app.acquire_token_for_client([self._resource_url + "/.default"])
+
         self._headers.update(
             {
-                "Authorization": "Bearer %s" % token["accessToken"],
+                "Authorization": "Bearer %s" % token["access_token"],
                 "Content-Type": "application/json",
             }
         )

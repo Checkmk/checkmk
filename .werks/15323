@@ -1,0 +1,11 @@
+Title: mk_postgres: Adapt environment file parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706697929
+Edition: cre
+Level: 1
+Version: 2.2.0p33
+
+Reading variables from the environment file was adapted:
+Lines starting with <code>#</code> will now be ignored.

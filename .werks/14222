@@ -1,0 +1,13 @@
+Title: BI configuration: Changed element order of "restrict severity to at worst"
+Class: feature
+Compatible: compat
+Component: bi
+Date: 1706694900
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+This werk only introduces a visual fix, so no functional changes.
+The order of the dropdown choice elements did not reflect the severity of the states.
+The correct severity order for the BI is OK->WARN->UNKNOWN->CRIT, which differs
+from the order of the monitoring states OK->WARN->CRIT->UNKNOWN.

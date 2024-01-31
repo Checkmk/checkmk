@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::types::ComputerName;
+
 use super::sqls::find_known_query;
 use super::{client::Client, sqls};
 use std::borrow::Borrow;
@@ -140,7 +142,7 @@ fn make_short_query(query: &str) -> &str {
         .unwrap_or_default()
 }
 
-pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<String>> {
+pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<ComputerName>> {
     let rows = run_known_query(client, sqls::Id::ComputerName).await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Computer name not found with query computer_name");
@@ -151,5 +153,6 @@ pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<String>>
         .try_get::<&str, usize>(0)
         .ok()
         .flatten()
-        .map(str::to_string))
+        .map(str::to_string)
+        .map(|s| s.into()))
 }

@@ -237,6 +237,7 @@ async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
                 .await
                 .unwrap()
                 .unwrap()
+                .to_string()
                 .to_lowercase()
                 .starts_with("agentbuild")
     );
@@ -664,6 +665,7 @@ mssql:
                             .await
                             .unwrap()
                             .unwrap()
+                            .to_string()
                             .to_lowercase()
                             .starts_with("agentbuild")
                 ),
@@ -685,8 +687,8 @@ async fn test_get_computer_name() {
             .unwrap();
         let name = query::obtain_computer_name(&mut client).await.unwrap();
         assert!(name
-            .clone()
             .unwrap()
+            .to_string()
             .to_lowercase()
             .starts_with("agentbuild"),);
     } else {
@@ -818,7 +820,11 @@ async fn test_find_no_detect_two_custom_instances_local() {
     assert!(instances[0].version.to_string().contains('.'));
     assert_eq!(instances[0].port().unwrap(), Port(1433));
     let pc = instances[0].computer_name().as_ref().unwrap().clone();
-    assert!(!pc.is_empty(), "{:?}", instances[0].computer_name());
+    assert!(
+        !pc.to_string().is_empty(),
+        "{:?}",
+        instances[0].computer_name()
+    );
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -864,7 +870,7 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         assert_eq!(instances[0].port().unwrap(), Port(1433));
         let pc = instances[0].computer_name().as_ref().unwrap().clone();
         assert!(
-            pc.to_uppercase().contains("AGENTBUILD"),
+            pc.to_string().to_uppercase().contains("AGENTBUILD"),
             "{:?}",
             instances[0].computer_name()
         );

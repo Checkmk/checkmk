@@ -646,3 +646,36 @@ class SnapMirrorModel(BaseModel):
 
         isodate.parse_duration(self.lag_time)
         return int(isodate.parse_duration(self.lag_time).total_seconds())
+
+
+class FcPortModel(BaseModel):
+    """
+    cfr: https://docs.netapp.com/us-en/ontap-restmap-9131//fcp.html#fcp-adapter-get-iter
+    """
+
+    supported_protocols: Sequence[str]
+    wwpn: str
+    wwnn: str
+    physical_protocol: str
+    state: str
+    name: str
+    description: str
+    enabled: bool
+    node_name: str
+    connected_speed: int | None = None  # gigabit per second
+
+    def speed_in_bps(self) -> int | None:
+        """Returns the speed in bits per second"""
+        return self.connected_speed * 1000**3 if self.connected_speed is not None else None
+
+
+class FcInterfaceTrafficCountersModel(BaseModel):
+    """
+    cfr: https://docs.netapp.com/us-en/ontap-pcmap-9141/
+    """
+
+    svm_name: str
+    table: str
+    counters: Sequence[dict]
+    name: str  # was: instance-name
+    port_wwpn: str

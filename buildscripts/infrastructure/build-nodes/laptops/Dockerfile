@@ -24,5 +24,3 @@ COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 
 RUN /opt/install-development.sh --profile all ${ADDITIONAL_ARGS}
-
-# ENV RUSTUP_HOME=/opt/rust/rustup

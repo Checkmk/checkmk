@@ -520,7 +520,7 @@ impl CustomInstance {
         main_conn: &Connection,
         sections: &Sections,
     ) -> Result<Self> {
-        let name = InstanceName(
+        let name = InstanceName::from(
             yaml.get_string(keys::SID)
                 .context("Bad/Missing sid in instance")?
                 .to_uppercase(),

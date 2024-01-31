@@ -85,7 +85,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -98,7 +97,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -111,7 +109,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
         SNMPTree(
@@ -124,7 +121,6 @@ check_info["cmctc_temp"] = LegacyCheckDefinition(
                 "5.2.1.6",
                 "5.2.1.7",
                 "5.2.1.8",
-                "7.2.1.2",
             ],
         ),
     ],

@@ -8,7 +8,7 @@ from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
-from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import SNMPTree
@@ -57,7 +57,7 @@ def inventory_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((item, {}) for item in section)
 
 
-def check_cmctc_temp(item, params, section):
+def check_cmctc_temp(item: str, params: TempParamType, section: Section) -> Iterable:
     if (sensor := section.get(item)) is None:
         return
 
@@ -66,7 +66,7 @@ def check_cmctc_temp(item, params, section):
         params,
         "cmctc_temp_%s" % item,
         dev_levels=sensor.levels,
-        dev_levels_lower=sensor.level_lower,
+        dev_levels_lower=sensor.levels_lower,
         dev_status=cmctc_translate_status(sensor.status),
         dev_status_name="Unit: %s" % cmctc_translate_status_text(sensor.status),
     )

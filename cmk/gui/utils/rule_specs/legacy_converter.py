@@ -8,7 +8,7 @@ import urllib.parse
 from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Callable, TypeVar
+from typing import Any, assert_never, Callable, Literal, TypeVar
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
@@ -599,6 +599,46 @@ def _convert_to_legacy_float(
     return legacy_valuespecs.Float(**converted_kwargs)
 
 
+def _convert_to_legacy_binary_unit(
+    unit: ruleset_api_v1.form_specs.basic.BinaryUnit,
+) -> legacy_valuespecs.LegacyBinaryUnit:
+    match unit:
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.BYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.Byte
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.KILOBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.KB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEGABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.MB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIGABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.GB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.TERABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.TB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.PETABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.PB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.EB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZETTABYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.ZB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOTTABYTES:
+            return legacy_valuespecs.LegacyBinaryUnit.YB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.KIBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.KiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.MiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.GiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.TEBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.TiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.PEBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.PiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.EiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZEBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.ZiB
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOBIBYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.YiB
+
+
 def _convert_to_legacy_datasize(
     to_convert: ruleset_api_v1.form_specs.basic.DataSize, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.LegacyDataSize:
@@ -618,7 +658,7 @@ def _convert_to_legacy_datasize(
 
     if to_convert.displayed_units is not None:
         converted_kwargs["units"] = [
-            legacy_valuespecs.LegacyBinaryUnit[unit.value] for unit in to_convert.displayed_units
+            _convert_to_legacy_binary_unit(unit) for unit in to_convert.displayed_units
         ]
 
     return legacy_valuespecs.LegacyDataSize(**converted_kwargs)
@@ -867,6 +907,22 @@ def _convert_to_legacy_fixed_value(
     )
 
 
+def _convert_to_legacy_time_unit(
+    unit: ruleset_api_v1.form_specs.basic.TimeUnit,
+) -> Literal["days", "hours", "minutes", "seconds", "milliseconds"]:
+    match unit:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.MILLISECONDS:
+            return "milliseconds"
+        case ruleset_api_v1.form_specs.basic.TimeUnit.SECONDS:
+            return "seconds"
+        case ruleset_api_v1.form_specs.basic.TimeUnit.MINUTES:
+            return "minutes"
+        case ruleset_api_v1.form_specs.basic.TimeUnit.HOURS:
+            return "hours"
+        case ruleset_api_v1.form_specs.basic.TimeUnit.DAYS:
+            return "days"
+
+
 def _convert_to_legacy_time_span(
     to_convert: ruleset_api_v1.form_specs.basic.TimeSpan, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TimeSpan:
@@ -877,7 +933,9 @@ def _convert_to_legacy_time_span(
     }
 
     if to_convert.displayed_units is not None:
-        converted_kwargs["display"] = [u.value for u in to_convert.displayed_units]
+        converted_kwargs["display"] = [
+            _convert_to_legacy_time_unit(u) for u in to_convert.displayed_units
+        ]
 
     if to_convert.prefill_value is not None:
         converted_kwargs["default_value"] = to_convert.prefill_value

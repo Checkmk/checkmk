@@ -7,75 +7,75 @@ https://www.technologyuk.net/science/measurement-and-units/physical-quantities-a
 """
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import auto, Enum
 
 from ._localize import Localizable
 
 
 class Unit(Enum):
     # CMK
-    BAR = "bar"
-    BIT_IEC = "bits"  # factor 1024
-    BIT_IEC_PER_SECOND = "bits/s"  # factor 1024
-    BIT_SI = "bits"  # factor 1000
-    BIT_SI_PER_SECOND = "bits/s"  # factor 1000
-    BYTE_IEC = "bytes"  # factor 1024
-    BYTE_IEC_PER_DAY = "bytes/d"  # factor 1024
-    BYTE_IEC_PER_OPERATION = "bytes/op"  # factor 1024
-    BYTE_IEC_PER_SECOND = "bytes/s"  # factor 1024
-    BYTE_SI = "bytes"  # factor 1000
-    BYTE_SI_PER_DAY = "bytes/d"  # factor 1000
-    BYTE_SI_PER_OPERATION = "bytes/op"  # factor 1000
-    BYTE_SI_PER_SECOND = "bytes/s"  # factor 1000
-    COUNT = ""  # integer
-    DECIBEL = "dB"
-    DECIBEL_MILLIVOLT = "dBmV"
-    DECIBEL_MILLIWATT = "dBm"
-    DOLLAR = "$"
-    ELETRICAL_ENERGY = "Wh"
-    EURO = "€"
-    LITER_PER_SECOND = "l/s"
-    NUMBER = ""  # float
-    PARTS_PER_MILLION = "ppm"
-    PERCENTAGE = "%"
-    PERCENTAGE_PER_METER = "%/m"
-    PER_SECOND = "1/s"
-    READ_CAPACITY_UNIT = "RCU"
-    REVOLUTIONS_PER_MINUTE = "rpm"
-    SECONDS_PER_SECOND = "s/s"
-    VOLT_AMPERE = "VA"
-    WRITE_CAPACITY_UNIT = "WCU"
+    BAR = auto()  # "bar"
+    BIT_IEC = auto()  # "bits, factor 1024
+    BIT_SI = auto()  # "bits, factor 1000
+    BIT_IEC_PER_SECOND = auto()  # "bits/s, factor 1024
+    BIT_SI_PER_SECOND = auto()  # "bits/s, factor 1000
+    BYTE_IEC = auto()  # "bytes, factor 1024
+    BYTE_SI = auto()  # "bytes, factor 1000
+    BYTE_IEC_PER_SECOND = auto()  # "bytes/s, factor 1024
+    BYTE_SI_PER_SECOND = auto()  # "bytes/s, factor 1000
+    BYTE_IEC_PER_DAY = auto()  # "bytes/d, factor 1024
+    BYTE_SI_PER_DAY = auto()  # "bytes/d, factor 1000
+    BYTE_IEC_PER_OPERATION = auto()  # "bytes/op, factor 1024
+    BYTE_SI_PER_OPERATION = auto()  # "bytes/op, factor 1000
+    COUNT = auto()  # ", integer
+    DECIBEL = auto()  # "dB"
+    DECIBEL_MILLIVOLT = auto()  # "dBmV"
+    DECIBEL_MILLIWATT = auto()  # "dBm"
+    DOLLAR = auto()  # "$"
+    ELETRICAL_ENERGY = auto()  # "Wh"
+    EURO = auto()  # "€"
+    LITER_PER_SECOND = auto()  # "l/s"
+    NUMBER = auto()  # ", float
+    PARTS_PER_MILLION = auto()  # "ppm"
+    PERCENTAGE = auto()  # "%"
+    PERCENTAGE_PER_METER = auto()  # "%/m"
+    PER_SECOND = auto()  # "1/s"
+    READ_CAPACITY_UNIT = auto()  # "RCU"
+    REVOLUTIONS_PER_MINUTE = auto()  # "rpm"
+    SECONDS_PER_SECOND = auto()  # "s/s"
+    VOLT_AMPERE = auto()  # "VA"
+    WRITE_CAPACITY_UNIT = auto()  # "WCU"
     # SI base unit
-    AMPERE = "A"
-    CANDELA = "cd"
-    KELVIN = "K"
-    KILOGRAM = "kg"
-    METRE = "m"
-    MOLE = "mol"
-    SECOND = "s"
+    AMPERE = auto()  # "A"
+    CANDELA = auto()  # "cd"
+    KELVIN = auto()  # "K"
+    KILOGRAM = auto()  # "kg"
+    METRE = auto()  # "m"
+    MOLE = auto()  # "mol"
+    SECOND = auto()  # "s"
     # SI Units with Special Names and Symbols
-    BECQUEREL = "Bq"
-    COULOMB = "C"
-    DEGREE_CELSIUS = "°C"
-    FARAD = "F"
-    GRAY = "Gy"
-    HENRY = "H"
-    HERTZ = "Hz"
-    JOULE = "J"
-    KATAL = "kat"
-    LUMEN = "lm"
-    LUX = "lx"
-    NEWTON = "N"
-    OHM = "Ω"
-    PASCAL = "Pa"
-    RADIAN = "rad"
-    SIEMENS = "S"
-    SIEVERT = "Sv"
-    STERADIAN = "sr"
-    TESLA = "T"
-    VOLT = "V"
-    WATT = "W"
-    WEBER = "Wb"
+    BECQUEREL = auto()  # "Bq"
+    COULOMB = auto()  # "C"
+    DEGREE_CELSIUS = auto()  # "°C"
+    FARAD = auto()  # "F"
+    GRAY = auto()  # "Gy"
+    HENRY = auto()  # "H"
+    HERTZ = auto()  # "Hz"
+    JOULE = auto()  # "J"
+    KATAL = auto()  # "kat"
+    LUMEN = auto()  # "lm"
+    LUX = auto()  # "lx"
+    NEWTON = auto()  # "N"
+    OHM = auto()  # "Ω"
+    PASCAL = auto()  # "Pa"
+    RADIAN = auto()  # "rad"
+    SIEMENS = auto()  # "S"
+    SIEVERT = auto()  # "Sv"
+    STERADIAN = auto()  # "sr"
+    TESLA = auto()  # "T"
+    VOLT = auto()  # "V"
+    WATT = auto()  # "W"
+    WEBER = auto()  # "Wb"
 
 
 @dataclass(frozen=True)

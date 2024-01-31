@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-import enum
 from dataclasses import dataclass
+from enum import auto, Enum
 from typing import Callable, ClassVar, Literal, Sequence
 
 from .._localize import Localizable
@@ -29,24 +29,24 @@ class BooleanChoice(FormSpec):
     transform: Migrate[bool] | None = None
 
 
-class BinaryUnit(enum.Enum):
-    BYTE = "Byte"
-    KILOBYTE = "KB"
-    MEGABYTE = "MB"
-    GIGABYTE = "GB"
-    TERABYTE = "TB"
-    PETABYTE = "PB"
-    EXABYTE = "EB"
-    ZETTABYTE = "ZB"
-    YOTTABYTES = "YB"
-    KIBIBYTE = "KiB"
-    MEBIBYTE = "MiB"
-    GIBIBYTE = "GiB"
-    TEBIBYTE = "TiB"
-    PEBIBYTE = "PiB"
-    EXBIBYTE = "EiB"
-    ZEBIBYTE = "ZiB"
-    YOBIBYTE = "YiB"
+class BinaryUnit(Enum):
+    BYTE = auto()  # "Byte"
+    KILOBYTE = auto()  # "KB"
+    MEGABYTE = auto()  # "MB"
+    GIGABYTE = auto()  # "GB"
+    TERABYTE = auto()  # "TB"
+    PETABYTE = auto()  # "PB"
+    EXABYTE = auto()  # "EB"
+    ZETTABYTE = auto()  # "ZB"
+    YOTTABYTES = auto()  # "YB"
+    KIBIBYTE = auto()  # "KiB"
+    MEBIBYTE = auto()  # "MiB"
+    GIBIBYTE = auto()  # "GiB"
+    TEBIBYTE = auto()  # "TiB"
+    PEBIBYTE = auto()  # "PiB"
+    EXBIBYTE = auto()  # "EiB"
+    ZEBIBYTE = auto()  # "ZiB"
+    YOBIBYTE = auto()  # "YiB"
 
 
 SI_BINARY_UNIT = (
@@ -351,12 +351,12 @@ class Text(FormSpec):
     custom_validate: Callable[[str], object] | None = None
 
 
-class TimeUnit(enum.Enum):
-    MILLISECONDS = "milliseconds"
-    SECONDS = "seconds"
-    MINUTES = "minutes"
-    HOURS = "hours"
-    DAYS = "days"
+class TimeUnit(Enum):
+    MILLISECONDS = auto()  # "milliseconds"
+    SECONDS = auto()  # "seconds"
+    MINUTES = auto()  # "minutes"
+    HOURS = auto()  # "hours"
+    DAYS = auto()  # "days"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -389,9 +389,9 @@ class TimeSpan(FormSpec):
     custom_validate: Callable[[float], object] | None = None
 
 
-class InvalidElementMode(enum.Enum):
-    KEEP = enum.auto()
-    COMPLAIN = enum.auto()
+class InvalidElementMode(Enum):
+    KEEP = auto()
+    COMPLAIN = auto()
 
 
 @dataclass

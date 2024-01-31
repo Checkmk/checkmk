@@ -5,7 +5,8 @@
 
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Integer, List, ServiceState, Text
+from cmk.rulesets.v1.form_specs.basic import Integer, ServiceState, Text
+from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, List
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 

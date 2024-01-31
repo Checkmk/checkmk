@@ -8,15 +8,15 @@ from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
 
 
 def _parameter_form_mssql_backup_per_type():
-    return form_specs.Dictionary(
+    return form_specs.composed.Dictionary(
         elements={
             "levels": fs_mssql_backup_age(Localizable("Upper levels for the backup age")),
         },
     )
 
 
-def _item_spec() -> form_specs.Text:
-    return form_specs.Text(
+def _item_spec() -> form_specs.basic.Text:
+    return form_specs.basic.Text(
         title=Localizable("Instance, tablespace & backup type"),
         help_text=Localizable(
             "The MSSQL instance name, the tablespace name and the backup type, each separated "

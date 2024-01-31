@@ -4,13 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
-    DictElement,
-    Dictionary,
-    SingleChoice,
-    SingleChoiceElement,
-    Text,
-)
+from cmk.rulesets.v1.form_specs.basic import SingleChoice, SingleChoiceElement, Text
+from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 

@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import form_specs, migrations, rule_specs, validators
-from ._localize import Localizable
+
+from . import basic, composed, levels, preconfigured
+from ._base import FormSpec, Migrate
 
 __all__ = [
-    "form_specs",
-    "Localizable",
-    "migrations",
-    "rule_specs",
-    "validators",
+    "basic",
+    "composed",
+    "FormSpec",
+    "levels",
+    "Migrate",
+    "preconfigured",
 ]

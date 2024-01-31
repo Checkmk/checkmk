@@ -123,7 +123,7 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
-from cmk.rulesets.v1 import FormSpec
+from cmk.rulesets.v1.form_specs import FormSpec
 
 from ._match_conditions import HostTagCondition
 from ._rule_conditions import DictHostTagCondition

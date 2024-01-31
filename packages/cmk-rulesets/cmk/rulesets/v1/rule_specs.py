@@ -7,9 +7,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
 
-from ._base import FormSpec
 from ._localize import Localizable
-from .form_specs import Dictionary, ItemFormSpec, SingleChoice, Text
+from .form_specs import FormSpec
+from .form_specs.basic import SingleChoice, Text
+from .form_specs.composed import Dictionary
 
 
 class Topic(Enum):
@@ -66,7 +67,7 @@ class HostAndItemCondition:
         item_form: Configuration specification for the item of the check
     """
 
-    item_form: ItemFormSpec
+    item_form: Text | SingleChoice
 
 
 @dataclass(frozen=True)

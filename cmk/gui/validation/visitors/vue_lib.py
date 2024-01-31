@@ -8,7 +8,7 @@ from typing import Any
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
 
-from cmk.rulesets.v1 import FormSpec
+from cmk.rulesets.v1.form_specs import FormSpec
 
 
 @dataclass(kw_only=True)

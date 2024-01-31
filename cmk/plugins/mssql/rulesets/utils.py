@@ -22,30 +22,30 @@ def _migrate_alternative_to_dropdown(
 
 
 # TODO: migrate to form_specs.Levels after check_levels function has been implemented
-def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
-    return form_specs.DictElement(
-        parameter_form=form_specs.CascadingSingleChoice(
+def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
+    return form_specs.composed.DictElement(
+        parameter_form=form_specs.composed.CascadingSingleChoice(
             title=title,
             elements=[
-                form_specs.CascadingSingleChoiceElement(
+                form_specs.composed.CascadingSingleChoiceElement(
                     name="levels",
                     title=Localizable("Set levels"),
-                    parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
+                    parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
                         title=Localizable("Set levels"),
                         elements=[
-                            form_specs.TimeSpan(title=Localizable("Warning if older than")),
-                            form_specs.TimeSpan(title=Localizable("Critical if older than")),
+                            form_specs.basic.TimeSpan(title=Localizable("Warning if older than")),
+                            form_specs.basic.TimeSpan(title=Localizable("Critical if older than")),
                         ],
                     ),
                 ),
-                form_specs.CascadingSingleChoiceElement(
+                form_specs.composed.CascadingSingleChoiceElement(
                     name="no_levels",
                     title=Localizable("No levels"),
-                    parameter_form=form_specs.TupleDoNotUseWillbeRemoved(
+                    parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
                         title=Localizable("No levels"),
                         elements=[
-                            form_specs.FixedValue(value=None, label=Localizable("")),
-                            form_specs.FixedValue(value=None, label=Localizable("")),
+                            form_specs.basic.FixedValue(value=None, label=Localizable("")),
+                            form_specs.basic.FixedValue(value=None, label=Localizable("")),
                         ],
                     ),
                 ),
@@ -56,8 +56,8 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.DictElement:
     )
 
 
-def mssql_item_spec_instance_tablespace() -> form_specs.Text:
-    return form_specs.Text(
+def mssql_item_spec_instance_tablespace() -> form_specs.basic.Text:
+    return form_specs.basic.Text(
         title=Localizable("Instance & tablespace name"),
         help_text=Localizable(
             "The MSSQL instance name and the tablespace name separated by a space."

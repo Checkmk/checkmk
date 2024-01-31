@@ -6,21 +6,16 @@
 from typing import Literal
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
-    BooleanChoice,
+from cmk.rulesets.v1.form_specs.basic import BooleanChoice, FixedValue, Float, Integer, Text
+from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    FixedValue,
-    Float,
-    Integer,
-    LevelDirection,
-    Levels,
     List,
-    Text,
     TupleDoNotUseWillbeRemoved,
 )
+from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 

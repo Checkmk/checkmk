@@ -2,6 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+"""FormSpecs that allow a selection form preconfigured resources in a setup"""
+
 import enum
 from dataclasses import dataclass
 
@@ -22,9 +25,9 @@ class Proxy(FormSpec):
     """Specifies a form for configuring a proxy
 
     Args:
-        allowed_schemas: Set of available proxy schemas that can be used in a proxy url
         title: Human readable title
         help_text: Description to help the user with the configuration
+        allowed_schemas: Set of available proxy schemas that can be used in a proxy url
     """
 
     allowed_schemas: frozenset[ProxySchema] = frozenset(

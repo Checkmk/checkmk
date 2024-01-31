@@ -9,7 +9,7 @@ import ipaddress
 import itertools
 import re
 from collections import Counter
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import TypeAlias
 
@@ -26,15 +26,10 @@ class Hosts:
     shadow_hosts: Sequence[HostName]
 
     def duplicates(self, /, pred: Callable[[HostName], bool]) -> Iterable[HostName]:
-        return (
-            hn
-            for hn, count in Counter(
-                hn
-                for hn in itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
-                if pred(hn)
-            ).items()
-            if count > 1
-        )
+        return (hn for hn, count in Counter(hn for hn in self if pred(hn)).items() if count > 1)
+
+    def __iter__(self) -> Iterator[HostName]:
+        return itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
 
 
 class HostAddress(str):

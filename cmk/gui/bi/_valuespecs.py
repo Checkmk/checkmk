@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
     LabelGroups,
     ListOf,
     ListOfStrings,
-    MonitoringState,
     Percentage,
     TextInput,
     Transform,
@@ -60,6 +59,23 @@ def register() -> None:
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionBest)
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionWorst)
     bi_config_aggregation_function_registry.register(BIConfigAggregationFunctionCountOK)
+
+
+def get_bi_state_dropdown() -> DropdownChoice[int]:
+    return DropdownChoice[int](
+        title=_("Restrict severity to at worst"),
+        help=_(
+            "Here a maximum severity of the node state can be set. This severity is not "
+            "exceeded, even if some of the children have more severe states."
+        ),
+        default_value=2,
+        choices=[
+            (0, _("OK")),
+            (1, _("WARN")),
+            (3, _("UNKNOWN")),
+            (2, _("CRIT")),
+        ],
+    )
 
 
 #   .--Generic converter---------------------------------------------------.
@@ -821,14 +837,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,
@@ -875,14 +884,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                         default_value=1,
                         minvalue=1,
                     ),
-                    MonitoringState(
-                        title=_("Restrict severity to at worst"),
-                        help=_(
-                            "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the children have more severe states."
-                        ),
-                        default_value=2,
-                    ),
+                    get_bi_state_dropdown(),
                 ]
             ),
             to_valuespec=convert_to_vs,

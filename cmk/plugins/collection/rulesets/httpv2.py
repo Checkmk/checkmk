@@ -4,24 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
+from cmk.rulesets.v1.form_specs.basic import (
     BooleanChoice,
-    CascadingSingleChoice,
-    CascadingSingleChoiceElement,
-    DictElement,
-    Dictionary,
     FixedValue,
     Float,
     Integer,
-    LevelDirection,
-    Levels,
-    List,
     SingleChoice,
     SingleChoiceElement,
     Text,
     TimeSpan,
 )
-from cmk.rulesets.v1.preconfigured import Password
+from cmk.rulesets.v1.form_specs.composed import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DictElement,
+    Dictionary,
+    List,
+)
+from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
+from cmk.rulesets.v1.form_specs.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty
 

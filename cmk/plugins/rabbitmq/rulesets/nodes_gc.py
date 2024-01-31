@@ -5,18 +5,10 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
-    BinaryUnit,
-    DataSize,
-    DictElement,
-    Dictionary,
-    Float,
-    Integer,
-    LevelDirection,
-    Levels,
-    Migrate,
-    Text,
-)
+from cmk.rulesets.v1.form_specs import Migrate
+from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer, Text
+from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
+from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 

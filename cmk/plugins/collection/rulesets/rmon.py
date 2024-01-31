@@ -3,15 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
-def _parameter_form_discover_rmon() -> form_specs.Dictionary:
-    return form_specs.Dictionary(
+def _parameter_form_discover_rmon() -> form_specs.composed.Dictionary:
+    return form_specs.composed.Dictionary(
         elements={
-            "discover": form_specs.DictElement(
-                parameter_form=form_specs.BooleanChoice(
+            "discover": form_specs.composed.DictElement(
+                parameter_form=form_specs.basic.BooleanChoice(
                     label=Localizable("Discover RMON statistics services"),
                     prefill_value=True,
                     help_text=Localizable(

@@ -5,15 +5,8 @@
 
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
-    DictElement,
-    Dictionary,
-    Integer,
-    Text,
-    TimeSpan,
-    TimeUnit,
-    TupleDoNotUseWillbeRemoved,
-)
+from cmk.rulesets.v1.form_specs.basic import Integer, Text, TimeSpan, TimeUnit
+from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, TupleDoNotUseWillbeRemoved
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 

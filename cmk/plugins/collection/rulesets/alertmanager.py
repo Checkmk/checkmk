@@ -7,17 +7,14 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from cmk.rulesets.v1 import Localizable, validators
-from cmk.rulesets.v1.form_specs import (
+from cmk.rulesets.v1.form_specs import Migrate
+from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, ServiceState, Text
+from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    FixedValue,
-    Integer,
     List,
-    Migrate,
-    ServiceState,
-    Text,
 )
 from cmk.rulesets.v1.rule_specs import (
     CheckParameters,

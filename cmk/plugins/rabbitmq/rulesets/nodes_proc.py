@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
+from cmk.rulesets.v1.form_specs.basic import Integer, Percentage, Text
+from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    Integer,
-    Percentage,
-    Text,
     TupleDoNotUseWillbeRemoved,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic

@@ -6,16 +6,14 @@
 import pytest
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import (
+from cmk.rulesets.v1.form_specs.basic import FixedValue, SingleChoice, SingleChoiceElement
+from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DictElement,
     Dictionary,
-    FixedValue,
     MultipleChoice,
     MultipleChoiceElement,
-    SingleChoice,
-    SingleChoiceElement,
 )
 
 

@@ -16,13 +16,17 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cmk.utils.version import __version__, parse_check_mk_version
 
-NUMBER_OF_EXTENSION_TESTED = 15
+NUMBER_OF_EXTENSION_TESTED = 30
 
 
 def main(parsed_version: int) -> None:
-    most_popular = islice(
-        _compatible_extensions_sorted_by_n_downloads(parsed_version), NUMBER_OF_EXTENSION_TESTED
-    )
+    extensions = _compatible_extensions_sorted_by_n_downloads(parsed_version)
+
+    # uncomment this to get output that you can paste into a spread sheet.
+    # for extension in extensions:
+    #     print(f"{extension.latest_version.link}\t{extension.downloads:5}")
+
+    most_popular = islice(extensions, NUMBER_OF_EXTENSION_TESTED)
     # do not output them sorted by downloads -- this breaks the test more often than necessary.
     for extension in sorted(most_popular, key=lambda e: e.latest_version.link):
         print(extension.latest_version.link)

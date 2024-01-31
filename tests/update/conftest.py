@@ -62,14 +62,26 @@ class BaseVersions:
     with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
         BASE_VERSIONS_STR = json.load(f)
 
+    # Todo: currently there is no release in previous branch (2.3.0).
+    #   Temporary using daily build.
+    #   Re-adapt code below once a release is available.
+    # BASE_VERSIONS = [
+    #     CMKVersion(
+    #         base_version_str,
+    #         Edition.CEE,
+    #         current_base_branch_name(),
+    #         current_branch_version(),
+    #     )
+    #     for base_version_str in BASE_VERSIONS_STR
+    # ]
+
     BASE_VERSIONS = [
         CMKVersion(
-            base_version_str,
+            CMKVersion.DAILY,
             Edition.CEE,
-            current_base_branch_name(),
-            current_branch_version(),
+            "2.3.0",
+            "2.3.0",
         )
-        for base_version_str in BASE_VERSIONS_STR
     ]
 
 

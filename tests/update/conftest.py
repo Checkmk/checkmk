@@ -131,7 +131,9 @@ def get_site_status(site: Site) -> str | None:
     return None
 
 
-def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
+def _get_site(  # pylint: disable=too-many-branches
+    version: CMKVersion, interactive: bool, base_site: Site | None = None
+) -> Site:
     """Install or update the test site with the given version.
 
     An update installation is done automatically when an optional base_site is given.
@@ -200,6 +202,8 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                         f"Base-version {version.version} not available in "
                         f'{os.environ.get("DISTRO")}'
                     )
+                else:
+                    raise
     else:
         if update:
             # non-interactive update as site-user
@@ -215,6 +219,8 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                         f"Base-version {version.version} not available in "
                         f'{os.environ.get("DISTRO")}'
                     )
+                else:
+                    raise
 
     return site
 

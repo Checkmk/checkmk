@@ -32,7 +32,7 @@ from cmk.gui.openapi.endpoints.contact_group_config.request_schemas import (
     BulkInputContactGroup,
     BulkUpdateContactGroup,
     InputContactGroup,
-    UpdateGroup,
+    UpdateContactGroupAttributes,
 )
 from cmk.gui.openapi.endpoints.contact_group_config.response_schemas import (
     ContactGroup,
@@ -235,7 +235,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     response_schema=ContactGroup,
     etag="both",
-    request_schema=UpdateGroup,
+    request_schema=UpdateContactGroupAttributes,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:

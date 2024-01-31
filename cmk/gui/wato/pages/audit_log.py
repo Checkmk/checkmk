@@ -28,7 +28,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
-from cmk.gui.userdb import UserSelection
+from cmk.gui.userdb.store import load_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -572,6 +572,12 @@ class ModeAuditLog(WatoMode):
             (None, _("No object type")),
         ] + [(t.name, t.name) for t in ObjectRefType]
 
+        users = load_users()
+        user_choices: Choices = [(None, "All users")] + sorted(
+            [("-", "internal")] + [(name, name) for (name, us) in users.items()],
+            key=lambda x: x[1],
+        )
+
         return [
             (
                 "object_type",
@@ -588,10 +594,9 @@ class ModeAuditLog(WatoMode):
             ),
             (
                 "user_id",
-                UserSelection(
+                DropdownChoice(
                     title=_("User"),
-                    only_contacts=False,
-                    none=_("All users"),
+                    choices=user_choices,
                 ),
             ),
             (

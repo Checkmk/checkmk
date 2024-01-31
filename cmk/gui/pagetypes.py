@@ -1184,18 +1184,18 @@ class ListPage(Page, Generic[_T]):
                 if isinstance(instance, PageRenderer):
                     html.icon_button(instance.view_url(), _("View"), self._type.type_name())
 
+                # Edit
+                if instance.may_edit():
+                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
+
+                self._type.custom_list_buttons(instance)
+
                 # Clone / Customize
                 html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
 
                 # Delete
                 if instance.may_delete():
                     html.icon_button(instance.delete_url(), _("Delete!"), "delete")
-
-                # Edit
-                if instance.may_edit():
-                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
-
-                self._type.custom_list_buttons(instance)
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_("ID"), instance.name(), css=["narrow"])

@@ -140,44 +140,7 @@ def page_list(  # pylint: disable=too-many-branches
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
 
-                # Clone / Customize
-                buttontext = _("Create a private copy of this")
-                backurl = urlencode(makeuri(request, []))
-                clone_url = makeuri_contextless(
-                    request,
-                    [
-                        ("mode", "clone"),
-                        ("owner", owner),
-                        ("load_name", visual_name),
-                        ("back", backurl),
-                    ],
-                    filename="edit_%s.py" % what_s,
-                )
-                html.icon_button(clone_url, buttontext, "clone")
-
                 is_packaged = visual["packaged"]
-
-                # Delete
-                if (
-                    owner
-                    and (owner == user.id or user.may("general.delete_foreign_%s" % what))
-                    and not is_packaged
-                ):
-                    add_vars: HTTPVariables = [("_delete", visual_name)]
-                    confirm_message = _("ID: %s") % visual_name
-                    if owner != user.id:
-                        add_vars.append(("_user_id", owner))
-                        confirm_message += "<br>" + _("Owner: %s") % owner
-                    html.icon_button(
-                        make_confirm_delete_link(
-                            url=makeactionuri(request, transactions, add_vars),
-                            title=_("Delete %s") % visual_type.title,
-                            suffix=str(visual["title"]),
-                            message=confirm_message,
-                        ),
-                        _("Delete!"),
-                        "delete",
-                    )
 
                 # Edit
                 if (
@@ -201,6 +164,21 @@ def page_list(  # pylint: disable=too-many-branches
                 if not is_packaged and render_custom_buttons:
                     render_custom_buttons(visual_name, visual)
 
+                # Clone / Customize
+                buttontext = _("Create a private copy of this")
+                backurl = urlencode(makeuri(request, []))
+                clone_url = makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "clone"),
+                        ("owner", owner),
+                        ("load_name", visual_name),
+                        ("back", backurl),
+                    ],
+                    filename="edit_%s.py" % what_s,
+                )
+                html.icon_button(clone_url, buttontext, "clone")
+
                 # Packaged visuals have built-in user as owner, so we have to
                 # make sure to not show packaged related icons for built-in
                 # visuals
@@ -214,6 +192,28 @@ def page_list(  # pylint: disable=too-many-branches
                         installed_packages,
                         is_packaged,
                         backurl,
+                    )
+
+                # Delete
+                if (
+                    owner
+                    and (owner == user.id or user.may("general.delete_foreign_%s" % what))
+                    and not is_packaged
+                ):
+                    add_vars: HTTPVariables = [("_delete", visual_name)]
+                    confirm_message = _("ID: %s") % visual_name
+                    if owner != user.id:
+                        add_vars.append(("_user_id", owner))
+                        confirm_message += "<br>" + _("Owner: %s") % owner
+                    html.icon_button(
+                        make_confirm_delete_link(
+                            url=makeactionuri(request, transactions, add_vars),
+                            title=_("Delete %s") % visual_type.title,
+                            suffix=str(visual["title"]),
+                            message=confirm_message,
+                        ),
+                        _("Delete!"),
+                        "delete",
                     )
 
                 # visual Name

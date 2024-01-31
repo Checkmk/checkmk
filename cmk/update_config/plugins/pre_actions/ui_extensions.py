@@ -34,7 +34,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
             if package_id is None:
                 if continue_on_incomp_local_file(
                     conflict_mode,
-                    module_name,
+                    path,
                     error,
                 ):
                     continue

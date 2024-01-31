@@ -16,6 +16,7 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, Host
 
 
 class Params(BaseModel, frozen=True):
+    hostname: str
     name: str | None = None
     server: str | None = None
     expect_all_addresses: bool = True
@@ -30,7 +31,7 @@ def commands_function(
     host_config: HostConfig,
     _http_proxies: object,
 ) -> Iterator[ActiveCheckCommand]:
-    command_arguments = ["-H", host_config.name]
+    command_arguments = ["-H", params.hostname]
 
     if params.server is None:
         if not host_config.resolved_address:
@@ -57,7 +58,7 @@ def commands_function(
         command_arguments += ["-t", str(params.timeout)]
 
     yield ActiveCheckCommand(
-        service_description=(params.name if params.name else f"DNS {host_config.name}"),
+        service_description=(params.name if params.name else f"DNS {params.hostname}"),
         command_arguments=command_arguments,
     )
 

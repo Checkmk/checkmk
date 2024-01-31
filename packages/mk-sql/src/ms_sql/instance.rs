@@ -18,7 +18,7 @@ use crate::ms_sql::query::{
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
-use crate::types::{InstanceName, Port};
+use crate::types::{InstanceId, InstanceName, Port};
 use crate::utils;
 
 use anyhow::Result;
@@ -37,7 +37,7 @@ pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 pub struct SqlInstanceBuilder {
     alias: Option<String>,
     pub name: Option<InstanceName>,
-    id: Option<String>,
+    id: Option<InstanceId>,
     edition: Option<String>,
     version: Option<String>,
     cluster: Option<String>,
@@ -64,7 +64,7 @@ impl SqlInstanceBuilder {
         self
     }
     pub fn id<S: Into<String>>(mut self, id: S) -> Self {
-        self.id = Some(id.into());
+        self.id = Some(InstanceId::from(id.into()));
         self
     }
     pub fn edition<S: Into<String>>(mut self, edition: S) -> Self {
@@ -181,7 +181,7 @@ fn parse_version(version: &Option<String>) -> [u32; 3] {
 pub struct SqlInstance {
     pub alias: Option<String>,
     pub name: InstanceName,
-    pub id: String,
+    pub id: InstanceId,
     pub version: String,
     pub edition: String,
     pub cluster: Option<String>,
@@ -1948,7 +1948,7 @@ mssql:
         assert_eq!(standard.get_port(), Port(2u16));
 
         let s = standard.build();
-        assert_eq!(s.id, "id");
+        assert_eq!(s.id.to_string(), "id");
         assert_eq!(s.name.to_string(), "NAME");
         assert_eq!(s.alias.as_deref(), Some("alias"));
         assert!(s.cluster.is_none());

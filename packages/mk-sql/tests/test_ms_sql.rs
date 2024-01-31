@@ -81,9 +81,9 @@ async fn test_local_connection() {
 }
 
 fn is_instance_good(i: &SqlInstance) -> bool {
-    !String::from(i.name.clone()).is_empty()
-        && i.id.contains(&String::from(i.name.clone())[..4])
-        && i.id.contains("MSSQL")
+    !i.name.to_string().is_empty()
+        && i.id.to_string().contains(&i.name.to_string()[..4])
+        && i.id.to_string().contains("MSSQL")
         && i.version.chars().filter(|&c| c == '.').count() == 3
         && i.port().is_some()
         && i.cluster.is_none()

@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_version,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import (
-    _normalize_ip_addresses as normalize_ip_addresses,
+    _expand_curly_address_notation as expand_curly_address_notation,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
@@ -1284,7 +1284,7 @@ def test_cached_plugins(
     )
 
 
-def test_normalize_ip() -> None:
-    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1"]) == ["0.0.0.0", "1.1.1.1"]
-    assert normalize_ip_addresses("0.0.0.0 1.1.1.1") == ["0.0.0.0", "1.1.1.1"]
+def test_expand_curly_address_notation() -> None:
+    assert expand_curly_address_notation("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert expand_curly_address_notation(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert expand_curly_address_notation("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

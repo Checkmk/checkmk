@@ -280,7 +280,7 @@ buildclean:
 
 
 setup:
-	sudo ./buildscripts/infrastructure/build-nodes/scripts/install-everything.sh --profile all
+	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile all
 	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
 	$(MAKE) check-setup
 

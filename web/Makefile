@@ -3,5 +3,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 setup:
-	cd ..
-	sudo ./buildscripts/infrastructure/build-nodes/scripts/install-everything.sh --profile frontend
+	cd ..; \
+	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile frontend

@@ -20,8 +20,8 @@ help:
 	@echo "update-pos - Pull changes in Checkmk localization repository, update, commit and push po-files in Checkmk repository accordingly"
 
 setup:
-	cd ..
-	sudo ./buildscripts/infrastructure/build-nodes/scripts/install-everything.sh --profile localize
+	cd ..; \
+	sudo buildscripts/infrastructure/build-nodes/scripts/install-development.sh --profile localize
 
 mo:
 	for lang in $(LANGUAGES) ; do \

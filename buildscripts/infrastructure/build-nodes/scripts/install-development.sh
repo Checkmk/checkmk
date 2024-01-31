@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # How to use
-# ./buildscripts/infrastructure/build-nodes/scripts/install-everything.sh \
+# ./buildscripts/infrastructure/build-nodes/scripts/install-development.sh \
 #   --installpath $PWD/qwertz \
 #   --profile cpp,python \
 #   --dry
@@ -500,9 +500,12 @@ fi
 # CMK dependencies should always be installed
 install_cmk_package_dependencies
 
-# install Bazel for package building
-export TARGET_DIR="${INSTALL_PATH}"
-"${SCRIPT_DIR}"/install-bazel.sh
+if [[ $REQUIRES_NEXUS -gt 0 ]]; then
+    # only localize or web is installed, which don't require nexus interactions
+    # install Bazel for package building
+    export TARGET_DIR="${INSTALL_PATH}"
+    "${SCRIPT_DIR}"/install-bazel.sh
+fi
 
 # install_packages golang-go
 # "${SCRIPT_DIR}"/install-buildifier.sh

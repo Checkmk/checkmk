@@ -11,5 +11,5 @@ Version: 2.3.0b1
 With Checkmk 2.2, announced by Werk #14977, the usage of mod_auth_mellon was deprecated. This release now removes mod_auth_mellon.
 
 If you still have mod_auth_mellon in your apache config, the apache service will not be able to start.
-Errors are logged to <tt>var/lib/apache2/error_log</tt>.
+Errors are logged to <tt>var/log/apache2/error_log</tt>.
 If you want to continue to use SAML you can do it in the Enterprise Edition via <i>Setup -> Users -> SAML connections</i>.

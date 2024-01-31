@@ -1212,14 +1212,18 @@ def parse_env_file(env_file):
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None
+
     for line in open_env_file(env_file):
         line = line.strip()
+        if not line or "=" not in line or line.startswith("#"):
+            continue
         if "PGDATABASE=" in line:
             pg_database = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGPORT=" in line:
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGVERSION=" in line:
             pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
     return pg_database, pg_port, pg_version

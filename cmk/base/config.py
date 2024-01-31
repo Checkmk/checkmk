@@ -2020,15 +2020,7 @@ class ConfigCache:
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_of_cache,
-            all_configured_hosts=list(
-                set(
-                    itertools.chain(
-                        self.hosts_config.hosts,
-                        self.hosts_config.clusters,
-                        self.hosts_config.shadow_hosts,
-                    )
-                )
-            ),
+            all_configured_hosts=list(set(self.hosts_config)),
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(

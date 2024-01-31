@@ -583,7 +583,27 @@ def test_parse_env_file_comments(tmp_path):
             ).encode("utf-8")
         )
     assert mk_postgres.parse_env_file(str(path)) == (
-        "ut_some_other_database",  # this is a bug, should be ut_pg_database
-        "345",  # this is a bug, should be 123
+        "ut_pg_database",
+        "123",
+        None,
+    )
+
+
+def test_parse_env_file_parser(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "# this is a comment\n"
+                " # t = is a comment\n"
+                "\t#\tt =s a comment\n"
+                "\n"  # empty line
+                "export PGDATABASE=ut_pg_database\n"
+                "PGPORT=123\n"
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "ut_pg_database",
+        "123",
         None,
     )

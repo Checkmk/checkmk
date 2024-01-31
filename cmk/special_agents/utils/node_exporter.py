@@ -103,7 +103,7 @@ class CPULoad(pydantic.BaseModel):
 class Uptime(pydantic.BaseModel):
     """section: prometheus_uptime_v1"""
 
-    seconds: int
+    seconds: float
 
 
 class FilesystemInfo:

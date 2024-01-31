@@ -62,7 +62,7 @@ class BulkInputHostGroup(BaseSchema):
     )
 
 
-class UpdateGroup(BaseSchema):
+class UpdateHostGroupAttributes(BaseSchema):
     alias = fields.String(
         example="Example Group",
         description="The name used for displaying in the GUI.",
@@ -80,7 +80,7 @@ class UpdateHostGroup(BaseSchema):
 
     name = EXISTING_HOST_GROUP_NAME
     attributes = fields.Nested(
-        UpdateGroup,
+        UpdateHostGroupAttributes,
         required=True,
     )
 

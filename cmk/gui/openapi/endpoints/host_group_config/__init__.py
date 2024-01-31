@@ -31,7 +31,7 @@ from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
     BulkInputHostGroup,
     BulkUpdateHostGroup,
     InputHostGroup,
-    UpdateGroup,
+    UpdateHostGroupAttributes,
 )
 from cmk.gui.openapi.endpoints.host_group_config.response_schemas import (
     HostGroup,
@@ -197,7 +197,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=HostGroup,
-    request_schema=UpdateGroup,
+    request_schema=UpdateHostGroupAttributes,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:

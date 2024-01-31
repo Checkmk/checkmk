@@ -31,7 +31,7 @@ from cmk.gui.openapi.endpoints.service_group_config.request_schemas import (
     BulkInputServiceGroup,
     BulkUpdateServiceGroup,
     InputServiceGroup,
-    UpdateGroup,
+    UpdateServiceGroupAttributes,
 )
 from cmk.gui.openapi.endpoints.service_group_config.response_schemas import (
     ServiceGroup,
@@ -217,7 +217,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=ServiceGroup,
-    request_schema=UpdateGroup,
+    request_schema=UpdateServiceGroupAttributes,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:

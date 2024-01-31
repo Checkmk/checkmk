@@ -235,7 +235,11 @@ def _aggregate_check_table_services(
     if host_name in config_cache.hosts_config.clusters:
         yield from (s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s))
 
-    yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
+    yield from (
+        svc
+        for _, svc in config_cache.enforced_services_table(host_name).values()
+        if sfilter.keep(svc)
+    )
 
     # NOTE: as far as I can see, we only have two cases with the filter mode.
     # Either we compute services to check, or we compute services for fetching.
@@ -315,15 +319,6 @@ class _ServiceFilter:
         )
 
 
-def _get_enforced_services(
-    config_cache: ConfigCache, host_name: HostName
-) -> list[ConfiguredService]:
-    return [
-        service
-        for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
-    ]
-
-
 def _get_services_from_cluster_nodes(
     config_cache: ConfigCache, node_name: HostName
 ) -> Iterable[ConfiguredService]:
@@ -339,7 +334,7 @@ def _get_clustered_services(
         node_checks: list[ConfiguredService] = []
         if not config_cache.is_ping_host(cluster_name):
             node_checks += config_cache.get_autochecks_of(node)
-        node_checks.extend(_get_enforced_services(config_cache, node))
+        node_checks.extend(svc for _, svc in config_cache.enforced_services_table(node).values())
 
         yield from (
             service

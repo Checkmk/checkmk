@@ -637,7 +637,7 @@ def test_check_table__get_static_check_entries(
     )
 
     static_check_parameters = [
-        service.parameters for service in config._get_enforced_services(config_cache, hostname)
+        service.parameters for _, service in config_cache.enforced_services_table(hostname).values()
     ]
 
     entries = config._get_checkgroup_parameters(

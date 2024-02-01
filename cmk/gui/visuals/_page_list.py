@@ -212,7 +212,7 @@ def page_list(  # pylint: disable=too-many-branches
                             suffix=str(visual["title"]),
                             message=confirm_message,
                         ),
-                        _("Delete!"),
+                        _("Delete"),
                         "delete",
                     )
 

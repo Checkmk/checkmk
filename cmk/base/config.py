@@ -1039,7 +1039,9 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "netscaler_mem": lambda item: ("Memory used", item),
     "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
     "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),
-    "postfix_mailq": lambda item: ("Postfix Queue", None),
+    "postfix_mailq": lambda item: ("Postfix Queue", None)
+    if item == "default"
+    else ("Postfix Queue %s", item),
     "ps": lambda item: ("proc_%s", item),
     "qmail_stats": lambda item: ("Qmail Queue", None),
     "raritan_emx": lambda item: ("Rack %s", item),

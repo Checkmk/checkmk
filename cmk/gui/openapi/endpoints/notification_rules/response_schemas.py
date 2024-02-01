@@ -50,15 +50,15 @@ class Checkbox(BaseSchema):
     )
 
 
-class CheckboxWithStrValue(Checkbox):
+class CheckboxWithStrValueOutput(Checkbox):
     value = fields.String()
 
 
-class CheckboxWithListOfStr(Checkbox):
+class CheckboxWithListOfStrOutput(Checkbox):
     value = fields.List(fields.String)
 
 
-class SysLogToFromPriorities(BaseSchema):
+class SysLogToFromPrioritiesOutput(BaseSchema):
     from_priority = fields.String(
         enum=list(get_args(SysLogPriorityStrType)),
         example="warning",
@@ -71,15 +71,15 @@ class SysLogToFromPriorities(BaseSchema):
     )
 
 
-class CheckboxWithSysLogPriority(Checkbox):
-    value = fields.Nested(SysLogToFromPriorities)
+class CheckboxWithSysLogPriorityOutput(Checkbox):
+    value = fields.Nested(SysLogToFromPrioritiesOutput)
 
 
 class EventConsoleAlertAttrsResponse(BaseSchema):
-    match_rule_ids = fields.Nested(CheckboxWithListOfStr)
-    match_syslog_priority = fields.Nested(CheckboxWithSysLogPriority)
-    match_syslog_facility = fields.Nested(CheckboxWithStrValue)
-    match_event_comment = fields.Nested(CheckboxWithStrValue)
+    match_rule_ids = fields.Nested(CheckboxWithListOfStrOutput)
+    match_syslog_priority = fields.Nested(CheckboxWithSysLogPriorityOutput)
+    match_syslog_facility = fields.Nested(CheckboxWithStrValueOutput)
+    match_event_comment = fields.Nested(CheckboxWithStrValueOutput)
 
 
 class EventConsoleAlertsResponse(Checkbox):
@@ -101,19 +101,19 @@ class MatchEventConsoleAlertsResponse(Checkbox):
     value = fields.Nested(EventConsoleAlertsResponse)
 
 
-class CheckboxLabel(BaseSchema):
+class CheckboxLabelOutput(BaseSchema):
     key = fields.String(example="cmk/os_family")
     value = fields.String(example="linux")
 
 
-class CheckboxWithListOfLabels(Checkbox):
+class CheckboxWithListOfLabelsOutput(Checkbox):
     value = fields.List(
-        fields.Nested(CheckboxLabel),
+        fields.Nested(CheckboxLabelOutput),
         description="A list of key, value label pairs",
     )
 
 
-class ServiceGroupsRegex(BaseSchema):
+class ServiceGroupsRegexOutput(BaseSchema):
     match_type = fields.String(
         enum=list(get_args(RegexModes)),
         example="match_alias",
@@ -126,14 +126,14 @@ class ServiceGroupsRegex(BaseSchema):
     )
 
 
-class CheckboxWithListOfServiceGroupsRegex(Checkbox):
+class CheckboxWithListOfServiceGroupsRegexOutput(Checkbox):
     value = fields.Nested(
-        ServiceGroupsRegex,
+        ServiceGroupsRegexOutput,
         description="The service group alias must not match one of the following regular expressions. For host events this condition is simply ignored. The text entered here is handled as a regular expression pattern. The pattern is applied as infix search. Add a leading ^ to make it match from the beginning and/or a tailing $ to match till the end of the text. The match is performed case sensitive. Read more about regular expression matching in Checkmk in our user guide. You may paste a text from your clipboard which contains several parts separated by ';' characters into the last input field. The text will then be split by these separators and the single parts are added into dedicated input field",
     )
 
 
-class CustomMacro(BaseSchema):
+class CustomMacroOutput(BaseSchema):
     macro_name = fields.String(
         description="The name of the macro",
         example="macro_1",
@@ -144,11 +144,11 @@ class CustomMacro(BaseSchema):
     )
 
 
-class MatchCustomMacros(Checkbox):
-    value = fields.List(fields.Nested(CustomMacro))
+class MatchCustomMacrosOutput(Checkbox):
+    value = fields.List(fields.Nested(CustomMacroOutput))
 
 
-class CheckboxWithFolderStr(Checkbox):
+class CheckboxWithFolderStrOutput(Checkbox):
     value = FolderIDField(
         description="This condition makes the rule match only hosts that are managed via WATO and that are contained in this folder - either directly or in one of its subfolders.",
     )
@@ -173,7 +173,7 @@ class MatchHostTags(BaseSchema):
     )
 
 
-class CheckboxMatchHostTags(Checkbox):
+class CheckboxMatchHostTagsOutput(Checkbox):
     value = fields.List(fields.Nested(MatchHostTags))
 
     @pre_dump(pass_many=True)
@@ -210,7 +210,7 @@ class CheckboxMatchHostTags(Checkbox):
         return data
 
 
-class FromToNotificationNumbers(BaseSchema):
+class FromToNotificationNumbersOutput(BaseSchema):
     beginning_from = fields.Integer(
         example=1,
         description="Let through notifications counting from this number. The first notification always has the number 1",
@@ -221,11 +221,11 @@ class FromToNotificationNumbers(BaseSchema):
     )
 
 
-class CheckboxRestrictNotificationNumbers(Checkbox):
-    value = fields.Nested(FromToNotificationNumbers)
+class CheckboxRestrictNotificationNumbersOutput(Checkbox):
+    value = fields.Nested(FromToNotificationNumbersOutput)
 
 
-class ThrottlePeriodicNotifications(BaseSchema):
+class ThrottlePeriodicNotificationsOutput(BaseSchema):
     beginning_from = fields.Integer(
         example=10,
         description="Beginning notification number",
@@ -236,18 +236,18 @@ class ThrottlePeriodicNotifications(BaseSchema):
     )
 
 
-class CheckboxThrottlePeriodicNotifcations(Checkbox):
-    value = fields.Nested(ThrottlePeriodicNotifications)
+class CheckboxThrottlePeriodicNotifcationsOuput(Checkbox):
+    value = fields.Nested(ThrottlePeriodicNotificationsOutput)
 
 
-class FromToServiceLevels(BaseSchema):
+class FromToServiceLevelsOutput(BaseSchema):
     from_level = ServiceLevelField()
     to_level = ServiceLevelField()
 
 
-class CheckboxWithFromToServiceLevels(Checkbox):
+class CheckboxWithFromToServiceLevelsOutput(Checkbox):
     value = fields.Nested(
-        FromToServiceLevels,
+        FromToServiceLevelsOutput,
         description="Host or service must be in the following service level to get notification",
     )
 
@@ -260,7 +260,7 @@ class HostOrServiceEventTypeCommon(BaseSchema):
     alert_handler_execution_failed = fields.Boolean(example=False)
 
 
-class HostEventType(HostOrServiceEventTypeCommon):
+class HostEventTypeOutput(HostOrServiceEventTypeCommon):
     up_down = fields.Boolean(example=True)
     up_unreachable = fields.Boolean(example=False)
     down_up = fields.Boolean(example=True)
@@ -272,7 +272,7 @@ class HostEventType(HostOrServiceEventTypeCommon):
     any_unreachable = fields.Boolean(example=True)
 
 
-class ServiceEventType(HostOrServiceEventTypeCommon):
+class ServiceEventTypeOutput(HostOrServiceEventTypeCommon):
     ok_warn = fields.Boolean(example=True)
     ok_ok = fields.Boolean(example=True)
     ok_crit = fields.Boolean(example=False)
@@ -292,16 +292,16 @@ class ServiceEventType(HostOrServiceEventTypeCommon):
     any_unknown = fields.Boolean(example=False)
 
 
-class CheckboxHostEventType(Checkbox):
+class CheckboxHostEventTypeOutput(Checkbox):
     value = fields.Nested(
-        HostEventType,
+        HostEventTypeOutput,
         description="Select the host event types and transitions this rule should handle. Note: If you activate this option and do not also specify service event types then this rule will never hold for service notifications! Note: You can only match on event types created by the core.",
     )
 
 
-class CheckboxServiceEventType(Checkbox):
+class CheckboxServiceEventTypeOutput(Checkbox):
     value = fields.Nested(
-        ServiceEventType,
+        ServiceEventTypeOutput,
         description="Select the service event types and transitions this rule should handle. Note: If you activate this option and do not also specify host event types then this rule will never hold for host notifications! Note: You can only match on event types created by the core",
     )
 
@@ -375,9 +375,9 @@ class MailCommonParams(PluginName):
 
 
 class AsciiEmailParamsResponse(MailCommonParams):
-    body_head_for_both_host_and_service_notifications = fields.Nested(CheckboxWithStrValue)
-    body_tail_for_host_notifications = fields.Nested(CheckboxWithStrValue)
-    body_tail_for_service_notifications = fields.Nested(CheckboxWithStrValue)
+    body_head_for_both_host_and_service_notifications = fields.Nested(CheckboxWithStrValueOutput)
+    body_tail_for_host_notifications = fields.Nested(CheckboxWithStrValueOutput)
+    body_tail_for_service_notifications = fields.Nested(CheckboxWithStrValueOutput)
 
 
 # HTML Email --------------------------------------------------------
@@ -613,13 +613,13 @@ class JiraPluginResponse(PluginName):
         example="",
         description="Configure the base URL for the Monitoring Web-GUI here. Include the site name. Used for link to check_mk out of jira",
     )
-    site_custom_id = fields.Nested(CheckboxWithStrValue)
-    priority_id = fields.Nested(CheckboxWithStrValue)
-    host_summary = fields.Nested(CheckboxWithStrValue)
-    service_summary = fields.Nested(CheckboxWithStrValue)
-    label = fields.Nested(CheckboxWithStrValue)
-    resolution_id = fields.Nested(CheckboxWithStrValue)
-    optional_timeout = fields.Nested(CheckboxWithStrValue)
+    site_custom_id = fields.Nested(CheckboxWithStrValueOutput)
+    priority_id = fields.Nested(CheckboxWithStrValueOutput)
+    host_summary = fields.Nested(CheckboxWithStrValueOutput)
+    service_summary = fields.Nested(CheckboxWithStrValueOutput)
+    label = fields.Nested(CheckboxWithStrValueOutput)
+    resolution_id = fields.Nested(CheckboxWithStrValueOutput)
+    optional_timeout = fields.Nested(CheckboxWithStrValueOutput)
 
 
 # MkEvent -----------------------------------------------------------
@@ -647,12 +647,12 @@ class MkEventParamsResponse(PluginName):
 
 class MSTeamsPluginResponse(PluginName):
     affected_host_groups = fields.Nested(Checkbox)
-    host_details = fields.Nested(CheckboxWithStrValue)
-    service_details = fields.Nested(CheckboxWithStrValue)
-    host_summary = fields.Nested(CheckboxWithStrValue)
-    service_summary = fields.Nested(CheckboxWithStrValue)
-    host_title = fields.Nested(CheckboxWithStrValue)
-    service_title = fields.Nested(CheckboxWithStrValue)
+    host_details = fields.Nested(CheckboxWithStrValueOutput)
+    service_details = fields.Nested(CheckboxWithStrValueOutput)
+    host_summary = fields.Nested(CheckboxWithStrValueOutput)
+    service_summary = fields.Nested(CheckboxWithStrValueOutput)
+    host_title = fields.Nested(CheckboxWithStrValueOutput)
+    service_title = fields.Nested(CheckboxWithStrValueOutput)
     http_proxy = HTTP_PROXY_RESPONSE
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE
     webhook_url = fields.Nested(WebhookURLResponse)
@@ -676,21 +676,21 @@ class CheckboxOpsGeniePriorityValue(Checkbox):
 
 class OpenGeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse)
-    domain = fields.Nested(CheckboxWithStrValue)
+    domain = fields.Nested(CheckboxWithStrValueOutput)
     http_proxy = fields.Nested(HttpProxyValue)
-    owner = fields.Nested(CheckboxWithStrValue)
-    source = fields.Nested(CheckboxWithStrValue)
+    owner = fields.Nested(CheckboxWithStrValueOutput)
+    source = fields.Nested(CheckboxWithStrValueOutput)
     priority = fields.Nested(CheckboxOpsGeniePriorityValue)
-    note_while_creating = fields.Nested(CheckboxWithStrValue)
-    note_while_closing = fields.Nested(CheckboxWithStrValue)
-    desc_for_host_alerts = fields.Nested(CheckboxWithStrValue)
-    desc_for_service_alerts = fields.Nested(CheckboxWithStrValue)
-    message_for_host_alerts = fields.Nested(CheckboxWithStrValue)
-    message_for_service_alerts = fields.Nested(CheckboxWithStrValue)
-    responsible_teams = fields.Nested(CheckboxWithListOfStr)
-    actions = fields.Nested(CheckboxWithListOfStr)
-    tags = fields.Nested(CheckboxWithListOfStr)
-    entity = fields.Nested(CheckboxWithStrValue)
+    note_while_creating = fields.Nested(CheckboxWithStrValueOutput)
+    note_while_closing = fields.Nested(CheckboxWithStrValueOutput)
+    desc_for_host_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    desc_for_service_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    message_for_host_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    message_for_service_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    responsible_teams = fields.Nested(CheckboxWithListOfStrOutput)
+    actions = fields.Nested(CheckboxWithListOfStrOutput)
+    tags = fields.Nested(CheckboxWithListOfStrOutput)
+    entity = fields.Nested(CheckboxWithStrValueOutput)
 
 
 # PagerDuty ---------------------------------------------------------
@@ -738,7 +738,7 @@ class PushOverPluginResponse(PluginName):
         description="Configure the user or group to receive the notifications by providing the user or group key here. The key can be obtained from the Pushover website.",
         pattern="^[a-zA-Z0-9]{30,40}$",
     )
-    url_prefix_for_links_to_checkmk = fields.Nested(CheckboxWithStrValue)
+    url_prefix_for_links_to_checkmk = fields.Nested(CheckboxWithStrValueOutput)
     priority = fields.Nested(PushOverPriority)
     sound = fields.Nested(Sounds)
     http_proxy = HTTP_PROXY_RESPONSE
@@ -780,17 +780,17 @@ class CheckboxWithManagementTypeStateValue(Checkbox):
 
 
 class ManagementTypeParams(BaseSchema):
-    host_description = fields.Nested(CheckboxWithStrValue)
-    service_description = fields.Nested(CheckboxWithStrValue)
-    host_short_description = fields.Nested(CheckboxWithStrValue)
-    service_short_description = fields.Nested(CheckboxWithStrValue)
+    host_description = fields.Nested(CheckboxWithStrValueOutput)
+    service_description = fields.Nested(CheckboxWithStrValueOutput)
+    host_short_description = fields.Nested(CheckboxWithStrValueOutput)
+    service_short_description = fields.Nested(CheckboxWithStrValueOutput)
     caller = fields.String()
-    urgency = fields.Nested(CheckboxWithStrValue)
-    impact = fields.Nested(CheckboxWithStrValue)
+    urgency = fields.Nested(CheckboxWithStrValueOutput)
+    impact = fields.Nested(CheckboxWithStrValueOutput)
     state_recovery = fields.Nested(CheckboxWithManagementTypeStateValue)
     state_acknowledgement = fields.Nested(CheckboxWithManagementTypeStateValue)
     state_downtime = fields.Nested(CheckboxWithManagementTypeStateValue)
-    priority = fields.Nested(CheckboxWithStrValue)
+    priority = fields.Nested(CheckboxWithStrValueOutput)
 
 
 class ServiceNowMngmtType(BaseSchema):
@@ -821,7 +821,7 @@ class ServiceNowPluginResponse(PluginName):
     )
     http_proxy = HTTP_PROXY_RESPONSE
     use_site_id_prefix = fields.Nested(CheckBoxUseSiteIDPrefix)
-    optional_timeout = fields.Nested(CheckboxWithStrValue)
+    optional_timeout = fields.Nested(CheckboxWithStrValueOutput)
     management_type = fields.Nested(ServiceNowMngmtType)
 
 
@@ -1029,7 +1029,7 @@ class NotificationBulkingCommonAttributes(Checkbox):
         example="",
     )
     subject_for_bulk_notifications = fields.Nested(
-        CheckboxWithStrValue,
+        CheckboxWithStrValueOutput,
     )
 
 
@@ -1073,38 +1073,38 @@ class ContactSelectionAttributes(BaseSchema):
     all_contacts_of_the_notified_object = fields.Nested(Checkbox)
     all_users = fields.Nested(Checkbox)
     all_users_with_an_email_address = fields.Nested(Checkbox)
-    the_following_users = fields.Nested(CheckboxWithListOfStr)
-    members_of_contact_groups = fields.Nested(CheckboxWithListOfStr)
-    explicit_email_addresses = fields.Nested(CheckboxWithListOfStr)
-    restrict_by_custom_macros = fields.Nested(MatchCustomMacros)
-    restrict_by_contact_groups = fields.Nested(CheckboxWithListOfStr)
+    the_following_users = fields.Nested(CheckboxWithListOfStrOutput)
+    members_of_contact_groups = fields.Nested(CheckboxWithListOfStrOutput)
+    explicit_email_addresses = fields.Nested(CheckboxWithListOfStrOutput)
+    restrict_by_custom_macros = fields.Nested(MatchCustomMacrosOutput)
+    restrict_by_contact_groups = fields.Nested(CheckboxWithListOfStrOutput)
 
 
 class ConditionsAttributes(BaseSchema):
-    match_sites = fields.Nested(CheckboxWithListOfStr)
-    match_folder = fields.Nested(CheckboxWithFolderStr)
-    match_host_tags = fields.Nested(CheckboxMatchHostTags)
-    match_host_labels = fields.Nested(CheckboxWithListOfLabels)
-    match_host_groups = fields.Nested(CheckboxWithListOfStr)
-    match_hosts = fields.Nested(CheckboxWithListOfStr)
-    match_exclude_hosts = fields.Nested(CheckboxWithListOfStr)
-    match_service_labels = fields.Nested(CheckboxWithListOfLabels)
-    match_service_groups = fields.Nested(CheckboxWithListOfStr)
-    match_exclude_service_groups = fields.Nested(CheckboxWithListOfStr)
-    match_service_groups_regex = fields.Nested(CheckboxWithListOfServiceGroupsRegex)
-    match_exclude_service_groups_regex = fields.Nested(CheckboxWithListOfServiceGroupsRegex)
-    match_services = fields.Nested(CheckboxWithListOfStr)
-    match_exclude_services = fields.Nested(CheckboxWithListOfStr)
-    match_check_types = fields.Nested(CheckboxWithListOfStr)
-    match_plugin_output = fields.Nested(CheckboxWithStrValue)
-    match_contact_groups = fields.Nested(CheckboxWithListOfStr)
-    match_service_levels = fields.Nested(CheckboxWithFromToServiceLevels)
-    match_only_during_time_period = fields.Nested(CheckboxWithStrValue)
-    match_host_event_type = fields.Nested(CheckboxHostEventType)
-    match_service_event_type = fields.Nested(CheckboxServiceEventType)
-    restrict_to_notification_numbers = fields.Nested(CheckboxRestrictNotificationNumbers)
-    throttle_periodic_notifications = fields.Nested(CheckboxThrottlePeriodicNotifcations)
-    match_notification_comment = fields.Nested(CheckboxWithStrValue)
+    match_sites = fields.Nested(CheckboxWithListOfStrOutput)
+    match_folder = fields.Nested(CheckboxWithFolderStrOutput)
+    match_host_tags = fields.Nested(CheckboxMatchHostTagsOutput)
+    match_host_labels = fields.Nested(CheckboxWithListOfLabelsOutput)
+    match_host_groups = fields.Nested(CheckboxWithListOfStrOutput)
+    match_hosts = fields.Nested(CheckboxWithListOfStrOutput)
+    match_exclude_hosts = fields.Nested(CheckboxWithListOfStrOutput)
+    match_service_labels = fields.Nested(CheckboxWithListOfLabelsOutput)
+    match_service_groups = fields.Nested(CheckboxWithListOfStrOutput)
+    match_exclude_service_groups = fields.Nested(CheckboxWithListOfStrOutput)
+    match_service_groups_regex = fields.Nested(CheckboxWithListOfServiceGroupsRegexOutput)
+    match_exclude_service_groups_regex = fields.Nested(CheckboxWithListOfServiceGroupsRegexOutput)
+    match_services = fields.Nested(CheckboxWithListOfStrOutput)
+    match_exclude_services = fields.Nested(CheckboxWithListOfStrOutput)
+    match_check_types = fields.Nested(CheckboxWithListOfStrOutput)
+    match_plugin_output = fields.Nested(CheckboxWithStrValueOutput)
+    match_contact_groups = fields.Nested(CheckboxWithListOfStrOutput)
+    match_service_levels = fields.Nested(CheckboxWithFromToServiceLevelsOutput)
+    match_only_during_time_period = fields.Nested(CheckboxWithStrValueOutput)
+    match_host_event_type = fields.Nested(CheckboxHostEventTypeOutput)
+    match_service_event_type = fields.Nested(CheckboxServiceEventTypeOutput)
+    restrict_to_notification_numbers = fields.Nested(CheckboxRestrictNotificationNumbersOutput)
+    throttle_periodic_notifications = fields.Nested(CheckboxThrottlePeriodicNotifcationsOuput)
+    match_notification_comment = fields.Nested(CheckboxWithStrValueOutput)
     event_console_alerts = fields.Nested(MatchEventConsoleAlertsResponse)
 
 

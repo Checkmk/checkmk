@@ -43,14 +43,14 @@ metric_clients_total = metrics.Metric(
 metric_bytes_received_rate = metrics.Metric(
     name="bytes_received_rate",
     title=Localizable("Bytes received"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.GREEN,
 )
 
 metric_bytes_sent_rate = metrics.Metric(
     name="bytes_sent_rate",
     title=Localizable("Bytes sent"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.BLUE,
 )
 
@@ -71,14 +71,14 @@ metric_messages_sent_rate = metrics.Metric(
 metric_publish_bytes_received_rate = metrics.Metric(
     name="publish_bytes_received_rate",
     title=Localizable("PUBLISH messages: Bytes received"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.GREEN,
 )
 
 metric_publish_bytes_sent_rate = metrics.Metric(
     name="publish_bytes_sent_rate",
     title=Localizable("PUBLISH messages: Bytes sent"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.BLUE,
 )
 

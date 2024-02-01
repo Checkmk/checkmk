@@ -16,6 +16,7 @@ from cmk.server_side_calls.v1 import (
     parse_http_proxy,
     parse_secret,
     PlainTextSecret,
+    replace_macros,
     ResolvedIPAddressFamily,
     Secret,
     StoredSecret,
@@ -174,3 +175,30 @@ def test_host_config_properties(
 ) -> None:
     assert host_config.address_config.all_ipv4_addresses == expected_all_ipv4
     assert host_config.address_config.all_ipv6_addresses == expected_all_ipv6
+
+
+@pytest.mark.parametrize(
+    "string, expected_result",
+    [
+        pytest.param("", "", id="empty"),
+        pytest.param("Text without macros", "Text without macros", id="without macros"),
+        pytest.param("My host $HOST_ALIAS$", "My host host_alias", id="one macro"),
+        pytest.param(
+            "-H $HOST_NAME$ -4 $HOST_IPV4_ADDRESS$ -6 $HOST_IPV6_ADDRESS$",
+            "-H hostname -4 0.0.0.1 -6 fe80::240",
+            id="multiple macros",
+        ),
+        pytest.param("ID$HOST_TAG_tag1$000", "ID55000", id="double replacement"),
+    ],
+)
+def test_replace_macros(string: str, expected_result: str) -> None:
+    macros = {
+        "$HOST_NAME$": "hostname",
+        "$HOST_ADDRESS$": "0.0.0.1",
+        "$HOST_ALIAS$": "host_alias",
+        "$HOST_IPV4_ADDRESS$": "0.0.0.1",
+        "$HOST_IPV6_ADDRESS$": "fe80::240",
+        "$HOST_TAG_tag1$": "$HOST_TAG_tag2$",
+        "$HOST_TAG_tag2$": "55",
+    }
+    assert replace_macros(string, macros) == expected_result

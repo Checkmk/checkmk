@@ -39,7 +39,7 @@ from cmk.graphing.v1 import (
     Unit,
 )
 
-from ._color import get_palette_color_by_index, parse_color_into_hexrgb
+from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._expression import (
     Constant,
     CriticalOf,
@@ -895,33 +895,35 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
-def _get_metric_info(metric_name: str, color_counter: Counter[Literal["index"]]) -> MetricInfo:
+def _get_metric_info(
+    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
+) -> MetricInfo:
     if metric_name in metric_info:
         return metric_info[metric_name]
-    color_counter.update({"index": 1})
+    color_counter.update({"metric": 1})
     return MetricInfo(
         title=metric_name.title(),
         unit="",
-        color=get_palette_color_by_index(color_counter["index"]),
+        color=get_palette_color_by_index(color_counter["metric"]),
     )
 
 
 def _get_extended_metric_info(
-    metric_name: str, color_counter: Counter[Literal["index"]]
+    metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
 ) -> MetricInfoExtended:
     if metric_name.startswith("predict_lower_"):
         mi_ = _get_metric_info(metric_name[14:], color_counter)
         mi = MetricInfo(
             title=_("Prediction of ") + mi_["title"] + _(" (lower levels)"),
             unit=mi_["unit"],
-            color="#676767",
+            color=get_gray_tone(color_counter),
         )
     elif metric_name.startswith("predict_"):
         mi_ = _get_metric_info(metric_name[8:], color_counter)
         mi = MetricInfo(
             title=_("Prediction of ") + mi_["title"] + _(" (upper levels)"),
             unit=mi_["unit"],
-            color="#9a9a9a",
+            color=get_gray_tone(color_counter),
         )
     else:
         mi = _get_metric_info(metric_name, color_counter)
@@ -967,7 +969,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
     translated_metrics: dict[str, TranslatedMetric] = {}
-    color_counter: Counter[Literal["index"]] = Counter()
+    color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     for entry in perf_data:
         metric_name, normalized = _normalize_perf_data(entry, check_command)
         mi = _get_extended_metric_info(metric_name, color_counter)

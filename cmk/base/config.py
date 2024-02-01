@@ -1379,16 +1379,14 @@ ALL_HOSTS = tuple_rulesets.ALL_HOSTS
 ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
 
-# TODO: Cleanup access to check_info[] -> replace it by different function calls
-# like for example check_exists(...)
 
 # BE AWARE: sync these global data structures with
 #           _initialize_data_structures()
-# TODO: Refactor this.
-
 # The following data structures will be filled by the checks
 # all known checks
 check_info: dict[str, LegacyCheckDefinition] = {}
+# for nagios config: keep track which plugin lives where
+legacy_check_plugin_files: dict[CheckPluginNameStr, str] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # optional functions for parameter precompilation
@@ -1444,6 +1442,7 @@ def load_all_plugins(
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
     check_info.clear()
+    legacy_check_plugin_files.clear()
     legacy_check_plugin_names.clear()
     precompile_params.clear()
     factory_settings.clear()
@@ -1461,7 +1460,7 @@ def _get_plugin_paths(*dirs: str) -> list[str]:
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
-def load_checks(  # pylint: disable=too-many-branches
+def load_checks(
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
@@ -1479,6 +1478,9 @@ def load_checks(  # pylint: disable=too-many-branches
         try:
             check_context = new_check_context(get_check_api_context)
 
+            # Make a copy of known check plugin names
+            known_checks = set(check_info)
+
             did_compile |= load_precompiled_plugin(f, check_context)
 
             loaded_files.add(file_name)
@@ -1491,6 +1493,9 @@ def load_checks(  # pylint: disable=too-many-branches
             if cmk.utils.debug.enabled():
                 raise
             continue
+
+        for check_plugin_name in set(check_info).difference(known_checks):
+            legacy_check_plugin_files[check_plugin_name] = f
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 

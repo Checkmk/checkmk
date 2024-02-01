@@ -113,7 +113,7 @@ class ConcreteUserContactOption(BaseSchema):
     )
 
 
-class AuthOption(BaseSchema):
+class AuthOptionOutput(BaseSchema):
     auth_type = fields.String(
         required=False, example="password", enum=["password", "automation", "saml2", "ldap"]
     )
@@ -177,7 +177,7 @@ class BaseUserAttributes(BaseSchema):
         description="The temperature unit used for graphs and perfometers.",
     )
     auth_option = fields.Nested(
-        AuthOption,
+        AuthOptionOutput,
         required=False,
         description="Enforce password change attribute for the user",
         example={"auth_type": "password", "enforce_password_change": False},

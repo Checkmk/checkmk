@@ -38,7 +38,7 @@ class BinaryUnit(Enum):
     PETABYTE = auto()  # "PB"
     EXABYTE = auto()  # "EB"
     ZETTABYTE = auto()  # "ZB"
-    YOTTABYTES = auto()  # "YB"
+    YOTTABYTE = auto()  # "YB"
     KIBIBYTE = auto()  # "KiB"
     MEBIBYTE = auto()  # "MiB"
     GIBIBYTE = auto()  # "GiB"
@@ -352,11 +352,11 @@ class Text(FormSpec):
 
 
 class TimeUnit(Enum):
-    MILLISECONDS = auto()  # "milliseconds"
-    SECONDS = auto()  # "seconds"
-    MINUTES = auto()  # "minutes"
-    HOURS = auto()  # "hours"
-    DAYS = auto()  # "days"
+    MILLISECOND = auto()  # "milliseconds"
+    SECOND = auto()  # "seconds"
+    MINUTE = auto()  # "minutes"
+    HOUR = auto()  # "hours"
+    DAY = auto()  # "days"
 
 
 @dataclass(frozen=True, kw_only=True)

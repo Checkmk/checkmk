@@ -619,7 +619,7 @@ def _convert_to_legacy_binary_unit(
             return legacy_valuespecs.LegacyBinaryUnit.EB
         case ruleset_api_v1.form_specs.basic.BinaryUnit.ZETTABYTE:
             return legacy_valuespecs.LegacyBinaryUnit.ZB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOTTABYTES:
+        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOTTABYTE:
             return legacy_valuespecs.LegacyBinaryUnit.YB
         case ruleset_api_v1.form_specs.basic.BinaryUnit.KIBIBYTE:
             return legacy_valuespecs.LegacyBinaryUnit.KiB
@@ -909,15 +909,15 @@ def _convert_to_legacy_time_unit(
     unit: ruleset_api_v1.form_specs.basic.TimeUnit,
 ) -> Literal["days", "hours", "minutes", "seconds", "milliseconds"]:
     match unit:
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MILLISECONDS:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.MILLISECOND:
             return "milliseconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.SECONDS:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.SECOND:
             return "seconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MINUTES:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.MINUTE:
             return "minutes"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.HOURS:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.HOUR:
             return "hours"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.DAYS:
+        case ruleset_api_v1.form_specs.basic.TimeUnit.DAY:
             return "days"
 
 

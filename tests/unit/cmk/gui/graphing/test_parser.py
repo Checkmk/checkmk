@@ -24,9 +24,9 @@ from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit, Unit
             id="BIT_IEC",
         ),
         pytest.param(
-            Unit.BIT_IEC_PER_SECOND,
+            Unit.BITS_IEC_PER_SECOND,
             "bits/s",
-            id="BIT_IEC_PER_SECOND,",
+            id="BITS_IEC_PER_SECOND,",
         ),
         pytest.param(
             Unit.BIT_SI,
@@ -34,9 +34,9 @@ from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit, Unit
             id="BIT_SI",
         ),
         pytest.param(
-            Unit.BIT_SI_PER_SECOND,
+            Unit.BITS_SI_PER_SECOND,
             "bits/s",
-            id="BIT_SI_PER_SECOND",
+            id="BITS_SI_PER_SECOND",
         ),
         pytest.param(
             Unit.BYTE_IEC,
@@ -44,19 +44,19 @@ from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit, Unit
             id="BYTE_IEC",
         ),
         pytest.param(
-            Unit.BYTE_IEC_PER_DAY,
+            Unit.BYTES_IEC_PER_DAY,
             "bytes/d",
-            id="BYTE_IEC_PER_DAY",
+            id="BYTES_IEC_PER_DAY",
         ),
         pytest.param(
-            Unit.BYTE_IEC_PER_OPERATION,
+            Unit.BYTES_IEC_PER_OPERATION,
             "bytes/op",
-            id="BYTE_IEC_PER_OPERATION",
+            id="BYTES_IEC_PER_OPERATION",
         ),
         pytest.param(
-            Unit.BYTE_IEC_PER_SECOND,
+            Unit.BYTES_IEC_PER_SECOND,
             "bytes/s",
-            id="BYTE_IEC_PER_SECOND",
+            id="BYTES_IEC_PER_SECOND",
         ),
         pytest.param(
             Unit.BYTE_SI,
@@ -64,19 +64,19 @@ from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit, Unit
             id="BYTE_SI",
         ),
         pytest.param(
-            Unit.BYTE_SI_PER_DAY,
+            Unit.BYTES_SI_PER_DAY,
             "bytes/d",
-            id="BYTE_SI_PER_DAY",
+            id="BYTES_SI_PER_DAY",
         ),
         pytest.param(
-            Unit.BYTE_SI_PER_OPERATION,
+            Unit.BYTES_SI_PER_OPERATION,
             "bytes/op",
-            id="BYTE_SI_PER_OPERATION",
+            id="BYTES_SI_PER_OPERATION",
         ),
         pytest.param(
-            Unit.BYTE_SI_PER_SECOND,
+            Unit.BYTES_SI_PER_SECOND,
             "bytes/s",
-            id="BYTE_SI_PER_SECOND",
+            id="BYTES_SI_PER_SECOND",
         ),
         pytest.param(
             Unit.COUNT,

@@ -70,18 +70,18 @@ def _parameter_form_wlan_controllers_last_backup():
                         TimeSpan(
                             title=Localizable("Warning at"),
                             displayed_units=[
-                                TimeUnit.DAYS,
-                                TimeUnit.HOURS,
-                                TimeUnit.MINUTES,
+                                TimeUnit.DAY,
+                                TimeUnit.HOUR,
+                                TimeUnit.MINUTE,
                             ],
                             prefill_value=7 * 24 * 3600,
                         ),
                         TimeSpan(
                             title=Localizable("Critical at"),
                             displayed_units=[
-                                TimeUnit.DAYS,
-                                TimeUnit.HOURS,
-                                TimeUnit.MINUTES,
+                                TimeUnit.DAY,
+                                TimeUnit.HOUR,
+                                TimeUnit.MINUTE,
                             ],
                             prefill_value=30 * 24 * 3600,
                         ),

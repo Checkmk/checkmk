@@ -506,7 +506,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app() -> Flask:
+def flask_app(patch_omd_site: None) -> Flask:
     return session_wsgi_app(testing=True)
 
 

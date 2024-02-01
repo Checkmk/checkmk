@@ -15,7 +15,9 @@ from cmk.agent_based.prediction_backend import PredictionInfo, PredictionParamet
 
 
 class TestPredictionQuerier:
-    def test_query_available_predictions(self, mock_livestatus: MockLiveStatusConnection) -> None:
+    def test_query_available_predictions(
+        self, patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+    ) -> None:
         metric = "metric"
         querier = self._prediction_querier()
         expected_prediction_info = PredictionInfo(
@@ -62,7 +64,9 @@ class TestPredictionQuerier:
         )
         assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
 
-    def test_query_prediction_data(self, mock_livestatus: MockLiveStatusConnection) -> None:
+    def test_query_prediction_data(
+        self, patch_omd_site: None, mock_livestatus: MockLiveStatusConnection
+    ) -> None:
         metric = "metric"
         querier = self._prediction_querier()
         prediciton_info = PredictionInfo(

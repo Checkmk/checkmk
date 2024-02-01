@@ -2815,7 +2815,7 @@ explicit_host_conf['{setting_name}'].update({values_})
         )
 
 
-def test_explicit_setting_loading() -> None:
+def test_explicit_setting_loading(patch_omd_site: None) -> None:
     main_mk_file = Path(cmk.utils.paths.main_config_file)
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),

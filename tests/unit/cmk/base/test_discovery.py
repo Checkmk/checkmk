@@ -1411,7 +1411,7 @@ _expected_host_labels = [
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("patch_omd_site", "fix_register")
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
     ts = Scenario()

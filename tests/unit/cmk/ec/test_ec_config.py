@@ -11,7 +11,7 @@ from cmk.ec.export import save_active_config
 from cmk.ec.settings import Settings
 
 
-def test_save_active_config(settings: Settings) -> None:
+def test_save_active_config(patch_omd_site: None, settings: Settings) -> None:
     (Path(default_config_dir) / "mkeventd.mk").touch()
     (settings.paths.config_dir.value / "my-config.mk").touch()
     (settings.paths.config_dir.value / "wato").mkdir(parents=True, exist_ok=True)
@@ -40,7 +40,7 @@ def test_save_active_config(settings: Settings) -> None:
     )
 
 
-def test_save_active_config_no_active_config_dir(settings: Settings) -> None:
+def test_save_active_config_no_active_config_dir(patch_omd_site: None, settings: Settings) -> None:
     (Path(default_config_dir) / "mkeventd.mk").touch()
     (settings.paths.config_dir.value / "my-config.mk").touch()
     (settings.paths.config_dir.value / "wato").mkdir(parents=True, exist_ok=True)

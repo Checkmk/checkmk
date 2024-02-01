@@ -657,7 +657,7 @@ class DiscoveryPageRenderer:
             return output_funnel.drain()
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
-        if not discovery_result.host_labels:
+        if not discovery_result.host_labels and not discovery_result.vanished_labels:
             return None
 
         with table_element(

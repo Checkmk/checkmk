@@ -898,7 +898,7 @@ def transform_check_mailbox_params(params):
                 **params,
                 "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
             }
-        if fetch_protocol in {"IMAP"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+        if fetch_protocol in {"IMAP"} and {"server", "auth"} <= fetch_params.keys():
             # temporary 2.1.0b format - just update the connection element
             return apply_fetch(params, ("IMAP", update_fetch_params(fetch_params)), allowed_keys)
 

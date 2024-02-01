@@ -1060,34 +1060,22 @@ def _extra_service_conf_of(
 #   | contains that code and information that is needed for executing all  |
 #   | checks of that host. Also static data that cannot change during the  |
 #   | normal monitoring process is being precomputed and hard coded. This  |
-#   | all saves substantial CPU resources as opposed to running Checkmk   |
+#   | all saves substantial CPU resources as opposed to running Checkmk    |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 
 
-def _find_check_plugins(checktype: CheckPluginNameStr) -> list[str]:
+def _find_check_plugins(checktype: CheckPluginNameStr) -> set[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
     In case of checks with a period (subchecks) we might have to include both "mem" and "mem.used".
     The subcheck *may* be implemented in a separate file."""
-    if "." in checktype:
-        candidates = [section_name_of(checktype), checktype]
-    else:
-        candidates = [checktype]
-
-    paths = []
-    for candidate in candidates:
-        local_file_path = cmk.utils.paths.local_checks_dir / candidate
-        if local_file_path.exists():
-            paths.append(str(local_file_path))
-            continue
-
-        filename = cmk.utils.paths.checks_dir + "/" + candidate
-        if os.path.exists(filename):
-            paths.append(filename)
-
-    return paths
+    return {
+        filename
+        for candidate in (section_name_of(checktype), checktype)
+        if (filename := config.legacy_check_plugin_files[candidate]) is not None
+    }
 
 
 class HostCheckStore:
@@ -1461,12 +1449,12 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
 
 def _get_legacy_check_file_names_to_load(
     needed_check_plugin_names: set[CheckPluginNameStr],
-) -> list[str]:
+) -> set[str]:
     # check info table
     # We need to include all those plugins that are referenced in the hosts
     # check table.
     ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
-    filenames: list[str] = []
+    filenames: set[str] = set()
 
     for check_plugin_name in needed_check_plugin_names:
         # Now add check file(s) itself
@@ -1475,9 +1463,7 @@ def _get_legacy_check_file_names_to_load(
         if not paths and check_plugin_name.removeprefix("agent_") not in ssc_api_special_agents:
             raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
-        for path in paths:
-            if path not in filenames:
-                filenames.append(path)
+        filenames |= paths
 
     return filenames
 

@@ -63,6 +63,10 @@ build_binutils() {
     log "Build binutils-${BINUTILS_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf binutils-${BINUTILS_VERSION}.tar.gz
+    # remove potential older build directories
+    if [[ -d binutils-${BINUTILS_VERSION}-build ]]; then
+        rm -rf "binutils-${BINUTILS_VERSION}-build"
+    fi
     mkdir binutils-${BINUTILS_VERSION}-build
     cd binutils-${BINUTILS_VERSION}-build
     # HACK: Dispatching on the distro is not nice, we should really check the versions.
@@ -88,6 +92,10 @@ build_gcc() {
     log "Build gcc-${GCC_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf "gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
+    # remove potential older build directories
+    if [[ -d gcc-${GCC_VERSION}-build ]]; then
+        rm -rf "gcc-${GCC_VERSION}-build"
+    fi
     mkdir "gcc-${GCC_VERSION}-build"
     cd "gcc-${GCC_VERSION}-build"
     "../gcc-${GCC_VERSION}/configure" \
@@ -104,6 +112,10 @@ build_gdb() {
     log "Build gdb-${GDB_VERSION}"
     cd "${BUILD_DIR}"
     tar xzf gdb-${GDB_VERSION}.tar.gz
+    # remove potential older build directories
+    if [[ -d gdb-${GDB_VERSION}-build ]]; then
+        rm -rf "gdb-${GDB_VERSION}-build"
+    fi
     mkdir gdb-${GDB_VERSION}-build
     cd gdb-${GDB_VERSION}-build
     ../gdb-${GDB_VERSION}/configure \

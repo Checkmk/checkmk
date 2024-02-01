@@ -37,4 +37,4 @@ PIPENV_PATH="${TARGET_DIR}/Python-${PYTHON_VERSION}/bin/pipenv"
 ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* "${TARGET_DIR}"/bin
 
 test_package "pipenv --version" "$PIPENV_VERSION$"
-test_package "pip3 freeze" "virtualenv"
+test_package "$CMD freeze" "virtualenv"

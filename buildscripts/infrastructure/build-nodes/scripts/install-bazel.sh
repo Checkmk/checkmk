@@ -26,6 +26,6 @@ if [ "$1" != "link-only" ]; then
     chmod +x "${BAZEL_EXE_FILE}"
 fi
 
-ln -s "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
+ln -sf "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
 
 test_package "bazel --version" "^bazel $BAZEL_VERSION$"

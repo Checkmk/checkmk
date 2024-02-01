@@ -1,0 +1,10 @@
+Title: netapp_ontap_environment: show unit of measurement in summary
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706794456
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+The service summary now displays the units of measurement of the monitored value.

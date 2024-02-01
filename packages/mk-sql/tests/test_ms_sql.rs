@@ -1004,10 +1004,6 @@ fn test_run_as_plugin_with_config() {
         update_config_in_dir(&dir, &content);
         let exec = tools::run_bin()
             .env("MK_CONFDIR", dir.path())
-            .arg("--log-dir")
-            .arg("c:\\temp\\xxx")
-            .arg("--temp-dir")
-            .arg("c:\\temp\\xxx")
             .timeout(std::time::Duration::from_secs(20))
             .unwrap();
         let (stdout, code) = tools::get_good_results(&exec).unwrap();
@@ -1030,7 +1026,11 @@ fn test_run_as_plugin_with_config() {
         .unwrap_err();
     let (stderr, code) = tools::get_bad_results(&exec_err).unwrap();
     assert_eq!(code, 1);
-    assert!(stderr.starts_with("Error: No Config\n"), "{}", stderr);
+    assert!(
+        stderr.starts_with("Stop on error: `No Config`\n"),
+        "`{}`",
+        stderr
+    );
 }
 
 /// Minimally validates stdout for a given key words.

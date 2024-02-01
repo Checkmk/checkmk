@@ -6,7 +6,7 @@
 from cmk.utils import site
 
 
-def test_get_omd_config() -> None:
+def test_get_omd_config(patch_omd_site: None) -> None:
     assert site.get_omd_config() == {
         "CONFIG_ADMIN_MAIL": "",
         "CONFIG_AGENT_RECEIVER": "on",
@@ -34,5 +34,5 @@ def test_get_omd_config() -> None:
     }
 
 
-def test_get_apache_port() -> None:
+def test_get_apache_port(patch_omd_site: None) -> None:
     assert site.get_apache_port() == 5002

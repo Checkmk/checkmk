@@ -80,7 +80,7 @@ def test_quote_dict(inp: str, expected_result: str) -> None:
 
 
 def test_livestatus_local_connection_omd_root_not_set(
-    monkeypatch: MonkeyPatch, tmp_path: Path
+    monkeypatch: MonkeyPatch, tmp_path: Path, patch_omd_site: None
 ) -> None:
     monkeypatch.delenv("OMD_ROOT")
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
@@ -243,7 +243,7 @@ def test_create_socket_no_cert(tmp_path: Path) -> None:
             live._create_socket(socket.AF_INET)
 
 
-def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
+def test_local_connection(patch_omd_site: None, mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.set_sites(["local"])
     live.add_table(
@@ -275,7 +275,7 @@ def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(user_id: livestatus.UserId, allowed: bool) -> None:
+def test_set_auth_user(patch_omd_site: None, user_id: livestatus.UserId, allowed: bool) -> None:
     if not allowed:
         with pytest.raises(ValueError, match="Invalid user ID"):
             livestatus.LocalConnection().set_auth_user("mydomain", user_id)

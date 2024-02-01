@@ -132,8 +132,8 @@ def fixture_omd_site() -> Generator[None, None, None]:
     yield
 
 
-@pytest.fixture(autouse=True)
-def patch_omd_site(monkeypatch):
+@pytest.fixture
+def patch_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 

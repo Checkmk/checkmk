@@ -177,6 +177,10 @@ pub async fn create_local(database: Option<String>, port: u16) -> Result<Client>
     config.port(port);
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
+    log::info!(
+        "Local connection using port: {port} at addr {}",
+        config.get_addr()
+    );
     let tcp = TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
 

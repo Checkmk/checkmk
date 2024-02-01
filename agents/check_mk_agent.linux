@@ -1118,7 +1118,7 @@ section_mailqueue() {
             done
         fi
         # Always check for the default queue. It can exist even if multiple instances are configured
-        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
+        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)" "default"
         read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)" "default"
 
     elif [ -x /usr/sbin/ssmtp ]; then

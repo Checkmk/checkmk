@@ -137,7 +137,7 @@ class UserContactOption(BaseSchema):
     )
 
 
-class CustomTimeRange(BaseSchema):
+class DisableNotificationCustomTimeRange(BaseSchema):
     # TODO: gui_fields.Dict validation also for Timperiods
     start_time = fields.DateTime(
         format="iso8601",
@@ -160,7 +160,7 @@ class DisabledNotifications(BaseSchema):
         example=False,
     )
     timerange = fields.Nested(
-        CustomTimeRange,
+        DisableNotificationCustomTimeRange,
         description="A custom timerange during which notifications are disabled",
         required=False,
         example={

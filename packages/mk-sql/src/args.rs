@@ -17,9 +17,9 @@ pub struct Args {
     /// Sends log to stderr.
     #[arg(short = 'l', long)]
     pub display_log: bool,
-    /// Prints config, parameters, important variables
-    #[arg(short, long)]
-    pub show_config: bool,
+    /// Prints config, parameters, important variables into the log file
+    #[arg(long)]
+    pub print_info: bool,
 
     /// Use custom log dir
     #[arg(long)]
@@ -46,7 +46,7 @@ impl Args {
     pub fn logging_level(&self) -> Option<log::Level> {
         match self.verbose {
             2.. => Some(log::Level::Trace),
-            1 => Some(log::Level::Trace),
+            1 => Some(log::Level::Debug),
             _ => None,
         }
     }

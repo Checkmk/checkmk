@@ -93,6 +93,11 @@ pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
         .unwrap_or(None);
     let environment = Env::new(&args);
     init_logging(&args, &environment, logging_config)?;
+    if !config_file.exists() {
+        // TODO(sk): remove this asap!
+        log::info!("The config file {:?} doesn't exist", config_file);
+        anyhow::bail!("The config file {:?} doesn't exist", config_file);
+    }
     Ok((get_check_config(&config_file)?, environment))
 }
 

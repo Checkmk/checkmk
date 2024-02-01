@@ -90,7 +90,7 @@ def _parameter_valuespec() -> Dictionary:
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        check_group_name="robotmk_test",
+        check_group_name="robotmk",
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec,
         match_type="dict",

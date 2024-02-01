@@ -1,0 +1,13 @@
+Title: agent_bakery: mk_postgres.py: restore required keys
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1706768367
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+<a href="https://checkmk.com/werk/15645">Werk #15645</a> made the Inputs of "Instance
+settings" of the Agent rule "PostgreSQL database and sessions (Linux, Windows)"
+optional by accident. If you did not specify all keys, baking agents failed with
+a <code>KeyError</code> on the automation call.

@@ -396,3 +396,25 @@ def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
         ... )
     """
     return params
+
+
+def replace_macros(value: str, macros: Mapping[str, str]) -> str:
+    """
+    Replaces host macros in a string
+
+    Args:
+        value: String in which macros are replaced
+        macros: Mapping of host macros names and values. In the plugins, host macros are
+                provided through the host_config.macros attribute.
+
+    Example:
+
+    >>> ["--hostname", replace_macros("$HOST_NAME$", {"$HOST_NAME$": "Test Host"})]
+    ['--hostname', 'Test Host']
+
+    """
+
+    for macro_name, macro_value in macros.items():
+        value = value.replace(macro_name, macro_value)
+
+    return value

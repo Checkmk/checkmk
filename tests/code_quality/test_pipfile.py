@@ -340,7 +340,6 @@ CEE_UNUSED_PACKAGES = [
     "ply",
     "psycopg2-binary",
     "pyasn1-modules",
-    "pykerberos",
     "pymssql",
     "pymysql",
     "pyrsistent",

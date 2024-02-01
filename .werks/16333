@@ -1,0 +1,14 @@
+Title: if_lancom: Switch port discovery does not work for Lancom routers when the router description is configured to be used for the Service Description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1706806081
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Sometimes the Lancom routers don't provide a name. During data parsing this caused the description to be left as an empty string.
+As a result of that, when the router description was configured to be used for the Service Desciption, the discovery did not work properly.
+This has now been fixed by having a fallback mechanism. If the router name is not present, the router description will be used.
+Because of the change, the user is required to execute the service discovery again in order to discover any new services.
+As well as get rid of any vanished services.

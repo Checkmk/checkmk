@@ -110,17 +110,14 @@ def check_netapp_ontap_environment_threshold(
         )
         return
 
-    def _fan_render(v):
-        return f"{int(v)}" if data.sensor_type == "fan" else f"{v}"
+    unit = _scale_unit(data.value_units)
 
     yield from check_levels(
         value=_scale(data.value, data.value_units),
         levels_upper=levels[:2],
         levels_lower=levels[2:],
         metric_name=data.sensor_type,
-        # we don't want to see decimal rpms
-        # we want to see the voltage and current in more detail
-        render_func=_fan_render,
+        render_func=lambda v: f"{v} {unit}",
     )
 
 

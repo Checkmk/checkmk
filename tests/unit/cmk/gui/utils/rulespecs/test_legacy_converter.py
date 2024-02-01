@@ -358,51 +358,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         parameter_form=api_v1.form_specs.basic.Text(),
                     )
                 ],
-                prefill_selection=None,
-            ),
-            legacy_valuespecs.CascadingDropdown(
-                choices=[("first", "first", legacy_valuespecs.TextInput())],
-                no_preselect_title="",
-            ),
-            id="CascadingDropdown no valuespec title",
-        ),
-        pytest.param(
-            api_v1.form_specs.composed.CascadingSingleChoice(
-                elements=[
-                    api_v1.form_specs.composed.CascadingSingleChoiceElement(
-                        name="first",
-                        title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.basic.Text(
-                            title=api_v1.Localizable("Spec title")
-                        ),
-                    )
-                ],
-                prefill_selection=None,
-            ),
-            legacy_valuespecs.CascadingDropdown(
-                choices=[
-                    ("first", _("Spec title"), legacy_valuespecs.TextInput(title=_("Spec title")))
-                ],
-                no_preselect_title="",
-            ),
-            id="CascadingDropdown valuespec title",
-        ),
-        pytest.param(
-            api_v1.form_specs.composed.CascadingSingleChoice(
-                elements=[
-                    api_v1.form_specs.composed.CascadingSingleChoiceElement(
-                        name="first",
-                        title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.basic.Text(),
-                    )
-                ],
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
                 label=api_v1.Localizable("parent label"),
                 prefill_selection="first",
             ),
             legacy_valuespecs.CascadingDropdown(
-                choices=[("first", _("first"), legacy_valuespecs.TextInput())],
+                choices=[("first", _("Spec title"), legacy_valuespecs.TextInput())],
                 title=_("parent title"),
                 help=_("parent help"),
                 label=_("parent label"),

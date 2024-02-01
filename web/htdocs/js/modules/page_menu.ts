@@ -90,6 +90,19 @@ export function ack_problems_update_expiration_active_state(
     }
 }
 
+export function check_menu_entry_by_checkboxes(id: string) {
+    const checkboxes = document.getElementsByClassName(
+        "page_checkbox"
+    ) as HTMLCollectionOf<HTMLInputElement>;
+    for (let i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+            enable_menu_entry(id, true);
+            return;
+        }
+    }
+    enable_menu_entry(id, false);
+}
+
 export function enable_menu_entry(id: string, enabled: boolean) {
     let from, to;
     if (enabled) {

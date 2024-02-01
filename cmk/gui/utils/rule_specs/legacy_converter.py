@@ -821,10 +821,8 @@ def _convert_to_legacy_cascading_dropdown(
 ) -> legacy_valuespecs.CascadingDropdown:
     legacy_choices = [
         (
-            element.name.value if isinstance(element.name, enum.StrEnum) else element.name,
-            element.parameter_form.title.localize(localizer)
-            if hasattr(element.parameter_form, "title") and element.parameter_form.title is not None
-            else str(element.name),
+            str(element.name),
+            element.title.localize(localizer),
             _convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
         for element in to_convert.elements

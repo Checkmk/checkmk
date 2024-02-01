@@ -20,7 +20,6 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         name="fd_perc",
         title=Localizable("Percentual levels for used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
-            title=Localizable("Percentual levels for used processes"),
             elements=[
                 Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
                 Percentage(title=Localizable("Critical at usage of"), prefill_value=90.0),
@@ -31,7 +30,6 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         name="fd_abs",
         title=Localizable("Absolute levels for total number of used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
-            title=Localizable("Absolute levels for total number of used processes"),
             elements=[
                 Integer(title=Localizable("Warning at"), unit=Localizable("processes")),
                 Integer(title=Localizable("Critical at"), unit=Localizable("processes")),

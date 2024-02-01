@@ -31,7 +31,6 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
                     name="levels",
                     title=Localizable("Set levels"),
                     parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
-                        title=Localizable("Set levels"),
                         elements=[
                             form_specs.basic.TimeSpan(title=Localizable("Warning if older than")),
                             form_specs.basic.TimeSpan(title=Localizable("Critical if older than")),
@@ -42,7 +41,6 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
                     name="no_levels",
                     title=Localizable("No levels"),
                     parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
-                        title=Localizable("No levels"),
                         elements=[
                             form_specs.basic.FixedValue(value=None, label=Localizable("")),
                             form_specs.basic.FixedValue(value=None, label=Localizable("")),

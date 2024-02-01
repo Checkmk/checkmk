@@ -1039,6 +1039,7 @@ class ListPage(Page, Generic[_T]):
                         ),
                         PageMenuEntry(
                             title=_("Delete selected"),
+                            name="delete",
                             icon_name="delete",
                             item=make_confirmed_form_submit_link(
                                 form_name="bulk_delete",
@@ -1114,6 +1115,7 @@ class ListPage(Page, Generic[_T]):
                 else:
                     self._show_table(instances, scope_instances)
 
+        html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
         html.footer()
 
     @classmethod
@@ -1150,7 +1152,11 @@ class ListPage(Page, Generic[_T]):
         for owner in {e[0] for e in to_delete}:
             self._type.save_user_instances(instances, owner)
 
-        flash(_("The selected %s have been deleted.") % self._type.phrase("title_plural"))
+        if len(to_delete) > 1:
+            flash(_("Selected %s have been deleted.") % self._type.phrase("title_plural").lower())
+        elif len(to_delete) == 1:
+            flash(_("%s has been deleted.") % self._type.phrase("title"))
+
         html.reload_whole_page(self._type.list_url())
 
     def _show_table(
@@ -1169,13 +1175,18 @@ class ListPage(Page, Generic[_T]):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            onclick="cmk.selection.toggle_all_rows(this.form);"
+                            "cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
                             value="X",
                         ),
                         sortable=False,
                         css=["checkbox"],
                     )
-                    html.checkbox(f"_c_{instance.owner()}+{instance.name()}")
+                    html.checkbox(
+                        f"_c_{instance.owner()}+{instance.name()}",
+                        onclick="cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
+                        class_="page_checkbox",
+                    )
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
@@ -1195,7 +1206,7 @@ class ListPage(Page, Generic[_T]):
 
                 # Delete
                 if instance.may_delete():
-                    html.icon_button(instance.delete_url(), _("Delete!"), "delete")
+                    html.icon_button(instance.delete_url(), _("Delete"), "delete")
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_("ID"), instance.name(), css=["narrow"])
@@ -1447,7 +1458,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
     for other_type_name, other_pagetype in page_types.items():
         if current_type_name != other_type_name:
             yield PageMenuEntry(
-                title=other_pagetype.phrase("title_plural").title(),
+                title=other_pagetype.phrase("title_plural"),
                 icon_name=other_type_name,
                 item=make_simple_link("%ss.py" % other_type_name),
             )

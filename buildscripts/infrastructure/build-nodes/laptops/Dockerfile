@@ -24,3 +24,15 @@ COPY scripts/*.mk /opt/
 COPY scripts/*.sh /opt/
 
 RUN /opt/install-development.sh --profile all ${ADDITIONAL_ARGS}
+
+# run the installation a second time to confirm an additional run does not fail
+# used by install scripts
+COPY scripts/.bazelversion /opt/
+COPY scripts/defines.make /opt/
+COPY scripts/package_versions.bzl /opt/
+COPY scripts/static_variables.bzl /opt/
+COPY scripts/strip_binaries /opt/
+COPY scripts/*.mk /opt/
+COPY scripts/*.sh /opt/
+RUN rm -rf /root/.pyenv
+RUN /opt/install-development.sh --profile all ${ADDITIONAL_ARGS}

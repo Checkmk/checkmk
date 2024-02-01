@@ -68,7 +68,13 @@ esac
 
 # install everything
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-echo "${REPO_NAME}" >>/etc/apt/sources.list.d/clang.list
+if [[ -e "/etc/apt/sources.list.d/clang.list" ]]; then
+    if ! grep -Fxq "${REPO_NAME}" /etc/apt/sources.list.d/clang.list; then
+        echo "${REPO_NAME}" >/etc/apt/sources.list.d/clang.list
+    fi
+else
+    echo "${REPO_NAME}" >>/etc/apt/sources.list.d/clang.list
+fi
 apt-get update
 apt-get install -y \
     "clang-$CLANG_VERSION" \

@@ -56,7 +56,8 @@ install() {
     fi
 
     mkdir -p "${INSTALL_PREFIX}/usr/include"
-    cp -prl "${TARGET_DIR}/${DIR_NAME}/include/"* "${INSTALL_PREFIX}/usr/include"
+    # CMK-15362, rerunning the installation would fail as the files exist already
+    cp -prlu "${TARGET_DIR}/${DIR_NAME}/include/"* "${INSTALL_PREFIX}/usr/include"
 
     if [ -d "${INSTALL_PREFIX}/usr/lib64/pkgconfig" ]; then
         PKGCONFIG_DIR=${INSTALL_PREFIX}/usr/lib64/pkgconfig
@@ -65,7 +66,8 @@ install() {
     fi
 
     mkdir -p "${PKGCONFIG_DIR}"
-    cp -prl "${TARGET_DIR}/${DIR_NAME}/lib/pkgconfig/"*.pc "${PKGCONFIG_DIR}"
+    # CMK-15362, rerunning the installation would fail as the files exist already
+    cp -prlu "${TARGET_DIR}/${DIR_NAME}/lib/pkgconfig/"*.pc "${PKGCONFIG_DIR}"
 }
 
 verify_install() {

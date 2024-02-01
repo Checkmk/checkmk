@@ -9,6 +9,28 @@ failure() {
     exit 1
 }
 
+# some style settings defined here
+resetColor=$'\e[0m'
+txtRed=$'\e[41m'
+txtGreen=$'\e[32m'
+txtBlue=$'\e[34m'
+
+print_red() {
+    printf "%s%s%s\n" "${txtRed}" "$1" "${resetColor}"
+}
+
+print_green() {
+    printf "%s%s%s\n" "${txtGreen}" "$1" "${resetColor}"
+}
+
+print_blue() {
+    printf "%s%s%s\n" "${txtBlue}" "$1" "${resetColor}"
+}
+
+print_debug() {
+    print_blue "    $1"
+}
+
 _artifact_name() {
     local DIR_NAME="$1"
     local DISTRO="$2"

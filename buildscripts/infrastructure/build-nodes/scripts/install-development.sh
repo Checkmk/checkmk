@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# To get this thing up and running the following tools need to be installed:
+# - git, to clone the repo and get this script
+# - make (optional), to run the script via "make setup", simply call "apt-get install make"
+#
 # How to use
 # ./buildscripts/infrastructure/build-nodes/scripts/install-development.sh \
 #   --installpath $PWD/qwertz \
@@ -15,29 +19,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-# some style settings defined here
-resetColor=$'\e[0m'
-txtRed=$'\e[41m'
-txtGreen=$'\e[32m'
-txtBlue=$'\e[34m'
-
 IMPORTANT_MESSAGES=()
 
-function print_red() {
-    printf "%s%s%s\n" "${txtRed}" "$1" "${resetColor}"
-}
-
-function print_green() {
-    printf "%s%s%s\n" "${txtGreen}" "$1" "${resetColor}"
-}
-
-function print_blue() {
-    printf "%s%s%s\n" "${txtBlue}" "$1" "${resetColor}"
-}
-
-function print_debug() {
-    print_blue "    $1"
-}
+trap perform_cleanup EXIT
 
 function install_packages() {
     echo "Install for: ${*}"
@@ -64,6 +48,7 @@ function install_basic_tools() {
     local PACKAGES_TO_INSTALL=(
         "binutils"    # "strip" required to cleanup during strip_binaries
         "curl"        # curl is used to download artifacts from Nexus
+        "doxygen"     # to be able to create docs in the unlikely event
         "gawk"        # TBC
         "git"         # git is used by install-[bazel, cmake, iwyu, patchelf, protobuf-cpp].sh
         "gnupg"       # "apt-key" used by install-docker
@@ -90,11 +75,11 @@ function copy_files_around() {
 
 function perform_cleanup() {
     print_green "Cleanup ..."
-    rm "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
-    rm "${SCRIPT_DIR}"/.bazelversion
-    rm "${SCRIPT_DIR}"/defines.make
-    rm "${SCRIPT_DIR}"/static_variables.bzl
-    rm "${SCRIPT_DIR}"/package_versions.bzl
+    rm -f "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
+    rm -f "${SCRIPT_DIR}"/.bazelversion
+    rm -f "${SCRIPT_DIR}"/defines.make
+    rm -f "${SCRIPT_DIR}"/static_variables.bzl
+    rm -f "${SCRIPT_DIR}"/package_versions.bzl
     rm -f "${SCRIPT_DIR}"/*.mk
     print_green "Cleanup done"
 }
@@ -109,6 +94,7 @@ function setup_env_variables() {
     PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
     VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
     export DISTRO="${DISTRO_NAME,,}-${VERSION_NUMBER}"
+    # export NEXUS_ARCHIVES_URL here (as well) in case no creds have to be collected, e.g. CI build
     export NEXUS_ARCHIVES_URL="https://artifacts.lan.tribe29.com/repository/archives/"
     export BRANCH_NAME
     export BRANCH_VERSION
@@ -130,13 +116,40 @@ function setup_env_variables() {
 }
 
 function collect_user_input() {
-    print_green "Collect user input ..."
-    print_debug "... to get artifacts instead of building from scratch"
+    print_green "Collect user input ... to get artifacts instead of building from scratch"
     read -rp "Enter Nexus Username: " NEXUS_USERNAME
     export NEXUS_USERNAME
     read -rsp "Enter Nexus Password: " NEXUS_PASSWORD
     export NEXUS_PASSWORD
     echo
+    export NEXUS_ARCHIVES_URL="https://artifacts.lan.tribe29.com/repository/archives/"
+    print_debug "Please stand by while the connection to '${NEXUS_ARCHIVES_URL}' with the provided creds is tested ..."
+
+    if ! type curl >/dev/null 2>&1; then
+        install_packages curl
+    fi
+
+    # test for valid credentials
+    output=$(curl -sSL -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" -X GET -G $NEXUS_ARCHIVES_URL)
+    if [ -n "$output" ]; then
+        print_green "Nexus login successfull"
+    else
+        print_red "Failed to login to Nexus"
+        read -rp "Retry entering correct Nexus Username and Password (y/n): " RETRY_LOGIN
+        echo # (optional) move to a new line
+        if [[ $RETRY_LOGIN =~ ^[Yy]$ ]]; then
+            collect_user_input
+        else
+            read -rp "Continuing without valid Nexus credentials? This might lead to building packages from scratch (y/n): " CONTINUE_INSTALLATION
+            echo # (optional) move to a new line
+            if [[ $CONTINUE_INSTALLATION =~ ^[Yy]$ ]]; then
+                print_blue "Alright, grab a coffee and stand by"
+            else
+                exit 0
+            fi
+        fi
+    fi
+
     print_green "User input collection done"
 }
 
@@ -175,50 +188,22 @@ function install_for_python_dev() {
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
 
-    if type pyenv >/dev/null 2>&1; then
-        pyenv install "$(get_desired_python_version)"
-        pyenv global "$(get_desired_python_version)" # make pip3 available
+    sudo -u "${SUDO_USER:-root}" \
+        TARGET_DIR="${INSTALL_PATH}" \
+        CI="${CI}" \
+        "${SCRIPT_DIR}"/install-pyenv.sh
+
+    if [[ -e "${SCRIPT_DIR}"/INSTALLED_BY_PYENV ]]; then
+        # show me a better way to do it
+        INSTALLED_BY_PYENV=1
+        rm "${SCRIPT_DIR}"/INSTALLED_BY_PYENV
+        print_debug "INSTALLED_BY_PYENV: $INSTALLED_BY_PYENV"
     else
-        print_blue "Team CI recommends to install pyenv for easy use. It is currently not yet installed."
-
-        if [[ -n ${CI} ]]; then
-            # CI build, don't ask
-            INSTALL_PYENV="y"
-        else
-            read -rp "Should pyenv it be installed now? (y/n): " INSTALL_PYENV
-            echo # (optional) move to a new line
-        fi
-        if [[ $INSTALL_PYENV =~ ^[Yy]$ ]]; then
-            INSTALLED_BY_PYENV=1
-            curl https://pyenv.run | bash
-
-            cat <<'EOF' >>~/.bashrc
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-EOF
-
-            if [[ -n ${CI} ]]; then
-                # CI build
-                export PYENV_ROOT="$HOME/.pyenv"
-                export PATH="$PYENV_ROOT/bin:$PATH"
-                eval "$(pyenv init -)"
-            else
-                # source the extended bashrc file to ensure everything went well
-                # SC1090: Can't follow non-constant source. Use a directive to specify location.
-                # shellcheck disable=SC1090
-                source ~/.bashrc
-            fi
-
-            pyenv install "$(get_desired_python_version)"
-            pyenv global "$(get_desired_python_version)" # make pip3 available
-        else
-            print_blue "All right, Python will be installed as done in the CI to $TARGET_DIR"
-            install_python_and_teammates
-        fi
+        # not installed via pyenv, do it the oldschool way
+        print_blue "All right, Python will be installed as done in the CI to $TARGET_DIR"
+        install_python_and_teammates
+        "${SCRIPT_DIR}"/install-pipenv.sh
     fi
-
-    "${SCRIPT_DIR}"/install-pipenv.sh
 
     print_green "Installation for Python development done"
 }
@@ -241,11 +226,12 @@ function install_for_cpp_dev() {
     local PACKAGES_TO_INSTALL=(
         "python3-dev"     # "libpython3.10.so.1.0" required by gdb, ouch
         "pkg-config"      # used by install-protobuf-cpp.sh
+        "bison"           # to build binutils
+        "texinfo"         # to build gdb
+        "tk-dev"          # to build gdb
+        "libgmp-dev"      # https://stackoverflow.com/questions/70380547/gmp-is-missing-while-configuring-building-gdb-from-source
         "build-essential" # why not
         # the following packages are copied from the old make setup step
-        "direnv"
-        "doxygen"
-        "ksh"
         "libjpeg-dev"
         "libkrb5-dev"
         "libldap2-dev"
@@ -445,14 +431,13 @@ if [[ $REQUIRES_NEXUS -ge 1 ]]; then
 fi
 
 install_basic_tools
+
 if [[ -z ${CI} ]]; then
     # non CI build, Dockerfile is responsible for placing the files
     copy_files_around
 fi
-setup_env_variables
 
-# basic tools and env variables required to install docker
-"${SCRIPT_DIR}"/install-docker.sh
+setup_env_variables
 
 # CPP, actually "python3-dev" needs to be installed/called before install-python.sh
 # to have "libpython3.10.so.1.0" available for gdb
@@ -496,6 +481,9 @@ if [[ $STRIP_LATER -gt 1 ]]; then
         "${SCRIPT_DIR}"/install-rust-cargo.sh link-only
     fi
 fi
+
+# basic tools and env variables required to install docker
+"${SCRIPT_DIR}"/install-docker.sh
 
 # CMK dependencies should always be installed
 install_cmk_package_dependencies

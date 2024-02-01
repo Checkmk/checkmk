@@ -5,6 +5,7 @@
 import argparse
 import os
 import sys
+import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -56,6 +57,12 @@ class Registry:
             return True
         return False
 
+    def image_exists_and_can_be_pulled_enterprise(self, image: DockerImage, edition: str) -> bool:
+        if not self.image_exists_enterprise(image, edition):
+            return False
+
+        return self.image_can_be_pulled_enterprise(image, edition)
+
     def image_exists_enterprise(self, image: DockerImage, edition: str) -> bool:
         url = f"{self.url}/v2/{edition}/check-mk-{edition}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
@@ -66,11 +73,31 @@ class Registry:
                 auth=(self.credentials.username, self.credentials.password),
             ).json()["tags"]
         )
-        if exists:
-            sys.stdout.write(" OK\n")
-        else:
+        if not exists:
             sys.stdout.write(" NO!\n")
-        return exists
+            return False
+        sys.stdout.write(" OK\n")
+        return True
+
+    def image_can_be_pulled_enterprise(self, image: DockerImage, edition: str) -> bool:
+        repository = f"{urllib.parse.urlparse(self.url).netloc}/{edition}/check-mk-{edition}"
+        sys.stdout.write(f"Test if {image.tag} can be pulled from {repository}...")
+
+        # Be sure we don't have the image locally... there is no force pull
+        with suppress(docker.errors.ImageNotFound):
+            self.client.images.remove(f"{repository}:{image.tag}")
+
+        try:
+            self.client.images.pull(
+                tag=image.tag,
+                repository=repository,
+            )
+        except docker.errors.APIError as e:
+            sys.stdout.write(f" NO! Error was: {e}\n")
+            return False
+
+        sys.stdout.write(" OK\n")
+        return True
 
     def __post_init__(self):
         self.client = docker.client.from_env()
@@ -78,7 +105,13 @@ class Registry:
         match self.editions:
             case ["enterprise", "managed"]:
                 self.url = "https://registry.checkmk.com"
-                self.image_exists = self.image_exists_enterprise
+                # Asking why we're also pulling? -> CMK-14567
+                self.image_exists = self.image_exists_and_can_be_pulled_enterprise
+                self.client.login(
+                    registry=self.url,
+                    username=self.credentials.username,
+                    password=self.credentials.password,
+                )
             case ["raw", "cloud"]:
                 self.url = "https://docker.io"
                 self.image_exists = self.image_exists_docker_hub

@@ -40,6 +40,8 @@ _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
     CheckPluginName("qmail_stats"): (lambda _x: None),
     CheckPluginName("systemd_units_services_summary"): (lambda _x: None),
     CheckPluginName("ucd_mem"): (lambda _x: None),
+    CheckPluginName("postfix_mailq"): (lambda x: x or "default"),
+    CheckPluginName("postfix_mailq_status"): (lambda x: x or "default"),
 }
 
 # some autocheck parameters need transformation even though there is no ruleset.

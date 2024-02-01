@@ -64,7 +64,7 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
 
     try:
         send_protocol, send_params = params["send"]
-        connection_params = send_params["connection"]
+        connection_params = send_params.get("connection", {})
     except KeyError as exc:
         raise ValueError(
             f"{params['item']} --- Params for check_mail_loop are faulty (missing {exc}), did you update the config?"

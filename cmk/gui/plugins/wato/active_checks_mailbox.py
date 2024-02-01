@@ -34,6 +34,10 @@ from cmk.gui.valuespec import (
 def _smtp_email_parameters() -> Dictionary:
     return Dictionary(
         title="SMTP",
+        # `server` is optional because if not set $HOSTADDRESS will be used
+        # `connection` is a mandatory top level element because all sub-elements are
+        #              optional individually
+        # `auth` is optional for sending mails
         optional_keys=["server", "auth"],
         elements=[
             (
@@ -115,6 +119,10 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
 
     return Dictionary(
         title=protocol,
+        # `server`     is optional because if not set $HOSTADDRESS will be used
+        # `connection` is a mandatory top level element because all sub-elements are
+        #              optional individually
+        # `auth`       is mandatory because active check expects it
         optional_keys=["server", "email_address"],
         elements=[
             (
@@ -277,8 +285,11 @@ def update_fetch_params(fetch_params):
     Also, the connection param 'tcp_port' is renamed to 'port'.
     """
     use_ssl, port = fetch_params.get("ssl", (None, None))
-    if any([use_ssl, port]):
-        fetch_params["connection"] = {}
+
+    # `connection` element _might_ have been missing in the past, add it to be safe
+    fetch_params.setdefault("connection", {})
+
+    if use_ssl is not None or port is not None:
         if use_ssl is not None:
             fetch_params["connection"]["disable_tls"] = not use_ssl
         if port is not None:
@@ -314,6 +325,9 @@ def transform_check_mail_loop_params(params):
     fetch_params = fetch_params.copy()
     send_params = send_params.copy()
 
+    # `connection` element _might_ have been missing in the past, add it to be safe
+    send_params.setdefault("connection", {})
+
     # Migrate old SMTP-only sending config to new EWS-enabled config
     if send_protocol is None:
         send_protocol = "SMTP"
@@ -325,7 +339,6 @@ def transform_check_mail_loop_params(params):
             send_params["auth"] = auth
             del params["smtp_auth"]
 
-        send_params["connection"] = {}
         if (port := params.get("smtp_port")) is not None:
             send_params["connection"]["port"] = port
             del params["smtp_port"]

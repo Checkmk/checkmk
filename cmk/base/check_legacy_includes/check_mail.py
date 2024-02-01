@@ -13,7 +13,7 @@ def general_check_mail_args_from_params(
 ) -> list[Union[str, tuple[str, str, str]]]:
     try:
         fetch_protocol, fetch_params = params["fetch"]
-        connection_params = fetch_params["connection"]
+        connection_params = fetch_params.get("connection", {})
         auth_type, auth_data = fetch_params["auth"]
     except KeyError as exc:
         raise ValueError(

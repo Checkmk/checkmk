@@ -268,7 +268,7 @@ def test_get_graph_templates(
 
 
 def test__get_metric_info() -> None:
-    color_counter: Counter[Literal["index"]] = Counter()
+    color_counter: Counter[Literal["metric", "predictive"]] = Counter()
     assert utils._get_metric_info("foo", color_counter) == {
         "title": "Foo",
         "unit": "",
@@ -279,7 +279,7 @@ def test__get_metric_info() -> None:
         "unit": "",
         "color": "13/a",
     }
-    assert color_counter["index"] == 2
+    assert color_counter["metric"] == 2
 
 
 @pytest.mark.parametrize(
@@ -289,14 +289,14 @@ def test__get_metric_info() -> None:
             "messages_outbound",
             "predict_messages_outbound",
             "Prediction of Outbound messages (upper levels)",
-            "#9a9a9a",
+            "#4b4b4b",
             id="upper",
         ),
         pytest.param(
             "messages_outbound",
             "predict_lower_messages_outbound",
             "Prediction of Outbound messages (lower levels)",
-            "#676767",
+            "#4b4b4b",
             id="lower",
         ),
     ],
@@ -318,6 +318,20 @@ def test_translate_metrics_with_predictive_metrics(
         == translated_metrics[predictive_metric_name]["unit"]
     )
     assert translated_metrics[predictive_metric_name]["color"] == expected_color
+
+
+def test_translate_metrics_with_multiple_predictive_metrics() -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple(n, 0, "", None, None, None, None)
+        for n in [
+            "messages_outbound",
+            "predict_messages_outbound",
+            "predict_lower_messages_outbound",
+        ]
+    ]
+    translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
+    assert translated_metrics["predict_messages_outbound"]["color"] == "#4b4b4b"
+    assert translated_metrics["predict_lower_messages_outbound"]["color"] == "#5a5a5a"
 
 
 @pytest.mark.parametrize(

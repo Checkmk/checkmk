@@ -3391,21 +3391,21 @@ metric_aws_http_fixed_response = metrics.Metric(
 metric_aws_proc_bytes = metrics.Metric(
     name="aws_proc_bytes",
     title=Localizable("Processed Bytes"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.PURPLE,
 )
 
 metric_aws_proc_bytes_tls = metrics.Metric(
     name="aws_proc_bytes_tls",
     title=Localizable("TLS Processed Bytes"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.PURPLE,
 )
 
 metric_aws_ipv6_proc_bytes = metrics.Metric(
     name="aws_ipv6_proc_bytes",
     title=Localizable("IPv6 Processed Bytes"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.LIGHT_PURPLE,
 )
 
@@ -3461,28 +3461,28 @@ metric_aws_tcp_target_rst = metrics.Metric(
 metric_aws_s3_downloads = metrics.Metric(
     name="aws_s3_downloads",
     title=Localizable("Download"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.YELLOW,
 )
 
 metric_aws_s3_uploads = metrics.Metric(
     name="aws_s3_uploads",
     title=Localizable("Upload"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.LIGHT_GREEN,
 )
 
 metric_aws_s3_select_object_scanned = metrics.Metric(
     name="aws_s3_select_object_scanned",
     title=Localizable("SELECT Object Scanned"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.LIGHT_GREEN,
 )
 
 metric_aws_s3_select_object_returned = metrics.Metric(
     name="aws_s3_select_object_returned",
     title=Localizable("SELECT Object Returned"),
-    unit=Unit.BYTE_IEC_PER_SECOND,
+    unit=Unit.BYTES_IEC_PER_SECOND,
     color=Color.LIGHT_BLUE,
 )
 

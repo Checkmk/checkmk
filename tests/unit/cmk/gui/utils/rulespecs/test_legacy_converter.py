@@ -440,10 +440,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("age label"),
                 help_text=api_v1.Localizable("help text"),
                 displayed_units=[
-                    api_v1.form_specs.basic.TimeUnit.DAYS,
-                    api_v1.form_specs.basic.TimeUnit.HOURS,
-                    api_v1.form_specs.basic.TimeUnit.MINUTES,
-                    api_v1.form_specs.basic.TimeUnit.SECONDS,
+                    api_v1.form_specs.basic.TimeUnit.DAY,
+                    api_v1.form_specs.basic.TimeUnit.HOUR,
+                    api_v1.form_specs.basic.TimeUnit.MINUTE,
+                    api_v1.form_specs.basic.TimeUnit.SECOND,
                 ],
                 prefill_value=100,
             ),
@@ -1842,8 +1842,8 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.TimeSpan(
                     displayed_units=[
-                        api_v1.form_specs.basic.TimeUnit.SECONDS,
-                        api_v1.form_specs.basic.TimeUnit.MINUTES,
+                        api_v1.form_specs.basic.TimeUnit.SECOND,
+                        api_v1.form_specs.basic.TimeUnit.MINUTE,
                     ]
                 ),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,

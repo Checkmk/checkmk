@@ -135,7 +135,7 @@ pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
     match read_file(file_name) {
         Ok(content) => load_from_str(&content),
         Err(e) => anyhow::bail!(
-            "Can't read file: {}, {e} ",
+            "Can't read config file: {}, {e} ",
             // Use relatively complicated  method to print name of the file
             // as it is not possible to use "{file_name:?}": produces to many backslashes
             // in Windows. Probability to NOT decode filename as UTF-8 is nil.

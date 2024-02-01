@@ -406,10 +406,10 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 1.1: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 1.1/1.2/1.3: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.1: No such site hash")
+            raise ValueError("Parse sample 1.1/1.2/1.3: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -480,13 +480,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 1.5: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError("Parse sample 2.0: No such instance ID")
+            raise ValueError("Parse sample 1.5: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.4: No such site hash")
+            raise ValueError("Parse sample 1.5: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -520,13 +520,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 2.0: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 2.0/2.1: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError("Parse sample 2.0: No such instance ID")
+            raise ValueError("Parse sample 2.0/2.1: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 2.0: No such site hash")
+            raise ValueError("Parse sample 2.0/2.1: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(

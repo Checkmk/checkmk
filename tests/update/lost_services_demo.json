@@ -36,12 +36,22 @@
     "exchange-1.company.com": [],
     "exchange-2.company.com": [],
     "exchange.company.com": [],
-    "ldap-1.company.com": [],
-    "ldap-2.company.com": [],
+    "ldap-1.company.com": [
+        "Postfix status",
+        "Postfix Queue"
+    ],
+    "ldap-2.company.com": [
+        "Postfix status",
+        "Postfix Queue"
+    ],
     "loadbalancer1.company.com": [],
     "loadbalancer2.company.com": [],
-    "mysql-1.erp.company.com": [],
-    "mysql-2.erp.company.com": [],
+    "mysql-1.erp.company.com": [
+        "Postfix Queue"
+    ],
+    "mysql-2.erp.company.com": [
+        "Postfix Queue"
+    ],
     "vcenter.company.com": [],
     "kubernetes.company.com": [],
     "daemonset_eks_checkmk-monitoring_checkmk-node-collector-container-metrics": [],
@@ -94,18 +104,10 @@
     "pod_eks_kube-system_ebs-csi-node-z9khz": [],
     "pod_eks_kube-system_kube-proxy-7drhq": [],
     "pod_eks_kube-system_kube-proxy-bpr2x": [],
-    "15.0.0.207-eu-central-1-i-0c8dca59e0fc7ef61": [
-        "PING"
-    ],
-    "15.0.11.75-eu-central-1-i-0d7776d349d81f15c": [
-        "PING"
-    ],
-    "15.0.13.227-eu-central-1-i-097d561a218e0590b": [
-        "PING"
-    ],
-    "15.0.3.186-eu-central-1-i-04998884db9ab59be": [
-        "PING"
-    ],
+    "15.0.0.207-eu-central-1-i-0c8dca59e0fc7ef61": [],
+    "15.0.11.75-eu-central-1-i-0d7776d349d81f15c": [],
+    "15.0.13.227-eu-central-1-i-097d561a218e0590b": [],
+    "15.0.3.186-eu-central-1-i-04998884db9ab59be": [],
     "checkmk.com": [],
     "docs.checkmk.com": [],
     "exchange.checkmk.com": [],

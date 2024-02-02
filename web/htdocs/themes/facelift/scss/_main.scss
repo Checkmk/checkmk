@@ -1474,3 +1474,24 @@ input.hidden_submit {
     display: none;
   }
 }
+
+// Sweetalert2
+// JS library used for confirm dialogs and success/error msg popups
+// (see the "Swal" call sites in our typescript code)
+div.swal2-popup {
+  background-color: $bg-color-secondary;
+
+  div.swal2-icon {
+    border-color: $success-dimmed;
+    color: $success-dimmed;
+  }
+
+  h2.swal2-title,
+  div.swal2-html-container {
+    color: $font-color;
+  }
+
+  button.swal2-confirm {
+    background-color: $success-dimmed;
+  }
+}

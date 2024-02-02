@@ -6,6 +6,7 @@
 """Script to validate if all available plugins can be loaded"""
 
 import enum
+import os
 import sys
 from argparse import ArgumentParser
 from collections.abc import Sequence
@@ -21,11 +22,16 @@ from cmk.base.config import load_all_plugins  # pylint: disable=cmk-module-layer
 
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
+    rulespec_registry,
+)
 
 
 class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
     RULE_SPECS = "rule specs loading"
+    RULE_SPEC_FORMS = "rule specs forms creation"
 
 
 def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
@@ -57,8 +63,33 @@ def _validate_rule_spec_loading() -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPECS, errors)
 
 
+def _validate_rule_spec_form_creation() -> ActiveCheckResult:
+    if not os.environ.get("OMD_SITE"):
+        return ActiveCheckResult(
+            state=1,
+            summary=f"{ValidationStep.RULE_SPEC_FORMS.value.capitalize()} skipped",
+            details=["Form creation validation can only be used as site user"],
+        )
+
+    errors = []
+    with gui_context():
+        for loaded_rule_spec in rulespec_registry.values():
+            try:
+                _ = loaded_rule_spec.valuespec
+            except Exception as e:
+                if debug.enabled():
+                    raise e
+                errors.append(f"{type(loaded_rule_spec).__name__} '{loaded_rule_spec.name}': {e}")
+
+    return to_result(ValidationStep.RULE_SPEC_FORMS, errors)
+
+
 def validate_plugins() -> ActiveCheckResult:
-    sub_results = [_validate_agent_based_plugin_loading(), _validate_rule_spec_loading()]
+    sub_results = [
+        _validate_agent_based_plugin_loading(),
+        _validate_rule_spec_loading(),
+        _validate_rule_spec_form_creation(),
+    ]
     return ActiveCheckResult.from_subresults(*sub_results)
 
 

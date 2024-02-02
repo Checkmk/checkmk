@@ -14,6 +14,7 @@ def test_basic_commands(site: Site) -> None:
         "bin/omd",
         "bin/stunnel",
         "bin/cmk-update-config",
+        "bin/cmk-validate-plugins",
     ]
 
     if not site.version.is_raw_edition():

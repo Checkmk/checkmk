@@ -61,6 +61,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
                 installer,
                 package_store,
                 path_config,
+                path,
             ):
                 disabled_packages.add(package_id)
                 return True

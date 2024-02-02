@@ -98,10 +98,11 @@ def disable_incomp_mkp(
     installer: Installer,
     package_store: PackageStore,
     path_config: PathConfig,
+    path: Path,
 ) -> bool:
     if (
         conflict_mode in NEED_USER_INPUT_MODES
-        and _request_user_input_on_incompatible_file(module_name, package_id, error).lower()
+        and _request_user_input_on_incompatible_file(path, module_name, package_id, error).lower()
         in USER_INPUT_DISABLE
     ):
         if (
@@ -121,10 +122,10 @@ def disable_incomp_mkp(
 
 
 def _request_user_input_on_incompatible_file(
-    module_name: str, package_id: PackageID, error: BaseException
+    path: Path, module_name: str, package_id: PackageID, error: BaseException
 ) -> str:
     return input(
-        f"Incompatible file '{module_name}' of extension package '{package_id.name} {package_id.version}'\n"
+        f"Incompatible file '{path}' of extension package '{package_id.name} {package_id.version}'\n"
         f"Error: {error}\n\n"
         "You can abort the update process (A) or disable the "
         "extension package (d) and continue the update process.\n"

@@ -2,13 +2,16 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import io
 import logging
 import os
 import subprocess
+import tarfile
+import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import docker  # type: ignore[import-untyped]
 import requests
@@ -31,11 +34,29 @@ def cleanup_old_packages() -> None:
         p.unlink()
 
 
+def copy_to_container(c: docker.models.containers.Container, source: str, target: str) -> bool:
+    """Copy a source file to the target folder in the container."""
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode="w|") as tar, open(source, "rb") as f:
+        info = tar.gettarinfo(fileobj=f)
+        info.name = os.path.basename(source)
+        tar.addfile(info, f)
+
+    return bool(c.put_archive(target, stream.getvalue()))
+
+
 def get_container_ip(c: docker.models.containers.Container) -> str:
     """Return the primary IP address for a given container name."""
     output = f"{c.attrs['NetworkSettings']['IPAddress']}" or "127.0.0.1"
 
     return output
+
+
+def send_to_container(c: docker.models.containers.Container, text: str) -> None:
+    """Send text to the STDIN of a given container."""
+    s = c.attach_socket(c, params={"stdin": 1, "stream": 1})
+    s._sock.send(text.encode("utf-8"))
+    s.close()
 
 
 def image_name(version: CMKVersion) -> str:
@@ -269,3 +290,274 @@ def start_checkmk(
     finally:
         if os.getenv("CLEANUP", "1") == "1":
             c.remove(force=True)
+
+
+def checkmk_docker_automation_secret(
+    checkmk: docker.models.containers.Container, site_id: str = "cmk", api_user: str = "automation"
+) -> str:
+    """Return the automation secret for a Checkmk docker instance."""
+    secret_rc, secret_output = checkmk.exec_run(
+        f"cat '/omd/sites/{site_id}/var/check_mk/web/{api_user}/{api_user}.secret'"
+    )
+    assert secret_rc == 0
+
+    api_secret = secret_output.decode("utf-8").split("\n")[0]
+    assert api_secret
+
+    return f"{api_secret}"
+
+
+def checkmk_docker_api_request(
+    checkmk: docker.models.containers.Container,
+    method: str,
+    endpoint: str,
+    json: Any | None = None,
+    allow_redirects: bool = True,
+    headers: dict[str, str] | None = None,
+) -> requests.Response:
+    """Run an API request against a Checkmk docker instance."""
+    site_ip = get_container_ip(checkmk)
+    # docker container defaults
+    site_port = 5000
+    site_id = "cmk"
+
+    api_url = f"http://{site_ip}:{site_port}/{site_id}/check_mk/api/1.0/{endpoint}"
+    api_user = "automation"
+    api_secret = checkmk_docker_automation_secret(checkmk, site_id, api_user)
+    api_token = f"Bearer {api_user} {api_secret}"
+    api_headers = {
+        "Authorization": api_token,
+        "Content-Type": "application/json",
+        "If-Match": "*",
+    }
+    if headers:
+        api_headers.update(headers)
+    return requests.request(
+        method, url=f"{api_url}", headers=api_headers, json=json, allow_redirects=allow_redirects
+    )
+
+
+def checkmk_docker_get_host_services(
+    checkmk: docker.models.containers.Container,
+    hostname: str,
+) -> Any:
+    """Return the service list for a host in a Checkmk docker instance."""
+    return checkmk_docker_api_request(
+        checkmk, "get", f"/objects/host/{hostname}/collections/services"
+    ).json()["value"]
+
+
+def checkmk_docker_activate_changes(
+    checkmk: docker.models.containers.Container, attempts: int = 15
+) -> bool:
+    """Activate changes in a Checkmk docker instance and wait for completion."""
+    activate_response = checkmk_docker_api_request(
+        checkmk,
+        "post",
+        "/domain-types/activation_run/actions/activate-changes/invoke",
+    )
+    if activate_response.status_code == 204:
+        return True
+
+    # wait for completion
+    activation_id = activate_response.json().get("id")
+    for _ in range(attempts):
+        if (
+            checkmk_docker_api_request(
+                checkmk,
+                "get",
+                f"/objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
+            ).status_code
+            == 204
+        ):
+            return True
+        time.sleep(1)
+
+    return False
+
+
+def checkmk_docker_discover_services(
+    checkmk: docker.models.containers.Container, hostname: str, attempts: int = 15
+) -> bool:
+    """Perform a service discovery within a Checkmk docker instance and wait for completion."""
+    checkmk_docker_schedule_check(checkmk, hostname, "Check_MK")
+    checkmk_docker_schedule_check(checkmk, hostname, "Check_MK Discovery")
+    discovery_response = checkmk_docker_api_request(
+        checkmk,
+        "post",
+        f"/objects/host/{hostname}/actions/discover_services/invoke",
+        json={
+            "mode": "tabula_rasa",
+        },
+    )
+    if discovery_response.status_code == 204:
+        return True
+
+    # wait for completion
+    for _ in range(attempts):
+        if (
+            checkmk_docker_api_request(
+                checkmk,
+                "get",
+                f"/objects/service_discovery_run/{hostname}/actions/wait-for-completion/invoke",
+            ).status_code
+            == 204
+        ):
+            return True
+        time.sleep(1)
+
+    return False
+
+
+def checkmk_docker_schedule_check(
+    checkmk: docker.models.containers.Container,
+    hostname: str,
+    checkname: str = "Check_MK",
+    site_id: str = "cmk",
+) -> None:
+    """Schedule a check for a host in a Checkmk docker instance."""
+    cmd_time = time.time()
+    checkmk.exec_run(
+        [
+            f"/omd/sites/{site_id}/bin/lq",
+            f"COMMAND [{cmd_time}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{checkname};{cmd_time}",
+        ],
+        user=site_id,
+    )
+
+
+def checkmk_docker_add_host(
+    checkmk: docker.models.containers.Container,
+    hostname: str,
+    ipv4: str,
+) -> None:
+    """Create a host in a Checkmk docker instance."""
+    checkmk_docker_api_request(
+        checkmk,
+        "post",
+        "/domain-types/host_config/collections/all",
+        json={
+            "folder": "/",
+            "host_name": hostname,
+            "attributes": {
+                "ipaddress": ipv4,
+                "tag_address_family": "ip-v4-only",
+            },
+        },
+    )
+    checkmk_docker_activate_changes(checkmk)
+
+
+def checkmk_docker_wait_for_services(
+    checkmk: docker.models.containers.Container,
+    hostname: str,
+    min_services: int = 5,
+    attempts: int = 15,
+) -> None:
+    """Repeatedly discover services in a Checkmk docker instance until min_services are found."""
+    for _ in range(attempts):
+        if len(checkmk_docker_get_host_services(checkmk, hostname)) > min_services:
+            break
+
+        checkmk_docker_discover_services(checkmk, hostname)
+        checkmk_docker_activate_changes(checkmk)
+
+
+def checkmk_install_agent(
+    app: docker.models.containers.Container,
+    checkmk: docker.models.containers.Container,
+) -> None:
+    """Download an agent from Checkmk container and install it into an application container."""
+    agent_os = "linux"
+    agent_type = "rpm"
+    agent_path = f"/tmp/check_mk_agent.{agent_type}"
+
+    logger.info('Downloading Checkmk agent "%s"...', agent_path)
+    with open(agent_path, "wb") as agent_file:
+        agent_file.write(
+            checkmk_docker_api_request(
+                checkmk,
+                "get",
+                f"/domain-types/agent/actions/download/invoke?os_type={agent_os}_{agent_type}",
+            ).content
+        )
+
+    logger.info('Installing Checkmk agent "%s"...', agent_path)
+    assert copy_to_container(app, agent_path, "/")
+    install_agent_rc, install_agent_output = app.exec_run(
+        f"dnf install '/{os.path.basename(agent_path)}'",
+        user="root",
+        privileged=True,
+    )
+    assert (
+        install_agent_rc == 0
+    ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
+
+    logger.info("Installing mk_oracle.cfg")
+    setup_agent_rc, setup_agent_output = app.exec_run(
+        """bash -c 'cp -f "/opt/oracle/oraenv/mk_oracle.cfg" "/etc/check_mk/mk_oracle.cfg"'""",
+        user="root",
+        privileged=True,
+    )
+    assert setup_agent_rc == 0, f"Error during agent setup: {setup_agent_output.decode('utf-8')}"
+
+
+def checkmk_register_agent(
+    app: docker.models.containers.Container,
+    site_ip: str,
+    site_id: str,
+    hostname: str,
+    api_user: str,
+    api_secret: str,
+    agent_receiver_port: int = 8000,
+) -> None:
+    """Register an agent in an application container with a site."""
+    cmd = [
+        "/usr/bin/cmk-agent-ctl",
+        "register",
+        "--server",
+        f"{site_ip}:{agent_receiver_port}",
+        "--site",
+        site_id,
+        "--user",
+        api_user,
+        "--password",
+        api_secret,
+        "--hostname",
+        hostname,
+        "--trust-cert",
+    ]
+    logger.info("Running command: %s", " ".join(cmd))
+    register_agent_rc, register_agent_output = app.exec_run(
+        cmd,
+        user="root",
+        privileged=True,
+    )
+    assert (
+        register_agent_rc == 0
+    ), f"Error registering agent: {register_agent_output.decode('utf-8')}"
+
+
+def checkmk_install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
+    """Install an agent controller daemon in an application container
+    to avoid systemd dependency."""
+    daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
+
+    logger.info("Installing Python...")
+    install_python_rc, install_python_output = app.exec_run(
+        "dnf install 'python3.11'",
+        user="root",
+        privileged=True,
+    )
+    assert (
+        install_python_rc == 0
+    ), f"Error during python setup: {install_python_output.decode('utf-8')}"
+
+    logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
+    assert copy_to_container(app, daemon_path, "/")
+    app.exec_run(
+        f'python3 "/{os.path.basename(daemon_path)}"',
+        user="root",
+        privileged=True,
+        detach=True,
+    )

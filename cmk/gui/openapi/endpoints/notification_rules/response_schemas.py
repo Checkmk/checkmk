@@ -975,6 +975,10 @@ class PluginBase(BaseSchema):
         example=PluginOptions.CANCEL.value,
     )
 
+    plugin_params = fields.Dict(
+        description="The plugin name and configuration parameters defined.",
+    )
+
     def dump(self, obj: dict[str, Any], *args: Any, **kwargs: Any) -> Mapping:
         if obj["plugin_params"]["plugin_name"] not in list(get_args(BuiltInPluginNames)):
             return obj

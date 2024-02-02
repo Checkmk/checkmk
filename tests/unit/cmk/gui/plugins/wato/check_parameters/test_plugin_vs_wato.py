@@ -8,7 +8,6 @@ import typing as t
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.version import edition, Edition
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
 
@@ -270,11 +269,6 @@ class ErrorReporter:
             RuleGroup.InvExports("software_csv"),
         ),  # deprecated since 2.2
     }
-    if edition() is Edition.CRE:
-        KNOWN_WATO_UNUSED |= {
-            ("check", RuleGroup.CheckgroupParameters("robotmk")),
-            ("check", RuleGroup.CheckgroupParameters("robotmk_suite")),
-        }
 
     KNOWN_WATO_MISSING = {
         # type # instance # wato

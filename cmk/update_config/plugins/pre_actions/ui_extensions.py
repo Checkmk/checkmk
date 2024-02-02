@@ -51,6 +51,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 installer,
                 package_store,
                 path_config,
+                path,
             ):
                 disabled_packages.add(package_id)
                 remove_failed_plugin(path)

@@ -2492,7 +2492,6 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return Optional(
             valuespec=Integer(
                 label=_("Number of logon failures to lock the account"),
-                default_value=10,
                 minvalue=1,
             ),
             title=_("Lock user accounts after N logon failures"),

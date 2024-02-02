@@ -8,6 +8,7 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils import store
+from cmk.utils.config_validation_layer.user_roles import validate_userroles
 
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.i18n import _
@@ -32,6 +33,7 @@ def load_roles_from_file() -> Roles:
                 del role["permissions"][pname]
                 role["permissions"]["general." + pname] = pvalue
 
+    validate_userroles(roles)
     return roles
 
 

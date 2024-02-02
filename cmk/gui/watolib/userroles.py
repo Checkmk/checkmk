@@ -11,6 +11,7 @@ from typing import NewType
 from marshmallow import ValidationError
 
 from cmk.utils import store
+from cmk.utils.config_validation_layer.user_roles import validate_userroles
 
 from cmk.gui import hooks
 from cmk.gui.config import active_config
@@ -100,6 +101,7 @@ def delete_role(role_id: RoleID) -> None:
 
 def save_all_roles(all_roles: dict[RoleID, UserRole]) -> None:
     roles_as_dicts: dict[str, dict] = {role.name: role.to_dict() for role in all_roles.values()}
+    validate_userroles(roles_as_dicts)
     active_config.roles.update(roles_as_dicts)
     store.mkdir(multisite_dir())
     store.save_to_mk_file(

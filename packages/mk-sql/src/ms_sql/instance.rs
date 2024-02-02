@@ -1504,11 +1504,12 @@ pub async fn find_all_instance_builders(
             .include()
             .iter()
             .map(|name| SqlInstanceBuilder::new().name(name))
-            .collect()
+            .collect::<Vec<SqlInstanceBuilder>>()
     }
     .into_iter()
     .map(|b| b.piggyback(ms_sql.piggyback_host().map(|h| h.to_string().into())))
     .collect();
+    // let d = HashSet::from_iter(detected) + HashSet::from_iter(predefined);
     let customizations: HashMap<&InstanceName, &CustomInstance> =
         ms_sql.instances().iter().map(|i| (i.name(), i)).collect();
     let builders = apply_customizations(detected, &customizations);
@@ -1519,7 +1520,7 @@ pub async fn find_all_instance_builders(
 async fn find_detectable_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Vec<SqlInstanceBuilder> {
-    get_instance_builders(&ms_sql.endpoint())
+    obtain_instance_builders(&ms_sql.endpoint(), &[])
         .await
         .unwrap_or_else(|e| {
             log::warn!("Error discovering instances: {e}");
@@ -1554,7 +1555,7 @@ async fn get_custom_instance_builder(
 ) -> Option<SqlInstanceBuilder> {
     let port = get_reasonable_port(builder, endpoint);
     let instance_name = &builder.get_name();
-    match client::create_on_endpoint_port(endpoint, port).await {
+    match client::connect_custom_endpoint(endpoint, port).await {
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -1577,13 +1578,15 @@ async fn find_custom_instance(
     endpoint: &Endpoint,
     instance_name: &InstanceName,
 ) -> Option<SqlInstanceBuilder> {
-    let builders = get_instance_builders(endpoint).await.unwrap_or_else(|e| {
-        log::error!("Error creating client for instance `{instance_name}`: {e}",);
-        Vec::<SqlInstanceBuilder>::new()
-    });
+    let builders = obtain_instance_builders(endpoint, &[instance_name])
+        .await
+        .unwrap_or_else(|e| {
+            log::error!("Error creating client for instance `{instance_name}`: {e}",);
+            Vec::<SqlInstanceBuilder>::new()
+        });
     match detect_instance_port(instance_name, &builders) {
         Some(port) => {
-            if let Ok(mut client) = client::create_on_endpoint_port(endpoint, port).await {
+            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port).await {
                 obtain_properties(&mut client, instance_name)
                     .await
                     .map(|p| to_instance_builder(endpoint, &p))
@@ -1759,49 +1762,79 @@ async fn generate_result(
     Ok(results.join(""))
 }
 
-/// return all MS SQL instances installed
-async fn get_instance_builders(endpoint: &Endpoint) -> Result<Vec<SqlInstanceBuilder>> {
-    let all = obtain_instance_builders_from_registry(endpoint).await?;
-    Ok([&all.0[..], &all.1[..]].concat().to_vec())
-}
-
-// TODO(sk):probably SQL is better as registry
-/// [low level helper] return all MS SQL instances installed
-pub async fn obtain_instance_builders_from_registry(
+// TODO(sk):probably normal SQL query  is better than registry reading SQL query
+/// obtain all instances from endpoint, on Windows can try SQL Browser
+pub async fn obtain_instance_builders(
     endpoint: &Endpoint,
-) -> Result<(Vec<SqlInstanceBuilder>, Vec<SqlInstanceBuilder>)> {
-    match client::create_on_endpoint(endpoint).await {
-        Ok(mut client) => Ok((
-            exec_win_registry_sql_instances_query(
-                &mut client,
-                endpoint,
-                &sqls::get_win_registry_instances_query(),
-            )
-            .await?,
-            exec_win_registry_sql_instances_query(
-                &mut client,
-                endpoint,
-                &sqls::get_wow64_32_registry_instances_query(),
-            )
-            .await?,
-        )),
+    instances: &[&InstanceName],
+) -> Result<Vec<SqlInstanceBuilder>> {
+    match client::connect_main_endpoint(endpoint).await {
+        Ok(mut client) => _obtain_instance_builders(&mut client, endpoint).await,
         Err(err) => {
-            log::error!("Failed to create client: {err}");
-            anyhow::bail!("Failed to create client: {err}")
+            log::error!("Failed to create main client: {err}");
+            obtain_instance_builders_by_sql_browser(endpoint, instances).await
         }
     }
+}
+
+#[cfg(windows)]
+pub async fn obtain_instance_builders_by_sql_browser(
+    endpoint: &Endpoint,
+    instances: &[&InstanceName],
+) -> Result<Vec<SqlInstanceBuilder>> {
+    for instance in instances {
+        match client::create_instance_local(instance, endpoint.conn().sql_browser_port(), None)
+            .await
+        {
+            Ok(mut client) => return _obtain_instance_builders(&mut client, endpoint).await,
+            Err(err) => {
+                log::error!("Failed to create client: {err}");
+            }
+        }
+    }
+    anyhow::bail!("Impossible to connect")
+}
+
+#[cfg(unix)]
+pub async fn obtain_instance_builders_by_sql_browser(
+    _endpoint: &Endpoint,
+    _instances: &[&InstanceName],
+) -> Result<Vec<SqlInstanceBuilder>> {
+    anyhow::bail!("Failed to create client, sql browser on linux is not supported")
+}
+
+async fn _obtain_instance_builders(
+    client: &mut Client,
+    endpoint: &Endpoint,
+) -> Result<Vec<SqlInstanceBuilder>> {
+    let normal_instances =
+        exec_win_registry_sql_instances_query(client, &sqls::get_win_registry_instances_query())
+            .await?;
+    let wow_instances = exec_win_registry_sql_instances_query(
+        client,
+        &sqls::get_wow64_32_registry_instances_query(),
+    )
+    .await?;
+    let computer_name = obtain_computer_name(client).await.unwrap_or_default();
+    Ok([&normal_instances[..], &wow_instances[..]]
+        .concat()
+        .iter()
+        .map(|i| {
+            i.clone()
+                .endpoint(endpoint)
+                .computer_name(computer_name.clone())
+        })
+        .collect())
 }
 
 /// return all MS SQL instances installed
 async fn exec_win_registry_sql_instances_query(
     client: &mut Client,
-    endpoint: &Endpoint,
     query: &str,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_custom_query(client, query).await?;
     if let Some(rows) = answers.get(0) {
-        let computer_name = obtain_computer_name(client).await.unwrap_or_default();
-        let instances = to_sql_instance(rows, endpoint, computer_name);
+        let instances = to_sql_instance(rows);
         log::info!("Instances found {}", instances.len());
         Ok(instances)
     } else {
@@ -1810,18 +1843,9 @@ async fn exec_win_registry_sql_instances_query(
     }
 }
 
-fn to_sql_instance(
-    rows: &Answer,
-    endpoint: &Endpoint,
-    computer_name: Option<ComputerName>,
-) -> Vec<SqlInstanceBuilder> {
+fn to_sql_instance(rows: &Answer) -> Vec<SqlInstanceBuilder> {
     rows.iter()
-        .map(|r| {
-            SqlInstanceBuilder::new()
-                .row(r)
-                .computer_name(computer_name.clone())
-                .endpoint(endpoint)
-        })
+        .map(|r| SqlInstanceBuilder::new().row(r))
         .collect::<Vec<SqlInstanceBuilder>>()
         .to_vec()
 }

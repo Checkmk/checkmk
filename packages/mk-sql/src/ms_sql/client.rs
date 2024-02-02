@@ -157,13 +157,7 @@ pub async fn _create_remote_client(
     });
     config.trust_cert(); // on production, it is not a good idea to do this
 
-    let tcp = TcpStream::connect(config.get_addr()).await?;
-    tcp.set_nodelay(true)?;
-
-    // To be able to use Tokio's tcp, we're using the `compat_write` from
-    // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
-    // traits from the `futures` crate.
-    Ok(Client::connect(config, tcp.compat_write()).await?)
+    connect_via_tcp(config).await
 }
 
 /// Check `local` (Integrated) connection to MS SQL
@@ -177,17 +171,7 @@ pub async fn create_local(database: Option<String>, port: u16) -> Result<Client>
     config.port(port);
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
-    log::info!(
-        "Local connection using port: {port} at addr {}",
-        config.get_addr()
-    );
-    let tcp = TcpStream::connect(config.get_addr()).await?;
-    tcp.set_nodelay(true)?;
-
-    // To be able to use Tokio's tcp, we're using the `compat_write` from
-    // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
-    // traits from the `futures` crate.
-    Ok(Client::connect(config, tcp.compat_write()).await?)
+    connect_via_tcp(config).await
 }
 
 #[cfg(unix)]
@@ -223,6 +207,7 @@ pub async fn create_instance_local(
     // on production, it is not a good idea to do this
     config.trust_cert();
 
+    log::info!("Connection to addr {}", config.get_addr());
     // This will create a new `TcpStream` from `async-std`, connected to the
     // right port of the named instance.
     let tcp = TcpStream::connect_named(&config)
@@ -234,6 +219,26 @@ pub async fn create_instance_local(
         .await
         .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))?;
     Ok(s)
+}
+
+async fn connect_via_tcp(config: Config) -> Result<Client> {
+    log::info!("Connection to addr {}", config.get_addr());
+    let tcp = TcpStream::connect(config.get_addr()).await.map_err(|e| {
+        anyhow::anyhow!(
+            "{} address:{} error:`{}`",
+            SQL_TCP_ERROR_TAG,
+            config.get_addr(),
+            e
+        )
+    })?;
+    tcp.set_nodelay(true)?;
+
+    // To be able to use Tokio's tcp, we're using the `compat_write` from
+    // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
+    // traits from the `futures` crate.
+    Client::connect(config, tcp.compat_write())
+        .await
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))
 }
 
 /// Create `local` connection to MS SQL `instance`

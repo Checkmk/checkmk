@@ -94,10 +94,10 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local() {
-    let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
+    let builders = instance::obtain_instance_builders(&Endpoint::default(), &[])
         .await
         .unwrap();
-    let all: Vec<SqlInstance> = to_instances([&builders.0[..], &builders.1[..]].concat());
+    let all: Vec<SqlInstance> = to_instances(builders);
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     assert_eq!(all.len(), expected_instances().len());
     let names: HashSet<InstanceName> = all.into_iter().map(|i| i.name).collect();
@@ -110,14 +110,10 @@ async fn test_obtain_all_instances_from_registry_local() {
 async fn test_validate_all_instances_local() {
     let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
     log::info!("{:#?}", l.dir());
-    let builders = instance::obtain_instance_builders_from_registry(&Endpoint::default())
+    let builders = instance::obtain_instance_builders(&Endpoint::default(), &[])
         .await
         .unwrap();
-    let names: Vec<InstanceName> = [&builders.0[..], &builders.1[..]]
-        .concat()
-        .into_iter()
-        .map(|i| i.get_name())
-        .collect();
+    let names: Vec<InstanceName> = builders.into_iter().map(|i| i.get_name()).collect();
 
     for name in names {
         let c = client::create_instance_local(&name, None, None).await;
@@ -149,7 +145,7 @@ async fn test_validate_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = client::create_on_endpoint(&endpoint.make_ep())
+        let mut client = client::connect_main_endpoint(&endpoint.make_ep())
             .await
             .unwrap();
         let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
@@ -174,10 +170,10 @@ fn to_instances(builders: Vec<SqlInstanceBuilder>) -> Vec<SqlInstance> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let builders = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
             .await
             .unwrap();
-        let all = to_instances([&builders.0[..], &builders.1[..]].concat());
+        let all = to_instances(builders);
         assert!(all.iter().all(is_instance_good));
         assert_eq!(all.len(), expected_instances().len());
 
@@ -200,10 +196,10 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
             .await
             .unwrap();
-        let is = to_instances([&instances.0[..], &instances.1[..]].concat());
+        let is = to_instances(builders);
 
         let cfg = Config::from_string(&create_remote_config(endpoint))
             .unwrap()
@@ -637,10 +633,10 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = instance::obtain_instance_builders_from_registry(&endpoint.make_ep())
+        let builders = instance::obtain_instance_builders(&endpoint.make_ep(), &[])
             .await
             .unwrap();
-        let is = to_instances([&instances.0[..], &instances.1[..]].clone().concat());
+        let is = to_instances(builders);
         let ms_sql = Config::from_string(
             r"---
 mssql:
@@ -682,7 +678,7 @@ mssql:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_computer_name() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = client::create_on_endpoint(&endpoint.make_ep())
+        let mut client = client::connect_main_endpoint(&endpoint.make_ep())
             .await
             .unwrap();
         let name = query::obtain_computer_name(&mut client).await.unwrap();

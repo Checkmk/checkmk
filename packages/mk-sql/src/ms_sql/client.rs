@@ -26,11 +26,11 @@ pub enum Credentials<'a> {
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
-pub async fn create_on_endpoint(endpoint: &Endpoint) -> Result<Client> {
-    create_on_endpoint_port(endpoint, endpoint.port()).await
+pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<Client> {
+    connect_custom_endpoint(endpoint, endpoint.port()).await
 }
 
-pub async fn create_on_endpoint_port(endpoint: &Endpoint, port: Port) -> Result<Client> {
+pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<Client> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -278,7 +278,7 @@ mssql:
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_for_error() {
         let config = make_config_with_auth_type("token");
-        assert!(create_on_endpoint(&config.endpoint())
+        assert!(connect_main_endpoint(&config.endpoint())
             .await
             .unwrap_err()
             .to_string()
@@ -288,7 +288,7 @@ mssql:
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_timeout() {
         let config = make_config_with_auth_type("sql_server");
-        let s = create_on_endpoint(&config.endpoint())
+        let s = connect_main_endpoint(&config.endpoint())
             .await
             .unwrap_err()
             .to_string();

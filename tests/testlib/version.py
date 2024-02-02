@@ -14,6 +14,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Final, NewType
 
+import git
 import requests
 
 from tests.testlib.utils import (
@@ -23,6 +24,7 @@ from tests.testlib.utils import (
     edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
+    repo_path,
     version_spec_from_env,
 )
 
@@ -377,3 +379,7 @@ def code_name(distro_name: str) -> str:
     }.get(distro_name):
         return code
     raise RuntimeError(f"Unknown distro: {distro_name}")
+
+
+def git_tag_exists(version: CMKVersion) -> bool:
+    return f"v{version.version}" in [str(t) for t in git.Repo(repo_path()).tags]

@@ -190,7 +190,8 @@ class Collector(Generic[_PluginType]):
         try:
             module = importer(mod_name, raise_errors=True)
         except Exception as exc:
-            self._handle_error(exc)
+            exc_sub = type(exc)(f"{mod_name}: {exc}")
+            self._handle_error(exc_sub)
             return
 
         if module is None:

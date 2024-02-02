@@ -1,0 +1,12 @@
+Title: omd start mkeventd: Error Code of Event Daemon
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1706877168
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+The command <code>omd start mkeventd</code> starts the event daemon. Previously, any exit code produced
+by this daemon would be ignored. Now, if the exit code is non-zero, then the message <code>Failed</code> is
+shown and the command <code>omd start mkeventd</code> exits with error code 2.

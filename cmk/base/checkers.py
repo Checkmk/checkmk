@@ -289,11 +289,11 @@ class CMKFetcher:
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
-                    host_name_,
-                    ip_address_,
-                    ConfigCache.address_family(host_name_),
+                    current_host_name,
+                    current_ip_address,
+                    ConfigCache.address_family(current_host_name),
                     config_cache=self.config_cache,
-                    is_cluster=host_name in hosts_config.clusters,
+                    is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if nodes is None else False
                     ),
@@ -306,7 +306,7 @@ class CMKFetcher:
                     ),
                     snmp_backend_override=self.snmp_backend_override,
                 )
-                for host_name_, ip_address_ in hosts
+                for current_host_name, current_ip_address in hosts
             ),
             simulation=self.simulation_mode,
             file_cache_options=self.file_cache_options,

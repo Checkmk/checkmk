@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     parse_secret,
+    replace_macros,
     Secret,
 )
 
@@ -53,14 +54,15 @@ def commands_function(
         args += ["--warn=%d" % warn, "--crit=%d" % crit]
 
     if params.hostname is not None:
-        args += ["-H", params.hostname]
+        args += ["-H", replace_macros(params.hostname, host_config.macros)]
     elif host_config.resolved_address:
         args += ["-H", host_config.resolved_address]
     else:
         raise ValueError("No IP address available")
 
+    item = replace_macros(params.svc_item, host_config.macros)
     yield ActiveCheckCommand(
-        service_description=f"Elasticsearch Query {params.svc_item}", command_arguments=args
+        service_description=f"Elasticsearch Query {item}", command_arguments=args
     )
 
 

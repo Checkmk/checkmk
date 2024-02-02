@@ -71,7 +71,7 @@ fn test_section_select_query() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    let mut client = client::create_local(None, mk_sql::ms_sql::defaults::STANDARD_PORT)
+    let mut client = client::create_local(mk_sql::ms_sql::defaults::STANDARD_PORT)
         .await
         .unwrap();
     let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)

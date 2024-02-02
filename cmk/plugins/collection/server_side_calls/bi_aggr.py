@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     Secret,
 )
 
@@ -61,7 +62,10 @@ def parse_bi_aggr_params(raw_params: Mapping[str, object]) -> BiAggrParams:
 def check_bi_aggr_services(
     params: BiAggrParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
-    args: list[str | Secret] = ["-b", params.base_url, "-a", params.aggregation_name]
+    aggregation_name = replace_macros(params.aggregation_name, host_config.macros)
+    base_url = replace_macros(params.base_url, host_config.macros)
+
+    args: list[str | Secret] = ["-b", base_url, "-a", aggregation_name]
     if params.credentials.automation:
         args.append("--use-automation-user")
     elif params.credentials.user and params.credentials.password:

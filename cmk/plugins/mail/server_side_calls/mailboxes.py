@@ -10,6 +10,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    replace_macros,
     Secret,
 )
 
@@ -48,7 +49,8 @@ def generate_mailboxes_command(
     for mb in params.mailboxes:
         args.append(f"--mailbox={mb}")
 
-    yield ActiveCheckCommand(service_description=params.service_description, command_arguments=args)
+    description = replace_macros(params.service_description, host_config.macros)
+    yield ActiveCheckCommand(service_description=description, command_arguments=args)
 
 
 active_check_mailboxes = ActiveCheckConfig(

@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     parse_secret,
+    replace_macros,
     ResolvedIPAddressFamily,
     Secret,
 )
@@ -72,7 +73,7 @@ def check_smtp_arguments(  # pylint: disable=too-many-branches
         args.extend(("-R", s))
 
     if params.from_address:
-        args.extend(("-f", params.from_address))
+        args.extend(("-f", replace_macros(params.from_address, host_config.macros)))
 
     if params.response_time:
         warn, crit = params.response_time
@@ -89,22 +90,24 @@ def check_smtp_arguments(  # pylint: disable=too-many-branches
         args.append("-S")
 
     if params.fqdn:
-        args.extend(("-F", params.fqdn))
+        args.extend(("-F", replace_macros(params.fqdn, host_config.macros)))
 
     if params.cert_days:
         warn, crit = params.cert_days
         args.extend(("-D", f"{warn},{crit}"))
 
-    args.extend(("-H", params.hostname if params.hostname else address))
+    address = replace_macros(params.hostname, host_config.macros) if params.hostname else address
+    args.extend(("-H", address))
 
     yield ActiveCheckCommand(
-        service_description=_check_smtp_desc(params.name),
+        service_description=_check_smtp_desc(params.name, host_config),
         command_arguments=args,
     )
 
 
-def _check_smtp_desc(name: str) -> str:
-    return name[1:] if name.startswith("^") else f"SMTP {name}"
+def _check_smtp_desc(name: str, host_config: HostConfig) -> str:
+    description = replace_macros(name, host_config.macros)
+    return description[1:] if description.startswith("^") else f"SMTP {description}"
 
 
 active_check_smtp = ActiveCheckConfig(

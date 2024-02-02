@@ -17,6 +17,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     ResolvedIPAddressFamily,
     Secret,
 )
@@ -98,7 +99,7 @@ class DirectHost:
 
     def get_server_address(self, host_config: HostConfig) -> str:
         if self.address is not None:
-            return self.address
+            return replace_macros(self.address, host_config.macros)
 
         return self.settings.get_fallback_address(host_config)
 
@@ -119,7 +120,7 @@ class DirectHost:
             else self.address
         )
         if isinstance(virtual_host, str):
-            return virtual_host.replace("$HOSTNAME$", host_config.name)
+            return replace_macros(virtual_host, host_config.macros)
         return virtual_host
 
 
@@ -128,8 +129,8 @@ class ProxyHost:
     proxy: ProxySettings
     settings: HostSettings
 
-    def get_server_address(self, _host_config: HostConfig) -> str:
-        return self.proxy.address
+    def get_server_address(self, host_config: HostConfig) -> str:
+        return replace_macros(self.proxy.address, host_config.macros)
 
     @property
     def port(self) -> int | None:
@@ -141,7 +142,7 @@ class ProxyHost:
             if isinstance(self.settings.virtual, str)
             else self.settings.get_fallback_address(host_config)
         )
-        vhost = vhost_with_macros.replace("$HOSTNAME$", host_config.name)
+        vhost = replace_macros(vhost_with_macros, host_config.macros)
         return vhost if self.settings.port is None else f"{vhost}:{self.settings.port}"
 
 
@@ -255,13 +256,12 @@ def _certificate_args(
 
 
 def _url_args(  # pylint: disable=too-many-branches
-    settings: URLMode,
-    proxy_used: bool,
+    settings: URLMode, proxy_used: bool, host_config: HostConfig
 ) -> Sequence[str | Secret]:
     args: list[str | Secret] = []
 
     if settings.uri is not None:
-        args += ["-u", settings.uri]
+        args += ["-u", replace_macros(settings.uri, host_config.macros)]
 
     if settings.ssl == "auto":
         args.append("--ssl")
@@ -365,8 +365,8 @@ def _common_args(params: HTTPParams, host_config: HostConfig) -> list[str | Secr
     return args
 
 
-def _get_http_description(params: HTTPParams) -> str:
-    description = params.name
+def _get_http_description(params: HTTPParams, host_config: HostConfig) -> str:
+    description = replace_macros(params.name, host_config.macros)
     if description.startswith("^"):
         return description[1:]
 
@@ -398,10 +398,11 @@ def generate_http_command(
                 params.host,
                 ProxyHost,
             ),
+            host_config=host_config,
         )
 
     args += _common_args(params, host_config)
-    yield ActiveCheckCommand(_get_http_description(params), args)
+    yield ActiveCheckCommand(_get_http_description(params, host_config), args)
 
 
 active_check_http = ActiveCheckConfig(

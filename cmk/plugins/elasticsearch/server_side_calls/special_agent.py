@@ -18,6 +18,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     noop_parser,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -43,7 +44,7 @@ def _agent_elasticsearch_arguments(
     if params.get("no-cert-check", False):
         args.append("--no-cert-check")
 
-    args.extend(str(h) for h in params["hosts"])  # type: ignore[attr-defined]
+    args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])  # type: ignore[attr-defined]
 
     yield SpecialAgentCommand(args)
 

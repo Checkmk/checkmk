@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     Secret,
 )
 
@@ -33,7 +34,7 @@ def check_disk_smb_arguments(
 ) -> Iterator[ActiveCheckCommand]:
     def _get_address(host_config: HostConfig, params: Params) -> str:
         if params.host != "use_parent_host":
-            return params.host[1]
+            return replace_macros(params.host[1], host_config.macros)
 
         if host_config.resolved_address:
             return host_config.resolved_address
@@ -41,7 +42,7 @@ def check_disk_smb_arguments(
         raise ValueError("No IP address available")
 
     args: list[str | Secret] = [
-        params.share,
+        replace_macros(params.share, host_config.macros),
         "-H",
         _get_address(host_config, params),
     ]
@@ -50,7 +51,7 @@ def check_disk_smb_arguments(
     args += ["--levels", str(warn), str(crit)]
 
     if params.workgroup is not None:
-        args += ["-W", params.workgroup]
+        args += ["-W", replace_macros(params.workgroup, host_config.macros)]
 
     if params.port is not None:
         args += ["-P", str(params.port)]
@@ -65,7 +66,7 @@ def check_disk_smb_arguments(
         ]
 
     if params.ip_address is not None:
-        args += ["-a", params.ip_address]
+        args += ["-a", replace_macros(params.ip_address, host_config.macros)]
 
     yield ActiveCheckCommand(
         service_description="SMB Share " + params.share.replace("$", ""),

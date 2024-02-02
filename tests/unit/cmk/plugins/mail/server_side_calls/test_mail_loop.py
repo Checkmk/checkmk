@@ -26,6 +26,7 @@ HOST_CONFIG = HostConfig(
         ipv4_address="127.0.0.1",
     ),
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    macros={"$HOSTNAME$": "host", "$HOSTADDRESS$": "127.0.0.1"},
 )
 
 

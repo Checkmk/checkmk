@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     parse_http_proxy,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -70,7 +71,7 @@ def generate_datadog_command(
         host_config.name,
         parse_secret(params.instance.api_key),
         parse_secret(params.instance.app_key),
-        params.instance.api_host,
+        replace_macros(params.instance.api_host, host_config.macros),
     ]
 
     if params.proxy is not None:

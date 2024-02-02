@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     HostConfig,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -38,7 +39,8 @@ def commands_function(
     elif ssl_config_ident == "hostname":
         command_arguments += ["--cert-server-name", host_config.name]
     else:
-        command_arguments += ["--cert-server-name", str(ssl_config_value)]
+        ssl_server = replace_macros(str(ssl_config_value), host_config.macros)
+        command_arguments += ["--cert-server-name", ssl_server]
 
     command_arguments += ["--api-token", parse_secret(params.api_token)]
 

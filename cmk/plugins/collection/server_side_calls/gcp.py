@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -38,7 +39,7 @@ class Params(BaseModel):
 
 def agent_gcp_arguments(
     params: Params,
-    _host_config: HostConfig,
+    host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     today = datetime.date.today()
@@ -62,7 +63,8 @@ def agent_gcp_arguments(
 
     args.append("--piggy-back-prefix")
     if params.piggyback.prefix is not None:
-        args.append(params.piggyback.prefix)
+        prefix = replace_macros(params.piggyback.prefix, host_config.macros)
+        args.append(prefix)
     else:
         args.append(params.project)
 

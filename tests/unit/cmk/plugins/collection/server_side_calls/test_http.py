@@ -44,6 +44,7 @@ HOST_CONFIG = HostConfig(
         ],
         ip_family=IPAddressFamily.DUAL_STACK,
     ),
+    macros={"$HOSTNAME$": "hostname"},
 )
 
 

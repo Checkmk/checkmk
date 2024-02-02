@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     parse_http_proxy,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -35,13 +36,14 @@ class MobileIronParams(BaseModel):
 def generate_mobileiron_command(
     params: MobileIronParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
+    partitions = [replace_macros(p, host_config.macros) for p in params.partition]
     args: list[str | Secret] = [
         "-u",
         params.username,
         "-p",
         parse_secret(params.password),
         "--partition",
-        ",".join(params.partition),
+        ",".join(partitions),
         "--hostname",
         host_config.name,
     ]

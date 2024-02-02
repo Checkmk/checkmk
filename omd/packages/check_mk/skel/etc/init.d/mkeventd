@@ -51,7 +51,13 @@ case "$1" in
             fi
             $DAEMON $OPTS
         fi
-        echo OK
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -ne 0 ]; then
+            echo Failed
+        else
+            echo OK
+        fi
+        exit $EXIT_CODE
     ;;
     stop)
         echo -n 'Stopping mkeventd...'

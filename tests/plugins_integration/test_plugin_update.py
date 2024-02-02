@@ -30,10 +30,13 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
         with setup_host(test_site_update, host_name, skip_cleanup=True):
             base_data[host_name] = test_site_update.get_host_services(host_name)
 
-            # The 'Postfix status' service has been renamed into 'Postfix status default'.
-            # Related: CMK-13774
-            if "Postfix status" in base_data[host_name]:
-                base_data[host_name].pop("Postfix status")
+            # * The 'Postfix status' service has been renamed into 'Postfix status default'.
+            #   Related: CMK-13774
+            # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
+            #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
+            for changed_service in ["Postfix status", "Postfix Queue"]:
+                if changed_service in base_data[host_name]:
+                    base_data[host_name].pop(changed_service)
 
             base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
 
@@ -43,12 +46,6 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
     target_data_status_0 = {}
     for host_name in get_host_names(test_site_update):
         target_data[host_name] = test_site_update.get_host_services(host_name)
-
-        # The 'Postfix status' service has been renamed into 'Postfix status default'.
-        # Related: CMK-13774
-        if "Postfix status" in target_data[host_name]:
-            target_data[host_name].pop("Postfix status")
-
         target_data_status_0[host_name] = get_services_with_status(target_data[host_name], 0)
 
         not_found_services = [

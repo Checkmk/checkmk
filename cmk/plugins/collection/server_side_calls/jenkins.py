@@ -12,6 +12,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -35,7 +36,7 @@ def parse_jenkins_params(raw_params: Mapping[str, object]) -> JenkinsParams:
 
 def agent_jenkins_config(
     params: JenkinsParams,
-    _host_config: HostConfig,
+    host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
@@ -53,7 +54,7 @@ def agent_jenkins_config(
     if params.port:
         args += ["-p", str(params.port)]
 
-    args.append(params.instance)
+    args.append(replace_macros(params.instance, host_config.macros))
 
     yield SpecialAgentCommand(command_arguments=args)
 

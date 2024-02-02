@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, parse_secret, Secret
+from cmk.server_side_calls.v1 import HostConfig, parse_secret, replace_macros, Secret
 
 SecretType = Literal["store", "password"]
 
@@ -39,15 +39,12 @@ class GeneralMailParams(BaseModel):
 
 
 def get_host_address(server: str | None, host_config: HostConfig) -> str:
-    if server is None or server == "$HOSTADDRESS$":
+    if server is None:
         if host_config.resolved_address:
             return host_config.resolved_address
         raise ValueError("No IP address available")
 
-    if server == "$HOSTNAME$":
-        return host_config.name
-
-    return server
+    return replace_macros(server, host_config.macros)
 
 
 def get_general_mail_arguments(

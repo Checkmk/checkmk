@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    replace_macros,
     ResolvedIPAddressFamily,
 )
 
@@ -130,9 +131,9 @@ def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> Addres
     raise ValueError("Invalid address parameters")
 
 
-def get_icmp_description_all_ips(params: ICMPParams) -> str:
+def get_icmp_description_all_ips(params: ICMPParams, host_config: HostConfig) -> str:
     if params.description:
-        return params.description
+        return replace_macros(params.description, host_config.macros)
     description = "PING"
     for v in ("4", "6"):
         if params.address.value == f"all_ipv{v}addresses":
@@ -156,11 +157,11 @@ def generate_icmp_services(
     common_args = get_common_arguments(params)
     address_args = get_address_arguments(params, host_config)
     if not multiple_services:
-        description = get_icmp_description_all_ips(params)
+        description = get_icmp_description_all_ips(params, host_config)
         arguments = common_args + address_args.to_list()
         yield ActiveCheckCommand(service_description=description, command_arguments=arguments)
     else:
-        desc_template = params.description or "PING"
+        desc_template = replace_macros(params.description or "PING", host_config.macros)
         for ip_address, single_address_args in generate_single_address_services(address_args):
             arguments = common_args + single_address_args.to_list()
             yield ActiveCheckCommand(

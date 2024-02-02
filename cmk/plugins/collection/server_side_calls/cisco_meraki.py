@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     parse_http_proxy,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -50,7 +51,7 @@ def agent_cisco_meraki_arguments(
 
     if params.orgs is not None:
         args.append("--orgs")
-        args += params.orgs
+        args += [replace_macros(org, host_config.macros) for org in params.orgs]
 
     yield SpecialAgentCommand(command_arguments=args)
 

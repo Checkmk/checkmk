@@ -6,7 +6,13 @@
 from collections.abc import Iterator, Mapping
 from typing import Any
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    HTTPProxy,
+    replace_macros,
+)
 
 
 def check_by_ssh_description(params):
@@ -33,13 +39,13 @@ def check_by_ssh_command(
     args = []
     settings = params[1]
     if "hostname" in settings:
-        args += ["-H", settings["hostname"]]
+        args += ["-H", replace_macros(settings["hostname"], host_config.macros)]
     elif host_config.resolved_address:
         args += ["-H", host_config.resolved_address]
     else:
         raise ValueError("No IP address available")
 
-    args += ["-C", "%s" % params[0]]
+    args += ["-C", "%s" % replace_macros(params[0], host_config.macros)]
     if "port" in settings:
         args += ["-p", settings["port"]]
     if "ip_version" in settings:
@@ -57,9 +63,8 @@ def check_by_ssh_command(
     if "identity" in settings:
         args += ["-i", settings["identity"]]
 
-    yield ActiveCheckCommand(
-        service_description=check_by_ssh_description(params), command_arguments=args
-    )
+    description = replace_macros(check_by_ssh_description(params), host_config.macros)
+    yield ActiveCheckCommand(service_description=description, command_arguments=args)
 
 
 active_check_by_ssh = ActiveCheckConfig(

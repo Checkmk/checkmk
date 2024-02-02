@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     Secret,
 )
 
@@ -104,7 +105,8 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
     if params.delete_messages:
         args.append("--delete-messages")
 
-    args.append(f"--status-suffix={host_config.name}-{params.item}")
+    item = replace_macros(params.item, host_config.macros)
+    args.append(f"--status-suffix={host_config.name}-{item}")
 
     if params.duration is not None:
         warning, critical = params.duration
@@ -112,9 +114,9 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
         args.append(f"--critical={critical}")
 
     if params.subject is not None:
-        args.append(f"--subject={params.subject}")
+        args.append(f"--subject={replace_macros(params.subject, host_config.macros)}")
 
-    yield ActiveCheckCommand(service_description=f"Mail Loop {params.item}", command_arguments=args)
+    yield ActiveCheckCommand(service_description=f"Mail Loop {item}", command_arguments=args)
 
 
 active_check_mail_loop = ActiveCheckConfig(

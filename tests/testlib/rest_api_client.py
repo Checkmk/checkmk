@@ -55,7 +55,6 @@ API_DOMAIN = Literal[
     "bi_aggregation",
     "bi_rule",
     "user_role",
-    "autocomplete",
 ]
 
 
@@ -2401,24 +2400,6 @@ class UserRoleClient(RestApiClient):
         )
 
 
-class AutocompleteClient(RestApiClient):
-    domain: API_DOMAIN = "autocomplete"
-
-    def invoke(
-        self,
-        autocomplete_id: str,
-        parameters: dict[str, Any],
-        value: str = "",
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "post",
-            url=f"/objects/{self.domain}/{autocomplete_id}",
-            body={"value": value, "parameters": parameters},
-            expect_ok=expect_ok,
-        )
-
-
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2448,7 +2429,6 @@ class ClientRegistry:
     BiAggregation: BiAggregationClient
     BiRule: BiRuleClient
     UserRole: UserRoleClient
-    AutoComplete: AutocompleteClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2480,5 +2460,4 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiAggregation=BiAggregationClient(request_handler, url_prefix),
         BiRule=BiRuleClient(request_handler, url_prefix),
         UserRole=UserRoleClient(request_handler, url_prefix),
-        AutoComplete=AutocompleteClient(request_handler, url_prefix),
     )

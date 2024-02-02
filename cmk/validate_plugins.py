@@ -19,9 +19,13 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
 from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import load_all_plugins  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
+
 
 class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
+    RULE_SPECS = "rule specs loading"
 
 
 def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
@@ -44,8 +48,17 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
     return to_result(ValidationStep.AGENT_BASED_PLUGINS, errors)
 
 
+def _validate_rule_spec_loading() -> ActiveCheckResult:
+    load_plugins()
+    errors = [
+        f"Error in rule spec {module_name}: {exc}"
+        for path, subcomponent, module_name, exc in get_failed_plugins()
+    ]
+    return to_result(ValidationStep.RULE_SPECS, errors)
+
+
 def validate_plugins() -> ActiveCheckResult:
-    sub_results = [_validate_agent_based_plugin_loading()]
+    sub_results = [_validate_agent_based_plugin_loading(), _validate_rule_spec_loading()]
     return ActiveCheckResult.from_subresults(*sub_results)
 
 

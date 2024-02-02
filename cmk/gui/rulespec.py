@@ -50,6 +50,8 @@ def register_plugins(loaded_rule_specs: Sequence[LoadedRuleSpec]) -> None:
 
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:
+            if debug_enabled():
+                raise e
             logger.error(
                 "Error converting to legacy rulespec '%s' : %s", loaded_rule_spec.rule_spec.name, e
             )

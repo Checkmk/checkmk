@@ -21,15 +21,20 @@ from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
 from tests.testlib.utils import repo_path, wait_until
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.version import CMKVersion, git_tag_exists, version_from_env
 
 from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
 distro_codename = "jammy"
-
 logger = logging.getLogger()
+old_version = CMKVersion(
+    version_spec="2.3.0b1",
+    edition=Edition.CRE,
+    branch="2.3.0",
+    branch_version="2.3.0",
+)
 
 
 def build_version() -> CMKVersion:
@@ -654,19 +659,14 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
 
 
 @pytest.mark.skipif(build_version().is_saas_edition(), reason="Temporily disabled due to CMK-14454")
+@pytest.mark.skipif(
+    not git_tag_exists(old_version),
+    reason="Skipping as long as we have the first 2.3 release",
+)
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     container_name = "%s-monitoring" % version.branch
-
-    # Pick a random old version that we can use to the setup the initial site with
-    # Later this site is being updated to the current daily build
-    old_version = CMKVersion(
-        version_spec="2.2.0p8",
-        edition=Edition.CRE,
-        branch="2.2.0",
-        branch_version="2.2.0",
-    )
 
     assert isinstance(
         versions_compatible(

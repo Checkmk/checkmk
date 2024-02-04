@@ -84,6 +84,12 @@ build_cmd = """
         cp -r {requirements}/** $$REQUIREMENTS
     fi
 
+    # Fix python-gssapi build on SLES12SP5
+    # https://github.com/pythongssapi/python-gssapi/issues/212
+    if grep 'PRETTY_NAME="SUSE Linux Enterprise Server 12 SP5"' /etc/os-release >/dev/null 2>&1; then
+        export GSSAPI_COMPILER_ARGS='-DHAS_GSSAPI_EXT_H'
+    fi
+
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
     # Enforce here the usage of the build image compiler and in the same time enable local building.
     # TODO: CMK-15581 The whole toolchain registration should be bazel wide!

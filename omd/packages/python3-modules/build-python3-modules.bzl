@@ -102,6 +102,7 @@ build_cmd = """
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
+      --verbose \\
       --no-binary=":all:" \\
       --no-deps \\
       --compile \\
@@ -111,5 +112,5 @@ build_cmd = """
       --prefix="$$HOME/$(OUTS)" \\
       -i {pypi_mirror} \\
       {pip_add_opts} \\
-      $$REQUIREMENTS
+      $$REQUIREMENTS 2>&1 | tee "$$HOME/$(OUTS)/pip.stdout"
 """

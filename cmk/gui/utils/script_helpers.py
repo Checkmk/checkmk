@@ -8,7 +8,6 @@ The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
 import typing
-import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import cache
@@ -47,13 +46,6 @@ def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterat
 
 @contextmanager
 def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
-    warnings.warn(
-        "Please either use the `request_context` fixture or the `flask_app` fixture from now "
-        "on. Using `flask_app` you can have access to the test client as well. "
-        "See https://flask.palletsprojects.com/en/latest/testing/ and examples in our tests.",
-        DeprecationWarning,
-    )
-
     app = session_wsgi_app(testing=True)
     with app.app_context(), request_context(app, environ):
         yield

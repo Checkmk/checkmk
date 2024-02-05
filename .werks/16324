@@ -24,3 +24,14 @@ LI: NetApp node's ports
 LI: NetApp power supply units
 LI: NetApp volumes (and snapshots)
 LI: NetApp (SVMs) Storage Virtual Machine's (formerly called "vservers”) traffic and status
+
+These plugins and metrics are under development:
+LI: NetApp snapvault
+LI: NetApp qtree quota
+LI: NetApp FCP
+LI: NetApp (SVMs) Storage Virtual Machine's (formerly called "vservers”): Nfsv3_read_ios (read ops), Nfsv3_write_ios (write ops)
+
+Here is a list of missing metrics and plugins as the corresponding data cannot be found in the new NetApp API:
+LI: NetApp Disk Summary: Parity disks, Total number of disks type data, Total number of disks type parity
+LI: Traffic SVM (formerly vServer): Nfsv4_read_ios (read ops), Nfsv4_write_ios (write ops)
+LI: System time: Missing service

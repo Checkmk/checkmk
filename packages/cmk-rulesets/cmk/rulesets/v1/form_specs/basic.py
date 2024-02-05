@@ -246,6 +246,8 @@ class MultilineText(FormSpec):
         title: Human readable title
         help_text: Description to help the user with the configuration
         monospaced: Display text in the form as monospaced
+        macro_support: Hint in the UI that macros can be used in the field.
+            Replacing the macros in the plugin is a responsibility of the plugin developer.
         label: Text displayed in front of the input field
         prefill: Value to pre-populate the form field with.
         transform: Transformation of the stored configuration
@@ -266,6 +268,7 @@ class MultilineText(FormSpec):
     """
 
     monospaced: bool = False
+    macro_support: bool = False
 
     label: Localizable | None = None
 
@@ -360,6 +363,8 @@ class Text(FormSpec):
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
+        macro_support: Hint in the UI that macros can be used in the field.
+            Replacing the macros in the plugin is a responsibility of the plugin developer.
         prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
@@ -367,6 +372,7 @@ class Text(FormSpec):
     """
 
     label: Localizable | None = None
+    macro_support: bool = False
 
     prefill: Prefill[str] = InputHint("")
 

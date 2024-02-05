@@ -6,7 +6,7 @@
 import pytest
 
 import cmk.base.plugins.agent_based.local as local
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 from cmk.plugins.lib.cache_helper import CacheInfo
 
@@ -356,6 +356,66 @@ def test_compute_state() -> None:
         Result(state=State.WARN, summary="Value 2: 20.00 (warn/crit at 20.00/50.00)"),
         Metric("value2", 20, levels=(20, 50), boundaries=(0, 100)),
     ]
+
+
+@pytest.mark.parametrize(
+    "string_table_row,is_discovered,expected_result",
+    [
+        pytest.param(
+            ["1", "ut_item_name", "metric=0", "Detail"],
+            True,
+            [
+                Result(state=State.WARN, summary="Detail"),
+                Result(state=State.OK, notice="Metric: 0.00"),
+                Metric("metric", 0.0),
+            ],
+            id="all four elements as documented",
+        ),
+        pytest.param(
+            ["1", "ut_item_name", "metric=0"],
+            True,
+            [
+                Result(state=State.OK, notice="Metric: 0.00"),
+                Metric("metric", 0.0),
+            ],
+            id="missing summary; should not be OK!",  # TODO: this documents a bug, see SUP-17314
+        ),
+        pytest.param(
+            ["1", "ut_item_name", "-"],
+            True,
+            [],
+            id="empty metric; should not be discovered!",  # TODO: this documents a bug, see SUP-17314
+        ),
+        pytest.param(
+            ["1", "ut_item_name"],
+            False,
+            [],
+            id="empty metric",
+        ),
+        pytest.param(
+            ["1"],
+            False,
+            [],
+            id="single element",
+        ),
+        pytest.param(
+            ["UT_RANDOM_STRING"],
+            False,
+            [],
+            id="single random string",
+        ),
+    ],
+)
+def test_check_sub_17314(
+    string_table_row: list[str], is_discovered: bool, expected_result: list[Result]
+) -> None:
+    assert (
+        list(local.check_local("ut_item_name", {}, local.parse_local([string_table_row])))
+        == expected_result
+    )
+    assert list(local.discover_local(local.parse_local([string_table_row]))) == (
+        [Service(item="ut_item_name")] if is_discovered else []
+    )
 
 
 if __name__ == "__main__":

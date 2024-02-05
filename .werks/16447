@@ -1,0 +1,9 @@
+Title: Fix inventory sync of subsequent hosts if a previous one has invalid data
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1707132754
+Edition: cee
+Level: 1
+Version: 2.2.0p22
+

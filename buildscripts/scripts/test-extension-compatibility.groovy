@@ -12,32 +12,6 @@ def main() {
         "DOCKER_TAG",
     ]);
 
-    stage("Check for extension actuality") {
-        dir("${checkout_dir}") {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker_image_from_alias("IMAGE_TESTING").inside() {
-                    /* groovylint-disable LineLength */
-                    sh("""
-                        scripts/run-pipenv run \
-                          tests/extension_compatibility/output_popular_extensions.py > /tmp/extension_compatibility.txt
-                        diff -u --color \
-                            tests/extension_compatibility/current_extensions_under_test.txt \
-                            /tmp/extension_compatibility.txt \
-                        || { cat <<HERE && false
-
-                        You can fix the above by running:
-                        scripts/run-pipenv run ./tests/extension_compatibility/output_popular_extensions.py > tests/extension_compatibility/current_extensions_under_test.txt
-
-
-HERE
-}
-                    """);
-                    /* groovylint-enable LineLength */
-                }
-            }
-        }
-    }
-
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),
         DISTRO_LIST: ["ubuntu-20.04"],

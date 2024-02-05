@@ -3,17 +3,59 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import contextlib
 import dataclasses
 import json
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Self
 
 import pytest
 import requests
+from pydantic import BaseModel
 
 from tests.testlib.site import Site
+
+from cmk.utils.version import __version__, parse_check_mk_version
+
+NUMBER_OF_EXTENSIONS_CHECKED = 30
+NUMBER_OF_EXTENSIONS_TESTED = 30
+
+
+CURRENTLY_UNDER_TEST = (
+    "https://exchange.checkmk.com/api/packages/download/101/dovereplstat-4.3.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/12/apcaccess-5.2.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/161/kentix_devices-3.0.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/170/lsbrelease-5.7.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/181/memcached-5.7.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/184/mikrotik-2.4.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/209/netifaces-7.0.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/244/rspamd-1.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/261/sslcertificates-8.8.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/307/amavis-6.1.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/309/ceph-11.17.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/319/hpsa-8.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/321/SIGNL4-2.1.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/332/win_scheduled_task-2.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/36/check_mk_api-5.5.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/361/win_adsync-2.2.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/362/yum-2.4.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/369/veeam_o365-2.6.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/370/wireguard-1.5.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/375/robotmk.v1.4.1-cmk2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/379/proxmox_provisioned-1.3.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/418/acgateway-1.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/426/MSTeams-2.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/427/vsan-2.2.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/467/check_snmp-0.5.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/468/check_snmp_metric-0.4.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/503/cve_2021_44228_log4j_cmk20.mkp",
+    "https://exchange.checkmk.com/api/packages/download/510/hpe_ilo-4.0.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.19.mkp",
+    "https://exchange.checkmk.com/api/packages/download/77/cpufreq-2.3.1.mkp",
+)
 
 
 class _ExtensionName(str):
@@ -89,13 +131,7 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
 
 
 def _get_tested_extensions() -> Iterable[tuple[str, str]]:
-    return [
-        (url, url.rsplit("/", 1)[-1])
-        for url in (Path(__file__).resolve().parent / "current_extensions_under_test.txt")
-        .read_text()
-        .strip()
-        .splitlines()
-    ]
+    return [(url, url.rsplit("/", 1)[-1]) for url in CURRENTLY_UNDER_TEST]
 
 
 @pytest.mark.parametrize(
@@ -163,3 +199,61 @@ def _disable_extension(site: Site, name: str) -> None:
 
 def _remove_extension(site: Site, name: str) -> None:
     site.check_output(["mkp", "remove", name])
+
+
+def test_package_list_up_to_date() -> None:
+    parsed_version = parse_check_mk_version(__version__)
+    extensions = _compatible_extensions_sorted_by_n_downloads(parsed_version)
+
+    # uncomment this to get output that you can paste into a spread sheet.
+    # for extension in extensions:
+    #     print(f"{extension.latest_version.link}\t{extension.downloads:5}")
+
+    # the #N tested ones should be amongst the #M most popular ones.
+    tested_unpopular = set(CURRENTLY_UNDER_TEST) - {
+        e.latest_version.link for e in extensions[:NUMBER_OF_EXTENSIONS_CHECKED]
+    }
+    assert not tested_unpopular
+
+
+def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_Extension]:
+    return sorted(
+        _compatible_extensions(parsed_version),
+        key=lambda extension: extension.downloads,
+        reverse=True,
+    )
+
+
+def _compatible_extensions(parsed_version: int) -> Iterator[_Extension]:
+    response = requests.get("https://exchange.checkmk.com/api/packages/all")
+    response.raise_for_status()
+    all_packages_response = _ExchangeResponseAllPackages.model_validate(response.json())
+    assert all_packages_response.success, "Querying packages from Checkmk exchange unsuccessful"
+    for extension in all_packages_response.data.packages:
+        try:
+            min_version = parse_check_mk_version(extension.latest_version.min_version)
+        except ValueError:
+            continue
+        if min_version < parsed_version:
+            yield extension
+
+
+class _LatestVersion(BaseModel, frozen=True):
+    id: int
+    min_version: str
+    link: str
+
+
+class _Extension(BaseModel, frozen=True):
+    id: int
+    latest_version: _LatestVersion
+    downloads: int
+
+
+class _ExchangeResponseAllPackagesData(BaseModel, frozen=True):
+    packages: Sequence[_Extension]
+
+
+class _ExchangeResponseAllPackages(BaseModel, frozen=True):
+    success: bool
+    data: _ExchangeResponseAllPackagesData

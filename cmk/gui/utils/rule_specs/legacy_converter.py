@@ -708,8 +708,18 @@ def _convert_to_legacy_text_input(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
-        "help": _localize_optional(to_convert.help_text, localizer),
     }
+
+    help_text = _localize_optional(to_convert.help_text, localizer)
+    if to_convert.macro_support:
+        macros_help_text = (
+            "This field supports the use of macros. "
+            "The corresponding plugin replaces the macros with the actual values."
+        )
+        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
+    else:
+        converted_kwargs["help"] = help_text
 
     match to_convert.prefill:
         case ruleset_api_v1.form_specs.basic.DefaultValue():
@@ -1572,6 +1582,18 @@ def _convert_to_legacy_text_area(
     to_convert: ruleset_api_v1.form_specs.basic.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
     converted_kwargs: dict[str, Any] = {}
+
+    help_text = _localize_optional(to_convert.help_text, localizer)
+    if to_convert.macro_support:
+        macros_help_text = (
+            "This field supports the use of macros. "
+            "The corresponding plugin replaces the macros with the actual values."
+        )
+        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
+    else:
+        converted_kwargs["help"] = help_text
+
     match to_convert.prefill:
         case ruleset_api_v1.form_specs.basic.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
@@ -1587,7 +1609,6 @@ def _convert_to_legacy_text_area(
         monospaced=to_convert.monospaced,
         label=_localize_optional(to_convert.label, localizer),
         title=_localize_optional(to_convert.title, localizer),
-        help=_localize_optional(to_convert.help_text, localizer),
         **converted_kwargs,
     )
 

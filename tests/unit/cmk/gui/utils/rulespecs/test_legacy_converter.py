@@ -261,6 +261,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.basic.Text(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
+                macro_support=True,
                 help_text=api_v1.Localizable("help text"),
                 prefill=api_v1.form_specs.InputHint("myname"),
                 custom_validate=_v1_custom_text_validate,
@@ -269,7 +270,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("spec title"),
                 label=_("spec label"),
                 placeholder="myname",
-                help=_("help text"),
+                help=_(
+                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                ),
                 validate=_legacy_custom_text_validate,
             ),
             id="TextInput",
@@ -851,11 +854,14 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help text"),
                 label=api_v1.Localizable("label"),
                 prefill=api_v1.form_specs.DefaultValue("default text"),
+                macro_support=True,
             ),
             legacy_valuespecs.TextAreaUnicode(
                 monospaced=True,
                 title=_("my title"),
-                help=_("help text"),
+                help=_(
+                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                ),
                 label=_("label"),
                 default_value="default text",
             ),

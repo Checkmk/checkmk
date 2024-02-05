@@ -932,7 +932,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "juniper_screenos_temp",
         "juniper_screenos_vpn",
         "juniper_temp",
-        "juniper_trpz_cpu_util",
         "juniper_trpz_flash",
         "juniper_trpz_info",
         "juniper_trpz_mem",

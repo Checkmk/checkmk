@@ -16,11 +16,11 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
         elements={
             "distribution": DictElement(
                 parameter_form=List(
-                    parameter_form=Dictionary(
+                    element_template=Dictionary(
                         elements={
                             "vm_names": DictElement(
                                 parameter_form=List(
-                                    parameter_form=Text(), title=Localizable("VMs")
+                                    element_template=Text(), title=Localizable("VMs")
                                 ),
                                 required=True,
                             ),

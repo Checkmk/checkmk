@@ -135,25 +135,22 @@ class List(FormSpec):
     Args:
         title: Human readable title
         help_text: Description to help the user with the configuration
-        parameter_form: Configuration specification of the list elements
+        element_template: Configuration specification of the list elements
+        add_element_label: Label used to customize the add element button.
+        remove_element_label: Label used to customize the remove element button.
+        no_element_label: Label used in the rule summary if the list is empty.
         custom_validate: Custom validation function. Will be executed in addition to any
             builtin validation logic. Needs to raise a ValidationError in case
             validation fails. The return value of the function will not be used.
-        order_editable: Can the elements be reordered in the UI
-        add_element_label: Label used to customize the add element button. If not set,
-            the default label will be used.
-        remove_element_label: Label used to customize the remove element button. If not set,
-            the default label will be used.
-        list_empty_label: Label used in the rule summary if the list is empty.
+        editable_order: Can the elements be reordered in the UI
     """
 
-    # TODO: consistent naming + default labels
-    parameter_form: FormSpec
-    order_editable: bool = True
-    add_element_label: Localizable | None = None
-    remove_element_label: Localizable | None = None
-    list_empty_label: Localizable | None = None
+    element_template: FormSpec
+    add_element_label: Localizable = Localizable("Add new entry")
+    remove_element_label: Localizable = Localizable("Remove this entry")
+    no_element_label: Localizable = Localizable("No entries")
 
+    editable_order: bool = True
     transform: Migrate[Sequence[object]] | None = None
     custom_validate: Callable[[Sequence[object]], object] | None = None
 

@@ -742,4 +742,9 @@ TEST(Wtools, GetServiceStatus) {
     EXPECT_EQ(GetServiceStatus(L"SamSS"), SERVICE_RUNNING);
 }
 
+TEST(Wtools, MakeSafeFolderIntegration) {
+    const auto path = MakeSafeTempFolder("temp");  //
+    EXPECT_TRUE(fs::exists(*path));
+    fs::remove_all(*path);
+}
 }  // namespace wtools

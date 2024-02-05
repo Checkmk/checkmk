@@ -428,7 +428,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "juniper_screenos_cpu_default_levels",
     "juniper_screenos_temp_default_levels",
     "juniper_temp_default_levels",
-    "juniper_trpz_cpu_util_default_levels",
     "juniper_trpz_flash_default_levels",
     "keepalived_default_levels",
     "kentix_amp_sensors_smoke_default_levels",

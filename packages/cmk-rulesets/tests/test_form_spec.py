@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import FixedValue, SingleChoice, SingleChoiceElement
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -53,20 +54,20 @@ def test_multiple_choice_validation() -> None:
     with pytest.raises(ValueError, match="Invalid prefill element"):
         MultipleChoice(
             elements=[MultipleChoiceElement(name="element_abc", title=Localizable("Element ABC"))],
-            prefill_selections=["element_xyz"],
+            prefill=DefaultValue(("element_xyz",)),
         )
 
 
 def test_single_choice_validation() -> None:
-    with pytest.raises(ValueError, match="Default element is not one of the specified elements"):
+    with pytest.raises(ValueError):
         SingleChoice(
             elements=[SingleChoiceElement(name="element_abc", title=Localizable("Element ABC"))],
-            prefill_selection="element_xyz",
+            prefill=DefaultValue("element_xyz"),
         )
 
 
 def test_cascading_single_choice_validation() -> None:
-    with pytest.raises(ValueError, match="Default element is not one of the specified elements"):
+    with pytest.raises(ValueError):
         CascadingSingleChoice(
             elements=[
                 CascadingSingleChoiceElement(
@@ -75,7 +76,7 @@ def test_cascading_single_choice_validation() -> None:
                     parameter_form=FixedValue(value=None),
                 )
             ],
-            prefill_selection="element_xyz",
+            prefill=DefaultValue("element_xyz"),
         )
 
 

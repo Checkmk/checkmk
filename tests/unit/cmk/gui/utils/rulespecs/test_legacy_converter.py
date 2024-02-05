@@ -75,7 +75,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.basic.HostState(
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help text"),
-                prefill_value=1,
+                prefill=api_v1.form_specs.DefaultValue(1),
             ),
             legacy_valuespecs.DropdownChoice(
                 choices=[
@@ -159,7 +159,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 unit=api_v1.Localizable("days"),
-                prefill_value=-1,
+                prefill=api_v1.form_specs.DefaultValue(-1),
                 custom_validate=lambda x: None,
             ),
             legacy_valuespecs.Integer(
@@ -184,7 +184,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("label"),
                 unit=api_v1.Localizable("1/s"),
                 display_precision=2,
-                prefill_value=-1.0,
+                prefill=api_v1.form_specs.DefaultValue(-1.0),
                 custom_validate=lambda x: None,
             ),
             legacy_valuespecs.Float(
@@ -209,7 +209,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 displayed_units=api_v1.form_specs.basic.SI_BINARY_UNIT,
-                prefill_value=-1,
+                prefill=api_v1.form_specs.DefaultValue(-1),
                 custom_validate=lambda x: None,
             ),
             LegacyDataSize(
@@ -239,7 +239,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 display_precision=2,
-                prefill_value=-1.0,
+                prefill=api_v1.form_specs.DefaultValue(-1.0),
                 custom_validate=lambda x: None,
             ),
             legacy_valuespecs.Percentage(
@@ -254,24 +254,22 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.basic.Text(),
-            legacy_valuespecs.TextInput(),
+            legacy_valuespecs.TextInput(placeholder=""),
             id="minimal TextInput",
         ),
         pytest.param(
             api_v1.form_specs.basic.Text(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
-                input_hint="firstname",
                 help_text=api_v1.Localizable("help text"),
-                prefill_value="myname",
+                prefill=api_v1.form_specs.InputHint("myname"),
                 custom_validate=_v1_custom_text_validate,
             ),
             legacy_valuespecs.TextInput(
                 title=_("spec title"),
                 label=_("spec label"),
-                placeholder="firstname",
+                placeholder="myname",
                 help=_("help text"),
-                default_value="myname",
                 validate=_legacy_custom_text_validate,
             ),
             id="TextInput",
@@ -280,7 +278,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.basic.RegularExpression(
                 predefined_help_text=api_v1.form_specs.basic.MatchingScope.INFIX,
             ),
-            legacy_valuespecs.RegExp(mode=legacy_valuespecs.RegExp.infix, case_sensitive=True),
+            legacy_valuespecs.RegExp(
+                mode=legacy_valuespecs.RegExp.infix, case_sensitive=True, placeholder=""
+            ),
             id="minimal RegularExpression",
         ),
         pytest.param(
@@ -289,7 +289,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
                 help_text=api_v1.Localizable("help text"),
-                prefill_value="mypattern$",
+                prefill=api_v1.form_specs.DefaultValue("mypattern$"),
                 custom_validate=_v1_custom_text_validate,
             ),
             legacy_valuespecs.RegExp(
@@ -319,8 +319,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             legacy_valuespecs.Tuple(
                 elements=[
-                    legacy_valuespecs.TextInput(title=_("child title 1")),
-                    legacy_valuespecs.TextInput(title=_("child title 2")),
+                    legacy_valuespecs.TextInput(title=_("child title 1"), placeholder=""),
+                    legacy_valuespecs.TextInput(title=_("child title 2"), placeholder=""),
                 ],
                 title=_("parent title"),
                 help=_("parent help"),
@@ -329,7 +329,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.basic.SingleChoice(elements=[]),
-            legacy_valuespecs.DropdownChoice(choices=[], invalid_choice="complain"),
+            legacy_valuespecs.DropdownChoice(
+                choices=[], invalid_choice="complain", no_preselect_title="Please choose"
+            ),
             id="minimal DropdownChoice",
         ),
         pytest.param(
@@ -348,7 +350,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
-                prefill_selection="true",
+                prefill=api_v1.form_specs.DefaultValue("true"),
                 invalid_element_validation=api_v1.form_specs.basic.InvalidElementValidator(
                     mode=api_v1.form_specs.basic.InvalidElementMode.KEEP,
                     display=api_v1.Localizable("invalid choice title"),
@@ -371,8 +373,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="DropdownChoice",
         ),
         pytest.param(
-            api_v1.form_specs.composed.CascadingSingleChoice(elements=[], prefill_selection=None),
-            legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title=""),
+            api_v1.form_specs.composed.CascadingSingleChoice(elements=[]),
+            legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title="Please choose"),
             id="minimal CascadingDropdown",
         ),
         pytest.param(
@@ -387,10 +389,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
                 label=api_v1.Localizable("parent label"),
-                prefill_selection="first",
+                prefill=api_v1.form_specs.DefaultValue("first"),
             ),
             legacy_valuespecs.CascadingDropdown(
-                choices=[("first", _("Spec title"), legacy_valuespecs.TextInput())],
+                choices=[("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder=""))],
                 title=_("parent title"),
                 help=_("parent help"),
                 label=_("parent label"),
@@ -415,7 +417,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
                 title=api_v1.Localizable("list title"),
                 help_text=api_v1.Localizable("list help"),
-                prefill_value=[("first", 1), ("second", 2), ("third", 3)],
                 order_editable=False,
                 add_element_label=api_v1.Localizable("Add item"),
                 remove_element_label=api_v1.Localizable("Remove item"),
@@ -423,11 +424,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             legacy_valuespecs.ListOf(
                 valuespec=legacy_valuespecs.Tuple(
-                    elements=[legacy_valuespecs.TextInput(), legacy_valuespecs.Integer(unit="km")]
+                    elements=[
+                        legacy_valuespecs.TextInput(placeholder=""),
+                        legacy_valuespecs.Integer(unit="km"),
+                    ]
                 ),
                 title="list title",
                 help="list help",
-                default_value=[("first", 1), ("second", 2), ("third", 3)],
                 add_label="Add item",
                 del_label="Remove item",
                 movable=False,
@@ -471,7 +474,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.basic.TimeUnit.MINUTE,
                     api_v1.form_specs.basic.TimeUnit.SECOND,
                 ],
-                prefill_value=100,
+                prefill=api_v1.form_specs.DefaultValue(100),
             ),
             legacy_valuespecs.TimeSpan(
                 title=_("age title"),
@@ -613,7 +616,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("boolean choice title"),
                 label=api_v1.Localizable("boolean choice label"),
                 help_text=api_v1.Localizable("help text"),
-                prefill_value=True,
+                prefill=api_v1.form_specs.DefaultValue(True),
             ),
             legacy_valuespecs.Checkbox(
                 title=_("boolean choice title"),
@@ -762,7 +765,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 show_toggle_all=True,
-                prefill_selections=["first", "second"],
+                prefill=api_v1.form_specs.DefaultValue(("first", "second")),
             ),
             legacy_valuespecs.ListChoice(
                 choices=[("first", _("First")), ("second", _("Second"))],
@@ -813,7 +816,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 show_toggle_all=True,
-                prefill_selections=["first", "third"],
+                prefill=api_v1.form_specs.DefaultValue(("first", "third")),
             ),
             legacy_valuespecs.DualListChoice(
                 choices=[
@@ -847,7 +850,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("my title"),
                 help_text=api_v1.Localizable("help text"),
                 label=api_v1.Localizable("label"),
-                prefill_value="default text",
+                prefill=api_v1.form_specs.DefaultValue("default text"),
             ),
             legacy_valuespecs.TextAreaUnicode(
                 monospaced=True,
@@ -895,7 +898,9 @@ def _get_cascading_single_choice_with_prefill_selection(
             api_v1.form_specs.composed.CascadingSingleChoiceElement(
                 name="simple_prefill",
                 title=api_v1.Localizable("simple prefill"),
-                parameter_form=api_v1.form_specs.basic.Text(prefill_value="prefill_text"),
+                parameter_form=api_v1.form_specs.basic.Text(
+                    prefill=api_v1.form_specs.DefaultValue("prefill_text")
+                ),
             ),
             api_v1.form_specs.composed.CascadingSingleChoiceElement(
                 name="nested",
@@ -917,18 +922,22 @@ def _get_cascading_single_choice_with_prefill_selection(
                 parameter_form=api_v1.form_specs.composed.Dictionary(
                     elements={
                         "key1": api_v1.form_specs.composed.DictElement(
-                            parameter_form=api_v1.form_specs.basic.Integer(prefill_value=1),
+                            parameter_form=api_v1.form_specs.basic.Integer(
+                                prefill=api_v1.form_specs.DefaultValue(1)
+                            ),
                             required=True,
                         ),
                         "key2": api_v1.form_specs.composed.DictElement(
-                            parameter_form=api_v1.form_specs.basic.Integer(prefill_value=2),
+                            parameter_form=api_v1.form_specs.basic.Integer(
+                                prefill=api_v1.form_specs.DefaultValue(2)
+                            ),
                             required=True,
                         ),
                     }
                 ),
             ),
         ],
-        prefill_selection=prefill_selection,
+        prefill=api_v1.form_specs.DefaultValue(prefill_selection),
     )
 
 
@@ -1077,7 +1086,9 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
-                item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
+                item_spec=lambda: legacy_valuespecs.TextInput(
+                    title=_("item title"), placeholder=""
+                ),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
                     elements=[
                         ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
@@ -1102,7 +1113,9 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
-                item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
+                item_spec=lambda: legacy_valuespecs.TextInput(
+                    title=_("item title"), placeholder=""
+                ),
                 parameter_valuespec=None,
                 match_type="dict",
             ),
@@ -1634,7 +1647,15 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.basic.Text(),
         api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[]),
         api_v1.form_specs.composed.Dictionary(elements={}),
-        api_v1.form_specs.basic.SingleChoice(elements=[]),
+        api_v1.form_specs.basic.SingleChoice(
+            elements=[
+                api_v1.form_specs.basic.SingleChoiceElement(
+                    name="foo",
+                    title=api_v1.Localizable("Whatever"),
+                ),
+            ],
+            prefill=api_v1.form_specs.DefaultValue("foo"),
+        ),
         api_v1.form_specs.composed.CascadingSingleChoice(elements=[]),
         api_v1.form_specs.basic.ServiceState(),
         api_v1.form_specs.basic.HostState(),
@@ -1645,6 +1666,7 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
             level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
             predictive=None,
             form_spec_template=api_v1.form_specs.basic.Integer(),
+            prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
         ),
         api_v1.form_specs.basic.BooleanChoice(),
         api_v1.form_specs.basic.FileUpload(),
@@ -1736,7 +1758,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.Integer(),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,
-                prefill_fixed_levels=(1.0, 2.0),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
                 predictive=None,
                 title=api_v1.Localizable("Lower levels"),
             ),
@@ -1754,7 +1776,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.Integer(),
                 level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
-                prefill_fixed_levels=(1.0, 2.0),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
                 predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
@@ -1770,12 +1792,12 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.Integer(unit=api_v1.Localizable("GiB")),
                 level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
-                prefill_fixed_levels=(1.0, 2.0),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
                 predictive=api_v1.form_specs.levels.PredictiveLevels(
                     reference_metric="my_metric",
-                    prefill_abs_diff=(5.0, 10.0),
-                    prefill_rel_diff=(50.0, 80.0),
-                    prefill_stddev_diff=(2.0, 3.0),
+                    prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
+                    prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
+                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
                 title=api_v1.Localizable("Upper levels"),
             ),
@@ -1951,12 +1973,12 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     ]
                 ),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,
-                prefill_fixed_levels=(1.0, 2.0),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
                 predictive=api_v1.form_specs.levels.PredictiveLevels(
                     reference_metric="my_metric",
-                    prefill_abs_diff=(5.0, 10.0),
-                    prefill_rel_diff=(50.0, 80.0),
-                    prefill_stddev_diff=(2.0, 3.0),
+                    prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
+                    prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
+                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
                 title=api_v1.Localizable("Lower levels"),
             ),

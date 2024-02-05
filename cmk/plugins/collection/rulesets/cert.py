@@ -6,6 +6,7 @@
 from typing import Literal
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import BooleanChoice, FixedValue, Float, Integer, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -22,18 +23,20 @@ from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 
 def _valuespec_response_time() -> TupleDoNotUseWillbeRemoved:
     # TODO API uses seconds, we need ms here!
+    # NOTE (mo): store seconds, not milliseconds. Use TimeSpan Formspec!
     return TupleDoNotUseWillbeRemoved(
         title=Localizable("Response time"),
         elements=[
             Levels(
                 form_spec_template=Float(unit=Localizable("seconds")),
                 level_direction=LevelDirection.LOWER,
+                prefill_fixed_levels=InputHint((0.0, 0.0)),
                 predictive=None,
             ),
             Levels(
                 form_spec_template=Float(unit=Localizable("seconds")),
                 level_direction=LevelDirection.UPPER,
-                prefill_fixed_levels=(0.001, 0.002),
+                prefill_fixed_levels=DefaultValue((0.001, 0.002)),
                 predictive=None,
             ),
         ],
@@ -69,13 +72,13 @@ def _valuespec_specific_values() -> Dictionary:
             "serialnumber": DictElement(
                 parameter_form=Text(
                     title=Localizable("Serial number"),
-                    input_hint="5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F",
+                    prefill=InputHint("5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F"),
                 )
             ),
             "signature_algorithm": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Encryption algorithm"),
-                    prefill_selection="rsa",
+                    prefill=DefaultValue("rsa"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="rsa",
@@ -153,7 +156,7 @@ def _valuespec_specific_values() -> Dictionary:
                         "pubkey_algorithm": DictElement(
                             parameter_form=CascadingSingleChoice(
                                 title=Localizable("Public key algorithm"),
-                                prefill_selection="rsa",
+                                prefill=DefaultValue("rsa"),
                                 elements=[
                                     CascadingSingleChoiceElement(
                                         name="rsa",
@@ -233,7 +236,7 @@ def _valuespec_remaining_validity() -> TupleDoNotUseWillbeRemoved:
 def _valuespec_port() -> Integer:
     return Integer(
         title=Localizable("Port"),
-        prefill_value=443,
+        prefill=DefaultValue(443),
     )
 
 
@@ -247,7 +250,7 @@ def _valuespec_host_settings() -> List:
                             "address": DictElement(
                                 parameter_form=Text(
                                     title=Localizable("Host address or name"),
-                                    input_hint="my.host.tld or 192.168.0.73",
+                                    prefill=InputHint("my.host.tld | 192.168.0.73"),
                                     custom_validate=DisallowEmpty(),
                                 ),
                                 required=True,
@@ -325,7 +328,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
             )
             for value, title in elements
         ],
-        prefill_selection="sha256",
+        prefill=DefaultValue("sha256"),
     )
 
 

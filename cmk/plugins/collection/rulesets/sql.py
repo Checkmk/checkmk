@@ -45,7 +45,7 @@ def _form_active_checks_sql() -> form_specs.composed.Dictionary:
                             "sqlanywhere", Localizable("SQLAnywhere")
                         ),
                     ],
-                    prefill_selection="postgres",
+                    prefill=form_specs.DefaultValue("postgres"),
                 ),
                 required=True,
             ),
@@ -157,7 +157,7 @@ def _form_active_checks_sql() -> form_specs.composed.Dictionary:
                     help_text=Localizable(
                         "Store output value into RRD database in a metric with this name."
                     ),
-                    prefill_value="performance_data",
+                    prefill=form_specs.DefaultValue("performance_data"),
                     custom_validate=validators.DisallowEmpty(),
                 ),
                 required=False,

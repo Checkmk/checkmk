@@ -2771,21 +2771,26 @@ void ProtectPathFromUserAccess(const fs::path &entry,
 }
 
 namespace {
-fs::path MakeCmdFileInTemp(std::wstring_view name,
+fs::path MakeCmdFileInTemp(std::string_view sub_dir, std::wstring_view name,
                            const std::vector<std::wstring> &commands) {
     try {
         auto pid = ::GetCurrentProcessId();
         static int counter = 0;
         counter++;
+        const auto dir = MakeSafeTempFolder(sub_dir);
+        if (dir.has_value()) {
+            auto tmp_file =
+                *dir / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
+            std::ofstream ofs(tmp_file, std::ios::trunc);
+            for (const auto &c : commands) {
+                ofs << ToUtf8(c) << "\n";
+            }
 
-        auto tmp_file = MakeSafeTempFolder() /
-                        fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
-        std::ofstream ofs(tmp_file, std::ios::trunc);
-        for (const auto &c : commands) {
-            ofs << ToUtf8(c) << "\n";
+            return tmp_file;
+        } else {
+            XLOG::l("Can't create file");
+            return {};
         }
-
-        return tmp_file;
     } catch (const std::exception &e) {
         XLOG::l("Exception creating file '{}'", e.what());
         return {};
@@ -2956,12 +2961,19 @@ private:
     SECURITY_ATTRIBUTES sa_;
 };
 
-fs::path MakeSafeTempFolder() {
+std::optional<fs::path> MakeSafeTempFolder(std::string_view sub_dir) {
     SecurityAttribute sa{
         {{Sid::Type::everyone, 0}, {Sid::Type::admin, GENERIC_ALL}}};
     std::error_code ec;
-    auto temp_folder = fs::temp_directory_path(ec) / "check_mk_agent";
-    CreateDirectoryW(temp_folder.wstring().data(), sa.securityAttributes());
+    fs::remove_all(fs::temp_directory_path(ec) / sub_dir, ec);
+    auto temp_folder = fs::temp_directory_path(ec) / sub_dir;
+    const auto ret =
+        CreateDirectoryW(temp_folder.wstring().data(), sa.securityAttributes());
+    if (!ret) {
+        XLOG::l("Failed to create temp folder '{}' {}", temp_folder,
+                GetLastError());
+        return {};
+    }
     return temp_folder;
 }
 
@@ -2974,7 +2986,7 @@ fs::path ExecuteCommands(std::wstring_view name,
         return {};
     }
 
-    auto to_exec = MakeCmdFileInTemp(name, commands);
+    auto to_exec = MakeCmdFileInTemp(safe_temp_sub_dir, name, commands);
     if (!to_exec.empty()) {
         auto pid = cma::tools::RunStdCommand(to_exec.wstring(),
                                              mode == ExecuteMode::sync

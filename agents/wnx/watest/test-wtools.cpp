@@ -816,4 +816,9 @@ TEST(Wtools, InternalUsersDbIntegration) {
     }
 }
 
+TEST(Wtools, MakeSafeFolderIntegration) {
+    const auto path = MakeSafeTempFolder("temp");  //
+    EXPECT_TRUE(fs::exists(*path));
+    fs::remove_all(*path);
+}
 }  // namespace wtools

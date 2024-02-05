@@ -510,15 +510,20 @@ class RegisterTotpSecret(ABCUserProfilePage):
 
             forms.header("1. %s" % _("Scan QR-Code or enter secret manually"), foldable=False)
             forms.section(legend=False)
-            html.div(
-                "",
-                data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
-                % (
-                    parse.quote(user.alias, safe=""),
-                    base32_secret,
-                    parse.quote("checkmk " + omd_site(), safe=""),
-                ),
+
+            html.call_ts_function(
+                container="div",
+                function_name="render_qr_code",
+                options={
+                    "qrcode": "otpauth://totp/%s?secret=%s&issuer=%s"
+                    % (
+                        parse.quote(user.alias, safe=""),
+                        base32_secret,
+                        parse.quote("checkmk " + omd_site(), safe=""),
+                    ),
+                },
             )
+
             html.open_div()
             html.span("Secret: ")
             html.a(

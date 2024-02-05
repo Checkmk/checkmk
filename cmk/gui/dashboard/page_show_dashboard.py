@@ -595,7 +595,9 @@ def _dashboard_other_entries(
     linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
     ntop_not_configured = not is_ntop_configured()
-    for dashboard_name, dashboard in get_permitted_dashboards().items():
+    for dashboard_name, dashboard in sorted(
+        get_permitted_dashboards().items(), key=lambda x: x[1]["sort_index"]
+    ):
         if name in linked_dashboards and dashboard_name in linked_dashboards:
             continue
         if dashboard["hidden"]:

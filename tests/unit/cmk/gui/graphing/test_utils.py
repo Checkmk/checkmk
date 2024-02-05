@@ -58,16 +58,34 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
     "perf_str, check_command, result",
     [
         ("", None, ([], "")),
-        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
+        (
+            "hi=6 [ihe]",
+            "ter",
+            (
+                [
+                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                ],
+                "ihe",
+            ),
+        ),
         ("hi=l6 [ihe]", "ter", ([], "ihe")),
-        ("hi=6 [ihe]", "ter", ([PerfDataTuple("hi", 6, "", None, None, None, None)], "ihe")),
+        (
+            "hi=6 [ihe]",
+            "ter",
+            (
+                [
+                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                ],
+                "ihe",
+            ),
+        ),
         (
             "hi=5 no=6",
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "", None, None, None, None),
-                    PerfDataTuple("no", 6, "", None, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "", None, None, None, None),
+                    PerfDataTuple("no", "no", 6, "", None, None, None, None),
                 ],
                 "test",
             ),
@@ -77,8 +95,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "", 6, 7, 8, 9),
-                    PerfDataTuple("not_here", 6, "", 5.6, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "", 6, 7, 8, 9),
+                    PerfDataTuple("not_here", "not_here", 6, "", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -88,8 +106,8 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
             "test",
             (
                 [
-                    PerfDataTuple("hi", 5, "G", None, None, None, None),
-                    PerfDataTuple("not_here", 6, "M", 5.6, None, None, None),
+                    PerfDataTuple("hi", "hi", 5, "G", None, None, None, None),
+                    PerfDataTuple("not_here", "not_here", 6, "M", 5.6, None, None, None),
                 ],
                 "test",
             ),
@@ -97,7 +115,12 @@ def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
         (
             "11.26=6;;;;",
             "check_mk-local",
-            ([PerfDataTuple("11.26", 6, "", None, None, None, None)], "check_mk-local"),
+            (
+                [
+                    PerfDataTuple("11.26", "11.26", 6, "", None, None, None, None),
+                ],
+                "check_mk-local",
+            ),
         ),
     ],
 )
@@ -172,7 +195,7 @@ def test_find_matching_translation(
     "perf_data, check_command, result",
     [
         (
-            PerfDataTuple("in", 496876.200933, "", None, None, 0, 125000000),
+            PerfDataTuple("in", "in", 496876.200933, "", None, None, 0, 125000000),
             "check_mk-lnx_if",
             (
                 "if_in_bps",
@@ -186,7 +209,7 @@ def test_find_matching_translation(
             ),
         ),
         (
-            PerfDataTuple("fast", 5, "", 4, 9, 0, 10),
+            PerfDataTuple("fast", "fast", 5, "", 4, 9, 0, 10),
             "check_mk-imaginary",
             (
                 "fast",
@@ -262,7 +285,7 @@ def test__normalize_perf_data(
 def test_get_graph_templates(
     metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
 ) -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
@@ -308,8 +331,8 @@ def test_translate_metrics_with_predictive_metrics(
     expected_color: str,
 ) -> None:
     perfdata: Perfdata = [
-        PerfDataTuple(n, 0, "", None, None, None, None)
-        for n in [metric_name, predictive_metric_name]
+        PerfDataTuple(metric_name, metric_name, 0, "", None, None, None, None),
+        PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
     assert translated_metrics[predictive_metric_name]["title"] == expected_title
@@ -322,12 +345,13 @@ def test_translate_metrics_with_predictive_metrics(
 
 def test_translate_metrics_with_multiple_predictive_metrics() -> None:
     perfdata: Perfdata = [
-        PerfDataTuple(n, 0, "", None, None, None, None)
-        for n in [
-            "messages_outbound",
-            "predict_messages_outbound",
-            "predict_lower_messages_outbound",
-        ]
+        PerfDataTuple("messages_outbound", "messages_outbound", 0, "", None, None, None, None),
+        PerfDataTuple(
+            "predict_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+        ),
+        PerfDataTuple(
+            "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+        ),
     ]
     translated_metrics = utils.translate_metrics(perfdata, "my-check-plugin")
     assert translated_metrics["predict_messages_outbound"]["color"] == "#4b4b4b"
@@ -335,15 +359,19 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
 
 
 @pytest.mark.parametrize(
-    "metric_names, check_command, graph_templates",
+    "metric_names, predict_metric_names, predict_lower_metric_names, check_command, graph_templates",
     [
         pytest.param(
             [
                 "messages_outbound",
-                "predict_messages_outbound",
-                "predict_lower_messages_outbound",
                 "messages_inbound",
+            ],
+            [
+                "predict_messages_outbound",
                 "predict_messages_inbound",
+            ],
+            [
+                "predict_lower_messages_outbound",
                 "predict_lower_messages_inbound",
             ],
             "check_mk-inbound_and_outbound_messages",
@@ -392,7 +420,11 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
                 "messages_outbound",
                 "messages_inbound",
                 "foo",
+            ],
+            [
                 "predict_foo",
+            ],
+            [
                 "predict_lower_foo",
             ],
             "check_mk-inbound_and_outbound_messages",
@@ -517,10 +549,19 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
 )
 def test_get_graph_templates_with_predictive_metrics(
     metric_names: Sequence[str],
+    predict_metric_names: Sequence[str],
+    predict_lower_metric_names: Sequence[str],
     check_command: str,
     graph_templates: Sequence[utils.GraphTemplate],
 ) -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = (
+        [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
+        + [PerfDataTuple(n, n[8:], 0, "", None, None, None, None) for n in predict_metric_names]
+        + [
+            PerfDataTuple(n, n[14:], 0, "", None, None, None, None)
+            for n in predict_lower_metric_names
+        ]
+    )
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     found_graph_templates = list(utils.get_graph_templates(translated_metrics))
     assert found_graph_templates == graph_templates
@@ -870,7 +911,7 @@ def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[st
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
-    perfdata: Perfdata = [PerfDataTuple(n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, "check_command")
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
@@ -910,7 +951,7 @@ def test_translate_metrics(
 ) -> None:
     active_config.default_temperature_unit = default_temperature_unit.value
     translated_metric = utils.translate_metrics(
-        [PerfDataTuple("temp", 59.05, "", 85.05, 85.05, None, None)],
+        [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
     )["temp"]
     assert translated_metric["value"] == expected_value

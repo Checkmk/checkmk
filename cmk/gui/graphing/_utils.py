@@ -713,6 +713,14 @@ def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     return None, unit_name
 
 
+def _compute_lookup_metric_name(metric_name: str) -> str:
+    if metric_name.startswith("predict_lower_"):
+        return metric_name[14:]
+    if metric_name.startswith("predict_"):
+        return metric_name[8:]
+    return metric_name
+
+
 def parse_perf_data(
     perf_data_string: str, check_command: str | None = None
 ) -> tuple[Perfdata, str]:
@@ -748,6 +756,7 @@ def parse_perf_data(
             perf_data.append(
                 PerfDataTuple(
                     varname,
+                    _compute_lookup_metric_name(varname),
                     value,
                     unit_name,
                     _float_or_int(value_parts[0]),
@@ -779,6 +788,7 @@ def parse_perf_data_from_performance_data_livestatus_column(
     perf_data: Perfdata = [
         PerfDataTuple(
             varname,
+            _compute_lookup_metric_name(varname),
             value,
             "",
             None,
@@ -881,7 +891,7 @@ def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds
 def _normalize_perf_data(
     perf_data_tuple: PerfDataTuple, check_command: str
 ) -> tuple[str, _NormalizedPerfData]:
-    translation_entry = perfvar_translation(perf_data_tuple.metric_name, check_command)
+    translation_entry = perfvar_translation(perf_data_tuple.lookup_metric_name, check_command)
 
     new_entry = _NormalizedPerfData(
         orig_name=[perf_data_tuple.metric_name],
@@ -892,6 +902,10 @@ def _normalize_perf_data(
         auto_graph=translation_entry["auto_graph"],
     )
 
+    if perf_data_tuple.metric_name.startswith("predict_lower_"):
+        return f"predict_lower_{translation_entry['name']}", new_entry
+    if perf_data_tuple.metric_name.startswith("predict_"):
+        return f"predict_{translation_entry['name']}", new_entry
     return translation_entry["name"], new_entry
 
 
@@ -999,6 +1013,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, T
             ]
         else:
             translated_metrics[metric_name] = new_entry
+
     return translated_metrics
 
 

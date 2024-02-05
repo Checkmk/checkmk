@@ -20,41 +20,41 @@ from tests.testlib.site import Site
 
 from cmk.utils.version import __version__, parse_check_mk_version
 
-NUMBER_OF_EXTENSIONS_CHECKED = 30
+NUMBER_OF_EXTENSIONS_CHECKED = 33
 NUMBER_OF_EXTENSIONS_TESTED = 30
 
 
 CURRENTLY_UNDER_TEST = (
-    "https://exchange.checkmk.com/api/packages/download/101/dovereplstat-4.3.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/12/apcaccess-5.2.2.mkp",
-    "https://exchange.checkmk.com/api/packages/download/161/kentix_devices-3.0.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/170/lsbrelease-5.7.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/181/memcached-5.7.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/184/mikrotik-2.4.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/209/netifaces-7.0.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/244/rspamd-1.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/375/robotmk.v1.4.1-cmk2.mkp",
     "https://exchange.checkmk.com/api/packages/download/261/sslcertificates-8.8.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/307/amavis-6.1.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/309/ceph-11.17.2.mkp",
-    "https://exchange.checkmk.com/api/packages/download/319/hpsa-8.4.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/321/SIGNL4-2.1.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/332/win_scheduled_task-2.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/184/mikrotik-2.4.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/426/MSTeams-2.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/362/yum-2.4.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/244/rspamd-1.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/161/kentix_devices-3.0.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/12/apcaccess-5.2.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/370/wireguard-1.5.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/319/hpsa-8.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/503/cve_2021_44228_log4j_cmk20.mkp",
+    "https://exchange.checkmk.com/api/packages/download/181/memcached-5.7.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/369/veeam_o365-2.6.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/36/check_mk_api-5.5.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/361/win_adsync-2.2.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/362/yum-2.4.3.mkp",
-    "https://exchange.checkmk.com/api/packages/download/369/veeam_o365-2.6.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/370/wireguard-1.5.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/375/robotmk.v1.4.1-cmk2.mkp",
-    "https://exchange.checkmk.com/api/packages/download/379/proxmox_provisioned-1.3.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/418/acgateway-1.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/426/MSTeams-2.1.mkp",
-    "https://exchange.checkmk.com/api/packages/download/427/vsan-2.2.0.mkp",
-    "https://exchange.checkmk.com/api/packages/download/467/check_snmp-0.5.2.mkp",
-    "https://exchange.checkmk.com/api/packages/download/468/check_snmp_metric-0.4.3.mkp",
-    "https://exchange.checkmk.com/api/packages/download/503/cve_2021_44228_log4j_cmk20.mkp",
+    "https://exchange.checkmk.com/api/packages/download/101/dovereplstat-4.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/510/hpe_ilo-4.0.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/209/netifaces-7.0.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/170/lsbrelease-5.7.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/427/vsan-2.2.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/307/amavis-6.1.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/468/check_snmp_metric-0.4.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/332/win_scheduled_task-2.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/379/proxmox_provisioned-1.3.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/467/check_snmp-0.5.2.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.19.mkp",
     "https://exchange.checkmk.com/api/packages/download/77/cpufreq-2.3.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/418/acgateway-1.1.mkp",
 )
 
 
@@ -208,6 +208,7 @@ def test_package_list_up_to_date() -> None:
     # uncomment this to get output that you can paste into a spread sheet.
     # for extension in extensions:
     #     print(f"{extension.latest_version.link}\t{extension.downloads:5}")
+    # assert False
 
     # the #N tested ones should be amongst the #M most popular ones.
     tested_unpopular = set(CURRENTLY_UNDER_TEST) - {

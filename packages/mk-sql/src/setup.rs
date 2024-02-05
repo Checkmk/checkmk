@@ -94,8 +94,6 @@ pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
     let environment = Env::new(&args);
     init_logging(&args, &environment, logging_config)?;
     if !config_file.exists() {
-        // TODO(sk): remove this asap!
-        log::info!("The config file {:?} doesn't exist", config_file);
         anyhow::bail!("The config file {:?} doesn't exist", config_file);
     }
     Ok((get_check_config(&config_file)?, environment))
@@ -110,8 +108,35 @@ fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Res
         SendTo::Null
     };
 
-    apply_logging_parameters(level, environment.log_dir(), send_to, l)?;
-    Ok(())
+    let s = apply_logging_parameters(level, environment.log_dir(), send_to, l).map(|_| ());
+    log_info_optional(args, level, environment, s.is_ok());
+    s
+}
+
+fn log_info_optional(args: &Args, level: log::Level, environment: &Env, log_available: bool) {
+    if args.print_info {
+        let info = create_info_text(&level, environment);
+        if log_available {
+            log::info!("{}", info);
+        } else {
+            println!("{}", info);
+        }
+    }
+}
+fn create_info_text(level: &log::Level, environment: &Env) -> String {
+    format!(
+        "\n  - Log level: {}\n  - Log dir: {}\n  - Temp dir: {}\n  - MK_CONFDIR: {}",
+        level,
+        environment
+            .log_dir()
+            .unwrap_or_else(|| Path::new(""))
+            .display(),
+        environment
+            .temp_dir()
+            .unwrap_or_else(|| Path::new("."))
+            .display(),
+        constants::get_env_value(constants::environment::CONFIG_DIR_ENV_VAR, "undefined"),
+    )
 }
 
 fn get_check_config(file: &Path) -> Result<CheckConfig> {
@@ -228,5 +253,16 @@ mod tests {
         assert!(e.cache_dir().is_none());
         assert!(e.calc_cache_sub_dir("aa").is_none());
         assert!(e.obtain_cache_sub_dir("a").is_none());
+    }
+    #[test]
+    fn test_create_info_text() {
+        assert_eq!(
+            create_info_text(&log::Level::Debug, &Env::new(&Args::default())),
+            r#"
+  - Log level: DEBUG
+  - Log dir: 
+  - Temp dir: .
+  - MK_CONFDIR: undefined"#
+        );
     }
 }

@@ -450,6 +450,12 @@ def check_azure_vm_network_io(
         raise IgnoreResultsError("Only one resource expected")
 
     resource = list(section.values())[0]
+    in_octets = None
+    if (In_Total := resource.metrics.get("total_Network_In_Total")) is not None:
+        in_octets = In_Total.value / 60
+    out_octets = None
+    if (Out_Total := resource.metrics.get("total_Network_Out_Total")) is not None:
+        out_octets = Out_Total.value / 60
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(
             attributes=interfaces.Attributes(
@@ -459,10 +465,7 @@ def check_azure_vm_network_io(
                 type="1",
                 oper_status="1",
             ),
-            rates=interfaces.Rates(
-                in_octets=resource.metrics["total_Network_In_Total"].value / 60,
-                out_octets=resource.metrics["total_Network_Out_Total"].value / 60,
-            ),
+            rates=interfaces.Rates(in_octets=in_octets, out_octets=out_octets),
             get_rate_errors=[],
         ),
         timestamp=time.time(),

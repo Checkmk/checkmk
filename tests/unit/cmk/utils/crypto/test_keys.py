@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 import pytest
-
-from tests.testlib.certs import rsa_private_keys_equal
 
 from cmk.utils.crypto.keys import (
     InvalidSignatureError,
@@ -21,37 +17,57 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, Signature
 
 
-def test_serialize_rsa_key(tmp_path: Path, rsa_key: PrivateKey) -> None:
-    pem_plain = rsa_key.dump_pem(None)
-    assert pem_plain.str.startswith("-----BEGIN PRIVATE KEY-----")
+@pytest.mark.parametrize(
+    "private_key_fixture,expected_openssh_fmt",
+    [
+        ("ed25519_private_key", "ssh-ed25519 AAAA"),
+        ("secp256k1_private_key", "ecdsa-sha2-nistp256 AAAA"),
+        ("rsa_private_key", "ssh-rsa AAAA"),
+    ],
+)
+def test_de_serialization(
+    private_key_fixture: str,
+    expected_openssh_fmt: str,
+    request: pytest.FixtureRequest,
+) -> None:
+    pem = request.getfixturevalue(private_key_fixture)
 
-    loaded_plain = PrivateKey.load_pem(pem_plain)
-    assert rsa_private_keys_equal(loaded_plain, rsa_key)
+    # --- private key ---
+    private_key = PrivateKey.load_pem(pem)
 
-    pem_enc = rsa_key.dump_pem(Password("verysecure"))
-    assert pem_enc.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
+    assert private_key.dump_pem(None).str == pem.str
+
+    encrypted_pem = private_key.dump_pem(Password("verysecure"))
+    assert encrypted_pem.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
     with pytest.raises((WrongPasswordError, InvalidPEMError)):
         # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
         # instead. We're not sure if it's an issue of our unit tests or if this confusion can also
         # happen in production. See also `PrivateKey.load_pem()`.
-        PrivateKey.load_pem(pem_enc, Password("wrong"))
+        PrivateKey.load_pem(encrypted_pem, Password("wrong"))
 
-    loaded_enc = PrivateKey.load_pem(pem_enc, Password("verysecure"))
-    assert rsa_private_keys_equal(loaded_enc, rsa_key)
+    decrypted_private_key = PrivateKey.load_pem(encrypted_pem, Password("verysecure"))
+    # __eq__ for private keys is not implemented (nor needed elsewhere), so we check the public keys
+    assert decrypted_private_key.public_key == private_key.public_key
 
-    pem_pkcs1 = rsa_key.dump_legacy_pkcs1()
-    assert pem_pkcs1.str.startswith("-----BEGIN RSA PRIVATE KEY-----")
+    try:
+        # only works for RSA keys -- provoke the exception and just pass on other keys
+        private_key.get_raw_rsa_key()
+    except ValueError:
+        pass
+    else:
+        assert private_key.rsa_dump_legacy_pkcs1().str.startswith("-----BEGIN RSA PRIVATE KEY-----")
 
-    pubkey_pem = rsa_key.public_key.dump_pem()
-    assert pubkey_pem.str.startswith("-----BEGIN RSA PUBLIC KEY-----")
+    # --- public key ---
+    public_key = PrivateKey.load_pem(pem).public_key
 
-    pubkey_openssh = rsa_key.public_key.dump_openssh()
-    assert pubkey_openssh.startswith("ssh-rsa ")
+    assert public_key.dump_pem().str.startswith("-----BEGIN PUBLIC KEY-----")
+    assert public_key.dump_openssh().startswith(expected_openssh_fmt)
 
 
 @pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])
-def test_verify_rsa_key(data: bytes, rsa_key: PrivateKey) -> None:
+def test_verify_rsa_key(data: bytes, rsa_private_key: PlaintextPrivateKeyPEM) -> None:
+    rsa_key = PrivateKey.load_pem(rsa_private_key)
     signed = rsa_key.rsa_sign_data(data)
 
     rsa_key.public_key.rsa_verify(signed, data, HashAlgorithm.Sha512)

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from cmk.rulesets.v1 import Localizable, validators
-from cmk.rulesets.v1.form_specs import Migrate
+from cmk.rulesets.v1.form_specs import DefaultValue, Migrate
 from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, ServiceState, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -38,8 +38,8 @@ def migrate_dropdown_ident(raw_value: object) -> tuple[str, object]:
 
     ident, dropdown_element = raw_value
 
-    if not isinstance(ident, bool):
-        return raw_value
+    if isinstance(ident, str):
+        return ident, dropdown_element
 
     if ident:
         return ("multiple_services", dropdown_element)
@@ -66,7 +66,7 @@ def _discovery_parameters_form_alertmanager():
                                                 "Minimum amount of alert rules in a group to create a group service"
                                             ),
                                             custom_validate=validators.InRange(min_value=1),
-                                            prefill_value=3,
+                                            prefill=DefaultValue(3),
                                             help_text=Localizable(
                                                 "Below the specified value alert rules will be monitored as a"
                                                 "single service."
@@ -132,7 +132,7 @@ def form_alert_remapping():
             elements={
                 "rule_names": DictElement(
                     parameter_form=List(
-                        parameter_form=Text(),
+                        parameter_form=Text(prefill=DefaultValue("Watchdog")),
                         title=Localizable("Alert rule names"),
                         help_text=Localizable("A list of rule names as defined in Alertmanager."),
                     ),
@@ -143,23 +143,33 @@ def form_alert_remapping():
                         title=Localizable("States"),
                         elements={
                             "inactive": DictElement(
-                                parameter_form=ServiceState(title=Localizable("inactive")),
+                                parameter_form=ServiceState(
+                                    title=Localizable("inactive"), prefill=DefaultValue(2)
+                                ),
                                 required=True,
                             ),
                             "pending": DictElement(
-                                parameter_form=ServiceState(title=Localizable("pending")),
+                                parameter_form=ServiceState(
+                                    title=Localizable("pending"), prefill=DefaultValue(2)
+                                ),
                                 required=True,
                             ),
                             "firing": DictElement(
-                                parameter_form=ServiceState(title=Localizable("firing")),
+                                parameter_form=ServiceState(
+                                    title=Localizable("firing"), prefill=DefaultValue(0)
+                                ),
                                 required=True,
                             ),
                             "none": DictElement(
-                                parameter_form=ServiceState(title=Localizable("none")),
+                                parameter_form=ServiceState(
+                                    title=Localizable("none"), prefill=DefaultValue(2)
+                                ),
                                 required=True,
                             ),
                             "not_applicable": DictElement(
-                                parameter_form=ServiceState(title=Localizable("n/a")),
+                                parameter_form=ServiceState(
+                                    title=Localizable("n/a"), prefill=DefaultValue(2)
+                                ),
                                 required=True,
                             ),
                         },
@@ -172,18 +182,6 @@ def form_alert_remapping():
         title=Localizable("Remap alert rule states"),
         help_text=Localizable("Configure the monitoring state for Alertmanager rules."),
         custom_validate=validators.DisallowEmpty(),
-        prefill_value=[
-            {
-                "map": {
-                    "inactive": 2,
-                    "pending": 2,
-                    "firing": 0,
-                    "none": 2,
-                    "not_applicable": 2,
-                },
-                "rule_names": ["Watchdog"],
-            }
-        ],
     )
 
 

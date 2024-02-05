@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import Migrate
+from cmk.rulesets.v1.form_specs import DefaultValue, Migrate
 from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -78,14 +78,14 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                             ),
                         ),
                     ],
-                    prefill_selection="hostname",
+                    prefill=DefaultValue("hostname"),
                 ),
                 required=True,
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
                     title=Localizable("Timeout"),
-                    prefill_value=5,
+                    prefill=DefaultValue(5),
                     custom_validate=InRange(min_value=1),
                 ),
                 required=True,

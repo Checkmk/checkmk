@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import ServiceState, Text
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
@@ -14,7 +15,7 @@ def _parameter_form_mssql_instance() -> Dictionary:
         elements={
             "map_connection_state": DictElement(
                 parameter_form=ServiceState(
-                    title=Localizable("Connection status"), prefill_value=ServiceState.CRIT
+                    title=Localizable("Connection status"), prefill=DefaultValue(ServiceState.CRIT)
                 )
             ),
         }

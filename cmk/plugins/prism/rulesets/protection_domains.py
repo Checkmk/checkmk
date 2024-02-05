@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import SingleChoice, SingleChoiceElement, Text
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
@@ -23,7 +24,7 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
                         SingleChoiceElement(name="Disabled", title=Localizable("Sync disabled")),
                         SingleChoiceElement(name="Synchronizing", title=Localizable("Syncing")),
                     ],
-                    prefill_selection="Disabled",
+                    prefill=DefaultValue("Disabled"),
                 )
             )
         },

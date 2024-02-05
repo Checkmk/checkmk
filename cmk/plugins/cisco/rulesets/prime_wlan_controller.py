@@ -5,9 +5,12 @@
 
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import Integer, Text, TimeSpan, TimeUnit
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, TupleDoNotUseWillbeRemoved
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+
+_DAY = 24 * 3600
 
 
 def _parameter_form_wlan_controllers_clients():
@@ -74,7 +77,7 @@ def _parameter_form_wlan_controllers_last_backup():
                                 TimeUnit.HOUR,
                                 TimeUnit.MINUTE,
                             ],
-                            prefill_value=7 * 24 * 3600,
+                            prefill=DefaultValue(7 * _DAY),
                         ),
                         TimeSpan(
                             title=Localizable("Critical at"),
@@ -83,7 +86,7 @@ def _parameter_form_wlan_controllers_last_backup():
                                 TimeUnit.HOUR,
                                 TimeUnit.MINUTE,
                             ],
-                            prefill_value=30 * 24 * 3600,
+                            prefill=DefaultValue(30 * _DAY),
                         ),
                     ],
                 ),

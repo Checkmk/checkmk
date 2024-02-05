@@ -422,18 +422,18 @@ def compute_default_value(form_spec: FormSpec) -> Any:
             elements.append(compute_default_value(x))
         return tuple(elements)
     if isinstance(form_spec, (Integer, Percentage, Float)):
-        return form_spec.prefill_value
+        return form_spec.prefill.value
     if isinstance(form_spec, CascadingSingleChoice):
-        return form_spec.prefill_selection
+        return form_spec.prefill.value
     if isinstance(form_spec, SingleChoice):
-        return form_spec.prefill_selection
+        return form_spec.prefill.value
     if isinstance(form_spec, List):
-        return form_spec.prefill_value or []
+        return []
     if isinstance(form_spec, Dictionary):
         # TODO: Enable active keys
         return {}
     if isinstance(form_spec, Text):
-        return form_spec.prefill_value or ""
+        return form_spec.prefill.value
 
     return "##################MISSING DEFAULT VALUE##########################"
 

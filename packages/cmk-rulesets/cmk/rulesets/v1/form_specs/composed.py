@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Mapping, Sequence
 
 from .._localize import Localizable
-from ._base import FormSpec, Migrate
+from ._base import DefaultValue, FormSpec, InputHint, Migrate
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,8 +48,7 @@ class CascadingSingleChoice(FormSpec):
         help_text: Description to help the user with the configuration
         elements: Elements to choose from
         label: Text displayed in front of the input field
-        prefill_selection: Name of pre-selected choice. If not set, the user is required to make a
-                           selection
+        prefill: Name of pre-selected choice. Must be one of the elements names.
         transform: Transformations to apply.
 
     Consumer model:
@@ -65,13 +64,13 @@ class CascadingSingleChoice(FormSpec):
     elements: Sequence[CascadingSingleChoiceElement]
     label: Localizable | None = None
 
-    prefill_selection: str | None = None
+    prefill: DefaultValue[str] | InputHint[Localizable] = InputHint(Localizable("Please choose"))
 
     transform: Migrate[tuple[str, object]] | None = None
 
     def __post_init__(self) -> None:
         avail_idents = [elem.name for elem in self.elements]
-        if self.prefill_selection is not None and self.prefill_selection not in avail_idents:
+        if isinstance(self.prefill, DefaultValue) and self.prefill.value not in avail_idents:
             raise ValueError("Default element is not one of the specified elements")
 
 
@@ -140,7 +139,6 @@ class List(FormSpec):
         custom_validate: Custom validation function. Will be executed in addition to any
             builtin validation logic. Needs to raise a ValidationError in case
             validation fails. The return value of the function will not be used.
-        prefill_value: Value to pre-populate the form field with
         order_editable: Can the elements be reordered in the UI
         add_element_label: Label used to customize the add element button. If not set,
             the default label will be used.
@@ -149,13 +147,13 @@ class List(FormSpec):
         list_empty_label: Label used in the rule summary if the list is empty.
     """
 
+    # TODO: consistent naming + default labels
     parameter_form: FormSpec
     order_editable: bool = True
     add_element_label: Localizable | None = None
     remove_element_label: Localizable | None = None
     list_empty_label: Localizable | None = None
 
-    prefill_value: Sequence[object] | None = None
     transform: Migrate[Sequence[object]] | None = None
     custom_validate: Callable[[Sequence[object]], object] | None = None
 
@@ -186,9 +184,7 @@ class MultipleChoice(FormSpec):
         help_text: Description to help the user with the configuration
         elements: Elements to choose from
         show_toggle_all: Show toggle all elements option in the UI
-        prefill_selections: List of element names to check by default. If None, the backend
-            will decide whether to leave the selection empty or to prefill it with
-            a canonical value.
+        prefill: Element names to select by default
         transform: Transformation of the stored configuration
         custom_validate: Custom validation function. Will be executed in addition to any
             builtin validation logic. Needs to raise a ValidationError in case
@@ -210,11 +206,11 @@ class MultipleChoice(FormSpec):
     elements: Sequence[MultipleChoiceElement]
     show_toggle_all: bool = False
 
-    prefill_selections: Sequence[str] = ()
+    prefill: DefaultValue[Sequence[str]] = DefaultValue(())
     transform: Migrate[Sequence[str]] | None = None
     custom_validate: Callable[[Sequence[str]], object] | None = None
 
     def __post_init__(self) -> None:
-        avail_idents = {elem.name for elem in self.elements}
-        if invalid := {ident for ident in self.prefill_selections if ident not in avail_idents}:
+        available_names = {elem.name for elem in self.elements}
+        if invalid := set(self.prefill.value) - available_names:
             raise ValueError(f"Invalid prefill element(s): {', '.join(invalid)}")

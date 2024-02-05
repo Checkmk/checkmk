@@ -8,7 +8,7 @@ from typing import Generic, TypeVar
 
 from .._localize import Localizable
 
-_T = TypeVar("_T")
+ModelT = TypeVar("ModelT")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -24,7 +24,7 @@ class FormSpec:
 
 
 @dataclass(frozen=True)
-class Migrate(Generic[_T]):
+class Migrate(Generic[ModelT]):
     """Creates a transformation that changes the value as a one-off event.
 
     You can add a ``Migrate`` instance to a form spec to update the value from an
@@ -35,4 +35,17 @@ class Migrate(Generic[_T]):
                        to a value compatible with the current form specification.
     """
 
-    model_to_form: Callable[[object], _T]
+    model_to_form: Callable[[object], ModelT]
+
+
+@dataclass(frozen=True)
+class DefaultValue(Generic[ModelT]):
+    value: ModelT
+
+
+@dataclass(frozen=True)
+class InputHint(Generic[ModelT]):
+    value: ModelT
+
+
+Prefill = DefaultValue[ModelT] | InputHint[ModelT]

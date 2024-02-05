@@ -9,7 +9,7 @@ from enum import auto, Enum
 from typing import Callable, ClassVar, Literal, Sequence
 
 from .._localize import Localizable
-from ._base import FormSpec, Migrate
+from ._base import DefaultValue, FormSpec, InputHint, Migrate, Prefill
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -20,12 +20,12 @@ class BooleanChoice(FormSpec):
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
-        prefill_value: Boolean value to pre-populate the choice with.
+        prefill: Value to pre-populate the choice with.
         transform: Transformation of the stored configuration
     """
 
     label: Localizable | None = None
-    prefill_value: bool = False
+    prefill: DefaultValue[bool] = DefaultValue(False)
     transform: Migrate[bool] | None = None
 
 
@@ -74,9 +74,7 @@ class DataSize(FormSpec):
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         displayed_units: Units that can be selected in the UI
-        prefill_value: Value in bytes to pre-populate the form field with. If None, the backend will
-                       decide whether to leave the field empty or to prefill it with a canonical
-                       value.
+        prefill: Value in bytes to pre-populate the form field with.
         transform: Specify if/how the raw input value in bytes should be changed when loaded into
                    the form/saved from the form
         custom_validate: Custom validation function. Will be executed in addition to any
@@ -86,7 +84,7 @@ class DataSize(FormSpec):
 
     label: Localizable | None = None
     displayed_units: Sequence[BinaryUnit] | None = None
-    prefill_value: int | None = None
+    prefill: Prefill[int] = InputHint(0)
 
     transform: Migrate[int] | None = None
 
@@ -175,8 +173,7 @@ class Float(FormSpec):
         label: Text displayed as an extension to the input field
         unit: Unit of the input (only for display)
         display_precision: How many decimal places to display
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -186,7 +183,7 @@ class Float(FormSpec):
     unit: Localizable | None = None
     display_precision: int | None = None
 
-    prefill_value: float | None = None
+    prefill: Prefill[float] = InputHint(0.0)
 
     transform: Migrate[float] | None = None
 
@@ -199,7 +196,7 @@ class HostState(FormSpec):
 
     >>> state_form_spec = HostState(
     ...     title=Localizable("Host state"),
-    ...     prefill_value=HostState.UP,
+    ...     prefill=DefaultValue(HostState.UP),
     ... )
     """
 
@@ -207,7 +204,7 @@ class HostState(FormSpec):
     DOWN: ClassVar[Literal[1]] = 1
     UNREACH: ClassVar[Literal[2]] = 2
 
-    prefill_value: Literal[0, 1, 2] = 0
+    prefill: DefaultValue[Literal[0, 1, 2]] = DefaultValue(0)
 
     transform: Migrate[Literal[0, 1, 2]] | None = None
 
@@ -221,8 +218,7 @@ class Integer(FormSpec):
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         unit: Unit of the input (only for display)
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -235,7 +231,7 @@ class Integer(FormSpec):
 
     label: Localizable | None = None
     unit: Localizable | None = None
-    prefill_value: int | None = None
+    prefill: Prefill[int] = InputHint(0)
 
     transform: Migrate[int] | None = None
 
@@ -251,9 +247,7 @@ class MultilineText(FormSpec):
         help_text: Description to help the user with the configuration
         monospaced: Display text in the form as monospaced
         label: Text displayed in front of the input field
-        prefill_value: Value to pre-populate the form field with.
-            If None, the backend will decide whether to leave the field
-            empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         transform: Transformation of the stored configuration
         custom_validate: Custom validation function.
             Will be executed in addition to any builtin validation logic.
@@ -275,7 +269,7 @@ class MultilineText(FormSpec):
 
     label: Localizable | None = None
 
-    prefill_value: str | None = None
+    prefill: Prefill[str] = InputHint("")
     transform: Migrate[str] | None = None
     custom_validate: Callable[[str], object] | None = None
 
@@ -289,8 +283,7 @@ class Percentage(FormSpec):
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
         display_precision: How many decimal places to display
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -299,7 +292,7 @@ class Percentage(FormSpec):
     label: Localizable | None = None
     display_precision: int | None = None
 
-    prefill_value: float | None = None
+    prefill: Prefill[float] = InputHint(0.0)
 
     transform: Migrate[float] | None = None
 
@@ -323,9 +316,7 @@ class RegularExpression(FormSpec):
         predefined_help_text: Adds pre-formulated help text on how the pattern will be used to match
                               for commonly used matching behavior.
         label: Text displayed as an extension to the input field
-        input_hint: A short hint to aid the user with data entry (e.g. an example)
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         transform: Transformation of the stored configuration
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
@@ -334,9 +325,8 @@ class RegularExpression(FormSpec):
 
     predefined_help_text: MatchingScope
     label: Localizable | None = None
-    input_hint: str | None = None
 
-    prefill_value: str | None = None
+    prefill: Prefill[str] = InputHint("")
 
     transform: Migrate[str] | None = None
 
@@ -349,7 +339,7 @@ class ServiceState(FormSpec):
 
     >>> state_form_spec = ServiceState(
     ...     title=Localizable("State if somthing happens"),
-    ...     prefill_value=ServiceState.WARN,
+    ...     prefill=DefaultValue(ServiceState.WARN),
     ... )
     """
 
@@ -358,7 +348,7 @@ class ServiceState(FormSpec):
     CRIT: ClassVar[Literal[2]] = 2
     UNKNOWN: ClassVar[Literal[3]] = 3
 
-    prefill_value: Literal[0, 1, 2, 3] = 0
+    prefill: DefaultValue[Literal[0, 1, 2, 3]] = DefaultValue(0)
 
     transform: Migrate[Literal[0, 1, 2, 3]] | None = None
 
@@ -370,18 +360,15 @@ class Text(FormSpec):
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
-        input_hint: A short hint to aid the user with data entry (e.g. an example)
-        prefill_value: Value to pre-populate the form field with. If None, the backend will decide
-                       whether to leave the field empty or to prefill it with a canonical value.
+        prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
     """
 
     label: Localizable | None = None
-    input_hint: str | None = None
 
-    prefill_value: str | None = None
+    prefill: Prefill[str] = InputHint("")
 
     transform: Migrate[str] | None = None
 
@@ -406,9 +393,7 @@ class TimeSpan(FormSpec):
         label: Text displayed as an extension to the input field
         displayed_units: Units that can be configured in the UI. All of the listed units can be
                         configured and the value is the sum of the configured fields in seconds.
-        prefill_value: Value in seconds to pre-populate the form fields with. If None, the backend
-                        will decide whether to leave the field empty or to prefill it with
-                        a canonical value.
+        prefill: Value in seconds to pre-populate the form fields with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -421,7 +406,7 @@ class TimeSpan(FormSpec):
 
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
-    prefill_value: float | None = None
+    prefill: Prefill[float] = InputHint(0.0)
     transform: Migrate[Sequence[float]] | None = None
     custom_validate: Callable[[float], object] | None = None
 
@@ -466,7 +451,7 @@ class SingleChoice(FormSpec):
         no_elements_text: Text to show if no elements are given
         frozen: If the value can be changed after initial configuration, e.g. for identifiers
         label: Text displayed in front of the input field
-        prefill_selection: Pre-selected choice.
+        prefill: Pre-selected choice. Must be one of the elements names.
         deprecated_elements: Elements that can still be present in stored user configurations, but
                              are no longer offered
         invalid_element_validation: Validate if the selected value is still offered as a choice
@@ -482,7 +467,7 @@ class SingleChoice(FormSpec):
 
     label: Localizable | None = None
 
-    prefill_selection: str | None = None
+    prefill: DefaultValue[str] | InputHint[Localizable] = InputHint(Localizable("Please choose"))
 
     deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
@@ -491,6 +476,8 @@ class SingleChoice(FormSpec):
     custom_validate: Callable[[str], object] | None = None
 
     def __post_init__(self) -> None:
-        avail_idents = [elem.name for elem in self.elements]
-        if self.prefill_selection is not None and self.prefill_selection not in avail_idents:
-            raise ValueError("Default element is not one of the specified elements")
+        valid = {elem.name for elem in self.elements}
+        if isinstance(self.prefill, DefaultValue) and self.prefill.value not in valid:
+            raise ValueError(
+                f"Invalid default: {self.prefill.value!r}, choose from {', '.join(valid)}"
+            )

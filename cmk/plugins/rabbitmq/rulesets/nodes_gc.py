@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import Migrate
+from cmk.rulesets.v1.form_specs import InputHint, Migrate
 from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer, Text
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
@@ -39,6 +39,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 parameter_form=Levels(
                     form_spec_template=Integer(unit=Localizable("runs")),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Upper level for total number of GC runs"),
                 )
@@ -47,6 +48,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 parameter_form=Levels(
                     form_spec_template=Float(unit=Localizable("1/s")),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
                     predictive=None,
                     title=Localizable("Upper level for GC run rate"),
                 )
@@ -55,6 +57,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 parameter_form=Levels(
                     form_spec_template=Float(unit=Localizable("1/s")),
                     level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
                     predictive=None,
                     title=Localizable("Lower level for GC run rate"),
                 )
@@ -71,6 +74,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                         ]
                     ),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Absolute levels for memory reclaimed by GC"),
                 )
@@ -87,6 +91,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                         ]
                     ),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Upper level for rate of memory reclaimed by GC"),
                 )
@@ -103,6 +108,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                         ]
                     ),
                     level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Lower level for rate of memory reclaimed by GC"),
                 )
@@ -111,6 +117,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 parameter_form=Levels(
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Upper level for runtime run queue"),
                 )
@@ -119,6 +126,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 parameter_form=Levels(
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
                     title=Localizable("Lower level for runtime run queue"),
                 )

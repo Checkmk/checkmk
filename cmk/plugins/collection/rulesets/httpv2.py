@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import (
     BooleanChoice,
     FixedValue,
@@ -34,7 +35,7 @@ def _valuespec_response() -> Dictionary:
             "expected": DictElement(
                 parameter_form=List(
                     title=Localizable("Expected"),
-                    parameter_form=Integer(prefill_value=200),
+                    parameter_form=Integer(prefill=DefaultValue(200)),
                 ),
                 required=True,
             ),
@@ -56,7 +57,7 @@ def _valuespec_document() -> Dictionary:
             "document_body": DictElement(
                 parameter_form=SingleChoice(
                     title=Localizable("Document body"),
-                    prefill_selection="fetch",
+                    prefill=DefaultValue("fetch"),
                     elements=[
                         SingleChoiceElement(
                             name="fetch",
@@ -77,7 +78,7 @@ def _valuespec_document() -> Dictionary:
                     title=Localizable("Age"),
                     label=Localizable("Warn, if the age is older than"),
                     help_text=Localizable("Warn, if the age of the page is older than this"),
-                    prefill_value=3600 * 24,
+                    prefill=DefaultValue(3600 * 24),
                 ),
             ),
             "page_size": DictElement(
@@ -211,7 +212,7 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
             "content_type": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Content-Type"),
-                    prefill_selection="common",
+                    prefill=DefaultValue("common"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="common",
@@ -258,7 +259,7 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
                             name="custom",
                             title=Localizable("Use custom type"),
                             parameter_form=Text(
-                                input_hint="text/plain",
+                                prefill=InputHint("text/plain"),
                             ),
                         ),
                     ],
@@ -341,7 +342,7 @@ def _valuespec_connection() -> Dictionary:
             "method": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("HTTP method"),
-                    prefill_selection="get",
+                    prefill=DefaultValue("get"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="get", title=Localizable("GET"), parameter_form=_send_data("GET")
@@ -423,20 +424,20 @@ def _valuespec_connection() -> Dictionary:
                             title=Localizable("Follow, but stay to same IP-address and port"),
                         ),
                     ],
-                    prefill_selection="follow",
+                    prefill=DefaultValue("follow"),
                 ),
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
                     title=Localizable("Connection timeout"),
                     unit=Localizable("sec"),
-                    prefill_value=10,
+                    prefill=DefaultValue(10),
                 ),
             ),
             "user_agent": DictElement(
                 parameter_form=Text(
                     title=Localizable("User Agent"),
-                    prefill_value="checkmk/check_http",
+                    prefill=DefaultValue("checkmk/check_http"),
                     help_text=Localizable('String to be sent in http header as "User Agent"'),
                 ),
             ),
@@ -449,7 +450,7 @@ def _valuespec_connection() -> Dictionary:
             "auth": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Authentication"),
-                    prefill_selection="user_auth",
+                    prefill=DefaultValue("user_auth"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="user_auth",
@@ -505,7 +506,7 @@ def _valuespec_content() -> Dictionary:
             "header": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Header"),
-                    prefill_selection="string",
+                    prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="string",
@@ -526,7 +527,7 @@ def _valuespec_content() -> Dictionary:
             "body": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Body"),
-                    prefill_selection="string",
+                    prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="string",
@@ -561,14 +562,14 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     help_text=Localizable("Maximum time the request may take."),
-                    prefill_fixed_levels=(0.1, 0.2),
+                    prefill_fixed_levels=DefaultValue((0.1, 0.2)),
                 ),
             ),
             "server_response": DictElement(parameter_form=_valuespec_response()),
             "cert": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Certificate validity"),
-                    prefill_selection="validate",
+                    prefill=DefaultValue("validate"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="validate",
@@ -577,6 +578,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                                 title=Localizable("Check validity"),
                                 form_spec_template=Integer(unit=Localizable("days")),
                                 level_direction=LevelDirection.LOWER,
+                                prefill_fixed_levels=InputHint((90, 60)),
                                 predictive=None,
                                 help_text=Localizable(
                                     "Minimum number of days a certificate has to be valid."
@@ -630,7 +632,7 @@ def _valuespec_endpoints() -> List:
                                 parameter_form=Text(
                                     title=Localizable("Name"),
                                     custom_validate=DisallowEmpty(),
-                                    input_hint="Name to be used for the Checkmk service",
+                                    prefill=InputHint("My HTTP service"),
                                 ),
                                 required=True,
                             ),
@@ -641,7 +643,7 @@ def _valuespec_endpoints() -> List:
                 "url": DictElement(
                     parameter_form=Text(
                         title=Localizable("URL"),
-                        input_hint="https://subdomain.domain.tld:port/path/to/filename",
+                        prefill=InputHint("https://subdomain.domain.tld:port/path/to/filename"),
                     ),
                     required=True,
                 ),

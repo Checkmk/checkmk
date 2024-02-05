@@ -5,6 +5,7 @@
 
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import Integer, ServiceState, Text
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, List
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
@@ -25,14 +26,14 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                             ),
                             "hosts_count": DictElement(
                                 parameter_form=Integer(
-                                    title=Localizable("Number of hosts"), prefill_value=2
+                                    title=Localizable("Number of hosts"), prefill=DefaultValue(2)
                                 ),
                                 required=True,
                             ),
                             "state": DictElement(
                                 parameter_form=ServiceState(
                                     title=Localizable("State if violated"),
-                                    prefill_value=ServiceState.WARN,
+                                    prefill=DefaultValue(ServiceState.WARN),
                                 ),
                                 required=True,
                             ),

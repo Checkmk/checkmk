@@ -560,8 +560,11 @@ def _convert_to_legacy_integer(
     if to_convert.unit is not None:
         converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -591,8 +594,11 @@ def _convert_to_legacy_float(
     if to_convert.display_precision is not None:
         converted_kwargs["display_format"] = f"%.{to_convert.display_precision}f"
 
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -651,8 +657,11 @@ def _convert_to_legacy_datasize(
         "label": _localize_optional(to_convert.label, localizer),
     }
 
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -679,8 +688,11 @@ def _convert_to_legacy_percentage(
     if to_convert.display_precision is not None:
         converted_kwargs["display_format"] = f"%.{to_convert.display_precision}f"
 
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -699,11 +711,11 @@ def _convert_to_legacy_text_input(
         "help": _localize_optional(to_convert.help_text, localizer),
     }
 
-    if to_convert.input_hint is not None:
-        converted_kwargs["placeholder"] = to_convert.input_hint
-
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            converted_kwargs["placeholder"] = to_convert.prefill.value
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -722,11 +734,11 @@ def _convert_to_legacy_regular_expression(
         "help": _localize_optional(to_convert.help_text, localizer),
     }
 
-    if to_convert.input_hint is not None:
-        converted_kwargs["placeholder"] = to_convert.input_hint
-
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.InputHint():
+            converted_kwargs["placeholder"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -771,9 +783,8 @@ def _convert_to_legacy_monitoring_state(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
+        "default_value": to_convert.prefill.value,
     }
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
 
     return legacy_valuespecs.MonitoringState(**converted_kwargs)
 
@@ -784,9 +795,8 @@ def _convert_to_legacy_host_state(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
+        "default_value": to_convert.prefill.value,
     }
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
 
     return legacy_valuespecs.DropdownChoice(
         choices=[
@@ -817,6 +827,12 @@ def _convert_to_legacy_dropdown_choice(
         "read_only": to_convert.frozen,
     }
 
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.InputHint():
+            converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
+
     if to_convert.invalid_element_validation is not None:
         match to_convert.invalid_element_validation.mode:
             case ruleset_api_v1.form_specs.basic.InvalidElementMode.COMPLAIN:
@@ -835,13 +851,6 @@ def _convert_to_legacy_dropdown_choice(
 
     if to_convert.deprecated_elements is not None:
         converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
-
-    if to_convert.prefill_selection is not None:
-        converted_kwargs["default_value"] = (
-            to_convert.prefill_selection.value
-            if isinstance(to_convert.prefill_selection, enum.Enum)
-            else to_convert.prefill_selection
-        )
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -869,19 +878,20 @@ def _convert_to_legacy_cascading_dropdown(
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
-    if to_convert.prefill_selection is None:
-        converted_kwargs["no_preselect_title"] = ""
-    else:
-        # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
-        default_choice = next(
-            legacy_choice
-            for legacy_choice in legacy_choices
-            if legacy_choice[0] == str(to_convert.prefill_selection)
-        )
-        converted_kwargs["default_value"] = (
-            str(to_convert.prefill_selection),
-            default_choice[2].default_value(),
-        )
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.composed.InputHint():
+            converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
+        case ruleset_api_v1.form_specs.composed.DefaultValue():
+            # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
+            default_choice = next(
+                legacy_choice
+                for legacy_choice in legacy_choices
+                if legacy_choice[0] == to_convert.prefill.value
+            )
+            converted_kwargs["default_value"] = (
+                to_convert.prefill.value,
+                default_choice[2].default_value(),
+            )
 
     return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
@@ -917,8 +927,9 @@ def _convert_to_legacy_validation(
 def _convert_to_legacy_list(
     to_convert: ruleset_api_v1.form_specs.composed.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
+    template = _convert_to_legacy_valuespec(to_convert.parameter_form, localizer)
     converted_kwargs: MutableMapping[str, Any] = {
-        "valuespec": _convert_to_legacy_valuespec(to_convert.parameter_form, localizer),
+        "valuespec": template,
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "movable": to_convert.order_editable,
@@ -931,9 +942,6 @@ def _convert_to_legacy_list(
         converted_kwargs["validate"] = _convert_to_legacy_validation(
             to_convert.custom_validate, localizer
         )
-
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
 
     return legacy_valuespecs.ListOf(**converted_kwargs)
 
@@ -981,8 +989,11 @@ def _convert_to_legacy_time_span(
             _convert_to_legacy_time_unit(u) for u in to_convert.displayed_units
         ]
 
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -1004,7 +1015,9 @@ _TNumericSpec = (
 def _get_legacy_level_spec(
     form_spec_template: _TNumericSpec,
     title: ruleset_api_v1.Localizable,
-    prefill: float | None,
+    prefill_value: float | int,
+    prefill_type: type[ruleset_api_v1.form_specs.DefaultValue]
+    | type[ruleset_api_v1.form_specs.InputHint],
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
     if isinstance(
@@ -1014,16 +1027,29 @@ def _get_legacy_level_spec(
         spec: _TNumericSpec = dataclasses.replace(
             form_spec_template,
             title=title,
-            prefill_value=int(prefill) if prefill is not None else None,
+            prefill=prefill_type(int(prefill_value)),
         )
     else:
-        spec = dataclasses.replace(form_spec_template, title=title, prefill_value=prefill)
+        spec = dataclasses.replace(
+            form_spec_template, title=title, prefill=prefill_type(float(prefill_value))
+        )
     return _convert_to_legacy_valuespec(spec, localizer)
+
+
+def _get_prefill_type(
+    prefill: ruleset_api_v1.form_specs.Prefill,
+) -> type[ruleset_api_v1.form_specs.DefaultValue] | type[ruleset_api_v1.form_specs.InputHint]:
+    return (
+        ruleset_api_v1.form_specs.DefaultValue
+        if isinstance(prefill, ruleset_api_v1.form_specs.DefaultValue)
+        else ruleset_api_v1.form_specs.InputHint
+    )
 
 
 def _get_fixed_levels_choice_element(
     form_spec: _TNumericSpec,
-    prefill_levels: tuple[float, float] | None,
+    prefill: ruleset_api_v1.form_specs.Prefill[tuple[float, float]]
+    | ruleset_api_v1.form_specs.Prefill[tuple[int, int]],
     level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
@@ -1036,12 +1062,16 @@ def _get_fixed_levels_choice_element(
     else:
         assert_never(level_direction)
 
-    prefill_value = prefill_levels if prefill_levels is not None else (None, None)
+    prefill_type = _get_prefill_type(prefill)
 
     return legacy_valuespecs.Tuple(
         elements=[
-            _get_legacy_level_spec(form_spec, warn_title, prefill_value[0], localizer),
-            _get_legacy_level_spec(form_spec, crit_title, prefill_value[1], localizer),
+            _get_legacy_level_spec(
+                form_spec, warn_title, prefill.value[0], prefill_type, localizer
+            ),
+            _get_legacy_level_spec(
+                form_spec, crit_title, prefill.value[1], prefill_type, localizer
+            ),
         ],
     )
 
@@ -1067,17 +1097,22 @@ def _get_level_computation_dropdown(
     else:
         assert_never(level_direction)
 
-    abs_prefill: tuple[float, float] | tuple[None, None] = (None, None)
-    if to_convert.prefill_abs_diff is not None:
-        abs_prefill = to_convert.prefill_abs_diff
-
-    rel_prefill = (10.0, 20.0)
-    if to_convert.prefill_rel_diff is not None:
-        rel_prefill = to_convert.prefill_rel_diff
-
-    stddev_prefill = (2.0, 4.0)
-    if to_convert.prefill_stddev_diff is not None:
-        stddev_prefill = to_convert.prefill_stddev_diff
+    abs_diff_prefill_type = _get_prefill_type(to_convert.prefill_abs_diff)
+    # InputHint not supported by legacy VS -> use DEF_VALUE for now.
+    rel_prefill: tuple[float, float] | tuple[
+        legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
+    ] = (
+        to_convert.prefill_rel_diff.value
+        if isinstance(to_convert.prefill_rel_diff, ruleset_api_v1.form_specs.DefaultValue)
+        else (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
+    )
+    stddev_prefill: tuple[float, float] | tuple[
+        legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
+    ] = (
+        to_convert.prefill_stddev_diff.value
+        if isinstance(to_convert.prefill_stddev_diff, ruleset_api_v1.form_specs.DefaultValue)
+        else (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
+    )
 
     return legacy_valuespecs.CascadingDropdown(
         title=ruleset_api_v1.Localizable(
@@ -1094,10 +1129,18 @@ def _get_level_computation_dropdown(
                     ).localize(localizer),
                     elements=[
                         _get_legacy_level_spec(
-                            form_spec_template, warn_title, abs_prefill[0], localizer
+                            form_spec_template,
+                            warn_title,
+                            to_convert.prefill_abs_diff.value[0],
+                            abs_diff_prefill_type,
+                            localizer,
                         ),
                         _get_legacy_level_spec(
-                            form_spec_template, crit_title, abs_prefill[1], localizer
+                            form_spec_template,
+                            crit_title,
+                            to_convert.prefill_abs_diff.value[1],
+                            abs_diff_prefill_type,
+                            localizer,
                         ),
                     ],
                 ),
@@ -1224,8 +1267,20 @@ def _get_predictive_levels_choice_element(
                 title=ruleset_api_v1.Localizable("Fixed limits").localize(localizer),
                 help=fixed_help_text.localize(localizer),
                 elements=[
-                    _get_legacy_level_spec(form_spec_template, fixed_warn_title, None, localizer),
-                    _get_legacy_level_spec(form_spec_template, fixed_crit_title, None, localizer),
+                    _get_legacy_level_spec(
+                        form_spec_template,
+                        fixed_warn_title,
+                        0,
+                        ruleset_api_v1.form_specs.InputHint,
+                        localizer,
+                    ),
+                    _get_legacy_level_spec(
+                        form_spec_template,
+                        fixed_crit_title,
+                        0,
+                        ruleset_api_v1.form_specs.InputHint,
+                        localizer,
+                    ),
                 ],
             ),
         ),
@@ -1384,7 +1439,7 @@ def _convert_to_legacy_checkbox(
         label=_localize_optional(to_convert.label, localizer),
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
-        default_value=to_convert.prefill_value,
+        default_value=to_convert.prefill.value,
     )
 
 
@@ -1489,7 +1544,7 @@ def _convert_to_legacy_list_choice(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
-        "default_value": to_convert.prefill_selections,
+        "default_value": to_convert.prefill.value,
     }
 
     if to_convert.custom_validate is not None:
@@ -1517,8 +1572,11 @@ def _convert_to_legacy_text_area(
     to_convert: ruleset_api_v1.form_specs.basic.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
     converted_kwargs: MutableMapping[str, Any] = {}
-    if to_convert.prefill_value is not None:
-        converted_kwargs["default_value"] = to_convert.prefill_value
+    match to_convert.prefill:
+        case ruleset_api_v1.form_specs.basic.DefaultValue():
+            converted_kwargs["default_value"] = to_convert.prefill.value
+        case ruleset_api_v1.form_specs.basic.InputHint():
+            pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(

@@ -162,6 +162,7 @@ def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
     """Basic init in memory and history table exists."""
 
     cur = history_sqlite.conn.cursor()
+    cur.row_factory = None
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='history';")
     assert cur.fetchall()[0] == ("history",)
 
@@ -169,8 +170,30 @@ def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
 def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
-    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
-    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    event1 = Event(
+        host=HostName("ABC1"),
+        text="Event1 text",
+        core_host=HostName("ABC"),
+        id=1,
+        count=1,
+        first=1.1,
+        last=1.111,
+        priority=100,
+        host_in_downtime=False,
+        contact_groups=("some string1", "another string1"),
+    )
+    event2 = Event(
+        host=HostName("ABC2"),
+        text="Event2 text",
+        core_host=HostName("ABC"),
+        id=2,
+        count=2,
+        first=2.0,
+        last=2.222,
+        priority=200,
+        host_in_downtime=True,
+        contact_groups=("some string2", "another string2"),
+    )
 
     history_sqlite.add(event=event1, what="NEW")
     history_sqlite.add(event=event2, what="NEW")
@@ -183,17 +206,24 @@ def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
 
     query = QueryGET(
         get_table,
-        ["GET history", "Columns: history_what host_name", "Filter: event_host = ABC1"],
+        ["GET history", "Columns: history_what event_host", "Filter: event_host = ABC1"],
         logger,
     )
 
     query_result = history_sqlite.get(query)
 
     (row,) = query_result
-    column_index = get_table("history").column_names.index
-    # -1 because sqlite does not have the "Line number in event history file"
-    assert row[column_index("history_what") - 1] == "NEW"
-    assert row[column_index("event_host") - 1] == "ABC1"
+
+    # check for several possible types: int, float, str, bool, list/tuple
+    assert row["what"] == "NEW"  # type: ignore[call-overload]
+    assert row["host"] == "ABC1"  # type: ignore[call-overload]
+    assert row["id"] == 1  # type: ignore[call-overload]
+    assert row["count"] == 1  # type: ignore[call-overload]
+    assert row["first"] == 1.1  # type: ignore[call-overload]
+    assert row["last"] == 1.111  # type: ignore[call-overload]
+    assert row["priority"] == 100  # type: ignore[call-overload]
+    assert row["host_in_downtime"] is False  # type: ignore[call-overload]
+    assert row["contact_groups"] == ["some string1", "another string1"]  # type: ignore[call-overload]
 
 
 def test_housekeeping(history_sqlite: SQLiteHistory) -> None:
@@ -207,9 +237,9 @@ def test_housekeeping(history_sqlite: SQLiteHistory) -> None:
     with history_sqlite.conn as connection:
         cur = connection.cursor()
         cur.execute("SELECT count(*) FROM history;")
-        assert cur.fetchall()[0] == (2,)
+        assert cur.fetchone()["count(*)"] == 2
 
         cur.execute("UPDATE history set time = 123456 where host = 'ABC1'")
         history_sqlite.housekeeping()
         cur.execute("SELECT count(*) FROM history;")
-        assert cur.fetchall()[0] == (1,)
+        assert cur.fetchone()["count(*)"] == 1

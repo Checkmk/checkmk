@@ -213,6 +213,7 @@ def test_human_user_restapi(site: Site) -> None:
     assert session.get_auth_cookie() is None
 
 
+@skip_if_saas_edition
 def test_local_secret_no_sessions(site: Site) -> None:
     """test authenticated request with the site internal secret
 

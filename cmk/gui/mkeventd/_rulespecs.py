@@ -261,6 +261,7 @@ def _parameter_valuespec_logwatch_ec() -> Migrate:
                     "activation",
                     Checkbox(
                         title=_("Disable or enable forwarding"),
+                        label=_("Enable forwarding"),
                         false_label=_("Messages are handled by logwatch."),
                         true_label=_(
                             "Message are forwarded according to below or inherited settings."

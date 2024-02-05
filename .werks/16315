@@ -1,0 +1,11 @@
+Title: Respect sort index for listed dashboards in page menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1707138304
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+The page menu "Dashboards" in dashboards listed all other available dashboards
+in a random order. The defined sort index of each dashboard is now respected.

@@ -405,14 +405,19 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.composed.List(
-                parameter_form=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[])
+                element_template=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[])
             ),
-            legacy_valuespecs.ListOf(valuespec=legacy_valuespecs.Tuple(elements=[])),
+            legacy_valuespecs.ListOf(
+                valuespec=legacy_valuespecs.Tuple(elements=[]),
+                add_label="Add new entry",
+                del_label="Remove this entry",
+                text_if_empty="No entries",
+            ),
             id="minimal ListOf",
         ),
         pytest.param(
             api_v1.form_specs.composed.List(
-                parameter_form=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
+                element_template=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
                     elements=[
                         api_v1.form_specs.basic.Text(),
                         api_v1.form_specs.basic.Integer(unit=api_v1.Localizable("km")),
@@ -420,10 +425,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ),
                 title=api_v1.Localizable("list title"),
                 help_text=api_v1.Localizable("list help"),
-                order_editable=False,
+                editable_order=False,
                 add_element_label=api_v1.Localizable("Add item"),
                 remove_element_label=api_v1.Localizable("Remove item"),
-                list_empty_label=api_v1.Localizable("No items"),
+                no_element_label=api_v1.Localizable("No items"),
             ),
             legacy_valuespecs.ListOf(
                 valuespec=legacy_valuespecs.Tuple(
@@ -1542,7 +1547,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.validators.ValidationError(api_v1.Localizable("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.composed.List(
-        parameter_form=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
+        element_template=api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
             elements=[api_v1.form_specs.basic.Text()]
         ),
         custom_validate=_v1_custom_list_validate,
@@ -1665,7 +1670,7 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.composed.CascadingSingleChoice(elements=[]),
         api_v1.form_specs.basic.ServiceState(),
         api_v1.form_specs.basic.HostState(),
-        api_v1.form_specs.composed.List(parameter_form=api_v1.form_specs.basic.Integer()),
+        api_v1.form_specs.composed.List(element_template=api_v1.form_specs.basic.Integer()),
         api_v1.form_specs.basic.FixedValue(value=None),
         api_v1.form_specs.basic.TimeSpan(),
         api_v1.form_specs.levels.Levels(

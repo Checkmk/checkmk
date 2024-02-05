@@ -76,7 +76,7 @@ def _discovery_parameters_form_alertmanager():
                                     ),
                                     "no_group_services": DictElement(
                                         parameter_form=List(
-                                            parameter_form=Text(),
+                                            element_template=Text(),
                                             title=Localizable(
                                                 "Don't create a group service for the following groups"
                                             ),
@@ -128,11 +128,11 @@ def migrate_non_identifier_key(raw_value: object) -> Mapping[str, object]:
 
 def form_alert_remapping():
     return List(
-        parameter_form=Dictionary(
+        element_template=Dictionary(
             elements={
                 "rule_names": DictElement(
                     parameter_form=List(
-                        parameter_form=Text(prefill=DefaultValue("Watchdog")),
+                        element_template=Text(prefill=DefaultValue("Watchdog")),
                         title=Localizable("Alert rule names"),
                         help_text=Localizable("A list of rule names as defined in Alertmanager."),
                     ),

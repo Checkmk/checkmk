@@ -937,15 +937,15 @@ def _convert_to_legacy_validation(
 def _convert_to_legacy_list(
     to_convert: ruleset_api_v1.form_specs.composed.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
-    template = _convert_to_legacy_valuespec(to_convert.parameter_form, localizer)
+    template = _convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: MutableMapping[str, Any] = {
         "valuespec": template,
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
-        "movable": to_convert.order_editable,
-        "add_label": _localize_optional(to_convert.add_element_label, localizer),
-        "del_label": _localize_optional(to_convert.remove_element_label, localizer),
-        "text_if_empty": _localize_optional(to_convert.list_empty_label, localizer),
+        "movable": to_convert.editable_order,
+        "add_label": to_convert.add_element_label.localize(localizer),
+        "del_label": to_convert.remove_element_label.localize(localizer),
+        "text_if_empty": to_convert.no_element_label.localize(localizer),
     }
 
     if to_convert.custom_validate is not None:

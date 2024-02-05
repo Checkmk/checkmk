@@ -51,6 +51,7 @@
 #define ASIO_NO_DEPRECATED                                 // be nice
 #define _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING  // Microsoft is not
                                                            // smart enough
+#define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS  // to satisfy format library
 
 #define FMT_HEADER_ONLY
 

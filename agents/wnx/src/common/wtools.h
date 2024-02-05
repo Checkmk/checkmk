@@ -41,6 +41,8 @@
 namespace wtools {
 constexpr const wchar_t *kWToolsLogName = L"check_mk_wtools.log";
 
+constexpr std::string_view safe_temp_sub_dir = "cmk_service";
+
 inline void *ProcessHeapAlloc(size_t size) {
     return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
@@ -1068,7 +1070,8 @@ std::filesystem::path ExecuteCommandsAsync(
 /// Create folder in %Temp% and set only owner permissions
 ///
 /// Returns path
-std::filesystem::path MakeSafeTempFolder();
+std::optional<std::filesystem::path> MakeSafeTempFolder(
+    std::string_view sub_dir);
 
 /// Changes Access Rights in Windows crazy manner
 ///

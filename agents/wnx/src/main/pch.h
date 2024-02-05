@@ -14,6 +14,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
+#define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS
 // TODO: add headers that you want to pre-compile here
 
 #define NOMINMAX

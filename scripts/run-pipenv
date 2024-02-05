@@ -43,6 +43,12 @@ if [ "$CI" == "true" ]; then
         NPY_NUM_BUILD_JOBS=4
 fi
 
+# Fix python-gssapi build on SLES12SP5
+# https://github.com/pythongssapi/python-gssapi/issues/212
+if grep 'PRETTY_NAME="SUSE Linux Enterprise Server 12 SP5"' /etc/os-release >/dev/null 2>&1; then
+    export GSSAPI_COMPILER_ARGS='-DHAS_GSSAPI_EXT_H'
+fi
+
 PIPENV_VENV_IN_PROJECT=true \
     PIPENV_NOSPIN=true \
     PIPENV_HIDE_EMOJIS=true \

@@ -20,7 +20,7 @@ def register() -> None:
 def perfometer_check_tcp(
     row: Row, check_command: str, perfdata: Perfdata
 ) -> LegacyPerfometerResult:
-    time_ms = float(perfdata[0][1]) * 1000.0
+    time_ms = float(perfdata[0].value) * 1000.0
     return "%.3f ms" % time_ms, perfometer_logarithmic(time_ms, 1000, 10, "#20dd30")
 
 
@@ -28,7 +28,7 @@ def perfometer_check_http(
     row: Row, check_command: str, perfdata: Perfdata
 ) -> LegacyPerfometerResult:
     try:
-        time_ms = float(perfdata[0][1]) * 1000.0
+        time_ms = float(perfdata[0].value) * 1000.0
     except (IndexError, ValueError):
         time_ms = 0
     return "%.1f ms" % time_ms, perfometer_logarithmic(time_ms, 1000, 10, "#66ccff")

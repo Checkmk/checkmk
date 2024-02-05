@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.type_defs import Perfdata
+from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_fileinfo_groups
 from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerResult
@@ -16,12 +16,12 @@ from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerRe
     [
         (
             [
-                ("count", 1, "", None, None, None, None),
-                ("size", 0, "", None, None, None, None),
-                ("size_largest", 0, "", None, None, None, None),
-                ("size_smallest", 0, "", None, None, None, None),
-                ("age_oldest", 5, "", None, None, None, None),
-                ("age_newest", 5, "", None, None, None, None),
+                PerfDataTuple("count", "count", 1, "", None, None, None, None),
+                PerfDataTuple("size", "size", 0, "", None, None, None, None),
+                PerfDataTuple("size_largest", "size_largest", 0, "", None, None, None, None),
+                PerfDataTuple("size_smallest", "size_smallest", 0, "", None, None, None, None),
+                PerfDataTuple("age_oldest", "age_oldest", 5, "", None, None, None, None),
+                PerfDataTuple("age_newest", "age_newest", 5, "", None, None, None, None),
             ],
             (
                 "1 Tot / 5.00 s",
@@ -34,7 +34,10 @@ from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerRe
             ),
         ),
         (
-            [("count", 0, "", None, None, None, None), ("size", 0, "", None, None, None, None)],
+            [
+                PerfDataTuple("count", "count", 0, "", None, None, None, None),
+                PerfDataTuple("size", "size", 0, "", None, None, None, None),
+            ],
             (
                 "0 Tot",
                 HTML(

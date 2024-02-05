@@ -16,20 +16,26 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
+
+from dataclasses import asdict
+
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.globals import request, user
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.endpoints.utils import may_fail
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.activate_changes.request_schemas import ActivateChanges
+from cmk.gui.plugins.openapi.endpoints.activate_changes.response_schemas import (
+    ActivationRunCollection,
+    ActivationRunResponse,
 )
-from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.plugins.openapi.endpoints.utils import may_fail
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
+from cmk.gui.watolib.activate_changes import (
+    activate_changes_start,
+    ActivationRestAPIResponseExtensions,
+)
 
 from cmk import fields
 
@@ -79,8 +85,8 @@ PERMISSIONS = permissions.AllPerm(
         423: "There is already an activation running.",
     },
     additional_status_codes=[302, 401, 409, 422, 423],
-    request_schema=request_schemas.ActivateChanges,
-    response_schema=response_schemas.DomainObject,
+    request_schema=ActivateChanges,
+    response_schema=ActivationRunResponse,
     permissions_required=permissions.AllPerm(
         [
             permissions.Perm("wato.activate"),
@@ -95,17 +101,17 @@ def activate_changes(params):
     body = params["body"]
     sites = body["sites"]
     with may_fail(MKUserError), may_fail(MKAuthException, status=401):
-        activation_id = watolib.activate_changes_start(
+        activation_response = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
 
     if body["redirect"]:
-        wait_for = _completion_link(activation_id)
+        wait_for = _completion_link(activation_response.activation_id)
         response = Response(status=302)
         response.location = wait_for["href"]
         return response
 
-    return _serve_activation_run(activation_id, is_running=True)
+    return serve_json(_activation_run_domain_object(activation_response))
 
 
 def _completion_link(activation_id: str) -> LinkType:
@@ -113,6 +119,29 @@ def _completion_link(activation_id: str) -> LinkType:
         "cmk.gui.plugins.openapi.endpoints.activate_changes",
         "cmk/wait-for-completion",
         parameters={"activation_id": activation_id},
+    )
+
+
+def _activation_run_domain_object(
+    activation_response: ActivationRestAPIResponseExtensions,
+) -> DomainObject:
+
+    return constructors.domain_object(
+        domain_type="activation_run",
+        identifier=activation_response.activation_id,
+        title=(
+            "Activation status: In progress."
+            if activation_response.is_running
+            else "Activation status: Complete."
+        ),
+        extensions=asdict(activation_response),
+        deletable=False,
+        editable=False,
+        links=(
+            [_completion_link(activation_response.activation_id)]
+            if activation_response.is_running
+            else []
+        ),
     )
 
 
@@ -186,7 +215,7 @@ def activate_changes_wait_for_completion(params):
         404: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
-    response_schema=response_schemas.DomainObject,
+    response_schema=ActivationRunResponse,
 )
 def show_activation(params):
     """Show the activation status"""
@@ -210,7 +239,7 @@ def show_activation(params):
     "cmk/run",
     method="get",
     permissions_required=RO_PERMISSIONS,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=ActivationRunCollection,
 )
 def list_activations(params):
     """Show all currently running activations"""

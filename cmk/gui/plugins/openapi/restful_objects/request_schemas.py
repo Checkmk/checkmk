@@ -14,7 +14,6 @@ from cmk.utils.livestatus_helpers import tables
 from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
-from cmk.gui import watolib
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
@@ -1816,36 +1815,6 @@ class BulkDeleteContactGroup(BaseSchema):
         required=True,
         example=["windows", "panels"],
         description="A list of contract group names.",
-    )
-
-
-class ActivateChanges(BaseSchema):
-    redirect = fields.Boolean(
-        description=(
-            "After starting the activation, redirect immediately to the 'Wait for completion' "
-            "endpoint instead of waiting for the completion."
-        ),
-        required=False,
-        load_default=False,
-        example=False,
-    )
-    sites = fields.List(
-        gui_fields.SiteField(presence="ignore"),
-        description=(
-            "The names of the sites on which the configuration shall be activated."
-            " An empty list means all sites which have pending changes."
-        ),
-        required=False,
-        load_default=list,
-        example=["production"],
-    )
-    force_foreign_changes = fields.Boolean(
-        description=param_description(
-            watolib.activate_changes_start.__doc__, "force_foreign_changes"
-        ),
-        required=False,
-        load_default=False,
-        example=False,
     )
 
 

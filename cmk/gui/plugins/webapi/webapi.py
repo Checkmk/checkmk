@@ -1267,9 +1267,9 @@ class APICallOther(APICallCollection):
         else:
             sites = []
 
-        activation_id = watolib.activate_changes_start(
+        activation_response = watolib.activate_changes_start(
             sites,
             comment,
             force_foreign_changes=allow_foreign_changes,
         )
-        return watolib.activate_changes_wait(activation_id)
+        return watolib.activate_changes_wait(activation_response.activation_id)

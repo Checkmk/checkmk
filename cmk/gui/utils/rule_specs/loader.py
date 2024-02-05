@@ -48,7 +48,7 @@ class LoadedRuleSpec:
 
 def load_api_v1_rule_specs(
     raise_errors: bool,
-) -> tuple[Sequence[str], Sequence[LoadedRuleSpec]]:
+) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {
@@ -68,8 +68,6 @@ def load_api_v1_rule_specs(
         raise_errors=raise_errors,
     )
 
-    errors = [str(e) for e in discovered_plugins.errors]
-
     loaded_plugins = [
         LoadedRuleSpec(rule_spec=plugin, edition_only=_get_edition_only(location.module))
         for location, plugin in discovered_plugins.plugins.items()
@@ -80,7 +78,7 @@ def load_api_v1_rule_specs(
     ]
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    return errors, loaded
+    return discovered_plugins.errors, loaded
 
 
 def _generate_additional_plugins(

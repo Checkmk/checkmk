@@ -705,11 +705,17 @@ world::ExternalPort::IoParam AsIoParam(
 
 void PrepareTempFolder() {
     try {
-        const auto path = wtools::MakeSafeTempFolder();
-        for (const auto &entry : std::filesystem::directory_iterator(path)) {
-            fs::remove_all(entry.path());
+        const auto path = wtools::MakeSafeTempFolder(wtools::safe_temp_sub_dir);
+        if (path.has_value()) {
+            for (const auto &entry :
+                 std::filesystem::directory_iterator(*path)) {
+                fs::remove_all(entry.path());
+            }
+            XLOG::l.i("Temp folder: {}", path);
+        } else {
+            XLOG::l("Failed to create temp folder");
         }
-        XLOG::l.i("Temp folder: {}", path);
+
     } catch (const std::exception &e) {
         XLOG::l("Failed to create temp folder: {}", e.what());
     }

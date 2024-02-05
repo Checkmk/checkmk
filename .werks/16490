@@ -1,0 +1,16 @@
+Title: NetApp: new addition of datasource program and check plugins for NetApp ONTAP
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1707136583
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+With this werk the last NetApp check plugins have been migrated for the new NetApp ONTAP REST API.
+
+The new migrated plugins are:
+
+LI: NetApp snapvault
+LI: NetApp qtree quota
+LI: NetApp FCP

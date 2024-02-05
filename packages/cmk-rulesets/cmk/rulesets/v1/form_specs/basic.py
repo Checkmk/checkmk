@@ -306,10 +306,10 @@ class Percentage(FormSpec):
     custom_validate: Callable[[float], object] | None = None
 
 
-class MatchingScope(enum.Enum):
-    PREFIX = enum.auto()
-    INFIX = enum.auto()
-    FULL = enum.auto()
+class MatchingScope(Enum):
+    PREFIX = auto()
+    INFIX = auto()
+    FULL = auto()
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -26,11 +26,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = [
-        # services in snmp-rittal-CMCIII host disappearing after update. See CMK-15029
-        # Todo: re-enable host after the ticket is solved.
-        "snmp-rittal-CMCIII",
-    ]
+    SKIPPED_DUMPS = []  # type: ignore
 
 
 @dataclass

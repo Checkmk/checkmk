@@ -1352,25 +1352,27 @@ impl CheckConfig {
         if let Some(ms_sql) = self.ms_sql() {
             CheckConfig::prepare_cache_sub_dir(environment, ms_sql.hash());
             log::info!("Generating main data");
-            let data = generate_data(ms_sql, environment)
-                .await
-                .unwrap_or_else(|e| {
-                    log::error!("Error generating data: {e}");
-                    format!("{e}\n")
-                });
             let mut output: Vec<String> = Vec::new();
-            for config in ms_sql.configs() {
+            output.push(
+                generate_data(ms_sql, environment)
+                    .await
+                    .unwrap_or_else(|e| {
+                        log::error!("Error generating data at main config: {e}");
+                        format!("{e}\n")
+                    }),
+            );
+            for (num, config) in std::iter::zip(0.., ms_sql.configs()) {
                 log::info!("Generating configs data");
                 CheckConfig::prepare_cache_sub_dir(environment, config.hash());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
-                        log::error!("Error generating data: {e}");
+                        log::error!("Error generating data at config {num}: {e}");
                         format!("{e}\n")
                     });
                 output.push(configs_data);
             }
-            Ok(data + &output.join(""))
+            Ok(output.join(""))
         } else {
             log::error!("No config");
             anyhow::bail!("No Config")

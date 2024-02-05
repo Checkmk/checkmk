@@ -5,13 +5,14 @@
 
 import enum
 from dataclasses import dataclass
+from typing import Generic, TypeVar
 
-from ._base import FormSpec, Migrate
+from ._base import DefaultValue, FormSpec, Migrate, ModelT, Prefill
 from .basic import DataSize, Float, Integer, Percentage, TimeSpan
 
 
 @dataclass(frozen=True, kw_only=True)
-class PredictiveLevels:
+class PredictiveLevels(Generic[ModelT]):
     """Definition for levels that change over time based on a prediction of the monitored value.
     Usable only in conjunction with `Levels`
 
@@ -33,9 +34,9 @@ class PredictiveLevels:
     """
 
     reference_metric: str
-    prefill_abs_diff: tuple[float, float] | None = None
-    prefill_rel_diff: tuple[float, float] | None = None
-    prefill_stddev_diff: tuple[float, float] | None = None
+    prefill_abs_diff: Prefill[tuple[ModelT, ModelT]]
+    prefill_rel_diff: Prefill[tuple[float, float]] = DefaultValue((10.0, 20.0))
+    prefill_stddev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
 
 
 class LevelDirection(enum.Enum):
@@ -45,8 +46,13 @@ class LevelDirection(enum.Enum):
     LOWER = "lower"
 
 
+_NumberT = TypeVar(
+    "_NumberT", int, float
+)  # TODO: tie this to the FormSpec type, once that is generic
+
+
 @dataclass(frozen=True, kw_only=True)
-class Levels(FormSpec):
+class Levels(FormSpec, Generic[_NumberT]):
     """Specifies a form for configuring levels
 
     Args:
@@ -110,8 +116,8 @@ class Levels(FormSpec):
 
     form_spec_template: DataSize | Float | Integer | Percentage | TimeSpan
     level_direction: LevelDirection
-    predictive: PredictiveLevels | None
+    predictive: PredictiveLevels[_NumberT] | None
 
-    prefill_fixed_levels: tuple[float, float] | None = None
+    prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
 
     transform: Migrate[object] | None = None

@@ -26,7 +26,7 @@ def _parameter_form_prism_vm_tools():
                             title=Localizable("ignored"),
                         ),
                     ],
-                    prefill_selection="installed",
+                    prefill=form_specs.DefaultValue("installed"),
                 )
             ),
             "tools_enabled": form_specs.composed.DictElement(
@@ -46,7 +46,7 @@ def _parameter_form_prism_vm_tools():
                             title=Localizable("ignored"),
                         ),
                     ],
-                    prefill_selection="enabled",
+                    prefill=form_specs.DefaultValue("enabled"),
                 )
             ),
         },

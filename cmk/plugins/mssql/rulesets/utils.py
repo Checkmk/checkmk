@@ -48,7 +48,7 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
                     ),
                 ),
             ],
-            prefill_selection="levels",
+            prefill=form_specs.DefaultValue("levels"),
             transform=form_specs.Migrate(model_to_form=_migrate_alternative_to_dropdown),
         )
     )

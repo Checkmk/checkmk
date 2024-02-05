@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import Integer, Percentage, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -21,8 +22,8 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         title=Localizable("Percentual levels for used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
             elements=[
-                Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
-                Percentage(title=Localizable("Critical at usage of"), prefill_value=90.0),
+                Percentage(title=Localizable("Warning at usage of")),  # prefill_value=80.0),
+                Percentage(title=Localizable("Critical at usage of")),  # prefill_value=90.0),
             ],
         ),
     )
@@ -43,7 +44,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Localizable("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
-                    prefill_selection="fd_perc",
+                    prefill=DefaultValue("fd_perc"),
                 )
             )
         },

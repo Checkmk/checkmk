@@ -12,7 +12,7 @@ def _parameter_form_discover_rmon() -> form_specs.composed.Dictionary:
             "discover": form_specs.composed.DictElement(
                 parameter_form=form_specs.basic.BooleanChoice(
                     label=Localizable("Discover RMON statistics services"),
-                    prefill_value=True,
+                    prefill=form_specs.DefaultValue(True),
                     help_text=Localizable(
                         "Enabling this option will result in an additional service for every RMON-capable "
                         "switch port. This service will provide detailed information on the distribution of "

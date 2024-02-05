@@ -33,8 +33,10 @@ def _formspec_inventory_sap_values():
                             title=Localizable("Exact path of the node"),
                             parameter_form=form_specs.basic.Text(
                                 title=Localizable("Exact path of the node"),
-                                prefill_value="SAP CCMS Monitor Templates/Dialog Overview/Dialog "
-                                "Response Time/ResponseTime",
+                                prefill=form_specs.DefaultValue(
+                                    "SAP CCMS Monitor Templates/Dialog Overview/Dialog "
+                                    "Response Time/ResponseTime"
+                                ),
                             ),
                         ),
                         form_specs.composed.CascadingSingleChoiceElement(
@@ -57,7 +59,7 @@ def _formspec_inventory_sap_values():
                             ),
                         ),
                     ],
-                    prefill_selection="exact",
+                    prefill=form_specs.DefaultValue("exact"),
                     transform=form_specs.Migrate(model_to_form=_migrate_to_cascading_single_choice),
                 ),
                 required=True,

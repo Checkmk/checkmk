@@ -137,6 +137,8 @@ def check_netapp_ontap_vs_traffic(item: str, section: Section) -> CheckResult:
         "svm_nfs_v3": (
             "NFS",
             [
+                ("read_ops", "nfs_read_ios", "read OPs", 1, int),
+                ("write_ops", "nfs_write_ios", "write OPs", 1, int),
                 (
                     "read_throughput",
                     "nfs_read_throughput",

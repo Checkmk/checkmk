@@ -1,0 +1,10 @@
+Title: netapp_ontap_vs_traffic: add missing svm_nfs_v3 counters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1707119498
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+This werk adds two missing counters to the mentioned plugin, the counters <code>svm_nfs_v3:read_ops</code> and <code>svm_nfs_v3:write_ops</code>.

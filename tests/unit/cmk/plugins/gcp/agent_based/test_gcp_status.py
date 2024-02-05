@@ -126,7 +126,7 @@ def test_one_incident_per_region() -> None:
         ],
     )
     agent_output = AgentOutputFactory.build(health_info=[incident])
-    section = gcp_status.parse([[agent_output.json(by_alias=True)]])
+    section = gcp_status.parse([[agent_output.model_dump_json(by_alias=True)]])
     assert all(
         constants.RegionMap[l.id_] in section.data for l in incident.currently_affected_locations
     )

@@ -113,11 +113,8 @@ def test_login_with_cookies(
         response = client.get("/NO_SITE/check_mk/index.py")
         assert response.status_code == 200
 
-        if client.cookie_jar is None:
-            assert False, "Cookie Jar is surprisingly empty."
-
-        test_environ = create_environ("/", method="GET")
-        client.cookie_jar.inject_wsgi(test_environ)
+        test_environ = create_environ("/NO_SITE/", method="GET")
+        client._add_cookies_to_wsgi(test_environ)
 
         # request context with cookie yields a user
         with flask_app.request_context(test_environ):
@@ -236,7 +233,7 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
     cookie_name = auth_cookie_name()
     cookie_value = auth_cookie_value(user_id, session_id)
 
-    environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode())
+    environ = {**create_environ(), "HTTP_COOKIE": f"{cookie_name}={cookie_value}"}
 
     with application_and_request_context(environ):
         load_config()

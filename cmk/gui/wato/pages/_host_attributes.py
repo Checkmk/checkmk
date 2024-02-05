@@ -174,8 +174,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 container = parent  # container is of type Folder
                 while container:
-                    assert not isinstance(container, SearchFolder)
                     if attrname in container.attributes:
+                        assert not isinstance(container, SearchFolder)
                         url = container.edit_url()
                         inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
                             container.title(), href=url

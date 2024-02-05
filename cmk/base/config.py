@@ -329,9 +329,10 @@ def _get_clustered_services(
         )
 
 
-class ClusterCacheInfo(NamedTuple):
-    clusters_of: dict[HostName, list[HostName]]
-    nodes_of: dict[HostName, list[HostName]]
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ClusterCacheInfo:
+    clusters_of: Mapping[HostName, Sequence[HostName]]
+    nodes_of: Mapping[HostName, Sequence[HostName]]
 
 
 class RRDConfig(TypedDict):
@@ -3797,7 +3798,7 @@ class ConfigCache:
             self._nodes_of_cache[clustername] = hosts
 
     def get_cluster_cache_info(self) -> ClusterCacheInfo:
-        return ClusterCacheInfo(self._clusters_of_cache, self._nodes_of_cache)
+        return ClusterCacheInfo(clusters_of=self._clusters_of_cache, nodes_of=self._nodes_of_cache)
 
     def clusters_of(self, hostname: HostName) -> list[HostName]:
         """Returns names of cluster hosts the host is a node of"""

@@ -91,7 +91,7 @@ pycparser = "==2.21"  # needed by cffi
 cffi = "==1.15.1"  # needed by cryptography, bcrypt
 cryptography = "~=3.4"  # needed by paramiko. NOTE: rust is needed for version >=3.4, see https://cryptography.io/en/latest/changelog/#v3-4
 bcrypt = "==3.2.2"  # needed by paramiko. NOTE: rust is needed for version >=4.0.0, see https://github.com/pyca/bcrypt#400
-paramiko = "==2.10.3"
+paramiko = "==3.4.0"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 pycryptodomex = "==3.19.1"  # needed by pysnmp

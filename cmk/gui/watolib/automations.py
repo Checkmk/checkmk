@@ -324,16 +324,24 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
 def fetch_service_discovery_background_job_status(
     site_id: SiteId, hostname: str
 ) -> BackgroundStatusSnapshot:
-    return BackgroundStatusSnapshot(
-        **json.loads(
-            str(
-                do_remote_automation(
-                    site=get_site_config(site_id),
-                    command="service-discovery-job-snapshot",
-                    vars_=[("hostname", hostname)],
-                )
+    details = json.loads(
+        str(
+            do_remote_automation(
+                site=get_site_config(site_id),
+                command="service-discovery-job-snapshot",
+                vars_=[("hostname", hostname)],
             )
         )
+    )
+    return BackgroundStatusSnapshot(
+        job_id=details["job_id"],
+        status=JobStatusSpec(**details["status"]),
+        exists=details["exists"],
+        is_active=details["is_active"],
+        has_exception=details["has_exception"],
+        acknowledged_by=details["acknowledged_by"],
+        may_stop=details["may_stop"],
+        may_delete=details["may_delete"],
     )
 
 

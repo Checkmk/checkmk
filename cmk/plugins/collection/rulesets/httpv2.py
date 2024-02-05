@@ -35,7 +35,7 @@ def _valuespec_response() -> Dictionary:
             "expected": DictElement(
                 parameter_form=List(
                     title=Localizable("Expected"),
-                    parameter_form=Integer(prefill=DefaultValue(200)),
+                    element_template=Integer(prefill=DefaultValue(200)),
                 ),
                 required=True,
             ),
@@ -444,7 +444,7 @@ def _valuespec_connection() -> Dictionary:
             "add_headers": DictElement(
                 parameter_form=List(
                     title=Localizable("Additional header lines"),
-                    parameter_form=Dictionary(elements=header_dict_elements),
+                    element_template=Dictionary(elements=header_dict_elements),
                 ),
             ),
             "auth": DictElement(
@@ -606,7 +606,7 @@ def _valuespec_endpoints() -> List:
     return List(
         title=Localizable("Endpoints"),
         custom_validate=DisallowEmpty(),
-        parameter_form=Dictionary(
+        element_template=Dictionary(
             elements={
                 "service_name": DictElement(
                     parameter_form=Dictionary(

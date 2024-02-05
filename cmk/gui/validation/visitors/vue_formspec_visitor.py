@@ -304,13 +304,13 @@ class VueFormSpecVisitor:
 
     def _visit_list(self, form_spec: List, value: list) -> VueVisitorMethodResult:
         template, _ = self._visit(
-            form_spec.parameter_form, compute_default_value(form_spec.parameter_form)
+            form_spec.element_template, compute_default_value(form_spec.element_template)
         )
 
         elements = []
         raw_value = []
         for element in value:
-            component, element_raw_value = self._visit(form_spec.parameter_form, element)
+            component, element_raw_value = self._visit(form_spec.element_template, element)
             elements.append(component)
             raw_value.append(element_raw_value)
 

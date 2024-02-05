@@ -12,7 +12,7 @@ def _form_inventory_fujitsu_ca_ports() -> form_specs.composed.Dictionary:
             "indices": form_specs.composed.DictElement(
                 parameter_form=form_specs.composed.List(
                     title=Localizable("CA port indices"),
-                    parameter_form=form_specs.basic.Text(),
+                    element_template=form_specs.basic.Text(),
                 )
             ),
             "modes": form_specs.composed.DictElement(

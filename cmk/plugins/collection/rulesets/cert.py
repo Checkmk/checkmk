@@ -206,7 +206,7 @@ def _valuespec_specific_values() -> Dictionary:
             ),
             "altnames": DictElement(
                 parameter_form=List(
-                    parameter_form=Text(),
+                    element_template=Text(),
                     title=Localizable("Certificate subject alternative name"),
                 ),
             ),
@@ -242,7 +242,7 @@ def _valuespec_port() -> Integer:
 
 def _valuespec_host_settings() -> List:
     return List(
-        parameter_form=Dictionary(
+        element_template=Dictionary(
             elements={
                 "connection": DictElement(
                     parameter_form=Dictionary(

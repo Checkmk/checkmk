@@ -741,7 +741,7 @@ def test_inv_oracle_instance_multiline() -> None:
                 "sid": "SID",
             },
             inventory_columns={
-                "pname": "",
+                "pname": None,
                 "version": "VERSION",
                 "openmode": "OPENMODE",
                 "logmode": "LOGMODE",

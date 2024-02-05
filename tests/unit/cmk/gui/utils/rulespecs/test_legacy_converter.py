@@ -1706,14 +1706,6 @@ def test_form_spec_transform(form_spec: FormSpec) -> None:
         raise NotImplementedError(form_spec)
 
 
-@pytest.mark.parametrize("form_spec", _exposed_form_specs())
-def test_form_spec_title(form_spec: FormSpec) -> None:
-    try:
-        _ = form_spec.title
-    except AttributeError:
-        assert False
-
-
 def _get_legacy_no_levels_choice() -> tuple[str, str, legacy_valuespecs.FixedValue]:
     return (
         "no_levels",

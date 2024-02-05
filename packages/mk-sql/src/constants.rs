@@ -39,6 +39,6 @@ fn get_conf_dir() -> PathBuf {
     Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).to_owned()
 }
 
-fn get_env_value(var: &str, on_lack: &str) -> String {
+pub fn get_env_value(var: &str, on_lack: &str) -> String {
     std::env::var(var).unwrap_or(on_lack.to_string())
 }

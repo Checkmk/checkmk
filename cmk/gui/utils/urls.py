@@ -194,7 +194,7 @@ def requested_file_name(
 def requested_file_with_query(request: Request) -> str:
     """Returns a string containing the requested file name and query to be used in hyperlinks"""
     file_name = requested_file_name(request)
-    query = request.query_string.decode(request.charset)
+    query = request.query_string.decode("utf-8")
     return f"{file_name}.py?{query}"
 
 

@@ -2,8 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import Iterator, Literal, Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -207,25 +208,53 @@ class ServiceDescription(BaseModel):
     name: str
 
 
-class Endpoint(BaseModel):
+class HttpEndpoint(BaseModel):
+    service_name: ServiceDescription
+    url: str
+    settings: HttpSettings | None = None
+
+
+class RawEndpoint(BaseModel):
     service_name: ServiceDescription
     url: str
     individual_settings: HttpSettings | None = None
 
 
-class HttpParams(BaseModel):
-    endpoints: list[Endpoint]
-    standard_settings: HttpSettings
+class RawParams(BaseModel):
+    endpoints: list[RawEndpoint]
+    standard_settings: HttpSettings | None = None
 
 
-def parse_http_params(raw_params: Mapping[str, object]) -> HttpParams:
-    return HttpParams.model_validate(raw_params)
+def parse_http_params(raw_params: Mapping[str, object]) -> Sequence[HttpEndpoint]:
+    params = RawParams.model_validate(raw_params)
+    return [
+        HttpEndpoint(
+            service_name=endpoint.service_name,
+            url=endpoint.url,
+            settings=_merge_settings(params.standard_settings, endpoint.individual_settings),
+        )
+        for endpoint in params.endpoints
+    ]
+
+
+def _merge_settings(
+    standard: HttpSettings | None, individual: HttpSettings | None
+) -> HttpSettings | None:
+    if individual is None:
+        return standard
+
+    if standard is None:
+        return individual
+
+    return HttpSettings.model_validate(
+        standard.model_dump(exclude_none=True) | individual.model_dump(exclude_none=True)
+    )
 
 
 def generate_http_services(
-    params: HttpParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: Sequence[HttpEndpoint], host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
-    for endpoint in params.endpoints:
+    for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
         yield ActiveCheckCommand(

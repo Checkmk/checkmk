@@ -639,7 +639,7 @@ class Response(flask.Response):
         super().delete_cookie(key, path=url_prefix())
 
     def set_content_type(self, mime_type: str) -> None:
-        self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+        self.headers["Content-type"] = get_content_type(mime_type, "utf-8")
 
     def set_csp_form_action(self, form_action: str) -> None:
         """If you have a form action that is not within the site, the

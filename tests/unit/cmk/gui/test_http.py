@@ -372,7 +372,7 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
 def test_pre_16_format_cookie_handling() -> None:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123",
     )
     _request = http.Request(environ)
 

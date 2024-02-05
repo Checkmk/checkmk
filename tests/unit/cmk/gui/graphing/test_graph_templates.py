@@ -145,7 +145,7 @@ def test_matching_graph_templates(
 
 
 def test__replace_expressions() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
+    perfdata: Perfdata = [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
     translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
@@ -154,7 +154,9 @@ def test__replace_expressions() -> None:
 
 
 def test__replace_expressions_missing_scalars() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", None, None, None, None) for n in ["load1"]]
+    perfdata: Perfdata = [
+        PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["load1"]
+    ]
     translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)

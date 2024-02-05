@@ -598,8 +598,10 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 
 
-class PerfDataTuple(NamedTuple):
+@dataclass(frozen=True)
+class PerfDataTuple:
     metric_name: MetricName
+    lookup_metric_name: MetricName
     value: float | int
     unit_name: str
     warn: float | None

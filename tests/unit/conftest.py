@@ -16,7 +16,9 @@ from pytest import MonkeyPatch
 
 # Import this fixture to not clutter this file, but it's unused here...
 from tests.testlib.certs import (  # pylint: disable=unused-import # noqa: F401
-    fixture_rsa_key,
+    fixture_ed25519_private_key,
+    fixture_rsa_private_key,
+    fixture_secp256k1_private_key,
     fixture_self_signed,
     fixture_self_signed_ec,
     fixture_self_signed_ed25519,

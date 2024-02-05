@@ -1,0 +1,11 @@
+Title: Fix inventory sync of hosts if remote data is updated at the time when liveproxyd sync starts or ends
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1707132975
+Edition: cee
+Level: 1
+Version: 2.2.0p22
+
+When the liveproxyd starts or ends at a particular time TS and remote inventory
+data is written between TS and \<TS+1 then it's not synced.

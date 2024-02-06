@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Script to validate if all available plugins can be loaded"""
+
 import enum
+import sys
+from argparse import ArgumentParser
 from collections.abc import Sequence
 
-from cmk.utils import paths
+from cmk.utils import debug, paths
 
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
@@ -38,3 +42,27 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
     )
 
     return to_result(ValidationStep.AGENT_BASED_PLUGINS, errors)
+
+
+def validate_plugins() -> ActiveCheckResult:
+    sub_results = [_validate_agent_based_plugin_loading()]
+    return ActiveCheckResult.from_subresults(*sub_results)
+
+
+def main() -> int:
+    parser = ArgumentParser(prog="cmk-validate-plugins", description=__doc__)
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Enable debug mode (raise Exceptions instead of logging them)",
+    )
+    args = parser.parse_args()
+
+    if args.debug:
+        debug.enable()
+
+    validation_result = validate_plugins()
+
+    sys.stdout.write(validation_result.as_text())
+    return validation_result.state

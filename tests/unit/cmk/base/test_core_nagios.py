@@ -261,6 +261,8 @@ def test_create_nagios_host_spec(
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
+        result["__LABELSOURCE_cmk/customer"] = "discovered"
+        result["__LABEL_cmk/customer"] = "provider"
 
     ts = Scenario()
     ts.add_host(HostName("localhost"))

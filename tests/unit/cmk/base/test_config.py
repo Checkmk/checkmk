@@ -20,6 +20,7 @@ from tests.testlib.base import Scenario
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition, edition
 
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
@@ -2030,6 +2031,9 @@ def test_host_label_rules_default() -> None:
 
 
 def test_labels(monkeypatch: MonkeyPatch) -> None:
+    additional_labels = {}
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+        additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
 
@@ -2056,22 +2060,27 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(xyz_host)
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.labels(xyz_host) == {"cmk/site": "NO_SITE"}
+    assert config_cache.labels(xyz_host) == {
+        "cmk/site": "NO_SITE",
+    } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.labels(test_host) == {
         "cmk/site": "NO_SITE",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
-    }
+    } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.label_sources(test_host) == {
         "cmk/site": "discovered",
         "explicit": "explicit",
         "from-rule": "ruleset",
         "from-rule2": "ruleset",
-    }
+    } | {k: v["source"] for k, v in additional_labels.items()}
 
 
 def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    additional_labels = {}
+    if edition(cmk.utils.paths.omd_root) is Edition.CME:
+        additional_labels = {"cmk/customer": {"value": "provider", "source": "discovered"}}
     test_host = HostName("test-host")
     ts = Scenario()
     ts.add_host(test_host)
@@ -2085,11 +2094,11 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
     assert config_cache.labels(test_host) == {
         "cmk/site": "NO_SITE",
         "äzzzz": "eeeeez",
-    }
+    } | {k: v["value"] for k, v in additional_labels.items()}
     assert config_cache.label_sources(test_host) == {
         "cmk/site": "discovered",
         "äzzzz": "discovered",
-    }
+    } | {k: v["source"] for k, v in additional_labels.items()}
 
 
 def test_service_label_rules_default() -> None:

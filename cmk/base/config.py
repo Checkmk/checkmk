@@ -26,6 +26,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
+from types import ModuleType
 from typing import (
     Any,
     AnyStr,
@@ -61,7 +62,7 @@ from cmk.utils.host_storage import apply_hosts_file_to_object, get_host_storage_
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPStackConfig
-from cmk.utils.labels import Labels, LabelSources
+from cmk.utils.labels import BuiltinHostLabelsStore, Labels, LabelSources
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -139,6 +140,14 @@ from cmk.base.sources import SNMPFetcherConfig
 from cmk import piggyback
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+
+cme_labels: ModuleType | None
+try:
+    from cmk.utils.cme import (  # type: ignore[import-untyped, no-redef, unused-ignore]
+        labels as cme_labels,
+    )
+except ModuleNotFoundError:
+    cme_labels = None
 
 try:
     from cmk.base.cee.rrd import RRDObjectConfig
@@ -1931,6 +1940,7 @@ class ConfigCache:
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_cache,
             all_configured_hosts=list(set(self.hosts_config)),
+            builtin_host_labels_store=BuiltinHostLabelsStore(),
             debug_matching_stats=ruleset_matching_stats,
         )
 
@@ -3984,12 +3994,11 @@ def reset_config_cache() -> ConfigCache:
 
 def _create_config_cache() -> ConfigCache:
     """create clean config cache"""
-    cache_class = (
-        ConfigCache
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE
-        else CEEConfigCache
-    )
-    return cache_class()
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
+        return ConfigCache()
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CME:
+        return CMEConfigCache()
+    return CEEConfigCache()
 
 
 # TODO(au): Find a way to retreive the matchtype_information directly from the
@@ -4700,3 +4709,13 @@ def get_ruleset_id_mapping() -> Mapping[int, str]:
         id(service_tag_rules): "service_tag_rules",
         id(management_bulkwalk_hosts): "management_bulkwalk_hosts",
     }
+
+
+class CMEConfigCache(CEEConfigCache):
+    def initialize(self) -> ConfigCache:
+        super().initialize()
+        if cme_labels:
+            self.ruleset_matcher.ruleset_optimizer.set_builtin_host_labels_store(
+                cme_labels.CMEBuiltinHostLabelsStore()
+            )
+        return self

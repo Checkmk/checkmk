@@ -77,19 +77,29 @@ def _parse_perfometers(perfometers_: list[LegacyPerfometer | PerfometerSpec]) ->
         # Convert legacy tuple based perfometer
         perfometer_type, perfometer_args = perfometer[0], perfometer[1]
         if perfometer_type == "dual":
-            sub_performeters = perfometer_args[:]
-            _parse_perfometers(sub_performeters)
+            sub_perfometers = perfometer_args[:]
+            if len(sub_perfometers) != 2:
+                raise MKInternalError(
+                    _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
+                    % len(sub_perfometers)
+                )
+            _parse_perfometers(sub_perfometers)
             perfometers_[index] = {
                 "type": "dual",
-                "perfometers": sub_performeters,
+                "perfometers": sub_perfometers,
             }
 
         elif perfometer_type == "stacked":
-            sub_performeters = perfometer_args[:]
-            _parse_perfometers(sub_performeters)
+            sub_perfometers = perfometer_args[:]
+            if len(sub_perfometers) != 2:
+                raise MKInternalError(
+                    _("Perf-O-Meter of type 'stacked' must contain exactly two definitions, not %d")
+                    % len(sub_perfometers)
+                )
+            _parse_perfometers(sub_perfometers)
             perfometers_[index] = {
                 "type": "stacked",
-                "perfometers": sub_performeters,
+                "perfometers": sub_perfometers,
             }
 
         elif perfometer_type == "linear" and len(perfometer_args) == 3:
@@ -853,11 +863,6 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
         perfometer: _StackedPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        if len(perfometer["perfometers"]) != 2:
-            raise MKInternalError(
-                _("Perf-O-Meter of type 'stacked' must contain exactly two definitions, not %d")
-                % len(perfometer["perfometers"])
-            )
         self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 
@@ -902,11 +907,6 @@ class MetricometerRendererLegacyDual(MetricometerRenderer):
         perfometer: _DualPerfometerSpec,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
-        if len(perfometer["perfometers"]) != 2:
-            raise MKInternalError(
-                _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
-                % len(perfometer["perfometers"])
-            )
         self._perfometers = perfometer["perfometers"]
         self._translated_metrics = translated_metrics
 

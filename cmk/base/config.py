@@ -124,7 +124,6 @@ from cmk.checkengine.parser import (
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base import server_side_calls
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -1404,13 +1403,7 @@ def load_all_plugins(
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
-    # Load new active checks.
-    # These are just loaded here, because there currently is no other place
-    # that will report the errors. Maybe a `cmk --validate-plugins` would be nice.
-    # CMK-15720
-    more_errors, _plugins = server_side_calls.load_active_checks()
-
-    return [*errors, *more_errors]
+    return errors
 
 
 def _initialize_data_structures() -> None:

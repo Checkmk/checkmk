@@ -6,23 +6,21 @@
 """FormSpecs that can be composed of other FormSpecs"""
 
 from dataclasses import dataclass, field
-from typing import Callable, Mapping, Sequence
+from typing import Any, Callable, Generic, Mapping, Sequence
 
 from .._localize import Localizable
-from ._base import DefaultValue, FormSpec, InputHint, Migrate
+from ._base import DefaultValue, FormSpec, InputHint, ModelT
 
 
-@dataclass(frozen=True, kw_only=True)
-class TupleDoNotUseWillbeRemoved(FormSpec):
-    elements: Sequence[FormSpec]
-
-    transform: Migrate[tuple[object, ...]] | None = None
+@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
+class TupleDoNotUseWillbeRemoved(FormSpec[tuple[object, ...]]):
+    elements: Sequence[FormSpec[Any]]
 
     custom_validate: Callable[[tuple[object, ...]], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoiceElement:
+class CascadingSingleChoiceElement(Generic[ModelT]):
     """Specifies an element of a single choice cascading form
 
     Args:
@@ -32,15 +30,15 @@ class CascadingSingleChoiceElement:
 
     name: str
     title: Localizable
-    parameter_form: FormSpec
+    parameter_form: FormSpec[ModelT]
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
             raise ValueError(f"'{self.name}' is not a valid Python identifier")
 
 
-@dataclass(frozen=True, kw_only=True)
-class CascadingSingleChoice(FormSpec):
+@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
+class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     """Specification for a single-selection from multiple options. Selection is another spec
 
     Args:
@@ -49,7 +47,7 @@ class CascadingSingleChoice(FormSpec):
         elements: Elements to choose from
         label: Text displayed in front of the input field
         prefill: Name of pre-selected choice. Must be one of the elements names.
-        transform: Transformations to apply.
+        migrate: Transformation to apply.
 
     Consumer model:
         **Type**: ``tuple[str, object]``
@@ -61,21 +59,19 @@ class CascadingSingleChoice(FormSpec):
         would result in ``("my_value", {...})``
     """
 
-    elements: Sequence[CascadingSingleChoiceElement]
+    elements: Sequence[CascadingSingleChoiceElement[Any]]
     label: Localizable | None = None
 
     prefill: DefaultValue[str] | InputHint[Localizable] = InputHint(Localizable("Please choose"))
 
-    transform: Migrate[tuple[str, object]] | None = None
-
     def __post_init__(self) -> None:
-        avail_idents = [elem.name for elem in self.elements]
+        avail_idents = {elem.name for elem in self.elements}  # type: ignore[misc]
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in avail_idents:
             raise ValueError("Default element is not one of the specified elements")
 
 
 @dataclass(frozen=True, kw_only=True)
-class DictElement:
+class DictElement(Generic[ModelT]):
     """Specifies an element of a dictionary form
 
     Args:
@@ -85,13 +81,13 @@ class DictElement:
         read_only: Element that can't be edited. Can be used to store the discovered parameters.
     """
 
-    parameter_form: FormSpec
+    parameter_form: FormSpec[ModelT]
     required: bool = False
-    read_only: bool = False
+    read_only: bool = False  # TODO: render_only is more fitting
 
 
-@dataclass(frozen=True, kw_only=True)
-class Dictionary(FormSpec):
+@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
+class Dictionary(FormSpec[Mapping[str, object]]):
     """
     Specifies a (multi-)selection of configuration options.
 
@@ -112,23 +108,22 @@ class Dictionary(FormSpec):
         no_elements_text: Text to show if no elements are specified
     """
 
-    elements: Mapping[str, DictElement]
+    elements: Mapping[str, DictElement[Any]]
 
     no_elements_text: Localizable | None = None
 
     deprecated_elements: tuple[str, ...] = field(default_factory=tuple)
-    transform: Migrate[Mapping[str, object]] | None = None
 
     custom_validate: Callable[[Mapping[str, object]], object] | None = None
 
     def __post_init__(self) -> None:
-        for key in self.elements:
+        for key in self.elements:  # type: ignore[misc]
             if not key.isidentifier():
                 raise ValueError(f"'{key}' is not a valid Python identifier")
 
 
 @dataclass(frozen=True, kw_only=True)
-class List(FormSpec):
+class List(FormSpec[Sequence[ModelT]]):
     """
     Specifies a list of configuration elements of the same type.
 
@@ -145,13 +140,12 @@ class List(FormSpec):
         editable_order: Can the elements be reordered in the UI
     """
 
-    element_template: FormSpec
+    element_template: FormSpec[ModelT]
     add_element_label: Localizable = Localizable("Add new entry")
     remove_element_label: Localizable = Localizable("Remove this entry")
     no_element_label: Localizable = Localizable("No entries")
 
     editable_order: bool = True
-    transform: Migrate[Sequence[object]] | None = None
     custom_validate: Callable[[Sequence[object]], object] | None = None
 
 
@@ -173,16 +167,16 @@ class MultipleChoiceElement:
 
 
 @dataclass(frozen=True, kw_only=True)
-class MultipleChoice(FormSpec):
+class MultipleChoice(FormSpec[Sequence[str]]):
     """Specifies a multiple choice form
 
     Args:
         title: Human readable title
         help_text: Description to help the user with the configuration
+        migrate: Transformation of the stored configuration
         elements: Elements to choose from
         show_toggle_all: Show toggle all elements option in the UI
         prefill: Element names to select by default
-        transform: Transformation of the stored configuration
         custom_validate: Custom validation function. Will be executed in addition to any
             builtin validation logic. Needs to raise a ValidationError in case
             validation fails. The return value of the function will not be used.
@@ -204,7 +198,6 @@ class MultipleChoice(FormSpec):
     show_toggle_all: bool = False
 
     prefill: DefaultValue[Sequence[str]] = DefaultValue(())
-    transform: Migrate[Sequence[str]] | None = None
     custom_validate: Callable[[Sequence[str]], object] | None = None
 
     def __post_init__(self) -> None:

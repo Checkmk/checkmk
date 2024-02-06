@@ -539,12 +539,11 @@ def _convert_to_inner_legacy_valuespec(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-    if hasattr(to_convert, "transform"):
-        if isinstance(to_convert.transform, ruleset_api_v1.form_specs.Migrate):
-            return legacy_valuespecs.Migrate(
-                valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-                migrate=to_convert.transform.model_to_form,
-            )
+    if to_convert.migrate is not None:
+        return legacy_valuespecs.Migrate(
+            valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
+            migrate=to_convert.migrate.update,
+        )
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 
@@ -1013,37 +1012,27 @@ def _convert_to_legacy_time_span(
     return legacy_valuespecs.TimeSpan(**converted_kwargs)
 
 
-_TNumericSpec = (
-    ruleset_api_v1.form_specs.basic.Integer
-    | ruleset_api_v1.form_specs.basic.Float
-    | ruleset_api_v1.form_specs.basic.DataSize
-    | ruleset_api_v1.form_specs.basic.Percentage
-    | ruleset_api_v1.form_specs.basic.TimeSpan
-)
+_NumberT = TypeVar("_NumberT", float, int)
 
 
 def _get_legacy_level_spec(
-    form_spec_template: _TNumericSpec,
+    form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
     title: ruleset_api_v1.Localizable,
-    prefill_value: float | int,
+    prefill_value: _NumberT,
     prefill_type: type[ruleset_api_v1.form_specs.DefaultValue]
     | type[ruleset_api_v1.form_specs.InputHint],
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
-    if isinstance(
-        form_spec_template,
-        (ruleset_api_v1.form_specs.basic.Integer, ruleset_api_v1.form_specs.basic.DataSize),
-    ):
-        spec: _TNumericSpec = dataclasses.replace(
-            form_spec_template,
-            title=title,
-            prefill=prefill_type(int(prefill_value)),
+    # Currently all FormSpec[_NumberT] types have a prefill attribute,
+    # but we don't know it statically. Let's just skip it in case
+    # we someday invent one that does not have this attribute.
+    if hasattr(form_spec_template, "prefill"):
+        form_spec_template = dataclasses.replace(
+            form_spec_template, prefill=prefill_type(prefill_value)  # type: ignore[call-arg]
         )
-    else:
-        spec = dataclasses.replace(
-            form_spec_template, title=title, prefill=prefill_type(float(prefill_value))
-        )
-    return _convert_to_legacy_valuespec(spec, localizer)
+    return _convert_to_legacy_valuespec(
+        dataclasses.replace(form_spec_template, title=title), localizer
+    )
 
 
 def _get_prefill_type(
@@ -1057,9 +1046,8 @@ def _get_prefill_type(
 
 
 def _get_fixed_levels_choice_element(
-    form_spec: _TNumericSpec,
-    prefill: ruleset_api_v1.form_specs.Prefill[tuple[float, float]]
-    | ruleset_api_v1.form_specs.Prefill[tuple[int, int]],
+    form_spec: ruleset_api_v1.form_specs.FormSpec[_NumberT],
+    prefill: ruleset_api_v1.form_specs.Prefill[tuple[_NumberT, _NumberT]],
     level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
@@ -1093,8 +1081,8 @@ class _PredictiveLevelDefinition(enum.StrEnum):
 
 
 def _get_level_computation_dropdown(
-    form_spec_template: _TNumericSpec,
-    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels,
+    form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
+    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels[_NumberT],
     level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
@@ -1206,8 +1194,8 @@ def _get_level_computation_dropdown(
 
 
 def _get_predictive_levels_choice_element(
-    form_spec_template: _TNumericSpec,
-    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels,
+    form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
+    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels[_NumberT],
     level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Transform:
@@ -1322,7 +1310,7 @@ class _LevelDynamicChoice(enum.StrEnum):
 
 
 def _convert_to_legacy_levels(
-    to_convert: ruleset_api_v1.form_specs.levels.Levels, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.levels.Levels[_NumberT], localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
@@ -1361,18 +1349,10 @@ def _convert_to_legacy_levels(
             )
         )
 
-    match to_convert.form_spec_template:
-        case ruleset_api_v1.form_specs.basic.Integer() | ruleset_api_v1.form_specs.basic.DataSize():
-            default_value: tuple[int, int] | tuple[float, float] = (0, 0)
-        case ruleset_api_v1.form_specs.basic.Float() | ruleset_api_v1.form_specs.basic.Percentage() | ruleset_api_v1.form_specs.basic.TimeSpan():
-            default_value = (0.0, 0.0)
-        case other:
-            assert_never(other)
-
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
         choices=choices,
-        default_value=(_LevelDynamicChoice.FIXED.value, default_value),
+        default_value=(_LevelDynamicChoice.FIXED.value, (0, 0)),
     )
 
 

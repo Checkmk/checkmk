@@ -42,7 +42,7 @@ def _parameter_form_zypper() -> Dictionary:
             ),
         },
         # TODO remove before 2.3 release, showcases migration
-        transform=Migrate(model_to_form=lambda v: v if isinstance(v, dict) and v else {}),
+        migrate=Migrate(update=lambda v: v if isinstance(v, dict) and v else {}),
     )
 
 

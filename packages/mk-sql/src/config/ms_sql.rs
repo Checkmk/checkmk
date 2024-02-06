@@ -174,6 +174,10 @@ impl Config {
         &self.hash
     }
 
+    pub fn cache_dir(&self) -> String {
+        "mssql-".to_owned() + &self.hash
+    }
+
     pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
         if !self.discovery.include().is_empty() {
             return self.discovery.include().contains(&name.to_string());

@@ -20,6 +20,8 @@ pub mod environment {
     pub const CONFIG_DIR_ENV_VAR: &str = "MK_CONFDIR";
     pub const LOG_DIR_ENV_VAR: &str = "MK_LOGDIR";
     pub const TEMP_DIR_ENV_VAR: &str = "MK_TEMPDIR";
+    pub const STATE_DIR_ENV_VAR: &str = "MK_STATEDIR";
+    pub const VAR_DIR_ENV_VAR: &str = "MK_VARDIR";
 }
 
 lazy_static! {
@@ -31,6 +33,12 @@ lazy_static! {
         .ok()
         .map(PathBuf::from);
     pub static ref ENV_TEMP_DIR: Option<PathBuf> = std::env::var(environment::TEMP_DIR_ENV_VAR)
+        .ok()
+        .map(PathBuf::from);
+    pub static ref ENV_STATE_DIR: Option<PathBuf> = std::env::var(environment::STATE_DIR_ENV_VAR)
+        .ok()
+        .map(PathBuf::from);
+    pub static ref ENV_VAR_DIR: Option<PathBuf> = std::env::var(environment::VAR_DIR_ENV_VAR)
         .ok()
         .map(PathBuf::from);
 }

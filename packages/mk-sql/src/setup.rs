@@ -16,15 +16,27 @@ use std::path::{Path, PathBuf};
 pub struct Env {
     /// guaranteed to contain dir or None
     temp_dir: Option<PathBuf>,
+
     /// guaranteed to contain dir or None
     log_dir: Option<PathBuf>,
+
+    /// guaranteed to contain dir or None
+    state_dir: Option<PathBuf>,
 }
 
 impl Env {
     pub fn new(args: &Args) -> Self {
         let log_dir = Env::build_dir(&args.log_dir, &constants::ENV_LOG_DIR.as_deref());
         let temp_dir = Env::build_dir(&args.temp_dir, &constants::ENV_TEMP_DIR.as_deref());
-        Self { temp_dir, log_dir }
+        #[cfg(windows)]
+        let state_dir = Env::build_dir(&args.state_dir, &constants::ENV_STATE_DIR.as_deref());
+        #[cfg(unix)]
+        let state_dir = Env::build_dir(&args.state_dir, &constants::ENV_VAR_DIR.as_deref());
+        Self {
+            temp_dir,
+            log_dir,
+            state_dir,
+        }
     }
 
     /// guaranteed to return temp dir or None
@@ -37,9 +49,15 @@ impl Env {
         self.log_dir.as_deref()
     }
 
+    /// guaranteed to return log dir or None
+    pub fn state_dir(&self) -> Option<&Path> {
+        self.state_dir.as_deref()
+    }
+
     /// guaranteed to return cache dir or None
     pub fn cache_dir(&self) -> Option<PathBuf> {
-        self.temp_dir().map(|temp_dir| temp_dir.join("cache"))
+        self.state_dir()
+            .map(|state_dir| state_dir.join("mk-sql-cache"))
     }
 
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
@@ -229,15 +247,16 @@ mod tests {
         let args = Args {
             log_dir: Some(PathBuf::from(".")),
             temp_dir: Some(PathBuf::from(".")),
+            state_dir: Some(PathBuf::from(".")),
             ..Default::default()
         };
         let e = Env::new(&args);
         assert_eq!(e.log_dir(), Some(Path::new(".")));
         assert_eq!(e.temp_dir(), Some(Path::new(".")));
-        assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("cache")));
+        assert_eq!(e.cache_dir(), Some(PathBuf::from(".").join("mk-sql-cache")));
         assert_eq!(
             e.calc_cache_sub_dir("aa"),
-            Some(PathBuf::from(".").join("cache").join("aa"))
+            Some(PathBuf::from(".").join("mk-sql-cache").join("aa"))
         );
     }
     #[test]

@@ -19,8 +19,8 @@ use crate::ms_sql::query::{
 use crate::ms_sql::sqls;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, ConfigHash, HostName, InstanceAlias, InstanceCluster, InstanceEdition,
-    InstanceId, InstanceName, InstanceVersion, PiggybackHostName, Port,
+    ComputerName, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
+    InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils;
 
@@ -49,7 +49,7 @@ pub struct SqlInstanceBuilder {
     endpoint: Option<Endpoint>,
     computer_name: Option<ComputerName>,
     environment: Option<Env>,
-    hash: Option<ConfigHash>,
+    cache_dir: Option<String>,
     piggyback: Option<PiggybackHostName>,
 }
 
@@ -103,8 +103,8 @@ impl SqlInstanceBuilder {
         self.environment = environment.clone().into();
         self
     }
-    pub fn hash(mut self, hash: &ConfigHash) -> Self {
-        self.hash = Some(hash.clone());
+    pub fn cache_dir(mut self, cache_dir: &str) -> Self {
+        self.cache_dir = Some(cache_dir.to_owned());
         self
     }
     pub fn piggyback(mut self, piggyback: Option<PiggybackHostName>) -> Self {
@@ -161,7 +161,7 @@ impl SqlInstanceBuilder {
             endpoint: self.endpoint.unwrap_or_default(),
             computer_name: self.computer_name,
             environment: self.environment.unwrap_or_default(),
-            hash: self.hash.unwrap_or_default(),
+            cache_dir: self.cache_dir.unwrap_or_default(),
             piggyback: self.piggyback,
             version_table,
         }
@@ -195,7 +195,7 @@ pub struct SqlInstance {
     endpoint: Endpoint,
     computer_name: Option<ComputerName>,
     environment: Env,
-    hash: ConfigHash,
+    cache_dir: String,
     piggyback: Option<PiggybackHostName>,
     version_table: [u32; 3],
 }
@@ -225,8 +225,8 @@ impl SqlInstance {
         format!("{}/{}", self.endpoint.hostname(), self.name)
     }
 
-    pub fn hash(&self) -> &ConfigHash {
-        &self.hash
+    pub fn cache_dir(&self) -> &str {
+        &self.cache_dir
     }
 
     pub fn temp_dir(&self) -> Option<&Path> {
@@ -484,7 +484,7 @@ impl SqlInstance {
         }
         if let Some(path) = self
             .environment
-            .obtain_cache_sub_dir(self.hash().to_string().as_str())
+            .obtain_cache_sub_dir(self.cache_dir())
             .map(|d| d.join(self.make_cache_entry_name(name)))
         {
             match utils::get_modified_age(&path) {
@@ -505,10 +505,7 @@ impl SqlInstance {
     }
 
     fn write_data_in_cache(&self, name: &str, body: &str) {
-        if let Some(dir) = self
-            .environment
-            .obtain_cache_sub_dir(self.hash().to_string().as_str())
-        {
+        if let Some(dir) = self.environment.obtain_cache_sub_dir(self.cache_dir()) {
             let file_name = self.make_cache_entry_name(name);
             std::fs::write(dir.join(file_name), body)
                 .unwrap_or_else(|e| log::error!("Error {e} writing cache"));
@@ -1363,7 +1360,7 @@ impl CheckConfig {
             );
             for (num, config) in std::iter::zip(0.., ms_sql.configs()) {
                 log::info!("Generating configs data");
-                CheckConfig::prepare_cache_sub_dir(environment, config.hash());
+                CheckConfig::prepare_cache_sub_dir(environment, &config.cache_dir());
                 let configs_data = generate_data(config, environment)
                     .await
                     .unwrap_or_else(|e| {
@@ -1479,7 +1476,7 @@ async fn find_usable_instances(
         .into_iter()
         .map(|b: SqlInstanceBuilder| {
             b.environment(environment)
-                .hash(&ms_sql.hash().to_string().into())
+                .cache_dir(&ms_sql.cache_dir())
                 .build()
         })
         .collect::<Vec<SqlInstance>>())
@@ -1983,7 +1980,7 @@ mssql:
             .dynamic_port(Some(Port(1u16)))
             .port(Some(Port(2u16)))
             .computer_name(Some("computer_name".to_string().into()))
-            .hash(&"hash".to_string().into())
+            .cache_dir("hash")
             .version(&"version".to_string().into())
             .edition(&"edition".to_string().into())
             .environment(&Env::new(&args))
@@ -1999,7 +1996,7 @@ mssql:
         assert!(s.cluster.is_none());
         assert_eq!(s.version.to_string(), "version");
         assert_eq!(s.edition.to_string(), "edition");
-        assert_eq!(s.hash, "hash".to_string().into());
+        assert_eq!(s.cache_dir, "hash");
         assert_eq!(s.port, Some(Port(2u16)));
         assert_eq!(s.dynamic_port, Some(Port(1u16)));
 

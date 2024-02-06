@@ -29,6 +29,10 @@ pub struct Args {
     #[arg(long)]
     pub temp_dir: Option<PathBuf>,
 
+    /// Use custom state dir
+    #[arg(long)]
+    pub state_dir: Option<PathBuf>,
+
     /// All sections are generated as sync
     #[arg(long)]
     pub disable_caching: bool,

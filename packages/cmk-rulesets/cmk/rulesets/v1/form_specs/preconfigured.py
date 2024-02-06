@@ -7,6 +7,7 @@
 
 import enum
 from dataclasses import dataclass
+from typing import Literal
 
 from ._base import FormSpec
 
@@ -20,8 +21,16 @@ class ProxySchema(enum.StrEnum):
     SOCKS5H = "socks5h"
 
 
+ProxyModelT = (
+    tuple[Literal["environment"], Literal["environment"]]
+    | tuple[Literal["no_proxy"], None]
+    | tuple[Literal["global"], str]
+    | tuple[Literal["url"], str]
+)
+
+
 @dataclass(frozen=True, kw_only=True)
-class Proxy(FormSpec):
+class Proxy(FormSpec[ProxyModelT]):
     """Specifies a form for configuring a proxy
 
     Args:
@@ -43,7 +52,7 @@ class Proxy(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Metric(FormSpec):
+class Metric(FormSpec[str]):
     """Specifies a form selecting from a list of metrics registered in Checkmk
 
     Args:
@@ -53,7 +62,7 @@ class Metric(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MonitoredHost(FormSpec):
+class MonitoredHost(FormSpec[str]):
     """Specifies a form selecting from a list of hosts configured in Checkmk
 
     Args:
@@ -63,7 +72,7 @@ class MonitoredHost(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MonitoredService(FormSpec):
+class MonitoredService(FormSpec[str]):
     """Specifies a form selecting from a list of currently monitored services in Checkmk
 
     Args:
@@ -73,7 +82,7 @@ class MonitoredService(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Password(FormSpec):
+class Password(FormSpec[tuple[Literal["password", "store"], str]]):
     """Specifies a form for configuring passwords (explicit or from password store)
 
     Args:
@@ -83,7 +92,7 @@ class Password(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimePeriod(FormSpec):
+class TimePeriod(FormSpec[str]):
     """Specifies a form selecting from a list of time periods configured in Checkmk
 
     Args:

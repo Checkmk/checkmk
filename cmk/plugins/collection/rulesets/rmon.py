@@ -23,9 +23,7 @@ def _parameter_form_discover_rmon() -> form_specs.composed.Dictionary:
                 required=True,
             )
         },
-        transform=form_specs.Migrate(
-            model_to_form=lambda p: p if isinstance(p, dict) else {"discover": p}
-        ),
+        migrate=form_specs.Migrate(update=lambda p: p if isinstance(p, dict) else {"discover": p}),
     )
 
 

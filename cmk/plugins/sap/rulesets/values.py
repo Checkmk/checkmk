@@ -60,7 +60,7 @@ def _formspec_inventory_sap_values():
                         ),
                     ],
                     prefill=form_specs.DefaultValue("exact"),
-                    transform=form_specs.Migrate(model_to_form=_migrate_to_cascading_single_choice),
+                    migrate=form_specs.Migrate(update=_migrate_to_cascading_single_choice),
                 ),
                 required=True,
             ),

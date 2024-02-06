@@ -5,14 +5,16 @@
 
 import enum
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypedDict, TypeVar
 
-from ._base import DefaultValue, FormSpec, Migrate, ModelT, Prefill
-from .basic import DataSize, Float, Integer, Percentage, TimeSpan
+from .._localize import Localizable
+from ._base import DefaultValue, FormSpec, Migrate, Prefill
+
+_NumberT = TypeVar("_NumberT", int, float)
 
 
 @dataclass(frozen=True, kw_only=True)
-class PredictiveLevels(Generic[ModelT]):
+class PredictiveLevels(Generic[_NumberT]):
     """Definition for levels that change over time based on a prediction of the monitored value.
     Usable only in conjunction with :class:`Levels`
 
@@ -34,7 +36,7 @@ class PredictiveLevels(Generic[ModelT]):
     """
 
     reference_metric: str
-    prefill_abs_diff: Prefill[tuple[ModelT, ModelT]]
+    prefill_abs_diff: Prefill[tuple[_NumberT, _NumberT]]
     prefill_rel_diff: Prefill[tuple[float, float]] = DefaultValue((10.0, 20.0))
     prefill_stddev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
 
@@ -46,18 +48,32 @@ class LevelDirection(enum.Enum):
     LOWER = "lower"
 
 
-_NumberT = TypeVar(
-    "_NumberT", int, float
-)  # TODO: tie this to the FormSpec type, once that is generic
+class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
+    period: Literal["wday", "day", "hour", "minute"]
+    horizon: int
+    levels: (
+        tuple[Literal["absolute"], tuple[_NumberT, _NumberT]]
+        | tuple[Literal["relative"], tuple[float, float]]
+        | tuple[Literal["stdev"], tuple[float, float]]
+    )
+    bound: tuple[float, float] | None
+
+
+LevelsConfigModel = (
+    tuple[Literal["no_levels"], None]
+    | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+    | tuple[Literal["predictive"], _PredictiveLevelsT[_NumberT]]
+)
 
 
 @dataclass(frozen=True, kw_only=True)
-class Levels(FormSpec, Generic[_NumberT]):
+class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels
 
     Args:
         title: Human readable title
         help_text: Description to help the user with the configuration
+        migrate: Transformation of the stored configuration
         form_spec_template: Template for the specification of the form fields of the warning and
             critical levels. If `title` or `prefill_value` are provided here, they will be ignored
         level_direction: Do the levels represent the lower or the upper bound.
@@ -66,7 +82,6 @@ class Levels(FormSpec, Generic[_NumberT]):
         prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
             If None, the backend will decide whether to leave the field empty or to prefill it
             with a canonical value.
-        transform: Transformation of the stored configuration
 
     Consumer model:
         **Type**: ``_NoLevels | _FixedLevels | _PredictiveLevels``
@@ -114,10 +129,13 @@ class Levels(FormSpec, Generic[_NumberT]):
 
     """
 
-    form_spec_template: DataSize | Float | Integer | Percentage | TimeSpan
+    # no idea why pylint will not see that we inherit these three anyway.
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    migrate: Migrate[LevelsConfigModel[_NumberT]] | None = None
+
+    form_spec_template: FormSpec[_NumberT]
     level_direction: LevelDirection
     predictive: PredictiveLevels[_NumberT] | None
 
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
-
-    transform: Migrate[object] | None = None

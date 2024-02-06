@@ -1573,9 +1573,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     [
         pytest.param(
             api_v1.form_specs.basic.Integer(
-                transform=api_v1.form_specs.Migrate(
-                    model_to_form=lambda x: _narrow_type(x, int) * 2
-                )
+                migrate=api_v1.form_specs.Migrate(update=lambda x: _narrow_type(x, int) * 2)
             ),
             2,
             4,
@@ -1585,13 +1583,11 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
             api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
                 elements=[
                     api_v1.form_specs.basic.Integer(
-                        transform=api_v1.form_specs.Migrate(
-                            model_to_form=lambda x: _narrow_type(x, int) * 2
-                        )
+                        migrate=api_v1.form_specs.Migrate(update=lambda x: _narrow_type(x, int) * 2)
                     ),
                     api_v1.form_specs.basic.Percentage(
-                        transform=api_v1.form_specs.Migrate(
-                            model_to_form=lambda x: _narrow_type(x, float) * 2
+                        migrate=api_v1.form_specs.Migrate(
+                            update=lambda x: _narrow_type(x, float) * 2
                         )
                     ),
                 ]
@@ -1607,8 +1603,8 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                         parameter_form=api_v1.form_specs.basic.Integer()
                     )
                 },
-                transform=api_v1.form_specs.Migrate(
-                    model_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]}
+                migrate=api_v1.form_specs.Migrate(
+                    update=lambda x: {"key2": _narrow_type(x, dict)["key"]}
                 ),
             ),
             {"key": 2},
@@ -1622,12 +1618,12 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
                         parameter_form=api_v1.form_specs.basic.Text(
-                            transform=api_v1.form_specs.Migrate(model_to_form=lambda x: f"{x}_new")
+                            migrate=api_v1.form_specs.Migrate(update=lambda x: f"{x}_new")
                         ),
                     )
                 ],
-                transform=api_v1.form_specs.Migrate(
-                    model_to_form=lambda x: (
+                migrate=api_v1.form_specs.Migrate(
+                    update=lambda x: (
                         f"{_narrow_type(x, tuple)[0]}_new",
                         _narrow_type(x, tuple)[1],
                     )
@@ -1719,7 +1715,7 @@ def test_form_spec_transform(form_spec: FormSpec) -> None:
         ),
     ):
         try:
-            _ = form_spec.transform
+            _ = form_spec.migrate
         except AttributeError:
             assert False
     elif isinstance(
@@ -1767,11 +1763,11 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
     [
         pytest.param(
             api_v1.form_specs.levels.Levels(
+                title=api_v1.Localizable("Lower levels"),
                 form_spec_template=api_v1.form_specs.basic.Integer(),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,
-                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
                 predictive=None,
-                title=api_v1.Localizable("Lower levels"),
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Lower levels"),
@@ -1787,7 +1783,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.Integer(),
                 level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
-                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
                 predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
@@ -1800,17 +1796,17 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="upper fixed",
         ),
         pytest.param(
-            api_v1.form_specs.levels.Levels(
+            api_v1.form_specs.levels.Levels[int](
+                title=api_v1.Localizable("Upper levels"),
                 form_spec_template=api_v1.form_specs.basic.Integer(unit=api_v1.Localizable("GiB")),
                 level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
-                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1.0, 2.0)),
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
                 predictive=api_v1.form_specs.levels.PredictiveLevels(
                     reference_metric="my_metric",
-                    prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
+                    prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
                     prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
                     prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
-                title=api_v1.Localizable("Upper levels"),
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Upper levels"),

@@ -6,14 +6,14 @@
 import ast
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Callable, ClassVar, Literal, Sequence
+from typing import Callable, ClassVar, Literal, Sequence, TypeVar
 
 from .._localize import Localizable
-from ._base import DefaultValue, FormSpec, InputHint, Migrate, Prefill
+from ._base import DefaultValue, FormSpec, InputHint, Prefill
 
 
 @dataclass(frozen=True, kw_only=True)
-class BooleanChoice(FormSpec):
+class BooleanChoice(FormSpec[bool]):
     """Specifies a form for configuring a choice between boolean values
 
     Args:
@@ -21,12 +21,11 @@ class BooleanChoice(FormSpec):
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         prefill: Value to pre-populate the choice with.
-        transform: Transformation of the stored configuration
+        migrate: Transformation of the stored configuration
     """
 
     label: Localizable | None = None
     prefill: DefaultValue[bool] = DefaultValue(False)
-    transform: Migrate[bool] | None = None
 
 
 class BinaryUnit(Enum):
@@ -66,7 +65,7 @@ IEC_BINARY_UNIT = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class DataSize(FormSpec):
+class DataSize(FormSpec[int]):
     """Specifies an input field for data storage capacity
 
     Args:
@@ -75,7 +74,7 @@ class DataSize(FormSpec):
         label: Text displayed as an extension to the input field
         displayed_units: Units that can be selected in the UI
         prefill: Value in bytes to pre-populate the form field with.
-        transform: Specify if/how the raw input value in bytes should be changed when loaded into
+        migrate: Specify if/how the raw input value in bytes should be changed when loaded into
                    the form/saved from the form
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
@@ -86,13 +85,11 @@ class DataSize(FormSpec):
     displayed_units: Sequence[BinaryUnit] | None = None
     prefill: Prefill[int] = InputHint(0)
 
-    transform: Migrate[int] | None = None
-
     custom_validate: Callable[[int], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class FileUpload(FormSpec):
+class FileUpload(FormSpec[tuple[str, str, bytes]]):
     """Specifies a file upload form.
 
     Args:
@@ -130,8 +127,11 @@ class FileUpload(FormSpec):
     custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
 
 
+_FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
+
+
 @dataclass(frozen=True, kw_only=True)
-class FixedValue(FormSpec):
+class FixedValue(FormSpec[_FixedValueT]):
     """
     Specifies a fixed non-editable value
 
@@ -142,13 +142,11 @@ class FixedValue(FormSpec):
         help_text: Description to help the user with the configuration
         value: Atomic value produced by the form spec
         label: Text displayed underneath the title
-        transform: Transformation of the stored configuration
+        migrate: Transformation of the stored configuration
     """
 
-    value: int | float | str | bool | None
+    value: _FixedValueT
     label: Localizable | None = None
-
-    transform: Migrate[int | float | str | bool | None] | None = None
 
     def __post_init__(self) -> None:
         try:
@@ -164,7 +162,7 @@ class FixedValue(FormSpec):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Float(FormSpec):
+class Float(FormSpec[float]):
     """Specifies an input field for floating point numbers
 
     Args:
@@ -185,13 +183,11 @@ class Float(FormSpec):
 
     prefill: Prefill[float] = InputHint(0.0)
 
-    transform: Migrate[float] | None = None
-
     custom_validate: Callable[[float], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class HostState(FormSpec):
+class HostState(FormSpec[Literal[0, 1, 2]]):
     """Specifies the configuration of a host state.
 
     >>> state_form_spec = HostState(
@@ -200,17 +196,15 @@ class HostState(FormSpec):
     ... )
     """
 
-    UP: ClassVar[Literal[0]] = 0
-    DOWN: ClassVar[Literal[1]] = 1
-    UNREACH: ClassVar[Literal[2]] = 2
+    UP: ClassVar = 0
+    DOWN: ClassVar = 1
+    UNREACH: ClassVar = 2
 
     prefill: DefaultValue[Literal[0, 1, 2]] = DefaultValue(0)
 
-    transform: Migrate[Literal[0, 1, 2]] | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class Integer(FormSpec):
+class Integer(FormSpec[int]):
     """Specifies an input field for whole numbers
 
     Args:
@@ -233,24 +227,22 @@ class Integer(FormSpec):
     unit: Localizable | None = None
     prefill: Prefill[int] = InputHint(0)
 
-    transform: Migrate[int] | None = None
-
     custom_validate: Callable[[int], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class MultilineText(FormSpec):
+class MultilineText(FormSpec[str]):
     """Specifies a multiline text form
 
     Args:
         title: Human readable title
         help_text: Description to help the user with the configuration
+        migrate: Transformation of the stored configuration
         monospaced: Display text in the form as monospaced
         macro_support: Hint in the UI that macros can be used in the field.
             Replacing the macros in the plugin is a responsibility of the plugin developer.
         label: Text displayed in front of the input field
         prefill: Value to pre-populate the form field with.
-        transform: Transformation of the stored configuration
         custom_validate: Custom validation function.
             Will be executed in addition to any builtin validation logic.
             Needs to raise a ValidationError in case validation fails.
@@ -273,12 +265,11 @@ class MultilineText(FormSpec):
     label: Localizable | None = None
 
     prefill: Prefill[str] = InputHint("")
-    transform: Migrate[str] | None = None
     custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class Percentage(FormSpec):
+class Percentage(FormSpec[float]):
     """Specifies an input field for percentages
 
     Args:
@@ -297,8 +288,6 @@ class Percentage(FormSpec):
 
     prefill: Prefill[float] = InputHint(0.0)
 
-    transform: Migrate[float] | None = None
-
     custom_validate: Callable[[float], object] | None = None
 
 
@@ -309,7 +298,7 @@ class MatchingScope(Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class RegularExpression(FormSpec):
+class RegularExpression(FormSpec[str]):
     """
     Specifies an input field for regular expressions
 
@@ -320,7 +309,7 @@ class RegularExpression(FormSpec):
                               for commonly used matching behavior.
         label: Text displayed as an extension to the input field
         prefill: Value to pre-populate the form field with.
-        transform: Transformation of the stored configuration
+        migrate: Transformation of the stored configuration
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
@@ -331,13 +320,11 @@ class RegularExpression(FormSpec):
 
     prefill: Prefill[str] = InputHint("")
 
-    transform: Migrate[str] | None = None
-
     custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
-class ServiceState(FormSpec):
+class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     """Specifies the configuration of a service state.
 
     >>> state_form_spec = ServiceState(
@@ -346,18 +333,16 @@ class ServiceState(FormSpec):
     ... )
     """
 
-    OK: ClassVar[Literal[0]] = 0
-    WARN: ClassVar[Literal[1]] = 1
-    CRIT: ClassVar[Literal[2]] = 2
-    UNKNOWN: ClassVar[Literal[3]] = 3
+    OK: ClassVar = 0
+    WARN: ClassVar = 1
+    CRIT: ClassVar = 2
+    UNKNOWN: ClassVar = 3
 
     prefill: DefaultValue[Literal[0, 1, 2, 3]] = DefaultValue(0)
 
-    transform: Migrate[Literal[0, 1, 2, 3]] | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
-class Text(FormSpec):
+class Text(FormSpec[str]):
     """
     Args:
         title: Human readable title
@@ -376,8 +361,6 @@ class Text(FormSpec):
 
     prefill: Prefill[str] = InputHint("")
 
-    transform: Migrate[str] | None = None
-
     custom_validate: Callable[[str], object] | None = None
 
 
@@ -390,7 +373,7 @@ class TimeUnit(Enum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimeSpan(FormSpec):
+class TimeSpan(FormSpec[float]):
     """Specifies an input field for time span
 
     Args:
@@ -413,7 +396,6 @@ class TimeSpan(FormSpec):
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
     prefill: Prefill[float] = InputHint(0.0)
-    transform: Migrate[Sequence[float]] | None = None
     custom_validate: Callable[[float], object] | None = None
 
 
@@ -447,7 +429,7 @@ class SingleChoiceElement:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SingleChoice(FormSpec):
+class SingleChoice(FormSpec[str]):
     """Specification for a (single-)selection from multiple options
 
     Args:
@@ -477,7 +459,6 @@ class SingleChoice(FormSpec):
 
     deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
-    transform: Migrate[str] | None = None
 
     custom_validate: Callable[[str], object] | None = None
 

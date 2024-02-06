@@ -184,7 +184,7 @@ class BodyRegex(BaseModel):
 
 
 class Content(BaseModel):
-    header: tuple[Literal[MatchType.STRING], str] | tuple[
+    header: tuple[Literal[MatchType.STRING], HeaderSpec] | tuple[
         Literal[MatchType.REGEX], HeaderRegex
     ] | None = None
     body: tuple[Literal[MatchType.STRING], str] | tuple[

@@ -855,7 +855,7 @@ class MetricometerRendererLegacyStacked(MetricometerRenderer):
     ) -> None:
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(
-                _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
+                _("Perf-O-Meter of type 'stacked' must contain exactly two definitions, not %d")
                 % len(perfometer["perfometers"])
             )
         self._perfometers = perfometer["perfometers"]

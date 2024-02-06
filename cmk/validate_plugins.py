@@ -18,6 +18,7 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
 )
 
 from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
+from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-violation
 from cmk.base.config import load_all_plugins  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
@@ -30,6 +31,8 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
 
 class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
+    ACTIVE_CHECKS = "active checks loading"
+    SPECIAL_AGENTS = "special agents loading"
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
 
@@ -52,6 +55,16 @@ def _validate_agent_based_plugin_loading() -> ActiveCheckResult:
     )
 
     return to_result(ValidationStep.AGENT_BASED_PLUGINS, errors)
+
+
+def _validate_active_checks_loading() -> ActiveCheckResult:
+    errors, _ = server_side_calls.load_active_checks()
+    return to_result(ValidationStep.ACTIVE_CHECKS, errors)
+
+
+def _validate_special_agents_loading() -> ActiveCheckResult:
+    errors, _ = server_side_calls.load_special_agents()
+    return to_result(ValidationStep.SPECIAL_AGENTS, errors)
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:
@@ -87,6 +100,8 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
 def validate_plugins() -> ActiveCheckResult:
     sub_results = [
         _validate_agent_based_plugin_loading(),
+        _validate_active_checks_loading(),
+        _validate_special_agents_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
     ]

@@ -49,10 +49,11 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
 
         cmk/os_type:
             This label is set to the operating system as reported by the agent
-            as "AgentOS" (such as "windows" or "linux").
+            as "OSType" (such as "windows" or "linux").
 
         cmk/os_platform:
-            This label is set to the platform as reported by the agent as "OSPlatform"
+            This label is set to the platform as reported by the agent as "OSPlatform". In case
+            "OSPlatform" is not set, the value of "AgentOS" is used.
 
         cmk/os_name:
             This label is set to the name of the operating system as reported by the agent as "OSName"
@@ -62,16 +63,18 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
     """
     if (agentos := section.get("agentos")) is not None:
         yield HostLabel("cmk/os_family", agentos)
-        yield HostLabel("cmk/os_type", agentos)
 
-    if (platform := section.get("osplatform", agentos)) is not None and platform != "linux":
-        yield HostLabel("cmk/os_platform", platform)
+    if (ostype := section.get("ostype")) is not None:
+        yield HostLabel("cmk/os_type", ostype)
 
-    if (os_name := section.get("osname")) is not None:
-        yield HostLabel("cmk/os_name", os_name)
+    if (osplatform := section.get("osplatform", agentos)) is not None:
+        yield HostLabel("cmk/os_platform", osplatform)
 
-    if (os_version := section.get("osversion")) is not None:
-        yield HostLabel("cmk/os_version", os_version)
+    if (osname := section.get("osname")) is not None:
+        yield HostLabel("cmk/os_name", osname)
+
+    if (osversion := section.get("osversion")) is not None:
+        yield HostLabel("cmk/os_version", osversion)
 
 
 register.agent_section(

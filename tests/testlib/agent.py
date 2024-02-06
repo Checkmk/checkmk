@@ -42,7 +42,11 @@ def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
-        run(["sudo", "dpkg", "-i", package_path.as_posix()])
+        try:
+            run(["sudo", "dpkg", "-i", package_path.as_posix()])
+        except RuntimeError as e:
+            process_table = run(["ps", "aux"]).stdout
+            raise RuntimeError(f"dpkg failed. Process table:\n{process_table}") from e
         return installed_ctl_path
     if package_type == "linux_rpm":
         run(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])

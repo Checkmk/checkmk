@@ -100,13 +100,13 @@ class MatchType(StrEnum):
 
 PasswordSpec = tuple[PasswordType, str]
 
+IntLevels = (
+    tuple[Literal[LevelsType.NO_LEVELS], None] | tuple[Literal[LevelsType.FIXED], tuple[int, int]]
+)
+
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
-)
-
-IntLevels = (
-    tuple[Literal[LevelsType.NO_LEVELS], None] | tuple[Literal[LevelsType.FIXED], tuple[int, int]]
 )
 
 
@@ -278,6 +278,8 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
 
     if (connection := settings.connection) is not None:
         yield from _connection_args(connection)
+    if (response_time := settings.response_time) is not None:
+        yield from _response_time_arguments(response_time)
 
 
 def _connection_args(connection: Connection) -> Iterator[str]:
@@ -410,6 +412,13 @@ def _send_header_args(headers: Sequence[HeaderSpec]) -> Iterator[str]:
     for header_spec in headers:
         yield "--header"
         yield f"{header_spec.header_name}:{header_spec.header_value}"
+
+
+def _response_time_arguments(response_time: FloatLevels) -> Iterator[str]:
+    match response_time:
+        case (LevelsType.FIXED, (float(warn), float(crit))):
+            yield "--response-time-levels"
+            yield f"{warn},{crit}"
 
 
 active_check_httpv2 = ActiveCheckConfig(

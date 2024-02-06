@@ -282,6 +282,8 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
         yield from _response_time_arguments(response_time)
     if (server_response := settings.server_response) is not None:
         yield from _status_code_args(server_response)
+    if (cert := settings.cert) is not None:
+        yield from _cert_args(cert)
 
 
 def _connection_args(connection: Connection) -> Iterator[str]:
@@ -427,6 +429,18 @@ def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
     for code in response_codes.expected:
         yield "--status-code"
         yield str(code)
+
+
+def _cert_args(
+    cert_validation: (
+        tuple[Literal[Validation.NO_VALIDATION], None]
+        | tuple[Literal[Validation.VALIDATE], IntLevels]
+    )
+) -> Iterator[str]:
+    match cert_validation:
+        case (Validation.VALIDATE, (LevelsType.FIXED, (int(warn), int(crit)))):
+            yield "--certificate-levels"
+            yield f"{warn},{crit}"
 
 
 active_check_httpv2 = ActiveCheckConfig(

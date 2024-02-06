@@ -584,6 +584,7 @@ def test_test_get_active_service_data_crash(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     list(active_check.get_active_service_data(active_check_rules))
@@ -650,6 +651,7 @@ def test_test_get_active_service_data_crash_with_debug(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     with pytest.raises(
@@ -768,6 +770,7 @@ def test_get_active_service_data_warnings(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
@@ -947,6 +950,7 @@ def test_get_active_service_descriptions(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -992,6 +996,7 @@ def test_get_active_service_descriptions_warnings(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))

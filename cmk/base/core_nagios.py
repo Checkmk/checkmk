@@ -497,7 +497,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),
         config.use_new_descriptions_for,
-        stored_passwords=stored_passwords,
+        stored_passwords,
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 

@@ -101,7 +101,7 @@ class ActiveCheck:
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         use_new_descriptions_for: Container[CheckPluginNameStr],
-        stored_passwords: Mapping[str, str] | None = None,
+        stored_passwords: Mapping[str, str],
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
         self._plugins = {p.name: p for p in plugins.values()}

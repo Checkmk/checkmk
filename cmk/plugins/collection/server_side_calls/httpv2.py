@@ -273,6 +273,144 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
     yield "--url"
     yield endpoint.url
 
+    if (settings := endpoint.settings) is None:
+        return
+
+    if (connection := settings.connection) is not None:
+        yield from _connection_args(connection)
+
+
+def _connection_args(connection: Connection) -> Iterator[str]:
+    if (auth := connection.auth) is not None:
+        yield from _auth_args(auth)
+    if (tls_versions := connection.tls_versions) is not None:
+        yield from _tls_version_arg(tls_versions)
+    if (method_spec := connection.method) is not None:
+        yield from _send_args(method_spec)
+    if (redirects := connection.redirects) is not None:
+        yield from _redirect_args(redirects)
+    if (http_versions := connection.http_versions) is not None:
+        yield from _http_version_args(http_versions)
+    if (timeout := connection.timeout) is not None:
+        yield from _timeout_args(timeout)
+    if (user_agent := connection.user_agent) is not None:
+        yield from _user_agent_args(user_agent)
+    if (add_headers := connection.add_headers) is not None:
+        yield from _send_header_args(add_headers)
+
+
+def _auth_args(
+    auth: (
+        tuple[Literal[AuthMode.BASIC_AUTH], UserAuth]
+        | tuple[Literal[AuthMode.TOKEN_AUTH], TokenAuth]
+    )
+) -> Iterator[str]:
+    match auth:
+        case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):
+            yield "--auth-user"
+            yield user
+            yield from _password_args(password, "--auth-pw-plain", "--auth-pw-pwstore")
+        case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):
+            yield "--token-header"
+            yield header
+            yield from _password_args(token, "--token-key-plain", "--token-key-pwstore")
+
+
+def _password_args(password: PasswordSpec, plain_arg: str, store_arg: str) -> Iterator[str]:
+    match password:
+        case (PasswordType.PASSWORD, pw):
+            yield plain_arg
+            yield pw
+        case (PasswordType.STORE, ident):
+            yield store_arg
+            yield ident
+
+
+def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
+    if tls_versions.min_version is TlsVersion.AUTO:
+        return
+
+    tls_version_arg = {
+        TlsVersion.TLS_1_0: "tls10",
+        TlsVersion.TLS_1_1: "tls11",
+        TlsVersion.TLS_1_2: "tls12",
+        TlsVersion.TLS_1_3: "tls13",
+    }[tls_versions.min_version]
+
+    yield "--min-tls-version" if tls_versions.allow_higher else "--tls-version"
+    yield tls_version_arg
+
+
+def _send_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:
+    method, send_data = method_spec
+
+    yield "--method"
+    yield {
+        HttpMethod.GET: "GET",
+        HttpMethod.POST: "POST",
+        HttpMethod.PUT: "PUT",
+        HttpMethod.DELETE: "DELETE",
+        HttpMethod.OPTIONS: "OPTIONS",
+        HttpMethod.TRACE: "TRACE",
+        HttpMethod.HEAD: "HEAD",
+        HttpMethod.CONNECT: "CONNECT",
+        HttpMethod.CONNECT_POST: "CONNECT:POST",
+        HttpMethod.PROPFIND: "PROPFIND",
+    }[method]
+
+    if send_data is None:
+        return
+
+    yield "--body"
+    yield send_data.body_text
+
+    yield "--content-type"
+    match send_data.content_type:
+        case (SendDataType.CUSTOM, str(ct_str)):
+            yield ct_str
+        case (SendDataType.COMMON, ContentType(ct_enum)):
+            yield {
+                ContentType.APPLICATION_JSON: "application/json",
+                ContentType.APPLICATION_OCTET_STREAM: "application/octet-stream",
+                ContentType.APPLICATION_XML: "application/xml",
+                ContentType.APPLICATION_ZIP: "application/zip",
+                ContentType.TEXT_CSV: "text/csv",
+                ContentType.TEXT_PLAIN: "text/plain",
+                ContentType.TEXT_XML: "text/xml",
+                ContentType.TEXT_HTML: "text/html",
+            }[ct_enum]
+
+
+def _redirect_args(policy: RedirectPolicy) -> Iterator[str]:
+    yield "--onredirect"
+    yield str(policy)
+
+
+def _http_version_args(http_version: HttpVersion) -> Iterator[str]:
+    if http_version is HttpVersion.AUTO:
+        return
+    yield "--http-version"
+    yield {
+        HttpVersion.HTTP_2: "http2",
+        HttpVersion.HTTP_1_1: "http11",
+    }[http_version]
+
+
+def _timeout_args(timeout: int) -> Iterator[str]:
+    yield "--timeout"
+    yield str(timeout)
+
+
+def _user_agent_args(user_agent: str) -> Iterator[str]:
+    yield "--user-agent"
+    yield user_agent
+
+
+def _send_header_args(headers: Sequence[HeaderSpec]) -> Iterator[str]:
+    for header_spec in headers:
+        yield "--header"
+        yield f"{header_spec.header_name}:{header_spec.header_value}"
+
 
 active_check_httpv2 = ActiveCheckConfig(
     name="httpv2",

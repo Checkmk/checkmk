@@ -40,11 +40,25 @@ class Migrate(Generic[ModelT]):
 
 @dataclass(frozen=True)
 class DefaultValue(Generic[ModelT]):
+    """Defines a default value for the form spec.
+
+    Note that the default value *will* be part of the created configuration,
+    unless the user changes it before hitting the save button.
+    See also :class:`InputHint`.
+    """
+
     value: ModelT
 
 
 @dataclass(frozen=True)
 class InputHint(Generic[ModelT]):
+    """Defines an input hint for the form spec.
+
+    Note that an input hint *will not* be part of the created configuration,
+    unless the user enters a value before hitting the save button.
+    See also :class:`DefaultValue`.
+    """
+
     value: ModelT
 
 

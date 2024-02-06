@@ -14,7 +14,7 @@ from .basic import DataSize, Float, Integer, Percentage, TimeSpan
 @dataclass(frozen=True, kw_only=True)
 class PredictiveLevels(Generic[ModelT]):
     """Definition for levels that change over time based on a prediction of the monitored value.
-    Usable only in conjunction with `Levels`
+    Usable only in conjunction with :class:`Levels`
 
     Args:
         reference_metric: The name of the metric that should be used to compute the prediction.

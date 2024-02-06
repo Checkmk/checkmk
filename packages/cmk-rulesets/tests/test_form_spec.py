@@ -18,36 +18,31 @@ from cmk.rulesets.v1.form_specs.composed import (
 )
 
 
-@pytest.mark.parametrize(
-    "value",
-    [
-        pytest.param(True, id="bool"),
-        pytest.param(0, id="int"),
-        pytest.param(2.0, id="float"),
-        pytest.param("value", id="float"),
-        pytest.param(None, id="None"),
-    ],
-)
-def test_fixed_value_validation(
-    value: int | float | str | bool | None,
-) -> None:
-    FixedValue(value=value, title=Localizable("Test FixedValue"))
+def test_fixed_value_validation_bool() -> None:
+    FixedValue(value=True, title=Localizable(""))
 
 
-@pytest.mark.parametrize(
-    "value",
-    [
-        pytest.param(float("Inf"), id="Inf float"),
-    ],
-)
-def test_fixed_value_validation_fails(value: int | float | str | bool | None) -> None:
+def test_fixed_value_validation_int() -> None:
+    FixedValue(value=0, title=Localizable(""))
+
+
+def test_fixed_value_validation_float() -> None:
+    FixedValue(value=42.0, title=Localizable(""))
+
+
+def test_fixed_value_validation_str() -> None:
+    FixedValue(value="juhu", title=Localizable(""))
+
+
+def test_fixed_value_validation_fails() -> None:
     with pytest.raises(ValueError, match="FixedValue value is not serializable."):
-        FixedValue(value=value, title=Localizable("Test FixedValue"))
+        FixedValue(value=float("Inf"), title=Localizable("Test FixedValue"))
 
 
 def test_dictionary_ident_validation() -> None:
+    elements = {"element\abc": DictElement(parameter_form=FixedValue(value=None))}
     with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        Dictionary(elements={"element\abc": DictElement(parameter_form=FixedValue(value=None))})
+        Dictionary(elements=elements)
 
 
 def test_multiple_choice_validation() -> None:
@@ -59,23 +54,25 @@ def test_multiple_choice_validation() -> None:
 
 
 def test_single_choice_validation() -> None:
+    elements = (SingleChoiceElement(name="element_abc", title=Localizable("Element ABC")),)
     with pytest.raises(ValueError):
         SingleChoice(
-            elements=[SingleChoiceElement(name="element_abc", title=Localizable("Element ABC"))],
+            elements=elements,
             prefill=DefaultValue("element_xyz"),
         )
 
 
 def test_cascading_single_choice_validation() -> None:
+    elements = (
+        CascadingSingleChoiceElement(
+            name="element_abc",
+            title=Localizable("Element ABC"),
+            parameter_form=FixedValue(value=None),
+        ),
+    )
     with pytest.raises(ValueError):
         CascadingSingleChoice(
-            elements=[
-                CascadingSingleChoiceElement(
-                    name="element_abc",
-                    title=Localizable("Element ABC"),
-                    parameter_form=FixedValue(value=None),
-                )
-            ],
+            elements=elements,
             prefill=DefaultValue("element_xyz"),
         )
 

@@ -132,7 +132,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 )
             ),
         },
-        transform=Migrate(model_to_form=_migrate_levels),
+        migrate=Migrate(update=_migrate_levels),
     )
 
 

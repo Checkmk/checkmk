@@ -91,7 +91,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                 required=True,
             ),
         },
-        transform=Migrate(model_to_form=_migrate),
+        migrate=Migrate(update=_migrate),
     )
 
 

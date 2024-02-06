@@ -571,6 +571,22 @@ class CMKOpenApiSession(requests.Session):
         the_id: str = response.json()["id"]
         return the_id
 
+    def get_rule(self, rule_id: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the rule details and the Etag header if the rule_id was found
+            None if the rule_id was not found
+        """
+        response = self.get(f"/objects/rule/{rule_id}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
+
     def delete_rule(self, rule_id: str) -> None:
         response = self.delete(f"/objects/rule/{rule_id}")
         if response.status_code != 204:

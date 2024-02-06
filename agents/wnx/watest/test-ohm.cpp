@@ -33,7 +33,7 @@ int CalcOhmCount() {
                                 cma::provider::ohm::kExeModule)) {
             count++;
         }
-        return true;
+        return wtools::ScanAction::advance;
     });
     return count;
 }

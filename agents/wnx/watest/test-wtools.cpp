@@ -25,10 +25,10 @@ namespace {
 // Should be valid for all windows versions
 struct CounterParam {
     const wchar_t *const name_;  // usually number
-    const uint32_t index_;       // the same as name
-    const uint32_t counters_count;
-    const uint32_t instances_min_;
-    const uint32_t instances_max_;
+    uint32_t index_;             // the same as name
+    uint32_t counters_count;
+    uint32_t instances_min_;
+    uint32_t instances_max_;
 };
 
 constexpr CounterParam g_cpu_counter = {.name_ = L"238",
@@ -44,7 +44,7 @@ constexpr CounterParam g_disk_counter = {.name_ = L"234",
 
 }  // namespace
 
-namespace wtools {  // to become friendly for cma::cfg classes
+namespace wtools {
 
 class WtoolsKillProcFixture : public ::testing::Test {
 protected:
@@ -52,12 +52,11 @@ protected:
     static constexpr std::wstring_view nameToUse() { return L"kill_proc.exe"; }
 
     static void KillTmpProcesses() {
-        // kill process
         ScanProcessList([](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} == nameToUse()) {
                 KillProcess(entry.th32ProcessID, 99);
             }
-            return true;  // continue scan
+            return ScanAction::advance;
         });
     }
 
@@ -84,12 +83,12 @@ protected:
         std::wstring path;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} != nameToUse()) {
-                return true;  // continue scan
+                return ScanAction::advance;
             }
 
             path = GetProcessPath(entry.th32ProcessID);
             pid = entry.th32ProcessID;
-            return false;
+            return ScanAction::terminate;
         });
 
         return {path, pid};
@@ -224,7 +223,7 @@ protected:
                     names.back(), entry.th32ProcessID,
                     entry.th32ParentProcessID, ::GetCurrentProcessId());
             }
-            return true;
+            return ScanAction::advance;
         });
         EXPECT_TRUE(!names.empty());
         for (auto &name : names) {
@@ -259,9 +258,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -271,9 +270,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ParentProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -284,11 +283,11 @@ protected:
         DWORD parent_process_id = 0;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID != proc_id) {
-                return true;  // continue
+                return ScanAction::advance;
             }
             proc_name = entry.szExeFile;
             parent_process_id = entry.th32ParentProcessID;
-            return false;  // found
+            return ScanAction::terminate;
         });
 
         return {proc_name, parent_process_id};

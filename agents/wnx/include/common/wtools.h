@@ -306,12 +306,15 @@ private:
     SECURITY_ATTRIBUTES sa_ = {};
 };
 
-// scans all processes in system and calls op
-// returns false only when something is really bad
+enum class ScanAction { terminate, advance };
+
+// scans all processes in system and calls action
+// returns false on error
 // based on ToolHelp api family
 // normally require elevation
-// if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op);
+// if action returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(
+    const std::function<ScanAction(const PROCESSENTRY32 &)> &action);
 
 // standard process terminator
 bool KillProcess(uint32_t pid, int exit_code) noexcept;

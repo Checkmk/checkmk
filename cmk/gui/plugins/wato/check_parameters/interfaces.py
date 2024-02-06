@@ -648,9 +648,12 @@ def _vs_state_mappings() -> CascadingDropdown:
                                 valuespec=Tuple(
                                     orientation="horizontal",
                                     elements=[
-                                        ListChoice(
-                                            choices=ifaceoper.interface_oper_states(),
-                                            allow_empty=False,
+                                        Migrate(
+                                            ListChoice(
+                                                choices=ifaceoper.interface_oper_states(),
+                                                allow_empty=False,
+                                            ),
+                                            migrate=list,
                                         ),
                                         MonitoringState(),
                                     ],

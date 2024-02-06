@@ -108,7 +108,7 @@ def _merge_if_counters_sections(  # pylint: disable=too-many-branches
 
     """
 
-    if_mac_list: MutableMapping[str, MACList] = {}
+    if_mac_list: dict[str, MACList] = {}
     virtual_interfaces = []
 
     # collect broadcast ports for broadcast_domain and node

@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping, MutableMapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
@@ -1241,7 +1241,7 @@ class SiteFactory:
     ) -> None:
         self.version = version
         self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
-        self._sites: MutableMapping[str, Site] = {}
+        self._sites: dict[str, Site] = {}
         self._index = 1
         self._update = update
         self._update_conflict_mode = update_conflict_mode

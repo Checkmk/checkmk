@@ -21,15 +21,7 @@ import py_compile
 import socket
 import struct
 import sys
-from collections.abc import (
-    Callable,
-    Container,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Sequence,
-)
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
@@ -754,7 +746,7 @@ class PackedConfigGenerator:
         self._config_cache = config_cache
 
     def generate(self) -> Mapping[str, Any]:
-        helper_config: MutableMapping[str, Any] = {}
+        helper_config: dict[str, Any] = {}
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         hosts_config = self._config_cache.hosts_config

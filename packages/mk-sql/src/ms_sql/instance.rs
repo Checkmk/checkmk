@@ -1768,7 +1768,7 @@ pub async fn obtain_instance_builders(
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
     match client::connect_main_endpoint(endpoint).await {
-        Ok(mut client) => _obtain_instance_builders(&mut client, endpoint).await,
+        Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
         Err(err) => {
             log::error!("Failed to create main client: {err}");
             obtain_instance_builders_by_sql_browser(endpoint, instances).await
@@ -1785,7 +1785,7 @@ pub async fn obtain_instance_builders_by_sql_browser(
         match client::create_instance_local(instance, endpoint.conn().sql_browser_port(), None)
             .await
         {
-            Ok(mut client) => return _obtain_instance_builders(&mut client, endpoint).await,
+            Ok(mut client) => return Ok(_obtain_instance_builders(&mut client, endpoint).await),
             Err(err) => {
                 log::error!("Failed to create client: {err}");
             }
@@ -1805,25 +1805,40 @@ pub async fn obtain_instance_builders_by_sql_browser(
 async fn _obtain_instance_builders(
     client: &mut Client,
     endpoint: &Endpoint,
-) -> Result<Vec<SqlInstanceBuilder>> {
-    let normal_instances =
-        exec_win_registry_sql_instances_query(client, &sqls::get_win_registry_instances_query())
-            .await?;
-    let wow_instances = exec_win_registry_sql_instances_query(
-        client,
-        &sqls::get_wow64_32_registry_instances_query(),
-    )
-    .await?;
+) -> Vec<SqlInstanceBuilder> {
+    let builders = try_find_instances_in_registry(client).await;
+    if builders.is_empty() {
+        return vec![];
+    }
     let computer_name = obtain_computer_name(client).await.unwrap_or_default();
-    Ok([&normal_instances[..], &wow_instances[..]]
-        .concat()
+    builders
         .iter()
         .map(|i| {
             i.clone()
                 .endpoint(endpoint)
                 .computer_name(computer_name.clone())
         })
-        .collect())
+        .collect()
+}
+
+async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceBuilder> {
+    let normal_instances =
+        exec_win_registry_sql_instances_query(client, &sqls::get_win_registry_instances_query())
+            .await
+            .unwrap_or_else(|e| {
+                log::info!("Can't get normal instances: {e}, it is not error");
+                Vec::new()
+            });
+    let wow_instances = exec_win_registry_sql_instances_query(
+        client,
+        &sqls::get_wow64_32_registry_instances_query(),
+    )
+    .await
+    .unwrap_or_else(|e| {
+        log::info!("Can't get normal instances: {e}");
+        Vec::new()
+    });
+    [&normal_instances[..], &wow_instances[..]].concat()
 }
 
 /// return all MS SQL instances installed

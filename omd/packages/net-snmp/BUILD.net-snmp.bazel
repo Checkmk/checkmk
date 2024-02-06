@@ -25,7 +25,6 @@ configure_make(
         "--disable-snmptrapd-subagent",
         "--with-defaults",
         "--disable-scripts",
-        '--with-mibdirs="\\\\$$\\$$HOME/local/share/snmp/mibs:\\\\$$\\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
     ],
     copts = [
         "-I$BUILD_TMPDIR/include",

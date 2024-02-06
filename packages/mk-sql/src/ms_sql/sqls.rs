@@ -35,16 +35,8 @@ pub enum Id {
 }
 
 mod query {
-    // TODO(sk): replace with "SELECT SERVERPROPERTY( 'MachineName' ) as MachineName"
-    pub const COMPUTER_NAME: &str = r"DECLARE @ComputerName NVARCHAR(200);
-DECLARE @main_key NVARCHAR(200) = 'SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName';
-EXECUTE xp_regread
-    @rootkey = 'HKEY_LOCAL_MACHINE',
-    @key = @main_key,
-    @value_name = 'ComputerName',
-    @value = @ComputerName OUTPUT;
-  Select @ComputerName as 'ComputerName'
-";
+    pub const COMPUTER_NAME: &str =
+        "SELECT Upper(Cast(SERVERPROPERTY( 'MachineName' ) as varchar)) as MachineName";
     /// Script to be run in SQL instance
     pub const WINDOWS_REGISTRY_INSTANCES_BASE: &str = r"
 DECLARE @GetInstances TABLE
@@ -129,9 +121,9 @@ BEGIN
         @key = @port_key,
         @value_name = 'TcpDynamicPorts',
         @value = @DynamicPort OUTPUT;
-    
+
     insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports, DynamicPorts) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port, @DynamicPort )
-    
+
     -- Get the next instance
     FETCH NEXT FROM instance_cursor INTO @InstanceName;
 END

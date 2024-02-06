@@ -1074,7 +1074,8 @@ def _find_check_plugins(checktype: CheckPluginNameStr) -> set[str]:
     return {
         filename
         for candidate in (section_name_of(checktype), checktype)
-        if (filename := config.legacy_check_plugin_files[candidate]) is not None
+        # in case there is no "main check" anymore, the lookup fails -> skip.
+        if (filename := config.legacy_check_plugin_files.get(candidate)) is not None
     }
 
 

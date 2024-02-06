@@ -265,8 +265,13 @@ def generate_http_services(
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
         yield ActiveCheckCommand(
             service_description=f"{prefix}{endpoint.service_name.name}",
-            command_arguments=["-u", endpoint.url],
+            command_arguments=list(_command_arguments(endpoint)),
         )
+
+
+def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
+    yield "--url"
+    yield endpoint.url
 
 
 active_check_httpv2 = ActiveCheckConfig(

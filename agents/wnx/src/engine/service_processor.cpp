@@ -549,9 +549,9 @@ bool FindProcessByPid(uint32_t pid) {
     wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
         if (entry.th32ProcessID == pid) {
             found = true;
-            return false;
+            return wtools::ScanAction::terminate;
         }
-        return true;
+        return wtools::ScanAction::advance;
     });
     return found;
 }

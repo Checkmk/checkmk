@@ -140,7 +140,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
         const auto pid = entry.th32ProcessID;
         const auto exe = wtools::GetProcessPath(pid);
         if (exe.length() < minimum_path_len) {
-            return true;  // skip short path
+            return ScanAction::advance;
         }
 
         fs::path p{exe};
@@ -151,7 +151,7 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
             KillProcess(pid, 99);
             killed_count++;
         }
-        return true;
+        return ScanAction::advance;
     });
 
     return killed_count;
@@ -166,7 +166,7 @@ void KillProcessesByFullPath(const fs::path &path) noexcept {
             XLOG::d.i("Killing process '{}'", exe);
             KillProcess(pid, 99);
         }
-        return true;
+        return ScanAction::advance;
     });
 }
 
@@ -185,11 +185,11 @@ void KillProcessesByPathEndAndPid(const fs::path &path_end,
                                   uint32_t need_pid) noexcept {
     ScanProcessList([&](const PROCESSENTRY32W &entry) {
         if (!IsSameProcess(entry, path_end, need_pid)) {
-            return true;
+            return ScanAction::advance;
         }
         XLOG::d.i("Killing process '{}' with pid {}", path_end, need_pid);
         KillProcess(need_pid, 99);
-        return false;
+        return ScanAction::terminate;
     });
 }
 
@@ -198,10 +198,10 @@ bool FindProcessByPathEndAndPid(const fs::path &path_end,
     bool found{false};
     ScanProcessList([&](const PROCESSENTRY32W &entry) {
         if (!IsSameProcess(entry, path_end, need_pid)) {
-            return true;
+            return ScanAction::advance;
         }
         found = true;
-        return false;
+        return ScanAction::terminate;
     });
 
     return found;
@@ -2180,8 +2180,9 @@ std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
 /// returns false on system failure
 // based on ToolHelp api family
 // normally require elevation
-// if op returns false, scan will be stopped(this is only optimization)
-bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
+// if action returns false, scan will be stopped(this is only optimization)
+bool ScanProcessList(
+    const std::function<ScanAction(const PROCESSENTRY32 &)> &action) {
     auto *snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
     if (snapshot == nullptr) {
         return false;
@@ -2189,16 +2190,17 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
 
     ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
 
-    auto current_process_id = ::GetCurrentProcessId();
-    // scan...
+    const auto current_process_id = ::GetCurrentProcessId();
     PROCESSENTRY32 entry32 = {};
     entry32.dwSize = sizeof entry32;
     auto result = ::Process32First(snapshot, &entry32);
     while (result != FALSE) {
-        if (entry32.th32ProcessID != current_process_id && !op(entry32)) {
-            return true;  // break on false returned
+        if (entry32.th32ProcessID == current_process_id ||
+            action(entry32) == ScanAction::advance) {
+            result = ::Process32Next(snapshot, &entry32);
+        } else {
+            return true;
         }
-        result = ::Process32Next(snapshot, &entry32);
     }
 
     return true;
@@ -2210,14 +2212,13 @@ bool KillProcessFully(const std::wstring &process_name,
     std::vector<DWORD> processes_to_kill;
     std::wstring name{process_name};
     cma::tools::WideLower(name);
-    ScanProcessList(
-        [&processes_to_kill, name](const PROCESSENTRY32 &entry) -> bool {
-            std::wstring incoming_name = entry.szExeFile;
-            cma::tools::WideLower(incoming_name);
-            if (name == incoming_name)
-                processes_to_kill.push_back(entry.th32ProcessID);
-            return true;
-        });
+    ScanProcessList([&processes_to_kill, name](const PROCESSENTRY32 &entry) {
+        std::wstring incoming_name = entry.szExeFile;
+        cma::tools::WideLower(incoming_name);
+        if (name == incoming_name)
+            processes_to_kill.push_back(entry.th32ProcessID);
+        return ScanAction::advance;
+    });
 
     for (auto proc_id : processes_to_kill) {
         KillProcessTree(proc_id);
@@ -2238,7 +2239,7 @@ int FindProcess(std::wstring_view process_name) noexcept {
         if (name == incoming_name) {
             count++;
         }
-        return true;
+        return ScanAction::advance;
     });
 
     return count;

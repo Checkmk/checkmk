@@ -8,7 +8,6 @@ from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import (
     BooleanChoice,
     FixedValue,
-    Float,
     Integer,
     SingleChoice,
     SingleChoiceElement,
@@ -560,7 +559,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
             "response_time": DictElement(
                 parameter_form=Levels(
                     title=Localizable("Response time"),
-                    form_spec_template=Float(unit=Localizable("ms")),
+                    form_spec_template=TimeSpan(
+                        displayed_units=[TimeUnit.SECOND, TimeUnit.MILLISECOND],
+                    ),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,
                     help_text=Localizable("Maximum time the request may take."),

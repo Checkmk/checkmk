@@ -240,8 +240,9 @@ Secret = StoredSecret | PlainTextSecret
 
 def parse_secret(secret: object, display_format: str = "%s") -> Secret:
     """
-    Parses values configured via the :class:`Password` into an instance of one of
-    the two appropriate classes.
+    Parses a secret/password configuration into an instance of one of the two
+    appropriate classes
+
 
     Args:
         secret_type: Type of the secret
@@ -298,7 +299,7 @@ def parse_http_proxy(
     http_proxies: Mapping[str, HTTPProxy],
 ) -> str:
     """
-    Returns a proxy string from parameters created by the :class:`HTTPProxy` form spec
+    Parses a proxy configuration into a proxy string
 
     The function will check if proxy argument has the expected type.
 

@@ -1555,7 +1555,7 @@ def _convert_to_legacy_list_choice(
 def _convert_to_legacy_text_area(
     to_convert: ruleset_api_v1.form_specs.basic.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
-    converted_kwargs: MutableMapping[str, Any] = {}
+    converted_kwargs: dict[str, Any] = {}
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:

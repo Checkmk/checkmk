@@ -6,7 +6,7 @@
 import ast
 import logging
 import sys
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.paths
@@ -52,7 +52,7 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
+walk_cache: dict[str, tuple[bool, list[tuple[str, bytes]]]] = {}
 
 print(
     repr(

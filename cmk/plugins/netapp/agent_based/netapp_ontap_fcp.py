@@ -155,7 +155,7 @@ def check_netapp_ontap_fcp(
     }
 
     fcp_if_counters: dict[str, int | float] = {
-        counter["name"].replace("data", "bytes"): counter["value"]
+        counter["name"].replace("data", "bytes").replace("average", "avg"): counter["value"]
         for counter in counters[fcp_if.wwpn].counters
     }
     fcp_if_counters["now"] = now

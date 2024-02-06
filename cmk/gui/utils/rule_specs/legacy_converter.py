@@ -539,10 +539,25 @@ def _convert_to_inner_legacy_valuespec(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    def allow_empty_value_wrapper(
+        update_func: Callable[[object], object]
+    ) -> Callable[[object], object]:
+        def wrapper(v: object) -> object:
+            if v is None:
+                return v
+            return update_func(v)
+
+        return wrapper
+
     if to_convert.migrate is not None:
+        migrate_func = (
+            allow_empty_value_wrapper(to_convert.migrate)
+            if isinstance(to_convert, ruleset_api_v1.form_specs.composed.CascadingSingleChoice)
+            else to_convert.migrate
+        )
         return legacy_valuespecs.Migrate(
             valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-            migrate=to_convert.migrate,
+            migrate=migrate_func,
         )
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 

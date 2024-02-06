@@ -167,7 +167,11 @@ def check_netapp_ontap_fcp(
     yield from _io_ops_results(item, params, fcp_if_counters)
     yield from _latency_results(item, params, fcp_if_counters)
 
-    yield Result(state=State.OK, summary=f"Address {fcp_if.wwpn}", details=f"State: {fcp_if.state}")
+    yield Result(
+        state=State.OK,
+        summary=f"State: {fcp_if.state}",
+        details=f"State: {fcp_if.state}\nAddress {fcp_if.wwpn}",
+    )
 
 
 def _speed_result(params: Mapping[str, Any], speed: int | None) -> CheckResult:

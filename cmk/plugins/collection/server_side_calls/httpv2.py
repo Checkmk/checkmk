@@ -284,6 +284,8 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
         yield from _status_code_args(server_response)
     if (cert := settings.cert) is not None:
         yield from _cert_args(cert)
+    if (document := settings.document) is not None:
+        yield from _document_args(document)
 
 
 def _connection_args(connection: Connection) -> Iterator[str]:
@@ -441,6 +443,35 @@ def _cert_args(
         case (Validation.VALIDATE, (LevelsType.FIXED, (int(warn), int(crit)))):
             yield "--certificate-levels"
             yield f"{warn},{crit}"
+
+
+def _document_args(document: Document) -> Iterator[str]:
+    yield from _fetch_document_args(document.document_body)
+    if (max_age := document.max_age) is not None:
+        yield from _max_document_age_args(max_age)
+    if (page_size := document.page_size) is not None:
+        yield from _page_size_args(page_size)
+
+
+def _fetch_document_args(fetch_body: DocumentBodyOption) -> Iterator[str]:
+    if fetch_body is DocumentBodyOption.IGNORE:
+        yield "--without-body"
+
+
+def _max_document_age_args(max_age: float) -> Iterator[str]:
+    yield "--document-age-levels"  # TODO(au): Rename argument. This is only one level
+    yield str(int(max_age))
+
+
+def _page_size_args(page_size: PageSize) -> Iterator[str]:
+    if page_size.min is None and page_size.max is None:
+        return
+
+    min_part = "0" if page_size.min is None else str(page_size.min)
+    max_part = "" if page_size.max is None else f",{page_size.max}"
+
+    yield "--page-size"
+    yield f"{min_part}{max_part}"
 
 
 active_check_httpv2 = ActiveCheckConfig(

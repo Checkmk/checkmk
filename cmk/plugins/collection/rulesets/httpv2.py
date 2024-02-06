@@ -6,7 +6,9 @@
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import (
+    BinaryUnit,
     BooleanChoice,
+    DataSize,
     FixedValue,
     Integer,
     SingleChoice,
@@ -87,16 +89,24 @@ def _valuespec_document() -> Dictionary:
                     title=Localizable("Size"),
                     elements={
                         "min": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=DataSize(
                                 title=Localizable("Minimum"),
-                                unit=Localizable("Bytes"),
+                                displayed_units=[
+                                    BinaryUnit.BYTE,
+                                    BinaryUnit.KILOBYTE,
+                                    BinaryUnit.MEGABYTE,
+                                ],
                             ),
                             required=False,
                         ),
                         "max": DictElement(
-                            parameter_form=Integer(
+                            parameter_form=DataSize(
                                 title=Localizable("Maximum"),
-                                unit=Localizable("Bytes"),
+                                displayed_units=[
+                                    BinaryUnit.BYTE,
+                                    BinaryUnit.KILOBYTE,
+                                    BinaryUnit.MEGABYTE,
+                                ],
                             ),
                             required=False,
                         ),

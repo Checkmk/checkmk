@@ -280,6 +280,8 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
         yield from _connection_args(connection)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
+    if (server_response := settings.server_response) is not None:
+        yield from _status_code_args(server_response)
 
 
 def _connection_args(connection: Connection) -> Iterator[str]:
@@ -419,6 +421,12 @@ def _response_time_arguments(response_time: FloatLevels) -> Iterator[str]:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time-levels"
             yield f"{warn},{crit}"
+
+
+def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
+    for code in response_codes.expected:
+        yield "--status-code"
+        yield str(code)
 
 
 active_check_httpv2 = ActiveCheckConfig(

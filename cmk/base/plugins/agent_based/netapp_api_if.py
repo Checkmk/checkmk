@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, type_defs
@@ -24,7 +24,7 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
     ifaces = netapp_api.parse_netapp_api_single_instance(string_table)
 
     # Dictionary with lists of common mac addresses
-    if_mac_list: MutableMapping[str, MACList] = {}
+    if_mac_list: dict[str, MACList] = {}
     # List of virtual interfaces
     vif_list = []
 

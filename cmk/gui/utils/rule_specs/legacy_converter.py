@@ -1571,7 +1571,7 @@ def _convert_to_legacy_list_choice(
 def _convert_to_legacy_text_area(
     to_convert: ruleset_api_v1.form_specs.basic.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
-    converted_kwargs: MutableMapping[str, Any] = {}
+    converted_kwargs: dict[str, Any] = {}
     match to_convert.prefill:
         case ruleset_api_v1.form_specs.basic.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value

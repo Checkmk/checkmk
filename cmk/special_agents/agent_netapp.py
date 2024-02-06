@@ -626,7 +626,7 @@ def query_nodes(
     what: str,
     node_attribute: str = "node-name",
 ) -> Mapping[str, NetAppNode]:
-    results: MutableMapping[str, NetAppNode] = {}
+    results: dict[str, NetAppNode] = {}
     for node in nodes:
         ET.SubElement(ET.Element(what), node_attribute).text = node
         response = server.get_response((what, [(node_attribute, node)]))
@@ -802,7 +802,7 @@ def process_interfaces(
     #    "broadcast-domain" in port or port["port-type"] in {"physical", "if_group"}
     #    for port in port_dict.values()
     # )
-    broadcast_domains: MutableMapping[str, set[str]] = {}
+    broadcast_domains: dict[str, set[str]] = {}
     for port in port_dict.values():
         if "broadcast-domain" not in port:
             continue

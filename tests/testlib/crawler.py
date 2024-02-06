@@ -12,7 +12,7 @@ import re
 import tarfile
 import time
 from collections import deque
-from collections.abc import Generator, Iterable, MutableMapping, MutableSequence
+from collections.abc import Generator, Iterable, MutableSequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
@@ -145,7 +145,7 @@ def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.asy
 class Crawler:
     def __init__(self, test_site: Site, report_file: str | None) -> None:
         self.duration = 0.0
-        self.results: MutableMapping[str, CrawlResult] = {}
+        self.results: dict[str, CrawlResult] = {}
         self.site = test_site
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
         self.requests_session = requests.Session()

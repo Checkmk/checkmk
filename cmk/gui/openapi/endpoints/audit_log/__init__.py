@@ -41,14 +41,15 @@ LIST_PERMISSION = permissions.Perm("wato.auditlog")
 
 
 @Endpoint(
-    constructors.collection_href("audit_log"),
-    ".../delete",
-    method="delete",
+    constructors.domain_type_action_href("audit_log", "archive"),
+    ".../action",
+    method="post",
     output_empty=True,
     permissions_required=CLEAR_PERMISSION,
+    update_config_generation=False,
 )
-def clear_logs(params: Mapping[str, Any]) -> Response:
-    """Clear the audit log"""
+def archive_logs(params: Mapping[str, Any]) -> Response:
+    """Move audit log entries to archive"""
     user.need_permission("wato.edit")
     user.need_permission("wato.auditlog")
     user.need_permission("wato.clear_auditlog")
@@ -122,5 +123,5 @@ def _get_start_end_day_timestamp(value: datetime.date) -> tuple[int, int]:
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(clear_logs)
     endpoint_registry.register(get_all)
+    endpoint_registry.register(archive_logs)

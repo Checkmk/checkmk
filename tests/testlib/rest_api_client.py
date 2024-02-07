@@ -2222,10 +2222,10 @@ class AuditLogClient(RestApiClient):
 
         return result
 
-    def clear(self, expect_ok: bool = True) -> Response:
+    def archive(self, expect_ok: bool = True) -> Response:
         result = self.request(
-            "delete",
-            url=f"/domain-types/{self.domain}/collections/all",
+            "post",
+            url=f"/domain-types/{self.domain}/actions/archive/invoke",
             expect_ok=expect_ok,
         )
 

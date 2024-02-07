@@ -21,7 +21,6 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.submitters import ServiceState
@@ -36,7 +35,7 @@ class CheckResultErrorHandler:
         *,
         host_name: HostName,
         service_name: ServiceName,
-        plugin_name: CheckPluginNameStr,
+        plugin_name: str,
         is_cluster: bool,
         snmp_backend: SNMPBackendEnum,
         keepalive: bool,
@@ -83,7 +82,7 @@ def _handle_failure(
     *,
     host_name: HostName,
     service_name: ServiceName,
-    plugin_name: CheckPluginNameStr,
+    plugin_name: str,
     is_cluster: bool,
     snmp_backend: SNMPBackendEnum,
     keepalive: bool,

@@ -24,13 +24,9 @@ __all__ = [
     "AggregatedResult",
     "CheckPlugin",
     "CheckPluginName",
-    "CheckPluginNameStr",
     "ConfiguredService",
     "ServiceID",
 ]
-
-
-CheckPluginNameStr = str
 
 
 class CheckPluginName(ValidatedString):

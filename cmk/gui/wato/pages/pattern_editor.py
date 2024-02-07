@@ -11,8 +11,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr
-
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
@@ -355,7 +353,7 @@ class ModePatternEditor(WatoMode):
                     html.icon_button(edit_url, _("Edit this rule"), "edit")
 
     def _get_service_description(
-        self, hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
+        self, hostname: HostName, check_plugin_name: str, item: Item
     ) -> ServiceName:
         return cmk.base.export.service_description(hostname, check_plugin_name, item)
 

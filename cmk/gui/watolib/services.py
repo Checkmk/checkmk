@@ -27,7 +27,6 @@ from cmk.automations.results import (
     SetAutochecksTable,
 )
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 
 import cmk.gui.watolib.changes as _changes
@@ -236,7 +235,7 @@ class Discovery:
         *,
         update_target: str | None,
         update_source: str | None = None,
-        selected_services: Container[tuple[CheckPluginNameStr, Item]],
+        selected_services: Container[tuple[str, Item]],
     ) -> None:
         self._host = host
         self._action = action
@@ -447,7 +446,7 @@ def perform_service_discovery(
     update_target: str | None,
     *,
     host: Host,
-    selected_services: Container[tuple[CheckPluginNameStr, Item]],
+    selected_services: Container[tuple[str, Item]],
     raise_errors: bool,
 ) -> DiscoveryResult:
     """
@@ -786,7 +785,7 @@ def checkbox_id(check_type: str, item: Item) -> str:
     return f"{check_type}:{item or ''}".encode().hex()
 
 
-def checkbox_service(checkbox_id_value: str) -> tuple[CheckPluginNameStr, Item]:
+def checkbox_service(checkbox_id_value: str) -> tuple[str, Item]:
     """Invert checkbox_id
 
     Examples:

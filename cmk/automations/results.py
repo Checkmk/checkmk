@@ -24,7 +24,6 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -382,7 +381,7 @@ result_type_registry.register(GetConfigurationResult)
 
 @dataclass
 class GetCheckInformationResult(ABCAutomationResult):
-    plugin_infos: Mapping[CheckPluginNameStr, Mapping[str, Any]]
+    plugin_infos: Mapping[str, Mapping[str, Any]]
 
     @staticmethod
     def automation_call() -> str:

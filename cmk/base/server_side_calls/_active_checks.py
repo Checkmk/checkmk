@@ -14,8 +14,6 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine.checking import CheckPluginNameStr
-
 from cmk.base import plugin_contexts
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
@@ -100,7 +98,7 @@ class ActiveCheck:
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
-        use_new_descriptions_for: Container[CheckPluginNameStr],
+        use_new_descriptions_for: Container[str],
         stored_passwords: Mapping[str, str],
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):

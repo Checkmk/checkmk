@@ -116,7 +116,7 @@ from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
@@ -1682,7 +1682,7 @@ class AutomationGetCheckInformation(Automation):
             discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
         )
 
-        plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
+        plugin_infos: dict[str, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),

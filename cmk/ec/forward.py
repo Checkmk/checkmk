@@ -13,9 +13,8 @@ from typing import Literal
 
 from cmk.utils.paths import default_config_dir, omd_root
 
-from cmk.ec.main import SyslogFacility
-
 from .settings import Paths, settings
+from .syslog import SyslogFacility
 
 _NILVALUE: Literal["-"] = "-"  # NILVALUE from RFC 5424
 _PRINTUSASCII = set(map(chr, range(33, 127)))  # PRINTUSASCII from RFC 5424

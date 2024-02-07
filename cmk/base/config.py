@@ -1360,7 +1360,9 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[str, LegacyCheckDefinition] = {}
+check_info: dict[
+    object, object
+] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plugin lives where
 legacy_check_plugin_files: dict[CheckPluginNameStr, str] = {}
 # Lookup for legacy names
@@ -1455,7 +1457,7 @@ def load_checks(
             check_context = new_check_context(get_check_api_context)
 
             # Make a copy of known check plugin names
-            known_checks = set(check_info)
+            known_checks = {str(k) for k in check_info}
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1470,13 +1472,20 @@ def load_checks(
                 raise
             continue
 
-        for check_plugin_name in set(check_info).difference(known_checks):
+        for check_plugin_name in {str(k) for k in check_info}.difference(known_checks):
             legacy_check_plugin_files[check_plugin_name] = f
 
-    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
+    # Now just drop everything we don't like; this is not a supported API anymore.
+    # Users affected by this will see a CRIT in their "Analyse Configuration" page.
+    sane_check_info = {
+        k: v
+        for k, v in check_info.items()
+        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
+    }
+    legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
 
-    return _extract_agent_and_snmp_sections(check_info) + _extract_check_plugins(
-        check_info, validate_creation_kwargs=did_compile
+    return _extract_agent_and_snmp_sections(sane_check_info) + _extract_check_plugins(
+        sane_check_info, validate_creation_kwargs=did_compile
     )
 
 
@@ -1605,12 +1614,13 @@ def _extract_agent_and_snmp_sections(
             continue
 
         try:
+            assert (parse_function := check_info_element.parse_function) is not None
             agent_based_register.add_section_plugin(
                 create_section_plugin_from_legacy(
                     name=section_name,
-                    parse_function=check_info_element["parse_function"],
-                    fetch=check_info_element.get("fetch"),
-                    detect=check_info_element.get("detect"),
+                    parse_function=parse_function,
+                    fetch=check_info_element.fetch,
+                    detect=check_info_element.detect,
                 )
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
@@ -1640,9 +1650,9 @@ def _extract_check_plugins(
     in check_info to create API compliant check plugins.
     """
     errors = []
-    for check_plugin_name, check_info_dict in sorted(legacy_checks.items()):
+    for check_plugin_name, check_info_element in sorted(legacy_checks.items()):
         # skip pure section declarations:
-        if check_info_dict.get("service_name") is None:
+        if check_info_element.service_name is None:
             continue
         try:
             present_plugin = agent_based_register.get_check_plugin(
@@ -1660,7 +1670,7 @@ def _extract_check_plugins(
             agent_based_register.add_check_plugin(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
-                    check_info_dict,
+                    check_info_element,
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )

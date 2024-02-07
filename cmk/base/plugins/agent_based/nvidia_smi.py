@@ -163,7 +163,7 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                         get_text_from_element(gpu.find("power_readings/power_state")),
                     ),
                     power_management=PowerManagement(
-                        get_text_from_element(gpu.find("power_readings/power_management"))
+                        get_text_from_element(gpu.find("power_readings/power_management")) if get_text_from_element(gpu.find("power_readings/power_management")) is not None else "Supported"
                     ),
                     power_draw=get_float_from_element(gpu.find("power_readings/power_draw"), "W"),
                     power_limit=get_float_from_element(gpu.find("power_readings/power_limit"), "W"),

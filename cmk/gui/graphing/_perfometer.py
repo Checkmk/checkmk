@@ -91,11 +91,6 @@ def _parse_perfometers(perfometers_: list[LegacyPerfometer | PerfometerSpec]) ->
 
         elif perfometer_type == "stacked":
             sub_perfometers = perfometer_args[:]
-            if len(sub_perfometers) != 2:
-                raise MKInternalError(
-                    _("Perf-O-Meter of type 'stacked' must contain exactly two definitions, not %d")
-                    % len(sub_perfometers)
-                )
             _parse_perfometers(sub_perfometers)
             perfometers_[index] = {
                 "type": "stacked",

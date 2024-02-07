@@ -22,7 +22,6 @@ import json
 import os
 import pprint
 import select
-import shutil
 import signal
 import socket
 import sys
@@ -51,7 +50,7 @@ from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, Count, ECRulePack, ECRulePackSpec, MatchGroups, Rule
+from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
@@ -73,7 +72,7 @@ from .query import (
     StatusTable,
 )
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
-from .rule_packs import load_active_config, save_rule_packs
+from .rule_packs import load_active_config
 from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
 from .snmp import SNMPTrapParser
@@ -3385,34 +3384,6 @@ def reload_configuration(
     event_status.reload_configuration(config, history)
     status_server.reload_configuration(config, history)
     logger.info("Reloaded configuration.")
-
-
-def save_active_config(
-    settings: Settings,
-    rule_packs: Iterable[ECRulePackSpec],
-    pretty_print: bool = False,
-) -> None:
-    """
-    Copy all config files recursively from
-        etc/check_mk/mkeventd.d
-    to
-        var/mkeventd/active_config
-    The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
-    """
-    try:
-        shutil.rmtree(str(settings.paths.active_config_dir.value))
-    except FileNotFoundError:
-        pass
-
-    for path in settings.paths.config_dir.value.glob("**/*.mk"):
-        target = settings.paths.active_config_dir.value / path.relative_to(
-            settings.paths.config_dir.value
-        )
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if path.name == "rules.mk":
-            save_rule_packs(rule_packs, pretty_print=pretty_print, dir_=target.parent)
-        else:
-            shutil.copy(path, target)
 
 
 # .

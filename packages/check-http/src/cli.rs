@@ -321,16 +321,16 @@ where
     }
 }
 
-fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(String, String)> {
+fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(Regex, Regex)> {
     let (name, value): (String, String) = split_header(pattern_pair)?;
-    RegexBuilder::new(&name).case_insensitive(true).build()?;
-    Regex::new(&value)?;
-    Ok((name, value))
+    Ok((
+        RegexBuilder::new(&name).case_insensitive(true).build()?,
+        Regex::new(&value)?,
+    ))
 }
 
-fn parse_regex_pattern(pattern: &str) -> Result<String, regex::Error> {
-    RegexBuilder::new(pattern).crlf(true).build()?;
-    Ok(pattern.to_string())
+fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
+    RegexBuilder::new(pattern).crlf(true).build()
 }
 
 #[cfg(test)]

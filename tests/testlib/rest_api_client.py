@@ -2213,6 +2213,18 @@ class AuditLogClient(RestApiClient):
 
         return result
 
+    def archive(self, expect_ok: bool = True) -> Response:
+        result = self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/archive/invoke",
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            result.assert_status_code(204)
+
+        return result
+
     def clear(self, expect_ok: bool = True) -> Response:
         result = self.request(
             "delete",

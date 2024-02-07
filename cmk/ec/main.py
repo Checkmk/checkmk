@@ -46,12 +46,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
-from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
-from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
+from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
@@ -77,6 +76,7 @@ from .settings import FileDescriptor, PortNumber, Settings
 from .settings import settings as create_settings
 from .snmp import SNMPTrapParser
 from .syslog import SyslogFacility, SyslogPriority
+from .timeperiod import TimePeriods
 
 
 class PackedEventStatus(TypedDict):
@@ -315,46 +315,6 @@ class MKSignalException(MKException):
     def __init__(self, signum: int) -> None:
         MKException.__init__(self, f"Got signal {signum}")
         self._signum = signum
-
-
-# .
-#   .--Timeperiods---------------------------------------------------------.
-#   |      _____ _                                _           _            |
-#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
-#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
-#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
-#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-#   |  Time Periods are used in rule conditions                             |
-#   '----------------------------------------------------------------------'
-
-
-class TimePeriods:
-    """Time Periods are used in rule conditions"""
-
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger
-        self._active: Mapping[TimeperiodName, bool] = {}
-        self._cache_timestamp: int | None = None
-
-    def _update(self) -> None:
-        try:
-            timestamp = int(time.time())
-            # update at most once a minute
-            if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
-                self._active = query_timeperiods_in()
-                self._cache_timestamp = timestamp
-        except Exception as e:
-            self._logger.error(f"Cannot update time period information: {e}")
-            raise
-
-    def active(self, name: TimeperiodName) -> bool:
-        self._update()
-        if (is_active := self._active.get(name)) is None:
-            self._logger.warning("unknown time period '%s', assuming it is active", name)
-            is_active = True
-        return is_active
 
 
 # .

@@ -19,7 +19,6 @@ from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .forward import SyslogForwarderUnixSocket as SyslogForwarderUnixSocket
 from .forward import SyslogMessage as SyslogMessage
-from .main import TimePeriods as TimePeriods
 from .rule_matcher import compile_rule as compile_rule
 from .rule_matcher import match_ip_network as match_ip_network
 from .rule_matcher import MatchFailure as MatchFailure
@@ -45,3 +44,4 @@ from .settings import Settings as Settings
 from .settings import settings as settings
 from .syslog import SyslogFacility as SyslogFacility
 from .syslog import SyslogPriority as SyslogPriority
+from .timeperiod import TimePeriods as TimePeriods

@@ -179,6 +179,9 @@ VARIABLES:
     - NAME: CHANGED_UNIXCAT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/unixcat/' || true"
 
+    - NAME: CHANGED_FRONTEND_VUE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/frontend_vue/' || true"
+
 STAGES:
     - NAME: 'Python Typing'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
@@ -527,3 +530,10 @@ STAGES:
       TEXT_ON_SKIP: 'No unixcat files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
+
+    - NAME: 'Package frontend_vue'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FRONTEND_VUE_FILES,CHANGED_NPM_NODE_SETUP
+      DIR: 'packages/frontend_vue'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/frontend_vue.txt"
+      TEXT_ON_SKIP: 'No frontend_vue files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/frontend_vue.txt"

@@ -5,7 +5,7 @@
  */
 
 import * as d3 from "d3";
-import {BaseType} from "d3";
+import type {BaseType} from "d3";
 
 export function clicked_checkbox_label(target: HTMLLabelElement) {
     // TODO: Better use the <label for="id"> mechanic instead of this workaround

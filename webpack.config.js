@@ -43,7 +43,6 @@ module.exports = {
     },
     entry: {
         main: "./web/htdocs/js/index.ts",
-        vue: "./web/htdocs/js/cmk_vue.ts",
         mobile: "./web/htdocs/js/mobile.ts",
         tracking_entry: "./web/htdocs/js/tracking_entry.ts",
         side: "./web/htdocs/js/side_index.ts",

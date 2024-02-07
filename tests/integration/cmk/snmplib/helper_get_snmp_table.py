@@ -52,7 +52,7 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-walk_cache: dict[str, tuple[bool, list[tuple[str, bytes]]]] = {}
+walk_cache: dict[tuple[str, str, bool], list[tuple[str, bytes]]] = {}
 
 print(
     repr(

@@ -42,7 +42,7 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
 
 def get_snmp_table(
     site: Site, tree: BackendSNMPTree, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> tuple[Sequence[SNMPTable], MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]]]:
+) -> tuple[Sequence[SNMPTable], MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]]]:
     return ast.literal_eval(
         site.python_helper("helper_get_snmp_table.py").check_output(
             input=repr(

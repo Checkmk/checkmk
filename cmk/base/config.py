@@ -1476,8 +1476,8 @@ def load_checks(
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
-    return _extract_agent_and_snmp_sections() + _extract_check_plugins(
-        validate_creation_kwargs=did_compile
+    return _extract_agent_and_snmp_sections(check_info) + _extract_check_plugins(
+        check_info, validate_creation_kwargs=did_compile
     )
 
 
@@ -1589,7 +1589,9 @@ AUTO_MIGRATION_ERR_MSG = (
 )
 
 
-def _extract_agent_and_snmp_sections() -> list[str]:
+def _extract_agent_and_snmp_sections(
+    legacy_checks: Mapping[str, LegacyCheckDefinition]
+) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -1597,7 +1599,7 @@ def _extract_agent_and_snmp_sections() -> list[str]:
     """
     errors = []
     # start with the "main"-checks, the ones without '.' in their names:
-    main_checks = [(name, cinfo) for name, cinfo in check_info.items() if "." not in name]
+    main_checks = [(name, cinfo) for name, cinfo in legacy_checks.items() if "." not in name]
 
     for section_name, check_info_element in main_checks:
         if agent_based_register.is_registered_section_plugin(SectionName(section_name)):
@@ -1621,7 +1623,7 @@ def _extract_agent_and_snmp_sections() -> list[str]:
             errors.append(AUTO_MIGRATION_ERR_MSG % ("section", section_name))
 
     if cmk.utils.debug.enabled():
-        subchecks = (name for name in check_info if "." in name)
+        subchecks = (name for name in legacy_checks if "." in name)
         for subcheck in subchecks:
             assert agent_based_register.is_registered_section_plugin(
                 SectionName(section_name_of(subcheck))
@@ -1630,14 +1632,16 @@ def _extract_agent_and_snmp_sections() -> list[str]:
     return errors
 
 
-def _extract_check_plugins(*, validate_creation_kwargs: bool) -> list[str]:
+def _extract_check_plugins(
+    legacy_checks: Mapping[str, LegacyCheckDefinition], *, validate_creation_kwargs: bool
+) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
     in check_info to create API compliant check plugins.
     """
     errors = []
-    for check_plugin_name, check_info_dict in sorted(check_info.items()):
+    for check_plugin_name, check_info_dict in sorted(legacy_checks.items()):
         # skip pure section declarations:
         if check_info_dict.get("service_name") is None:
             continue

@@ -299,8 +299,9 @@ class MKDockerClient(docker.DockerClient):
 
             self._device_map = {}
             for device in os.listdir("/sys/block"):
-                with open("/sys/block/%s/dev" % device) as handle:
-                    self._device_map[handle.read().strip()] = device
+                if os.path.exists("/sys/block/%s/dev" % device):
+                    with open("/sys/block/%s/dev" % device) as handle:
+                        self._device_map[handle.read().strip()] = device
 
         return self._device_map
 

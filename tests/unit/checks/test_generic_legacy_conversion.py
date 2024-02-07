@@ -38,24 +38,22 @@ def test_create_section_plugin_from_legacy(
         if section is None:
             continue
 
-        original_parse_function = check_info_dict.get("parse_function")
+        original_parse_function = check_info_dict.parse_function
         if original_parse_function is not None:
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
 def test_snmp_info_snmp_detect_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
     for check_info_element in fix_plugin_legacy.check_info.values():
-        assert (check_info_element.get("detect") is None) is (
-            check_info_element.get("fetch") is None
-        )
+        assert (check_info_element.detect is None) is (check_info_element.fetch is None)
 
 
 def _defines_section(check_info_element: LegacyCheckDefinition) -> bool:
-    if check_info_element.get("parse_function") is not None:
+    if check_info_element.parse_function is not None:
         return True
 
-    assert check_info_element.get("detect") is None
-    assert check_info_element.get("fetch") is None
+    assert check_info_element.detect is None
+    assert check_info_element.fetch is None
     return False
 
 
@@ -86,9 +84,9 @@ def test_sections_definitions_exactly_in_mainchecks(
 def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:
     ref_info: dict = {section_name_of(name): {} for name in fix_plugin_legacy.check_info}
     for name, check_info_element in fix_plugin_legacy.check_info.items():
-        if info := check_info_element.get("fetch"):
+        if info := check_info_element.fetch:
             assert info == ref_info[section_name_of(name)].setdefault("fetch", info)
-        if detect := check_info_element.get("detect"):
+        if detect := check_info_element.detect:
             assert detect == ref_info[section_name_of(name)].setdefault("detect", detect)
 
 
@@ -98,7 +96,7 @@ def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: F
     true_checks = {
         n.replace(".", "_").replace("-", "_")
         for n, i in fix_plugin_legacy.check_info.items()
-        if i.get("check_function")
+        if i.check_function
     }
     failures = true_checks - migrated
     assert not failures, f"failed to migrate: {failures!r}"

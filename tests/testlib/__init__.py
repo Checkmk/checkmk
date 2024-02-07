@@ -337,7 +337,9 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info: LegacyCheckDefinition = config.check_info[self.name]
+        info = config.check_info[self.name]
+        assert isinstance(info, LegacyCheckDefinition)
+        self.info = info
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )
@@ -348,24 +350,21 @@ class Check(BaseCheck):
         return {}
 
     def run_parse(self, info):  # type: ignore[no-untyped-def]
-        parse_func = self.info.get("parse_function")
-        if not parse_func:
+        if self.info.parse_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        return parse_func(info)
+        return self.info.parse_function(info)
 
     def run_discovery(self, info):  # type: ignore[no-untyped-def]
-        disco_func = self.info.get("discovery_function")
-        if not disco_func:
+        if self.info.discovery_function is None:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
             )
-        return disco_func(info)
+        return self.info.discovery_function(info)
 
     def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
-        check_func = self.info.get("check_function")
-        if not check_func:
+        if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        return check_func(item, params, info)
+        return self.info.check_function(item, params, info)
 
 
 class ActiveCheck(BaseCheck):

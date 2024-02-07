@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
+from dataclasses import replace
 
 from pytest import MonkeyPatch
 
@@ -22,11 +23,11 @@ def dummy_generator(section):  # pylint: disable=unused-argument
     yield from ()
 
 
-MINIMAL_CHECK_INFO: LegacyCheckDefinition = {
-    "service_name": "Norris Device",
-    "discovery_function": dummy_generator,
-    "check_function": dummy_generator,
-}
+MINIMAL_CHECK_INFO = LegacyCheckDefinition(
+    service_name="Norris Device",
+    discovery_function=dummy_generator,
+    check_function=dummy_generator,
+)
 
 
 def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
@@ -44,7 +45,7 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         ]
 
     new_function = check_plugins_legacy._create_discovery_function(
-        {"discovery_function": insane_discovery},
+        LegacyCheckDefinition(discovery_function=insane_discovery),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -74,10 +75,10 @@ def test_create_check_function() -> None:
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
-        {
-            "check_function": insane_check,
-            "service_name": "Foo %s",
-        },
+        "Foo %s",
+        LegacyCheckDefinition(
+            check_function=insane_check,
+        ),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -121,10 +122,10 @@ def test_create_check_function_with_empty_summary_in_details() -> None:
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
-        {
-            "check_function": insane_check,
-            "service_name": "Foo %s",
-        },
+        "Foo %s",
+        LegacyCheckDefinition(
+            check_function=insane_check,
+        ),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -153,10 +154,10 @@ def test_create_check_function_without_details() -> None:
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
-        {
-            "check_function": insane_check,
-            "service_name": "Foo %s",
-        },
+        "Foo %s",
+        LegacyCheckDefinition(
+            check_function=insane_check,
+        ),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -181,10 +182,10 @@ def test_create_check_function_with_zero_details_after_newline() -> None:
 
     new_function = check_plugins_legacy._create_check_function(
         "test_plugin",
-        {
-            "check_function": insane_check,
-            "service_name": "Foo %s",
-        },
+        "Foo %s",
+        LegacyCheckDefinition(
+            check_function=insane_check,
+        ),
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -207,7 +208,7 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
-    assert plugin.service_name == MINIMAL_CHECK_INFO["service_name"]
+    assert plugin.service_name == MINIMAL_CHECK_INFO.service_name
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
@@ -218,9 +219,11 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
 
 
 def test_create_check_plugin_from_legacy_with_params() -> None:
-    check_info_element = MINIMAL_CHECK_INFO.copy()
-    check_info_element["check_ruleset_name"] = "norris_rule"
-    check_info_element["check_default_parameters"] = {"levels": (23, 42)}
+    check_info_element = replace(
+        MINIMAL_CHECK_INFO,
+        check_ruleset_name="norris_rule",
+        check_default_parameters={"levels": (23, 42)},
+    )
 
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
@@ -229,7 +232,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
 
     assert plugin.name == CheckPluginName("norris")
     assert plugin.sections == [ParsedSectionName("norris")]
-    assert plugin.service_name == MINIMAL_CHECK_INFO["service_name"]
+    assert plugin.service_name == MINIMAL_CHECK_INFO.service_name
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None

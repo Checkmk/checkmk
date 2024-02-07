@@ -30,7 +30,7 @@ def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Cal
     # 1) ensure we have the correct signature
     # 2) ensure it is a generator of Service instances
     def discovery_migration_wrapper(section: object) -> object:
-        disco_func = check_info_element.get("discovery_function")
+        disco_func = check_info_element.discovery_function
         if not callable(disco_func):  # never discover:
             return
 
@@ -88,17 +88,18 @@ def _normalize_check_function_return_value(subresults: object) -> list:
     raise TypeError(f"expected None, Tuple or Iterable, got {subresults=}")
 
 
-def _create_check_function(name: str, check_info_element: LegacyCheckDefinition) -> Callable:
+def _create_check_function(
+    name: str, service_name: str, check_info_element: LegacyCheckDefinition
+) -> Callable:
     """Create an API compliant check function"""
-    service_descr = check_info_element["service_name"]
-    if not isinstance(service_descr, str):
-        raise ValueError(f"[{name}]: invalid service description: {service_descr!r}")
+    if check_info_element.check_function is None:
+        raise ValueError(f"[{name}]: check function is missing")
 
     # 1) ensure we have the correct signature
-    requires_item = "%s" in service_descr
+    requires_item = "%s" in service_name
     sig_function = _create_signature_check_function(
         requires_item=requires_item,
-        original_function=check_info_element["check_function"],
+        original_function=check_info_element.check_function,
     )
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
@@ -188,7 +189,7 @@ def _get_float(raw_value: Any) -> float | None:
 
     if not isinstance(raw_value, str):
         return None
-    # try to cut of units:
+    # try to cut off units:
     for i in range(len(raw_value) - 1, 0, -1):
         with suppress(TypeError, ValueError):
             return float(raw_value[:i])
@@ -245,38 +246,33 @@ def create_check_plugin_from_legacy(
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
-    # We only intend to deal with checks from our repo.
-    # We know what we can and have to deal with.
-    if (
-        unexpected_keys := set(check_info_element)
-        - LegacyCheckDefinition.__optional_keys__
-        - LegacyCheckDefinition.__required_keys__
-    ):
-        raise ValueError(
-            f"Unexpected key(s) in check_info[{check_plugin_name!r}]: {unexpected_keys!r}"
-        )
+    if not isinstance(check_info_element.service_name, str):
+        # we don't make it here in the None case, but it would be
+        # handled gracefully
+        raise ValueError(check_info_element.service_name)
 
     new_check_name = maincheckify(check_plugin_name)
     sections = [check_plugin_name.split(".", 1)[0]]
     if "." in check_plugin_name:
-        assert sections == check_info_element["sections"]
+        assert sections == check_info_element.sections
 
     discovery_function = _create_discovery_function(check_info_element)
 
     check_function = _create_check_function(
         check_plugin_name,
+        check_info_element.service_name,
         check_info_element,
     )
 
     return create_check_plugin(
         name=new_check_name,
         sections=sections,
-        service_name=check_info_element["service_name"],
+        service_name=check_info_element.service_name,
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,
         check_function=check_function,
-        check_default_parameters=check_info_element.get("check_default_parameters", {}),
-        check_ruleset_name=check_info_element.get("check_ruleset_name"),
+        check_default_parameters=check_info_element.check_default_parameters or {},
+        check_ruleset_name=check_info_element.check_ruleset_name,
         validate_kwargs=validate_creation_kwargs,
     )

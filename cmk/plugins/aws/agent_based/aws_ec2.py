@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -222,7 +222,7 @@ def check_aws_ec2_disk_io(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    disk_data: MutableMapping[str, float] = {}
+    disk_data: dict[str, float] = {}
     key_pairs: Mapping[
         str, str
     ] = {  # The key from the Mapping is the result that we want and the value is how we get the data

@@ -21,7 +21,7 @@
 # /dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 # /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 import time
-from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import Enum
 from typing import Any, Final, NamedTuple
 
@@ -39,8 +39,8 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 Section = Mapping[str, Mapping[str, int]]
 
-Disk = MutableMapping[str, int]
-Disks = MutableMapping[str, Disk]
+Disk = dict[str, int]
+Disks = dict[str, Disk]
 
 
 class DiskAttributeItem(NamedTuple):
@@ -159,7 +159,7 @@ def parse_raw_values(string_table: StringTable) -> Section:
 
 
 def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
-    ata_disks: MutableMapping[str, Disk] = {}
+    ata_disks: dict[str, Disk] = {}
 
     for (
         disk_path,
@@ -211,7 +211,7 @@ def _parse_ata_lines(ata_lines: Iterable[Sequence[str]]) -> Section:
 
 
 def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
-    nvme_disks: MutableMapping[str, Disk] = {}
+    nvme_disks: Disks = {}
 
     for line in nvme_lines:
         if "/dev" in line[0]:

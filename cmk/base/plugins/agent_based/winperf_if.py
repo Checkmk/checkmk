@@ -77,7 +77,7 @@ def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
 ) -> Mapping[str, interfaces.InterfaceWithCounters]:
-    ifaces: MutableMapping[str, interfaces.InterfaceWithCounters] = {}
+    ifaces: dict[str, interfaces.InterfaceWithCounters] = {}
     for idx, raw_nic_name in enumerate(raw_nic_names):
         name = _canonize_name(raw_nic_name)
         counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
@@ -152,7 +152,7 @@ def _filter_out_deprecated_plugin_lines(
 def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     agent_timestamp = None
     raw_nic_names: Sequence[str] = []
-    agent_section: MutableMapping[str, Line] = {}
+    agent_section: dict[str, Line] = {}
 
     # There used to be only a single winperf_if-section which contained both the native agent data
     # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
@@ -381,12 +381,12 @@ def _normalize_name(
     return mod_name
 
 
-def _match_add_data_to_interfaces(  # type: ignore[no-untyped-def]
+def _match_add_data_to_interfaces(
     interface_names: Collection[str],
     section_teaming: SectionTeaming,
     section_extended: SectionExtended,
-):
-    additional_data: MutableMapping[str, AdditionalIfData] = {}
+) -> Mapping[str, AdditionalIfData]:
+    additional_data: dict[str, AdditionalIfData] = {}
 
     for add_data in section_extended:
         if add_data.guid is not None and (teaming_entry := section_teaming.get(add_data.guid)):
@@ -446,7 +446,7 @@ def _merge_sections(
                         "alias": add_if_data.alias,
                         "speed": add_if_data.speed or interface.attributes.speed,
                         "group": section_teaming[add_if_data.guid].team_name
-                        if add_if_data.guid in section_teaming
+                        if add_if_data.guid is not None and add_if_data.guid in section_teaming
                         else None,
                         "oper_status": add_if_data.oper_status,
                         "oper_status_name": add_if_data.oper_status_name,

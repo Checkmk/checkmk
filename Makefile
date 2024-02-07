@@ -42,7 +42,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         format-js help install mrproper mrclean \
         packages setup setversion version openapi \
-        protobuf-files
+        protobuf-files frontend-vue
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -93,7 +93,11 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+#
+# We added frontend-vue as a dependency here, so both $(JAVASCRIPT_MINI) and
+# frontend-vue can be build independently of each other. Otherwise f12ing
+# `./web` would also build frontend-vue
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES) frontend-vue
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -128,6 +132,10 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
+
+frontend-vue:
+	cd packages/frontend_vue && ./run
+	cp packages/frontend_vue/dist/assets/vue_min.js* web/htdocs/js/
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

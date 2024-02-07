@@ -5,6 +5,8 @@
 
 # This script should install the NPM packages and ensure that the same NPM and NodeJS major version is used locally as in the CI
 
+set -e
+
 ARTIFACT_STORAGE=https://artifacts.lan.tribe29.com
 
 echo "nodejs $(node --version)"

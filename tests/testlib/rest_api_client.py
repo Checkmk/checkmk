@@ -2107,6 +2107,7 @@ class DcdClient(RestApiClient):
         validity_period: int | None = None,
         exclude_time_ranges: list[dict[str, str]] | None = None,
         creation_rules: list[dict[str, Any]] | None = None,
+        restrict_source_hosts: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         body: dict[str, Any] = {
@@ -2125,6 +2126,7 @@ class DcdClient(RestApiClient):
                 "creation_rules": creation_rules,
                 "exclude_time_ranges": exclude_time_ranges,
                 "connector_type": connector_type,
+                "restrict_source_hosts": restrict_source_hosts,
             }.items()
             if v is not None
         }

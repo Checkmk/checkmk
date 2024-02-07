@@ -2916,11 +2916,6 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         {registered_plugin.name: registered_plugin},
     )
     monkeypatch.setattr(
-        config,
-        "check_info",
-        duplicate_plugin,
-    )
-    monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
         lambda: True,
@@ -2928,11 +2923,11 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(MKGeneralException):
-        config._extract_check_plugins(validate_creation_kwargs=False)
+        config._extract_check_plugins(duplicate_plugin, validate_creation_kwargs=False)
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, dict[str, Any]] = {
+    duplicate_plugin: dict[str, LegacyCheckDefinition] = {
         "duplicate_plugin": {},
     }
     registered_section = SNMPSectionPlugin(
@@ -2955,18 +2950,13 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         {registered_section.name: registered_section},
     )
     monkeypatch.setattr(
-        config,
-        "check_info",
-        duplicate_plugin,
-    )
-    monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
         lambda: True,
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._extract_agent_and_snmp_sections()
+    config._extract_agent_and_snmp_sections(duplicate_plugin)
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

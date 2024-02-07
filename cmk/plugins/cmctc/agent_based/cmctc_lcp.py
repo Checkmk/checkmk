@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeAlias
 
 from cmk.agent_based.v2 import CheckPlugin, Metric, Result, Service, SNMPSection, SNMPTree, State
@@ -88,23 +88,25 @@ _TREES = [
 ]
 
 
+def _parse_cmctc_lcp(string_table: Sequence[StringTable]) -> Iterable[tuple[str, Sensor]]:
+    for tree, block in zip(_TREES, string_table):
+        for index, typeid, status, reading, high, low, warn, description in block:
+            if sensor_spec := _CMCTC_LCP_SENSORS.get(typeid):
+                item = f"{sensor_spec[0]} - {tree}.{index}" if sensor_spec[0] else f"{tree}.{index}"
+                sensor = Sensor(
+                    status=status,
+                    reading=float(reading),
+                    high=float(high),
+                    low=float(low),
+                    warn=float(warn),
+                    description=description,
+                    type_=sensor_spec[1],
+                )
+                yield (item, sensor)
+
+
 def parse_cmctc_lcp(string_table: Sequence[StringTable]) -> Section:
-    return {
-        f"{sensor_spec[0]} - {tree}.{index}"
-        if sensor_spec[0]
-        else index: Sensor(
-            status=status,
-            reading=float(reading),
-            high=float(high),
-            low=float(low),
-            warn=float(warn),
-            description=description,
-            type_=sensor_spec[1],
-        )
-        for tree, block in zip(_TREES, string_table)
-        for index, typeid, status, reading, high, low, warn, description in block
-        if (sensor_spec := _CMCTC_LCP_SENSORS.get(typeid))
-    }
+    return dict(_parse_cmctc_lcp(string_table))
 
 
 def inventory_cmctc_lcp(section: Section, sensortype: str) -> DiscoveryResult:

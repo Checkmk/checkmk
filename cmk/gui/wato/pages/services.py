@@ -26,7 +26,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import CheckPreviewEntry
 
 from cmk.gui.background_job import JobStatusStates
@@ -393,7 +392,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         previous_discovery_result: DiscoveryResult | None,
         update_source: str | None,
         update_target: str | None,
-        selected_services: Container[tuple[CheckPluginNameStr, Item]],
+        selected_services: Container[tuple[str, Item]],
         *,
         raise_errors: bool,
     ) -> DiscoveryResult:
@@ -496,7 +495,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     @staticmethod
     def _resolve_selected_services(
         update_services: list[str], checkboxes_where_avaliable: bool
-    ) -> Container[tuple[CheckPluginNameStr, Item]]:
+    ) -> Container[tuple[str, Item]]:
         if update_services:
             return {checkbox_service(e) for e in update_services}
         # empty list can mean everything or nothing.

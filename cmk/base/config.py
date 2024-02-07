@@ -100,12 +100,7 @@ from cmk.fetchers import (
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine.checking import (
-    CheckPluginName,
-    CheckPluginNameStr,
-    ConfiguredService,
-    ServiceID,
-)
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutochecksManager,
@@ -1364,7 +1359,7 @@ check_info: dict[
     object, object
 ] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plugin lives where
-legacy_check_plugin_files: dict[CheckPluginNameStr, str] = {}
+legacy_check_plugin_files: dict[str, str] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # optional functions for parameter precompilation
@@ -2005,16 +2000,14 @@ class ConfigCache:
         self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
-        self.__notification_plugin_parameters: dict[
-            tuple[HostName, CheckPluginNameStr], Mapping[str, object]
-        ] = {}
+        self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
         self.initialize()
 
     def initialize(self) -> ConfigCache:
         self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
-        self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
+        self._cache_section_name_of: dict[str, str] = {}
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
         self._hosttags: dict[HostName, Sequence[TagID]] = {}
 
@@ -3029,7 +3022,9 @@ class ConfigCache:
         return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))
 
     def notification_plugin_parameters(
-        self, host_name: HostName, plugin_name: CheckPluginNameStr
+        self,
+        host_name: HostName,
+        plugin_name: str,
     ) -> Mapping[str, object]:
         def _impl() -> Mapping[str, object]:
             default: Sequence[RuleSpec[Mapping[str, object]]] = []
@@ -3481,7 +3476,7 @@ class ConfigCache:
             self.effective_host,
         )
 
-    def section_name_of(self, section: CheckPluginNameStr) -> str:
+    def section_name_of(self, section: str) -> str:
         try:
             return self._cache_section_name_of[section]
         except KeyError:

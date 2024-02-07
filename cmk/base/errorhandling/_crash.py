@@ -20,7 +20,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -62,7 +62,7 @@ def create_check_crash_dump(
     host_name: HostName,
     service_name: ServiceName,
     *,
-    plugin_name: CheckPluginNameStr | CheckPluginName,
+    plugin_name: str | CheckPluginName,
     plugin_kwargs: Mapping[str, Any],
     is_cluster: bool,
     is_enforced: bool,

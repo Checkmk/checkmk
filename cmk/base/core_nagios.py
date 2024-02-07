@@ -34,7 +34,7 @@ from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -131,7 +131,7 @@ class NagiosConfig:
         self.servicegroups_to_define: set[ServicegroupName] = set()
         self.contactgroups_to_define: set[ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()
-        self.active_checks_to_define: set[CheckPluginNameStr] = set()
+        self.active_checks_to_define: set[str] = set()
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
 
@@ -1065,7 +1065,7 @@ def _extra_service_conf_of(
 #   '----------------------------------------------------------------------'
 
 
-def _find_check_plugins(checktype: CheckPluginNameStr) -> set[str]:
+def _find_check_plugins(checktype: str) -> set[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
@@ -1386,7 +1386,7 @@ if '-d' in sys.argv:
 
 def _get_needed_plugin_names(
     config_cache: ConfigCache, host_name: HostName
-) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
+) -> tuple[set[str], set[CheckPluginName], set[InventoryPluginName]]:
     needed_legacy_check_plugin_names = {
         f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
     }
@@ -1428,7 +1428,7 @@ def _get_needed_plugin_names(
     )
 
 
-def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPluginNameStr | None:
+def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | None:
     legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
     if legacy_name:
         return legacy_name
@@ -1449,7 +1449,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
 
 
 def _get_legacy_check_file_names_to_load(
-    needed_check_plugin_names: set[CheckPluginNameStr],
+    needed_check_plugin_names: set[str],
 ) -> set[str]:
     # check info table
     # We need to include all those plugins that are referenced in the hosts

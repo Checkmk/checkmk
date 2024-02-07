@@ -36,7 +36,6 @@ def register() -> None:
     perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
     perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
     perfometers["check_mk-nvidia.temp"] = perfometer_temperature
-    perfometers["check_mk-cmctc_lcp.temp"] = perfometer_temperature
     perfometers["check_mk-cmctc.temp"] = perfometer_temperature
     perfometers["check_mk-smart.temp"] = perfometer_temperature
     perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
@@ -69,8 +68,6 @@ def register() -> None:
     perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
     perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
     perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
-    perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
-    perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
     perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
     perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
     perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport

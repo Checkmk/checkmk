@@ -243,13 +243,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            walk_cache.load(
-                trees=(
-                    tree
-                    for section_name in section_names
-                    for tree in self.plugin_store[section_name].trees
-                ),
-            )
+            walk_cache.load()
         else:
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"

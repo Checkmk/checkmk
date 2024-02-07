@@ -1,0 +1,17 @@
+Title: snmp: Store OID cache per context group
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1707299680
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+SNMP caching didn't take contexts in consideration when storing
+OID data. This led to the same result being reported for the OID
+in different sections even if sections use different contexts.
+
+Now, SNMP caching stores fetched OID data for every group of contexts
+it was called with.
+
+

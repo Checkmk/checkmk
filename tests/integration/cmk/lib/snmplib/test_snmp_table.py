@@ -142,7 +142,7 @@ def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> Non
 
 def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
 
-    walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
+    walk_cache: MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]] = {}
 
     _ = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),
@@ -152,9 +152,9 @@ def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
     )
 
     assert sorted(walk_cache) == [
-        ".1.3.6.1.2.1.1.1.0",
-        ".1.3.6.1.2.1.1.2.0",
-        ".1.3.6.1.2.1.1.5.0",
+        (".1.3.6.1.2.1.1.1.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.2.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.5.0", "f3a8901547f4c88fd9947f9e401ce2", False),
     ]
 
 

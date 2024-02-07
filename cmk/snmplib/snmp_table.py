@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
 """
+import hashlib
 from collections.abc import Callable, Iterable, Iterator, MutableMapping, Sequence
 from pathlib import Path
 
@@ -31,7 +32,7 @@ ResultColumnsDecoded = list[list[SNMPDecodedValues]]
 
 
 class WalkCache(
-    MutableMapping[str, tuple[bool, SNMPRowInfo]]
+    MutableMapping[tuple[str, str, bool], SNMPRowInfo]
 ):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
@@ -46,7 +47,7 @@ class WalkCache(
     __slots__ = ("_store", "_path")
 
     def __init__(self, host_name: HostName) -> None:
-        self._store: MutableMapping[str, tuple[bool, SNMPRowInfo]] = {}
+        self._store: MutableMapping[tuple[str, str, bool], SNMPRowInfo] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
@@ -56,12 +57,13 @@ class WalkCache(
         return store.save_object_to_file(path, rowinfo, pretty=False)
 
     @staticmethod
-    def _oid2name(fetchoid: str) -> str:
-        return f"OID{fetchoid}"
+    def _oid2name(fetchoid: str, context_hash: str) -> str:
+        return f"OID{fetchoid}-{context_hash}"
 
     @staticmethod
-    def _name2oid(basename: str) -> str:
-        return basename[3:]
+    def _name2oid(basename: str) -> tuple[str, str]:
+        name_parts = basename[3:].split("-", 1)
+        return name_parts[0], name_parts[1]
 
     def _iterfiles(self) -> Iterable[Path]:
         if not self._path.is_dir():
@@ -71,16 +73,16 @@ class WalkCache(
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: str) -> tuple[bool, SNMPRowInfo]:
+    def __getitem__(self, key: tuple[str, str, bool]) -> SNMPRowInfo:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: str, value: tuple[bool, SNMPRowInfo]) -> None:
+    def __setitem__(self, key: tuple[str, str, bool], value: SNMPRowInfo) -> None:
         return self._store.__setitem__(key, value)
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key: tuple[str, str, bool]) -> None:
         return self._store.__delitem__(key)
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self) -> Iterator[tuple[str, str, bool]]:
         return self._store.__iter__()
 
     def __len__(self) -> int:
@@ -90,24 +92,10 @@ class WalkCache(
         for path in self._iterfiles():
             path.unlink(missing_ok=True)
 
-    def load(
-        self,
-        *,
-        trees: Iterable[BackendSNMPTree],
-    ) -> None:
+    def load(self) -> None:
         """Try to read the OIDs data from cache files"""
-        # Do not load the cached data if *any* plugin needs live data
-        do_not_load = {
-            f"{tree.base}.{oid.column}"
-            for tree in trees
-            for oid in tree.oids
-            if not oid.save_to_cache
-        }
-
         for path in self._iterfiles():
-            fetchoid = self._name2oid(path.name)
-            if fetchoid in do_not_load:
-                continue
+            fetchoid, context_hash = self._name2oid(path.name)
 
             console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
             try:
@@ -119,17 +107,16 @@ class WalkCache(
                 continue
 
             if read_walk is not None:
-                # 'False': no need to store this value: it is already stored!
-                self._store[fetchoid] = (False, read_walk)
+                self._store[(fetchoid, context_hash, True)] = read_walk
 
     def save(self) -> None:
         self._path.mkdir(parents=True, exist_ok=True)
 
-        for fetchoid, (save_flag, rowinfo) in self._store.items():
+        for (fetchoid, context_hash, save_flag), rowinfo in self._store.items():
             if not save_flag:
                 continue
 
-            path = self._path / self._oid2name(fetchoid)
+            path = self._path / self._oid2name(fetchoid, context_hash)
             console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
             self._write_row(path, rowinfo)
 
@@ -138,7 +125,7 @@ def get_snmp_table(
     *,
     section_name: SectionName | None,
     tree: BackendSNMPTree,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     backend: SNMPBackend,
 ) -> Sequence[SNMPTable]:
 
@@ -266,37 +253,32 @@ def _get_snmpwalk(
     base: str,
     fetchoid: OID,
     *,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     save_walk_cache: bool,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
+    contexts = backend.config.snmpv3_contexts_of(section_name)
+    context_string = "-".join(["no_context" if c is None else c for c in contexts])
+
+    # contexts are hashed in order not to exceed max pathname length
+    context_hash = hashlib.shake_256(context_string.encode("utf-8")).hexdigest(15)
+
+    rowinfo: SNMPRowInfo = []
+
     try:
-        rowinfo = walk_cache[fetchoid][1]
+        rowinfo = walk_cache[(fetchoid, context_hash, save_walk_cache)]
         console.vverbose(f"Already fetched OID: {fetchoid}\n")
         return rowinfo
     except KeyError:
         pass
 
-    rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
-    return rowinfo
-
-
-def _perform_snmpwalk(
-    section_name: SectionName | None,
-    base_oid: str,
-    fetchoid: OID,
-    *,
-    backend: SNMPBackend,
-) -> SNMPRowInfo:
     added_oids: set[OID] = set()
-    rowinfo: SNMPRowInfo = []
 
-    for context_name in backend.config.snmpv3_contexts_of(section_name):
+    for context_name in contexts:
         rows = backend.walk(
             oid=fetchoid,
             section_name=section_name,
-            table_base_oid=base_oid,
+            table_base_oid=base,
             context_name=context_name,
         )
 
@@ -317,6 +299,7 @@ def _perform_snmpwalk(
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
 
+    walk_cache[(fetchoid, context_hash, save_walk_cache)] = rowinfo
     return rowinfo
 
 

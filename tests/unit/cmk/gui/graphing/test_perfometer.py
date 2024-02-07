@@ -8,6 +8,8 @@ from collections.abc import Callable, Mapping, Sequence
 import numpy as np
 import pytest
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
@@ -17,8 +19,10 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.graphing._perfometer import (
     _make_projection,
+    _parse_perfometers,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
+    LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
     MetricRendererStack,
@@ -736,3 +740,126 @@ def test_perfometer_renderer_stack_same_values() -> None:
             },
         },
     ).get_stack() == [[(42.63, "#111111"), (42.63, "#222222"), (14.74, "#bdbdbd")]]
+
+
+@pytest.mark.parametrize(
+    "legacy_perfometer, expected_perfometer",
+    [
+        pytest.param(
+            ("linear", ([], 100, "Label 1")),
+            {"type": "linear", "segments": [], "total": 100, "label": "Label 1"},
+            id="linear",
+        ),
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label 2")), ("linear", ([], 100, "Label 3"))]),
+            {
+                "type": "dual",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 2"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 3"},
+                ],
+            },
+            id="dual",
+        ),
+        pytest.param(
+            ("stacked", [("linear", ([], 100, "Label 4")), ("linear", ([], 100, "Label 5"))]),
+            {
+                "type": "stacked",
+                "perfometers": [
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 4"},
+                    {"type": "linear", "segments": [], "total": 100, "label": "Label 5"},
+                ],
+            },
+            id="stacked",
+        ),
+    ],
+)
+def test_parse_perfometer(
+    legacy_perfometer: LegacyPerfometer, expected_perfometer: PerfometerSpec
+) -> None:
+    assert list(_parse_perfometers([legacy_perfometer])) == [expected_perfometer]
+
+
+@pytest.mark.parametrize(
+    "perfometer",
+    [
+        pytest.param(
+            ("dual", [("linear", ([], 100, "Label"))]),
+            id="dual-one-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    ("linear", ([], 100, "Label 1")),
+                    ("linear", ([], 100, "Label 2")),
+                    ("linear", ([], 100, "Label 3")),
+                ],
+            ),
+            id="dual-three-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-dual-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "dual",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="dual-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "stacked",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-stacked-sub-perfometers",
+        ),
+        pytest.param(
+            (
+                "stacked",
+                [
+                    (
+                        "dual",
+                        [
+                            ("linear", ([], 100, "Label 1")),
+                            ("linear", ([], 100, "Label 2")),
+                        ],
+                    )
+                ],
+            ),
+            id="stacked-dual-sub-perfometers",
+        ),
+    ],
+)
+def test_parse_dual_or_stacked_perfometer_errors(perfometer: tuple[str, object]) -> None:
+    with pytest.raises(MKGeneralException):
+        list(_parse_perfometers([perfometer]))

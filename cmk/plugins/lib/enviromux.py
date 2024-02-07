@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -116,7 +116,7 @@ EnviromuxSection = Mapping[str, EnviromuxSensor]
 
 
 def parse_enviromux(string_table: StringTable) -> EnviromuxSection:
-    enviromux_sensors: MutableMapping[str, EnviromuxSensor] = {}
+    enviromux_sensors: dict[str, EnviromuxSensor] = {}
 
     for line in string_table:
         sensor_name = f"{line[2]} {line[0]}"
@@ -164,7 +164,7 @@ def parse_enviromux_digital(string_table: StringTable) -> EnviromuxDigitalSectio
 def parse_enviromux_micro(
     string_table: StringTable,
 ) -> EnviromuxSection:
-    enviromux_micro_sensors: MutableMapping[str, EnviromuxSensor] = {}
+    enviromux_micro_sensors: dict[str, EnviromuxSensor] = {}
 
     for line in string_table:
         try:

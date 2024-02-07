@@ -79,7 +79,7 @@ def _create_filesystem_storage_pool(
 
 
 def parse_scaleio_storage_pool(string_table: StringTable) -> ScaleioStoragePoolSection:
-    section: MutableMapping[str, StoragePool] = {}
+    section: dict[str, StoragePool] = {}
     for pool_id, pool in parse_scaleio(string_table, "STORAGE_POOL").items():
         pool_capacity = pool["MAX_CAPACITY_IN_KB"]
 

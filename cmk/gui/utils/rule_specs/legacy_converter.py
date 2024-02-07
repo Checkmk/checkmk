@@ -5,7 +5,7 @@
 import dataclasses
 import enum
 import urllib.parse
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, Literal, TypeVar
@@ -550,7 +550,7 @@ def _convert_to_legacy_valuespec(
 def _convert_to_legacy_integer(
     to_convert: ruleset_api_v1.form_specs.basic.Integer, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Integer:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
@@ -576,7 +576,7 @@ def _convert_to_legacy_integer(
 def _convert_to_legacy_float(
     to_convert: ruleset_api_v1.form_specs.basic.Float, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Float:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
@@ -643,7 +643,7 @@ def _convert_to_legacy_binary_unit(
 def _convert_to_legacy_datasize(
     to_convert: ruleset_api_v1.form_specs.basic.DataSize, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.LegacyDataSize:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
@@ -671,7 +671,7 @@ def _convert_to_legacy_datasize(
 def _convert_to_legacy_percentage(
     to_convert: ruleset_api_v1.form_specs.basic.Percentage, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Percentage:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
@@ -695,7 +695,7 @@ def _convert_to_legacy_percentage(
 def _convert_to_legacy_text_input(
     to_convert: ruleset_api_v1.form_specs.basic.Text, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "allow_empty": not isinstance(
@@ -731,7 +731,7 @@ def _convert_to_legacy_text_input(
 def _convert_to_legacy_regular_expression(
     to_convert: ruleset_api_v1.form_specs.basic.RegularExpression, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.RegExp:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -768,7 +768,7 @@ def _convert_to_legacy_tuple(
     legacy_elements = [
         _convert_to_legacy_valuespec(element, localizer) for element in to_convert.elements
     ]
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
@@ -783,7 +783,7 @@ def _convert_to_legacy_tuple(
 def _convert_to_legacy_monitoring_state(
     to_convert: ruleset_api_v1.form_specs.basic.ServiceState, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,
@@ -795,7 +795,7 @@ def _convert_to_legacy_monitoring_state(
 def _convert_to_legacy_host_state(
     to_convert: ruleset_api_v1.form_specs.basic.HostState, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,
@@ -822,7 +822,7 @@ def _convert_to_legacy_dropdown_choice(
         )
         for element in to_convert.elements
     ]
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -876,7 +876,7 @@ def _convert_to_legacy_cascading_dropdown(
         for element in to_convert.elements
     ]
 
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -931,7 +931,7 @@ def _convert_to_legacy_list(
     to_convert: ruleset_api_v1.form_specs.composed.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
     template = _convert_to_legacy_valuespec(to_convert.element_template, localizer)
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "valuespec": template,
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
@@ -981,7 +981,7 @@ def _convert_to_legacy_time_unit(
 def _convert_to_legacy_time_span(
     to_convert: ruleset_api_v1.form_specs.basic.TimeSpan, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TimeSpan:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
@@ -1430,7 +1430,7 @@ def _convert_to_legacy_checkbox(
 def _convert_to_legacy_file_upload(
     to_convert: ruleset_api_v1.form_specs.basic.FileUpload, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.FileUpload:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
@@ -1466,7 +1466,7 @@ def _convert_to_legacy_monitored_host_name(
     to_convert: ruleset_api_v1.form_specs.preconfigured.MonitoredHost,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredHostname:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "autocompleter": ContextAutocompleterConfig(
             ident=legacy_valuespecs.MonitoredHostname.ident,
             strict=True,
@@ -1489,7 +1489,7 @@ def _convert_to_legacy_monitored_service_description(
     to_convert: ruleset_api_v1.form_specs.preconfigured.MonitoredService,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredServiceDescription:
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "autocompleter": ContextAutocompleterConfig(
             ident=legacy_valuespecs.MonitoredServiceDescription.ident,
             strict=True,
@@ -1525,7 +1525,7 @@ def _convert_to_legacy_list_choice(
     # if number of choices if bigger, MultipleChoice is converted to DualListChoice
     MAX_LIST_CHOICE_SIZE: int = 10
 
-    converted_kwargs: MutableMapping[str, Any] = {
+    converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,

@@ -1096,7 +1096,6 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         custom_attributes={"attr1": "value1"},
         tags={"tag1": "value1", "tag2": "value2"},
         labels={"label1": "value1", "label2": "value2"},
-        customer=None,
         macros={
             "$HOSTADDRESS$": "0.0.0.0",
             "$HOSTNAME$": "test_host",

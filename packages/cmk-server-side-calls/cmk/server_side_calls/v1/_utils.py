@@ -109,7 +109,6 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
         custom_attributes: Custom attributes of the host
         tags: Tags of the host
         labels: Labels of the host
-        customer: Customer the host belongs to. Relevant only in the CME edition.
 
 
     Example:
@@ -139,7 +138,6 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     custom_attributes: Mapping[str, str] = field(default_factory=dict)
     tags: Mapping[str, str] = field(default_factory=dict)
     labels: Mapping[str, str] = field(default_factory=dict)
-    customer: str | None = None
 
 
 @dataclass(frozen=True)

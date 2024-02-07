@@ -1926,12 +1926,6 @@ def get_ssc_host_config(
         **legacy_macros,
     }
 
-    customer = (
-        current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
-        if cmk_version.edition() is cmk_version.Edition.CME
-        else None
-    )
-
     return server_side_calls_api.HostConfig(
         name=host_name,
         alias=alias,
@@ -1944,7 +1938,6 @@ def get_ssc_host_config(
         custom_attributes=custom_attributes,
         tags=tags,
         labels=labels,
-        customer=customer,
     )
 
 

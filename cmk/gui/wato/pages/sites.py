@@ -1139,13 +1139,16 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return self.mode_url(site=self._site_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 _page_menu_dropdown_site_details(self._site_id, self._site, self.name()),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+
+        self._extend_display_dropdown(menu)
+        return menu
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self) -> ActionResult:

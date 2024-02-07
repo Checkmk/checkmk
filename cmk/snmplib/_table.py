@@ -6,6 +6,7 @@
 """
 
 import contextlib
+import hashlib
 from collections.abc import Callable, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
@@ -47,7 +48,7 @@ def get_snmp_table(
     *,
     section_name: SectionName | None,
     tree: BackendSNMPTree,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     backend: SNMPBackend,
 ) -> Sequence[SNMPTable]:
     index_column = -1
@@ -179,12 +180,18 @@ def get_snmpwalk(
     base_oid: str,
     fetchoid: OID,
     *,
-    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[tuple[str, str, bool], SNMPRowInfo],
     save_walk_cache: bool,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
+    contexts = backend.config.snmpv3_contexts_of(section_name).contexts
+    context_string = "-".join(["no_context" if not c else c for c in contexts])
+
+    # contexts are hashed in order not to exceed max pathname length
+    context_hash = hashlib.shake_256(context_string.encode("utf-8")).hexdigest(15)
+
     with contextlib.suppress(KeyError):
-        cache_info = walk_cache[fetchoid][1]
+        cache_info = walk_cache[(fetchoid, context_hash, save_walk_cache)]
         console.vverbose(f"Already fetched OID: {fetchoid}\n")
         return cache_info
 
@@ -232,7 +239,7 @@ def get_snmpwalk(
     if skip and not rowinfo:
         raise MKSNMPError("SNMP Error on %s: SNMP query timed out" % backend.config.hostname)
 
-    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
+    walk_cache[(fetchoid, context_hash, save_walk_cache)] = rowinfo
     return rowinfo
 
 

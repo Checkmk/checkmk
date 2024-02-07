@@ -138,9 +138,9 @@ def test_get_simple_snmp_table_bulkwalk(
 def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
     _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
     assert sorted(walk_cache) == [
-        ".1.3.6.1.2.1.1.1.0",
-        ".1.3.6.1.2.1.1.2.0",
-        ".1.3.6.1.2.1.1.5.0",
+        (".1.3.6.1.2.1.1.1.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.2.0", "f3a8901547f4c88fd9947f9e401ce2", False),
+        (".1.3.6.1.2.1.1.5.0", "f3a8901547f4c88fd9947f9e401ce2", False),
     ]
 
 

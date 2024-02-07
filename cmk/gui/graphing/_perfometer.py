@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Callable, Literal, NotRequired, TypeAlias, TypedDict
 
@@ -66,10 +66,11 @@ MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
 def _parse_sub_perfometer(
-    perfometer: PerfometerSpec,
+    perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> _LinearPerfometerSpec | LogarithmicPerfometerSpec:
-    if perfometer["type"] == "linear" or perfometer["type"] == "logarithmic":
-        return perfometer
+    parsed = _parse_perfometer(perfometer)
+    if parsed["type"] == "linear" or parsed["type"] == "logarithmic":
+        return parsed
     raise MKGeneralException(
         _(
             "Dual or stacked Perf-O-Meters are not allowed to have"
@@ -78,53 +79,61 @@ def _parse_sub_perfometer(
     )
 
 
-def _parse_perfometers(
-    perfometers_: list[LegacyPerfometer | PerfometerSpec],
-) -> Iterator[PerfometerSpec]:
+def _parse_perfometer(
+    perfometer: LegacyPerfometer | PerfometerSpec,
+) -> PerfometerSpec:
+    if isinstance(perfometer, dict):
+        return perfometer
+
     # During implementation of the metric system the perfometers were first defined using
     # tuples. This has been replaced with a dict based syntax. This function converts the
     # old known formats from tuple to dict.
     # All shipped perfometers have been converted to the dict format with 1.5.0i3.
-    for perfometer in perfometers_:
-        if isinstance(perfometer, dict):
-            yield perfometer
-            continue
+    if not isinstance(perfometer, tuple) or len(perfometer) != 2:
+        raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
 
-        if not isinstance(perfometer, tuple) or len(perfometer) != 2:
-            raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
-
-        # Convert legacy tuple based perfometer
-        perfometer_type, perfometer_args = perfometer[0], perfometer[1]
-        if perfometer_type == "dual":
-            if len(perfometer_args) != 2:
-                raise MKGeneralException(
-                    _("Perf-O-Meter of type 'dual' must contain exactly two definitions, not %d")
-                    % len(perfometer_args)
-                )
-            yield _DualPerfometerSpec(
-                type="dual",
-                perfometers=[_parse_sub_perfometer(p) for p in _parse_perfometers(perfometer_args)],
-            )
-
-        elif perfometer_type == "stacked":
-            yield _StackedPerfometerSpec(
-                type="stacked",
-                perfometers=[_parse_sub_perfometer(p) for p in _parse_perfometers(perfometer_args)],
-            )
-
-        elif perfometer_type == "linear" and len(perfometer_args) == 3:
-            yield _LinearPerfometerSpec(
-                type="linear",
-                segments=perfometer_args[0],
-                total=perfometer_args[1],
-                label=perfometer_args[2],
-            )
-
-        else:
+    # Convert legacy tuple based perfometer
+    perfometer_type, perfometer_args = perfometer[0], perfometer[1]
+    if perfometer_type == "dual":
+        if len(perfometer_args) != 2:
             raise MKGeneralException(
-                _("Could not convert perfometer to dict format: %r. Ignoring this one.")
-                % perfometer
+                _("Perf-O-Meter %r must contain exactly two definitions, not %d")
+                % (perfometer, len(perfometer_args))
             )
+        return _DualPerfometerSpec(
+            type="dual",
+            perfometers=[_parse_sub_perfometer(p) for p in perfometer_args],
+        )
+
+    if perfometer_type == "stacked":
+        return _StackedPerfometerSpec(
+            type="stacked",
+            perfometers=[_parse_sub_perfometer(p) for p in perfometer_args],
+        )
+
+    if perfometer_type == "linear" and len(perfometer_args) == 3:
+        return _LinearPerfometerSpec(
+            type="linear",
+            segments=perfometer_args[0],
+            total=perfometer_args[1],
+            label=perfometer_args[2],
+        )
+
+    raise MKGeneralException(
+        _("Could not convert perfometer to dict format: %r. Ignoring this one.") % perfometer
+    )
+
+
+def parse_perfometer(
+    perfometer: LegacyPerfometer | PerfometerSpec,
+) -> PerfometerSpec:
+    parsed = _parse_perfometer(perfometer)
+    if parsed["type"] == "dual" and len(parsed["perfometers"]) != 2:
+        raise MKGeneralException(
+            _("Perf-O-Meter %r must contain exactly two definitions, not %d")
+            % (parsed, len(parsed["perfometers"]))
+        )
+    return parsed
 
 
 def _perfometer_has_required_metrics_or_scalars(
@@ -190,9 +199,10 @@ def get_first_matching_perfometer(
             return perfometer
 
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
-    for legacy_perfometer in _parse_perfometers(perfometer_info):
-        if _perfometer_possible(legacy_perfometer, translated_metrics):
-            return legacy_perfometer
+    for legacy_perfometer in perfometer_info:
+        parsed = parse_perfometer(legacy_perfometer)
+        if _perfometer_possible(parsed, translated_metrics):
+            return parsed
     return None
 
 

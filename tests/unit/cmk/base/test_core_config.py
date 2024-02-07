@@ -54,7 +54,10 @@ def fixture_core_scenario(monkeypatch):
     return ts.apply(monkeypatch)
 
 
-def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
+def test_do_create_config_nagios(
+    core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
     core_config.do_create_config(
         create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
     )

@@ -470,7 +470,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -539,7 +539,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias '$HOSTALIAS$'\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias 'my_host_alias'\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -572,7 +572,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -613,7 +613,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           HTTP my special HTTP\n"
@@ -632,6 +632,7 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -680,7 +681,7 @@ def test_create_nagios_servicedefs_active_check(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
@@ -729,6 +730,7 @@ def test_create_nagios_servicedefs_with_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
     monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
@@ -782,6 +784,7 @@ def test_create_nagios_servicedefs_omit_service(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -886,7 +889,7 @@ def test_create_nagios_servicedefs_invalid_args(
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
+            "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias my_host_alias\n"
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -915,6 +918,7 @@ def test_create_nagios_config_commands(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
+    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)

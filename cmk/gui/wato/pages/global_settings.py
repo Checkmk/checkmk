@@ -133,6 +133,31 @@ class ABCGlobalSettingsMode(WatoMode):
 
         return True
 
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Details"),
+                entries=list(self._page_menu_entries_details()),
+            ),
+        )
+
+    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Show only modified settings"),
+            icon_name="toggle_on" if self._show_only_modified else "toggle_off",
+            item=make_simple_link(
+                makeactionuri(
+                    request,
+                    transactions,
+                    [
+                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
+                    ],
+                )
+            ),
+        )
+
     def iter_all_configuration_variables(
         self,
     ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
@@ -479,31 +504,6 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             title=_("Sites"),
             icon_name="sites",
             item=make_simple_link("wato.py?mode=sites"),
-        )
-
-    def _extend_display_dropdown(self, menu: PageMenu) -> None:
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Details"),
-                entries=list(self._page_menu_entries_details()),
-            ),
-        )
-
-    def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
-        yield PageMenuEntry(
-            title=_("Show only modified settings"),
-            icon_name="toggle_on" if self._show_only_modified else "toggle_off",
-            item=make_simple_link(
-                makeactionuri(
-                    request,
-                    transactions,
-                    [
-                        ("_show_only_modified", "0" if self._show_only_modified else "1"),
-                    ],
-                )
-            ),
         )
 
     def action(self) -> ActionResult:

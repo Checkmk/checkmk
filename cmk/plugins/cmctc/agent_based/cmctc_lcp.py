@@ -3,17 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
-from typing import Any, NamedTuple
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple, TypeAlias
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
-from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import CheckPlugin, Metric, Result, Service, SNMPSection, SNMPTree, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.cmctc import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
-from cmk.plugins.lib.cmctc import DETECT_CMCTC
+Params: TypeAlias = Any
 
 
 class Sensor(NamedTuple):
@@ -90,7 +88,7 @@ _TREES = [
 ]
 
 
-def parse_cmctc_lcp(string_table: list[StringTable]) -> Section:
+def parse_cmctc_lcp(string_table: Sequence[StringTable]) -> Section:
     return {
         f"{sensor_spec[0]} - {tree}.{index}"
         if sensor_spec[0]
@@ -109,13 +107,13 @@ def parse_cmctc_lcp(string_table: list[StringTable]) -> Section:
     }
 
 
-def inventory_cmctc_lcp(section: Section, sensortype: str) -> Iterable[tuple[str, dict]]:
-    yield from ((item, {}) for item, sensor in section.items() if sensor.type_ == sensortype)
+def inventory_cmctc_lcp(section: Section, sensortype: str) -> DiscoveryResult:
+    for item, sensor in section.items():
+        if sensor.type_ == sensortype:
+            yield Service(item=item)
 
 
-def check_cmctc_lcp(
-    item: str, params: Any, section: Section, sensortype: str
-) -> Iterable[tuple[int, str, list]]:
+def check_cmctc_lcp(item: str, params: Params, section: Section, sensortype: str) -> CheckResult:
     map_sensor_state = {
         "1": (3, "not available"),
         "2": (2, "lost"),
@@ -151,12 +149,12 @@ def check_cmctc_lcp(
     if sensor.description:
         infotext += "[%s] " % sensor.description
     state, extra_info = map_sensor_state[sensor.status]
-    yield state, "%s%d%s" % (infotext, int(sensor.reading), unit), []
+    yield Result(state=State(state), summary="%s%d%s" % (infotext, int(sensor.reading), unit))
 
     extra_state = 0
     if params:
         warn, crit = params
-        perfdata = [(sensortype, sensor.reading, warn, crit)]
+        yield Metric(sensortype, sensor.reading, levels=(warn, crit))
         if sensor.reading >= crit:
             extra_state = 2
         elif sensor.reading >= warn:
@@ -165,7 +163,7 @@ def check_cmctc_lcp(
         if extra_state:
             extra_info += " (warn/crit at %d/%d%s)" % (warn, crit, unit)
     else:
-        perfdata = [(sensortype, sensor.reading, None, None)]
+        yield Metric(sensortype, sensor.reading)
         if sensor.has_levels():
             if sensor.reading >= sensor.high or sensor.reading <= sensor.low:
                 extra_state = 2
@@ -175,24 +173,22 @@ def check_cmctc_lcp(
                     unit,
                 )
 
-    yield extra_state, extra_info, perfdata
+    yield Result(state=State(extra_state), summary=extra_info)
 
 
-def inventory_cmctc_lcp_temp(section: Section) -> Iterable[tuple[str, dict]]:
+def discovery_cmctc_lcp_temp(section: Section) -> DiscoveryResult:
     yield from inventory_cmctc_lcp(section, "temp")
 
 
-def check_cmctc_lcp_temp(
-    item: str, params: TempParamType, section: Section
-) -> Iterable[tuple[int, str, list]]:
+def check_cmctc_lcp_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
     if (sensor := section.get(item)) is None:
         return
 
     status = int(sensor.status)
-    yield check_temperature(
-        sensor.reading,
-        params,
-        "cmctc_lcp_temp_%s" % item,
+    yield from check_temperature(
+        reading=sensor.reading,
+        params=params,
+        unique_name="cmctc_lcp_temp_%s" % item,
         dev_levels=sensor.levels,
         dev_levels_lower=sensor.levels_lower,
         dev_status=cmctc_translate_status(status),
@@ -200,7 +196,8 @@ def check_cmctc_lcp_temp(
     )
 
 
-check_info["cmctc_lcp"] = LegacyCheckDefinition(
+snmp_section_cmctc_lcp = SNMPSection(
+    name="cmctc_lcp",
     detect=DETECT_CMCTC,
     fetch=[
         SNMPTree(
@@ -222,170 +219,192 @@ check_info["cmctc_lcp"] = LegacyCheckDefinition(
 )
 
 
-def discover_cmctc_lcp_access(info):
-    return inventory_cmctc_lcp(info, "access")
+def discover_cmctc_lcp_access(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "access")
 
 
-def check_cmctc_lcp_access(item, params, info):
-    return check_cmctc_lcp(item, params, info, "access")
+def check_cmctc_lcp_access(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "access")
 
 
-check_info["cmctc_lcp.access"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_access = CheckPlugin(
+    name="cmctc_lcp_access",
     service_name="Access %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_access,
     check_function=check_cmctc_lcp_access,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_blower(info):
-    return inventory_cmctc_lcp(info, "blower")
+def discover_cmctc_lcp_blower(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "blower")
 
 
-def check_cmctc_lcp_blower(item, params, info):
-    return check_cmctc_lcp(item, params, info, "blower")
+def check_cmctc_lcp_blower(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "blower")
 
 
-check_info["cmctc_lcp.blower"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_blower = CheckPlugin(
+    name="cmctc_lcp_blower",
     service_name="Blower %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_blower,
     check_function=check_cmctc_lcp_blower,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_blowergrade(info):
-    return inventory_cmctc_lcp(info, "blowergrade")
+def discover_cmctc_lcp_blowergrade(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "blowergrade")
 
 
-def check_cmctc_lcp_blowergrade(item, params, info):
-    return check_cmctc_lcp(item, params, info, "blowergrade")
+def check_cmctc_lcp_blowergrade(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "blowergrade")
 
 
-check_info["cmctc_lcp.blowergrade"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_blowergrade = CheckPlugin(
+    name="cmctc_lcp_blowergrade",
     service_name="Blower Grade %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_blowergrade,
     check_function=check_cmctc_lcp_blowergrade,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_current(info):
-    return inventory_cmctc_lcp(info, "current")
+def discover_cmctc_lcp_current(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "current")
 
 
-def check_cmctc_lcp_current(item, params, info):
-    return check_cmctc_lcp(item, params, info, "current")
+def check_cmctc_lcp_current(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "current")
 
 
-check_info["cmctc_lcp.current"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_current = CheckPlugin(
+    name="cmctc_lcp_current",
     service_name="Current %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_current,
     check_function=check_cmctc_lcp_current,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_flow(info):
-    return inventory_cmctc_lcp(info, "flow")
+def discover_cmctc_lcp_flow(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "flow")
 
 
-def check_cmctc_lcp_flow(item, params, info):
-    return check_cmctc_lcp(item, params, info, "flow")
+def check_cmctc_lcp_flow(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "flow")
 
 
-check_info["cmctc_lcp.flow"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_flow = CheckPlugin(
+    name="cmctc_lcp_flow",
     service_name="Waterflow %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_flow,
     check_function=check_cmctc_lcp_flow,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_humidity(info):
-    return inventory_cmctc_lcp(info, "humidity")
+def discover_cmctc_lcp_humidity(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "humidity")
 
 
-def check_cmctc_lcp_humidity(item, params, info):
-    return check_cmctc_lcp(item, params, info, "humidity")
+def check_cmctc_lcp_humidity(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "humidity")
 
 
-check_info["cmctc_lcp.humidity"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_humidity = CheckPlugin(
+    name="cmctc_lcp_humidity",
     service_name="Humidity %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_humidity,
     check_function=check_cmctc_lcp_humidity,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_position(info):
-    return inventory_cmctc_lcp(info, "position")
+def discover_cmctc_lcp_position(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "position")
 
 
-def check_cmctc_lcp_position(item, params, info):
-    return check_cmctc_lcp(item, params, info, "position")
+def check_cmctc_lcp_position(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "position")
 
 
-check_info["cmctc_lcp.position"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_position = CheckPlugin(
+    name="cmctc_lcp_position",
     service_name="Position %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_position,
     check_function=check_cmctc_lcp_position,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_regulator(info):
-    return inventory_cmctc_lcp(info, "regulator")
+def discover_cmctc_lcp_regulator(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "regulator")
 
 
-def check_cmctc_lcp_regulator(item, params, info):
-    return check_cmctc_lcp(item, params, info, "regulator")
+def check_cmctc_lcp_regulator(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "regulator")
 
 
-check_info["cmctc_lcp.regulator"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_regulator = CheckPlugin(
+    name="cmctc_lcp_regulator",
     service_name="Regulator %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_regulator,
     check_function=check_cmctc_lcp_regulator,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_status(info):
-    return inventory_cmctc_lcp(info, "status")
+def discover_cmctc_lcp_status(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "status")
 
 
-def check_cmctc_lcp_status(item, params, info):
-    return check_cmctc_lcp(item, params, info, "status")
+def check_cmctc_lcp_status(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "status")
 
 
-check_info["cmctc_lcp.status"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_status = CheckPlugin(
+    name="cmctc_lcp_status",
     service_name="Status %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_status,
     check_function=check_cmctc_lcp_status,
+    check_default_parameters={},
 )
 
 
-def discover_cmctc_lcp_user(info):
-    return inventory_cmctc_lcp(info, "user")
+def discover_cmctc_lcp_user(section: Section) -> DiscoveryResult:
+    yield from inventory_cmctc_lcp(section, "user")
 
 
-def check_cmctc_lcp_user(item, params, info):
-    return check_cmctc_lcp(item, params, info, "user")
+def check_cmctc_lcp_user(item: str, params: Params, section: Section) -> CheckResult:
+    yield from check_cmctc_lcp(item, params, section, "user")
 
 
-check_info["cmctc_lcp.user"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_user = CheckPlugin(
+    name="cmctc_lcp_user",
     service_name="User Sensor %s",
     sections=["cmctc_lcp"],
     discovery_function=discover_cmctc_lcp_user,
     check_function=check_cmctc_lcp_user,
+    check_default_parameters={},
 )
 
 # temperature check is standardised
-check_info["cmctc_lcp.temp"] = LegacyCheckDefinition(
+check_plugin_cmctc_lcp_temp = CheckPlugin(
+    name="cmctc_lcp_temp",
     service_name="Temperature %s",
     sections=["cmctc_lcp"],
-    discovery_function=inventory_cmctc_lcp_temp,
+    discovery_function=discovery_cmctc_lcp_temp,
     check_function=check_cmctc_lcp_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

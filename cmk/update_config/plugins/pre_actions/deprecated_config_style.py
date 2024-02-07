@@ -188,7 +188,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "climaveneta_temp_default_levels",
     "cluster_info",
     "cmc_temp_default_levels",
-    "cmctc_lcp_sensors",
     "cmctc_pcm_m_sensor_types",
     "condition_map",
     "cpsecure_sessions_default_levels",

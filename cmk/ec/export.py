@@ -20,11 +20,7 @@ from .event import Event as Event
 from .forward import SyslogForwarderUnixSocket as SyslogForwarderUnixSocket
 from .forward import SyslogMessage as SyslogMessage
 from .main import save_active_config as save_active_config
-from .main import SyslogFacility as SyslogFacility
-from .main import SyslogPriority as SyslogPriority
 from .main import TimePeriods as TimePeriods
-
-# TODO remove match_ipv4_network when the GUI uses the EC logic.
 from .rule_matcher import compile_rule as compile_rule
 from .rule_matcher import match_ip_network as match_ip_network
 from .rule_matcher import MatchFailure as MatchFailure
@@ -47,3 +43,5 @@ from .settings import FileDescriptor as FileDescriptor
 from .settings import PortNumber as PortNumber
 from .settings import Settings as Settings
 from .settings import settings as settings
+from .syslog import SyslogFacility as SyslogFacility
+from .syslog import SyslogPriority as SyslogPriority

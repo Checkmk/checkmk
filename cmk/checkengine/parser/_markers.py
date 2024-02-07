@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, MutableMapping, Sequence
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
@@ -133,7 +133,7 @@ class SectionMarker(NamedTuple):
         )
 
     def __str__(self) -> str:
-        opts: MutableMapping[str, str] = {}
+        opts: dict[str, str] = {}
         if self.cached:
             opts["cached"] = ",".join(str(c) for c in self.cached)
         if self.encoding != "utf-8":

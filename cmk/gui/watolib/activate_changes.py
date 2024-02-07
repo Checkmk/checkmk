@@ -2251,7 +2251,7 @@ def sync_and_activate(
                 )
                 active_tasks["activate_remote_changes"][site_id] = async_result
 
-        remote_config_generation_per_site: MutableMapping[SiteId, int] = {}
+        remote_config_generation_per_site: dict[SiteId, int] = {}
         # we want to mostly parallelize the activation steps, but if one site takes longer,
         # it should not hold up the other sites
         # -> monitor active tasks to handle results as soon as one finishes and start a task for

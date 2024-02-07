@@ -420,7 +420,7 @@ def merge_if_sections(  # pylint: disable=too-many-branches
     virtual_interfaces: Sequence[str],
 ) -> IfSection:
     nics = []
-    extra_info: MutableMapping[str, NICExtraInfo] = {}
+    extra_info: dict[str, NICExtraInfo] = {}
     for idx, (nic_name, values) in enumerate(sorted(interfaces_section.items())):
         speed = values.get("speed", 0)
 

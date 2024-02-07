@@ -242,7 +242,7 @@ class InterfaceWithRates:
         timestamp: float,
         value_store: MutableMapping[str, Any],
     ) -> tuple[Rates, Sequence[tuple[str, GetRateError]]]:
-        rates: MutableMapping[str, float | None] = {}
+        rates: dict[str, float | None] = {}
         rate_errors = []
         for rate_name, counter_value in (
             ("in_octets", (counters := iface_counters.counters).in_octets),

@@ -160,7 +160,7 @@ def check_netapp_ontap_fcp(
     }
     fcp_if_counters["now"] = now
 
-    yield from _io_bytes_results(item, params, fcp_if_counters)
+    yield from _io_bytes_results(item, params, fcp_if_counters, fcp_if.speed_in_bps())
 
     yield from _speed_result(params, fcp_if.speed_in_bps())
 
@@ -196,11 +196,11 @@ def _speed_result(params: Mapping[str, Any], speed: int | None) -> CheckResult:
 
 
 def _io_bytes_results(
-    item: str, params: Mapping[str, Any], fcp_if: Mapping[str, int | float]
+    item: str, params: Mapping[str, Any], fcp_if: Mapping[str, int | float], speed: int | None
 ) -> CheckResult:
     bw_levels = bandwidth_levels(
         params=params,
-        speed_in=fcp_if.get("speed"),
+        speed_in=speed,
         speed_out=None,
         speed_total=None,
         unit=BandwidthUnit.BYTE,

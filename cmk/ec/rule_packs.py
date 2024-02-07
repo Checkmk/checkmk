@@ -11,6 +11,7 @@ configuration.
 import copy
 import logging
 import pprint
+import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
@@ -204,6 +205,34 @@ def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
     are filtered rule packs, especially in distributed managed setups."""
     return _load_config(settings, settings.paths.active_config_dir.value)
+
+
+def save_active_config(
+    settings: Settings,
+    rule_packs: Iterable[ECRulePackSpec],
+    pretty_print: bool = False,
+) -> None:
+    """
+    Copy all config files recursively from
+        etc/check_mk/mkeventd.d
+    to
+        var/mkeventd/active_config
+    The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
+    """
+    try:
+        shutil.rmtree(str(settings.paths.active_config_dir.value))
+    except FileNotFoundError:
+        pass
+
+    for path in settings.paths.config_dir.value.glob("**/*.mk"):
+        target = settings.paths.active_config_dir.value / path.relative_to(
+            settings.paths.config_dir.value
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if path.name == "rules.mk":
+            save_rule_packs(rule_packs, pretty_print=pretty_print, dir_=target.parent)
+        else:
+            shutil.copy(path, target)
 
 
 def load_rule_packs() -> Sequence[ECRulePack]:

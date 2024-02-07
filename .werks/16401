@@ -5,7 +5,7 @@ Component: omd
 Date: 1706877168
 Edition: cre
 Level: 1
-Version: 2.1.0p39
+Version: 2.1.0p40
 
 The command <code>omd start mkeventd</code> starts the event daemon. Previously, any exit code produced
 by this daemon would be ignored. Now, if the exit code is non-zero, then the message <code>Failed</code> is

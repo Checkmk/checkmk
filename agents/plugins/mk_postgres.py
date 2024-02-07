@@ -173,6 +173,7 @@ class PostgresBase:
         self.name = instance["name"]
         self.pg_user = instance["pg_user"]
         self.pg_port = instance["pg_port"]
+        self.pg_host = instance["pg_host"]
         self.pg_database = instance["pg_database"]
         self.pg_passfile = instance.get("pg_passfile", "")
         self.pg_version = instance.get("pg_version")
@@ -795,6 +796,8 @@ class PostgresLinux(PostgresBase):
             extra_args += " -q"
         if rows_only:
             extra_args += " -t"
+        if self.pg_host:
+            extra_args += " -h %s" % self.pg_host
 
         # In case we want to use postgres meta commands AND SQL queries in one call, we need to pipe
         # the full cmd string into psql executable
@@ -1217,6 +1220,7 @@ def parse_env_file(env_file):
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None
+    pg_host = None
     for line in open_env_file(env_file):
         line = line.strip()
         if "PGDATABASE=" in line:
@@ -1225,9 +1229,11 @@ def parse_env_file(env_file):
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGVERSION=" in line:
             pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif "PGHOST" in line:
+            pg_host = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port, pg_version
+    return pg_database, pg_port, pg_version, pg_host
 
 
 def _parse_INSTANCE_value(value, config_separator):
@@ -1261,7 +1267,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             env_file, pg_user, pg_passfile, instance_name = _parse_INSTANCE_value(
                 value, config_separator
             )
-            pg_database, pg_port, pg_version = parse_env_file(env_file)
+            pg_database, pg_port, pg_version, pg_host = parse_env_file(env_file)
             instances.append(
                 {
                     "name": instance_name,
@@ -1270,6 +1276,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
                     "pg_database": pg_database,
                     "pg_port": pg_port,
                     "pg_version": pg_version,
+                    "pg_host": pg_host,
                 }
             )
     if dbuser is None:

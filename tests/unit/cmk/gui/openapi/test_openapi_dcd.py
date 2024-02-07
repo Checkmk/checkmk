@@ -321,3 +321,16 @@ def test_openapi_activation_changes(clients: ClientRegistry) -> None:
     clients.Dcd.delete("dcd_A")
     new_pending_changes_count = _count_pending_changes(clients)
     assert new_pending_changes_count == pending_changes_count + 1
+
+
+@pytest.mark.skipif(
+    cmk_version.edition() is cmk_version.Edition.CRE, reason="DCD not available in raw edition"
+)
+def test_openapi_create_dcd_with_non_existent_restricted_host(clients: ClientRegistry) -> None:
+    clients.Dcd.create(
+        dcd_id="dcd_10",
+        title="My first auto DCD",
+        site="NO_SITE",
+        connector_type="piggyback",
+        restrict_source_hosts=["example.com", "i-do-not-exist"],
+    )

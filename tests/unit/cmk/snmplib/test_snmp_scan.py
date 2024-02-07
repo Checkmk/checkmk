@@ -115,11 +115,9 @@ def test_evaluate_snmp_detection(
     oids_data: dict[str, str | None],
     expected_result: bool,
 ) -> None:
+    assert (detect_spec := fix_plugin_legacy.check_info[name].detect) is not None
     assert (
-        snmp_scan._evaluate_snmp_detection(
-            detect_spec=fix_plugin_legacy.check_info[name]["detect"],
-            oid_value_getter=oids_data.get,
-        )
+        snmp_scan._evaluate_snmp_detection(detect_spec=detect_spec, oid_value_getter=oids_data.get)
         is expected_result
     )
 

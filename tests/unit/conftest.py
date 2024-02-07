@@ -40,6 +40,7 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
@@ -307,7 +308,11 @@ class FixPluginLegacy:
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
-        self.check_info = copy.deepcopy(config.check_info)
+        self.check_info = {
+            k: v
+            for k, v in config.check_info.items()
+            if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
+        }
         self.active_check_info = copy.deepcopy(config.active_check_info)
         self.factory_settings = copy.deepcopy(config.factory_settings)
 

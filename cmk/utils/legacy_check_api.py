@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, Generator, NotRequired, TypedDict
+from dataclasses import dataclass
+from typing import Any, Generator
 
 from cmk.agent_based.v2 import IgnoreResults, Metric, Result, SNMPDetectSpecification, SNMPTree
 from cmk.agent_based.v2.type_defs import DiscoveryResult
@@ -33,13 +34,14 @@ _CheckFunctionLegacy = Callable[
 _CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
 
 
-class LegacyCheckDefinition(TypedDict):
-    detect: NotRequired[SNMPDetectSpecification]
-    fetch: NotRequired[list[SNMPTree] | SNMPTree]
-    sections: NotRequired[list[str]]
-    check_function: NotRequired[_CheckFunctionV2Compliant | _CheckFunctionLegacy]
-    discovery_function: NotRequired[_DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy]
-    parse_function: NotRequired[Callable[[list], object]]
-    check_ruleset_name: NotRequired[str]
-    check_default_parameters: NotRequired[Mapping[str, Any]]
-    service_name: NotRequired[str]
+@dataclass(frozen=True, kw_only=True)
+class LegacyCheckDefinition:
+    detect: SNMPDetectSpecification | None = None
+    fetch: list[SNMPTree] | SNMPTree | None = None
+    sections: list[str] | None = None
+    check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
+    discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
+    parse_function: Callable[[list], object] | None = None
+    check_ruleset_name: str | None = None
+    check_default_parameters: Mapping[str, Any] | None = None
+    service_name: str | None = None

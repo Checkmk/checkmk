@@ -2890,10 +2890,10 @@ class TestPackedConfigStore:
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, LegacyCheckDefinition] = {
-        "duplicate_plugin": {
-            "service_name": "blah",
-        },
+    duplicate_plugin = {
+        "duplicate_plugin": LegacyCheckDefinition(
+            service_name="blah",
+        ),
     }
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
@@ -2927,8 +2927,8 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, LegacyCheckDefinition] = {
-        "duplicate_plugin": {},
+    duplicate_plugin = {
+        "duplicate_plugin": LegacyCheckDefinition(),
     }
     registered_section = SNMPSectionPlugin(
         SectionName("duplicate_plugin"),

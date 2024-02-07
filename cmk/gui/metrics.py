@@ -30,7 +30,7 @@ import cmk.gui.utils as utils
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing import parse_perfometers, perfometer_info
+from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
@@ -64,7 +64,6 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     utils.load_web_plugins("metrics", globals())
     add_graphing_plugins(load_graphing_plugins())
-    parse_perfometers(perfometer_info)
 
 
 def register_pre_21_plugin_api() -> None:

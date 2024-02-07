@@ -555,10 +555,25 @@ function listof_get_new_entry_html_code(
     magic: string,
     str_count: string
 ) {
-    const oPrototype = document.getElementById(varprefix + "_prototype")!;
+    const container = document.getElementById(varprefix + "_container")!;
+    let oPrototype: HTMLElement | null = null;
+    if (container.children.length == 0) {
+        // Adding the first element. See if there's a specific prototype given for the first
+        // element, i.e. the first element is rendered differently than the subsequent ones.
+        oPrototype = document.getElementById(
+            varprefix + "_first_elem_prototype"
+        );
+    }
+    if (oPrototype == null) {
+        oPrototype = document.getElementById(varprefix + "_prototype")!;
+    }
+
     let html_code = oPrototype.innerHTML;
+    // replace the index for a specific first element vs
+    let re = new RegExp(magic + "_first_elem", "g");
+    html_code = html_code.replace(re, str_count);
     // replace the magic
-    let re = new RegExp(magic, "g");
+    re = new RegExp(magic, "g");
     html_code = html_code.replace(re, str_count);
 
     // in some cases the magic might be URL encoded. Also replace these occurences.
@@ -1509,7 +1524,8 @@ export function toggle_label_row_opacity(
 export function label_group_delete(
     varprefix: string,
     index: string,
-    first_elem_choices_or_label: [string, string][] | string
+    first_elem_choices_or_label: [string, string][] | string,
+    show_empty_group_by_default: boolean
 ) {
     const tr = document.getElementById(
         varprefix + "_entry_" + index
@@ -1518,8 +1534,9 @@ export function label_group_delete(
 
     if (tbody.children[0] === tr) {
         // The tr to be deleted is the first child -> put in first element specific choices/label
-        if (tbody.children.length == 1) {
-            // Add another element if the one to be deleted is the only one
+        if (tbody.children.length == 1 && show_empty_group_by_default) {
+            // Add another element if the one to be deleted is the only one and if an empty group
+            // must be shown by default
             const add_element_buttons = tbody
                 .closest("div.valuespec_listof")!
                 .getElementsByClassName("vlof_add_button") as HTMLCollection;
@@ -1529,36 +1546,40 @@ export function label_group_delete(
             add_element_button.click();
         }
 
-        const next_row_select: HTMLSelectElement = tbody.children[1]
-            .getElementsByClassName("bool")![0]
-            .getElementsByTagName("select")![0];
-        if (typeof first_elem_choices_or_label !== "string") {
-            // first element has dropdown choices -> adjust the dropdown choices
-            const first_elem_choices: Record<string, string> =
-                Object.fromEntries(first_elem_choices_or_label);
-            const options: HTMLOptionsCollection = next_row_select.options;
-            for (let i = 0; i < options.length; i++) {
-                if (
-                    Object.prototype.hasOwnProperty.call(
-                        first_elem_choices,
-                        options[i].value
-                    )
-                ) {
-                    options[i].innerHTML = first_elem_choices[options[i].value];
-                } else {
-                    options.remove(i);
-                    i -= 1;
+        if (tbody.children.length > 1) {
+            const next_row_select: HTMLSelectElement = tbody.children[1]
+                .getElementsByClassName("bool")![0]
+                .getElementsByTagName("select")![0];
+            if (typeof first_elem_choices_or_label !== "string") {
+                // first element has dropdown choices -> adjust the dropdown choices
+                const first_elem_choices: Record<string, string> =
+                    Object.fromEntries(first_elem_choices_or_label);
+                const options: HTMLOptionsCollection = next_row_select.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            first_elem_choices,
+                            options[i].value
+                        )
+                    ) {
+                        options[i].innerHTML =
+                            first_elem_choices[options[i].value];
+                    } else {
+                        options.remove(i);
+                        i -= 1;
+                    }
                 }
+            } else {
+                // first element has a label -> remove dropdown and put in a label span
+                const next_bool_div =
+                    next_row_select.parentNode as HTMLDivElement;
+                next_bool_div.removeChild(next_row_select.nextSibling!); // select2 span
+                next_bool_div.removeChild(next_row_select);
+                next_bool_div.insertBefore(
+                    tr.getElementsByClassName("vs_label")[0],
+                    next_bool_div.lastChild
+                );
             }
-        } else {
-            // first element has a label -> remove dropdown and put in a label span
-            const next_bool_div = next_row_select.parentNode as HTMLDivElement;
-            next_bool_div.removeChild(next_row_select.nextSibling!); // select2 span
-            next_bool_div.removeChild(next_row_select);
-            next_bool_div.insertBefore(
-                tr.getElementsByClassName("vs_label")[0],
-                next_bool_div.lastChild
-            );
         }
     }
 

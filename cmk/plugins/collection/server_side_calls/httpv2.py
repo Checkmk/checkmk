@@ -286,6 +286,8 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str]:
         yield from _cert_args(cert)
     if (document := settings.document) is not None:
         yield from _document_args(document)
+    if (content := settings.content) is not None:
+        yield from _content_args(content)
 
 
 def _connection_args(connection: Connection) -> Iterator[str]:
@@ -472,6 +474,65 @@ def _page_size_args(page_size: PageSize) -> Iterator[str]:
 
     yield "--page-size"
     yield f"{min_part}{max_part}"
+
+
+def _content_args(content: Content) -> Iterator[str]:
+    if (header := content.header) is not None:
+        yield from _header_match_args(header)
+    if (body := content.body) is not None:
+        yield from _body_match_args(body)
+
+
+def _header_match_args(
+    header: (
+        tuple[Literal[MatchType.STRING], HeaderSpec] | tuple[Literal[MatchType.REGEX], HeaderRegex]
+    )
+) -> Iterator[str]:
+    match header:
+        case (MatchType.STRING, HeaderSpec(header_name=name, header_value=value)):
+            yield "--header-strings"
+            yield f"{name}:{value}"
+
+        case (
+            MatchType.REGEX,
+            HeaderRegex(
+                regex=HeaderRegexSpec(header_name_pattern=name, header_value_pattern=value),
+                case_insensitive=case_insensitive,
+                invert=invert,
+            ),
+        ):
+            yield "--header-regexes"
+            flagged_value = f"(?i){value}" if case_insensitive else value
+            # Note: Header name is always case insensitive, so there's no need to apply the flag
+            yield f"{name}:{flagged_value}"
+            if invert:
+                yield "--header-regexes-invert"
+
+
+def _body_match_args(
+    body: tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex]
+) -> Iterator[str]:
+    match body:
+        case (MatchType.STRING, str(string)):
+            yield "--body-string"
+            yield string
+
+        case (
+            MatchType.REGEX,
+            BodyRegex(
+                regex=regex,
+                case_insensitive=case_insensitive,
+                multiline=multiline,
+                invert=invert,
+            ),
+        ):
+            yield "--body-regex"
+            # multiline == True translates to (?m), while multiline == False translates to (?s):
+            # m: match anchors ^ and $ on line beginnings/endings
+            # s: match "." also on newlines. The standard is to *not* match the dot on newlines.
+            yield f"(?{'i' if case_insensitive else ''}{'m' if multiline else 's'}){regex}"
+            if invert:
+                yield "--body-regex-invert"
 
 
 active_check_httpv2 = ActiveCheckConfig(

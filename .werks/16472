@@ -1,0 +1,13 @@
+Title: iLert notifications: ignore error when event is already closed
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1707321925
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+When attempting to resolve an incident which was already manually resolved, an
+error occured.
+
+This kind of error will now be ignored.

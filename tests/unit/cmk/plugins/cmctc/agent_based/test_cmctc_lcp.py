@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Service
 from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.cmctc.agent_based.cmctc_lcp import (
@@ -44,7 +42,6 @@ STRING_TABLE: list[StringTable] = [
 SECTION = parse_cmctc_lcp(STRING_TABLE)
 
 
-@pytest.mark.xfail
 def test_discover_cmctc_lcp_access() -> None:
     expected_discovery: list[Service] = [
         Service(item="5.1"),
@@ -52,7 +49,6 @@ def test_discover_cmctc_lcp_access() -> None:
     assert list(discover_cmctc_lcp_access(SECTION)) == expected_discovery
 
 
-@pytest.mark.xfail
 def test_discover_cmctc_lcp_status() -> None:
     expected_discovery: list[Service] = [
         Service(item="3.2"),
@@ -62,7 +58,6 @@ def test_discover_cmctc_lcp_status() -> None:
     assert list(discover_cmctc_lcp_status(SECTION)) == expected_discovery
 
 
-@pytest.mark.xfail
 def test_discover_cmctc_lcp_position() -> None:
     expected_discovery: list[Service] = [
         Service(item="3.3"),
@@ -72,7 +67,6 @@ def test_discover_cmctc_lcp_position() -> None:
     assert list(discover_cmctc_lcp_position(SECTION)) == expected_discovery
 
 
-@pytest.mark.xfail
 def test_discover_cmctc_lcp_current() -> None:
     expected_discovery: list[Service] = [
         Service(item="3.1"),

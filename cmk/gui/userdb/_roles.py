@@ -16,7 +16,7 @@ RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
 
 
-def load_roles() -> Roles:
+def load_roles_from_file() -> Roles:
     roles = store.load_from_mk_file(
         os.path.join(cmk.utils.paths.default_config_dir, "multisite.d/wato/roles.mk"),
         "roles",
@@ -31,6 +31,12 @@ def load_roles() -> Roles:
             if "." not in pname:
                 del role["permissions"][pname]
                 role["permissions"]["general." + pname] = pvalue
+
+    return roles
+
+
+def load_roles() -> Roles:
+    roles = load_roles_from_file()
 
     # Reflect the data in the roles dict kept in the config module needed
     # for instant changes in current page while saving modified roles.

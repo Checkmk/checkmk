@@ -2366,11 +2366,19 @@ class ListOf(ValueSpec[ListOfModel[T]]):
     def _show_reference_entry(self, varprefix: str, index: str, value: T) -> None:
         if self._style == ListOf.Style.REGULAR:
             html.open_table(style="display:none;")
+
             html.open_tbody(id_="%s_prototype" % varprefix, class_="vlof_prototype")
-
             self._show_entry(varprefix, index, value)
-
             html.close_tbody()
+
+            # In case there is a specific first element vs, render another prototype for the first
+            # element. This makes sure that adding an element works as expected also if the added
+            # element is the first one - i.e. when there is no element given before.
+            if self._first_element_vs:
+                html.open_tbody(id_="%s_first_elem_prototype" % varprefix, class_="vlof_prototype")
+                self._show_entry(varprefix, f"{index}_first_elem", value)
+                html.close_tbody()
+
             html.close_table()
 
         elif self._style == ListOf.Style.FLOATING:
@@ -2447,7 +2455,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         self._del_button(varprefix, index)
         html.close_td()
         html.open_td(class_="vlof_content")
-        if self._first_element_vs and index == "1":
+        if self._first_element_vs is not None and index in {"1", f"{self._magic}_first_elem"}:
             self._first_element_vs.render_input(varprefix + "_" + index, value)
         else:
             self._valuespec.render_input(varprefix + "_" + index, value)
@@ -7348,6 +7356,7 @@ class LabelGroup(ListOf):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        show_empty_group_by_default: bool = True,
         # ListOf
         add_label: str | None = None,
         # ValueSpec
@@ -7374,6 +7383,7 @@ class LabelGroup(ListOf):
             title=title,
             help=help,
         )
+        self._show_empty_group_by_default = show_empty_group_by_default
 
     @property
     def del_label(self) -> str:
@@ -7394,7 +7404,7 @@ class LabelGroup(ListOf):
         )
         js = (
             f"cmk.valuespecs.label_group_delete({json.dumps(vp)}, {json.dumps(nr)},"
-            f"{json.dumps(choices_or_label)});"
+            f"{json.dumps(choices_or_label)}, {json.dumps(self._show_empty_group_by_default)});"
         )
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
@@ -7422,6 +7432,7 @@ class LabelGroups(LabelGroup):
         help: ValueSpecHelp | None = None,
     ) -> None:
         super().__init__(
+            show_empty_group_by_default,
             add_label,
             title,
             help,

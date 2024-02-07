@@ -1860,6 +1860,21 @@ def _get_ssc_resolved_ip_family(
     return None
 
 
+def get_resource_macros() -> Mapping[str, str]:
+    macros = {}
+    try:
+        for line in (cmk.utils.paths.omd_root / "etc/nagios/resource.cfg").open():
+            line = line.strip()
+            if not line or line[0] == "#":
+                continue
+            varname, value = line.split("=", 1)
+            macros[varname] = value
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+    return macros
+
+
 def get_ssc_host_config(
     host_name: HostName, config_cache: ConfigCache, legacy_macros: Mapping[str, str]
 ) -> server_side_calls_api.HostConfig:

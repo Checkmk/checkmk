@@ -19,13 +19,13 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.graphing._perfometer import (
     _make_projection,
-    _parse_perfometers,
     _perfometer_possible,
     _PERFOMETER_PROJECTION_PARAMETERS,
     LegacyPerfometer,
     MetricometerRendererLegacyLinear,
     MetricometerRendererPerfometer,
     MetricRendererStack,
+    parse_perfometer,
 )
 from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
 
@@ -777,11 +777,11 @@ def test_perfometer_renderer_stack_same_values() -> None:
 def test_parse_perfometer(
     legacy_perfometer: LegacyPerfometer, expected_perfometer: PerfometerSpec
 ) -> None:
-    assert list(_parse_perfometers([legacy_perfometer])) == [expected_perfometer]
+    assert parse_perfometer(legacy_perfometer) == expected_perfometer
 
 
 @pytest.mark.parametrize(
-    "perfometer",
+    "legacy_perfometer",
     [
         pytest.param(
             ("dual", [("linear", ([], 100, "Label"))]),
@@ -860,6 +860,6 @@ def test_parse_perfometer(
         ),
     ],
 )
-def test_parse_dual_or_stacked_perfometer_errors(perfometer: tuple[str, object]) -> None:
+def test_parse_dual_or_stacked_perfometer_errors(legacy_perfometer: LegacyPerfometer) -> None:
     with pytest.raises(MKGeneralException):
-        list(_parse_perfometers([perfometer]))
+        parse_perfometer(legacy_perfometer)

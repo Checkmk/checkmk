@@ -5,12 +5,17 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, cast, Literal, NewType, NotRequired
+from typing import Any, cast, Literal, NotRequired
 
 from typing_extensions import TypedDict
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.user_connections import (
+    PrivateKeyPath,
+    PublicKeyPath,
+    validate_user_connections,
+)
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -157,14 +162,6 @@ class UserRoleMapping(TypedDict, total=False):
     admin: list[str]
     guest: list[str]
     agent_registration: list[str]
-
-
-PrivateKeyPath = NewType(
-    "PrivateKeyPath", str
-)  # this needs to be written to a .mk file, so a more complex type like Path will lead to problems
-PublicKeyPath = NewType(
-    "PublicKeyPath", str
-)  # this needs to be written to a .mk file, so a more complex type like Path will lead to problems
 
 
 class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
@@ -341,7 +338,9 @@ def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
         be used.
     """
     filename = os.path.join(_multisite_dir(), "user_connections.mk")
-    return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+    connections = store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+    validate_user_connections(connections)
+    return connections
 
 
 def save_connection_config(
@@ -354,6 +353,7 @@ def save_connection_config(
         the connections. During UI rendering, `active_config.user_connections` must
         be used.
     """
+    validate_user_connections(connections)
     if not base_dir:
         base_dir = _multisite_dir()
     store.mkdir(base_dir)

@@ -45,8 +45,6 @@ from ._connections import multisite_attributes as multisite_attributes
 from ._connections import NAV_HIDE_ICONS_TITLE as NAV_HIDE_ICONS_TITLE
 from ._connections import non_contact_attributes as non_contact_attributes
 from ._connections import OPEN_LDAP as OPEN_LDAP
-from ._connections import PrivateKeyPath as PrivateKeyPath
-from ._connections import PublicKeyPath as PublicKeyPath
 from ._connections import SAMLConnectionTypedDict as SAMLConnectionTypedDict
 from ._connections import save_connection_config as save_connection_config
 from ._connections import SHOW_MODE as SHOW_MODE

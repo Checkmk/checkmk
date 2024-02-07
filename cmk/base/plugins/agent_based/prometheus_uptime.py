@@ -12,13 +12,15 @@ from cmk.plugins.lib import uptime
 class Uptime(pydantic.BaseModel):
     """section: prometheus_uptime_v1"""
 
-    seconds: int
+    seconds: float
 
 
 def parse(string_table: type_defs.StringTable) -> uptime.Section:
     """
     >>> parse([['{"seconds": 2117}']])
-    Section(uptime_sec=2117, message=None)
+    Section(uptime_sec=2117.0, message=None)
+    >>> parse([['{"seconds": 5666.380061}']])
+    Section(uptime_sec=5666.380061, message=None)
     """
     seconds = Uptime.model_validate_json(string_table[0][0]).seconds
     return uptime.Section(uptime_sec=seconds, message=None)

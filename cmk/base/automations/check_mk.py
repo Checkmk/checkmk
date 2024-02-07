@@ -452,11 +452,14 @@ def active_check_preview_rows(
     def make_final_service_name(sn: ServiceName) -> ServiceName:
         return config.get_final_service_description(sn, translations)
 
+    host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+    resource_macros = config.get_resource_macros()
+    legacy_macros = {**host_macros, **resource_macros}
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        config.get_ssc_host_config(host_name, config_cache, {}),
+        config.get_ssc_host_config(host_name, config_cache, legacy_macros),
         host_attrs,
         config.http_proxies,
         make_final_service_name,
@@ -1312,12 +1315,16 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
+        host_attrs = config_cache.get_host_attributes(host_name)
+        host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
+        resource_macros = config.get_resource_macros()
+        legacy_macros = {**host_macros, **resource_macros}
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, {}),
-            config_cache.get_host_attributes(host_name),
+            config.get_ssc_host_config(host_name, config_cache, legacy_macros),
+            host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
@@ -2167,7 +2174,7 @@ class AutomationActiveCheck(Automation):
                 )
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = self._get_resouce_macros()
+        resource_macros = config.get_resource_macros()
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         legacy_macros = {**host_macros, **resource_macros}
         active_check_config = server_side_calls.ActiveCheck(
@@ -2199,20 +2206,6 @@ class AutomationActiveCheck(Automation):
             "Failed to compute check result",
         )
 
-    def _get_resouce_macros(self) -> Mapping[str, str]:
-        macros = {}
-        try:
-            for line in (omd_root / "etc/nagios/resource.cfg").open():
-                line = line.strip()
-                if not line or line[0] == "#":
-                    continue
-                varname, value = line.split("=", 1)
-                macros[varname] = value
-        except Exception:
-            if cmk.utils.debug.enabled():
-                raise
-        return macros
-
     # Simulate replacing some of the more important macros of host and service. We
     # cannot use dynamic macros, of course. Note: this will not work
     # without OMD, since we do not know the value of $USER1$ and $USER2$
@@ -2225,7 +2218,7 @@ class AutomationActiveCheck(Automation):
         )
         service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
-        macros.update(self._get_resouce_macros())
+        macros.update(config.get_resource_macros())
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 

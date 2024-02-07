@@ -1935,10 +1935,10 @@ def get_ssc_host_config(
     macros = {
         "$HOST_NAME$": host_name,
         "$HOST_ALIAS$": alias,
-        "$HOST_ADDRESS$": resolved_address,
+        "$HOST_ADDRESS$": resolved_address or "",
         "$HOST_IP_FAMILY$": ip_family_macro,
-        "$HOST_IPV4_ADDRESS$": resolved_ipv4_address,
-        "$HOST_IPV6_ADDRESS$": resolved_ipv6_address,
+        "$HOST_IPV4_ADDRESS$": resolved_ipv4_address or "",
+        "$HOST_IPV6_ADDRESS$": resolved_ipv6_address or "",
         "$HOST_IPV4_ADDRESSES$": " ".join(additional_addresses_ipv4),
         "$HOST_IPV6_ADDRESSES$": " ".join(additional_addresses_ipv6),
         **indexed_ipv4_macros,

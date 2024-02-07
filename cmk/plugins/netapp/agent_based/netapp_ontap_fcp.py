@@ -29,28 +29,28 @@ FcInterfacesCountersSection = Mapping[str, models.FcInterfaceTrafficCountersMode
 
 # <<<netapp_ontap_fc_ports:sep(0)>>>
 # {
-#     "connected_speed": 8,
-#     "description": "Fibre Channel Target Adapter 1c (QLogic 8324 (8362), rev. 2, 16G)",
-#     "enabled": true,
-#     "name": "1c",
-#     "node_name": "mcc_darz_a-01",
-#     "physical_protocol": "fibre_channel",
-#     "state": "online",
-#     "supported_protocols": ["fcp"],
-#     "wwnn": "50:0a:09:80:80:a2:f2:00",
-#     "wwpn": "50:0a:09:82:80:a2:f2:00",
-# }
-# {
 #     "connected_speed": 0,
-#     "description": "Fibre Channel Target Adapter 1d (QLogic 8324 (8362), rev. 2, 16G)",
+#     "description": "Fibre Channel Target Adapter 11a (QLogic CNA 8324 (8362), rev. 2, CNA_10G)",
 #     "enabled": true,
-#     "name": "1d",
+#     "name": "11a",
 #     "node_name": "mcc_darz_a-01",
-#     "physical_protocol": "fibre_channel",
+#     "physical_protocol": "ethernet",
 #     "state": "link_not_connected",
 #     "supported_protocols": ["fcp"],
 #     "wwnn": "50:0a:09:80:80:a2:f2:00",
-#     "wwpn": "50:0a:09:81:80:a2:f2:00",
+#     "wwpn": "50:0a:09:88:a0:a2:f2:00",
+# }
+# {
+#     "connected_speed": 0,
+#     "description": "Fibre Channel Target Adapter 11b (QLogic CNA 8324 (8362), rev. 2, CNA_10G)",
+#     "enabled": true,
+#     "name": "11b",
+#     "node_name": "mcc_darz_a-01",
+#     "physical_protocol": "ethernet",
+#     "state": "link_not_connected",
+#     "supported_protocols": ["fcp"],
+#     "wwnn": "50:0a:09:80:80:a2:f2:00",
+#     "wwpn": "50:0a:09:87:a0:a2:f2:00",
 # }
 # <<<netapp_ontap_fc_interfaces_counters:sep(0)>>>
 # {

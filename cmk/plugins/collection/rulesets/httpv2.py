@@ -14,6 +14,7 @@ from cmk.rulesets.v1.form_specs.basic import (
     SingleChoiceElement,
     Text,
     TimeSpan,
+    TimeUnit,
 )
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -76,6 +77,7 @@ def _valuespec_document() -> Dictionary:
                 # TODO How to use AGE correctly?!
                 parameter_form=TimeSpan(
                     title=Localizable("Age"),
+                    displayed_units=[TimeUnit.SECOND, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.DAY],
                     label=Localizable("Warn, if the age is older than"),
                     help_text=Localizable("Warn, if the age of the page is older than this"),
                     prefill=DefaultValue(3600 * 24),
@@ -550,9 +552,9 @@ def _valuespec_content() -> Dictionary:
 # individual settings (currently referred as "shared_settings")
 def _valuespec_settings(is_standard: bool = True) -> Dictionary:
     return Dictionary(
-        title=Localizable("Standard settings")
-        if is_standard
-        else Localizable("Individual settings"),
+        title=(
+            Localizable("Standard settings") if is_standard else Localizable("Individual settings")
+        ),
         elements={
             "connection": DictElement(parameter_form=_valuespec_connection()),
             "response_time": DictElement(

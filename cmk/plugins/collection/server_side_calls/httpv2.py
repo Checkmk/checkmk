@@ -117,9 +117,9 @@ class EnforceTlsVersion(BaseModel):
 
 class SendData(BaseModel):
     body_text: str
-    content_type: tuple[Literal[SendDataType.COMMON], ContentType] | tuple[
-        Literal[SendDataType.CUSTOM], str
-    ]
+    content_type: (
+        tuple[Literal[SendDataType.COMMON], ContentType] | tuple[Literal[SendDataType.CUSTOM], str]
+    )
 
 
 class HeaderSpec(BaseModel):
@@ -150,9 +150,11 @@ class Connection(BaseModel):
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: list[HeaderSpec] | None = None
-    auth: tuple[Literal[AuthMode.BASIC_AUTH], UserAuth] | tuple[
-        Literal[AuthMode.TOKEN_AUTH], TokenAuth
-    ] | None = None
+    auth: (
+        tuple[Literal[AuthMode.BASIC_AUTH], UserAuth]
+        | tuple[Literal[AuthMode.TOKEN_AUTH], TokenAuth]
+        | None
+    ) = None
 
 
 class ServerResponse(BaseModel):
@@ -166,7 +168,7 @@ class PageSize(BaseModel):
 
 class Document(BaseModel):
     document_body: DocumentBodyOption
-    max_age: int | None = None
+    max_age: float | None = None
     page_size: PageSize | None = None
 
 
@@ -184,21 +186,25 @@ class BodyRegex(BaseModel):
 
 
 class Content(BaseModel):
-    header: tuple[Literal[MatchType.STRING], HeaderSpec] | tuple[
-        Literal[MatchType.REGEX], HeaderRegex
-    ] | None = None
-    body: tuple[Literal[MatchType.STRING], str] | tuple[
-        Literal[MatchType.REGEX], BodyRegex
-    ] | None = None
+    header: (
+        tuple[Literal[MatchType.STRING], HeaderSpec]
+        | tuple[Literal[MatchType.REGEX], HeaderRegex]
+        | None
+    ) = None
+    body: (
+        tuple[Literal[MatchType.STRING], str] | tuple[Literal[MatchType.REGEX], BodyRegex] | None
+    ) = None
 
 
 class HttpSettings(BaseModel):
     connection: Connection | None = None
     response_time: FloatLevels | None = None
     server_response: ServerResponse | None = None
-    cert: tuple[Literal[Validation.NO_VALIDATION], None] | tuple[
-        Literal[Validation.VALIDATE], IntLevels
-    ] | None = None
+    cert: (
+        tuple[Literal[Validation.NO_VALIDATION], None]
+        | tuple[Literal[Validation.VALIDATE], IntLevels]
+        | None
+    ) = None
     document: Document | None = None
     content: Content | None = None
 

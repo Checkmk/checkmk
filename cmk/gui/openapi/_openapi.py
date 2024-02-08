@@ -97,7 +97,7 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
 
 def _add_cookie_auth(check_dict):
-    """Add the cookie authentication schema to the SPEC.
+    """Add the cookie authentication schema to the spec.
 
     We do this here, because every site has a different cookie name and such can't be predicted
     before this code here actually runs.

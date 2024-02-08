@@ -311,7 +311,6 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
-from typing import Literal
 
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
@@ -323,7 +322,7 @@ from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import to_openapi
 
-SECURITY_SCHEMES = {
+_SECURITY_SCHEMES = {
     "headerAuth": {
         "type": "http",
         "scheme": "bearer",
@@ -340,10 +339,6 @@ SECURITY_SCHEMES = {
         "If authentication succeeds, `cookieAuth` will be skipped.",
     },
 }
-
-DEFAULT_HEADERS = [
-    ("Accept", "Media type(s) that is/are acceptable for the response.", "application/json"),
-]
 
 
 class OpenAPIInfoDict(TypedDict, total=True):
@@ -370,46 +365,11 @@ ReDocSpec = TypedDict(
     total=True,
 )
 
-OPTIONS: ReDocSpec = {
-    "info": {
-        "description": apispec.utils.dedent(__doc__)
-        .strip()
-        .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
-        "license": {
-            "name": "GNU General Public License version 2",
-            "url": "https://checkmk.com/legal/gpl",
-        },
-        "contact": {
-            "name": "Contact the Checkmk Team",
-            "url": "https://checkmk.com/contact",
-            "email": "feedback@checkmk.com",
-        },
-    },
-    "externalDocs": {
-        "description": "The official Checkmk user guide",
-        "url": "https://docs.checkmk.com/",
-    },
-    "x-logo": {
-        "url": "https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png",
-        "altText": "Checkmk",
-    },
-    "x-tagGroups": [
-        {"name": "Monitoring", "tags": []},
-        {"name": "Setup", "tags": []},
-        {"name": "Checkmk Internal", "tags": []},
-    ],
-    "x-ignoredHeaderParameters": [
-        "User-Agent",
-        "X-Test-Header",
-    ],
-    "security": [{sec_scheme_name: []} for sec_scheme_name in SECURITY_SCHEMES],
-}
-
 __version__ = "1.0"
 
 
-def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
-    return apispec.APISpec(
+def make_spec() -> apispec.APISpec:
+    spec = apispec.APISpec(
         "Checkmk REST-API",
         __version__,
         "3.0.2",
@@ -418,28 +378,63 @@ def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
             apispec_oneofschema.MarshmallowPlugin(),
             CheckmkMarshmallowPlugin(),
         ],
-        **options,
+        **_redoc_spec(),
     )
 
+    for sec_scheme_name, sec_scheme_spec in _SECURITY_SCHEMES.items():
+        spec.components.security_scheme(sec_scheme_name, sec_scheme_spec)
 
-SPEC = make_spec(options=OPTIONS)
-for sec_scheme_name, sec_scheme_spec in SECURITY_SCHEMES.items():
-    SPEC.components.security_scheme(sec_scheme_name, sec_scheme_spec)
+    # All the supported response headers by the spec.
 
-# All the supported response headers by the spec.
+    # response_headers = {
+    #     'Allow',
+    #     'Cache-Control',
+    #     'Last-Modified',
+    #     'Warning',
+    #     'Content-Type',
+    # }
+    for header_name, field in ACCEPT_HEADER.items():
+        spec.components.parameter(
+            header_name,
+            "header",
+            dict(to_openapi([{header_name: field}], "header")[0]),
+        )
 
-# response_headers = {
-#     'Allow',
-#     'Cache-Control',
-#     'Last-Modified',
-#     'Warning',
-#     'Content-Type',
-# }
-for header_name, field in ACCEPT_HEADER.items():
-    SPEC.components.parameter(
-        header_name,
-        "header",
-        to_openapi([{header_name: field}], "header")[0],
-    )
+    return spec
 
-ErrorType = Literal["ignore", "raise"]
+
+def _redoc_spec() -> ReDocSpec:
+    return {
+        "info": {
+            "description": apispec.utils.dedent(__doc__)
+            .strip()
+            .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
+            "license": {
+                "name": "GNU General Public License version 2",
+                "url": "https://checkmk.com/legal/gpl",
+            },
+            "contact": {
+                "name": "Contact the Checkmk Team",
+                "url": "https://checkmk.com/contact",
+                "email": "feedback@checkmk.com",
+            },
+        },
+        "externalDocs": {
+            "description": "The official Checkmk user guide",
+            "url": "https://docs.checkmk.com/",
+        },
+        "x-logo": {
+            "url": "https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png",
+            "altText": "Checkmk",
+        },
+        "x-tagGroups": [
+            {"name": "Monitoring", "tags": []},
+            {"name": "Setup", "tags": []},
+            {"name": "Checkmk Internal", "tags": []},
+        ],
+        "x-ignoredHeaderParameters": [
+            "User-Agent",
+            "X-Test-Header",
+        ],
+        "security": [{sec_scheme_name: []} for sec_scheme_name in _SECURITY_SCHEMES],
+    }

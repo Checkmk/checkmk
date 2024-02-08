@@ -600,7 +600,7 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
     We don't want to build all this stuff at the module-level as it is only needed when
-    re-generating the SPEC file.
+    re-generating the spec file.
 
     >>> class Endpoint:  # doctest: +SKIP
     ...     path = 'foo'

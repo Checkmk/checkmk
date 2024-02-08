@@ -14,16 +14,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # define toolchain version explicitly
 # 'stable' is allowed only for main(master) branch
-DEFAULT_TOOLCHAIN_VERSION="1.75"
-# Some packages require specific toolchain versions.
-# These versions will be installed in addition to the default toolchain version.
-# List the versions separated by space, e.g. "1 2 3", and add a reason below.
-#
-# Reasons for added toolchains:
-# - 1.72: mk-sql is currently known to properly work with this version
-ADDITIONAL_TOOLCHAIN_VERSIONS="1.72"
+TOOLCHAIN_VERSION="1.72"
 
-DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
+DEFAULT_TOOLCHAIN="${TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 DIR_NAME="rust"
 TARGET_DIR="${TARGET_DIR:-/opt}"
 
@@ -33,7 +26,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="8-$DEFAULT_TOOLCHAIN_VERSION"
+BUILD_ID="8-$TOOLCHAIN_VERSION"
 
 build_package() {
     WORK_DIR=$(mktemp -d)
@@ -56,20 +49,12 @@ build_package() {
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
     "${CARGO_HOME}"/bin/rustup update
     "${CARGO_HOME}"/bin/rustup target add x86_64-unknown-linux-musl
-    "${CARGO_HOME}"/bin/rustup toolchain install $DEFAULT_TOOLCHAIN_VERSION $ADDITIONAL_TOOLCHAIN_VERSIONS
-    "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION
+    "${CARGO_HOME}"/bin/rustup default $TOOLCHAIN_VERSION
 
     # saves space
-    function remove_doc_dirs() {
-        rm -rf "$RUSTUP_HOME/toolchains/$1/share/doc/"
-        rm -rf "$RUSTUP_HOME/toolchains/$1/share/man/"
-        rm -rf "$RUSTUP_HOME/toolchains/$1/share/zsh/"
-    }
-
-    remove_doc_dirs "$DEFAULT_TOOLCHAIN"
-    for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-        remove_doc_dirs "$toolchain_version"
-    done
+    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
+    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/man/"
+    rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/zsh/"
 }
 
 if [ "$1" != "link-only" ]; then
@@ -77,4 +62,4 @@ if [ "$1" != "link-only" ]; then
 fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
 
-test_package "rustc --version" "^rustc $DEFAULT_TOOLCHAIN_VERSION\."
+test_package "rustc --version" "^rustc $TOOLCHAIN_VERSION\."

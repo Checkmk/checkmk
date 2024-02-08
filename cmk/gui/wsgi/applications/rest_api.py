@@ -37,7 +37,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.restful_objects.specification import SPEC
+from cmk.gui.openapi.restful_objects.specification import make_spec
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,
@@ -251,7 +251,7 @@ def serve_spec(
     content_type: str,
     serializer: Callable[[dict[str, Any]], str],
 ) -> Response:
-    data = generate_spec(SPEC, target=target)
+    data = generate_spec(make_spec(), target=target)
     data.setdefault("servers", [])
     add_once(
         data["servers"],
@@ -362,10 +362,6 @@ class CheckmkRESTAPI(AbstractWSGIApp):
 
         endpoint: Endpoint
         for endpoint in endpoint_registry:
-            if self.debug:
-                # This helps us to make sure we can always generate a valid OpenAPI yaml file.
-                _ = endpoint.to_operation_dict(SPEC)
-
             self.add_rule(
                 [endpoint.default_path],
                 EndpointAdapter(endpoint),

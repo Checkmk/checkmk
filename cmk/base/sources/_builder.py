@@ -20,17 +20,17 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
 
-from cmk.fetchers import FetcherType, SNMPFetcher
-from cmk.fetchers.cache import SectionStore
+from cmk.fetchers import SNMPFetcher
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import (
     AgentRawDataSectionElem,
     NO_SELECTION,
     Parser,
     SectionNameCollection,
+    SectionStore,
     SNMPParser,
 )
 

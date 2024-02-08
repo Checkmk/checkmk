@@ -170,7 +170,6 @@ class Float(FormSpec[float]):
         help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         unit: Unit of the input (only for display)
-        display_precision: How many decimal places to display
         prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
@@ -179,7 +178,6 @@ class Float(FormSpec[float]):
 
     label: Localizable | None = None
     unit: Localizable | None = None
-    display_precision: int | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
 
@@ -276,7 +274,6 @@ class Percentage(FormSpec[float]):
         title: Human readable title
         help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
-        display_precision: How many decimal places to display
         prefill: Value to pre-populate the form field with.
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
@@ -284,7 +281,6 @@ class Percentage(FormSpec[float]):
     """
 
     label: Localizable | None = None
-    display_precision: int | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
 

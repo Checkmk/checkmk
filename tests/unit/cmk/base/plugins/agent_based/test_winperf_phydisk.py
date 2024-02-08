@@ -319,3 +319,24 @@ def test_cluster_check_winperf_phydisk(item: str) -> None:
         },
         winperf_phydisk.cluster_check_winperf_phydisk,
     )
+
+
+def test_denom_ok():
+    ok = winperf_phydisk._Denom(2, False)
+    assert ok.calc_smart(1.0) == 0.5
+
+
+def test_denom_null():
+    null = winperf_phydisk._Denom(0, False)
+    assert null.calc_smart(0.0) == 0.0
+    with pytest.raises(IgnoreResultsError):
+        null.calc_smart(1.0)
+
+
+def test_denom_bad():
+    none = winperf_phydisk._Denom(None, False)
+    with pytest.raises(IgnoreResultsError):
+        none.calc_smart(0.0)
+    exc = winperf_phydisk._Denom(1, True)
+    with pytest.raises(IgnoreResultsError):
+        exc.calc_smart(0.0)

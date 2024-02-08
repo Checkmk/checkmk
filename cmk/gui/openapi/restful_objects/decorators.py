@@ -53,7 +53,6 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_VERSION,
 )
 from cmk.gui.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
-from cmk.gui.openapi.restful_objects.specification import SPEC
 from cmk.gui.openapi.restful_objects.type_defs import (
     ContentObject,
     EndpointTarget,
@@ -1040,7 +1039,9 @@ class Endpoint:
             headers=headers,
         )
 
-    def operation_dicts(self) -> Generator[tuple[str, OperationObject], None, None]:
+    def operation_dicts(
+        self, spec: apispec.APISpec
+    ) -> Generator[tuple[str, OperationObject], None, None]:
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.
@@ -1049,13 +1050,14 @@ class Endpoint:
         if self.deprecated_urls is not None:
             for url, werk_id in self.deprecated_urls.items():
                 deprecate_self |= url == self.path
-                yield url, self.to_operation_dict(werk_id)
+                yield url, self.to_operation_dict(spec, werk_id)
 
         if not deprecate_self:
-            yield self.path, self.to_operation_dict()
+            yield self.path, self.to_operation_dict(spec)
 
     def to_operation_dict(  # pylint: disable=too-many-branches
         self,
+        spec: apispec.APISpec,
         werk_id: int | None = None,
     ) -> OperationObject:
         assert self.func is not None, "This object must be used in a decorator environment."
@@ -1173,7 +1175,7 @@ class Endpoint:
         if docstring_desc:
             tag_obj["description"] = docstring_desc
 
-        _add_tag(tag_obj, tag_group=self.tag_group)
+        _add_tag(spec, tag_obj, tag_group=self.tag_group)
 
         operation_spec: OperationSpecType = {
             "tags": [docstring_name],
@@ -1388,8 +1390,8 @@ def _verify_parameters(  # type: ignore[no-untyped-def]
         )
 
 
-def _assign_to_tag_group(tag_group: str, name: str) -> None:
-    for group in SPEC.options.setdefault("x-tagGroups", []):
+def _assign_to_tag_group(spec: apispec.APISpec, tag_group: str, name: str) -> None:
+    for group in spec.options.setdefault("x-tagGroups", []):
         if group["name"] == tag_group:
             group["tags"].append(name)
             break
@@ -1397,14 +1399,14 @@ def _assign_to_tag_group(tag_group: str, name: str) -> None:
         raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
 
 
-def _add_tag(tag: OpenAPITag, tag_group: str | None = None) -> None:
+def _add_tag(spec: apispec.APISpec, tag: OpenAPITag, tag_group: str | None = None) -> None:
     name = tag["name"]
-    if name in [t["name"] for t in SPEC._tags]:
+    if name in [t["name"] for t in spec._tags]:
         return
 
-    SPEC.tag(tag)
+    spec.tag(dict(tag))
     if tag_group is not None:
-        _assign_to_tag_group(tag_group, name)
+        _assign_to_tag_group(spec, tag_group, name)
 
 
 def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]

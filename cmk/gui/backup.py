@@ -407,7 +407,7 @@ class Job(MKBackupJob):
             dayspec = "%d * *" % period[1]
 
         else:
-            assert_never()
+            assert_never(period)
 
         # times: list of two element tuples (hours, minutes)
         timespecs = []

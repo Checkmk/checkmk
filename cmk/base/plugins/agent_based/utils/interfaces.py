@@ -700,7 +700,7 @@ def _scaled_bandwidth_thresholds(
             return scale(thresholds, 1 / unit)
         case "perc":
             return scale(thresholds, speed / 100) if speed else None
-    assert_never()
+    assert_never(thresholds_type)
 
 
 def _finalize_bandwidth_levels(

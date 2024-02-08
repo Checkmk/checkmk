@@ -56,6 +56,7 @@ from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKT
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import Labels
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
@@ -136,7 +137,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_section_plugin_from_legacy,
 )
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
 

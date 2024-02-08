@@ -13,6 +13,7 @@ from contextlib import suppress
 from typing import Any
 
 from cmk.utils.check_utils import maincheckify, unwrap_parameters
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.parameters import Parameters
 
@@ -21,8 +22,6 @@ from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v1.type_defs import CheckResult
-
-from .utils_legacy import LegacyCheckDefinition
 
 
 def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Callable:

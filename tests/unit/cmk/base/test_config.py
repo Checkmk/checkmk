@@ -22,6 +22,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.sectionname import SectionName
@@ -41,7 +42,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
 

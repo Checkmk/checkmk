@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
@@ -59,7 +60,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.view_utils import (
     CellSpec,
     CSSClass,
-    CSVExportError,
     format_plugin_output,
     get_labels,
     render_labels,
@@ -5068,7 +5068,7 @@ class PainterHostLabels(Painter):
         return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        raise CSVExportError()
+        return json.dumps(self._compute_data(row, cell))
 
     def export_for_json(self, row: Row, cell: Cell) -> Labels:
         return self._compute_data(row, cell)
@@ -5108,7 +5108,7 @@ class PainterServiceLabels(Painter):
         return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        raise CSVExportError()
+        return json.dumps(self._compute_data(row, cell))
 
     def export_for_json(self, row: Row, cell: Cell) -> Labels:
         return self._compute_data(row, cell)

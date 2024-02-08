@@ -1226,6 +1226,7 @@ class Endpoint:
             }
 
         operation_spec["x-codeSamples"] = code_samples(
+            spec,
             self,
             header_params=header_params,
             path_params=path_params,

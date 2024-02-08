@@ -162,7 +162,7 @@ class CommandReschedule(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML("<br><br>" + _("Spreading: %s minutes") % request.var("_resched_spread"))
+        return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")

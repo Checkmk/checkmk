@@ -42,7 +42,7 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
         if target in endpoint.blacklist_in:
             continue
 
-        for path, operation_dict in endpoint.operation_dicts():
+        for path, operation_dict in endpoint.operation_dicts(SPEC):
             ident = endpoint.method, path
             if ident in seen_paths:
                 raise ValueError(

@@ -6,24 +6,24 @@
 import copy
 from typing import Any
 
+from apispec import APISpec
 from openapi_spec_validator import validate_spec
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.openapi.restful_objects import SPEC
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
-from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 
 # TODO
-#   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
+#   Eventually move all of spec stuff in here, so we have nothing statically defined.
 #   This removes variation from the code.
 
 
 Ident = tuple[str, str]
 
 
-def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
+def generate_data(spec: APISpec, target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
@@ -34,15 +34,13 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
     def sort_key(e: Endpoint) -> tuple[str | int, ...]:
         return e.sort, module_name(e.func), methods.index(e.method), e.path
 
-    # Depends on another commit. This Any will go away.
-    seen_paths = dict[Ident, Any]()
-
+    seen_paths: dict[Ident, OperationObject] = {}
     ident: Ident
     for endpoint in sorted(endpoint_registry, key=sort_key):
         if target in endpoint.blacklist_in:
             continue
 
-        for path, operation_dict in endpoint.operation_dicts(SPEC):
+        for path, operation_dict in endpoint.operation_dicts(spec):
             ident = endpoint.method, path
             if ident in seen_paths:
                 raise ValueError(
@@ -51,25 +49,22 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
                     f"The previous one: {seen_paths[ident]}\n\n"
                 )
             seen_paths[ident] = operation_dict
-            SPEC.path(
-                path=path,
-                operations=operation_dict,
-            )
+            spec.path(path=path, operations={str(k): v for k, v in operation_dict.items()})
 
     del seen_paths
 
-    generated_spec = SPEC.to_dict()
-    #   return generated_spec
+    generated_spec = spec.to_dict()
     _add_cookie_auth(generated_spec)
     if not validate:
         return generated_spec
 
-    # NOTE: deepcopy the dict because validate_spec modifies the SPEC in-place, leaving some
+    # NOTE: deepcopy the dict because validate_spec modifies the spec in-place, leaving some
     # internal properties lying around, which leads to an invalid spec-file.
+    # TODO: Review if this is still necessary. At least the type of validate_spec suggests that it
+    # does not modify the spec.
     check_dict = copy.deepcopy(generated_spec)
-    validate_spec(check_dict)
-    # NOTE: We want to modify the thing afterwards. The SPEC object would be a global reference
-    # which would make modifying the spec very awkward, so we deepcopy again.
+    # TODO: Need to investigate later what is going on here after cleaning up a bit further
+    validate_spec(check_dict)  # type: ignore[arg-type]
     return generated_spec
 
 

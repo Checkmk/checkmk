@@ -251,7 +251,7 @@ def serve_spec(
     content_type: str,
     serializer: Callable[[dict[str, Any]], str],
 ) -> Response:
-    data = generate_data(target=target)
+    data = generate_data(SPEC, target=target)
     data.setdefault("servers", [])
     add_once(
         data["servers"],

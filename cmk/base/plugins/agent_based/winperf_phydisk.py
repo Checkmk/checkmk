@@ -3,20 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final
+from typing import Any, Final, Mapping, MutableMapping, Sequence
 
 from cmk.plugins.lib import diskstat
 
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    GetRateError,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -250,47 +243,47 @@ def discover_winperf_phydisk(
     )
 
 
+@dataclass(frozen=True)
+class _Params:
+    value_store: MutableMapping[str, Any]
+    value_store_suffix: str
+    timestamp: float
+    frequency: float | None
+
+
+_DenomType = tuple[float | None, bool]
+
+
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-    rates_and_errors = {
-        metric: _compute_rate_for_metric(metric, value, disk, value_store, value_store_suffix)
-        for metric, value in disk.items()
-        if _is_work_metric(metric)
-    }
+    disk_with_rates = {}
+    params: Final = _Params(
+        value_store=value_store,
+        value_store_suffix=value_store_suffix,
+        timestamp=disk["timestamp"],
+        frequency=disk.get("frequency"),
+    )
+    raise_ignore_results = False
+    metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
+    for metric, value in metric_values:
+        denom, exception_raised = _calc_denom(metric, disk, params)
+        if denom is None:
+            continue
+        if exception_raised:
+            raise_ignore_results = True
 
-    if any(raised for _rate, raised in rates_and_errors.values()):
+        try:
+            disk_with_rates[metric] = _get_rate(metric, params, value) / denom
+        except IgnoreResultsError:
+            raise_ignore_results = True
+
+    if raise_ignore_results:
         raise IgnoreResultsError("Initializing counters")
 
-    return {
-        metric: rate for metric, (rate, _raised) in rates_and_errors.items() if rate is not None
-    }
-
-
-def _compute_rate_for_metric(
-    metric: str,
-    value: float,
-    disk: diskstat.Disk,
-    value_store: MutableMapping[str, Any],
-    value_store_suffix: str,
-) -> tuple[float | None, bool]:
-    scaling = _scaling(metric, disk.get("frequency"))
-    metric_key, value_x = _get_x_metric(metric, disk)
-    if scaling is None or value_x is None:
-        return None, False
-
-    try:
-        return (
-            scaling
-            * get_rate(
-                value_store, metric_key + value_store_suffix, value_x, value, raise_overflow=True
-            ),
-            False,
-        )
-    except GetRateError:
-        return None, True
+    return disk_with_rates
 
 
 def _is_work_metric(metric: str) -> bool:
@@ -306,20 +299,41 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _scaling(metric: str, frequency: float | None) -> float | None:
+def _calc_denom(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
-        return 1e-7
+        return 10_000_000.0, False
     if not metric.endswith(MetricSuffix.WAIT):
-        return 1.0
-    return None if frequency is None else 1.0 / frequency
+        return 1.0, False
+
+    return _calc_denom_for_wait(metric, disk, params)
 
 
-def _get_x_metric(metric: str, disk: diskstat.Disk) -> tuple[str, float | None]:
-    if metric.endswith(MetricSuffix.WAIT):
-        y_metric = _as_denom_metric(metric)
-        return f"{metric}_by_{y_metric}", disk.get(y_metric)
+def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
+    if params.frequency is None:
+        return None, False
+    denom_value = disk.get(_as_denom_metric(metric))
+    if denom_value is None:
+        return None, False
 
-    return metric, disk["timestamp"]
+    exception_raised = False
+    # using 1 for the base if the counter didn't increase. This makes little to no sense
+    try:
+        # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
+        denom_value = _get_rate(_as_denom_metric(metric), params, denom_value) or 1
+    except IgnoreResultsError:
+        exception_raised = True
+
+    return denom_value * params.frequency, exception_raised
+
+
+def _get_rate(metric: str, params: _Params, value: float) -> float:
+    return get_rate(
+        params.value_store,
+        metric + params.value_store_suffix,
+        params.timestamp,
+        value,
+        raise_overflow=True,
+    )
 
 
 def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:

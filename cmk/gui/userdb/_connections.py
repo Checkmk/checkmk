@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, cast, Literal, NotRequired
+from typing import Any, cast, Literal, NewType, NotRequired
 
 from typing_extensions import TypedDict
 
@@ -150,7 +150,50 @@ class LDAPConnectionTypedDict(UserConnectionTypedDictBase):
     type: Literal["ldap"]
 
 
-UserConnectionSpec = LDAPConnectionTypedDict | dict[str, Any]
+class UserRoleMapping(TypedDict, total=False):
+    user: list[str]
+    admin: list[str]
+    guest: list[str]
+    agent_registration: list[str]
+
+
+PrivateKeyPath = NewType(
+    "PrivateKeyPath", str
+)  # this needs to be written to a .mk file, so a more complex type like Path will lead to problems
+PublicKeyPath = NewType(
+    "PublicKeyPath", str
+)  # this needs to be written to a .mk file, so a more complex type like Path will lead to problems
+
+
+class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
+    name: str
+    description: str
+    comment: str
+    docu_url: str
+    idp_metadata: Any
+    checkmk_entity_id: str
+    checkmk_metadata_endpoint: str
+    checkmk_assertion_consumer_service_endpoint: str
+    checkmk_server_url: str
+    connection_timeout: tuple[int, int]
+    signature_certificate: Literal["builtin"] | tuple[
+        Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]
+    ]
+    encryption_certificate: NotRequired[
+        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+    ]
+    user_id_attribute_name: str
+    user_alias_attribute_name: str
+    email_attribute_name: str
+    contactgroups_mapping: str
+    role_membership_mapping: Literal[False] | tuple[Literal[True], tuple[str, UserRoleMapping]]
+    type: Literal["saml2"]
+    version: Literal["1.0.0"]
+    owned_by_site: str
+    customer: NotRequired[str]
+
+
+UserConnectionSpec = LDAPConnectionTypedDict | SAMLConnectionTypedDict
 
 
 @request_memoize(maxsize=None)
@@ -230,6 +273,22 @@ def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
         ldap_id: ldap_connection
         for ldap_id, ldap_connection in get_ldap_connections().items()
         if not ldap_connection["disabled"]
+    }
+
+
+def get_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+    saml_connections = cast(
+        dict[str, SAMLConnectionTypedDict],
+        {c["id"]: c for c in active_config.user_connections if c["type"] == "saml2"},
+    )
+    return saml_connections
+
+
+def get_active_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+    return {
+        saml_id: saml_connection
+        for saml_id, saml_connection in get_saml_connections().items()
+        if not saml_connection["disabled"]
     }
 
 

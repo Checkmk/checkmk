@@ -36,7 +36,7 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, u
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
-from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
@@ -310,7 +310,9 @@ class LoginPage(Page):
 
             saml2_user_error: str | None = None
             if saml_connections := [
-                c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+                c
+                for c in get_active_saml_connections().values()
+                if c["owned_by_site"] == omd_site()
             ]:
                 saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 

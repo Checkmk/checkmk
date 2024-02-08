@@ -24,7 +24,7 @@ from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
-from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
@@ -197,7 +197,7 @@ def page_login() -> None:
 
         saml2_user_error: str | None = None
         if saml_connections := [
-            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+            c for c in get_active_saml_connections().values() if c["owned_by_site"] == omd_site()
         ]:
             saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 

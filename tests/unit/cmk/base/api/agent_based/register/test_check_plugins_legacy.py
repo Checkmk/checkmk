@@ -7,13 +7,13 @@ import inspect
 
 from pytest import MonkeyPatch
 
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 from cmk.agent_based.v1 import Metric, Result, Service, State
 

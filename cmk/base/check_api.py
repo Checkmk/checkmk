@@ -27,6 +27,9 @@ import cmk.utils.debug as _debug
 # check context.
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+
+# pylint: disable=unused-import
+from cmk.utils.legacy_check_api import LegacyCheckDefinition as LegacyCheckDefinition
 from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
@@ -35,11 +38,6 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-
-# pylint: disable=unused-import
-from cmk.base.api.agent_based.register.utils_legacy import (
-    LegacyCheckDefinition as LegacyCheckDefinition,
-)
 from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
 from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 

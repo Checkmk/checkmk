@@ -103,7 +103,7 @@ metric_info["helper_usage_cmk"] = {
 metric_info["helper_usage_fetcher"] = {
     "title": _l("Fetcher helper usage"),
     "unit": "%",
-    "color": "15/a",
+    "color": "21/b",
 }
 
 metric_info["helper_usage_checker"] = {
@@ -127,7 +127,7 @@ metric_info["average_latency_cmk"] = {
 metric_info["average_latency_fetcher"] = {
     "title": _l("Checkmk fetcher latency"),
     "unit": "s",
-    "color": "15/a",
+    "color": "21/b",
 }
 
 metric_info["average_latency_generic"] = {
@@ -474,42 +474,21 @@ graph_info["helper_usage_cmk"] = {
     "range": (0, 100),
 }
 
-graph_info["helper_usage_fetcher"] = {
-    "title": _l("Fetcher helper usage"),
+graph_info["helper_usage"] = {
+    "title": _l("Helper usage"),
     "metrics": [
-        ("helper_usage_fetcher", "area"),
+        ("helper_usage_fetcher", "line"),
+        ("helper_usage_checker", "line"),
+        ("helper_usage_generic", "line"),
     ],
     "range": (0, 100),
 }
 
-graph_info["helper_usage_checker"] = {
-    "title": _l("Checker helper usage"),
-    "metrics": [
-        ("helper_usage_checker", "area"),
-    ],
-    "range": (0, 100),
-}
-
-graph_info["helper_usage_generic"] = {
-    "title": _l("Active check helper usage"),
-    "metrics": [
-        ("helper_usage_generic", "area"),
-    ],
-    "range": (0, 100),
-}
-
-graph_info["average_check_latency"] = {
-    "title": _l("Average check latency"),
-    "metrics": [
-        ("average_latency_cmk", "line"),
-        ("average_latency_generic", "line"),
-    ],
-}
-
-graph_info["average_fetcher_latency"] = {
-    "title": _l("Average check latency"),
+graph_info["average_helper_latency"] = {
+    "title": _l("Average helper latency"),
     "metrics": [
         ("average_latency_fetcher", "line"),
+        ("average_latency_cmk", "line"),
         ("average_latency_generic", "line"),
     ],
 }

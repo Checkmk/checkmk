@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue, Migrate
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -91,7 +91,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                 required=True,
             ),
         },
-        migrate=Migrate(update=_migrate),
+        migrate=_migrate,
     )
 
 

@@ -542,7 +542,7 @@ def _convert_to_legacy_valuespec(
     if to_convert.migrate is not None:
         return legacy_valuespecs.Migrate(
             valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-            migrate=to_convert.migrate.update,
+            migrate=to_convert.migrate,
         )
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
@@ -564,11 +564,6 @@ def _convert_to_legacy_integer(
             converted_kwargs["default_value"] = to_convert.prefill.value
         case ruleset_api_v1.form_specs.basic.InputHint():
             pass  # not implemented for legacy VS
-
-    if to_convert.custom_validate is not None:
-        converted_kwargs["validate"] = _convert_to_legacy_validation(
-            to_convert.custom_validate, localizer
-        )
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(

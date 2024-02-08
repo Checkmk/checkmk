@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import InputHint, Migrate
+from cmk.rulesets.v1.form_specs import InputHint
 from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer, Text
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
@@ -132,7 +132,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                 )
             ),
         },
-        migrate=Migrate(update=_migrate_levels),
+        migrate=_migrate_levels,
     )
 
 

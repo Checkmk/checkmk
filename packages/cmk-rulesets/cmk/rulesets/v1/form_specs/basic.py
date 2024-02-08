@@ -6,7 +6,7 @@
 import ast
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Callable, ClassVar, Literal, Sequence, TypeVar
+from typing import ClassVar, Literal, Sequence, TypeVar
 
 from .._localize import Localizable
 from ._base import DefaultValue, FormSpec, InputHint, Prefill
@@ -69,23 +69,14 @@ class DataSize(FormSpec[int]):
     """Specifies an input field for data storage capacity
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         displayed_units: Units that can be selected in the UI
         prefill: Value in bytes to pre-populate the form field with.
-        migrate: Specify if/how the raw input value in bytes should be changed when loaded into
-                   the form/saved from the form
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     label: Localizable | None = None
     displayed_units: Sequence[BinaryUnit] | None = None
     prefill: Prefill[int] = InputHint(0)
-
-    custom_validate: Callable[[int], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -93,16 +84,10 @@ class FileUpload(FormSpec[tuple[str, str, bytes]]):
     """Specifies a file upload form.
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         extensions: The extensions of the files to choose from. If set to `None`,
             all extensions are selectable.
         mime_types: The allowed mime types of uploaded files. If set to `None`,
             all mime types will be uploadable.
-        custom_validate: Custom validation function.
-            Will be executed in addition to any builtin validation logic.
-            Needs to raise a ValidationError in case validation fails.
-            The return value of the function will not be used.
 
     Consumer model:
         **Type**: ``tuple[str, str, bytes]``
@@ -124,8 +109,6 @@ class FileUpload(FormSpec[tuple[str, str, bytes]]):
     extensions: tuple[str, ...] | None = None
     mime_types: tuple[str, ...] | None = None
 
-    custom_validate: Callable[[tuple[str, str, bytes]], object] | None = None
-
 
 _FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
 
@@ -138,11 +121,8 @@ class FixedValue(FormSpec[_FixedValueT]):
     Can be used in a CascadingSingleChoice and Dictionary to represent a fixed value option.
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         value: Atomic value produced by the form spec
         label: Text displayed underneath the title
-        migrate: Transformation of the stored configuration
     """
 
     value: _FixedValueT
@@ -166,22 +146,15 @@ class Float(FormSpec[float]):
     """Specifies an input field for floating point numbers
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         unit: Unit of the input (only for display)
         prefill: Value to pre-populate the form field with.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     label: Localizable | None = None
     unit: Localizable | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
-
-    custom_validate: Callable[[float], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -206,14 +179,9 @@ class Integer(FormSpec[int]):
     """Specifies an input field for whole numbers
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         unit: Unit of the input (only for display)
         prefill: Value to pre-populate the form field with.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
 
     Consumer model:
         **Type**: ``int``
@@ -225,26 +193,17 @@ class Integer(FormSpec[int]):
     unit: Localizable | None = None
     prefill: Prefill[int] = InputHint(0)
 
-    custom_validate: Callable[[int], object] | None = None
-
 
 @dataclass(frozen=True, kw_only=True)
 class MultilineText(FormSpec[str]):
     """Specifies a multiline text form
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-        migrate: Transformation of the stored configuration
         monospaced: Display text in the form as monospaced
         macro_support: Hint in the UI that macros can be used in the field.
             Replacing the macros in the plugin is a responsibility of the plugin developer.
         label: Text displayed in front of the input field
         prefill: Value to pre-populate the form field with.
-        custom_validate: Custom validation function.
-            Will be executed in addition to any builtin validation logic.
-            Needs to raise a ValidationError in case validation fails.
-            The return value of the function will not be used.
 
     Consumer model:
         **Type**: ``str``
@@ -263,7 +222,6 @@ class MultilineText(FormSpec[str]):
     label: Localizable | None = None
 
     prefill: Prefill[str] = InputHint("")
-    custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -271,20 +229,13 @@ class Percentage(FormSpec[float]):
     """Specifies an input field for percentages
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
         prefill: Value to pre-populate the form field with.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     label: Localizable | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
-
-    custom_validate: Callable[[float], object] | None = None
 
 
 class MatchingScope(Enum):
@@ -299,24 +250,16 @@ class RegularExpression(FormSpec[str]):
     Specifies an input field for regular expressions
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         predefined_help_text: Adds pre-formulated help text on how the pattern will be used to match
                               for commonly used matching behavior.
         label: Text displayed as an extension to the input field
         prefill: Value to pre-populate the form field with.
-        migrate: Transformation of the stored configuration
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     predefined_help_text: MatchingScope
     label: Localizable | None = None
 
     prefill: Prefill[str] = InputHint("")
-
-    custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -341,23 +284,16 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
 class Text(FormSpec[str]):
     """
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed in front of the input field
         macro_support: Hint in the UI that macros can be used in the field.
             Replacing the macros in the plugin is a responsibility of the plugin developer.
         prefill: Value to pre-populate the form field with.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     label: Localizable | None = None
     macro_support: bool = False
 
     prefill: Prefill[str] = InputHint("")
-
-    custom_validate: Callable[[str], object] | None = None
 
 
 class TimeUnit(Enum):
@@ -373,15 +309,10 @@ class TimeSpan(FormSpec[float]):
     """Specifies an input field for time span
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         label: Text displayed as an extension to the input field
         displayed_units: Units that can be configured in the UI. All of the listed units can be
                         configured and the value is the sum of the configured fields in seconds.
         prefill: Value in seconds to pre-populate the form fields with.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
 
     Consumer model:
         **Type**: ``float``
@@ -392,7 +323,6 @@ class TimeSpan(FormSpec[float]):
     label: Localizable | None = None
     displayed_units: Sequence[TimeUnit] | None = None
     prefill: Prefill[float] = InputHint(0.0)
-    custom_validate: Callable[[float], object] | None = None
 
 
 class InvalidElementMode(Enum):
@@ -429,8 +359,6 @@ class SingleChoice(FormSpec[str]):
     """Specification for a (single-)selection from multiple options
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         elements: Elements to choose from
         no_elements_text: Text to show if no elements are given
         frozen: If the value can be changed after initial configuration, e.g. for identifiers
@@ -439,9 +367,6 @@ class SingleChoice(FormSpec[str]):
         deprecated_elements: Elements that can still be present in stored user configurations, but
                              are no longer offered
         invalid_element_validation: Validate if the selected value is still offered as a choice
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
     """
 
     elements: Sequence[SingleChoiceElement]
@@ -455,8 +380,6 @@ class SingleChoice(FormSpec[str]):
 
     deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
-
-    custom_validate: Callable[[str], object] | None = None
 
     def __post_init__(self) -> None:
         valid = {elem.name for elem in self.elements}

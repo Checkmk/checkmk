@@ -23,7 +23,7 @@ from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationO
 Ident = tuple[str, str]
 
 
-def generate_data(spec: APISpec, target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
+def generate_spec(spec: APISpec, target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
@@ -115,4 +115,4 @@ def _add_cookie_auth(check_dict):
     }
 
 
-__all__ = ["endpoint_registry", "generate_data", "add_once"]
+__all__ = ["endpoint_registry", "generate_spec", "add_once"]

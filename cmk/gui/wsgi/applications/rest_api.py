@@ -31,7 +31,7 @@ from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.openapi import add_once, endpoint_registry, generate_data
+from cmk.gui.openapi import add_once, endpoint_registry, generate_spec
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
@@ -251,7 +251,7 @@ def serve_spec(
     content_type: str,
     serializer: Callable[[dict[str, Any]], str],
 ) -> Response:
-    data = generate_data(SPEC, target=target)
+    data = generate_spec(SPEC, target=target)
     data.setdefault("servers", [])
     add_once(
         data["servers"],

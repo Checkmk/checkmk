@@ -9,7 +9,7 @@ import sys
 from apispec.yaml_utils import dict_to_yaml
 
 from cmk.gui import main_modules
-from cmk.gui.openapi import generate_data
+from cmk.gui.openapi import generate_spec
 from cmk.gui.openapi.restful_objects import SPEC
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -20,7 +20,7 @@ def generate(args=None):
         args = [None]
 
     with application_and_request_context():
-        data = generate_data(SPEC, target="debug")
+        data = generate_spec(SPEC, target="debug")
 
     if args[-1] == "--json":
         output = json.dumps(data, indent=2).rstrip()

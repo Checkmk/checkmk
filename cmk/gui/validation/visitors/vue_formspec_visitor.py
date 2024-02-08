@@ -190,7 +190,10 @@ class VueFormSpecVisitor:
                 config={
                     "value": value,
                     "label": form_spec.label.localize(_) if form_spec.label else None,
-                    "precision": form_spec.display_precision,
+                    # FIXME
+                    # Sorry, 20 looks awful. Legacy value specs use "%r" now.
+                    # That is better behaved with respect to undesired cut-off effects.
+                    "precision": 20,
                 },
             ),
             value,

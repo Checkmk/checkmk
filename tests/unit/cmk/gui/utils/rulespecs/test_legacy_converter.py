@@ -174,7 +174,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.basic.Float(),
-            legacy_valuespecs.Float(),
+            legacy_valuespecs.Float(display_format="%r"),
             id="minimal Float",
         ),
         pytest.param(
@@ -183,7 +183,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 unit=api_v1.Localizable("1/s"),
-                display_precision=2,
                 prefill=api_v1.form_specs.DefaultValue(-1.0),
                 custom_validate=lambda x: None,
             ),
@@ -191,7 +190,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("title"),
                 help=_("help"),
                 label=_("label"),
-                display_format="%.2f",
+                display_format="%r",
                 unit=_("1/s"),
                 default_value=-1.0,
                 validate=lambda x, y: None,
@@ -230,7 +229,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.basic.Percentage(),
-            legacy_valuespecs.Percentage(),
+            legacy_valuespecs.Percentage(display_format="%r"),
             id="minimal Percentage",
         ),
         pytest.param(
@@ -238,7 +237,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
-                display_precision=2,
                 prefill=api_v1.form_specs.DefaultValue(-1.0),
                 custom_validate=lambda x: None,
             ),
@@ -246,7 +244,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("title"),
                 help=_("help"),
                 label=_("label"),
-                display_format="%.2f",
+                display_format="%r",
                 default_value=-1.0,
                 validate=lambda x, y: None,
             ),

@@ -1579,9 +1579,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
     ["parameter_form", "old_value", "expected_transformed_value"],
     [
         pytest.param(
-            api_v1.form_specs.basic.Integer(
-                migrate=api_v1.form_specs.Migrate(update=lambda x: _narrow_type(x, int) * 2)
-            ),
+            api_v1.form_specs.basic.Integer(migrate=lambda x: _narrow_type(x, int) * 2),
             2,
             4,
             id="integer migration",
@@ -1589,13 +1587,9 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
         pytest.param(
             api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(
                 elements=[
-                    api_v1.form_specs.basic.Integer(
-                        migrate=api_v1.form_specs.Migrate(update=lambda x: _narrow_type(x, int) * 2)
-                    ),
+                    api_v1.form_specs.basic.Integer(migrate=lambda x: _narrow_type(x, int) * 2),
                     api_v1.form_specs.basic.Percentage(
-                        migrate=api_v1.form_specs.Migrate(
-                            update=lambda x: _narrow_type(x, float) * 2
-                        )
+                        migrate=lambda x: _narrow_type(x, float) * 2
                     ),
                 ]
             ),
@@ -1610,9 +1604,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                         parameter_form=api_v1.form_specs.basic.Integer()
                     )
                 },
-                migrate=api_v1.form_specs.Migrate(
-                    update=lambda x: {"key2": _narrow_type(x, dict)["key"]}
-                ),
+                migrate=lambda x: {"key2": _narrow_type(x, dict)["key"]},
             ),
             {"key": 2},
             {"key2": 2},
@@ -1624,16 +1616,12 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                     api_v1.form_specs.composed.CascadingSingleChoiceElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.basic.Text(
-                            migrate=api_v1.form_specs.Migrate(update=lambda x: f"{x}_new")
-                        ),
+                        parameter_form=api_v1.form_specs.basic.Text(migrate=lambda x: f"{x}_new"),
                     )
                 ],
-                migrate=api_v1.form_specs.Migrate(
-                    update=lambda x: (
-                        f"{_narrow_type(x, tuple)[0]}_new",
-                        _narrow_type(x, tuple)[1],
-                    )
+                migrate=lambda x: (
+                    f"{_narrow_type(x, tuple)[0]}_new",
+                    _narrow_type(x, tuple)[1],
                 ),
             ),
             ("key", "value"),

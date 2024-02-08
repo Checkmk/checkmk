@@ -5,10 +5,10 @@
 
 import enum
 from dataclasses import dataclass
-from typing import Generic, Literal, TypedDict, TypeVar
+from typing import Callable, Generic, Literal, TypedDict, TypeVar
 
 from .._localize import Localizable
-from ._base import DefaultValue, FormSpec, Migrate, Prefill
+from ._base import DefaultValue, FormSpec, Prefill
 
 _NumberT = TypeVar("_NumberT", int, float)
 
@@ -71,9 +71,6 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-        migrate: Transformation of the stored configuration
         form_spec_template: Template for the specification of the form fields of the warning and
             critical levels. If `title` or `prefill_value` are provided here, they will be ignored
         level_direction: Do the levels represent the lower or the upper bound.
@@ -129,10 +126,11 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
 
     """
 
-    # no idea why pylint will not see that we inherit these three anyway.
+    # no idea why pylint will not see that we inherit these four anyway.
     title: Localizable | None = None
     help_text: Localizable | None = None
-    migrate: Migrate[LevelsConfigModel[_NumberT]] | None = None
+    migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None
+    custom_validate: Callable[[LevelsConfigModel[_NumberT]], object] | None = None
 
     form_spec_template: FormSpec[_NumberT]
     level_direction: LevelDirection

@@ -79,6 +79,25 @@ def _generate_event_message(site: Site, message: str) -> None:
     assert rc == 0, "Failed to generate EC message via Unix socket"
 
 
+def _get_snmp_trap_cmd(event_message: str) -> list:
+    return [
+        "snmptrap",
+        "-v",
+        "1",
+        "-c",
+        "public",
+        "127.0.0.1",
+        ".1.3.6.1",
+        "192.168.178.30",
+        "6",
+        "17",
+        '""',
+        ".1.3.6.1",
+        "s",
+        f'"{event_message}"',
+    ]
+
+
 @pytest.fixture(name="setup_ec", scope="function")
 def _setup_ec(site: Site) -> Iterator:
     match = "dummy"
@@ -110,6 +129,17 @@ def _setup_ec(site: Site) -> Iterator:
         )
 
         assert resp.status_code == 204, pprint.pformat(resp.json())
+
+
+def _change_snmp_trap_receiver(site: Site, enable_receiver: bool = True):
+    site.stop()
+    assert (
+        site.execute(
+            ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on" if enable_receiver else "off"]
+        ).wait()
+        == 0
+    )
+    site.start()
 
 
 def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
@@ -151,3 +181,35 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
 
     queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert not queried_event_messages
+
+
+def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
+    match, rule_id, rule_state = setup_ec
+    event_message = f"some {match} status"
+
+    _change_snmp_trap_receiver(site, enable_receiver=True)
+
+    rc = site.execute(_get_snmp_trap_cmd(event_message)).wait()
+    assert rc == 0, "Failed to send message via SNMP trap"
+
+    assert event_message in site.read_file("var/log/mkeventd.log")
+
+    live = site.live
+
+    # retrieve id of matching rule via livestatus query
+    queried_rule_ids = live.query_column("GET eventconsolerules\nColumns: rule_id\n")
+    assert rule_id in queried_rule_ids
+
+    # retrieve matching event state via livestatus query
+    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    assert len(queried_event_states) == 1
+    assert queried_event_states[0] == rule_state
+
+    # retrieve matching event message via livestatus query
+    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    assert len(queried_event_messages) == 1
+    assert event_message in queried_event_messages[0]
+
+    # cleanup: disable SNMP trap receiver
+    _change_snmp_trap_receiver(site, enable_receiver=False)

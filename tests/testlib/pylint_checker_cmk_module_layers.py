@@ -537,6 +537,35 @@ def _allowed_for_robotmk(
     )
 
 
+def _allow_for_cmk_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+        )
+    )
+
+
+def _allow_for_cmk_fetchers(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -572,9 +601,9 @@ _COMPONENTS = (
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
-    (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
+    (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
-    (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),

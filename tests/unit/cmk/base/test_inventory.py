@@ -27,10 +27,8 @@ from cmk.utils.structured_data import (
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.fetchers import FetcherType
-
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.fetcher import SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
     _create_trees_from_inventory_plugin_items,

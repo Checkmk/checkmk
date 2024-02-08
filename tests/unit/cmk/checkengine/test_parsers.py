@@ -23,9 +23,13 @@ from cmk.utils.translations import TranslationOptions
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.fetchers.cache import SectionStore
-
-from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SNMPParser
+from cmk.checkengine.parser import (
+    AgentParser,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionStore,
+    SNMPParser,
+)
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 
 StringTable = list[list[str]]

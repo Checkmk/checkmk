@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
+from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template
 from cmk.fetchers.filecache import (
     AgentFileCache,
@@ -26,7 +26,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkengine.fetcher import SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
 
 import cmk.base.config as config

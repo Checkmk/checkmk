@@ -112,7 +112,7 @@ from cmk.snmplib import (
     walk_for_export,
 )
 
-from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
@@ -132,7 +132,7 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_real_hosts,
 )
 from cmk.checkengine.discovery._utils import DiscoveredItem
-from cmk.checkengine.fetcher import SourceType
+from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize

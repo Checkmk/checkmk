@@ -11,7 +11,7 @@ from typing import assert_never, Final
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 
-from ._typedefs import FetcherType
+from cmk.checkengine.fetcher import FetcherType
 
 __all__ = ["make_file_cache_path_template", "make_persisted_section_dir"]
 

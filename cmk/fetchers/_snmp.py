@@ -28,9 +28,10 @@ from cmk.snmplib import (
     SNMPRowInfo,
 )
 
+from cmk.checkengine.parser import SectionStore
+
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names
-from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]

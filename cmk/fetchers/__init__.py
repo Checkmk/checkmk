@@ -12,6 +12,8 @@ See Also:
 from collections.abc import Mapping
 from typing import Any, assert_never
 
+from cmk.checkengine.fetcher import FetcherType
+
 from ._abstract import Fetcher, Mode
 from ._agentprtcl import decrypt_by_agent_protocol, TCPEncryptionHandling, TransportProtocol
 from ._api import get_raw_data
@@ -21,14 +23,12 @@ from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
 from ._snmp import SNMPFetcher, SNMPSectionMeta
 from ._tcp import TCPFetcher
-from ._typedefs import FetcherType
 
 __all__ = [
     "decrypt_by_agent_protocol",
     "NoFetcherError",
     "Fetcher",
     "FetcherFactory",
-    "FetcherType",
     "get_raw_data",
     "IPMICredentials",
     "IPMIFetcher",

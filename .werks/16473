@@ -1,0 +1,24 @@
+Title: Support host & service labels in CSV exports again
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1707413153
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+In <a href="https://checkmk.com/werk/13729">Werk #13729</a> support for labels
+in CSV exports was removed (among other things). Instead, for affected columns
+a constant <code>"NOT_CSV_EXPORTABLE"</code> value was exported.
+
+This change reintroduces host & service labels as JSON serialized strings. This
+only relates to CSV exports, other formats are not affected.
+
+Sample export:
+
+C+:
+"host";"host_labels"
+"test";"{""cmk\/os_platform"": ""linux"", ""cmk\/os_family"": ""linux"", ""cmk\/check_mk_server"": ""yes"", ""cmk\/site"": ""test""}"
+"dummy";"{""my_label"": ""works""}"
+"nothing";"{}"
+C-:

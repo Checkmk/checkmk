@@ -134,3 +134,20 @@ def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
     queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert len(queried_event_messages) == 1
     assert queried_event_messages[0] == event_message
+
+
+def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message not matching any EC rule and assert no event is created"""
+    match, _, _ = setup_ec
+    event_message = "some other status"
+    assert match not in event_message
+
+    _generate_event_message(site, event_message)
+
+    live = site.live
+
+    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    assert not queried_event_states
+
+    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    assert not queried_event_messages

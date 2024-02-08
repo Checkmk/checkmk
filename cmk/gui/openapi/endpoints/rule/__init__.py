@@ -196,7 +196,9 @@ def create_rule(param):
             title=exc.title,
         )
 
-    rule = _create_rule(folder, ruleset, body["conditions"], body["properties"], value, gen_id())
+    rule = _create_rule(
+        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+    )
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
@@ -372,7 +374,7 @@ def edit_rule(param):
         )
 
     new_rule = _create_rule(
-        folder, ruleset, body["conditions"], body["properties"], value, param["rule_id"]
+        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
     )
 
     ruleset.edit_rule(current_rule, new_rule)

@@ -1159,7 +1159,7 @@ class RuleClient(RestApiClient):
     def create(
         self,
         ruleset: str,
-        conditions: RuleConditions,
+        conditions: RuleConditions | None = None,
         folder: str = "~",
         value_raw: str | None = None,
         properties: RuleProperties | None = None,
@@ -1169,7 +1169,7 @@ class RuleClient(RestApiClient):
             {
                 "ruleset": ruleset,
                 "folder": folder,
-                "properties": properties if properties is not None else {},
+                "properties": properties,
                 "value_raw": value_raw,
                 "conditions": conditions,
             }

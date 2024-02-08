@@ -412,7 +412,7 @@ def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
     return apispec.APISpec(
         "Checkmk REST-API",
         __version__,
-        apispec.utils.OpenAPIVersion("3.0.2"),
+        "3.0.2",
         plugins=[
             marshmallow.MarshmallowPlugin(),
             apispec_oneofschema.MarshmallowPlugin(),

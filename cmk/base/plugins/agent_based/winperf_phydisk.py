@@ -5,7 +5,7 @@
 import time
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final, Mapping, MutableMapping, Sequence
+from typing import Any, Final, Mapping, MutableMapping, NamedTuple, Sequence
 
 from cmk.plugins.lib import diskstat
 
@@ -244,14 +244,31 @@ def discover_winperf_phydisk(
 
 
 @dataclass(frozen=True)
-class _Params:
+class _ComputeSpec:
     value_store: MutableMapping[str, Any]
     value_store_suffix: str
     timestamp: float
     frequency: float | None
 
 
-_DenomType = tuple[float | None, bool]
+class _Denom(NamedTuple):
+    value: float | None
+    exception: bool
+
+    def calc_smart(self, nom: float) -> float:
+        """
+        Throws exception if exception registered or denom is not defined
+        Returns nom/denom if denom is defined and not 0
+        Returns 0 if nom and denom both are 0: this is quite special case related to Windows.
+        Windows can send the same data again and again. With normal counter we get 0, but for
+        """
+        if self.exception or self.value is None:
+            raise IgnoreResultsError
+        if self.value != 0:
+            return nom / self.value
+        if nom == 0:
+            return 0
+        raise IgnoreResultsError
 
 
 def _compute_rates_single_disk(
@@ -260,28 +277,25 @@ def _compute_rates_single_disk(
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
     disk_with_rates = {}
-    params: Final = _Params(
+    compute_specs: Final = _ComputeSpec(
         value_store=value_store,
         value_store_suffix=value_store_suffix,
         timestamp=disk["timestamp"],
         frequency=disk.get("frequency"),
     )
-    raise_ignore_results = False
+    bad_results = False
     metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
     for metric, value in metric_values:
-        denom, exception_raised = _calc_denom(metric, disk, params)
-        if denom is None:
-            continue
-        if exception_raised:
-            raise_ignore_results = True
-
+        denom = _calc_denom(metric, disk, compute_specs)
         try:
-            disk_with_rates[metric] = _get_rate(metric, params, value) / denom
+            # we must update value_store here
+            nom = _update_value_and_calc_rate(metric, compute_specs, value)
+            disk_with_rates[metric] = denom.calc_smart(nom)
         except IgnoreResultsError:
-            raise_ignore_results = True
+            bad_results = True
 
-    if raise_ignore_results:
-        raise IgnoreResultsError("Initializing counters")
+    if bad_results:
+        raise IgnoreResultsError("Initializing counters!")
 
     return disk_with_rates
 
@@ -299,38 +313,40 @@ def _as_denom_metric(metric: str) -> str:
     return metric + _METRIC_DENOM_SUFFIX
 
 
-def _calc_denom(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
+def _calc_denom(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
     if metric.endswith(MetricSuffix.QUEUE_LENGTH):
-        return 10_000_000.0, False
+        return _Denom(10_000_000.0, False)
     if not metric.endswith(MetricSuffix.WAIT):
-        return 1.0, False
+        return _Denom(1.0, False)
 
-    return _calc_denom_for_wait(metric, disk, params)
+    return _calc_denom_for_wait(metric, disk, compute_specs)
 
 
-def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
-    if params.frequency is None:
-        return None, False
+def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, compute_specs: _ComputeSpec) -> _Denom:
+    if compute_specs.frequency is None:
+        return _Denom(None, False)
     denom_value = disk.get(_as_denom_metric(metric))
     if denom_value is None:
-        return None, False
+        return _Denom(None, False)
 
-    exception_raised = False
-    # using 1 for the base if the counter didn't increase. This makes little to no sense
     try:
-        # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
-        denom_value = _get_rate(_as_denom_metric(metric), params, denom_value) or 1
+        # we may get `None` from the counter only when Windows agent output is broken
+        # get_rate must throw an exception
+        denom_rate = _update_value_and_calc_rate(
+            _as_denom_metric(metric), compute_specs, denom_value
+        )
     except IgnoreResultsError:
-        exception_raised = True
+        return _Denom(None, True)
 
-    return denom_value * params.frequency, exception_raised
+    return _Denom(denom_rate * compute_specs.frequency, False)
 
 
-def _get_rate(metric: str, params: _Params, value: float) -> float:
+def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value: float) -> float:
+    """we must use correct name for wrong API name"""
     return get_rate(
-        params.value_store,
-        metric + params.value_store_suffix,
-        params.timestamp,
+        compute_specs.value_store,
+        metric + compute_specs.value_store_suffix,
+        compute_specs.timestamp,
         value,
         raise_overflow=True,
     )

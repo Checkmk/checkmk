@@ -37,6 +37,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
+from cmk.gui.openapi.restful_objects.specification import SPEC
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,
@@ -363,7 +364,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         for endpoint in endpoint_registry:
             if self.debug:
                 # This helps us to make sure we can always generate a valid OpenAPI yaml file.
-                _ = endpoint.to_operation_dict()
+                _ = endpoint.to_operation_dict(SPEC)
 
             self.add_rule(
                 [endpoint.default_path],

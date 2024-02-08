@@ -15,6 +15,7 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
+from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 
@@ -23,7 +24,6 @@ from cmk.utils.site import omd_site
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
-from cmk.gui.openapi.restful_objects.specification import SPEC
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 
 CODE_TEMPLATE_MACROS = """
@@ -480,6 +480,7 @@ def httpie_request_body(examples: JsonObject) -> str:
 
 
 def code_samples(  # type: ignore[no-untyped-def]
+    spec,
     endpoint,
     header_params,
     path_params,
@@ -498,12 +499,13 @@ def code_samples(  # type: ignore[no-untyped-def]
         ...     request_schema = _get_schema('CreateHost')
         ...     does_redirects = False
 
+        >>> spec = make_spec()  # doctest: +SKIP
         >>> endpoint = Endpoint()  # doctest: +SKIP
-        >>> samples = code_samples(endpoint, [], [], [])  # doctest: +SKIP
+        >>> samples = code_samples(spec, endpoint, [], [], [])  # doctest: +SKIP
 
 
     """
-    env = _jinja_environment()
+    env = _jinja_environment(spec)
     result: list[CodeSample] = []
     for example in CODE_EXAMPLES:
         schema = _get_schema(endpoint.request_schema)
@@ -594,7 +596,7 @@ def _schema_is_multiple(schema: str | type[Schema] | None) -> bool:
 
 
 @functools.lru_cache
-def _jinja_environment() -> jinja2.Environment:
+def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
     We don't want to build all this stuff at the module-level as it is only needed when
@@ -608,7 +610,7 @@ def _jinja_environment() -> jinja2.Environment:
 
     >>> endpoint = Endpoint()  # doctest: +SKIP
 
-    >>> env = _jinja_environment()
+    >>> env = _jinja_environment(SPEC)  # doctest: +SKIP
     >>> result = env.get_template('curl').render(  # doctest: +SKIP
     ...     hostname='localhost',
     ...     site='heute',
@@ -651,7 +653,7 @@ def _jinja_environment() -> jinja2.Environment:
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(
-        spec=SPEC,
+        spec=spec,
     )
     return tmpl_env
 

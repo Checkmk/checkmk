@@ -451,3 +451,35 @@ def test_create_rule_empty_match_on_str(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
+
+
+def test_create_rule_no_conditions_nor_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_conditions(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        properties={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_create_rule_no_properties(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.get(rule_id=resp.json["id"])

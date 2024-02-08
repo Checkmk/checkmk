@@ -1,0 +1,12 @@
+Title: rule: Fix crash on rule creation via REST API without conditions or properties
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1707462364
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+Before this Werk, an status code 500 Internal Server Error was returned when creating a
+rule without conditions or properties. This Werk fixes it and now it is possible to create
+a rule in such conditions.

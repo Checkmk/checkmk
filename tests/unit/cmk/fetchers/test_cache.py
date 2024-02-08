@@ -8,8 +8,9 @@ import json
 import logging
 
 from cmk.fetchers import Mode
-from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.filecache import MaxAge
+
+from cmk.checkengine.parser import SectionStore
 
 
 class MockStore:

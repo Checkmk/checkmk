@@ -12,9 +12,8 @@ from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 
-from cmk.fetchers.cache import SectionStore
-
 from ._parser import HostSections, Parser, SectionNameCollection
+from ._sectionstore import SectionStore
 
 __all__ = ["SNMPParser"]
 

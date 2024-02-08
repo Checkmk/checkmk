@@ -97,7 +97,6 @@ from cmk.snmplib import (  # these are required in the modules' namespace to loa
 )
 
 from cmk.fetchers import (
-    FetcherType,
     IPMICredentials,
     IPMIFetcher,
     PiggybackFetcher,
@@ -106,7 +105,6 @@ from cmk.fetchers import (
     TCPEncryptionHandling,
     TCPFetcher,
 )
-from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
@@ -124,7 +122,7 @@ from cmk.checkengine.discovery import (
     DiscoveryPlugin,
 )
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import SourceType
+from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
@@ -133,6 +131,7 @@ from cmk.checkengine.parser import (
     AgentRawDataSectionElem,
     NO_SELECTION,
     SectionNameCollection,
+    SectionStore,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register

@@ -70,7 +70,7 @@ from cmk.snmplib import (
 )
 
 import cmk.fetchers.snmp as snmp_factory
-from cmk.fetchers import FetcherType, get_raw_data
+from cmk.fetchers import get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -82,7 +82,7 @@ from cmk.checkengine.discovery import (
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
     NO_SELECTION,

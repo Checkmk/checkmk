@@ -18,8 +18,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
 
-from cmk.fetchers.cache import SectionStore
-
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import (
     AgentRawDataSection,
@@ -29,6 +27,7 @@ from ._parser import (
     Parser,
     SectionNameCollection,
 )
+from ._sectionstore import SectionStore
 
 
 class SectionWithHeader(NamedTuple):

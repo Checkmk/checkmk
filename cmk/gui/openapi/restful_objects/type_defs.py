@@ -378,7 +378,7 @@ OperationSpecType = TypedDict(
     total=False,
 )
 
-OperationObject = Mapping[HTTPMethod, OperationSpecType]
+OperationObject = dict[HTTPMethod, OperationSpecType]
 
 OpenAPITag = TypedDict(
     "OpenAPITag",

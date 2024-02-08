@@ -1,0 +1,12 @@
+Title: lnx_video: Fix section parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1707412972
+Edition: cre
+Level: 1
+Version: 2.2.0p22
+
+The output of the 'lspci' command was not consistent. This caused the parsing of the lnx_video section to fail.
+As a consequnce, the graphics cards were not shown in the HW/SW inventory.
+This has now been fixed and the graphics cards will be shown.

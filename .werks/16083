@@ -1,0 +1,17 @@
+Title: mk_inventory: Regression in bakery plugin
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1707400951
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0p22
+
+This werk fixes a regression that came up with Checkmk 2.2.0,
+only affecting windows agents.
+
+While patching the `mk_inventory.vbs` script, the agent bakery
+accidentally specified `exe_paths` two times, instead of once
+`exePaths` and once `regPaths`.
+

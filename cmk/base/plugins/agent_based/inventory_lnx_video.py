@@ -34,8 +34,8 @@ def parse_lnx_video(string_table: StringTable) -> Section:
     array = {}
     for line in string_table:
         if len(line) > 1:
-            if re.search("VGA compatible controller", line[1]):
-                array["name"] = line[2]
+            if re.search("VGA compatible controller", line[-2]):
+                array["name"] = line[-1]
             elif line[0] == "Subsystem":
                 array["subsystem"] = line[1]
             elif line[0] == "Kernel driver in use":

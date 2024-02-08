@@ -34,8 +34,6 @@ class Proxy(FormSpec[ProxyModelT]):
     """Specifies a form for configuring a proxy
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         allowed_schemas: Set of available proxy schemas that can be used in a proxy url
     """
 
@@ -53,49 +51,24 @@ class Proxy(FormSpec[ProxyModelT]):
 
 @dataclass(frozen=True, kw_only=True)
 class Metric(FormSpec[str]):
-    """Specifies a form selecting from a list of metrics registered in Checkmk
-
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-    """
+    """Specifies a form selecting from a list of metrics registered in Checkmk"""
 
 
 @dataclass(frozen=True, kw_only=True)
 class MonitoredHost(FormSpec[str]):
-    """Specifies a form selecting from a list of hosts configured in Checkmk
-
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-    """
+    """Specifies a form selecting from a list of hosts configured in Checkmk"""
 
 
 @dataclass(frozen=True, kw_only=True)
 class MonitoredService(FormSpec[str]):
-    """Specifies a form selecting from a list of currently monitored services in Checkmk
-
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-    """
+    """Specifies a form selecting from a list of currently monitored services in Checkmk"""
 
 
 @dataclass(frozen=True, kw_only=True)
 class Password(FormSpec[tuple[Literal["password", "store"], str]]):
-    """Specifies a form for configuring passwords (explicit or from password store)
-
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-    """
+    """Specifies a form for configuring passwords (explicit or from password store)"""
 
 
 @dataclass(frozen=True, kw_only=True)
 class TimePeriod(FormSpec[str]):
-    """Specifies a form selecting from a list of time periods configured in Checkmk
-
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-    """
+    """Specifies a form selecting from a list of time periods configured in Checkmk"""

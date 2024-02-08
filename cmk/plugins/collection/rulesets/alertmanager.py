@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from cmk.rulesets.v1 import Localizable, validators
-from cmk.rulesets.v1.form_specs import DefaultValue, Migrate
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, ServiceState, Text
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -92,7 +92,7 @@ def _discovery_parameters_form_alertmanager():
                             parameter_form=FixedValue(value=None),
                         ),
                     ],
-                    migrate=Migrate(update=migrate_dropdown_ident),
+                    migrate=migrate_dropdown_ident,
                 ),
                 required=True,
             ),
@@ -173,7 +173,7 @@ def form_alert_remapping():
                                 required=True,
                             ),
                         },
-                        migrate=Migrate(migrate_non_identifier_key),
+                        migrate=migrate_non_identifier_key,
                     ),
                     required=True,
                 ),

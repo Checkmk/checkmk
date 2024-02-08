@@ -5,14 +5,13 @@
 
 
 from . import basic, composed, levels, preconfigured
-from ._base import DefaultValue, FormSpec, InputHint, Migrate, Prefill
+from ._base import DefaultValue, FormSpec, InputHint, Prefill
 
 __all__ = [
     "basic",
     "composed",
     "FormSpec",
     "levels",
-    "Migrate",
     "preconfigured",
     "DefaultValue",
     "InputHint",

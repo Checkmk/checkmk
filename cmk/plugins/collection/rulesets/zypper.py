@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue, Migrate
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.rulesets.v1.form_specs.basic import ServiceState
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
@@ -42,7 +42,7 @@ def _parameter_form_zypper() -> Dictionary:
             ),
         },
         # TODO remove before 2.3 release, showcases migration
-        migrate=Migrate(update=lambda v: v if isinstance(v, dict) and v else {}),
+        migrate=lambda v: v if isinstance(v, dict) and v else {},
     )
 
 

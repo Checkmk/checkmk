@@ -6,7 +6,7 @@
 """FormSpecs that can be composed of other FormSpecs"""
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Generic, Mapping, Sequence
+from typing import Any, Generic, Mapping, Sequence
 
 from .._localize import Localizable
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
@@ -15,8 +15,6 @@ from ._base import DefaultValue, FormSpec, InputHint, ModelT
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
 class TupleDoNotUseWillbeRemoved(FormSpec[tuple[object, ...]]):
     elements: Sequence[FormSpec[Any]]
-
-    custom_validate: Callable[[tuple[object, ...]], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,12 +40,9 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     """Specification for a single-selection from multiple options. Selection is another spec
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         elements: Elements to choose from
         label: Text displayed in front of the input field
         prefill: Name of pre-selected choice. Must be one of the elements names.
-        migrate: Transformation to apply.
 
     Consumer model:
         **Type**: ``tuple[str, object]``
@@ -92,14 +87,9 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     Specifies a (multi-)selection of configuration options.
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         elements: key-value mapping where the key identifies the selected option and the value
                   specifies how the option can be configured. The key has to be a valid Python
                   identifier.
-        custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails. The return value of the function will not be used.
         deprecated_elements: Elements that can no longer be configured, but aren't removed
                             from the old rules that already have them configured. Can be
                             used when deprecating elements, to avoid breaking the old
@@ -114,8 +104,6 @@ class Dictionary(FormSpec[Mapping[str, object]]):
 
     deprecated_elements: tuple[str, ...] = field(default_factory=tuple)
 
-    custom_validate: Callable[[Mapping[str, object]], object] | None = None
-
     def __post_init__(self) -> None:
         for key in self.elements:  # type: ignore[misc]
             if not key.isidentifier():
@@ -128,15 +116,10 @@ class List(FormSpec[Sequence[ModelT]]):
     Specifies a list of configuration elements of the same type.
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
         element_template: Configuration specification of the list elements
         add_element_label: Label used to customize the add element button.
         remove_element_label: Label used to customize the remove element button.
         no_element_label: Label used in the rule summary if the list is empty.
-        custom_validate: Custom validation function. Will be executed in addition to any
-            builtin validation logic. Needs to raise a ValidationError in case
-            validation fails. The return value of the function will not be used.
         editable_order: Can the elements be reordered in the UI
     """
 
@@ -146,7 +129,6 @@ class List(FormSpec[Sequence[ModelT]]):
     no_element_label: Localizable = Localizable("No entries")
 
     editable_order: bool = True
-    custom_validate: Callable[[Sequence[object]], object] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -171,15 +153,9 @@ class MultipleChoice(FormSpec[Sequence[str]]):
     """Specifies a multiple choice form
 
     Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-        migrate: Transformation of the stored configuration
         elements: Elements to choose from
         show_toggle_all: Show toggle all elements option in the UI
         prefill: Element names to select by default
-        custom_validate: Custom validation function. Will be executed in addition to any
-            builtin validation logic. Needs to raise a ValidationError in case
-            validation fails. The return value of the function will not be used.
 
     Consumer model:
         **Type**: ``list[str]``
@@ -198,7 +174,6 @@ class MultipleChoice(FormSpec[Sequence[str]]):
     show_toggle_all: bool = False
 
     prefill: DefaultValue[Sequence[str]] = DefaultValue(())
-    custom_validate: Callable[[Sequence[str]], object] | None = None
 
     def __post_init__(self) -> None:
         available_names = {elem.name for elem in self.elements}

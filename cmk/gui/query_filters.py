@@ -986,7 +986,7 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
 def cre_sites_options() -> SitesOptions:
     return sorted(
         [
-            (sitename, site_config.get_site_config(sitename)["alias"])
+            (sitename, site_config.get_site_config(active_config, sitename)["alias"])
             for sitename, state in sites.states().items()
             if state["state"] == "online"
         ],

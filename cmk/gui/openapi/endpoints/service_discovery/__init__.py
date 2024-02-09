@@ -21,6 +21,7 @@ from cmk.checkengine.discovery import CheckPreviewEntry, DiscoveryMode, Discover
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job import BackgroundStatusSnapshot
+from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -680,7 +681,7 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
 
 
 def _job_snapshot(host: Host) -> BackgroundStatusSnapshot:
-    if site_is_local(host.site_id()):
+    if site_is_local(active_config, host.site_id()):
         job = ServiceDiscoveryBackgroundJob(host.name())
         return job.get_status_snapshot()
 

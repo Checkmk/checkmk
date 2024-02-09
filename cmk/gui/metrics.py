@@ -27,6 +27,7 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
+from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
@@ -177,9 +178,16 @@ age_human_readable = cmk.utils.render.approx_age
 
 
 def translate_perf_data(
-    perf_data_string: str, check_command: str | None = None
+    perf_data_string: str,
+    *,
+    config: Config,
+    check_command: str | None = None,
 ) -> Mapping[str, TranslatedMetric]:
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    perf_data, check_command = parse_perf_data(
+        perf_data_string,
+        check_command,
+        config=config,
+    )
     return translate_metrics(perf_data, check_command)
 
 

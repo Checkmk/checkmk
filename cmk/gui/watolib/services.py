@@ -37,6 +37,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
     JobStatusStates,
 )
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
@@ -831,7 +832,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
             host.site_id(),
         )
 
-    if site_is_local(host.site_id()):
+    if site_is_local(active_config, host.site_id()):
         return execute_discovery_job(
             host.name(),
             action,
@@ -843,7 +844,7 @@ def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) 
     return DiscoveryResult.deserialize(
         str(
             do_remote_automation(
-                get_site_config(host.site_id()),
+                get_site_config(active_config, host.site_id()),
                 "service-discovery-job",
                 [
                     ("host_name", host.name()),

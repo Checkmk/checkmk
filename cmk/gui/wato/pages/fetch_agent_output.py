@@ -21,6 +21,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
@@ -194,12 +195,12 @@ class PageFetchAgentOutput(AgentOutputPage):
 
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             start_fetch_agent_job(self._request)
             return
 
         do_remote_automation(
-            get_site_config(self._request.host.site_id()),
+            get_site_config(active_config, self._request.host.site_id()),
             "fetch-agent-output-start",
             [
                 ("request", repr(self._request.serialize())),
@@ -207,12 +208,12 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
 
     def _get_job_status(self) -> JobStatusSpec:
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
         return JobStatusSpec.model_validate(
             do_remote_automation(
-                get_site_config(self._request.host.site_id()),
+                get_site_config(active_config, self._request.host.site_id()),
                 "fetch-agent-output-get-status",
                 [
                     ("request", repr(self._request.serialize())),
@@ -336,11 +337,11 @@ class PageDownloadAgentOutput(AgentOutputPage):
         response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:
-        if site_is_local(self._request.host.site_id()):
+        if site_is_local(active_config, self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
         raw_response = do_remote_automation(
-            get_site_config(self._request.host.site_id()),
+            get_site_config(active_config, self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),

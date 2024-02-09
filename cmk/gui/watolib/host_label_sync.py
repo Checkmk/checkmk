@@ -28,6 +28,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -101,7 +102,7 @@ class DiscoveredHostLabelSyncResponse:
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
-    site_spec = get_site_config(site_id)
+    site_spec = get_site_config(active_config, site_id)
     result = _execute_site_sync(
         site_id,
         site_spec,

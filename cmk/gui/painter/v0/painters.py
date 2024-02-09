@@ -20,7 +20,7 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import get_extended_metric_info, metric_info
@@ -482,7 +482,7 @@ class PainterSitealias(Painter):
         return ["site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, get_site_config(row["site"])["alias"])
+        return (None, get_site_config(active_config, row["site"])["alias"])
 
 
 # .
@@ -504,9 +504,9 @@ def service_state_short(row: Row) -> tuple[str, str]:
     return "p", short_service_state_name(-1, "")
 
 
-def _paint_service_state_short(row: Row) -> CellSpec:
+def _paint_service_state_short(row: Row, *, config: Config) -> CellSpec:
     state, name = service_state_short(row)
-    if is_stale(row):
+    if is_stale(row, config=config):
         state = state + " stale"
     return "state svcstate state%s" % state, HTMLWriter.render_span(
         name, class_=["state_rounded_fill"]
@@ -525,9 +525,9 @@ def host_state_short(row: Row) -> tuple[str, str]:
     return state, name
 
 
-def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
+def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) -> CellSpec:
     state, name = host_state_short(row)
-    if is_stale(row):
+    if is_stale(row, config=config):
         state = state + " stale"
 
     if short:
@@ -561,7 +561,7 @@ class PainterServiceState(Painter):
         return "svcstate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_service_state_short(row)
+        return _paint_service_state_short(row, config=active_config)
 
 
 class PainterSvcPluginOutput(Painter):
@@ -584,7 +584,11 @@ class PainterSvcPluginOutput(Painter):
         return "svcoutput"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_stalified(row, format_plugin_output(row["service_plugin_output"], row))
+        return paint_stalified(
+            row,
+            format_plugin_output(row["service_plugin_output"], row),
+            config=active_config,
+        )
 
 
 class PainterSvcLongPluginOutput(Painter):
@@ -660,7 +664,7 @@ class PainterSvcLongPluginOutput(Painter):
         # In long output we get newlines which should also be displayed in the GUI
         content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
 
-        return paint_stalified(row, content)
+        return paint_stalified(row, content, config=active_config)
 
 
 class PainterSvcPerfData(Painter):
@@ -679,7 +683,7 @@ class PainterSvcPerfData(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_stalified(row, row["service_perf_data"])
+        return paint_stalified(row, row["service_perf_data"], config=active_config)
 
 
 class PainterSvcMetrics(Painter):
@@ -709,7 +713,9 @@ class PainterSvcMetrics(Painter):
         painter_options = PainterOptions.get_instance()
 
         translated_metrics = metrics.translate_perf_data(
-            row["service_perf_data"], row["service_check_command"]
+            row["service_perf_data"],
+            config=active_config,
+            check_command=row["service_check_command"],
         )
 
         if row["service_perf_data"] and not translated_metrics:
@@ -782,7 +788,9 @@ class PainterSvcPerfVal(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1))
+        return paint_stalified(
+            row, get_perfdata_nth_value(row, self._num - 1), config=active_config
+        )
 
 
 class PainterSvcPerfVal01(PainterSvcPerfVal):
@@ -1000,7 +1008,7 @@ class PainterSvcStateAge(Painter):
         )
 
 
-def _paint_checked(what: str, row: Row) -> CellSpec:
+def _paint_checked(what: str, row: Row, *, config: Config) -> CellSpec:
     age = row[what + "_last_check"]
     if what == "service":
         cached_at = row["service_cached_at"]
@@ -1009,7 +1017,7 @@ def _paint_checked(what: str, row: Row) -> CellSpec:
 
     css, td = paint_age(age, row[what + "_has_been_checked"] == 1, 0)
     assert css is not None
-    if is_stale(row):
+    if is_stale(row, config=config):
         css += " staletime"
     return css, td
 
@@ -1034,7 +1042,7 @@ class PainterSvcCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("service", row)
+        return _paint_checked("service", row, config=active_config)
 
 
 class PainterSvcCheckCacheInfo(Painter):
@@ -1643,7 +1651,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
 
     def replace_tags(text: str) -> str:
         sitename = row["site"]
-        url_prefix = get_site_config(sitename)["url_prefix"]
+        url_prefix = get_site_config(active_config, sitename)["url_prefix"]
         return (
             text.replace("$URL_PREFIX$", url_prefix)
             .replace("$SITE$", sitename)
@@ -1700,8 +1708,8 @@ class PainterSvcStaleness(Painter):
         return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
-def _paint_is_stale(row: Row) -> CellSpec:
-    if is_stale(row):
+def _paint_is_stale(row: Row, *, config: Config) -> CellSpec:
+    if is_stale(row, config=config):
         return "badflag", HTMLWriter.render_span(_("yes"))
     return "goodflag", _("no")
 
@@ -1726,7 +1734,7 @@ class PainterSvcIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_is_stale(row)
+        return _paint_is_stale(row, config=active_config)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -1921,7 +1929,7 @@ class PainterHostState(Painter):
         return "hoststate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_state_short(row)
+        return _paint_host_state_short(row, config=active_config)
 
 
 class PainterHostStateOnechar(Painter):
@@ -1944,7 +1952,7 @@ class PainterHostStateOnechar(Painter):
         return "hoststate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_host_state_short(row, short=True)
+        return _paint_host_state_short(row, short=True, config=active_config)
 
 
 class PainterHostPluginOutput(Painter):
@@ -2090,7 +2098,7 @@ class PainterHostCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("host", row)
+        return _paint_checked("host", row, config=active_config)
 
 
 class PainterHostNextCheck(Painter):
@@ -3248,7 +3256,7 @@ class PainterHostIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_is_stale(row)
+        return _paint_is_stale(row, config=active_config)
 
 
 class PainterHostCustomVariables(Painter):
@@ -4325,7 +4333,7 @@ class PainterLogDetailsHistory(Painter):
         # In long output we get newlines which should also be displayed in the GUI
         content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
 
-        return paint_stalified(row, content)
+        return paint_stalified(row, content, config=active_config)
 
 
 class PainterLogMessage(Painter):
@@ -4783,9 +4791,13 @@ class PainterLogState(Painter):
             or row["log_type"].endswith("NOTIFICATION PROGRESS")
         ):
             return _paint_service_state_short(
-                {"service_has_been_checked": 1, "service_state": state}
+                {"service_has_been_checked": 1, "service_state": state},
+                config=active_config,
             )
-        return _paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
+        return _paint_host_state_short(
+            {"host_has_been_checked": 1, "host_state": state},
+            config=active_config,
+        )
 
 
 # Alert statistics
@@ -5228,7 +5240,7 @@ class AbstractColumnSpecificMetric(Painter):
     ) -> tuple[str, str]:
         show_metric = cell.painter_parameters()["metric"]
         translated_metrics = metrics.translate_perf_data(
-            perf_data_entries, check_command=check_command
+            perf_data_entries, config=active_config, check_command=check_command
         )
 
         if show_metric not in translated_metrics:

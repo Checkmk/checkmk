@@ -17,6 +17,7 @@ from cmk.utils.user import UserId
 import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
@@ -174,7 +175,8 @@ class ActivateChangesWriter:
                 "domain_settings": domain_settings or {},
                 "prevent_discard_changes": prevent_discard_changes,
                 "diff_text": diff_text,
-                "has_been_activated": site_is_local(site_id) and need_restart is False,
+                "has_been_activated": site_is_local(active_config, site_id)
+                and need_restart is False,
             }
         )
 

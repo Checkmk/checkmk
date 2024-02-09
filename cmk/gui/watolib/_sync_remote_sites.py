@@ -21,6 +21,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.config import active_config
 from cmk.gui.cron import register_job
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -241,7 +242,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         return SyncRemoteSitesResult.from_json(
             str(
                 do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "sync-remote-site",
                     [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
                 )
@@ -275,7 +276,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
 
     def _clear_site_changes_from_remote_sites(self, site_changes_synced_sites: set[SiteId]) -> None:
         for site_id in site_changes_synced_sites:
-            do_remote_automation(get_site_config(site_id), "clear-site-changes", [])
+            do_remote_automation(get_site_config(active_config, site_id), "clear-site-changes", [])
 
     def _get_result_message(
         self,

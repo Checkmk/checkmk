@@ -11,6 +11,7 @@ from livestatus import SiteId
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.hostaddress import HostAddress, HostName
 
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, site_is_local
@@ -23,12 +24,12 @@ def remove_tls_registration(hosts_by_site: Mapping[SiteId, Sequence[HostName]]) 
         if not host_names:
             continue
 
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             _remove_tls_registration(host_names)
             return
 
         do_remote_automation(
-            get_site_config(site_id),
+            get_site_config(active_config, site_id),
             "remove-tls-registration",
             [("host_names", json.dumps(host_names))],
         )

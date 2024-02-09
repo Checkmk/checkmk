@@ -991,7 +991,11 @@ class SiteFilter(Filter):
 
 def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
-    return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
+    return (
+        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
+        if current_value
+        else None
+    )
 
 
 class MultipleSitesFilter(SiteFilter):

@@ -12,6 +12,7 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
 
+from ...config import active_config
 from .legacy_perfometers import perfometers, render_metricometer
 
 
@@ -31,7 +32,7 @@ class Perfometer:
             return
 
         self._perf_data, self._check_command = parse_perf_data(
-            perf_data_string, self._row["service_check_command"]
+            perf_data_string, self._row["service_check_command"], config=active_config
         )
 
         self._translated_metrics = translate_metrics(self._perf_data, self._check_command)

@@ -341,8 +341,12 @@ class SorterSitealias(Sorter):
         return ["site"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return (get_site_config(r1["site"])["alias"] > get_site_config(r2["site"])["alias"]) - (
-            get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"]
+        return (
+            get_site_config(active_config, r1["site"])["alias"]
+            > get_site_config(active_config, r2["site"])["alias"]
+        ) - (
+            get_site_config(active_config, r1["site"])["alias"]
+            < get_site_config(active_config, r2["site"])["alias"]
         )
 
 

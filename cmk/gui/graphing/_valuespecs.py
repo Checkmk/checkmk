@@ -35,6 +35,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.visuals import livestatus_query_bare
 
+from ..config import active_config
 from ._graph_render_config import GraphRenderConfigBase
 from ._unit_info import unit_info
 from ._utils import get_extended_metric_info, metric_info, parse_perf_data, perfvar_translation
@@ -381,7 +382,7 @@ def metrics_of_query(
     row = {}
     for row in livestatus_query_bare("service", context, columns):
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"]
+            row["service_perf_data"], row["service_check_command"], config=active_config
         )
         known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(str(check_command), tuple(map(str, known_metrics)))

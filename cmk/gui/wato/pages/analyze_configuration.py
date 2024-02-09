@@ -26,6 +26,7 @@ from cmk.utils.exceptions import MKGeneralException
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -407,13 +408,13 @@ class ModeAnalyzeConfig(WatoMode):
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            if site_is_local(site_id):
+            if site_is_local(active_config, site_id):
                 automation = AutomationCheckAnalyzeConfig()
                 results_data = automation.execute(automation.get_request())
 
             else:
                 raw_results_data = do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "check-analyze-config",
                     [],
                     timeout=request.request_timeout - 10,

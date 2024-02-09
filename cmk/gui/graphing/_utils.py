@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 
 import cmk.gui.sites as sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -722,7 +722,7 @@ def _compute_lookup_metric_name(metric_name: str) -> str:
 
 
 def parse_perf_data(
-    perf_data_string: str, check_command: str | None = None
+    perf_data_string: str, check_command: str | None = None, *, config: Config
 ) -> tuple[Perfdata, str]:
     """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
@@ -767,7 +767,7 @@ def parse_perf_data(
             )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if active_config.debug:
+            if config.debug:
                 raise exc
 
     return perf_data, check_command
@@ -1043,9 +1043,13 @@ def available_metrics_translated(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
+    )
     rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
-    rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
+    rrd_perf_data, check_command = parse_perf_data(
+        rrd_perf_data_string, check_command, config=active_config
+    )
     if not rrd_perf_data + perf_data:
         return {}
 

@@ -129,12 +129,12 @@ def test_parse_perf_data(
     check_command: str | None,
     result: tuple[Perfdata, str],
 ) -> None:
-    assert utils.parse_perf_data(perf_str, check_command) == result
+    assert utils.parse_perf_data(perf_str, check_command, config=active_config) == result
 
 
 def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
     with pytest.raises(ValueError), set_config(debug=True):
-        utils.parse_perf_data("hi ho", None)
+        utils.parse_perf_data("hi ho", None, config=active_config)
 
 
 @pytest.mark.parametrize(

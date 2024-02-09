@@ -202,38 +202,10 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "wato/msteams: name 'socket' is not defined",
         }
     ),
-    "apcaccess-5.2.2.mkp": _ImportErrors(
-        base_errors={
-            "Error in agent based plugin apcaccess: cannot import name 'temperature' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
-        }
-    ),
-    "ceph-11.17.2.mkp": _ImportErrors(
-        base_errors={
-            "Error in agent based plugin cephosd: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
-            "Error in agent based plugin cephosdbluefs: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
-            "Error in agent based plugin cephstatus: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
-            "Error in agent based plugin cephdf: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
-        }
-    ),
     "cve_2021_44228_log4j_cmk20.mkp": _ImportErrors(
         gui_errors={
             "views/inv_cve_2021_22448_log4j: No module named 'cmk.gui.plugins.views.inventory'",
         },
-    ),
-    "hpe_ilo-4.0.0.mkp": _ImportErrors(
-        base_errors={
-            "Error in agent based plugin ilo_api_temp: No module named 'cmk.base.plugins.agent_based.utils.temperature'\n",
-        }
-    ),
-    "kentix_devices-3.0.1.mkp": _ImportErrors(
-        base_errors={
-            "Error in agent based plugin kentix_devices: No module named 'cmk.base.plugins.agent_based.utils.temperature'\n",
-        }
-    ),
-    "redfish-2.2.19.mkp": _ImportErrors(
-        base_errors={
-            "Error in agent based plugin redfish_temperatures: No module named 'cmk.base.plugins.agent_based.utils.temperature'\n",
-        }
     ),
     "veeam_o365-2.6.1.mkp": _ImportErrors(
         gui_errors={

@@ -2045,6 +2045,7 @@ def main_help(
     sys.stdout.write(
         "\nGeneral Options:\n"
         " -V <version>                    set specific version, useful in combination with update/create\n"
+        " -f, --force                     use force mode, useful in combination with update\n"
         " omd COMMAND -h, --help          show available options of COMMAND\n"
     )
 
@@ -2893,6 +2894,8 @@ def main_update(  # pylint: disable=too-many-branches
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "
             "update with '-f'.\n"
+            "You can execute the command in the following way:\n"
+            "'omd -f update' or 'omd --force update'"
             "But you will be on your own from there."
         )
 

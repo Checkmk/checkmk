@@ -1314,6 +1314,9 @@ def permission_action(
     if new_type == "link":
         return None  # Do not touch symlinks
 
+    if user_type is None:
+        return None  # Don't change permissions of non existant paths
+
     if user_type != new_type:
         return None  # Do not touch when type changed by the user
 

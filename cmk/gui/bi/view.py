@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import typing
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Literal
@@ -29,7 +29,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
@@ -828,13 +828,13 @@ class PainterAggrTreestate(Painter):
         return paint_aggregated_tree_state(row)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -864,13 +864,13 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return paint_aggregated_tree_state(row, show_frozen_difference=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
 
 @request_memoize()
@@ -979,16 +979,18 @@ class PainterAggrTreestateBoxed(Painter):
         return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user)
 
 
-def render_tree_json(row) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+def render_tree_json(  # pylint: disable=redefined-outer-name
+    row: typing.Mapping[str, typing.Any], *, user: LoggedInUser
+) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     if expansion_level != user.bi_expansion_level:

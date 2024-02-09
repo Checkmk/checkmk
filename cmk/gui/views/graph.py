@@ -21,7 +21,7 @@ from cmk.gui.graphing._html_render import (
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
@@ -159,6 +159,7 @@ def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     *,
+    user: LoggedInUser,
     show_time_range_previews: bool | None = None,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
@@ -315,7 +316,7 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
+        return paint_time_graph_cmk(row, cell, user=self.user, show_time_range_previews=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -352,7 +353,7 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
+        return paint_time_graph_cmk(row, cell, user=self.user, show_time_range_previews=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -419,7 +420,7 @@ class PainterSvcPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell)
+        return paint_time_graph_cmk(row, cell, user=self.user)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -459,7 +460,7 @@ class PainterHostPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell)
+        return paint_time_graph_cmk(row, cell, user=self.user)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()

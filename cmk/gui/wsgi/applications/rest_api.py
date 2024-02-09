@@ -31,13 +31,14 @@ from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.openapi import add_once, endpoint_registry, generate_spec
+from cmk.gui.openapi import endpoint_registry
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
 from cmk.gui.openapi.restful_objects.specification import make_spec
+from cmk.gui.openapi.spec_generator import generate_spec
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,
@@ -243,6 +244,7 @@ def get_filename_from_url(url: str) -> str:
     return Path(urllib.parse.urlparse(url).path).name
 
 
+# TODO: Remove the lru_cache once the spec is not generated anymore
 @functools.lru_cache(maxsize=512)
 def serve_spec(
     site: str,
@@ -251,7 +253,7 @@ def serve_spec(
     content_type: str,
     serializer: Callable[[dict[str, Any]], str],
 ) -> Response:
-    data = generate_spec(make_spec(), target=target)
+    data = read_spec(target)
     data.setdefault("servers", [])
     add_once(
         data["servers"],
@@ -265,6 +267,40 @@ def serve_spec(
     response.content_type = content_type
     response.freeze()
     return response
+
+
+def read_spec(target: EndpointTarget) -> dict[str, Any]:
+    # TODO: Replace this with actual reading a pre-generated spec instead of computing it
+    return generate_spec(make_spec(), target=target)
+    # return {}  # TODO
+
+
+def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
+    """Add an entry to a collection, only once.
+
+    Examples:
+
+        >>> l = []
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+    Args:
+        coll:
+        to_add:
+
+    Returns:
+
+    """
+    if to_add in coll:
+        return None
+
+    coll.append(to_add)
+    return None
 
 
 class ServeSpec(AbstractWSGIApp):

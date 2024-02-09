@@ -22,6 +22,8 @@ from marshmallow import fields as ma_fields
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
@@ -247,7 +249,6 @@ def get_filename_from_url(url: str) -> str:
 # TODO: Remove the lru_cache once the spec is not generated anymore
 @functools.lru_cache(maxsize=512)
 def serve_spec(
-    site: str,
     target: EndpointTarget,
     url: str,
     extension: Literal["yaml", "json"],
@@ -262,19 +263,20 @@ def serve_spec(
             content_type = "application/json"
 
     response = Response(status=200)
+    site = omd_site()
     response.data = serialize(_add_site_server(_read_spec(target, site), site, url))
     response.content_type = content_type
     response.freeze()
     return response
 
 
-def _read_spec(target: EndpointTarget, site: str) -> dict[str, Any]:
+def _read_spec(target: EndpointTarget, site: SiteId) -> dict[str, Any]:
     # TODO: Replace this with actual reading a pre-generated spec instead of computing it
     return generate_spec(make_spec(), target, site)
     # return {}  # TODO
 
 
-def _add_site_server(spec: dict[str, Any], site: str, url: str) -> dict[str, Any]:
+def _add_site_server(spec: dict[str, Any], site: SiteId, url: str) -> dict[str, Any]:
     """Add the server URL to the spec
 
     This step needs to happen with the current request context at hand to
@@ -328,15 +330,10 @@ class ServeSpec(AbstractWSGIApp):
         self.extension = extension
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        def _site(_environ: WSGIEnvironment) -> str:
-            path_info = _environ["PATH_INFO"].split("/")
-            return path_info[1]
-
         def _url(_environ: WSGIEnvironment) -> str:
             return "/".join(get_url(_environ).split("/")[:-1])
 
         return serve_spec(
-            site=_site(environ),
             target=self.target,
             url=_url(environ),
             extension=self.extension,

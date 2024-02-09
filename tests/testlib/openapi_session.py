@@ -169,6 +169,13 @@ class CMKOpenApiSession(requests.Session):
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
         raise UnexpectedResponse.from_response(response)
 
+    def pending_changes(self, sites: list[str] | None = None) -> list[dict[str, Any]]:
+        """Returns a list of all changes currently pending."""
+        response = self.get("/domain-types/activation_run/collections/pending_changes")
+        assert response.status_code == 200
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
     def activate_changes_and_wait_for_completion(
         self,
         sites: list[str] | None = None,
@@ -176,7 +183,12 @@ class CMKOpenApiSession(requests.Session):
         timeout: int = 60,
     ) -> bool:
         with self._wait_for_completion(timeout, "get"):
-            return self.activate_changes(sites, force_foreign_changes)
+            if activation_started := self.activate_changes(sites, force_foreign_changes):
+                pending_changes = self.pending_changes()
+                assert (
+                    len(pending_changes) == 0
+                ), f"There are pending changes that were not activated: {pending_changes}"
+            return activation_started
 
     def create_user(
         self,

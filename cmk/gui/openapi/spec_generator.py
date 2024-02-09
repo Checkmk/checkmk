@@ -16,8 +16,6 @@ from marshmallow.schema import SchemaMeta
 from openapi_spec_validator import validate_spec
 from werkzeug.utils import import_string
 
-from cmk.utils.site import omd_site
-
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
 from cmk.gui.openapi.restful_objects import permissions
@@ -52,7 +50,9 @@ from cmk.gui.permissions import permission_registry
 Ident = tuple[str, str]
 
 
-def generate_spec(spec: APISpec, target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
+def generate_spec(
+    spec: APISpec, target: EndpointTarget, site: str, validate: bool = True
+) -> dict[str, Any]:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
@@ -83,7 +83,7 @@ def generate_spec(spec: APISpec, target: EndpointTarget, validate: bool = True) 
     del seen_paths
 
     generated_spec = spec.to_dict()
-    _add_cookie_auth(generated_spec)
+    _add_cookie_auth(generated_spec, site)
     if not validate:
         return generated_spec
 
@@ -706,7 +706,7 @@ def _add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
     return None
 
 
-def _add_cookie_auth(check_dict):
+def _add_cookie_auth(check_dict: dict[str, Any], site: str) -> None:
     """Add the cookie authentication schema to the spec.
 
     We do this here, because every site has a different cookie name and such can't be predicted
@@ -716,7 +716,7 @@ def _add_cookie_auth(check_dict):
     _add_once(check_dict["security"], {schema_name: []})
     check_dict["components"]["securitySchemes"][schema_name] = {
         "in": "cookie",
-        "name": f"auth_{omd_site()}",
+        "name": f"auth_{site}",
         "type": "apiKey",
         "description": "Any user of Checkmk, who has already logged in, and thus got a cookie "
         "assigned, can use the REST API. Some actions may or may not succeed due "

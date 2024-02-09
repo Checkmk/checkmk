@@ -15,11 +15,6 @@ from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
 
-# TODO
-#   Eventually move all of spec stuff in here, so we have nothing statically defined.
-#   This removes variation from the code.
-
-
 Ident = tuple[str, str]
 
 
@@ -113,6 +108,3 @@ def _add_cookie_auth(check_dict):
         "to group and permission restrictions. This authentication method has the"
         "least precedence.",
     }
-
-
-__all__ = ["endpoint_registry", "generate_spec", "add_once"]

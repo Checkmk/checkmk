@@ -374,7 +374,12 @@ def edit_rule(param):
         )
 
     new_rule = _create_rule(
-        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+        folder,
+        ruleset,
+        body.get("conditions", {}),
+        body.get("properties", {}),
+        value,
+        param["rule_id"],
     )
 
     ruleset.edit_rule(current_rule, new_rule)

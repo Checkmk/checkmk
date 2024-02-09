@@ -1,0 +1,11 @@
+Title: Respect timerange for all view elements in report
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1707474005
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+If a report with more than one view element was created e.g. via the report
+snapin, the defined timerange was only set from the second view element on.

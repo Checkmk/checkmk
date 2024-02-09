@@ -372,7 +372,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
             event["sl"] = int(service_level)
         event[
             "text"
-        ] = f"{(remaining_structured_data +  ' ') if remaining_structured_data else ''}{message}"
+        ] = f"{(remaining_structured_data + ' ') if remaining_structured_data else ''}{message}"
     else:
         event["text"] = message
     return event

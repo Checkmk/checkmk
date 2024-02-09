@@ -703,6 +703,9 @@ def _convert_to_legacy_text_input(
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
+        "allow_empty": not isinstance(
+            to_convert.custom_validate, ruleset_api_v1.validators.DisallowEmpty
+        ),
     }
 
     help_text = _localize_optional(to_convert.help_text, localizer)

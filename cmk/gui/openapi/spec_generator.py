@@ -16,6 +16,8 @@ from marshmallow.schema import SchemaMeta
 from openapi_spec_validator import validate_spec
 from werkzeug.utils import import_string
 
+from livestatus import SiteId
+
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
 from cmk.gui.openapi.restful_objects import permissions
@@ -51,7 +53,7 @@ Ident = tuple[str, str]
 
 
 def generate_spec(
-    spec: APISpec, target: EndpointTarget, site: str, validate: bool = True
+    spec: APISpec, target: EndpointTarget, site: SiteId, validate: bool = True
 ) -> dict[str, Any]:
     endpoint: Endpoint
 
@@ -706,7 +708,7 @@ def _add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
     return None
 
 
-def _add_cookie_auth(check_dict: dict[str, Any], site: str) -> None:
+def _add_cookie_auth(check_dict: dict[str, Any], site: SiteId) -> None:
     """Add the cookie authentication schema to the spec.
 
     We do this here, because every site has a different cookie name and such can't be predicted

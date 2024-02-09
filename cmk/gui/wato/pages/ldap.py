@@ -6,6 +6,8 @@
 
 import re
 from collections.abc import Collection
+from copy import deepcopy
+from typing import cast
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -26,6 +28,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb import (
     ACTIVE_DIR,
     get_connection,
+    get_ldap_connections,
     LDAPConnectionTypedDict,
     load_connection_config,
     save_connection_config,
@@ -729,8 +732,21 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _from_vars(self):
         self._connection_id = request.get_ascii_input("id")
+        self._connection_cfg: LDAPConnectionTypedDict
+
+        if self._connection_id is None:
+            if (clone_id := request.var("clone")) is not None:
+                self._cloned_connection(clone_id)
+            else:
+                self._new_connection()
+        else:
+            self._new = False
+            self._connection_cfg = get_ldap_connections()[self._connection_id]
+
+    def _new_connection(self) -> None:
+        self._new = True
         directory_type: ACTIVE_DIR = ("ad", {"connect_to": ("fixed_list", {"server": ""})})
-        self._connection_cfg: LDAPConnectionTypedDict = {
+        self._connection_cfg = {
             "id": "",
             "description": "",
             "comment": "",
@@ -746,29 +762,15 @@ class ModeEditLDAPConnection(WatoMode):
             "cache_livetime": 300,
             "type": "ldap",
         }
-        self._connections = load_connection_config(lock=transactions.is_transaction())
 
-        if self._connection_id is None:
-            clone_id = request.var("clone")
-            if clone_id is not None:
-                self._connection_cfg = self._get_connection_cfg_and_index(clone_id)[0]
+    def _cloned_connection(self, clone_id: str) -> None:
+        self._new = True
+        ldap_connections = get_ldap_connections()
+        self._connection_cfg = deepcopy(ldap_connections[clone_id])
+        while self._connection_cfg["id"] in ldap_connections:
+            self._connection_cfg["id"] += "x"
 
-            self._new = True
-            return
-
-        self._new = False
-        self._connection_cfg, self._connection_nr = self._get_connection_cfg_and_index(
-            self._connection_id
-        )
-
-    def _get_connection_cfg_and_index(self, connection_id):
-        for index, cfg in enumerate(self._connections):
-            if cfg["id"] == connection_id:
-                return cfg, index
-
-        if not self._connection_cfg:
-            raise MKUserError(None, _("The requested connection does not exist."))
-        return None
+        self._connection_id = self._connection_cfg["id"]
 
     def title(self) -> str:
         if self._new:
@@ -801,37 +803,47 @@ class ModeEditLDAPConnection(WatoMode):
         if not transactions.check_transaction():
             return None
 
+        _all_connections = {
+            c["id"]: c for c in load_connection_config(lock=transactions.is_transaction())
+        }
+
         vs = self._valuespec()
-        self._connection_cfg = vs.from_html_vars("connection")
-        vs.validate_value(self._connection_cfg, "connection")
-
-        self._connection_cfg["type"] = "ldap"
-
-        assert self._connection_id is not None
+        connection_cfg = cast(LDAPConnectionTypedDict, vs.from_html_vars("connection"))
+        vs.validate_value(connection_cfg, "connection")
+        connection_cfg["type"] = "ldap"
 
         if self._new:
-            self._connections.insert(0, self._connection_cfg)
-            self._connection_id = self._connection_cfg["id"]
-        else:
-            self._connection_cfg["id"] = self._connection_id
-            self._connections[self._connection_nr] = self._connection_cfg
+            if connection_cfg["id"] in _all_connections:
+                raise MKUserError(
+                    "id",
+                    _("The ID %s is already used by another connection.")
+                    % self._connection_cfg["id"],
+                )
+            _all_connections[connection_cfg["id"]] = connection_cfg
+            add_change(
+                "new-ldap-connection",
+                _("Created new LDAP connection"),
+                get_affected_sites(connection_cfg),
+            )
 
-        if self._new:
-            log_what = "new-ldap-connection"
-            log_text = _("Created new LDAP connection")
         else:
-            log_what = "edit-ldap-connection"
-            log_text = _("Changed LDAP connection %s") % self._connection_id
-        add_change(log_what, log_text, get_affected_sites(self._connection_cfg))
+            _all_connections[connection_cfg["id"]] = connection_cfg
+            add_change(
+                "edit-ldap-connection",
+                _("Changed LDAP connection %s") % connection_cfg["id"],
+                get_affected_sites(connection_cfg),
+            )
 
-        save_connection_config(self._connections)
-        active_config.user_connections = (
-            self._connections
-        )  # make directly available on current page
+        self._connection_cfg = connection_cfg
+        connection_list = list(_all_connections.values())
+        save_connection_config(connection_list)
+        active_config.user_connections = connection_list  # make directly available on current page
+
         if request.var("_save"):
             return redirect(mode_url("ldap_config"))
+
         # Handle the case where a user hit "Save & Test" during creation
-        return redirect(self.mode_url(_test="1", id=self._connection_id))
+        return redirect(self.mode_url(_test="1", id=self._connection_cfg["id"]))
 
     def page(self) -> None:
         html.open_div(id_="ldap")

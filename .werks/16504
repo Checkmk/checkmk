@@ -1,0 +1,14 @@
+Title: nfsiostat: resolve error when displaying graphs
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1707734651
+Edition: cre
+Level: 1
+Version: 2.1.0p40
+
+There was an error in the nfsiostat plugin where it tried
+to report some data in units not supported by the graphing
+system which made viewing its service graphs impossible.
+This werk changes the units that were reported to our
+visualizations and now the graphs render all data appropriately.

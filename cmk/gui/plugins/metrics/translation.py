@@ -488,6 +488,13 @@ check_metrics["check_mk-ceph_df"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
 check_metrics["check_mk-df_netscaler"] = df_translation
 
+check_metrics["check_mk-nfsiostat"] = {
+    "read_avg_rtt_ms": {"name": "read_avg_rtt_s", "scale": m},
+    "read_avg_exe_ms": {"name": "read_avg_exe_s", "scale": m},
+    "write_avg_rtt_ms": {"name": "write_avg_rtt_s", "scale": m},
+    "write_avg_exe_ms": {"name": "write_avg_exe_s", "scale": m},
+}
+
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {"scale": MB},
     "fs_used_percent": {

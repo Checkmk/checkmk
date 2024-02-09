@@ -9,50 +9,49 @@ from cmk.base.config import active_check_info
 
 
 def check_ldap_arguments(params):
-    _name, basedn, settings = params
     args = []
 
-    if "hostname" in settings:
-        args += ["-H", settings["hostname"]]
+    if "hostname" in params:
+        args += ["-H", params["hostname"]]
     else:
         args += ["-H", "$HOSTADDRESS$"]
 
-    args += ["-b", basedn]
+    args += ["-b", params["base_dn"]]
 
-    if "response_time" in settings:
-        warn, crit = settings["response_time"]
+    if "response_time" in params:
+        warn, crit = params["response_time"]
         args += ["-w", "%f" % (warn / 1000.0), "-c", "%f" % (crit / 1000.0)]
 
-    if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
+    if "timeout" in params:
+        args += ["-t", params["timeout"]]
 
-    if "attribute" in settings:
-        args += ["-a", settings["attribute"]]
+    if "attribute" in params:
+        args += ["-a", params["attribute"]]
 
-    if "authentication" in settings:
-        binddn, password = settings["authentication"]
+    if "authentication" in params:
+        binddn, password = params["authentication"]
         args += ["-D", binddn, "-P", passwordstore_get_cmdline("%s", password)]
 
-    if "port" in settings:
-        args += ["-p", settings["port"]]
+    if "port" in params:
+        args += ["-p", params["port"]]
 
-    if "version" in settings:
+    if "version" in params:
         args += {
             "v2": ["-2"],
             "v3": ["-3"],
             "v3tls": ["-3", "-T"],
-        }[settings["version"]]
+        }[params["version"]]
 
-    if settings.get("ssl"):
+    if params.get("ssl"):
         args.append("--ssl")
 
     return args
 
 
 def check_ldap_desc(params):
-    if params[0].startswith("^"):
-        return params[0][1:]
-    return "LDAP %s" % params[0]
+    if (name := params["name"]).startswith("^"):
+        return name[1:]
+    return f"LDAP {name}"
 
 
 active_check_info["ldap"] = {

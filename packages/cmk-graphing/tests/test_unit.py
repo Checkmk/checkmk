@@ -5,13 +5,13 @@
 
 import pytest
 
-from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit
+from cmk.graphing.v1 import DecimalUnit, Localizable, ScientificUnit
 
 
 def test_physical_unit_error() -> None:
     title = Localizable("")
     with pytest.raises(ValueError):
-        PhysicalUnit(title, "")
+        DecimalUnit(title, "")
 
 
 def test_scientific_unit_error() -> None:

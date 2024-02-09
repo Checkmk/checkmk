@@ -6,6 +6,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import TypeVar
 
 
 class ResolvedIPAddressFamily(StrEnum):
@@ -360,7 +361,10 @@ def parse_http_proxy(
     return "FROM_ENVIRONMENT"
 
 
-def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
+_T_co = TypeVar("_T_co", covariant=True)
+
+
+def noop_parser(params: Mapping[str, _T_co]) -> Mapping[str, _T_co]:
     """
     Parameter parser that doesn't perform a transformation
 

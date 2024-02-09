@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import on_time
+import datetime
+from zoneinfo import ZoneInfo
+
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inv_if import inventory_if, parse_inv_if, SectionInvIf
@@ -758,7 +761,7 @@ def test_parse_inv_if() -> None:
 
 
 def test_inventory_if() -> None:
-    with on_time(1601310544, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1601310544, tz=ZoneInfo("UTC"))):
         assert sort_inventory_result(
             inventory_if(
                 {},

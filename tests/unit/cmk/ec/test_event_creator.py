@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import logging
 from collections.abc import Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
@@ -387,7 +388,10 @@ from cmk.ec.event import (
 def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, Any]) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
-    with on_time(1550000000.0, "CET"):
+
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1550000000, tz=ZoneInfo("CET")), tick=False
+    ):
         assert create_event_from_syslog_message(data, address, logger) == expected
 
 
@@ -417,10 +421,14 @@ def test_create_event_from_syslog_message_with_DST(
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
 
-    with on_time(1675748161, "CET"):  # february when there is no DST
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1675748161, tz=ZoneInfo("CET"))
+    ):  # february when there is no DST
         assert create_event_from_syslog_message(data, address, logger) == expected
 
-    with on_time(1688704561, "CET"):  # July when there is DST
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1688704561, tz=ZoneInfo("CET"))
+    ):  # July when there is DST
         assert create_event_from_syslog_message(data, address, logger) == expected
 
 
@@ -450,10 +458,14 @@ def test_create_event_from_syslog_message_without_DST(
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
 
-    with on_time(1675748161, "CET"):  # february when there is no DST
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1675748161, tz=ZoneInfo("CET")), tick=False
+    ):  # february when there is no DST
         assert create_event_from_syslog_message(data, address, logger) == expected
 
-    with on_time(1688704561, "CET"):  # July when there is DST
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1688704561, tz=ZoneInfo("CET")), tick=False
+    ):  # July when there is DST
         assert create_event_from_syslog_message(data, address, logger) == expected
 
 
@@ -553,7 +565,10 @@ def test_parse_syslog_info(line: str, expected_result: Mapping[str, Any]) -> Non
 )
 def test_parse_rfc5424_syslog_info(line: str, expected_result: Mapping[str, Any]) -> None:
     # this is currently needed because we do not use the timezone information from the log message
-    with on_time(1550000000.0, "UTC"):
+
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(1550000000, tz=ZoneInfo("UTC")), tick=False
+    ):
         assert parse_rfc5424_syslog_info(line) == expected_result
 
 

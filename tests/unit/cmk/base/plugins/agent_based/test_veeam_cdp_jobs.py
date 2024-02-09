@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based import veeam_cdp_jobs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, type_defs
@@ -119,6 +121,6 @@ def test_veeam_cdp_jobs_check(
     data: type_defs.StringTable,
     result: CheckResult,
 ) -> None:
-    with on_time(1632216660, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1632216660, tz=ZoneInfo("UTC"))):
         section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
         assert list(veeam_cdp_jobs.check_veeam_cdp_jobs(item, params, section)) == result

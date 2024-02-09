@@ -5,11 +5,12 @@
 
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import cryptography.x509 as x509
+import time_machine
 from dateutil.relativedelta import relativedelta
 
-from tests.testlib import on_time
 from tests.testlib.certs import rsa_private_keys_equal
 
 from livestatus import SiteId
@@ -147,7 +148,7 @@ class Test_CNTemplate:
 
 def test_create_root_ca_and_key(tmp_path: Path) -> None:
     filename = tmp_path / "test_certs_testCA"
-    with on_time(100, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(100, tz=ZoneInfo("UTC"))):
         ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
     assert ca.private_key.get_raw_rsa_key().key_size == 1024
@@ -221,8 +222,7 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
         issuer_name=peters_mom.certificate.subject,
     )
     peter_root_ca = RootCA(peter_cert, peter_key)
-
-    with on_time(567892121, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(567892121, tz=ZoneInfo("UTC"))):
         daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
             "peters_daughter",
             relativedelta(days=100),

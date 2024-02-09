@@ -104,7 +104,7 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         },
     )
 
-    painter: Painter = painter_base.painter_registry["tag_painter"]()
+    painter: Painter = painter_base.painter_registry["tag_painter"](user=user)
     dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None)
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

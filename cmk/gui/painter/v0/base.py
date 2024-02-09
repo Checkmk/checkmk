@@ -25,6 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -71,6 +72,13 @@ class Painter(abc.ABC):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
+
+    def __init__(  # pylint: disable=redefined-outer-name
+        self,
+        *,
+        user: LoggedInUser,
+    ):
+        self.user = user
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -286,7 +294,7 @@ class Painter(abc.ABC):
 
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
-        return instance().ident
+        return instance(user=user).ident
 
 
 painter_registry = PainterRegistry()
@@ -419,9 +427,9 @@ class Cell:
 
     def painter(self) -> Painter:
         try:
-            return PainterAdapter(experimental_painter_registry[self.painter_name()])
+            return PainterAdapter(experimental_painter_registry[self.painter_name()], user=user)
         except KeyError:
-            return painter_registry[self.painter_name()]()
+            return painter_registry[self.painter_name()](user=user)
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -484,7 +492,7 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name]()
+        return painter_registry[self._tooltip_painter_name](user=user)
 
     def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
@@ -743,7 +751,10 @@ class PainterAdapter(Painter):
 
     """
 
-    def __init__(self, painter: V1Painter):
+    def __init__(  # pylint: disable=redefined-outer-name
+        self, painter: V1Painter, *, user: LoggedInUser
+    ):
+        super().__init__(user=user)
         self._painter = painter
 
     @property

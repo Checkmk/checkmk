@@ -256,6 +256,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="minimal TextInput",
         ),
         pytest.param(
+            api_v1.form_specs.basic.Text(custom_validate=api_v1.validators.DisallowEmpty()),
+            legacy_valuespecs.TextInput(
+                placeholder="",
+                allow_empty=False,
+                validate=lambda _x, _y: None,  # ignored by test
+            ),
+            id="TextInput empty disallowed",
+        ),
+        pytest.param(
             api_v1.form_specs.basic.Text(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),

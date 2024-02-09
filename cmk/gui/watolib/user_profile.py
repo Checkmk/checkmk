@@ -59,7 +59,9 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     if not profiles_to_synchronize:
         return
 
-    remote_sites = [(site_id, get_site_config(site_id)) for site_id in get_login_slave_sites()]
+    remote_sites = [
+        (site_id, get_site_config(active_config, site_id)) for site_id in get_login_slave_sites()
+    ]
 
     logger.info(
         "Credentials changed for %s. Trying to sync to %d sites"

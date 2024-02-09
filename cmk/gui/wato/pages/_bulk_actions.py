@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from cmk.utils.hostaddress import HostName
 
 from cmk.gui import weblib
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
@@ -45,7 +46,7 @@ def _search_text_matches(
         str(host.effective_attributes().get("ipaddress")),
         str(host.effective_attributes().get("alias")),
         host.site_id(),
-        str(get_site_config(host.site_id())["alias"]),
+        str(get_site_config(active_config, host.site_id())["alias"]),
         str(host.tag_groups()),
         str(host.labels()),
     ]:

@@ -196,7 +196,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     if "secret" not in site:
         raise MKGeneralException(
             _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
@@ -220,7 +220,7 @@ def check_mk_remote_automation_serialized(
     # Synchronous execution of the actual remote command in a single blocking HTTP request
     return SerializedResult(
         _do_remote_automation_serialized(
-            site=get_site_config(site_id),
+            site=get_site_config(active_config, site_id),
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
@@ -315,7 +315,9 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
     return ast.literal_eval(
         str(
             do_remote_automation(
-                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+                site=get_site_config(active_config, site_id),
+                command="execute-dcd-command",
+                vars_=command_args,
             )
         )
     )
@@ -327,7 +329,7 @@ def fetch_service_discovery_background_job_status(
     details = json.loads(
         str(
             do_remote_automation(
-                site=get_site_config(site_id),
+                site=get_site_config(active_config, site_id),
                 command="service-discovery-job-snapshot",
                 vars_=[("hostname", hostname)],
             )
@@ -607,7 +609,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     It starts the background job using one call. It then polls the remote site, waiting for
     completion of the job."""
-    site_config = get_site_config(site_id)
+    site_config = get_site_config(active_config, site_id)
 
     job_id = _start_remote_automation_job(site_config, automation_request)
 

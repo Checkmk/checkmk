@@ -861,7 +861,7 @@ class StalenessIcon(Icon):
     def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-        if is_stale(row):
+        if is_stale(row, config=active_config):
             if what == "host":
                 title = _("This host is stale")
             else:

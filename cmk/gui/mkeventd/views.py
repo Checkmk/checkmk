@@ -401,7 +401,12 @@ class PainterSvcServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
+        return paint_custom_var(
+            "service",
+            "EC_SL",
+            row,
+            active_config.mkeventd_service_levels,
+        )
 
 
 class PainterHostServicelevel(Painter):
@@ -424,7 +429,12 @@ class PainterHostServicelevel(Painter):
         return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
+        return paint_custom_var(
+            "host",
+            "EC_SL",
+            row,
+            active_config.mkeventd_service_levels,
+        )
 
 
 class PainterEventId(Painter):

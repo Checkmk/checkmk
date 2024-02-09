@@ -651,7 +651,7 @@ def _get_config_sync_state(
 
     Calls the automation call "get-config-sync-state" on the remote site,
     which is handled by AutomationGetConfigSyncState."""
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "get-config-sync-state",
@@ -677,7 +677,7 @@ def _synchronize_files(
 
     sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "receive-config-sync",
@@ -873,7 +873,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
     while True:
         try:
             raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
-                get_site_config(site_id),
+                get_site_config(active_config, site_id),
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
             )
@@ -897,13 +897,13 @@ def _call_activate_changes_automation(
     omd_ident: ConfigDomainName = config_domain_name.OMD
     domain_requests = _get_domains_needing_activation(omd_ident, site_changes_activate_until)
 
-    if site_is_local(site_id):
+    if site_is_local(active_config, site_id):
         return execute_activate_changes(domain_requests)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
-            get_site_config(site_id),
+            get_site_config(active_config, site_id),
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
         )
@@ -1104,7 +1104,7 @@ class ActivateChanges:
         return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id, site):
-        return site_is_local(site_id) or "secret" in site
+        return site_is_local(active_config, site_id) or "secret" in site
 
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
@@ -1126,7 +1126,7 @@ class ActivateChanges:
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
     ) -> bool:
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)
@@ -2734,7 +2734,7 @@ def get_file_names_to_sync(
     # New files
     central_files = set(sync_state.central_file_infos.keys())
     remote_files_set = set(sync_state.remote_file_infos.keys())
-    remote_site_config = get_site_config(site_id)
+    remote_site_config = get_site_config(active_config, site_id)
     remote_files = (
         _filter_remote_files(remote_files_set)
         if remote_site_config.get("user_sync")

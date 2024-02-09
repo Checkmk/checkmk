@@ -10,9 +10,11 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import render, Result, State
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 from cmk.plugins.lib.netapp_api import (
     check_netapp_luns,
+    get_single_check,
+    get_summary_check,
     parse_netapp_api_multiple_instances,
     SectionMultipleInstances,
 )
@@ -136,3 +138,65 @@ def test_check_netapp_luns(
         )
         result_item += 1
         assert result[result_item] == Result(state=State.OK, summary="Used space is ignored")
+
+
+_FANS_SECTION = {
+    "fan1": {"cooling-element-is-error": "true", "cooling-element-number": "3"},
+    "fan2": {"cooling-element-is-error": "false", "cooling-element-number": "4"},
+}
+
+
+@pytest.mark.parametrize(
+    "item_name, expected_result",
+    [
+        pytest.param(
+            "fan1", [Result(state=State.CRIT, summary="Error in fan 3")], id="fan in error"
+        ),
+        pytest.param("fan2", [Result(state=State.OK, summary="Operational state OK")], id="fan ok"),
+    ],
+)
+def test_get_single_check_fan(item_name: str, expected_result: CheckResult) -> None:
+    result = list(get_single_check("fan")(item_name, _FANS_SECTION))
+
+    assert result == expected_result
+
+
+def test_get_summary_check_fan() -> None:
+    result = list(get_summary_check("fan")("", _FANS_SECTION))
+
+    assert result == [
+        Result(state=State.OK, summary="OK: 1 of 2"),
+        Result(state=State.CRIT, summary="Failed: 1 (fan1)"),
+    ]
+
+
+_PSU_SECTION = {
+    "psu1": {"power-supply-is-error": "true", "power-supply-element-number": "3"},
+    "psu2": {"power-supply-is-error": "false", "power-supply-element-number": "4"},
+}
+
+
+@pytest.mark.parametrize(
+    "item_name, expected_result",
+    [
+        pytest.param(
+            "psu1",
+            [Result(state=State.CRIT, summary="Error in power supply unit 3")],
+            id="psu in error",
+        ),
+        pytest.param("psu2", [Result(state=State.OK, summary="Operational state OK")], id="psu ok"),
+    ],
+)
+def test_get_single_check_psu(item_name: str, expected_result: CheckResult) -> None:
+    result = list(get_single_check("power supply unit")(item_name, _PSU_SECTION))
+
+    assert result == expected_result
+
+
+def test_get_summary_check_psu() -> None:
+    result = list(get_summary_check("power supply unit")("", _PSU_SECTION))
+
+    assert result == [
+        Result(state=State.OK, summary="OK: 1 of 2"),
+        Result(state=State.CRIT, summary="Failed: 1 (psu1)"),
+    ]

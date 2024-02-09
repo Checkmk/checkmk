@@ -28,40 +28,28 @@ class BooleanChoice(FormSpec[bool]):
     prefill: DefaultValue[bool] = DefaultValue(False)
 
 
-class BinaryUnit(Enum):
-    BYTE = auto()  # "Byte"
-    KILOBYTE = auto()  # "KB"
-    MEGABYTE = auto()  # "MB"
-    GIGABYTE = auto()  # "GB"
-    TERABYTE = auto()  # "TB"
-    PETABYTE = auto()  # "PB"
-    EXABYTE = auto()  # "EB"
-    ZETTABYTE = auto()  # "ZB"
-    YOTTABYTE = auto()  # "YB"
-    KIBIBYTE = auto()  # "KiB"
-    MEBIBYTE = auto()  # "MiB"
-    GIBIBYTE = auto()  # "GiB"
-    TEBIBYTE = auto()  # "TiB"
-    PEBIBYTE = auto()  # "PiB"
-    EXBIBYTE = auto()  # "EiB"
-    ZEBIBYTE = auto()  # "ZiB"
-    YOBIBYTE = auto()  # "YiB"
+class SIMagnitude(Enum):
+    BYTE = auto()
+    KILO = auto()
+    MEGA = auto()
+    GIGA = auto()
+    TERA = auto()
+    PETA = auto()
+    EXA = auto()
+    ZETTA = auto()
+    YOTTA = auto()
 
 
-SI_BINARY_UNIT = (
-    BinaryUnit.BYTE,
-    BinaryUnit.KILOBYTE,
-    BinaryUnit.MEGABYTE,
-    BinaryUnit.GIGABYTE,
-    BinaryUnit.TERABYTE,
-)
-IEC_BINARY_UNIT = (
-    BinaryUnit.BYTE,
-    BinaryUnit.KIBIBYTE,
-    BinaryUnit.MEBIBYTE,
-    BinaryUnit.GIBIBYTE,
-    BinaryUnit.TEBIBYTE,
-)
+class IECMagnitude(Enum):
+    BYTE = auto()
+    KIBI = auto()
+    MEBI = auto()
+    GIBI = auto()
+    TEBI = auto()
+    PEBI = auto()
+    EXBI = auto()
+    ZEBI = auto()
+    YOBI = auto()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,12 +58,12 @@ class DataSize(FormSpec[int]):
 
     Args:
         label: Text displayed as an extension to the input field
-        displayed_units: Units that can be selected in the UI
+        displayed_magnitudes: Magnitudes of data that can be entered in the UI
         prefill: Value in bytes to pre-populate the form field with.
     """
 
     label: Localizable | None = None
-    displayed_units: Sequence[BinaryUnit] | None = None
+    displayed_magnitudes: Sequence[SIMagnitude] | Sequence[IECMagnitude]
     prefill: Prefill[int] = InputHint(0)
 
 
@@ -296,12 +284,12 @@ class Text(FormSpec[str]):
     prefill: Prefill[str] = InputHint("")
 
 
-class TimeUnit(Enum):
-    MILLISECOND = auto()  # "milliseconds"
-    SECOND = auto()  # "seconds"
-    MINUTE = auto()  # "minutes"
-    HOUR = auto()  # "hours"
-    DAY = auto()  # "days"
+class TimeMagnitude(Enum):
+    MILLISECOND = auto()
+    SECOND = auto()
+    MINUTE = auto()
+    HOUR = auto()
+    DAY = auto()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -310,7 +298,7 @@ class TimeSpan(FormSpec[float]):
 
     Args:
         label: Text displayed as an extension to the input field
-        displayed_units: Units that can be configured in the UI. All of the listed units can be
+        displayed_magnitudes: Units that can be configured in the UI. All of the listed units can be
                         configured and the value is the sum of the configured fields in seconds.
         prefill: Value in seconds to pre-populate the form fields with.
 
@@ -321,7 +309,7 @@ class TimeSpan(FormSpec[float]):
     """
 
     label: Localizable | None = None
-    displayed_units: Sequence[TimeUnit] | None = None
+    displayed_magnitudes: Sequence[TimeMagnitude]
     prefill: Prefill[float] = InputHint(0.0)
 
 

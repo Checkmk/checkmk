@@ -198,8 +198,18 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Float",
         ),
         pytest.param(
-            api_v1.form_specs.basic.DataSize(),
-            LegacyDataSize(),
+            api_v1.form_specs.basic.DataSize(
+                displayed_magnitudes=tuple(api_v1.form_specs.basic.SIMagnitude)[:5]
+            ),
+            LegacyDataSize(
+                units=[
+                    LegacyBinaryUnit.Byte,
+                    LegacyBinaryUnit.KB,
+                    LegacyBinaryUnit.MB,
+                    LegacyBinaryUnit.GB,
+                    LegacyBinaryUnit.TB,
+                ],
+            ),
             id="minimal DataSize",
         ),
         pytest.param(
@@ -207,7 +217,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
-                displayed_units=api_v1.form_specs.basic.SI_BINARY_UNIT,
+                displayed_magnitudes=(
+                    api_v1.form_specs.basic.SIMagnitude.KILO,
+                    api_v1.form_specs.basic.SIMagnitude.EXA,
+                ),
                 prefill=api_v1.form_specs.DefaultValue(-1),
                 custom_validate=lambda x: None,
             ),
@@ -216,11 +229,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("help"),
                 label=_("label"),
                 units=[
-                    LegacyBinaryUnit.Byte,
                     LegacyBinaryUnit.KB,
-                    LegacyBinaryUnit.MB,
-                    LegacyBinaryUnit.GB,
-                    LegacyBinaryUnit.TB,
+                    LegacyBinaryUnit.EB,
                 ],
                 default_value=-1,
                 validate=lambda x, y: None,
@@ -474,7 +484,10 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="FixedValue",
         ),
         pytest.param(
-            api_v1.form_specs.basic.TimeSpan(),
+            api_v1.form_specs.basic.TimeSpan(
+                # reverse just to keep the test simple
+                displayed_magnitudes=tuple(reversed(api_v1.form_specs.basic.TimeMagnitude))
+            ),
             legacy_valuespecs.TimeSpan(),
             id="minimal TimeSpan",
         ),
@@ -483,11 +496,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("age title"),
                 label=api_v1.Localizable("age label"),
                 help_text=api_v1.Localizable("help text"),
-                displayed_units=[
-                    api_v1.form_specs.basic.TimeUnit.DAY,
-                    api_v1.form_specs.basic.TimeUnit.HOUR,
-                    api_v1.form_specs.basic.TimeUnit.MINUTE,
-                    api_v1.form_specs.basic.TimeUnit.SECOND,
+                displayed_magnitudes=[
+                    api_v1.form_specs.basic.TimeMagnitude.DAY,
+                    api_v1.form_specs.basic.TimeMagnitude.HOUR,
+                    api_v1.form_specs.basic.TimeMagnitude.MINUTE,
+                    api_v1.form_specs.basic.TimeMagnitude.SECOND,
                 ],
                 prefill=api_v1.form_specs.DefaultValue(100),
             ),
@@ -1650,7 +1663,9 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
     return [
         api_v1.form_specs.basic.Integer(),
         api_v1.form_specs.basic.Float(),
-        api_v1.form_specs.basic.DataSize(),
+        api_v1.form_specs.basic.DataSize(
+            displayed_magnitudes=tuple(api_v1.form_specs.basic.IECMagnitude)
+        ),
         api_v1.form_specs.basic.Percentage(),
         api_v1.form_specs.basic.Text(),
         api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved(elements=[]),
@@ -1669,7 +1684,9 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.basic.HostState(),
         api_v1.form_specs.composed.List(element_template=api_v1.form_specs.basic.Integer()),
         api_v1.form_specs.basic.FixedValue(value=None),
-        api_v1.form_specs.basic.TimeSpan(),
+        api_v1.form_specs.basic.TimeSpan(
+            displayed_magnitudes=tuple(api_v1.form_specs.basic.TimeMagnitude)
+        ),
         api_v1.form_specs.levels.Levels(
             level_direction=api_v1.form_specs.levels.LevelDirection.UPPER,
             predictive=None,
@@ -1800,7 +1817,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             api_v1.form_specs.levels.Levels[float](
                 title=api_v1.Localizable("Cast to super type float"),
                 form_spec_template=api_v1.form_specs.basic.TimeSpan(
-                    displayed_units=[api_v1.form_specs.basic.TimeUnit.SECOND]
+                    displayed_magnitudes=[api_v1.form_specs.basic.TimeMagnitude.SECOND]
                 ),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
@@ -2017,9 +2034,9 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         pytest.param(
             api_v1.form_specs.levels.Levels(
                 form_spec_template=api_v1.form_specs.basic.TimeSpan(
-                    displayed_units=[
-                        api_v1.form_specs.basic.TimeUnit.SECOND,
-                        api_v1.form_specs.basic.TimeUnit.MINUTE,
+                    displayed_magnitudes=[
+                        api_v1.form_specs.basic.TimeMagnitude.SECOND,
+                        api_v1.form_specs.basic.TimeMagnitude.MINUTE,
                     ]
                 ),
                 level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,

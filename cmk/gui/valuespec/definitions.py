@@ -778,6 +778,8 @@ class LegacyBinaryUnit(Enum):
     EB = 1000**6
     ZB = 1000**7
     YB = 1000**8
+    RB = 1000**9
+    QB = 1000**10
     KiB = 1024
     MiB = 1024**2
     GiB = 1024**3
@@ -785,7 +787,9 @@ class LegacyBinaryUnit(Enum):
     PiB = 1024**5
     EiB = 1024**6
     ZiB = 1024**7
-    YiB = 1000**8
+    YiB = 1024**8
+    RiB = 1024**9
+    QiB = 1024**10
 
 
 class LegacyDataSize(Integer):

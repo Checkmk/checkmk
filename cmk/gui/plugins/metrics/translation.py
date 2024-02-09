@@ -496,6 +496,12 @@ do_not_display_fs_size_translation: dict[str, CheckMetricEntry] = {
     },
 }
 check_metrics["check_mk-nfsmounts"] = do_not_display_fs_size_translation
+check_metrics["check_mk-nfsiostat"] = {
+    "read_avg_rtt_ms": {"name": "read_avg_rtt_s", "scale": m},
+    "read_avg_exe_ms": {"name": "read_avg_exe_s", "scale": m},
+    "write_avg_rtt_ms": {"name": "write_avg_rtt_s", "scale": m},
+    "write_avg_exe_ms": {"name": "write_avg_exe_s", "scale": m},
+}
 check_metrics["check_mk-cifsmounts"] = do_not_display_fs_size_translation
 check_metrics["check_mk-proxmox_ve_disk_usage"] = do_not_display_fs_size_translation
 

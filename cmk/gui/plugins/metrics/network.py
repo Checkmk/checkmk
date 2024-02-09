@@ -1471,15 +1471,21 @@ metric_info["read_retrans"] = {
     "color": "#90ee90",
 }
 
-metric_info["read_avg_rtt_ms"] = {
-    "title": _("Read average rtt"),
-    "unit": "ms",
+metric_info["write_retrans"] = {
+    "title": _("Write retransmission"),
+    "unit": "%",
     "color": "#90ee90",
 }
 
-metric_info["read_avg_exe_ms"] = {
+metric_info["read_avg_rtt_s"] = {
+    "title": _("Read average rtt"),
+    "unit": "s",
+    "color": "#90ee90",
+}
+
+metric_info["read_avg_exe_s"] = {
     "title": _("Read average exe"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 
@@ -1502,15 +1508,15 @@ metric_info["write_b_op"] = {
     "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
-metric_info["write_avg_rtt_ms"] = {
+metric_info["write_avg_rtt_s"] = {
     "title": _("Write average rtt"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 
-metric_info["write_avg_exe_ms"] = {
+metric_info["write_avg_exe_s"] = {
     "title": _("Write average exe"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 

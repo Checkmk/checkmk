@@ -5,7 +5,7 @@
 
 """FormSpecs that can be composed of other FormSpecs"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Generic, Mapping, Sequence
 
 from .._localize import Localizable
@@ -100,9 +100,9 @@ class Dictionary(FormSpec[Mapping[str, object]]):
 
     elements: Mapping[str, DictElement[Any]]
 
-    no_elements_text: Localizable | None = None
+    no_elements_text: Localizable = Localizable("(no parameters)")
 
-    deprecated_elements: tuple[str, ...] = field(default_factory=tuple)
+    deprecated_elements: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         for key in self.elements:  # type: ignore[misc]

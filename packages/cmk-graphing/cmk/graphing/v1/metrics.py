@@ -10,7 +10,7 @@ from dataclasses import dataclass, KW_ONLY
 
 from ._color import Color
 from ._localize import Localizable
-from ._unit import PhysicalUnit, ScientificUnit, Unit
+from ._unit import DecimalUnit, ScientificUnit, Unit
 
 __all__ = [
     "Metric",
@@ -50,7 +50,7 @@ class Metric:
 
     name: str
     title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    unit: Unit | DecimalUnit | ScientificUnit
     color: Color
 
     def __post_init__(self) -> None:
@@ -77,7 +77,7 @@ value=23.5)
     """
 
     title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     value: int | float
 
@@ -243,7 +243,7 @@ factors=['metric-name-1', 'metric-name-2'])
     """
 
     title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     factors: Sequence[
         str
@@ -351,7 +351,7 @@ dividend='metric-name-1', divisor='metric-name-2')
     """
 
     title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     _: KW_ONLY
     dividend: (

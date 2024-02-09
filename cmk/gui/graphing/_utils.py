@@ -30,10 +30,10 @@ from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
 from cmk.graphing.v1 import (
+    DecimalUnit,
     graphs,
     metrics,
     perfometers,
-    PhysicalUnit,
     ScientificUnit,
     translations,
     Unit,
@@ -182,7 +182,7 @@ def _parse_raw_graph_range(
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
 
 
-def _parse_or_add_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> str:
+def _parse_or_add_unit(unit: Unit | DecimalUnit | ScientificUnit) -> str:
     unit_name = unit.name if isinstance(unit, Unit) else unit.symbol
     if unit_name not in set(unit_info.keys()):
         unit_info[unit_name] = parse_unit(unit)

@@ -37,7 +37,7 @@ def test_load_aggregation_integrity(bi_packs_sample_config) -> None:  # type: ig
     [
         (sample_config.bi_status_rows, 1, False, 0, 2, True),
         (sample_config.bi_acknowledgment_status_rows, 1, True, 0, 1, True),
-        (sample_config.bi_downtime_status_rows, 1, False, 1, 1, True),
+        (sample_config.bi_downtime_status_rows, 1, False, 2, 1, True),
         (sample_config.bi_service_period_status_rows, 1, False, 0, 1, False),
     ],
 )

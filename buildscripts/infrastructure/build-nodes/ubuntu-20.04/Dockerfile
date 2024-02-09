@@ -77,7 +77,6 @@ RUN apt-get update \
     rpcbind \
     rsync \
     smbclient \
-    snmp \
     software-properties-common \
     texinfo \
     tk-dev \

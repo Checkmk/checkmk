@@ -874,7 +874,23 @@ class PainterEventPhase(Painter):
 
 
 def paint_event_icons(row, history=False):
-    htmlcode = render_event_phase_icons(row)
+    phase = row["event_phase"]
+
+    htmlcode: str | HTML
+    if phase == "ack":
+        htmlcode = html.render_icon(phase, title=_("This event has been acknowledged."))
+    elif phase == "counting":
+        htmlcode = html.render_icon(
+            phase,
+            title=_("This event has not reached the target count yet."),
+        )
+    elif phase == "delayed":
+        htmlcode = html.render_icon(
+            phase,
+            title=_("The action of this event is still delayed in the hope of a cancelling event."),
+        )
+    else:
+        htmlcode = ""
 
     if not history:
         htmlcode += render_delete_event_icons(row)
@@ -885,21 +901,6 @@ def paint_event_icons(row, history=False):
     if htmlcode:
         return "icons", htmlcode
     return "", ""
-
-
-def render_event_phase_icons(row: Row) -> str | HTML:
-    phase = row["event_phase"]
-
-    if phase == "ack":
-        title = _("This event has been acknowledged.")
-    elif phase == "counting":
-        title = _("This event has not reached the target count yet.")
-    elif phase == "delayed":
-        title = _("The action of this event is still delayed in the hope of a cancelling event.")
-    else:
-        return ""
-
-    return html.render_icon(phase, title=title)
 
 
 def render_delete_event_icons(row: Row) -> str | HTML:

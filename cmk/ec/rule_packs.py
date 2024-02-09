@@ -123,15 +123,16 @@ def _bind_to_rule_pack_proxies(
                 )
 
 
+# Used by ourselves *and* the GUI!
 def _load_config(  # pylint: disable=too-many-branches
-    settings: Settings, rule_packs_dir: Path
+    settings: Settings, config_dir: Path
 ) -> ConfigFromWATO:
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
     global_context = dict(default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
     global_context["mkp_rule_packs"] = {}
-    for path in [settings.paths.main_config_file.value] + sorted(rule_packs_dir.glob("**/*.mk")):
+    for path in [settings.paths.main_config_file.value] + sorted(config_dir.glob("**/*.mk")):
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
@@ -195,18 +196,21 @@ def _load_config(  # pylint: disable=too-many-branches
     return config
 
 
+# TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.eventd_configuration()
 def load_config(settings: Settings) -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
     distributed setups."""
     return _load_config(settings, settings.paths.config_dir.value)
 
 
+# Used only by ourselves in by cmk.ec.main.load_configuration()
 def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
     are filtered rule packs, especially in distributed managed setups."""
     return _load_config(settings, settings.paths.active_config_dir.value)
 
 
+# TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.save_active_config()
 def save_active_config(
     settings: Settings,
     rule_packs: Iterable[ECRulePackSpec],

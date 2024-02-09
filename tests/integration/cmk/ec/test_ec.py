@@ -213,3 +213,26 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
 
     # cleanup: disable SNMP trap receiver
     _change_snmp_trap_receiver(site, enable_receiver=False)
+
+
+def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
+    """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
+    match, _, _ = setup_ec
+    event_message = "some other status"
+    assert match not in event_message
+
+    _change_snmp_trap_receiver(site, enable_receiver=True)
+
+    rc = site.execute(_get_snmp_trap_cmd(event_message)).wait()
+    assert rc == 0, "Failed to send message via SNMP trap"
+
+    live = site.live
+
+    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    assert not queried_event_states
+
+    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    assert not queried_event_messages
+
+    # cleanup: disable SNMP trap receiver
+    _change_snmp_trap_receiver(site, enable_receiver=False)

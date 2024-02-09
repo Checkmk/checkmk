@@ -25,7 +25,7 @@ from cmk.rulesets.v1.form_specs.composed import (
     List,
 )
 from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
-from cmk.rulesets.v1.form_specs.preconfigured import Password
+from cmk.rulesets.v1.form_specs.preconfigured import Password, Proxy
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 from cmk.rulesets.v1.validators import DisallowEmpty
 
@@ -404,8 +404,7 @@ def _valuespec_connection() -> Dictionary:
                     ],
                 ),
             ),
-            # Not yet implemented
-            # "proxy": HTTPProxyReference())
+            "proxy": DictElement(parameter_form=Proxy()),
             "redirects": DictElement(
                 parameter_form=SingleChoice(
                     title=Localizable("Redirects"),

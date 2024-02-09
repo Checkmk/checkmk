@@ -8,6 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
 from cmk.gui.views.perfometer import Perfometer
@@ -35,7 +36,7 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None]) -> None:
         }
         for v in sort_values
     ]
-    sorter = SorterPerfometer(user=user)
+    sorter = SorterPerfometer(user=user, config=active_config)
 
     def wrapped(r1: Row, r2: Row) -> int:
         return sorter.cmp(r1, r2, None)

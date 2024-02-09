@@ -6,7 +6,6 @@
 from collections.abc import Sequence
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
@@ -49,7 +48,7 @@ class PainterPerfometer(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         classes = ["perfometer"]
-        if is_stale(row, config=active_config):
+        if is_stale(row, config=self.config):
             classes.append("stale")
 
         try:
@@ -58,7 +57,7 @@ class PainterPerfometer(Painter):
                 return "", ""
         except Exception as e:
             logger.exception("error rendering performeter")
-            if active_config.debug:
+            if self.config.debug:
                 raise
             return " ".join(classes), _("Exception: %s") % e
 

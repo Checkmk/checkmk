@@ -18,6 +18,7 @@ from cmk.utils.structured_data import ImmutableTree
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter.v0.painters import _paint_custom_notes
@@ -1859,7 +1860,9 @@ def test_paint_custom_notes(
     with open(notes_file, "w") as f:
         f.write("<hr>".join(notes))
 
-    assert notes_file.read_text() == str(_paint_custom_notes(notes_type, row)[1])
+    assert notes_file.read_text() == str(
+        _paint_custom_notes(notes_type, row, config=active_config)[1]
+    )
 
 
 @pytest.mark.parametrize(
@@ -2093,7 +2096,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
         "host_address": "127.0.0.1",
     }
 
-    displayed_custom_notes = _paint_custom_notes(object_type, row)[1]
+    displayed_custom_notes = _paint_custom_notes(object_type, row, config=active_config)[1]
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)

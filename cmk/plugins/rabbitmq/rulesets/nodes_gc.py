@@ -6,10 +6,12 @@ from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import InputHint
-from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer
+from cmk.rulesets.v1.form_specs.basic import DataSize, Float, IECMagnitude, Integer
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
+
+MAGNITUDES = tuple(IECMagnitude)[:5]
 
 
 def _migrate_levels(
@@ -64,15 +66,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_bytes_reclaimed_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=DataSize(
-                        displayed_units=[
-                            BinaryUnit.BYTE,
-                            BinaryUnit.KIBIBYTE,
-                            BinaryUnit.MEBIBYTE,
-                            BinaryUnit.GIBIBYTE,
-                            BinaryUnit.TEBIBYTE,
-                        ]
-                    ),
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
@@ -81,15 +75,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_bytes_reclaimed_rate_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=DataSize(
-                        displayed_units=[
-                            BinaryUnit.BYTE,
-                            BinaryUnit.KIBIBYTE,
-                            BinaryUnit.MEBIBYTE,
-                            BinaryUnit.GIBIBYTE,
-                            BinaryUnit.TEBIBYTE,
-                        ]
-                    ),
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
@@ -98,15 +84,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_bytes_reclaimed_rate_lower": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=DataSize(
-                        displayed_units=[
-                            BinaryUnit.BYTE,
-                            BinaryUnit.KIBIBYTE,
-                            BinaryUnit.MEBIBYTE,
-                            BinaryUnit.GIBIBYTE,
-                            BinaryUnit.TEBIBYTE,
-                        ]
-                    ),
+                    form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,

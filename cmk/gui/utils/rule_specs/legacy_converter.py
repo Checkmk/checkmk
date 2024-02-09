@@ -612,42 +612,46 @@ def _convert_to_legacy_float(
 
 
 def _convert_to_legacy_binary_unit(
-    unit: ruleset_api_v1.form_specs.basic.BinaryUnit,
+    unit: ruleset_api_v1.form_specs.basic.SIMagnitude
+    | ruleset_api_v1.form_specs.basic.IECMagnitude,
 ) -> legacy_valuespecs.LegacyBinaryUnit:
     match unit:
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.BYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.BYTE:
             return legacy_valuespecs.LegacyBinaryUnit.Byte
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.KILOBYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.KILO:
             return legacy_valuespecs.LegacyBinaryUnit.KB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEGABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.MEGA:
             return legacy_valuespecs.LegacyBinaryUnit.MB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIGABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.GIGA:
             return legacy_valuespecs.LegacyBinaryUnit.GB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.TERABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.TERA:
             return legacy_valuespecs.LegacyBinaryUnit.TB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.PETABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.PETA:
             return legacy_valuespecs.LegacyBinaryUnit.PB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.EXA:
             return legacy_valuespecs.LegacyBinaryUnit.EB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZETTABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.ZETTA:
             return legacy_valuespecs.LegacyBinaryUnit.ZB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOTTABYTE:
+        case ruleset_api_v1.form_specs.basic.SIMagnitude.YOTTA:
             return legacy_valuespecs.LegacyBinaryUnit.YB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.KIBIBYTE:
+
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.BYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.Byte
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.KIBI:
             return legacy_valuespecs.LegacyBinaryUnit.KiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.MEBI:
             return legacy_valuespecs.LegacyBinaryUnit.MiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.GIBI:
             return legacy_valuespecs.LegacyBinaryUnit.GiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.TEBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.TEBI:
             return legacy_valuespecs.LegacyBinaryUnit.TiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.PEBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.PEBI:
             return legacy_valuespecs.LegacyBinaryUnit.PiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.EXBI:
             return legacy_valuespecs.LegacyBinaryUnit.EiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZEBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.ZEBI:
             return legacy_valuespecs.LegacyBinaryUnit.ZiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOBIBYTE:
+        case ruleset_api_v1.form_specs.basic.IECMagnitude.YOBI:
             return legacy_valuespecs.LegacyBinaryUnit.YiB
 
 
@@ -658,6 +662,10 @@ def _convert_to_legacy_datasize(
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
+        "units": [
+            _convert_to_legacy_binary_unit(magnitude)
+            for magnitude in to_convert.displayed_magnitudes
+        ],
     }
 
     match to_convert.prefill:
@@ -670,11 +678,6 @@ def _convert_to_legacy_datasize(
         converted_kwargs["validate"] = _convert_to_legacy_validation(
             to_convert.custom_validate, localizer
         )
-
-    if to_convert.displayed_units is not None:
-        converted_kwargs["units"] = [
-            _convert_to_legacy_binary_unit(unit) for unit in to_convert.displayed_units
-        ]
 
     return legacy_valuespecs.LegacyDataSize(**converted_kwargs)
 
@@ -987,18 +990,18 @@ def _convert_to_legacy_fixed_value(
 
 
 def _convert_to_legacy_time_unit(
-    unit: ruleset_api_v1.form_specs.basic.TimeUnit,
+    unit: ruleset_api_v1.form_specs.basic.TimeMagnitude,
 ) -> Literal["days", "hours", "minutes", "seconds", "milliseconds"]:
     match unit:
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MILLISECOND:
+        case ruleset_api_v1.form_specs.basic.TimeMagnitude.MILLISECOND:
             return "milliseconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.SECOND:
+        case ruleset_api_v1.form_specs.basic.TimeMagnitude.SECOND:
             return "seconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MINUTE:
+        case ruleset_api_v1.form_specs.basic.TimeMagnitude.MINUTE:
             return "minutes"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.HOUR:
+        case ruleset_api_v1.form_specs.basic.TimeMagnitude.HOUR:
             return "hours"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.DAY:
+        case ruleset_api_v1.form_specs.basic.TimeMagnitude.DAY:
             return "days"
 
 
@@ -1011,9 +1014,9 @@ def _convert_to_legacy_time_span(
         "label": _localize_optional(to_convert.label, localizer),
     }
 
-    if to_convert.displayed_units is not None:
+    if to_convert.displayed_magnitudes is not None:
         converted_kwargs["display"] = [
-            _convert_to_legacy_time_unit(u) for u in to_convert.displayed_units
+            _convert_to_legacy_time_unit(u) for u in to_convert.displayed_magnitudes
         ]
 
     match to_convert.prefill:

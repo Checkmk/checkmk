@@ -6,16 +6,16 @@
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import (
-    BinaryUnit,
     BooleanChoice,
     DataSize,
     FixedValue,
     Integer,
+    SIMagnitude,
     SingleChoice,
     SingleChoiceElement,
     Text,
+    TimeMagnitude,
     TimeSpan,
-    TimeUnit,
 )
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
@@ -78,7 +78,12 @@ def _valuespec_document() -> Dictionary:
                 # TODO How to use AGE correctly?!
                 parameter_form=TimeSpan(
                     title=Localizable("Age"),
-                    displayed_units=[TimeUnit.SECOND, TimeUnit.MINUTE, TimeUnit.HOUR, TimeUnit.DAY],
+                    displayed_magnitudes=[
+                        TimeMagnitude.SECOND,
+                        TimeMagnitude.MINUTE,
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.DAY,
+                    ],
                     label=Localizable("Warn, if the age is older than"),
                     help_text=Localizable("Warn, if the age of the page is older than this"),
                     prefill=DefaultValue(3600 * 24),
@@ -91,10 +96,10 @@ def _valuespec_document() -> Dictionary:
                         "min": DictElement(
                             parameter_form=DataSize(
                                 title=Localizable("Minimum"),
-                                displayed_units=[
-                                    BinaryUnit.BYTE,
-                                    BinaryUnit.KILOBYTE,
-                                    BinaryUnit.MEGABYTE,
+                                displayed_magnitudes=[
+                                    SIMagnitude.BYTE,
+                                    SIMagnitude.KILO,
+                                    SIMagnitude.MEGA,
                                 ],
                             ),
                             required=False,
@@ -102,10 +107,10 @@ def _valuespec_document() -> Dictionary:
                         "max": DictElement(
                             parameter_form=DataSize(
                                 title=Localizable("Maximum"),
-                                displayed_units=[
-                                    BinaryUnit.BYTE,
-                                    BinaryUnit.KILOBYTE,
-                                    BinaryUnit.MEGABYTE,
+                                displayed_magnitudes=[
+                                    SIMagnitude.BYTE,
+                                    SIMagnitude.KILO,
+                                    SIMagnitude.MEGA,
                                 ],
                             ),
                             required=False,
@@ -569,7 +574,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 parameter_form=Levels(
                     title=Localizable("Response time"),
                     form_spec_template=TimeSpan(
-                        displayed_units=[TimeUnit.SECOND, TimeUnit.MILLISECOND],
+                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     ),
                     level_direction=LevelDirection.UPPER,
                     predictive=None,

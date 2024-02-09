@@ -9,8 +9,8 @@ import sys
 from apispec.yaml_utils import dict_to_yaml
 
 from cmk.gui import main_modules
-from cmk.gui.openapi import generate_spec
 from cmk.gui.openapi.restful_objects import make_spec
+from cmk.gui.openapi.spec_generator import generate_spec
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import application_and_request_context
 

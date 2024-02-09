@@ -9,14 +9,29 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.netapp_api import (
     check_netapp_luns,
+    check_netapp_qtree_quota,
+    discover_netapp_qtree_quota,
     get_single_check,
     get_summary_check,
     parse_netapp_api_multiple_instances,
+    Qtree,
     SectionMultipleInstances,
 )
+
+LAST_TIME_EPOCH = (
+    datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
+).total_seconds()
 
 
 @pytest.mark.parametrize(
@@ -102,10 +117,6 @@ def test_check_netapp_luns(
     read_only: bool,
     params: Mapping[str, Any],
 ) -> None:
-    LAST_TIME_EPOCH = (
-        datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f")
-        - datetime(1970, 1, 1)
-    ).total_seconds()
     NOW_SIMULATED_SECONDS = (
         datetime.strptime("1988-06-08 17:00:00.000000", "%Y-%m-%d %H:%M:%S.%f")
         - datetime(1970, 1, 1)
@@ -199,3 +210,123 @@ def test_get_summary_check_psu() -> None:
         Result(state=State.OK, summary="OK: 1 of 2"),
         Result(state=State.CRIT, summary="Failed: 1 (psu1)"),
     ]
+
+
+_QTREE_SECTION = {
+    # discovered as "qtree.1"
+    "qtree.1": Qtree(
+        quota="qtree",
+        quota_users="1",
+        quota_type="type",
+        volume="",
+        disk_limit="500",
+        disk_used="100",
+        files_used="",
+        file_limit="",
+    ),
+    # discovered as "volume_name/qtree.2" with exclude_volume to False
+    "volume_name/qtree.2": Qtree(
+        quota="qtree",
+        quota_users="2",
+        quota_type="type",
+        volume="volume_name",
+        disk_limit="500",
+        disk_used="100",
+        files_used="",
+        file_limit="",
+    ),
+    # discovered as "qtree.2" with exclude_volume to True
+    "qtree.2": Qtree(
+        quota="qtree",
+        quota_users="2",
+        quota_type="type",
+        volume="volume_name",
+        disk_limit="500",
+        disk_used="100",
+        files_used="",
+        file_limit="",
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "params, expected_result",
+    [
+        pytest.param(
+            {},  # {"exclude_volume": False},
+            [Service(item="qtree.1"), Service(item="volume_name/qtree.2")],
+            id="",
+        ),
+        pytest.param(
+            {"exclude_volume": True},
+            [Service(item="qtree.1"), Service(item="qtree.2")],
+            id="",
+        ),
+    ],
+)
+def test_discover_netapp_qtree_quota(
+    params: Mapping[str, Any], expected_result: DiscoveryResult
+) -> None:
+    result = list(discover_netapp_qtree_quota(params, _QTREE_SECTION))
+    assert result == expected_result
+
+
+def test_check_netapp_qtree_quota_ok() -> None:
+    value_store = {"item_name.delta": (LAST_TIME_EPOCH, 0.0)}
+    qtree = Qtree(
+        quota="qtree",
+        quota_users="1",
+        quota_type="type",
+        volume="",
+        disk_limit="500",
+        disk_used="100",
+        files_used="",
+        file_limit="",
+    )
+    params = {
+        "levels": (80.0, 90.0),
+        "trend_range": 24,
+        "trend_perfdata": True,
+    }
+    result = list(check_netapp_qtree_quota("item_name", qtree, params, value_store))
+
+    assert len(result) == 10
+
+
+@pytest.mark.parametrize(
+    "qtree, expected_result",
+    [
+        pytest.param(
+            Qtree(
+                quota="qtree",
+                quota_users="2",
+                quota_type="type",
+                volume="volume_name",
+                disk_limit="",
+                disk_used="100",
+                files_used="",
+                file_limit="",
+            ),
+            [Result(state=State.UNKNOWN, summary="Qtree has no disk limit set")],
+            id="qtree with no disk limit",
+        ),
+        pytest.param(
+            Qtree(
+                quota="qtree",
+                quota_users="2",
+                quota_type="type",
+                volume="volume_name",
+                disk_limit="500",
+                disk_used="unknown",
+                files_used="",
+                file_limit="",
+            ),
+            [Result(state=State.UNKNOWN, summary="Qtree has no used space data set")],
+            id="qtree with no disk used",
+        ),
+    ],
+)
+def test_check_netapp_qtree_quota_unknown(qtree: Qtree, expected_result: CheckResult) -> None:
+    result = list(check_netapp_qtree_quota("item_name", qtree, {}, {}))
+
+    assert result == expected_result

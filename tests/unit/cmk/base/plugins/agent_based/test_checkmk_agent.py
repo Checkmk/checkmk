@@ -7,8 +7,10 @@ import json
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
 from tests.testlib import on_time
 
@@ -494,7 +496,7 @@ def test_certificate_results(
 
 @pytest.mark.parametrize("duplicate", [False, True])
 def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
-    with on_time(1645800081.5039608, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1645800081.5039608, tz=ZoneInfo("UTC"))):
         actual = list(
             _check_cmk_agent_update(
                 {},
@@ -1158,7 +1160,7 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    with on_time(1674578645.3644419, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1674578645.3644419, tz=ZoneInfo("UTC"))):
         assert (
             list(check_checkmk_agent({}, None, None, controller_section, None, None))
             == expected_result

@@ -5,11 +5,13 @@
 # flake8: noqa
 """EC History file backend"""
 
+import datetime
 import logging
 import shlex
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import time_machine
 
 from cmk.utils.hostaddress import HostName
 
@@ -57,11 +59,10 @@ def test_file_add_get(history: FileHistory) -> None:
 
 def test_current_history_period(config: Config) -> None:
     """timestamp of the beginning of the current history period correctly returned."""
-
-    with on_time(1550000000.0, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
         assert _current_history_period(config=config) == 1549929600
 
-    with on_time(1550000000.0, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
         assert (
             _current_history_period(config={**config, "history_rotation": "weekly"}) == 1549843200
         )

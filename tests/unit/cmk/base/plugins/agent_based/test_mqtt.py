@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import json
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import mqtt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -382,7 +383,7 @@ def test_discovery_mqtt_uptime(discovery_scenario: DiscoveryScenario) -> None:
 def test_check_mqtt_uptime(check_scenario: CheckScenario, monkeypatch: pytest.MonkeyPatch) -> None:
     if check_scenario.value_store:
         monkeypatch.setattr(mqtt, "get_value_store", check_scenario.value_store.copy)
-    with on_time(581792400, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(581792400, tz=ZoneInfo("UTC"))):
         assert (
             list(check_mqtt_uptime(check_scenario.item, check_scenario.section))
             == check_scenario.expected_result
@@ -438,7 +439,7 @@ def test_check_mqtt_uptime(check_scenario: CheckScenario, monkeypatch: pytest.Mo
 def test_check_mqtt_broker(check_scenario: CheckScenario, monkeypatch: pytest.MonkeyPatch) -> None:
     if check_scenario.value_store:
         monkeypatch.setattr(mqtt, "get_value_store", check_scenario.value_store.copy)
-    with on_time(581792400, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(581792400, tz=ZoneInfo("UTC"))):
         assert (
             list(check_mqtt_broker(check_scenario.item, check_scenario.section))
             == check_scenario.expected_result
@@ -582,7 +583,7 @@ def test_check_mqtt_messages(
 ) -> None:
     if check_scenario.value_store:
         monkeypatch.setattr(mqtt, "get_value_store", check_scenario.value_store.copy)
-    with on_time(581792400, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(581792400, tz=ZoneInfo("UTC"))):
         assert (
             list(check_mqtt_messages(check_scenario.item, check_scenario.section))
             == check_scenario.expected_result
@@ -676,7 +677,7 @@ def test_discovery_mqtt_clients(discovery_scenario: DiscoveryScenario) -> None:
 def test_check_mqtt_clients(check_scenario: CheckScenario, monkeypatch: pytest.MonkeyPatch) -> None:
     if check_scenario.value_store:
         monkeypatch.setattr(mqtt, "get_value_store", check_scenario.value_store.copy)
-    with on_time(581792400, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(581792400, tz=ZoneInfo("UTC"))):
         assert (
             list(check_mqtt_clients(check_scenario.item, check_scenario.section))
             == check_scenario.expected_result

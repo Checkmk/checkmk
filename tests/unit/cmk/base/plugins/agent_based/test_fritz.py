@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Attributes,
@@ -308,7 +310,7 @@ def test_check_fritz_uptime(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    with on_time(1647515259, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1647515259, tz=ZoneInfo("UTC"))):
         assert (
             list(
                 check_fritz_uptime(

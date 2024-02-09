@@ -16,23 +16,27 @@ pytestmark = pytest.mark.checks
     "params,expected_args",
     [
         (
-            (
-                "foo",
-                "bar",
-                {
-                    "hostname": "baz",
-                },
-            ),
+            {
+                "name": "foo",
+                "base_dn": "bar",
+                "hostname": "baz",
+            },
             ["-H", "baz", "-b", "bar"],
         ),
         (
-            ("foo", "bar", {"hostname": "baz", "port": 389, "version": "v2"}),
+            {
+                "name": "foo",
+                "base_dn": "bar",
+                "hostname": "baz",
+                "port": 389,
+                "version": "v2",
+            },
             ["-H", "baz", "-b", "bar", "-p", 389, "-2"],
         ),
     ],
 )
 def test_check_ldap_argument_parsing(
-    params: tuple[str, str, Mapping[str, str | float]], expected_args: Sequence[str]
+    params: Mapping[str, str | float], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_ldap")

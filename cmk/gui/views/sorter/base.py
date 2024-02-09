@@ -9,6 +9,7 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
+from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary
@@ -25,8 +26,9 @@ class Sorter(abc.ABC):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
 
-    def __init__(self, *, user: LoggedInUser):
+    def __init__(self, *, user: LoggedInUser, config: Config):
         self.user = user
+        self.config = config
 
     @property
     @abc.abstractmethod

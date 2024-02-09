@@ -13,6 +13,7 @@ from cmk.utils.servicename import ServiceName
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -139,7 +140,7 @@ class View:
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(user=user),
+                    sorter=sorter_cls(user=user, config=active_config),
                     negate=entry.negate,
                     join_key=entry.join_key,
                     parameters=sorter[1] if isinstance(sorter, tuple) else None,

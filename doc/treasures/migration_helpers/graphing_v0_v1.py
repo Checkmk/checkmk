@@ -49,11 +49,11 @@ from cmk.gui.utils.speaklater import LazyString  # pylint: disable=cmk-module-la
 
 from cmk.graphing.v1 import (
     Color,
+    DecimalUnit,
     graphs,
     Localizable,
     metrics,
     perfometers,
-    PhysicalUnit,
     ScientificUnit,
     translations,
     Unit,
@@ -117,11 +117,11 @@ _UNIT_MAP = {
 }
 
 
-def _parse_legacy_unit(legacy_unit: str) -> Unit | PhysicalUnit:
+def _parse_legacy_unit(legacy_unit: str) -> Unit | DecimalUnit:
     if legacy_unit in _UNIT_MAP:
         return _UNIT_MAP[legacy_unit]
-    _LOGGER.info("Unit %r not found, use 'PhysicalUnit'", legacy_unit)
-    return PhysicalUnit(Localizable(legacy_unit), legacy_unit)
+    _LOGGER.info("Unit %r not found, use 'DecimalUnit'", legacy_unit)
+    return DecimalUnit(Localizable(legacy_unit), legacy_unit)
 
 
 def _rgb_from_hexstr(hexstr: str) -> RGB:
@@ -952,12 +952,12 @@ def _title_repr(title: Localizable) -> str:
     return f'Localizable("{str(title.localize(lambda v: v))}")'
 
 
-def _unit_repr(unit: Unit | PhysicalUnit | ScientificUnit) -> str:
+def _unit_repr(unit: Unit | DecimalUnit | ScientificUnit) -> str:
     match unit:
         case Unit():
             return f"Unit.{unit.name}"
-        case PhysicalUnit():
-            return f"PhysicalUnit({_title_repr(unit.title)}, {_name_repr(unit.symbol)})"
+        case DecimalUnit():
+            return f"DecimalUnit({_title_repr(unit.title)}, {_name_repr(unit.symbol)})"
         case ScientificUnit():
             return f"ScientificUnit({_title_repr(unit.title)}, {_name_repr(unit.symbol)})"
 

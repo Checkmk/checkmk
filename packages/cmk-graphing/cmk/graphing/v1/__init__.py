@@ -6,7 +6,7 @@
 from . import graphs, metrics, perfometers, translations
 from ._color import Color
 from ._localize import Localizable
-from ._unit import PhysicalUnit, ScientificUnit, Unit
+from ._unit import DecimalUnit, ScientificUnit, Unit
 
 __all__ = [
     "graphs",
@@ -15,7 +15,7 @@ __all__ = [
     "translations",
     "Color",
     "Localizable",
-    "PhysicalUnit",
+    "DecimalUnit",
     "ScientificUnit",
     "Unit",
 ]

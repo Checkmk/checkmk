@@ -9,12 +9,12 @@ import cmk.utils.render as render
 
 from cmk.gui.i18n import _
 
-from cmk.graphing.v1 import Color, PhysicalUnit, ScientificUnit, Unit
+from cmk.graphing.v1 import Color, DecimalUnit, ScientificUnit, Unit
 
 from ._type_defs import UnitInfo
 
 
-def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
+def parse_unit(unit: Unit | DecimalUnit | ScientificUnit) -> UnitInfo:
     match unit:
         case Unit.BAR:
             return UnitInfo(
@@ -460,7 +460,7 @@ def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
                 render=lambda v: render.physical_precision(v, 3, _("Wb")),
                 js_render="v => cmk.number_format.physical_precision(v, 3, 'Wb')",
             )
-        case PhysicalUnit():
+        case DecimalUnit():
             return UnitInfo(
                 title=unit.title.localize(_),
                 symbol=unit.symbol,

@@ -79,9 +79,9 @@ class Unit(Enum):
 
 
 @dataclass(frozen=True)
-class PhysicalUnit:
+class DecimalUnit:
     """
-    A physical unit is rendered with decimals.
+    A unit is rendered with decimals.
     """
 
     title: Localizable
@@ -95,7 +95,7 @@ class PhysicalUnit:
 @dataclass(frozen=True)
 class ScientificUnit:
     """
-    A scientific unit is using scientific notation while rendering.
+    A unit is using scientific notation while rendering.
     """
 
     title: Localizable

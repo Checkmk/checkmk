@@ -246,10 +246,6 @@ def paint_time_graph_cmk(
     )
 
 
-def paint_cmk_graphs_with_timeranges(row: Row, cell: Cell) -> tuple[Literal[""], HTML | str]:
-    return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
-
-
 def cmk_time_graph_params():
     elements = [
         (
@@ -319,7 +315,7 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -356,7 +352,7 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()

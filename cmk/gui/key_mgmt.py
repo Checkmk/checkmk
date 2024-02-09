@@ -131,7 +131,7 @@ class PageKeyManagement:
                             title=_("Add key"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Add key"),
+                                    title=_("Generate key"),
                                     icon_name="new",
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", self.edit_mode)])
@@ -357,6 +357,7 @@ class PageUploadKey:
             raise MKUserError("key_p_passphrase", "Invalid pass phrase")
 
         try:
+            # check if the key is an RSA key, which is assumed by backup encryption at the moment
             _rsa_key = key_pair.private_key.get_raw_rsa_key()
         except ValueError:
             raise MKUserError("key_p_key_file_0", "Only RSA keys are supported at this time")
@@ -372,6 +373,22 @@ class PageUploadKey:
         self.key_store.add(key)
 
     def page(self) -> None:
+        # Note about the cert/key requirements:
+        # * The private key has to be an RSA key because both backup encryption and agent signing
+        #   currently assume that. The algorithms are still hardcoded.
+        # * For historical reasons we expect a "combined PEM" file, with the key and cert
+        #   concatenated. In fact we don't really use the certificate, so a public/private key pair
+        #   would be sufficient.
+        # * Since we provide the passphrase to load_combined_file_content, the private key must be
+        #   encrypted (using that passphrase) and have the '-----BEGIN ENCRYPTED PRIVATE KEY-----'
+        #   form. The positive side effect is that the user proves that they know the passphrase
+        #   now, rather than later whenever the key is used.
+        html.write_text(
+            _(
+                "Here you can upload an existing certificate and private key. "
+                "The key must be an RSA key and it must be password protected."
+            )
+        )
         with html.form_context("key", method="POST"):
             html.prevent_password_auto_completion()
             self._vs_key().render_input("key", {})
@@ -397,13 +414,17 @@ class PageUploadKey:
                         help=self._passphrase_help(),
                         allow_empty=False,
                         is_stored_plain=False,
-                        password_meter=True,
+                        password_meter=False,
                     ),
                 ),
                 (
                     "key_file",
                     CascadingDropdown(
-                        title=_("Key"),
+                        title=_("Certificate and key file"),
+                        help=_(
+                            'Upload either the file or the file content. A "combined PEM" format,'
+                            " containing both the encrypted key and the certificate, is expected."
+                        ),
                         choices=[
                             (
                                 "upload",

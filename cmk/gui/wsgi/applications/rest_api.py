@@ -14,7 +14,7 @@ import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any, Literal, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -250,29 +250,45 @@ def serve_spec(
     site: str,
     target: EndpointTarget,
     url: str,
-    content_type: str,
-    serializer: Callable[[dict[str, Any]], str],
+    extension: Literal["yaml", "json"],
 ) -> Response:
-    data = read_spec(target)
-    data.setdefault("servers", [])
-    add_once(
-        data["servers"],
-        {
-            "url": url,
-            "description": f"Site: {site}",
-        },
-    )
+    serialize: Callable[[dict[str, Any]], str]
+    match extension:
+        case "yaml":
+            serialize = dict_to_yaml
+            content_type = "application/x-yaml; charset=utf-8"
+        case "json":
+            serialize = json.dumps
+            content_type = "application/json"
+
     response = Response(status=200)
-    response.data = serializer(data)
+    response.data = serialize(_add_site_server(_read_spec(target, site), site, url))
     response.content_type = content_type
     response.freeze()
     return response
 
 
-def read_spec(target: EndpointTarget) -> dict[str, Any]:
+def _read_spec(target: EndpointTarget, site: str) -> dict[str, Any]:
     # TODO: Replace this with actual reading a pre-generated spec instead of computing it
-    return generate_spec(make_spec(), target=target)
+    return generate_spec(make_spec(), target, site)
     # return {}  # TODO
+
+
+def _add_site_server(spec: dict[str, Any], site: str, url: str) -> dict[str, Any]:
+    """Add the server URL to the spec
+
+    This step needs to happen with the current request context at hand to
+    be able to add the protocol and URL currently being used by the client
+    """
+    spec.setdefault("servers", [])
+    add_once(
+        spec["servers"],
+        {
+            "url": url,
+            "description": f"Site: {site}",
+        },
+    )
+    return spec
 
 
 def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
@@ -304,18 +320,14 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
 
 class ServeSpec(AbstractWSGIApp):
-    def __init__(self, target: EndpointTarget, extension: str, debug: bool = False) -> None:
+    def __init__(
+        self, target: EndpointTarget, extension: Literal["yaml", "json"], debug: bool = False
+    ) -> None:
         super().__init__(debug)
         self.target = target
         self.extension = extension
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        serializers = {"yaml": dict_to_yaml, "json": json.dumps}
-        content_types = {
-            "json": "application/json",
-            "yaml": "application/x-yaml; charset=utf-8",
-        }
-
         def _site(_environ: WSGIEnvironment) -> str:
             path_info = _environ["PATH_INFO"].split("/")
             return path_info[1]
@@ -327,8 +339,7 @@ class ServeSpec(AbstractWSGIApp):
             site=_site(environ),
             target=self.target,
             url=_url(environ),
-            content_type=content_types[self.extension],
-            serializer=serializers[self.extension],
+            extension=self.extension,
         )(environ, start_response)
 
 

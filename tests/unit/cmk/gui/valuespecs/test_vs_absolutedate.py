@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import freezegun
+import datetime
+
 import pytest
+import time_machine
 
 from tests.testlib import set_timezone
 
@@ -68,7 +70,9 @@ class TestAbsoluteDate:
         assert vs.AbsoluteDate(default_value=123).default_value() == 123
         assert vs.AbsoluteDate(default_value=lambda: 234).default_value() == 234
         assert vs.AbsoluteDate(allow_empty=True).default_value() is None
-        with freezegun.freeze_time("2022-09-12 16:07:49"):
+        with time_machine.travel(
+            datetime.datetime.fromisoformat("2022-09-12 16:07:49Z"), tick=False
+        ):
             assert vs.AbsoluteDate().default_value() == 1662940800
             assert vs.AbsoluteDate(default_value=raise_exception).default_value() == 1662940800
             assert vs.AbsoluteDate(include_time=True).default_value() == 1662998869.0
@@ -77,7 +81,9 @@ class TestAbsoluteDate:
         assert vs.AbsoluteDate(default_value=123).canonical_value() == 123
         assert vs.AbsoluteDate(default_value=lambda: 234).canonical_value() == 234
         assert vs.AbsoluteDate(allow_empty=True).canonical_value() is None
-        with freezegun.freeze_time("2022-09-12 16:07:49"):
+        with time_machine.travel(
+            datetime.datetime.fromisoformat("2022-09-12 16:07:49Z"), tick=False
+        ):
             assert vs.AbsoluteDate().canonical_value() == 1662940800
             assert vs.AbsoluteDate(default_value=raise_exception).canonical_value() == 1662940800
             assert vs.AbsoluteDate(include_time=True).canonical_value() == 1662998869.0

@@ -11,7 +11,7 @@ from typing import Any, ContextManager
 from unittest.mock import MagicMock
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
@@ -61,7 +61,7 @@ def test_nonexistant_customer(clients: ClientRegistry) -> None:
 def test_idle_timeout(clients: ClientRegistry) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -88,7 +88,7 @@ def test_idle_timeout(clients: ClientRegistry) -> None:
 def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -127,7 +127,10 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
 def test_openapi_user_minimal_settings(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-    with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
+        run_as_superuser(),
+    ):
         user_object: UserObject = {
             UserId("user"): {
                 "attributes": {
@@ -180,7 +183,7 @@ def test_openapi_user_minimal_password_settings(
 ) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -202,7 +205,7 @@ def test_openapi_user_minimal_password_settings(
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         resp = clients.User.edit(
             username=username,
             auth_option={
@@ -241,7 +244,7 @@ def test_openapi_user_config(
     name = _random_string(10)
     alias = "KPECYCq79E"
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         clients.User.create(
             username=name,
             fullname=alias,
@@ -367,7 +370,7 @@ def test_openapi_user_edit_auth(clients: ClientRegistry, monkeypatch: MonkeyPatc
     name = "foo"
     alias = "Foo Bar"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=name,
             fullname=alias,
@@ -380,12 +383,12 @@ def test_openapi_user_edit_auth(clients: ClientRegistry, monkeypatch: MonkeyPatc
     assert extensions["customer"] == "provider"
     assert extensions["auth_option"]["enforce_password_change"] is False
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         resp = clients.User.edit(
             username=name, auth_option={"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"}
         )
 
-    with freeze_time("2010-02-01 09:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         resp = clients.User.edit(
             username=name,
             auth_option={
@@ -508,7 +511,7 @@ def test_openapi_user_internal_auth_handling(
         }
     }
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with run_as_superuser():
             edit_users(user_object)
 
@@ -530,7 +533,7 @@ def test_openapi_user_internal_auth_handling(
         "num_failed_logins": 0,
     }
 
-    with freeze_time("2010-02-01 09:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
@@ -565,7 +568,7 @@ def test_openapi_user_internal_auth_handling(
         "connector": "htpasswd",
     }
 
-    with freeze_time("2010-02-01 09:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
@@ -601,7 +604,7 @@ def test_openapi_user_internal_auth_handling(
 def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr("cmk.utils.version.edition", lambda: version.Edition.CME)
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(username="user", fullname="Cosme Fulanito", customer="global")
 
     extensions = resp.json["extensions"]
@@ -650,7 +653,7 @@ def test_managed_global_internal(
 def test_global_full_configuration(clients: ClientRegistry) -> None:
     username = "cmkuser"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",
@@ -737,7 +740,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
     # this test uses the internal mechanics of the user endpoint
 
     username = "cmkuser"
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",

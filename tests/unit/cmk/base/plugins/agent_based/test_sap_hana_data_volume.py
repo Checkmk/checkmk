@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -23,10 +23,7 @@ import cmk.plugins.lib.df as df
 import cmk.plugins.lib.sap_hana as sap_hana
 from cmk.agent_based.v1.type_defs import StringTable
 
-NOW_SIMULATED = "1988-06-08 17:00:00.000000"
-NOW_EPOCH = (
-    datetime.strptime(NOW_SIMULATED, "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
-).total_seconds()
+NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
@@ -225,7 +222,7 @@ def value_store_fixture(monkeypatch):
         ),
     ],
 )
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_sap_hana_data_volume_check(
     item: str,
     params: Mapping[str, object],

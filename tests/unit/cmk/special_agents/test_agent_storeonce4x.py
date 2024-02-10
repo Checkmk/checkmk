@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import responses
-from freezegun import freeze_time
+import time_machine
 
 from cmk.special_agents.agent_storeonce4x import StoreOnceOauth2Session
 
@@ -35,7 +35,7 @@ TOKEN_JSON_FROM_STOREONCE = {
 
 
 @responses.activate
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED, tick=False)
 def test_invalid_tokenfile() -> None:
     responses.add(
         responses.POST,
@@ -50,7 +50,7 @@ def test_invalid_tokenfile() -> None:
     assert mysession._json_token["expires_in_abs"] == "1988-06-08 17:00:10.000000"
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED, tick=False)
 @responses.activate
 def test_REST_call() -> None:
     responses.add(

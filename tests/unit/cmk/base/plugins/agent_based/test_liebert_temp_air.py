@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import typing
 
-import freezegun
 import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -153,15 +154,15 @@ def test_check_liebert_temp_air_trend() -> None:
             )
         )
 
-    with freezegun.freeze_time("1970-01-01 01:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 01:00:00Z")):
         with pytest.raises(IgnoreResultsError):
             _get_check_result("20.0")  # -6.66 °C
 
-    with freezegun.freeze_time("1970-01-01 02:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 02:00:00Z")):
         with pytest.raises(IgnoreResultsError):
             _get_check_result("30.0")  # -1.11 °C
 
-    with freezegun.freeze_time("1970-01-01 03:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 03:00:00Z")):
         result = _get_check_result("40.0")  # 4.44  °C
 
     assert result == [

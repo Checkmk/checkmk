@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from copy import deepcopy
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.testlib import set_timezone
 
@@ -774,7 +775,6 @@ def test_fileinfo_discovery(
         ),
     ],
 )
-@pytest.mark.skip(reason="flaky)")  # should be fixed with CMK-14223
 def test_fileinfo_check(
     info: StringTable,
     item: str,
@@ -968,7 +968,7 @@ def test_fileinfo_group_discovery(
         ),
     ],
 )
-@freeze_time("2021-07-12 12:00")
+@time_machine.travel(datetime.datetime.fromisoformat("2021-07-12 12:00Z"))
 def test_fileinfo_groups_check(
     info: StringTable,
     item: str,
@@ -976,5 +976,4 @@ def test_fileinfo_groups_check(
     expected_result: CheckResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
-        assert list(fileinfo_plugin.check_fileinfo_groups(item, params, section)) == expected_result
+    assert list(fileinfo_plugin.check_fileinfo_groups(item, params, section)) == expected_result

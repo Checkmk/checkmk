@@ -6,7 +6,7 @@
 from datetime import datetime, timezone
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.testlib import set_timezone
 
@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-NOW_SIMULATED = "2019-01-01 22:00:00.000000"
+NOW_SIMULATED = datetime.fromisoformat("2019-01-01 22:00:00.000000Z")
 ITEM = "inst"
 SECTION = {
     ITEM: sap_hana_backup.Backup(
@@ -85,7 +85,7 @@ def test_discovery_sap_hana_backup() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_backup_OK() -> None:
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
     with set_timezone("UTC"):  # needed for local summary time string below
@@ -107,7 +107,7 @@ def test_check_sap_hana_backup_OK() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
     with set_timezone("UTC"):  # needed for local summary time string below
@@ -131,7 +131,7 @@ def test_check_sap_hana_backup_CRIT() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_cluster_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
     section = {"node0": SECTION, "node1": SECTION}
@@ -159,7 +159,7 @@ def test_cluster_check_sap_hana_backup_CRIT() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_cluster_check_sap_hana_backup_missing_node_data() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
 

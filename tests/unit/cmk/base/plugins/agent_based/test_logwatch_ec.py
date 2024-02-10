@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Literal
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -574,7 +575,7 @@ def _forward_message(
     text: str = "some_text",
     item: str | None = None,
     application: str = "-",
-) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]],]:
+) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]]]:
     messages_forwarded: list[tuple[float, int, list[str]]] = []
 
     class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):
@@ -693,7 +694,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
 
     # create a spooled message:
-    with freeze_time("2023-10-31 16:02:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
         result, messages_forwarded = _forward_message(
             tcp_result="set exception", method=SPOOL_METHOD
         )
@@ -707,7 +708,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # create another spooled message:
-    with freeze_time("2023-10-31 16:03:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
         result, messages_forwarded = _forward_message(
             tcp_result="set exception", method=SPOOL_METHOD
         )
@@ -736,7 +737,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
 
     # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
     # this is the same as the old behaviour, before werk 15397 with "seperate_checks" = True
-    with freeze_time("2023-10-31 16:02:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:02:00Z")):
         _result, messages_forwarded = _forward_message(
             tcp_result="set exception",
             method=SPOOL_METHOD,
@@ -746,7 +747,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
 
     # now we do the same, but for a different item:
-    with freeze_time("2023-10-31 16:03:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:03:00Z")):
         _result, messages_forwarded = _forward_message(
             tcp_result="set exception",
             method=SPOOL_METHOD,
@@ -761,7 +762,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
     # this was the old behaviour. now we image the customer installed the new version of checkmk.
     # their logwatch_ec services had separate_checks = True from the beginning.
 
-    with freeze_time("2023-10-31 16:04:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2023-10-31 16:04:00Z")):
         _result, messages_forwarded = _forward_message(
             tcp_result="ok",
             method=SPOOL_METHOD,

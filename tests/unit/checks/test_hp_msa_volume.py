@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from typing import Any
 
-import freezegun
 import pytest
+import time_machine
 
 from tests.testlib import Check
 
@@ -128,7 +129,10 @@ def test_df_check() -> None:
         ],
     )
 
-    with freezegun.freeze_time("2020-07-31 07:00:00"), mock_item_state((1596100000, 42)):
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2020-07-31 07:00:00Z")),
+        mock_item_state((1596100000, 42)),
+    ):
         _, trend_result = check.run_check(item_1st, params, parsed)
 
     assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))

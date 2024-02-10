@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 
-import freezegun
 import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based import kernel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -501,7 +502,7 @@ def test_check(
         "get_value_store",
         lambda: {"cpu.util.core.high": {"cpu0": 1591285080, "cpu1": 1591285080}},
     )
-    with freezegun.freeze_time("2020-06-04 15:40:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2020-06-04 15:40:00Z")):
         results = list(kernel.check_kernel_util(parameters, SECTION))
 
     assert results[: len(BASIC_RESULT)] == BASIC_RESULT

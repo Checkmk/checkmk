@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
+
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 import cmk.base.plugins.agent_based.jenkins_jobs as jn
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
-NOW_SIMULATED = "2021-11-23 13:00:00"
+NOW_SIMULATED = datetime.datetime.fromisoformat("2021-11-23 13:00:00Z")
 
 
 @pytest.fixture(scope="module", name="section")
@@ -46,7 +48,7 @@ def test_discovery(section: jn.Section) -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_job_item(section: jn.Section) -> None:
     """Successfull job"""
     assert list(jn.check_jenkins_jobs("project/Job", {}, section)) == [
@@ -73,7 +75,7 @@ def test_check_job1_item(section: jn.Section) -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_job2_item(section: jn.Section) -> None:
     """Failed job"""
     assert list(jn.check_jenkins_jobs("project/Job2", {}, section)) == [
@@ -92,7 +94,7 @@ def test_check_job2_item(section: jn.Section) -> None:
     ]
 
 
-@freeze_time("2021-11-23 13:00:00")
+@time_machine.travel(datetime.datetime.fromisoformat("2021-11-23 13:00:00Z"))
 def test_check_job3_item(section: jn.Section) -> None:
     assert list(jn.check_jenkins_jobs("project/Job3", {}, section)) == [
         Result(state=State.OK, summary="Display name: Job 3"),
@@ -110,7 +112,7 @@ def test_check_job3_item(section: jn.Section) -> None:
     ]
 
 
-@freeze_time("2021-11-23 13:00:00")
+@time_machine.travel(datetime.datetime.fromisoformat("2021-11-23 13:00:00Z"))
 def test_check_job3_item_with_params(section: jn.Section) -> None:
     assert list(
         jn.check_jenkins_jobs(

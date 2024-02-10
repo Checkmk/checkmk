@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from cmk.plugins.collection.server_side_calls.gcp import special_agent_gcp
 from cmk.server_side_calls.v1 import (
@@ -33,7 +33,7 @@ HOST_CONFIG = HostConfig(
 )
 
 
-@freeze_time("2022-01-12")
+@time_machine.travel("2022-01-12")
 @pytest.mark.parametrize(
     "params, expected_result",
     [

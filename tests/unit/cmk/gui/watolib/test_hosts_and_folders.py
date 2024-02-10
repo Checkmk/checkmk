@@ -16,8 +16,8 @@ from dataclasses import dataclass
 from itertools import count
 from unittest.mock import MagicMock, patch
 
-import freezegun
 import pytest
+import time_machine
 from pytest import MonkeyPatch
 
 from tests.testlib import on_time
@@ -1131,7 +1131,7 @@ def test_folder_times() -> None:
     tree = folder_tree()
     root = tree.root_folder()
 
-    with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
+    with time_machine.travel(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
         Folder.new(tree=tree, name="test", parent_folder=root).save()
         folder = Folder.load(tree=tree, name="test", parent_folder=root)

@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import datetime
 from collections.abc import MutableMapping
 from typing import Any
 
-import freezegun
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import GetRateError, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.lib import temperature
@@ -36,7 +37,7 @@ def test_check_trend_raises() -> None:
 
 
 def test_check_trend_simple() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 17.0)},
@@ -52,7 +53,7 @@ def test_check_trend_simple() -> None:
 
 
 def test_check_trend_ok() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 17.0)},
@@ -72,7 +73,7 @@ def test_check_trend_ok() -> None:
 
 
 def test_check_trend_warn_upper() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 17.0)},
@@ -97,7 +98,7 @@ def test_check_trend_warn_upper() -> None:
 
 
 def test_check_trend_crit_upper() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 17.0)},
@@ -122,7 +123,7 @@ def test_check_trend_crit_upper() -> None:
 
 
 def test_check_trend_warn_lower() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, -17.0)},
@@ -147,7 +148,7 @@ def test_check_trend_warn_lower() -> None:
 
 
 def test_check_trend_crit_lower() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, -17.0)},
@@ -172,7 +173,7 @@ def test_check_trend_crit_lower() -> None:
 
 
 def test_check_trend_time_period_ok() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 5.0)},
@@ -196,7 +197,7 @@ def test_check_trend_time_period_ok() -> None:
 
 
 def test_check_trend_time_period_warn_upper() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 5.0)},
@@ -223,7 +224,7 @@ def test_check_trend_time_period_warn_upper() -> None:
 
 
 def test_check_trend_time_period_crit_upper() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 5.0)},
@@ -250,7 +251,7 @@ def test_check_trend_time_period_crit_upper() -> None:
 
 
 def test_check_trend_time_period_warn_lower() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 10.0)},
@@ -277,7 +278,7 @@ def test_check_trend_time_period_warn_lower() -> None:
 
 
 def test_check_trend_time_period_crit_lower() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 10.0)},
@@ -304,7 +305,7 @@ def test_check_trend_time_period_crit_lower() -> None:
 
 
 def test_check_trend_time_period_zero_lower_bound() -> None:
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:01:00Z")):
         results = list(
             temperature._check_trend(
                 {"temp.my_test.delta": (0, 10.0)},
@@ -904,7 +905,10 @@ def test_check_temperature_ignores_trend_computation() -> None:
     # trends might be off during initialization we ignore this issue for now since the
     # temperatures between two check intervals should not deviate much and the trends should
     # be correct in the long run.
-    with contextlib.suppress(GetRateError), freezegun.freeze_time("1970-01-01 00:00:00"):
+    with (
+        contextlib.suppress(GetRateError),
+        time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:00:00Z")),
+    ):
         list(
             temperature.check_temperature(
                 0.0,
@@ -913,7 +917,10 @@ def test_check_temperature_ignores_trend_computation() -> None:
                 value_store=value_store,
             )
         )
-    with contextlib.suppress(GetRateError), freezegun.freeze_time("1970-01-01 00:15:00"):
+    with (
+        contextlib.suppress(GetRateError),
+        time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:15:00Z")),
+    ):
         list(
             temperature.check_temperature(
                 10.0,
@@ -922,7 +929,7 @@ def test_check_temperature_ignores_trend_computation() -> None:
                 value_store=value_store,
             )
         )
-    with freezegun.freeze_time("1970-01-01 00:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("1970-01-01 00:30:00Z")):
         results = list(
             temperature.check_temperature(
                 20.0,

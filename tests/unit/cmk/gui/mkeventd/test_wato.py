@@ -6,7 +6,7 @@
 from collections.abc import Iterable
 from datetime import datetime, timezone
 
-from freezegun import freeze_time
+import time_machine
 from pytest import MonkeyPatch
 
 from livestatus import SiteId
@@ -70,7 +70,7 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
     ]
 
 
-@freeze_time(datetime.fromtimestamp(1622638021, tz=timezone.utc))
+@time_machine.travel(datetime.fromtimestamp(1622638021, tz=timezone.utc))
 def test_send_event(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         mkeventd_wato,

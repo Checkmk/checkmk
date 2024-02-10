@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Sequence
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
@@ -62,17 +63,19 @@ def test_parse_esx_vsphere_snapshots():
         ),
     ],
 )
-@freeze_time("2020-11-23")
+@time_machine.travel(datetime.datetime.fromisoformat("2020-11-23"))
 def test_check_snapshots_summary(
     section: Section, expected_result: CheckResult, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # TODO: please remove this monkeypatching and use time_machine only instead
     monkeypatch.setattr(time, "localtime", time.gmtime)
     result = check_snapshots_summary({}, section)
     assert list(result) == expected_result
 
 
-@freeze_time("2020-11-23")
+@time_machine.travel(datetime.datetime.fromisoformat("2020-11-23T00:00:00Z"))
 def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
+    # TODO: please remove this monkeypatching and use time_machine only instead
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(
         check_snapshots(
@@ -88,8 +91,9 @@ def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2020-11-23 14:37:00")
+@time_machine.travel(datetime.datetime.fromisoformat("2020-11-23 14:37:00Z"))
 def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
+    # TODO: please remove this monkeypatching and use time_machine only instead
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
@@ -122,8 +126,9 @@ def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2019-06-22 14:37:00")
+@time_machine.travel(datetime.datetime.fromisoformat("2019-06-22 14:37:00Z"))
 def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
+    # TODO: please remove this monkeypatching and use time_machine only instead
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
@@ -159,8 +164,9 @@ def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     ]
 
 
-@freeze_time("2022-06-22")
+@time_machine.travel(datetime.datetime.fromisoformat("2022-06-22 00:00:00Z"))
 def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
+    # TODO: please remove this monkeypatching and use time_machine only instead
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [

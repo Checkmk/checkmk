@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
-NOW_SIMULATED = "1988-06-08 17:00:00.000000"
+NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 LAST_TIME_EPOCH = (
     datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
 ).total_seconds()
@@ -201,7 +201,7 @@ def value_store_fixture(monkeypatch):
         ),
     ],
 )
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_diskusage(
     fix_register: FixRegister,
     item: str,

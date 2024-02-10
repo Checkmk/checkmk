@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
 
-import freezegun
 import pytest
+import time_machine
 
 from tests.unit.checks.checktestlib import mock_item_state
 
@@ -242,7 +243,10 @@ def test_check_3par_cpgs_usage(
     item: str,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    with freezegun.freeze_time("2022-07-11 07:00:00"), mock_item_state((162312321.0, 0.0)):
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2022-07-11 07:00:00Z")),
+        mock_item_state((162312321.0, 0.0)),
+    ):
         assert (
             list(
                 check_threepar_cpgs_usage(

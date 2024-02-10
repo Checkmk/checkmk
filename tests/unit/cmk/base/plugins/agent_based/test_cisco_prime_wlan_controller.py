@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -352,7 +352,7 @@ def test_check_wlan_controller_reachability(
         ("wism23", {}, WLAN_CONTROLLERS_SECTION, []),
     ],
 )
-@freeze_time("2021-10-27 00:00:00.000000")
+@time_machine.travel(datetime.fromisoformat("2021-10-27 00:00:00.000000Z"))
 def test_check_wlan_controller_last_backup(
     item: str,
     params: Mapping[str, tuple[float, float]],

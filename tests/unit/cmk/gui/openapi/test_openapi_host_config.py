@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
+import datetime
 from collections.abc import Iterator, Sequence
 from typing import Literal
 from unittest.mock import MagicMock
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
@@ -1006,7 +1007,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
     assert "should_not_be_invisible" not in host_names
 
 
-@freeze_time("1998-02-09")
+@time_machine.travel(datetime.datetime.fromisoformat("1998-02-09T00:00:00+00:00"), tick=False)
 def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -1301,7 +1302,7 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 
 @managedtest
-@freeze_time("2022-11-05")
+@time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:

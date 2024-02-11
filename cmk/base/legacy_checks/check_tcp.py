@@ -10,63 +10,62 @@ from cmk.base.config import active_check_info
 
 
 def check_tcp_arguments(params):  # pylint: disable=too-many-branches
-    port, settings = params
     args = []
 
-    args += ["-p", str(port)]
+    args += ["-p", str(params["port"])]
 
-    if "response_time" in settings:
-        warn, crit = settings["response_time"]
+    if "response_time" in params:
+        warn, crit = params["response_time"]
         args += ["-w", "%f" % (warn / 1000.0)]
         args += ["-c", "%f" % (crit / 1000.0)]
 
-    if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
+    if "timeout" in params:
+        args += ["-t", params["timeout"]]
 
-    if "refuse_state" in settings:
-        args += ["-r", settings["refuse_state"]]
+    if "refuse_state" in params:
+        args += ["-r", params["refuse_state"]]
 
-    if settings.get("escape_send_string"):
+    if params.get("escape_send_string"):
         args.append("--escape")
 
-    if "send_string" in settings:
-        args += ["-s", settings["send_string"]]
+    if "send_string" in params:
+        args += ["-s", params["send_string"]]
 
-    if "expect" in settings:
-        for s in settings["expect"]:
+    if "expect" in params:
+        for s in params["expect"]:
             args += ["-e", s]
 
-    if settings.get("expect_all"):
+    if params.get("expect_all"):
         args.append("-A")
 
-    if settings.get("jail"):
+    if params.get("jail"):
         args.append("--jail")
 
-    if "mismatch_state" in settings:
-        args += ["-M", settings["mismatch_state"]]
+    if "mismatch_state" in params:
+        args += ["-M", params["mismatch_state"]]
 
-    if "delay" in settings:
-        args += ["-d", settings["delay"]]
+    if "delay" in params:
+        args += ["-d", params["delay"]]
 
-    if "maxbytes" in settings:
-        args += ["-m", settings["maxbytes"]]
+    if "maxbytes" in params:
+        args += ["-m", params["maxbytes"]]
 
-    if settings.get("ssl"):
+    if params.get("ssl"):
         args.append("--ssl")
 
-    if "cert_days" in settings:
+    if "cert_days" in params:
         # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-D", settings["cert_days"]]
+        if isinstance(params["cert_days"], int):
+            args += ["-D", params["cert_days"]]
         else:
-            warn, crit = settings["cert_days"]
+            warn, crit = params["cert_days"]
             args += ["-D", "%d,%d" % (warn, crit)]
 
-    if "quit_string" in settings:
-        args += ["-q", settings["quit_string"]]
+    if "quit_string" in params:
+        args += ["-q", params["quit_string"]]
 
-    if "hostname" in settings:
-        args += ["-H", settings["hostname"]]
+    if "hostname" in params:
+        args += ["-H", params["hostname"]]
     else:
         args += ["-H", "$HOSTADDRESS$"]
 
@@ -76,5 +75,5 @@ def check_tcp_arguments(params):  # pylint: disable=too-many-branches
 active_check_info["tcp"] = {
     "command_line": "check_tcp $ARG1$",
     "argument_function": check_tcp_arguments,
-    "service_description": lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
+    "service_description": lambda args: args.get("svc_description", "TCP Port %d" % args["port"]),
 }

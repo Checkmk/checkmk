@@ -15,11 +15,11 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        ((1, {}), ["-p", "1", "-H", "$HOSTADDRESS$"]),
+        ({"port": 1}, ["-p", "1", "-H", "$HOSTADDRESS$"]),
     ],
 )
 def test_check_tcp_argument_parsing(
-    params: tuple[float, Mapping[str, object]], expected_args: Sequence[str]
+    params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_tcp")

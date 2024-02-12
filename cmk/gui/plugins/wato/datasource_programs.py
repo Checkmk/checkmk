@@ -5071,7 +5071,8 @@ def _valuespec_special_agents_rabbitmq():
                         "checked by the special agent. Please add the "
                         "hostname here, eg. my_rabbitmq.com. If not set, the "
                         "assigned host is used as instance."
-                    ),
+                    )
+                    + monitoring_macro_help(),
                     size=32,
                     allow_empty=False,
                 ),

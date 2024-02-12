@@ -9,9 +9,11 @@ import enum
 import os
 import sys
 from argparse import ArgumentParser
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from typing import assert_never
 
 from cmk.utils import debug, paths
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-violation
     ActiveCheckResult,
@@ -28,6 +30,17 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
     rulespec_registry,
 )
 
+from cmk.agent_based import v2 as agent_based_v2
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+
+_AgentBasedPlugins = (
+    agent_based_v2.SimpleSNMPSection
+    | agent_based_v2.SNMPSection
+    | agent_based_v2.AgentSection
+    | agent_based_v2.CheckPlugin
+    | agent_based_v2.InventoryPlugin
+)
+
 
 class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
@@ -35,6 +48,7 @@ class ValidationStep(enum.Enum):
     SPECIAL_AGENTS = "special agents loading"
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
+    RULE_SPEC_REFERENCED = "referenced rule specs validation"
 
 
 def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
@@ -97,6 +111,107 @@ def _validate_rule_spec_form_creation() -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPEC_FORMS, errors)
 
 
+def _validate_agent_based_plugin_v2_ruleset_ref(
+    plugin: _AgentBasedPlugins,
+    rule_group: Callable[[str | None], str],
+    ruleset_ref_attr: str,
+    default_params_attr: str,
+) -> str | None:
+    if (ruleset_ref := getattr(plugin, ruleset_ref_attr)) is None:
+        return None
+
+    if (rule_spec := rulespec_registry.get(rule_group(ruleset_ref))) is None:
+        return (
+            f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
+            f"non-existent rule spec '{ruleset_ref}'"
+        )
+
+    if (default_params := getattr(plugin, default_params_attr)) is None:
+        return None
+    try:
+        rule_spec.valuespec.validate_datatype(default_params, "")
+        rule_spec.valuespec.validate_value(default_params, "")
+    except Exception as e:
+        if debug.enabled():
+            raise e
+        return (
+            f"Default parameters '{default_params_attr}' specified by {type(plugin).__name__} "
+            f"'{plugin.name}' cannot be read by referenced rule spec '{ruleset_ref}': {e}"
+        )
+    return None
+
+
+def _validate_referenced_rule_spec() -> ActiveCheckResult:
+    if not os.environ.get("OMD_SITE"):
+        return ActiveCheckResult(
+            state=1,
+            summary=f"{ValidationStep.RULE_SPEC_REFERENCED.value.capitalize()} skipped",
+            details=["Validation of referenced rule specs can only be used as site user"],
+        )
+
+    # only for check API v2
+    discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_plugins(
+        PluginGroup.AGENT_BASED,
+        {
+            agent_based_v2.SimpleSNMPSection: "snmp_section_",
+            agent_based_v2.SNMPSection: "snmp_section_",
+            agent_based_v2.AgentSection: "agent_section_",
+            agent_based_v2.CheckPlugin: "check_plugin_",
+            agent_based_v2.InventoryPlugin: "inventory_plugin_",
+        },
+        raise_errors=False,  # already raised during loading validation if enabled
+    )
+
+    errors: list[str] = []
+
+    for plugin in discovered_plugins.plugins.values():
+        match plugin:
+            case agent_based_v2.CheckPlugin():
+                if (
+                    error := _validate_agent_based_plugin_v2_ruleset_ref(
+                        plugin,
+                        rule_group=lambda x: f"{x}",
+                        ruleset_ref_attr="discovery_ruleset_name",
+                        default_params_attr="discovery_default_parameters",
+                    )
+                ) is not None:
+                    errors.append(error)
+                if (
+                    error := _validate_agent_based_plugin_v2_ruleset_ref(
+                        plugin,
+                        rule_group=RuleGroup.CheckgroupParameters,
+                        ruleset_ref_attr="check_ruleset_name",
+                        default_params_attr="check_default_parameters",
+                    )
+                ) is not None:
+                    errors.append(error)
+            case agent_based_v2.InventoryPlugin():
+                if (
+                    error := _validate_agent_based_plugin_v2_ruleset_ref(
+                        plugin,
+                        rule_group=lambda x: f"{x}",
+                        ruleset_ref_attr="inventory_ruleset_name",
+                        default_params_attr="inventory_default_parameters",
+                    )
+                ) is not None:
+                    errors.append(error)
+            case agent_based_v2.SimpleSNMPSection() | agent_based_v2.SNMPSection() | agent_based_v2.AgentSection():
+                if (
+                    error := _validate_agent_based_plugin_v2_ruleset_ref(
+                        plugin,
+                        rule_group=lambda x: f"{x}",
+                        ruleset_ref_attr="host_label_ruleset_name",
+                        default_params_attr="host_label_default_parameters",
+                    )
+                ) is not None:
+                    errors.append(error)
+
+            case other:
+                assert_never(other)
+
+    return to_result(ValidationStep.RULE_SPEC_REFERENCED, errors)
+
+
 def validate_plugins() -> ActiveCheckResult:
     sub_results = [
         _validate_agent_based_plugin_loading(),
@@ -104,6 +219,7 @@ def validate_plugins() -> ActiveCheckResult:
         _validate_special_agents_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
+        _validate_referenced_rule_spec(),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
 

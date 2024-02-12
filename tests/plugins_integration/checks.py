@@ -36,7 +36,12 @@ class SkippedDumps:
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore
+    SKIPPED_CHECKS = [
+        # TODO: check responses diverging between 2.3.0 and master.
+        #   After CMK-16054 update responses and unskip checks.
+        "agent-2.2.0-ontapi-9.10:Temperature Ambient Shelf 0",
+        "agent-2.2.0-ontapi-9.10:Temperature Internal Shelf 0",
+    ]
 
 
 class CheckModes(IntEnum):

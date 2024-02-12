@@ -397,11 +397,21 @@ def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = 
 
 
 def _paint_future_time(  # pylint: disable=redefined-outer-name
-    timestamp: int, *, request: Request
+    timestamp: int,
+    *,
+    request: Request,
+    painter_options: PainterOptions,
 ) -> CellSpec:
     if timestamp <= 0:
         return "", "-"
-    return paint_age(timestamp, True, 0, request=request, what="future")
+    return paint_age(
+        timestamp,
+        True,
+        0,
+        request=request,
+        painter_options=painter_options,
+        what="future",
+    )
 
 
 def _paint_day(timestamp: int) -> CellSpec:
@@ -1008,11 +1018,12 @@ class PainterSvcStateAge(Painter):
             row["service_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 
 def _paint_checked(  # pylint: disable=redefined-outer-name
-    what: str, row: Row, *, config: Config, request: Request
+    what: str, row: Row, *, config: Config, request: Request, painter_options: PainterOptions
 ) -> CellSpec:
     age = row[what + "_last_check"]
     if what == "service":
@@ -1020,7 +1031,13 @@ def _paint_checked(  # pylint: disable=redefined-outer-name
         if cached_at:
             age = cached_at
 
-    css, td = paint_age(age, row[what + "_has_been_checked"] == 1, 0, request=request)
+    css, td = paint_age(
+        age,
+        row[what + "_has_been_checked"] == 1,
+        0,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+    )
     assert css is not None
     if is_stale(row, config=config):
         css += " staletime"
@@ -1047,7 +1064,13 @@ class PainterSvcCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("service", row, config=self.config, request=self.request)
+        return _paint_checked(
+            "service",
+            row,
+            config=self.config,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterSvcCheckCacheInfo(Painter):
@@ -1091,7 +1114,11 @@ class PainterSvcNextCheck(Painter):
         return ["service_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["service_next_check"], request=self.request)
+        return _paint_future_time(
+            row["service_next_check"],
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterSvcLastTimeOk(Painter):
@@ -1115,6 +1142,7 @@ class PainterSvcLastTimeOk(Painter):
             row["service_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 
@@ -1134,7 +1162,11 @@ class PainterSvcNextNotification(Painter):
         return ["service_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["service_next_notification"], request=self.request)
+        return _paint_future_time(
+            row["service_next_notification"],
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
@@ -1214,6 +1246,7 @@ class PainterSvcLastNotification(Painter):
             row["service_last_notification"],
             0,
             request=self.request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 
@@ -2096,6 +2129,7 @@ class PainterHostStateAge(Painter):
             row["host_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 
@@ -2119,7 +2153,13 @@ class PainterHostCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("host", row, config=self.config, request=self.request)
+        return _paint_checked(
+            "host",
+            row,
+            config=self.config,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterHostNextCheck(Painter):
@@ -2138,7 +2178,11 @@ class PainterHostNextCheck(Painter):
         return ["host_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["host_next_check"], request=self.request)
+        return _paint_future_time(
+            row["host_next_check"],
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterHostNextNotification(Painter):
@@ -2157,7 +2201,11 @@ class PainterHostNextNotification(Painter):
         return ["host_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["host_next_notification"], request=self.request)
+        return _paint_future_time(
+            row["host_next_notification"],
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterHostNotificationPostponementReason(Painter):
@@ -2200,7 +2248,11 @@ class PainterHostLastNotification(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["host_last_notification"], row["host_last_notification"], 0, request=self.request
+            row["host_last_notification"],
+            row["host_last_notification"],
+            0,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 
@@ -3976,7 +4028,13 @@ class PainterCommentTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["comment_entry_time"], True, 3600, request=self.request)
+        return paint_age(
+            row["comment_entry_time"],
+            True,
+            3600,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterCommentExpires(Painter):
@@ -4004,6 +4062,7 @@ class PainterCommentExpires(Painter):
             row["comment_expire_time"] != 0,
             3600,
             request=self.request,
+            painter_options=PainterOptions.get_instance(),
             what="future",
         )
 
@@ -4236,7 +4295,13 @@ class PainterDowntimeEntryTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_entry_time"], True, 3600, request=self.request)
+        return paint_age(
+            row["downtime_entry_time"],
+            True,
+            3600,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterDowntimeStartTime(Painter):
@@ -4259,7 +4324,14 @@ class PainterDowntimeStartTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_start_time"], True, 3600, request=self.request, what="both")
+        return paint_age(
+            row["downtime_start_time"],
+            True,
+            3600,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+            what="both",
+        )
 
 
 class PainterDowntimeEndTime(Painter):
@@ -4282,7 +4354,14 @@ class PainterDowntimeEndTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_end_time"], True, 3600, request=self.request, what="both")
+        return paint_age(
+            row["downtime_end_time"],
+            True,
+            3600,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+            what="both",
+        )
 
 
 class PainterDowntimeDuration(Painter):
@@ -4747,7 +4826,13 @@ class PainterLogTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["log_time"], True, 3600 * 24, request=self.request)
+        return paint_age(
+            row["log_time"],
+            True,
+            3600 * 24,
+            request=self.request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterLogLineno(Painter):

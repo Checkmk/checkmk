@@ -1163,6 +1163,7 @@ def register_table_views_and_columns() -> None:
 
 def _register_table_views_and_columns() -> None:
     # create painters for node with a display hint
+    painter_options = PainterOptions.get_instance()
     for hints in DISPLAY_HINTS:
         if "*" in hints.abc_path:
             # FIXME DYNAMIC-PATHS
@@ -1178,7 +1179,7 @@ def _register_table_views_and_columns() -> None:
 
         ident = ("inv",) + hints.abc_path
 
-        _register_node_painter("_".join(ident), hints)
+        _register_node_painter("_".join(ident), hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
@@ -1197,7 +1198,9 @@ def _register_table_views_and_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _register_node_painter(name: str, hints: DisplayHints) -> None:
+def _register_node_painter(
+    name: str, hints: DisplayHints, *, painter_options: PainterOptions
+) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
         name,
@@ -1225,7 +1228,9 @@ def _register_node_painter(name: str, hints: DisplayHints) -> None:
             "printable": False,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_tree(row, hints.abc_path),
+            "paint": lambda row: _paint_host_inventory_tree(
+                row, hints.abc_path, painter_options=painter_options
+            ),
             "export_for_python": lambda row, cell: (
                 _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
@@ -1246,11 +1251,12 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     return row.get("host_inventory", ImmutableTree()).get_tree(path)
 
 
-def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
+def _paint_host_inventory_tree(
+    row: Row, path: SDPath, *, painter_options: PainterOptions
+) -> CellSpec:
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
-    painter_options = PainterOptions.get_instance()
     tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
@@ -1951,7 +1957,13 @@ class PainterInvhistTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["invhist_time"], True, 60 * 10, request=request)
+        return paint_age(
+            row["invhist_time"],
+            True,
+            60 * 10,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterInvhistDelta(Painter):

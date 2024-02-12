@@ -25,7 +25,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
 from cmk.gui.painter.v0.painters import paint_custom_var
-from cmk.gui.painter_options import paint_age
+from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -539,7 +539,13 @@ class PainterEventFirst(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_first"], True, True, request=request)
+        return paint_age(
+            row["event_first"],
+            True,
+            True,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterEventLast(Painter):
@@ -562,7 +568,13 @@ class PainterEventLast(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_last"], True, True, request=request)
+        return paint_age(
+            row["event_last"],
+            True,
+            True,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterEventComment(Painter):
@@ -1121,7 +1133,13 @@ class PainterHistoryTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["history_time"], True, True, request=request)
+        return paint_age(
+            row["history_time"],
+            True,
+            True,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
 
 
 class PainterHistoryWhat(Painter):

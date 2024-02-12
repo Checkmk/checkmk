@@ -17,7 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.painter.v0.base import Cell, Painter
-from cmk.gui.painter_options import paint_age
+from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
@@ -247,7 +247,11 @@ class PainterCrashTime(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["crash_time"], has_been_checked=True, bold_if_younger_than=3600, request=request
+            row["crash_time"],
+            has_been_checked=True,
+            bold_if_younger_than=3600,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
         )
 
 

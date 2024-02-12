@@ -766,10 +766,11 @@ class PainterOptionAggrWrap(PainterOption):
 
 def paint_aggregated_tree_state(
     row: Row,
+    *,
+    painter_options: PainterOptions,
     force_renderer_cls: type[ABCFoldableTreeRenderer] | None = None,
     show_frozen_difference: bool = False,
 ) -> CellSpec:
-    painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
     only_problems = painter_options.get("aggr_onlyproblems") == "1"
@@ -825,7 +826,7 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row)
+        return paint_aggregated_tree_state(row, painter_options=PainterOptions.get_instance())
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
         return render_tree_json(row, user=self.user, request=request)
@@ -861,7 +862,9 @@ class PainterAggrTreestateFrozenDiff(Painter):
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
 
-        return paint_aggregated_tree_state(row, show_frozen_difference=True)
+        return paint_aggregated_tree_state(
+            row, painter_options=PainterOptions.get_instance(), show_frozen_difference=True
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
         return render_tree_json(row, user=self.user, request=request)
@@ -976,7 +979,11 @@ class PainterAggrTreestateBoxed(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
+        return paint_aggregated_tree_state(
+            row,
+            painter_options=PainterOptions.get_instance(),
+            force_renderer_cls=FoldableTreeRendererBoxes,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
         return render_tree_json(row, user=self.user, request=request)

@@ -162,11 +162,6 @@ function strip_binaries() {
     fi
 }
 
-function get_desired_python_version() {
-    # to use "make print-PYTHON_VERISON" the git repo with "Makefile" and "artifacts.make" would be necessary at a known location
-    sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$|\1|p' "${SCRIPT_DIR}"/package_versions.bzl
-}
-
 function install_for_python_dev() {
     print_green "Installing everything for Python development ..."
 

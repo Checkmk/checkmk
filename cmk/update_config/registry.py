@@ -25,6 +25,12 @@ class UpdateAction(ABC):
         sort_index: int,
         continue_on_failure: bool = True,
     ) -> None:
+        """
+        :param name: the internal name of the update action, has to be unique
+        :param title: the string printed before executing the action, informational only
+        :param sort_index: a relative index of the action, actions with smaller indices are executed first
+        :param continue_on_failure: If True, the update continues even after an exception from __call__().
+        """
         self.name: Final = name
         self.title: Final = title
         self.sort_index: Final = sort_index
@@ -32,7 +38,10 @@ class UpdateAction(ABC):
 
     @abstractmethod
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        """Execute the update action"""
+        """
+        Execute the update action.
+        Raising an exception will abort the config update, unless continue_on_failure is True.
+        """
 
 
 class UpdateActionRegistry(Registry[UpdateAction]):
@@ -44,7 +53,7 @@ update_action_registry = UpdateActionRegistry()
 
 
 class PreUpdateAction(ABC):
-    """Base class for all pre update actions"""
+    """Base class for all pre-update actions"""
 
     def __init__(
         self,
@@ -53,13 +62,21 @@ class PreUpdateAction(ABC):
         title: str,
         sort_index: int,
     ) -> None:
+        """
+        :param name: the internal name of the pre-update action, has to be unique
+        :param title: the string printed before executing the action, informational only
+        :param sort_index: a relative index of the action, actions with smaller indices are executed first
+        """
         self.name: Final = name
         self.title: Final = title
         self.sort_index: Final = sort_index
 
     @abstractmethod
     def __call__(self, conflict_mode: ConflictMode) -> None:
-        """Execute the update action"""
+        """
+        Execute the pre-update action.
+        Raising an exception will abort the config update.
+        """
 
 
 class PreUpdateActionRegistry(Registry[PreUpdateAction]):

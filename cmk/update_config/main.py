@@ -83,7 +83,7 @@ def main(
         sys.stderr.write(
             "Unknown error on pre update action.\n"
             f"Error: {e}\n\n"
-            "Please repair this and run 'cmk-update-config'"
+            "Please repair this and run 'cmk-update-config' "
             "BEFORE starting the site again."
         )
         return 1

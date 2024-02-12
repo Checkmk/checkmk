@@ -11,42 +11,37 @@ from cmk.base.config import active_check_info
 
 
 def check_sftp_arguments(params):
-    args = []
-    host, user, secret, settings = params
+    args = [
+        "--host=%s" % params["host"],
+        "--user=%s" % params["user"],
+        passwordstore_get_cmdline("--secret=%s", params["secret"]),
+    ]
 
-    args.append("--host=%s" % host)
-    args.append("--user=%s" % user)
-    args.append(passwordstore_get_cmdline("--secret=%s", secret))
+    if "port" in params:
+        args.append("--port=%s" % params["port"])
 
-    if "port" in settings:
-        args.append("--port=%s" % settings["port"])
+    if "timeout" in params:
+        args.append("--timeout=%s" % params["timeout"])
 
-    if "timeout" in settings:
-        args.append("--timeout=%s" % settings["timeout"])
+    if "timestamp" in params:
+        args.append("--get-timestamp=%s" % params["timestamp"])
 
-    if "timestamp" in settings:
-        args.append("--get-timestamp=%s" % settings["timestamp"])
+    if "put" in params:
+        args.append("--put-local=%s" % params["put"]["local"])
+        args.append("--put-remote=%s" % params["put"]["remote"])
 
-    if "put" in settings:
-        local, remote = settings["put"]
-        args.append("--put-local=%s" % local)
-        args.append("--put-remote=%s" % remote)
+    if "get" in params:
+        args.append("--get-remote=%s" % params["get"]["remote"])
+        args.append("--get-local=%s" % params["get"]["local"])
 
-    if "get" in settings:
-        remote, local = settings["get"]
-        args.append("--get-remote=%s" % remote)
-        args.append("--get-local=%s" % local)
-
-    if settings.get("look_for_keys", False):
+    if params.get("look_for_keys", False):
         args.append("--look-for-keys")
 
     return args
 
 
 def check_sftp_desc(params):
-    if "description" in params[3]:
-        return params[3]["description"]
-    return "SFTP %s" % params[0]
+    return params.get("description") or f"SFTP {params['host']}"
 
 
 active_check_info["sftp"] = {

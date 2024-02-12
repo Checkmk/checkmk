@@ -1114,7 +1114,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             "$HOST_NAME$": "host_name",
             "$HOST_TAG_tag1$": "value1",
             "$HOST_TAG_tag2$": "value2",
-            "$HOST_attr1$": "value1",
+            "$HOST_ATTR_attr1$": "value1",
             "HOSTALIAS": "test alias",
         },
     )

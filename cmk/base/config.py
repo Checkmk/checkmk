@@ -1946,7 +1946,7 @@ def get_ssc_host_config(
         **indexed_ipv6_macros,
         **{f"$HOST_TAG_{k}$": v for k, v in tags.items()},
         **{f"$HOST_LABEL_{k}$": v for k, v in labels.items()},
-        **{f"$HOST_{k}$": v for k, v in custom_attributes.items()},
+        **{f"$HOST_ATTR_{k}$": v for k, v in custom_attributes.items()},
         **legacy_macros,
     }
 

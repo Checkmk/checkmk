@@ -5,7 +5,7 @@
 
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cryptography.x509 as x509
@@ -283,7 +283,7 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=sans,
             expiry=relativedelta(days=1),
-            start_date=datetime.now(),
+            start_date=datetime.now(timezone.utc),
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),
         ).get_subject_alt_names()

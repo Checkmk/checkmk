@@ -6,7 +6,7 @@
 import collections
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
@@ -323,8 +323,9 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 
         assert cert_info.not_after is not None  # It is only None if cert is corrupt
 
-        # We get tz aware datetimes and we must not compare them to naive datetimes
-        duration_valid = cert_info.not_after - datetime.now().astimezone()
+        # comparing naive to aware datetimes raises anyway, but the assertion is less obscure
+        assert cert_info.not_after.tzinfo is not None, "cert_info.not_after must be tz aware"
+        duration_valid = cert_info.not_after - datetime.now(timezone.utc)
 
         if duration_valid.total_seconds() < 0:
             yield Result(

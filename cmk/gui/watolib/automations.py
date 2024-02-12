@@ -167,7 +167,7 @@ def local_automation_failure(
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
-) -> MKGeneralException:
+) -> MKAutomationException:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -178,7 +178,7 @@ def local_automation_failure(
         msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
     if exc:
         msg += ": %s" % exc
-    return MKGeneralException(msg)
+    return MKAutomationException(msg)
 
 
 def _hilite_errors(outdata: str) -> str:

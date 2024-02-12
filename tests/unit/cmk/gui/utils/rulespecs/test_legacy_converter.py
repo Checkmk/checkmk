@@ -1791,6 +1791,45 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="upper fixed",
         ),
         pytest.param(
+            api_v1.form_specs.levels.Levels[float](
+                title=api_v1.Localizable("Cast to super type float"),
+                form_spec_template=api_v1.form_specs.basic.TimeSpan(
+                    displayed_units=[api_v1.form_specs.basic.TimeUnit.SECOND]
+                ),
+                level_direction=api_v1.form_specs.levels.LevelDirection.LOWER,
+                prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
+                predictive=None,
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                title=_("Cast to super type float"),
+                choices=(
+                    _get_legacy_no_levels_choice(),
+                    (
+                        "fixed",
+                        _("Fixed levels"),
+                        legacy_valuespecs.Tuple(
+                            elements=[
+                                legacy_valuespecs.TimeSpan(
+                                    title=_("Warning below"),
+                                    default_value=1,
+                                    display=["seconds"],
+                                ),
+                                legacy_valuespecs.TimeSpan(
+                                    title=_("Critical below"),
+                                    default_value=2,
+                                    display=["seconds"],
+                                ),
+                            ],
+                        ),
+                    ),
+                ),
+                default_value=("fixed", (1.0, 2.0)),
+            ),
+            # mypy allows passing integers where a float is expected. We cast these to float, "
+            # so that CascadingDropdown does not complain.",
+            id="cast_to_float",
+        ),
+        pytest.param(
             api_v1.form_specs.levels.Levels[int](
                 title=api_v1.Localizable("Upper levels"),
                 form_spec_template=api_v1.form_specs.basic.Integer(unit=api_v1.Localizable("GiB")),

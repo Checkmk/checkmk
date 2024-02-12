@@ -216,3 +216,8 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
     yield
     if os.getenv("CLEANUP", "1") == "1" and not checks.config.skip_cleanup:
         checks.cleanup_hosts(test_site, host_names)
+
+
+@pytest.fixture(name="plugin_validation_site", scope="session")
+def _get_site_validation() -> Iterator[Site]:
+    yield from get_site_factory(prefix="val_").get_test_site()

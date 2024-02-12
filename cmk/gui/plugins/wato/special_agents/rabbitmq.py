@@ -8,7 +8,11 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListChoice, NetworkPort, TextInput
-from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
+from cmk.gui.wato import (
+    IndividualOrStoredPassword,
+    monitoring_macro_help,
+    RulespecGroupDatasourceProgramsApps,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
@@ -31,7 +35,8 @@ def _valuespec_special_agents_rabbitmq():
                         "checked by the special agent. Please add the "
                         "hostname here, eg. my_rabbitmq.com. If not set, the "
                         "assigned host is used as instance."
-                    ),
+                    )
+                    + monitoring_macro_help(),
                     size=32,
                     allow_empty=False,
                 ),

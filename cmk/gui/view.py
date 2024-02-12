@@ -22,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
@@ -140,7 +141,12 @@ class View:
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(user=user, config=active_config, request=request),
+                    sorter=sorter_cls(
+                        user=user,
+                        config=active_config,
+                        request=request,
+                        painter_options=PainterOptions.get_instance(),
+                    ),
                     negate=entry.negate,
                     join_key=entry.join_key,
                     parameters=sorter[1] if isinstance(sorter, tuple) else None,

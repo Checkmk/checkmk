@@ -722,8 +722,6 @@ class PainterSvcMetrics(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        painter_options = PainterOptions.get_instance()
-
         translated_metrics = metrics.translate_perf_data(
             row["service_perf_data"],
             config=self.config,
@@ -738,7 +736,7 @@ class PainterSvcMetrics(Painter):
                 translated_metrics,
                 row["host_name"],
                 row["service_description"],
-                show_metric_id=painter_options.get("show_internal_graph_and_metric_ids"),
+                show_metric_id=self._painter_options.get("show_internal_graph_and_metric_ids"),
             )
             return "", HTML(output_funnel.drain())
 
@@ -1018,7 +1016,7 @@ class PainterSvcStateAge(Painter):
             row["service_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1036,7 +1034,7 @@ def _paint_checked(  # pylint: disable=redefined-outer-name
         row[what + "_has_been_checked"] == 1,
         0,
         request=request,
-        painter_options=PainterOptions.get_instance(),
+        painter_options=painter_options,
     )
     assert css is not None
     if is_stale(row, config=config):
@@ -1069,7 +1067,7 @@ class PainterSvcCheckAge(Painter):
             row,
             config=self.config,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1117,7 +1115,7 @@ class PainterSvcNextCheck(Painter):
         return _paint_future_time(
             row["service_next_check"],
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1142,7 +1140,7 @@ class PainterSvcLastTimeOk(Painter):
             row["service_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1165,7 +1163,7 @@ class PainterSvcNextNotification(Painter):
         return _paint_future_time(
             row["service_next_notification"],
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1246,7 +1244,7 @@ class PainterSvcLastNotification(Painter):
             row["service_last_notification"],
             0,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -2129,7 +2127,7 @@ class PainterHostStateAge(Painter):
             row["host_has_been_checked"] == 1,
             60 * 10,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -2158,7 +2156,7 @@ class PainterHostCheckAge(Painter):
             row,
             config=self.config,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -2181,7 +2179,7 @@ class PainterHostNextCheck(Painter):
         return _paint_future_time(
             row["host_next_check"],
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -2204,7 +2202,7 @@ class PainterHostNextNotification(Painter):
         return _paint_future_time(
             row["host_next_notification"],
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -2252,7 +2250,7 @@ class PainterHostLastNotification(Painter):
             row["host_last_notification"],
             0,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -4033,7 +4031,7 @@ class PainterCommentTime(Painter):
             True,
             3600,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -4062,7 +4060,7 @@ class PainterCommentExpires(Painter):
             row["comment_expire_time"] != 0,
             3600,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             what="future",
         )
 
@@ -4300,7 +4298,7 @@ class PainterDowntimeEntryTime(Painter):
             True,
             3600,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -4329,7 +4327,7 @@ class PainterDowntimeStartTime(Painter):
             True,
             3600,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             what="both",
         )
 
@@ -4359,7 +4357,7 @@ class PainterDowntimeEndTime(Painter):
             True,
             3600,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             what="both",
         )
 
@@ -4831,7 +4829,7 @@ class PainterLogTime(Painter):
             True,
             3600 * 24,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 

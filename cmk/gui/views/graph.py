@@ -322,7 +322,7 @@ class PainterServiceGraphs(Painter):
             cell,
             user=self.user,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             show_time_range_previews=True,
         )
 
@@ -366,7 +366,7 @@ class PainterHostGraphs(Painter):
             cell,
             user=self.user,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             show_time_range_previews=True,
         )
 
@@ -440,7 +440,7 @@ class PainterSvcPnpgraph(Painter):
             cell,
             user=self.user,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
@@ -486,7 +486,7 @@ class PainterHostPnpgraph(Painter):
             cell,
             user=self.user,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:

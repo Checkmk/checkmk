@@ -11,6 +11,7 @@ from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, Sorter
 from ..config import active_config
 from ..http import request
 from ..logged_in import user
+from ..painter_options import PainterOptions
 from .sorter import ParameterizedSorter, sorter_registry
 
 
@@ -118,7 +119,12 @@ def _get_sorter_name_of_painter(
         if isinstance(painter_name_or_spec, ColumnSpec)
         else painter_name_or_spec
     )
-    painter = painter_registry[painter_name](user=user, config=active_config, request=request)
+    painter = painter_registry[painter_name](
+        user=user,
+        config=active_config,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+    )
     if painter.sorter:
         return painter.sorter
 

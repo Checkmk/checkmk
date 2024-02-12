@@ -39,6 +39,7 @@ CLANG_VERSION_PATTERNS[14]="-14"
 CLANG_VERSION_PATTERNS[15]="-15"
 CLANG_VERSION_PATTERNS[16]="-16"
 CLANG_VERSION_PATTERNS[17]="-17"
+CLANG_VERSION_PATTERNS[17]="-18"
 
 if [ ! ${CLANG_VERSION_PATTERNS[$CLANG_VERSION]+_} ]; then
     failure "This script does not support LLVM version $CLANG_VERSION"
@@ -63,6 +64,8 @@ case "$DIST_VERSION" in
     Ubuntu_21.10) REPO_NAME="deb http://apt.llvm.org/impish/ llvm-toolchain-impish$CLANG_VERSION_STRING main" ;;
     Ubuntu_22.04) REPO_NAME="deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy$CLANG_VERSION_STRING main" ;;
     Ubuntu_22.10) REPO_NAME="deb http://apt.llvm.org/kinetic/ llvm-toolchain-kinectic$CLANG_VERSION_STRING main" ;;
+    Ubuntu_23.04) REPO_NAME="deb http://apt.llvm.org/lunar/ llvm-toolchain-lunar$CLANG_VERSION_STRING main" ;;
+    Ubuntu_23.10) REPO_NAME="deb http://apt.llvm.org/mantic/ llvm-toolchain-mantic$CLANG_VERSION_STRING main" ;;
     *) failure "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})." >&2 ;;
 esac
 

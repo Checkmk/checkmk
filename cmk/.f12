@@ -94,7 +94,6 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/update_config/__init__.py" \
     "$ROOT/lib/python3/cmk/update_config/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/update_config/plugins/actions/__init__.py" \
-    \
     "$ROOT/lib/python3/cmk/cee/__init__.py" \
     "$ROOT/lib/python3/cmk/cee/dcd/__init__.py" \
     "$ROOT/lib/python3/cmk/cee/dcd/plugins/__init__.py" \
@@ -115,7 +114,6 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/sla/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py" \
-    \
     "$ROOT/lib/python3/cmk/gui/cce/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cce/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/__init__.py" \

@@ -10,9 +10,18 @@ import itertools
 import os
 import time
 from collections.abc import Callable, Iterator
-from typing import Any, Literal, NamedTuple
+from typing import Any, Generator, Literal, NamedTuple, Sequence
 
-from livestatus import lq_logic, lqencode, OnlySites, Query, QuerySpecification, SiteId
+from livestatus import (
+    LivestatusRow,
+    lq_logic,
+    lqencode,
+    MKLivestatusPayloadTooLargeError,
+    OnlySites,
+    Query,
+    QuerySpecification,
+    SiteId,
+)
 
 import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
@@ -2341,6 +2350,9 @@ BITreeState = Any
 BITimelineEntry = Any
 
 
+DEFAULT_MAX_TIME_RANGE = 31 * 24 * 60 * 60  # One month
+
+
 def get_bi_availability(
     avoptions: AVOptions, aggr_rows: Rows, timewarp: AVTimeStamp | None
 ) -> tuple[list[TimelineContainer], AVRawData, bool]:
@@ -2418,8 +2430,33 @@ class TimelineContainer:
         self.tree_time: AVTimeStamp | None = None
 
 
+def split_time_range(
+    start: AVTimeStamp, end: AVTimeStamp, interval: AVTimeStamp
+) -> Generator[AVTimeRange, None, None]:
+    """
+    Split a time range into smaller ranges of a given interval.
+
+    Examples:
+    >>> _start, _end = 42, 1337
+    >>> list(split_time_range(_start, _end, -((_end - _start) // -2)))
+    [(42, 690), (690, 1337)]
+    >>> list(split_time_range(_start, _end, (_end - _start) // 2))
+    [(42, 689), (689, 1336), (1336, 1337)]
+    >>> list(split_time_range(_start, _end, 250))
+    [(42, 292), (292, 542), (542, 792), (792, 1042), (1042, 1292), (1292, 1337)]
+    """
+    if interval <= 0:
+        raise ValueError("Interval must be positive")
+    while start < end:
+        yield start, min(start + interval, end)
+        start += interval
+
+
 def get_bi_leaf_history(
-    aggr_rows: Rows, time_range: AVTimeRange, livestatus_limit: int | None
+    aggr_rows: Rows,
+    time_range: AVTimeRange,
+    livestatus_limit: int | None,
+    max_time_range: int = DEFAULT_MAX_TIME_RANGE,
 ) -> tuple[AVBIPhases, list[TimelineContainer], int]:
     """Get state history of all hosts and services contained in the tree.
     In order to simplify the query, we always fetch the information for all hosts of the aggregates.
@@ -2442,7 +2479,6 @@ def get_bi_leaf_history(
         "in_service_period",
     ]
 
-    headers = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     # Create a specific filter. We really only want the services and hosts
     # of the aggregation in question. That prevents status changes
     # irrelevant services from introducing new phases.
@@ -2451,7 +2487,7 @@ def get_bi_leaf_history(
     for row in aggr_rows:
         timeline_container = TimelineContainer(row)
 
-        for site, host, service in timeline_container.aggr_compiled_branch.required_elements():
+        for _site, host, service in timeline_container.aggr_compiled_branch.required_elements():
             this_service = service or ""
             by_host.setdefault(host, {""}).add(this_service)
             timeline_container.host_service_info.add((host, this_service))
@@ -2459,6 +2495,7 @@ def get_bi_leaf_history(
 
         timeline_containers.append(timeline_container)
 
+    headers = ""
     for host, services in by_host.items():
         headers += "Filter: host_name = %s\n" % host
         headers += lq_logic("Filter: service_description = ", list(services), "Or")
@@ -2466,18 +2503,13 @@ def get_bi_leaf_history(
     if len(hosts) != 1:
         headers += "Or: %d\n" % len(hosts)
 
-    data = query_livestatus(
-        Query(
-            QuerySpecification(
-                table="statehist",
-                columns=columns,
-                headers=headers,
-            )
-        ),
-        only_sites=list(only_sites),
-        limit=livestatus_limit,
-        auth_domain="read",
-    )
+    data: list[LivestatusRow] = []
+
+    split_time_ranges = split_time_range(time_range[0], time_range[1], max_time_range)
+    for current_time_range in split_time_ranges:
+        get_bi_split_history_data(
+            data, current_time_range, columns, only_sites, headers, livestatus_limit
+        )
 
     if not data:
         return [], [], 0
@@ -2487,6 +2519,7 @@ def get_bi_leaf_history(
 
     # Reclassify base data due to annotations
     rows = reclassify_bi_rows(rows)
+    merged_rows_by_id = get_bi_merged_rows_by_id(rows)
 
     # Now comes the tricky part: recompute the state of the aggregate
     # for each step in the state history and construct a timeline from
@@ -2496,8 +2529,9 @@ def get_bi_leaf_history(
 
     # First partition the rows into sequences with equal start time
     phases: dict[int, dict[tuple[HostName, ServiceName], Row]] = {}
-    for row in rows:
-        phases.setdefault(row["from"], {})[(row["host_name"], row["service_description"])] = row
+    for id_, merged_rows in merged_rows_by_id.items():
+        for row in merged_rows:
+            phases.setdefault(row["from"], {})[id_] = row
 
     # Convert phases to sorted list
     sorted_times = sorted(phases.keys())
@@ -2505,8 +2539,73 @@ def get_bi_leaf_history(
 
     for from_time in sorted_times:
         phases_list.append((from_time, phases[from_time]))
+    return phases_list, timeline_containers, sum(len(rows) for rows in merged_rows_by_id.values())
 
-    return phases_list, timeline_containers, len(rows)
+
+def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceName], list[Row]]:
+    by_id: dict[tuple[HostName, ServiceName], list[Row]] = {}
+    for row in rows:
+        id_ = (row["host_name"], row["service_description"])
+        by_id.setdefault(id_, [])
+        by_id[id_].append(row)
+
+    for id_, service_rows in by_id.items():
+        by_id[id_] = sorted(service_rows, key=lambda x: x["from"])
+
+    merged_rows_by_id: dict[tuple[HostName, ServiceName], list[Row]] = {id_: [] for id_ in by_id}
+    for id_, service_rows in by_id.items():
+        for service_row in service_rows:
+            if not merged_rows_by_id[id_]:
+                merged_rows_by_id[id_].append(service_row)
+            elif (
+                merged_rows_by_id[id_][-1]["state"] != service_row["state"]
+                or merged_rows_by_id[id_][-1]["in_downtime"] != service_row["in_downtime"]
+                or merged_rows_by_id[id_][-1]["in_service_period"]
+                != service_row["in_service_period"]
+                or merged_rows_by_id[id_][-1]["log_output"] != service_row["log_output"]
+            ):
+                merged_rows_by_id[id_].append(service_row)
+            else:
+                merged_rows_by_id[id_][-1]["until"] = service_row["until"]
+    return merged_rows_by_id
+
+
+def get_bi_split_history_data(
+    data: list[LivestatusRow],
+    time_range: AVTimeRange,
+    columns: Sequence[str],
+    only_sites: set[Any],
+    headers: str,
+    livestatus_limit: int | None,
+) -> None:
+    try:
+        # Try to fetch complete data
+        data.extend(
+            query_livestatus(
+                Query(
+                    QuerySpecification(
+                        table="statehist",
+                        columns=columns,
+                        headers="Filter: time >= %d\nFilter: time < %d\n" % time_range + headers,
+                    )
+                ),
+                only_sites=list(only_sites),
+                limit=livestatus_limit,
+                auth_domain="read",
+            )
+        )
+    except MKLivestatusPayloadTooLargeError:
+        # If the query fails, split the time range into two and try again
+        split_time_ranges = split_time_range(
+            time_range[0],
+            time_range[1],
+            # Ceiling division in order not to split into three parts (see docstring example)
+            -((time_range[1] - time_range[0]) // -2),
+        )
+        for current_time_range in split_time_ranges:
+            get_bi_split_history_data(
+                data, current_time_range, columns, only_sites, headers, livestatus_limit
+            )
 
 
 def compute_bi_timelines(

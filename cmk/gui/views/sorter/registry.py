@@ -11,13 +11,14 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
 from ...config import active_config
+from ...http import request
 from ...logged_in import user
 from .base import Sorter
 
 
 class SorterRegistry(Registry[type[Sorter]]):
     def plugin_name(self, instance: type[Sorter]) -> str:
-        return instance(user=user, config=active_config).ident
+        return instance(user=user, config=active_config, request=request).ident
 
 
 sorter_registry = SorterRegistry()
@@ -52,7 +53,7 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
 def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
-    painter = painter_registry[painter_name](user=user, config=active_config)
+    painter = painter_registry[painter_name](user=user, config=active_config, request=request)
 
     register_sorter(
         painter_name,

@@ -22,7 +22,7 @@ from cmk.gui import visuals
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
@@ -79,9 +79,11 @@ class Painter(abc.ABC):
         *,
         user: LoggedInUser,
         config: Config,
+        request: Request,
     ):
         self.user = user
         self.config = config
+        self.request = request
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -297,7 +299,7 @@ class Painter(abc.ABC):
 
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
-        return instance(user=user, config=active_config).ident
+        return instance(user=user, config=active_config, request=request).ident
 
 
 painter_registry = PainterRegistry()
@@ -434,9 +436,12 @@ class Cell:
                 experimental_painter_registry[self.painter_name()],
                 user=user,
                 config=active_config,
+                request=request,
             )
         except KeyError:
-            return painter_registry[self.painter_name()](user=user, config=active_config)
+            return painter_registry[self.painter_name()](
+                user=user, config=active_config, request=request
+            )
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -499,7 +504,9 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name](user=user, config=active_config)
+        return painter_registry[self._tooltip_painter_name](
+            user=user, config=active_config, request=request
+        )
 
     def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
@@ -759,9 +766,9 @@ class PainterAdapter(Painter):
     """
 
     def __init__(  # pylint: disable=redefined-outer-name
-        self, painter: V1Painter, *, user: LoggedInUser, config: Config
+        self, painter: V1Painter, *, user: LoggedInUser, config: Config, request: Request
     ):
-        super().__init__(user=user, config=config)
+        super().__init__(user=user, config=config, request=request)
         self._painter = painter
 
     @property

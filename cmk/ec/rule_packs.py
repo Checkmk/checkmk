@@ -125,14 +125,14 @@ def _bind_to_rule_pack_proxies(
 
 # Used by ourselves *and* the GUI!
 def _load_config(  # pylint: disable=too-many-branches
-    settings: Settings, config_dir: Path
+    settings: Settings, config_files: Iterable[Path]
 ) -> ConfigFromWATO:
     """Load event console configuration."""
     # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
     global_context = dict(default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
     global_context["mkp_rule_packs"] = {}
-    for path in [settings.paths.main_config_file.value] + sorted(config_dir.glob("**/*.mk")):
+    for path in config_files:
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
@@ -200,14 +200,20 @@ def _load_config(  # pylint: disable=too-many-branches
 def load_config(settings: Settings) -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
     distributed setups."""
-    return _load_config(settings, settings.paths.config_dir.value)
+    return _load_config(
+        settings,
+        (
+            [settings.paths.main_config_file.value]
+            + sorted(settings.paths.config_dir.value.glob("**/*.mk"))
+        ),
+    )
 
 
 # Used only by ourselves in by cmk.ec.main.load_configuration()
 def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
     are filtered rule packs, especially in distributed managed setups."""
-    return _load_config(settings, settings.paths.active_config_dir.value)
+    return _load_config(settings, sorted(settings.paths.active_config_dir.value.glob("**/*.mk")))
 
 
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.save_active_config()
@@ -217,10 +223,16 @@ def save_active_config(
     pretty_print: bool = False,
 ) -> None:
     """
+    Copy main configuration file from
+        etc/check_mk/mkeventd.mk
+    to
+        var/mkeventd/active_config/mkeventd.mk
+
     Copy all config files recursively from
         etc/check_mk/mkeventd.d
     to
-        var/mkeventd/active_config
+        var/mkeventd/active_config/conf.d
+
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
     try:
@@ -228,10 +240,18 @@ def save_active_config(
     except FileNotFoundError:
         pass
 
-    for path in settings.paths.config_dir.value.glob("**/*.mk"):
-        target = settings.paths.active_config_dir.value / path.relative_to(
-            settings.paths.config_dir.value
+    settings.paths.active_config_dir.value.mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.copy(
+            settings.paths.main_config_file.value,
+            settings.paths.active_config_dir.value / "mkeventd.mk",
         )
+    except FileNotFoundError:
+        pass
+
+    active_conf_d = settings.paths.active_config_dir.value / "conf.d"
+    for path in settings.paths.config_dir.value.glob("**/*.mk"):
+        target = active_conf_d / path.relative_to(settings.paths.config_dir.value)
         target.parent.mkdir(parents=True, exist_ok=True)
         if path.name == "rules.mk":
             save_rule_packs(rule_packs, pretty_print=pretty_print, dir_=target.parent)

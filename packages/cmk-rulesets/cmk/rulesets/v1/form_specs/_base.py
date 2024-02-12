@@ -42,6 +42,8 @@ class FormSpec(Generic[ModelT]):
     title: Localizable | None = None
     help_text: Localizable | None = None
     migrate: Callable[[object], ModelT] | None = None
+    # Since we can't have a default `migrate` other than `None`, we also allow it here for
+    # consistency, although a no-op validator would work as well.
     custom_validate: Callable[[ModelT], object] | None = None
 
 

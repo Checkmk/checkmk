@@ -106,7 +106,8 @@ main() {
         # print server section
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
-        # execute command
+        # TODO: Use an array instead of the suppression for the command, too.
+        # shellcheck disable=SC2086
         waitmax 3 ${REDIS_CLI_COMMAND} "${REDIS_ARGS[@]}" || true
         echo
     done

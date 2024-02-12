@@ -19,7 +19,7 @@ from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashle
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
@@ -539,7 +539,7 @@ class PainterEventFirst(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_first"], True, True)
+        return paint_age(row["event_first"], True, True, request=request)
 
 
 class PainterEventLast(Painter):
@@ -562,7 +562,7 @@ class PainterEventLast(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["event_last"], True, True)
+        return paint_age(row["event_last"], True, True, request=request)
 
 
 class PainterEventComment(Painter):
@@ -883,7 +883,9 @@ class PainterEventPhase(Painter):
         return ("", phase_names.get(row["event_phase"], ""))
 
 
-def paint_event_icons(row, history=False):
+def paint_event_icons(  # pylint: disable=redefined-outer-name
+    row: Row, history: bool = False, *, request: Request
+) -> CellSpec:
     phase = row["event_phase"]
 
     htmlcode: str | HTML
@@ -903,7 +905,7 @@ def paint_event_icons(row, history=False):
         htmlcode = ""
 
     if not history:
-        htmlcode += render_delete_event_icons(row)
+        htmlcode += render_delete_event_icons(row, request=request)
 
     if row["event_host_in_downtime"]:
         htmlcode += html.render_icon("downtime", _("Host in downtime during event creation"))
@@ -913,7 +915,9 @@ def paint_event_icons(row, history=False):
     return "", ""
 
 
-def render_delete_event_icons(row: Row) -> str | HTML:
+def render_delete_event_icons(  # pylint: disable=redefined-outer-name
+    row: Row, *, request: Request
+) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
@@ -993,7 +997,7 @@ class PainterEventIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row)
+        return paint_event_icons(row, request=request)
 
 
 class PainterEventHistoryIcons(Painter):
@@ -1016,7 +1020,7 @@ class PainterEventHistoryIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, history=True)
+        return paint_event_icons(row, history=True, request=request)
 
 
 class PainterEventContactGroups(Painter):
@@ -1117,7 +1121,7 @@ class PainterHistoryTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["history_time"], True, True)
+        return paint_age(row["history_time"], True, True, request=request)
 
 
 class PainterHistoryWhat(Painter):

@@ -16,6 +16,7 @@ from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, Row
@@ -72,20 +73,21 @@ def render_cache_info(what: str, row: Row) -> str:
     return text
 
 
-def paint_host_list(site: SiteId, hosts: list[HostName]) -> CellSpec:
+def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) -> CellSpec:
     return "", HTML(
         ", ".join(
             get_host_list_links(
                 site,
                 [str(host) for host in hosts],
+                request=request,
             )
         )
     )
 
 
-def format_plugin_output(output: str, row: Row) -> HTML:
+def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
-        output, row, shall_escape=active_config.escape_plugin_output
+        output, request=request, row=row, shall_escape=active_config.escape_plugin_output
     )
 
 

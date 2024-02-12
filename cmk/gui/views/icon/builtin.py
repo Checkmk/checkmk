@@ -438,7 +438,7 @@ class PerfgraphIcon(Icon):
     def _graph_icon_link(self, row, what):
         if display_options.disabled(display_options.X):
             return ""
-        return cmk_graph_url(row, what)
+        return cmk_graph_url(row, what, request=request)
 
 
 # .
@@ -739,7 +739,7 @@ class CommentsIcon(Icon):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
                 text += '{} {}: "{}" \n'.format(
-                    paint_age(timestamp, True, 0, "abs")[1],
+                    paint_age(timestamp, True, 0, request=request, mode="abs")[1],
                     author,
                     comment,
                 )

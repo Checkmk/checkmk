@@ -1123,7 +1123,9 @@ class ModeNotifications(ABCNotificationsMode):
         table.cell(
             _("Plugin output"),
             cmk.gui.view_utils.format_plugin_output(
-                output, shall_escape=active_config.escape_plugin_output
+                output,
+                request=request,
+                shall_escape=active_config.escape_plugin_output,
             ),
         )
 

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from logging import Logger
-from re import match, Pattern
+from re import findall, match, MULTILINE, Pattern
 from typing import Any
 
 import cmk.utils.store as store
@@ -19,7 +19,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, RuleConditions, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, RuleConditions, Ruleset, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -37,6 +37,31 @@ RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
 }
 
 DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
+
+HOST_MACROS_PREFIXES = [
+    "$HOST_NAME$",
+    "$HOST_ALIAS$",
+    "$HOST_ADDRESS$",
+    "$HOST_IP_FAMILY$",
+    "$HOST_IPV4_ADDRESS$",
+    "$HOST_IPV6_ADDRESS$",
+    "$HOST_IPV4_ADDRESSES$",
+    "$HOST_IPV6_ADDRESSES$",
+    "$HOST_IPV4_ADDRESS_",
+    "$HOST_IPV6_ADDRESS_",
+    "$HOST_TAG_",
+    "$HOST_LABEL_",
+    "$HOST_ATTR_",
+]
+
+LEGACY_MACRO_WARNING = (
+    "\n From version 2.4, legacy macros will no longer be replaced in active "
+    "checks and special agents.\n Replace them with supported macros: $HOST_NAME$, "
+    "$HOST_ALIAS$, $HOST_ADDRESS$, $HOST_IP_FAMILY$, $HOST_IPV4_ADDRESS$, "
+    "$HOST_IPV6_ADDRESS$, $HOST_IPV4_ADDRESSES$, $HOST_IPV6_ADDRESSES$, "
+    "$HOST_IPV4_ADDRESS_[index]$, $HOST_IPV6_ADDRESS_[index]$, "
+    "$HOST_TAG_[tag_name]$, $HOST_LABEL_[label_name]$ or $HOST_ATTR_[custom_attr_name]$."
+)
 
 
 class UpdateRulesets(UpdateAction):
@@ -79,6 +104,7 @@ class UpdateRulesets(UpdateAction):
             REPLACED_CHECK_PLUGINS,
         )
         _validate_rule_values(logger, all_rulesets)
+        _warn_about_deprecated_ssc_macros(logger, all_rulesets)
         all_rulesets.save()
 
 
@@ -364,3 +390,57 @@ def _remove_removed_check_plugins_from_ignored_checks(
                 rule,
                 create_change=False,
             )
+
+
+def _is_ssc_ruleset(ruleset: Ruleset) -> bool:
+    for prefix in ("active_checks:", "special_agents:"):
+        if prefix in ruleset.name:
+            return True
+
+    return False
+
+
+def _is_legacy_macro(string: str) -> bool:
+    for prefix in HOST_MACROS_PREFIXES:
+        if string.startswith(prefix):
+            return False
+    return True
+
+
+def _find_strings_in_rule(rule_value: object) -> Iterator[str]:
+    if isinstance(rule_value, str):
+        yield rule_value
+    elif isinstance(rule_value, dict):
+        for nested in rule_value.values():
+            yield from _find_strings_in_rule(nested)
+    elif isinstance(rule_value, (list, tuple)):
+        for nested in rule_value:
+            yield from _find_strings_in_rule(nested)
+
+
+def _get_legacy_macros(ruleset: Ruleset) -> Iterator[str]:
+    for _folder, _index, rule in ruleset.get_rules():
+        for string in _find_strings_in_rule(rule.value):
+            for macro in findall(r"\$[^\s]+\$", string, MULTILINE):
+                if _is_legacy_macro(macro):
+                    yield macro
+
+
+def _warn_about_deprecated_ssc_macros(logger: Logger, collection: RulesetCollection) -> None:
+    legacy_macros = {}
+
+    for ruleset in collection.get_rulesets().values():
+        if not _is_ssc_ruleset(ruleset):
+            continue
+
+        if macros := list(_get_legacy_macros(ruleset)):
+            legacy_macros[ruleset.name] = macros
+
+    warnings = []
+    for ruleset_name, macros in legacy_macros.items():
+        warnings.append(f"Legacy macros ({", ".join(macros)}) found in ruleset {ruleset_name}.")
+
+    if warnings:
+        logger.warning(
+            format_warning("WARNING: " + "\n ".join(warnings) + LEGACY_MACRO_WARNING),
+        )

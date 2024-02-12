@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from logging import getLogger
 from typing import Any
 
@@ -23,6 +23,7 @@ from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfiguration
 from cmk.gui.watolib.rulespecs import Rulespec
 
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
+from cmk.update_config.update_state import format_warning
 
 RuleValue = Any
 
@@ -301,3 +302,80 @@ def test_validate_rule_values(
     )
     rulesets_updater._validate_rule_values(logger, all_rulesets)
     assert mock_warner.call_count == n_expected_warnings
+
+
+@pytest.mark.parametrize(
+    "rule_value, expected_strings",
+    [
+        pytest.param({"key": "Test $HOSTNAME$"}, ["Test $HOSTNAME$"], id="dict rule"),
+        pytest.param(
+            {"key": ["arg1", 78, ({"nested_el": "HOST_ATTR_custom"}, "string")]},
+            ["arg1", "HOST_ATTR_custom", "string"],
+            id="nested dict rule",
+        ),
+        pytest.param(
+            (2, "Test $HOSTNAME$", ("arg", 4)), ["Test $HOSTNAME$", "arg"], id="tuple rule"
+        ),
+        pytest.param(34, [], id="int rule"),
+        pytest.param("string", ["string"], id="string rule"),
+    ],
+)
+def test_find_strings_in_rule(
+    rule_value: RuleValue,
+    expected_strings: Sequence[str],
+) -> None:
+    assert list(rulesets_updater._find_strings_in_rule(rule_value)) == expected_strings
+
+
+@pytest.mark.parametrize(
+    "rule_name, rule_value, expected_legacy_macros",
+    [
+        pytest.param(
+            "active_checks:test", {"key": "Test $HOSTNAME$"}, ["$HOSTNAME$"], id="one legacy macro"
+        ),
+        pytest.param(
+            "active_checks:test",
+            {"key": "Address $HOST_ADDRESS_4$ of $HOSTNAME$"},
+            ["$HOST_ADDRESS_4$", "$HOSTNAME$"],
+            id="multiple legacy macros",
+        ),
+        pytest.param(
+            "active_checks:test",
+            {"key": "Address $HOST_IPV4_ADDRESS$ of $HOST_NAME$"},
+            [],
+            id="new macros",
+        ),
+        pytest.param(
+            "check_parameter_rule",
+            {"key": "Test $HOSTNAME$"},
+            [],
+            id="not active check or special agent rule",
+        ),
+    ],
+)
+def test_warn_about_deprecated_ssc_macros(
+    caplog: pytest.LogCaptureFixture,
+    rulespec_with_migration: Rulespec,
+    rule_name: str,
+    rule_value: RuleValue,
+    expected_legacy_macros: Sequence[str],
+) -> None:
+    ruleset = _instantiate_ruleset(
+        rule_name,
+        rule_value,
+        rulespec=rulespec_with_migration,
+    )
+    rulesets = RulesetCollection({rule_name: ruleset})
+
+    rulesets_updater._warn_about_deprecated_ssc_macros(getLogger(), rulesets)
+
+    expected_records = 1 if expected_legacy_macros else 0
+    assert len(caplog.records) == expected_records
+
+    if expected_legacy_macros:
+        macros = ", ".join(expected_legacy_macros)
+        macro_warning = f"Legacy macros ({macros}) found in ruleset {rule_name}."
+        expected_warning = format_warning(
+            "WARNING: " + macro_warning + rulesets_updater.LEGACY_MACRO_WARNING
+        )
+        assert caplog.records[0].message == expected_warning

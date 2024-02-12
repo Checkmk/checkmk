@@ -110,7 +110,7 @@ def disconnect() -> None:
     """Actively closes all Livestatus connections."""
     if not g:
         return
-    logger.debug("Disconnecing site connections")
+    logger.debug("Disconnecting site connections")
     if "live" in g:
         g.live.disconnect()
     g.pop("live", None)

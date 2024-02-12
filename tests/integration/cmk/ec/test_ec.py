@@ -1,10 +1,12 @@
 import pprint
 import subprocess
+import time
 from collections.abc import Iterator
 
 import pytest
 
 from tests.testlib.site import Site
+import re
 
 
 def _get_ec_rule(rule_id: str, title: str, state: int, match: str) -> list:
@@ -233,6 +235,41 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
 
     queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert not queried_event_messages
+
+    # cleanup: disable SNMP trap receiver
+    _change_snmp_trap_receiver(site, enable_receiver=False)
+
+
+def test_ec_global_settings(site: Site, setup_ec: Iterator):
+    """Assert that global settings of the EC are applied to the EC
+
+    * Activate SNMP traps translation via EC global rules
+    * Send message via SNMP trap
+    * Assert SNMP-MIB is found in the event message
+    """
+    match, _, _ = setup_ec
+    event_message = f"some {match} status"
+
+    _change_snmp_trap_receiver(site, enable_receiver=True)
+
+    # activate EC global rules to translate SNMP traps
+    ec_global_rules_path = site.path("etc/check_mk/mkeventd.d/wato/global.mk")
+    site.write_text_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
+
+    _activate_ec_changes(site)
+
+    rc = site.execute(_get_snmp_trap_cmd(event_message)).wait()
+    assert rc == 0, "Failed to send message via SNMP trap"
+
+    live = site.live
+    time.sleep(1)  # wait to set up connection
+
+    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    assert len(queried_event_messages) == 1
+
+    pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
+    match = re.compile(pattern).search(queried_event_messages[0])
+    assert match, f"{pattern} not found in the event message"
 
     # cleanup: disable SNMP trap receiver
     _change_snmp_trap_receiver(site, enable_receiver=False)

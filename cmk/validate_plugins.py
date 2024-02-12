@@ -21,10 +21,20 @@ from cmk.checkengine.checkresults import (  # pylint: disable=cmk-module-layer-v
 
 from cmk.base import check_api  # pylint: disable=cmk-module-layer-violation
 from cmk.base import server_side_calls  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import load_all_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation
+    iter_all_check_plugins,
+    iter_all_discovery_rulesets,
+    iter_all_host_label_rulesets,
+    iter_all_inventory_plugins,
+)
+from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+    check_info,
+    load_all_plugins,
+)
 
 from cmk.gui.main_modules import load_plugins  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils import get_failed_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.rule_specs.loader import RuleSpec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
     rulespec_registry,
@@ -32,6 +42,7 @@ from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-viol
 
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
+from cmk.rulesets.v1 import entry_point_prefixes
 
 _AgentBasedPlugins = (
     agent_based_v2.SimpleSNMPSection
@@ -49,6 +60,7 @@ class ValidationStep(enum.Enum):
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
     RULE_SPEC_REFERENCED = "referenced rule specs validation"
+    RULE_SPEC_USED = "loaded rule specs usage"
 
 
 def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
@@ -206,6 +218,52 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPEC_REFERENCED, errors)
 
 
+def _validate_rule_spec_usage() -> ActiveCheckResult:
+    # only for ruleset API v1
+    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
+        PluginGroup.RULESETS,
+        entry_point_prefixes(),
+        raise_errors=False,  # already raised during loading validation if enabled
+    )
+
+    referenced_ruleset_names = set(
+        [
+            str(plugin.check_ruleset_name)
+            for plugin in iter_all_check_plugins()
+            if plugin.check_ruleset_name is not None
+        ]
+        + [
+            str(plugin.inventory_ruleset_name)
+            for plugin in iter_all_inventory_plugins()
+            if plugin.inventory_ruleset_name is not None
+        ]
+        + [str(ruleset_name) for ruleset_name in iter_all_host_label_rulesets()]
+        + [active_check.name for active_check in server_side_calls.load_active_checks()[1].values()]
+        + [str(ruleset_name) for ruleset_name in iter_all_discovery_rulesets()]
+        + [
+            check.check_ruleset_name
+            for check in check_info.values()
+            if hasattr(check, "check_ruleset_name")
+        ]
+        + [
+            special_agent.name
+            for special_agent in server_side_calls.load_special_agents()[1].values()
+        ]
+    )
+
+    errors = []
+    for plugin in discovered_plugins.plugins.values():
+        if plugin.is_deprecated:
+            continue
+
+        if plugin.name not in referenced_ruleset_names:
+            errors.append(
+                f"{type(plugin).__name__} rule set '{plugin.name}' is not used anywhere. Ensure "
+                f"the correct spelling at the referencing plugin or deprecate the ruleset"
+            )
+    return to_result(ValidationStep.RULE_SPEC_USED, errors)
+
+
 def validate_plugins() -> ActiveCheckResult:
     sub_results = [
         _validate_agent_based_plugin_loading(),
@@ -214,6 +272,7 @@ def validate_plugins() -> ActiveCheckResult:
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),
+        _validate_rule_spec_usage(),
     ]
     return ActiveCheckResult.from_subresults(*sub_results)
 

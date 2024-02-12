@@ -19,7 +19,7 @@ from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ViewSpec
@@ -250,10 +250,12 @@ def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     return int(start_time), int(end_time)
 
 
-def paint_age_or_never(
+def paint_age_or_never(  # pylint: disable=redefined-outer-name
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
+    *,
+    request: Request,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
@@ -264,13 +266,17 @@ def paint_age_or_never(
     if timestamp == 0 and has_been_checked and (mode in {"abs", "mixed"}):
         return "age", _("Never")
 
-    return paint_age(timestamp, has_been_checked, bold_if_younger_than, mode, what)
+    return paint_age(
+        timestamp, has_been_checked, bold_if_younger_than, request=request, mode=mode, what=what
+    )
 
 
-def paint_age(
+def paint_age(  # pylint: disable=redefined-outer-name
     timestamp: int,
     has_been_checked: bool,
     bold_if_younger_than: int,
+    *,
+    request: Request,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
@@ -285,8 +291,22 @@ def paint_age(
         return "", str(int(timestamp))
 
     if mode == "both":
-        css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
-        css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
+        css, h1 = paint_age(
+            timestamp,
+            has_been_checked,
+            bold_if_younger_than,
+            request=request,
+            mode="abs",
+            what=what,
+        )
+        css, h2 = paint_age(
+            timestamp,
+            has_been_checked,
+            bold_if_younger_than,
+            request=request,
+            mode="rel",
+            what=what,
+        )
         return css, f"{h1} - {h2}"
 
     age = time.time() - timestamp

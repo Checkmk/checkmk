@@ -27,7 +27,7 @@ from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -828,13 +828,13 @@ class PainterAggrTreestate(Painter):
         return paint_aggregated_tree_state(row)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -864,13 +864,13 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return paint_aggregated_tree_state(row, show_frozen_difference=True)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
 
 @request_memoize()
@@ -979,17 +979,20 @@ class PainterAggrTreestateBoxed(Painter):
         return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user)
+        return render_tree_json(row, user=self.user, request=request)
 
 
 def render_tree_json(  # pylint: disable=redefined-outer-name
-    row: typing.Mapping[str, typing.Any], *, user: LoggedInUser
+    row: typing.Mapping[str, typing.Any],
+    *,
+    user: LoggedInUser,
+    request: Request,
 ) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 

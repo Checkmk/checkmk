@@ -19,7 +19,7 @@ from cmk.gui.graphing._html_render import (
     render_graphs_from_specification_html,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
-from cmk.gui.http import request, response
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -155,12 +155,13 @@ _GRAPH_VIEWS = {
 }
 
 
-def paint_time_graph_cmk(
+def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     row: Row,
     cell: Cell,
     *,
     user: LoggedInUser,
     show_time_range_previews: bool | None = None,
+    request: Request,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -316,7 +317,9 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, user=self.user, show_time_range_previews=True)
+        return paint_time_graph_cmk(
+            row, cell, user=self.user, show_time_range_previews=True, request=request
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -353,7 +356,9 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, user=self.user, show_time_range_previews=True)
+        return paint_time_graph_cmk(
+            row, cell, user=self.user, show_time_range_previews=True, request=request
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -420,7 +425,7 @@ class PainterSvcPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, user=self.user)
+        return paint_time_graph_cmk(row, cell, user=self.user, request=request)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -460,7 +465,7 @@ class PainterHostPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_time_graph_cmk(row, cell, user=self.user)
+        return paint_time_graph_cmk(row, cell, user=self.user, request=request)
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()
@@ -472,7 +477,9 @@ class PainterHostPnpgraph(Painter):
         raise JSONExportError()
 
 
-def cmk_graph_url(row, what):
+def cmk_graph_url(  # pylint: disable=redefined-outer-name
+    row: Row, what: str, *, request: Request
+) -> str:
     site_id = row["site"]
 
     urivars = [

@@ -246,7 +246,9 @@ class PainterCrashTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
+        return paint_age(
+            row["crash_time"], has_been_checked=True, bold_if_younger_than=3600, request=request
+        )
 
 
 class PainterCrashVersion(Painter):

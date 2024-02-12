@@ -669,7 +669,12 @@ class DiscoveryPageRenderer:
                 html.write_html(HTML(get_html_state_marker(state)))
                 html.close_td()
                 # Make sure not to show long output
-                html.td(format_plugin_output(output.split("\n", 1)[0].replace(" ", ": ", 1)))
+                html.td(
+                    format_plugin_output(
+                        output.split("\n", 1)[0].replace(" ", ": ", 1),
+                        request=request,
+                    )
+                )
                 html.close_tr()
             html.close_table()
 
@@ -1126,7 +1131,9 @@ class DiscoveryPageRenderer:
                 html.write_html(
                     HTML(
                         format_plugin_output(
-                            output, shall_escape=active_config.escape_plugin_output
+                            output,
+                            request=request,
+                            shall_escape=active_config.escape_plugin_output,
                         )
                     )
                 )

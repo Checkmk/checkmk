@@ -27,7 +27,7 @@ from cmk.gui.graphing._utils import get_extended_metric_info, metric_info
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import replace_action_url_macros
 from cmk.gui.painter_options import (
@@ -396,10 +396,12 @@ def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = 
     return key, ""
 
 
-def _paint_future_time(timestamp: int) -> CellSpec:
+def _paint_future_time(  # pylint: disable=redefined-outer-name
+    timestamp: int, *, request: Request
+) -> CellSpec:
     if timestamp <= 0:
         return "", "-"
-    return paint_age(timestamp, True, 0, what="future")
+    return paint_age(timestamp, True, 0, request=request, what="future")
 
 
 def _paint_day(timestamp: int) -> CellSpec:
@@ -586,7 +588,7 @@ class PainterSvcPluginOutput(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_stalified(
             row,
-            format_plugin_output(row["service_plugin_output"], row),
+            format_plugin_output(row["service_plugin_output"], request=request, row=row),
             config=self.config,
         )
 
@@ -636,7 +638,7 @@ class PainterSvcLongPluginOutput(Painter):
         if 0 < max_len < long_output_len:
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(long_output, row)
+        content = format_plugin_output(long_output, request=request, row=row)
 
         # has to be placed after format_plugin_output() to keep links save from
         # escaping
@@ -1002,18 +1004,23 @@ class PainterSvcStateAge(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10
+            row["service_last_state_change"],
+            row["service_has_been_checked"] == 1,
+            60 * 10,
+            request=request,
         )
 
 
-def _paint_checked(what: str, row: Row, *, config: Config) -> CellSpec:
+def _paint_checked(  # pylint: disable=redefined-outer-name
+    what: str, row: Row, *, config: Config, request: Request
+) -> CellSpec:
     age = row[what + "_last_check"]
     if what == "service":
         cached_at = row["service_cached_at"]
         if cached_at:
             age = cached_at
 
-    css, td = paint_age(age, row[what + "_has_been_checked"] == 1, 0)
+    css, td = paint_age(age, row[what + "_has_been_checked"] == 1, 0, request=request)
     assert css is not None
     if is_stale(row, config=config):
         css += " staletime"
@@ -1040,7 +1047,7 @@ class PainterSvcCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("service", row, config=self.config)
+        return _paint_checked("service", row, config=self.config, request=request)
 
 
 class PainterSvcCheckCacheInfo(Painter):
@@ -1084,7 +1091,7 @@ class PainterSvcNextCheck(Painter):
         return ["service_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["service_next_check"])
+        return _paint_future_time(row["service_next_check"], request=request)
 
 
 class PainterSvcLastTimeOk(Painter):
@@ -1104,7 +1111,10 @@ class PainterSvcLastTimeOk(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age_or_never(
-            row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10
+            row["service_last_time_ok"],
+            row["service_has_been_checked"] == 1,
+            60 * 10,
+            request=request,
         )
 
 
@@ -1124,7 +1134,7 @@ class PainterSvcNextNotification(Painter):
         return ["service_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["service_next_notification"])
+        return _paint_future_time(row["service_next_notification"], request=request)
 
 
 def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
@@ -1199,7 +1209,9 @@ class PainterSvcLastNotification(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["service_last_notification"], row["service_last_notification"], 0)
+        return paint_age(
+            row["service_last_notification"], row["service_last_notification"], 0, request=request
+        )
 
 
 class PainterSvcNotificationNumber(Painter):
@@ -1969,7 +1981,7 @@ class PainterHostPluginOutput(Painter):
         return ["host_plugin_output", "host_custom_variables"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, format_plugin_output(row["host_plugin_output"], row))
+        return (None, format_plugin_output(row["host_plugin_output"], request=request, row=row))
 
 
 class PainterHostPerfData(Painter):
@@ -2073,7 +2085,12 @@ class PainterHostStateAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
+        return paint_age(
+            row["host_last_state_change"],
+            row["host_has_been_checked"] == 1,
+            60 * 10,
+            request=request,
+        )
 
 
 class PainterHostCheckAge(Painter):
@@ -2096,7 +2113,7 @@ class PainterHostCheckAge(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_checked("host", row, config=self.config)
+        return _paint_checked("host", row, config=self.config, request=request)
 
 
 class PainterHostNextCheck(Painter):
@@ -2115,7 +2132,7 @@ class PainterHostNextCheck(Painter):
         return ["host_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["host_next_check"])
+        return _paint_future_time(row["host_next_check"], request=request)
 
 
 class PainterHostNextNotification(Painter):
@@ -2134,7 +2151,7 @@ class PainterHostNextNotification(Painter):
         return ["host_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_future_time(row["host_next_notification"])
+        return _paint_future_time(row["host_next_notification"], request=request)
 
 
 class PainterHostNotificationPostponementReason(Painter):
@@ -2176,7 +2193,9 @@ class PainterHostLastNotification(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["host_last_notification"], row["host_last_notification"], 0)
+        return paint_age(
+            row["host_last_notification"], row["host_last_notification"], 0, request=request
+        )
 
 
 class PainterHostCheckLatency(Painter):
@@ -3041,7 +3060,7 @@ class PainterHostParents(Painter):
         return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_list(row["site"], row["host_parents"])
+        return paint_host_list(row["site"], row["host_parents"], request=request)
 
 
 class PainterHostChilds(Painter):
@@ -3064,7 +3083,7 @@ class PainterHostChilds(Painter):
         return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_host_list(row["site"], row["host_childs"])
+        return paint_host_list(row["site"], row["host_childs"], request=request)
 
 
 class PainterHostGroupMemberlist(Painter):
@@ -3909,7 +3928,7 @@ class PainterCommentComment(Painter):
         return ["comment_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, format_plugin_output(row["comment_comment"], row))
+        return (None, format_plugin_output(row["comment_comment"], request=request, row=row))
 
 
 class PainterCommentWhat(Painter):
@@ -3951,7 +3970,7 @@ class PainterCommentTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["comment_entry_time"], True, 3600)
+        return paint_age(row["comment_entry_time"], True, 3600, request=request)
 
 
 class PainterCommentExpires(Painter):
@@ -3975,7 +3994,11 @@ class PainterCommentExpires(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(
-            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what="future"
+            row["comment_expire_time"],
+            row["comment_expire_time"] != 0,
+            3600,
+            request=request,
+            what="future",
         )
 
 
@@ -4084,7 +4107,7 @@ class PainterDowntimeComment(Painter):
         return ["downtime_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, format_plugin_output(row["downtime_comment"], row))
+        return (None, format_plugin_output(row["downtime_comment"], request=request, row=row))
 
 
 class PainterDowntimeFixed(Painter):
@@ -4207,7 +4230,7 @@ class PainterDowntimeEntryTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_entry_time"], True, 3600)
+        return paint_age(row["downtime_entry_time"], True, 3600, request=request)
 
 
 class PainterDowntimeStartTime(Painter):
@@ -4230,7 +4253,7 @@ class PainterDowntimeStartTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_start_time"], True, 3600, what="both")
+        return paint_age(row["downtime_start_time"], True, 3600, request=request, what="both")
 
 
 class PainterDowntimeEndTime(Painter):
@@ -4253,7 +4276,7 @@ class PainterDowntimeEndTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["downtime_end_time"], True, 3600, what="both")
+        return paint_age(row["downtime_end_time"], True, 3600, request=request, what="both")
 
 
 class PainterDowntimeDuration(Painter):
@@ -4326,7 +4349,7 @@ class PainterLogDetailsHistory(Painter):
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        content = format_plugin_output(long_output, row)
+        content = format_plugin_output(long_output, request=request, row=row)
 
         # In long output we get newlines which should also be displayed in the GUI
         content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
@@ -4372,7 +4395,7 @@ class PainterLogPluginOutput(Painter):
         output = row["log_plugin_output"]
         comment = row["log_comment"]
         if output:
-            return "", format_plugin_output(output, row)
+            return "", format_plugin_output(output, request=request, row=row)
         if comment:
             return "", comment
         log_type = row["log_type"]
@@ -4716,7 +4739,7 @@ class PainterLogTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["log_time"], True, 3600 * 24)
+        return paint_age(row["log_time"], True, 3600 * 24, request=request)
 
 
 class PainterLogLineno(Painter):
@@ -4936,7 +4959,9 @@ class PainterHostTags(Painter):
         return "host"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
+        return "", render_tag_groups(
+            get_tag_groups(row, "host"), "host", with_links=True, request=request
+        )
 
 
 class ABCPainterTagsWithTitles(Painter, abc.ABC):
@@ -5017,7 +5042,9 @@ class PainterServiceTags(Painter):
         return "service_tags"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return "", render_tag_groups(get_tag_groups(row, "service"), "service", with_links=True)
+        return "", render_tag_groups(
+            get_tag_groups(row, "service"), "service", with_links=True, request=request
+        )
 
 
 class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):

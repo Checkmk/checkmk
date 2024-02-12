@@ -196,7 +196,9 @@ section_lnx_video() {
     vgas="$(lspci | grep VGA | cut -d" " -f 1)"
     [ -n "$vgas" ] || return
     echo "<<<lnx_video:sep(58)>>>"
-    lspci -v -s "$vgas"
+    printf '%s\n' "$vgas" | while IFS= read -r vga; do
+        lspci -v -s "$vga"
+    done
 }
 
 section_lnx_ip_r() {

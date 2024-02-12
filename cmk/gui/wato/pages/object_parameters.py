@@ -234,7 +234,7 @@ class ModeObjectParameters(WatoMode):
             True,
             _("This check is not configurable via WATO"),
         )
-        if not checkgroup:
+        if not checkgroup or checkgroup == "None":
             not_configurable_render()
             render_labels()
             return

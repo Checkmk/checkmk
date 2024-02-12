@@ -140,7 +140,7 @@ class View:
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_cls(user=user, config=active_config),
+                    sorter=sorter_cls(user=user, config=active_config, request=request),
                     negate=entry.negate,
                     join_key=entry.join_key,
                     parameters=sorter[1] if isinstance(sorter, tuple) else None,

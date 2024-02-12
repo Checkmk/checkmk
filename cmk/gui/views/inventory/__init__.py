@@ -236,7 +236,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, request=request)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -1985,7 +1985,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, request=request)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code

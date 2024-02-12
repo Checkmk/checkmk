@@ -10,6 +10,7 @@ import pytest
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import base as painter_base
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
@@ -105,7 +106,9 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         },
     )
 
-    painter: Painter = painter_base.painter_registry["tag_painter"](user=user, config=active_config)
+    painter: Painter = painter_base.painter_registry["tag_painter"](
+        user=user, config=active_config, request=request
+    )
     dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None)
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

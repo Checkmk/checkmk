@@ -1020,7 +1020,7 @@ def _allowed_for_datasource(
 
     allowed: dict[str, Sorter | Painter] = {}
     for name, plugin_class in collection.items():
-        plugin = plugin_class(user=user, config=active_config)
+        plugin = plugin_class(user=user, config=active_config, request=request)
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

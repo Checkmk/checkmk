@@ -17,7 +17,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.graph import cmk_graph_url
 
-from ...http import request
 from .base import Perfometer
 
 
@@ -71,7 +70,7 @@ class PainterPerfometer(Painter):
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
-            url = cmk_graph_url(row, "service", request=request)
+            url = cmk_graph_url(row, "service", request=self.request)
             disabled = False
         else:
             url = "javascript:void(0)"

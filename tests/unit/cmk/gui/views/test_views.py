@@ -321,7 +321,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     painters: list[Painter] = [
-        painter_class(user=user, config=active_config)
+        painter_class(user=user, config=active_config, request=request)
         for painter_class in painter_registry.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
@@ -361,7 +361,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"](user=user, config=active_config)
+    painter = painter_base.painter_registry["abc"](user=user, config=active_config, request=request)
     dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"

@@ -22,6 +22,7 @@ from cmk.utils.structured_data import (
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.config import active_config
+from cmk.gui.http import request
 from cmk.gui.inventory.filters import FilterInvtableVersion
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
@@ -945,7 +946,7 @@ def test_registered_sorter_cmp() -> None:
 
     sorter_cls = sorter_registry.get("test_sorter")
     assert sorter_cls is not None
-    assert sorter_cls(user=user, config=active_config).cmp({}, {}, None) == 0
+    assert sorter_cls(user=user, config=active_config, request=request).cmp({}, {}, None) == 0
 
 
 def test_row_post_processor() -> None:

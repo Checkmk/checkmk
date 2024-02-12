@@ -1358,10 +1358,24 @@ def _convert_to_legacy_levels(
             )
         )
 
+    match to_convert.form_spec_template:
+        case ruleset_api_v1.form_specs.basic.Float() | ruleset_api_v1.form_specs.basic.TimeSpan() | ruleset_api_v1.form_specs.basic.Percentage():
+            # mypy accepts int's in place of float's (https://github.com/python/mypy/issues/11385).
+            # However, int is not a subclass of float, issubclass(int, float) is false. In a
+            # CascadingDropdown it is not acceptable to pass an int instead of a float (CMK-16402
+            # shows the warning). We transform the value here, such that users which rely on mypy
+            # validation are not disappointed.
+            prefill_value = (
+                float(to_convert.prefill_fixed_levels.value[0]),
+                float(to_convert.prefill_fixed_levels.value[1]),
+            )
+        case ruleset_api_v1.form_specs.basic.Integer() | ruleset_api_v1.form_specs.basic.DataSize():
+            prefill_value = to_convert.prefill_fixed_levels.value
+
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
         choices=choices,
-        default_value=(_LevelDynamicChoice.FIXED.value, (0, 0)),
+        default_value=(_LevelDynamicChoice.FIXED.value, prefill_value),
     )
 
 

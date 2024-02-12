@@ -23,7 +23,7 @@ IMPORTANT_MESSAGES=()
 
 trap perform_cleanup EXIT
 
-function install_packages() {
+install_packages() {
     echo "Install for: ${*}"
 
     INSTALL_STR=""
@@ -43,7 +43,7 @@ function install_packages() {
     fi
 }
 
-function install_basic_tools() {
+install_basic_tools() {
     print_green "Installing common basic tools ..."
     local PACKAGES_TO_INSTALL=(
         "binutils"    # "strip" required to cleanup during strip_binaries
@@ -61,7 +61,7 @@ function install_basic_tools() {
     print_green "Common basic tool installation done"
 }
 
-function copy_files_around() {
+copy_files_around() {
     print_green "Copy necessary files around and to ${INSTALL_PATH} ..."
     # /opt would be used in install-cmk-dependencies.sh by default
     mkdir -p "${INSTALL_PATH}"
@@ -73,7 +73,7 @@ function copy_files_around() {
     print_green "Necessary file copying done"
 }
 
-function perform_cleanup() {
+perform_cleanup() {
     print_green "Cleanup ..."
     rm -f "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
     rm -f "${SCRIPT_DIR}"/.bazelversion
@@ -84,7 +84,7 @@ function perform_cleanup() {
     print_green "Cleanup done"
 }
 
-function setup_env_variables() {
+setup_env_variables() {
     print_green "Setup env variables ..."
     DISTRO_NAME=$(lsb_release -is)
     VERSION_NUMBER=$(lsb_release -sr)
@@ -115,7 +115,7 @@ function setup_env_variables() {
     print_green "Env variables setup done"
 }
 
-function collect_user_input() {
+collect_user_input() {
     print_green "Collect user input ... to get artifacts instead of building from scratch"
     read -rp "Enter Nexus Username: " NEXUS_USERNAME
     export NEXUS_USERNAME
@@ -153,7 +153,7 @@ function collect_user_input() {
     print_green "User input collection done"
 }
 
-function strip_binaries() {
+strip_binaries() {
     if [[ -n ${CI} ]]; then
         # CI build, located at /opt
         /opt/strip_binaries "${INSTALL_PATH}"
@@ -162,7 +162,7 @@ function strip_binaries() {
     fi
 }
 
-function install_for_python_dev() {
+install_for_python_dev() {
     print_green "Installing everything for Python development ..."
 
     local PACKAGES_TO_INSTALL=(
@@ -203,7 +203,7 @@ function install_for_python_dev() {
     print_green "Installation for Python development done"
 }
 
-function install_python_and_teammates() {
+install_python_and_teammates() {
     export TARGET_DIR="${INSTALL_PATH}"
     "${SCRIPT_DIR}"/install-openssl.sh
     "${SCRIPT_DIR}"/install-python.sh
@@ -215,7 +215,7 @@ function install_python_and_teammates() {
     fi
 }
 
-function install_for_cpp_dev() {
+install_for_cpp_dev() {
     print_green "Installing everything for CPP development ..."
 
     local PACKAGES_TO_INSTALL=(
@@ -273,7 +273,7 @@ function install_for_cpp_dev() {
     print_green "Installation for CPP development done"
 }
 
-function install_cmk_package_dependencies() {
+install_cmk_package_dependencies() {
     print_green "Installing everything for CMK development ..."
 
     "${SCRIPT_DIR}"/install-cmk-dependencies.sh
@@ -281,7 +281,7 @@ function install_cmk_package_dependencies() {
     print_green "Installation for CMK development done"
 }
 
-function install_for_rust_dev() {
+install_for_rust_dev() {
     print_green "Installing everything for Rust development ..."
 
     export TARGET_DIR="${INSTALL_PATH}"
@@ -300,7 +300,7 @@ function install_for_rust_dev() {
     print_red "${IMPORTANT_MESSAGES[${#IMPORTANT_MESSAGES[@]} - 1]}"
 }
 
-function install_for_frontend_dev() {
+install_for_frontend_dev() {
     print_green "Installing everything for Frontend development ..."
 
     "${SCRIPT_DIR}"/install-nodejs.sh
@@ -308,7 +308,7 @@ function install_for_frontend_dev() {
     print_green "Installation for Frontend development done"
 }
 
-function install_for_localize_dev() {
+install_for_localize_dev() {
     print_green "Installing everything for Localization development ..."
 
     install_packages gettext

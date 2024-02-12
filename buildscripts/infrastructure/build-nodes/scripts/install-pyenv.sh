@@ -12,12 +12,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 TARGET_DIR="${TARGET_DIR:-/opt}"
 
-function get_desired_python_version() {
+get_desired_python_version() {
     # to use "make print-PYTHON_VERISON" the git repo with "Makefile" and "artifacts.make" would be necessary at a known location
     sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$|\1|p' "${SCRIPT_DIR}"/package_versions.bzl
 }
 
-function install() {
+install() {
     if type pyenv >/dev/null 2>&1; then
         # show me a better way to communicate between scripts called by different users
         echo "1" >>"${SCRIPT_DIR}"/INSTALLED_BY_PYENV
@@ -64,7 +64,7 @@ EOF
     fi
 }
 
-function install_pipenv() {
+install_pipenv() {
     PIPENV_VERSION=$(get_version "$SCRIPT_DIR" PIPENV_VERSION)
     VIRTUALENV_VERSION=$(get_version "$SCRIPT_DIR" VIRTUALENV_VERSION)
 

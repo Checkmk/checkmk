@@ -8,7 +8,9 @@ from typing import Literal
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 
+# courtesy to imap-3.0.0.mkp:
 # courtesy to RS: leave this in until 2.4 for MKP compatibility
+from cmk.gui.wato import RulespecGroupActiveChecks  # pylint: disable=unused-import
 from cmk.gui.wato import RulespecGroupIntegrateOtherServices  # pylint: disable=unused-import
 
 

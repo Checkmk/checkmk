@@ -18,6 +18,8 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import RuleSetTypeName
 
+# courtesy to m365_service_health-1.2.1.mkp:
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError  # pylint: disable=unused-import
 from cmk.agent_based.v1.type_defs import CheckResult, DiscoveryResult
 
 CheckFunction = Callable[..., CheckResult]

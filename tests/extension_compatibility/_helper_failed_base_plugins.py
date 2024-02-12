@@ -8,14 +8,26 @@ import json
 from cmk.utils import paths
 
 from cmk.base.check_api import get_check_api_context
-from cmk.base.config import load_all_plugins
 
-print(
-    json.dumps(
-        load_all_plugins(
-            get_check_api_context,
-            local_checks_dir=paths.local_checks_dir,
-            checks_dir=paths.checks_dir,
+try:
+    from cmk.base.config import load_all_plugins
+
+    print(
+        json.dumps(
+            load_all_plugins(
+                get_check_api_context,
+                local_checks_dir=paths.local_checks_dir,
+                checks_dir=paths.checks_dir,
+            )
         )
     )
-)
+except ImportError:
+    from cmk.base.config import load_all_agent_based_plugins  # type: ignore[attr-defined]
+
+    print(
+        json.dumps(
+            load_all_agent_based_plugins(
+                get_check_api_context,
+            )
+        )
+    )

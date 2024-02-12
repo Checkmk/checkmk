@@ -13,6 +13,8 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+# courtesy to unifi-2.2.1.mkp:
+from cmk.agent_based.v1 import TableRow  # pylint: disable=unused-import
 from cmk.agent_based.v1.type_defs import InventoryResult
 
 InventoryFunction = Callable[..., InventoryResult]

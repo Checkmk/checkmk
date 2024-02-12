@@ -114,6 +114,11 @@ def is_ipv6_primary(hostname: HostName) -> bool:
     return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
 
 
+# kept in 2.3 to not break pure-1.4.7.mkp
+def get_percent_human_readable(value: float) -> str:
+    return _v1.render.percent(value)
+
+
 def get_age_human_readable(seconds: float) -> str:
     return _v1.render.timespan(seconds) if seconds >= 0 else f"-{_v1.render.timespan(-seconds)}"
 

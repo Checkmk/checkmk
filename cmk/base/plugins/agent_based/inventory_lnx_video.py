@@ -21,26 +21,42 @@
 #        Capabilities: [270] #19
 #        Kernel driver in use: fglrx_pci
 
-import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, str]
+
+@dataclass
+class GraphicsCard:
+    name: str
+    subsystem: str | None = None
+    driver: str | None = None
+
+
+Section = Mapping[str, GraphicsCard]
 
 
 def parse_lnx_video(string_table: StringTable) -> Section:
-    array = {}
+    parsed_section: dict[str, GraphicsCard] = {}
+
+    current_name: str = ""
     for line in string_table:
-        if len(line) > 1:
-            if re.search("VGA compatible controller", line[-2]):
-                array["name"] = line[-1]
-            elif line[0] == "Subsystem":
-                array["subsystem"] = line[1]
+        if len(line) <= 1:
+            continue
+
+        if "VGA compatible controller" in line[-2]:
+            current_name = line[-1].strip()
+            if current_name:
+                parsed_section.setdefault(current_name, GraphicsCard(name=current_name))
+        elif current_name:
+            if line[0] == "Subsystem":
+                parsed_section[current_name].subsystem = line[1].strip()
             elif line[0] == "Kernel driver in use":
-                array["driver"] = line[1]
-    return array
+                parsed_section[current_name].driver = line[1].strip()
+
+    return parsed_section
 
 
 register.agent_section(
@@ -50,21 +66,19 @@ register.agent_section(
 
 
 def inventory_lnx_video(section: Section) -> InventoryResult:
-    # FIXME This is very strange: Raw data is parsed into ONE dict,
-    # but we save the controller attributes in a table...
-    # Maybe there are more controllers?
-    if "name" in section:
-        yield TableRow(
-            path=["hardware", "video"],
-            key_columns={
-                "name": section["name"],
-            },
-            inventory_columns={
-                "subsystem": section.get("subsystem"),
-                "driver": section.get("driver"),
-            },
-            status_columns={},
-        )
+    for graphics_card in section.values():
+        if graphics_card.name:
+            yield TableRow(
+                path=["hardware", "video"],
+                key_columns={
+                    "name": graphics_card.name,
+                },
+                inventory_columns={
+                    "subsystem": graphics_card.subsystem,
+                    "driver": graphics_card.driver,
+                },
+                status_columns={},
+            )
 
 
 register.inventory_plugin(

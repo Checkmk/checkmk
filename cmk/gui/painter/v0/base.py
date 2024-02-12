@@ -48,6 +48,7 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
 from ...config import active_config, Config
+from ...painter_options import PainterOptions
 from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
@@ -80,10 +81,12 @@ class Painter(abc.ABC):
         user: LoggedInUser,
         config: Config,
         request: Request,
+        painter_options: PainterOptions,
     ):
         self.user = user
         self.config = config
         self.request = request
+        self._painter_options = painter_options
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -299,7 +302,12 @@ class Painter(abc.ABC):
 
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
-        return instance(user=user, config=active_config, request=request).ident
+        return instance(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        ).ident
 
 
 painter_registry = PainterRegistry()
@@ -431,16 +439,21 @@ class Cell:
             return None
 
     def painter(self) -> Painter:
+        painter_options_inst = PainterOptions.get_instance()
         try:
             return PainterAdapter(
                 experimental_painter_registry[self.painter_name()],
                 user=user,
                 config=active_config,
                 request=request,
+                painter_options=painter_options_inst,
             )
         except KeyError:
             return painter_registry[self.painter_name()](
-                user=user, config=active_config, request=request
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=painter_options_inst,
             )
 
     def painter_name(self) -> PainterName:
@@ -505,7 +518,10 @@ class Cell:
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name](
-            user=user, config=active_config, request=request
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
         )
 
     def paint_as_header(self) -> None:
@@ -766,9 +782,15 @@ class PainterAdapter(Painter):
     """
 
     def __init__(  # pylint: disable=redefined-outer-name
-        self, painter: V1Painter, *, user: LoggedInUser, config: Config, request: Request
+        self,
+        painter: V1Painter,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
     ):
-        super().__init__(user=user, config=config, request=request)
+        super().__init__(user=user, config=config, request=request, painter_options=painter_options)
         self._painter = painter
 
     @property

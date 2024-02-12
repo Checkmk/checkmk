@@ -27,6 +27,7 @@ from cmk.gui.inventory.filters import FilterInvtableVersion
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
@@ -946,7 +947,15 @@ def test_registered_sorter_cmp() -> None:
 
     sorter_cls = sorter_registry.get("test_sorter")
     assert sorter_cls is not None
-    assert sorter_cls(user=user, config=active_config, request=request).cmp({}, {}, None) == 0
+    assert (
+        sorter_cls(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        ).cmp({}, {}, None)
+        == 0
+    )
 
 
 def test_row_post_processor() -> None:

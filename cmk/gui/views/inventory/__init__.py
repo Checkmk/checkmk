@@ -228,11 +228,10 @@ class PainterInventoryTree(Painter):
         if not (tree := self._compute_data(row, cell)):
             return "", ""
 
-        painter_options = PainterOptions.get_instance()
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
@@ -1962,7 +1961,7 @@ class PainterInvhistTime(Painter):
             True,
             60 * 10,
             request=request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 

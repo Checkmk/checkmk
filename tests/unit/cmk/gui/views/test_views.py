@@ -23,7 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import base as painter_base
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
-from cmk.gui.painter_options import painter_option_registry
+from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -321,7 +321,12 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     painters: list[Painter] = [
-        painter_class(user=user, config=active_config, request=request)
+        painter_class(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
         for painter_class in painter_registry.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
@@ -361,7 +366,12 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"](user=user, config=active_config, request=request)
+    painter = painter_base.painter_registry["abc"](
+        user=user,
+        config=active_config,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+    )
     dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"

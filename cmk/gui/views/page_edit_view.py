@@ -62,6 +62,7 @@ from cmk.gui.visuals.type import visual_type_registry
 
 from ..config import active_config
 from ..logged_in import user
+from ..painter_options import PainterOptions
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views
@@ -1020,7 +1021,12 @@ def _allowed_for_datasource(
 
     allowed: dict[str, Sorter | Painter] = {}
     for name, plugin_class in collection.items():
-        plugin = plugin_class(user=user, config=active_config, request=request)
+        plugin = plugin_class(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+        )
         if any(column in plugin.columns for column in unsupported_columns):
             continue
         infos_needed = infos_needed_by_plugin(plugin, add_columns)

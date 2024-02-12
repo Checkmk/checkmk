@@ -256,18 +256,24 @@ def paint_age_or_never(  # pylint: disable=redefined-outer-name
     bold_if_younger_than: int,
     *,
     request: Request,
+    painter_options: PainterOptions,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
     if mode is None:
-        painter_options = PainterOptions.get_instance()
         mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
     if timestamp == 0 and has_been_checked and (mode in {"abs", "mixed"}):
         return "age", _("Never")
 
     return paint_age(
-        timestamp, has_been_checked, bold_if_younger_than, request=request, mode=mode, what=what
+        timestamp,
+        has_been_checked,
+        bold_if_younger_than,
+        request=request,
+        painter_options=painter_options,
+        mode=mode,
+        what=what,
     )
 
 
@@ -277,13 +283,13 @@ def paint_age(  # pylint: disable=redefined-outer-name
     bold_if_younger_than: int,
     *,
     request: Request,
+    painter_options: PainterOptions,
     mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
     if not has_been_checked:
         return "age", "-"
 
-    painter_options = PainterOptions.get_instance()
     if mode is None:
         mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
@@ -296,6 +302,7 @@ def paint_age(  # pylint: disable=redefined-outer-name
             has_been_checked,
             bold_if_younger_than,
             request=request,
+            painter_options=painter_options,
             mode="abs",
             what=what,
         )
@@ -304,6 +311,7 @@ def paint_age(  # pylint: disable=redefined-outer-name
             has_been_checked,
             bold_if_younger_than,
             request=request,
+            painter_options=painter_options,
             mode="rel",
             what=what,
         )

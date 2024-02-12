@@ -53,7 +53,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
-from cmk.gui.painter_options import paint_age
+from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.type_defs import ColumnName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
@@ -739,7 +739,14 @@ class CommentsIcon(Icon):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
                 text += '{} {}: "{}" \n'.format(
-                    paint_age(timestamp, True, 0, request=request, mode="abs")[1],
+                    paint_age(
+                        timestamp,
+                        True,
+                        0,
+                        request=request,
+                        painter_options=PainterOptions.get_instance(),
+                        mode="abs",
+                    )[1],
                     author,
                     comment,
                 )

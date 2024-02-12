@@ -15,6 +15,8 @@ class GetRateError(IgnoreResultsError):
     """
 
 
+# TODO(mk): Name of function must be fixed on smth like _update_value_and_calc_rate
+# TODO(mk): Split function into two parts update_value and calc_rate
 def get_rate(  # type: ignore[misc]
     value_store: MutableMapping[str, Any],
     key: str,
@@ -23,7 +25,9 @@ def get_rate(  # type: ignore[misc]
     *,
     raise_overflow: bool = False,
 ) -> float:
-    """Return a rate based on current value and time and last value and time
+    """
+    1. Update value store.
+    2. Calculate rate based on current value and time and last value and time
 
     Args:
 
@@ -75,7 +79,7 @@ def get_rate(  # type: ignore[misc]
         The computed rate
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     last_state = value_store.get(key)

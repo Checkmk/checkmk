@@ -1,0 +1,14 @@
+Title: bluenet: allow discovery for newer devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1707740421
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Prior to this werk, the snmp detect condition was too
+restrictive which excluded subsequently new devices.
+Those new devices had another oid section following the
+initial condition. This werk makes the detect condition
+more lenient to allow discovery of those devices.

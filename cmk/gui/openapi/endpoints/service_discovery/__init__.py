@@ -41,7 +41,10 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
-from cmk.gui.watolib.automations import fetch_service_discovery_background_job_status
+from cmk.gui.watolib.automations import (
+    fetch_service_discovery_background_job_status,
+    MKAutomationException,
+)
 from cmk.gui.watolib.bulk_discovery import (
     bulk_discovery_job_status,
     BulkDiscoveryBackgroundJob,
@@ -162,11 +165,21 @@ DISCOVERY_ACTION = {
             )
         }
     ],
+    additional_status_codes=[400],
 )
 def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     """Show the current service discovery result"""
     host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+
+    try:
+        discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
+    except MKAutomationException:
+        return problem(
+            status=400,
+            title="Error running automation",
+            detail="Please run `Show the last service discovery background job on a host` in order to get details about the error",
+        )
+
     return serve_json(serialize_discovery_result(host, discovery_result))
 
 

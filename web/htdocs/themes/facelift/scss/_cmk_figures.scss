@@ -150,10 +150,6 @@ div.cmk_figure {
 
   g.axis {
     color: transparent; // graph axis edges are invisible
-
-    text {
-      fill: $font-color;
-    }
   }
 
   &.average_scatterplot {

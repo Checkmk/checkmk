@@ -218,6 +218,15 @@ def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
+def filters_exist_for_infos(infos: SingleInfos) -> bool:
+    """Returns True if any filter is registered for the given infos"""
+    for _fname, filt in filter_registry.items():
+        for info in infos:
+            if filt.info is None or info == filt.info:
+                return True
+    return False
+
+
 class VisualFilterListWithAddPopup(VisualFilterList):
     """Special form of the visual filter list to be used in the views and dashboards"""
 

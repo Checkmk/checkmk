@@ -147,6 +147,7 @@ $say "AgentOS: openvms"
 $say "Nodename: ",f$getsyi("nodename")
 $say "Architecture: ''HWinfo'"
 $say "SWversion: ''SWinfo'"
+$say "OSName: OpenVMS"
 $say "<<<vms_cpu>>>"
 $say "''numCPU' ''cpu2' ''cpu3' ''wt0' ''wt1'"
 $say "<<<mem>>>"

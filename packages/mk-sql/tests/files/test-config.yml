@@ -97,10 +97,10 @@ mssql:
     mode: "port" # optional, default: "port" / can be "socket", "port" or "special"
   configs: # optional, defines additional SQL checks to be executed
     - main:
-      system: # optional, if absent will use main
-      authentication: # optional, if absent will use main
-        username: "foo" # mandatory
-      connection: # optional, if absent will use main
-        hostname: "agent" # optional, default: "localhost"
-      instances: # optional, describes how to monitor/access instances, both detected and non-detectable
-        - sid: "SQLEXPRESS" # mandatory
+        system: # optional, if absent will use main
+        authentication: # optional, if absent will use main
+          username: "foo" # mandatory
+        connection: # optional, if absent will use main
+          hostname: "agent" # optional, default: "localhost"
+        instances: # optional, describes how to monitor/access instances, both detected and non-detectable
+          - sid: "SQLEXPRESS" # mandatory

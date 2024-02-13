@@ -87,6 +87,15 @@ impl Config {
             Ok(Some(c)) if !c.auth.defined() => {
                 anyhow::bail!("Bad/absent user name");
             }
+            Ok(Some(mut c)) => {
+                c.configs = root
+                    .get_yaml_vector(keys::CONFIGS)
+                    .into_iter()
+                    .filter_map(|v| Config::parse_main_from_yaml(&v).transpose())
+                    .collect::<Result<Vec<Config>>>()?;
+
+                Ok(Some(c))
+            }
             _ => c,
         }
     }
@@ -108,12 +117,6 @@ impl Config {
             .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &sections))
             .collect();
 
-        let configs: Result<Vec<Config>> = root
-            .get_yaml_vector(keys::CONFIGS)
-            .into_iter()
-            .filter_map(|v| Config::parse_main_from_yaml(&v).transpose())
-            .collect();
-
         Ok(Some(Self {
             auth,
             conn,
@@ -122,7 +125,7 @@ impl Config {
             piggyback_host: main.get_string(keys::PIGGYBACK_HOST),
             mode: Mode::from_yaml(main)?,
             custom_instances: custom_instances?,
-            configs: configs?,
+            configs: vec![],
             hash,
             system: System::default(),
         }))
@@ -212,6 +215,10 @@ impl Default for Authentication {
 impl Authentication {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
         let auth = yaml.get(keys::AUTHENTICATION);
+        if auth.is_badvalue() {
+            anyhow::bail!("authentication is missing");
+        }
+
         Ok(Self {
             username: auth.get_string(keys::USERNAME).unwrap_or_default(),
             password: auth.get_string(keys::PASSWORD),
@@ -1217,8 +1224,8 @@ mssql:
             &(TEST_CONFIG.to_string()
                 + r#"
     - main:
-      authentication: # mandatory
-        username: "f" # mandatory"#),
+        authentication: # mandatory
+          username: "f" # mandatory"#),
         )
         .unwrap()
         .unwrap();

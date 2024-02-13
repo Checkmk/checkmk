@@ -30,6 +30,7 @@ from cmk.gui.graphing._expression import (
     WarningOf,
 )
 from cmk.gui.graphing._utils import (
+    _compute_predictive_metrics,
     _NormalizedPerfData,
     AutomaticDict,
     MetricDefinition,
@@ -288,6 +289,137 @@ def test_get_graph_templates(
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
+
+
+@pytest.mark.parametrize(
+    "metric_definitions, expected_predictive_metric_definitions",
+    [
+        pytest.param(
+            [],
+            [],
+            id="empty",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="line")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="line",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="area")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="area",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="stack")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="line"
+                ),
+            ],
+            id="stack",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-line")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-line",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-area")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-area",
+        ),
+        pytest.param(
+            [MetricDefinition(expression=Metric(name="metric_name"), line_type="-stack")],
+            [
+                MetricDefinition(expression=Metric(name="predict_metric_name"), line_type="-line"),
+                MetricDefinition(
+                    expression=Metric(name="predict_lower_metric_name"), line_type="-line"
+                ),
+            ],
+            id="-stack",
+        ),
+    ],
+)
+def test__compute_predictive_metrics(
+    metric_definitions: Sequence[MetricDefinition],
+    expected_predictive_metric_definitions: Sequence[MetricDefinition],
+) -> None:
+    assert (
+        list(
+            _compute_predictive_metrics(
+                {
+                    "metric_name": {
+                        "orig_name": ["metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                    "predict_metric_name": {
+                        "orig_name": ["predict_metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                    "predict_lower_metric_name": {
+                        "orig_name": ["predict_lower_metric_name"],
+                        "value": 0.0,
+                        "scalar": {},
+                        "scale": [1.0],
+                        "auto_graph": True,
+                        "title": "",
+                        "unit": {
+                            "title": "",
+                            "symbol": "",
+                            "render": str,
+                            "js_render": "v => v;",
+                        },
+                        "color": "#0080c0",
+                    },
+                },
+                metric_definitions,
+            )
+        )
+        == expected_predictive_metric_definitions
+    )
 
 
 def test__get_metric_info() -> None:

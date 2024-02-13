@@ -19,7 +19,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.utils import netapp_ontap_models as models
 
 VolumesSection = Mapping[str, models.VolumeModel]
-VolumesCountersSection = Mapping[str, models.VolumeCountersModel]
 
 
 # <<<netapp_ontap_volumes:sep(0)>>>

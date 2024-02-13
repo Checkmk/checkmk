@@ -32,6 +32,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
@@ -146,6 +147,7 @@ class View:
                         config=active_config,
                         request=request,
                         painter_options=PainterOptions.get_instance(),
+                        theme=theme,
                     ),
                     negate=entry.negate,
                     join_key=entry.join_key,

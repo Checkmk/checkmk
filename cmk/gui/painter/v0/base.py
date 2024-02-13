@@ -42,7 +42,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
@@ -82,11 +82,13 @@ class Painter(abc.ABC):
         config: Config,
         request: Request,
         painter_options: PainterOptions,
+        theme: Theme,
     ):
         self.user = user
         self.config = config
         self.request = request
         self._painter_options = painter_options
+        self.theme = theme
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -307,6 +309,7 @@ class PainterRegistry(Registry[type[Painter]]):
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         ).ident
 
 
@@ -447,6 +450,7 @@ class Cell:
                 config=active_config,
                 request=request,
                 painter_options=painter_options_inst,
+                theme=theme,
             )
         except KeyError:
             return painter_registry[self.painter_name()](
@@ -454,6 +458,7 @@ class Cell:
                 config=active_config,
                 request=request,
                 painter_options=painter_options_inst,
+                theme=theme,
             )
 
     def painter_name(self) -> PainterName:
@@ -522,6 +527,7 @@ class Cell:
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         )
 
     def paint_as_header(self) -> None:
@@ -789,8 +795,15 @@ class PainterAdapter(Painter):
         config: Config,
         request: Request,
         painter_options: PainterOptions,
+        theme: Theme,
     ):
-        super().__init__(user=user, config=config, request=request, painter_options=painter_options)
+        super().__init__(
+            user=user,
+            config=config,
+            request=request,
+            painter_options=painter_options,
+            theme=theme,
+        )
         self._painter = painter
 
     @property

@@ -29,6 +29,7 @@ from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
+from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
@@ -953,6 +954,7 @@ def test_registered_sorter_cmp() -> None:
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         ).cmp({}, {}, None)
         == 0
     )

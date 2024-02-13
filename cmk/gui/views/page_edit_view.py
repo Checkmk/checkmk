@@ -63,6 +63,7 @@ from cmk.gui.visuals.type import visual_type_registry
 from ..config import active_config
 from ..logged_in import user
 from ..painter_options import PainterOptions
+from ..utils.theme import theme
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views
@@ -1026,6 +1027,7 @@ def _allowed_for_datasource(
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         )
         if any(column in plugin.columns for column in unsupported_columns):
             continue

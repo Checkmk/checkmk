@@ -14,6 +14,7 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
+from ...utils.theme import theme
 from .base import Sorter
 
 
@@ -24,6 +25,7 @@ class SorterRegistry(Registry[type[Sorter]]):
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         ).ident
 
 
@@ -64,6 +66,7 @@ def declare_1to1_sorter(
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),
+        theme=theme,
     )
 
     register_sorter(

@@ -852,7 +852,7 @@ class PainterEventRuleId(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         rule_id = row["event_rule_id"]
-        if user.may("mkeventd.edit"):
+        if self.user.may("mkeventd.edit"):
             urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", HTMLWriter.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id

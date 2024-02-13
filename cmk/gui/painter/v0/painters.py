@@ -43,6 +43,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.valuespec import (
     Checkbox,
@@ -737,6 +738,7 @@ class PainterSvcMetrics(Painter):
                 row["host_name"],
                 row["service_description"],
                 show_metric_id=self._painter_options.get("show_internal_graph_and_metric_ids"),
+                theme=self.theme,
             )
             return "", HTML(output_funnel.drain())
 
@@ -746,6 +748,8 @@ class PainterSvcMetrics(Painter):
         host_name: str,
         service_description: str,
         show_metric_id: bool,
+        *,
+        theme: Theme,
     ) -> None:
         html.open_table(class_="metricstable")
         for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
@@ -763,6 +767,7 @@ class PainterSvcMetrics(Painter):
                             "menu",
                             title=_("Add this metric to dedicated graph"),
                             cssclass="iconbutton",
+                            theme=theme,
                         ),
                         ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
                         method=MethodAjax(
@@ -3364,7 +3369,7 @@ class PainterHostCustomVariables(Painter):
         )
 
 
-def _paint_discovery_output(field: str, row: Row) -> CellSpec:
+def _paint_discovery_output(field: str, row: Row, *, theme: Theme) -> CellSpec:
     value = row[field]
     if field == "discovery_state":
         ruleset_url = "wato.py?mode=edit_ruleset&varname=ignored_services"
@@ -3374,15 +3379,24 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
             None,
             {
                 "ignored": html.render_icon_button(
-                    ruleset_url, _("Disabled (configured away by admin)"), "rulesets"
+                    ruleset_url,
+                    _("Disabled (configured away by admin)"),
+                    "rulesets",
+                    theme=theme,
                 )
                 + escaping.escape_to_html(_("Disabled (configured away by admin)")),
                 "vanished": html.render_icon_button(
-                    discovery_url, _("Vanished (checked, but no longer exist)"), "services"
+                    discovery_url,
+                    _("Vanished (checked, but no longer exist)"),
+                    "services",
+                    theme=theme,
                 )
                 + escaping.escape_to_html(_("Vanished (checked, but no longer exist)")),
                 "unmonitored": html.render_icon_button(
-                    discovery_url, _("Available (missing)"), "services"
+                    discovery_url,
+                    _("Available (missing)"),
+                    "services",
+                    theme=theme,
                 )
                 + escaping.escape_to_html(_("Available (missing)")),
             }.get(value, value),
@@ -3413,7 +3427,7 @@ class PainterServiceDiscoveryState(Painter):
         return ["discovery_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_discovery_output("discovery_state", row)
+        return _paint_discovery_output("discovery_state", row, theme=self.theme)
 
 
 class PainterServiceDiscoveryCheck(Painter):
@@ -3432,7 +3446,7 @@ class PainterServiceDiscoveryCheck(Painter):
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_discovery_output("discovery_check", row)
+        return _paint_discovery_output("discovery_check", row, theme=self.theme)
 
 
 class PainterServiceDiscoveryService(Painter):
@@ -3451,7 +3465,7 @@ class PainterServiceDiscoveryService(Painter):
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_discovery_output("discovery_service", row)
+        return _paint_discovery_output("discovery_service", row, theme=self.theme)
 
 
 #    _   _           _
@@ -4102,7 +4116,7 @@ class PainterCommentEntryType(Painter):
             help_txt = _("Acknowledgement")
         else:
             return "", ""
-        code: str | HTML = html.render_icon(icon, help_txt)
+        code: str | HTML = html.render_icon(icon, help_txt, theme=self.theme)
         if linkview:
             code = render_link_to_view(
                 code, row, VisualLinkSpec("views", linkview), request=self.request
@@ -4759,7 +4773,7 @@ class PainterLogIcon(Painter):
                 title = _("Stopped acknowledgement")
 
         if img:
-            return "icon", html.render_icon("alert_" + img, title=title)
+            return "icon", html.render_icon("alert_" + img, title=title, theme=self.theme)
         return "icon", ""
 
 

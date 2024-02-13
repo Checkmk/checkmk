@@ -12,6 +12,7 @@ from cmk.gui.painter.v0.base import painter_exists, painter_registry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 
+from ..utils.theme import theme
 from .sorter import ParameterizedSorter, sorter_registry
 
 
@@ -124,6 +125,7 @@ def _get_sorter_name_of_painter(
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),
+        theme=theme,
     )
     if painter.sorter:
         return painter.sorter

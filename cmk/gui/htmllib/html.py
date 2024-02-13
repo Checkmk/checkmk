@@ -45,7 +45,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -1175,12 +1175,16 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(
+    def render_icon(  # pylint: disable=redefined-outer-name
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        *,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
@@ -1238,7 +1242,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_icon_button(
+    def render_icon_button(  # pylint: disable=redefined-outer-name
         url: None | str,
         title: str,
         icon: Icon,
@@ -1248,6 +1252,9 @@ class HTMLGenerator(HTMLWriter):
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1259,7 +1266,7 @@ class HTMLGenerator(HTMLWriter):
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
+            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
             href=href,
             title=title,
             id_=id_,
@@ -1270,7 +1277,7 @@ class HTMLGenerator(HTMLWriter):
             onclick=onclick,
         )
 
-    def icon_button(
+    def icon_button(  # pylint: disable=redefined-outer-name
         self,
         url: str | None,
         title: str,
@@ -1281,10 +1288,13 @@ class HTMLGenerator(HTMLWriter):
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
-                url, title, icon, id_, onclick, style, target, cssclass, class_
+                url, title, icon, id_, onclick, style, target, cssclass, class_, theme=theme
             )
         )
 

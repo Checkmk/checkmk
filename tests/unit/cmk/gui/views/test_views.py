@@ -25,6 +25,7 @@ from cmk.gui.painter.v0 import base as painter_base
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
@@ -326,6 +327,7 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
             config=active_config,
             request=request,
             painter_options=PainterOptions.get_instance(),
+            theme=theme,
         )
         for painter_class in painter_registry.values()
     ]
@@ -371,6 +373,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         config=active_config,
         request=request,
         painter_options=PainterOptions.get_instance(),
+        theme=theme,
     )
     dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)

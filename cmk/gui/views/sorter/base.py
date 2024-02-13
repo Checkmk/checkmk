@@ -14,6 +14,7 @@ from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
+from cmk.gui.utils.theme import Theme
 from cmk.gui.valuespec import Dictionary
 
 
@@ -35,11 +36,13 @@ class Sorter(abc.ABC):
         config: Config,
         request: Request,
         painter_options: PainterOptions,
+        theme: Theme,
     ):
         self.user = user
         self.config = config
         self.request = request
         self._painter_options = painter_options
+        self.theme = theme
 
     @property
     @abc.abstractmethod

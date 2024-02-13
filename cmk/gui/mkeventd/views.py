@@ -42,6 +42,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
@@ -900,22 +901,32 @@ class PainterEventPhase(Painter):
 
 
 def paint_event_icons(  # pylint: disable=redefined-outer-name
-    row: Row, history: bool = False, *, request: Request
+    row: Row,
+    history: bool = False,
+    *,
+    request: Request,
+    theme: Theme,
 ) -> CellSpec:
     phase = row["event_phase"]
 
     htmlcode: str | HTML
     if phase == "ack":
-        htmlcode = html.render_icon(phase, title=_("This event has been acknowledged."))
+        htmlcode = html.render_icon(
+            phase,
+            title=_("This event has been acknowledged."),
+            theme=theme,
+        )
     elif phase == "counting":
         htmlcode = html.render_icon(
             phase,
             title=_("This event has not reached the target count yet."),
+            theme=theme,
         )
     elif phase == "delayed":
         htmlcode = html.render_icon(
             phase,
             title=_("The action of this event is still delayed in the hope of a cancelling event."),
+            theme=theme,
         )
     else:
         htmlcode = ""
@@ -924,7 +935,11 @@ def paint_event_icons(  # pylint: disable=redefined-outer-name
         htmlcode += render_delete_event_icons(row, request=request)
 
     if row["event_host_in_downtime"]:
-        htmlcode += html.render_icon("downtime", _("Host in downtime during event creation"))
+        htmlcode += html.render_icon(
+            "downtime",
+            _("Host in downtime during event creation"),
+            theme=theme,
+        )
 
     if htmlcode:
         return "icons", htmlcode
@@ -1013,7 +1028,7 @@ class PainterEventIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, request=self.request)
+        return paint_event_icons(row, request=self.request, theme=self.theme)
 
 
 class PainterEventHistoryIcons(Painter):
@@ -1036,7 +1051,7 @@ class PainterEventHistoryIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, history=True, request=self.request)
+        return paint_event_icons(row, history=True, request=self.request, theme=self.theme)
 
 
 class PainterEventContactGroups(Painter):

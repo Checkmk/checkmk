@@ -8,9 +8,10 @@ def main() {
 
     check_environment_variables([
         "DOCKER_TAG",
+        "OVERRIDE_DISTROS",
     ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_tests");
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");
 
     testing_helper.run_make_targets(
         DOCKER_GROUP_ID: get_docker_group_id(),

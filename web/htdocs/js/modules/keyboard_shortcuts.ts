@@ -22,6 +22,10 @@ function handle_main_menu_shortcuts(event: Event): void {
     let menu_document = document;
     if (!document || !menu_document.getElementById("main_menu"))
         menu_document = window.parent.document;
+    // If the context is within another iframe (for example view in dashboard)
+    // the menu document is two layers above the current frame document
+    if (!document || !menu_document.getElementById("main_menu"))
+        menu_document = window.parent.parent.document;
 
     if (!menu_document || !menu_document.getElementById("main_menu")) return;
 

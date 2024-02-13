@@ -20,7 +20,6 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.netapp import models
 
 VolumesSection = Mapping[str, models.VolumeModel]
-VolumesCountersSection = Mapping[str, models.VolumeCountersModel]
 
 
 # <<<netapp_ontap_volumes:sep(0)>>>

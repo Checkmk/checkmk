@@ -17,38 +17,63 @@ use yaml_rust::YamlLoader;
 pub struct Config {
     auth: Authentication,
     conn: Connection,
-    section_info: Sections,
+    sections: Sections,
     discovery: Discovery,
     piggyback_host: Option<String>,
     mode: Mode,
     custom_instances: Vec<CustomInstance>,
     configs: Vec<Config>,
     hash: String,
-    system: System,
+    options: Options,
 }
 
-#[derive(PartialEq, Debug)]
-pub struct System {
+#[derive(PartialEq, Debug, Clone)]
+pub struct Options {
     max_connections: MaxConnections,
     max_queries: MaxQueries,
 }
 
-impl Default for System {
+impl Default for Options {
     fn default() -> Self {
         Self {
-            max_connections: MaxConnections(defaults::MAX_CONNECTIONS),
-            max_queries: MaxQueries(defaults::MAX_QUERIES),
+            max_connections: defaults::MAX_CONNECTIONS.into(),
+            max_queries: defaults::MAX_QUERIES.into(),
         }
     }
 }
 
-impl System {
+impl Options {
+    pub fn new(max_connections: MaxConnections) -> Self {
+        Self {
+            max_connections,
+            max_queries: defaults::MAX_QUERIES.into(),
+        }
+    }
+
     pub fn max_connections(&self) -> MaxConnections {
         self.max_connections.clone()
     }
 
     pub fn max_queries(&self) -> MaxQueries {
         self.max_queries.clone()
+    }
+
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+        let options = yaml.get(keys::OPTIONS);
+        if options.is_badvalue() {
+            return Ok(None);
+        }
+
+        Ok(Some(Self {
+            max_connections: options
+                .get_int::<u32>(keys::MAX_CONNECTIONS)
+                .unwrap_or_else(|| {
+                    log::debug!("no max_connections specified, using default");
+                    defaults::MAX_CONNECTIONS
+                })
+                .into(),
+            max_queries: defaults::MAX_QUERIES.into(),
+        }))
     }
 }
 
@@ -57,14 +82,14 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
-            section_info: Sections::default(),
+            sections: Sections::default(),
             discovery: Discovery::default(),
             piggyback_host: None,
             mode: Mode::Port,
             custom_instances: vec![],
             configs: vec![],
             hash: String::new(),
-            system: System::default(),
+            options: Options::default(),
         }
     }
 }
@@ -82,25 +107,32 @@ impl Config {
         if root.is_badvalue() {
             return Ok(None);
         }
-        let c = Config::parse_main_from_yaml(root);
-        match c {
-            Ok(Some(c)) if !c.auth.defined() => {
+        let default_config = Config {
+            auth: Authentication {
+                auth_type: AuthType::Undefined,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let config = Config::parse_main_from_yaml(root, &default_config)?;
+        match config {
+            Some(c) if !c.auth.defined() => {
                 anyhow::bail!("Bad/absent user name");
             }
-            Ok(Some(mut c)) => {
+            Some(mut c) => {
                 c.configs = root
                     .get_yaml_vector(keys::CONFIGS)
                     .into_iter()
-                    .filter_map(|v| Config::parse_main_from_yaml(&v).transpose())
+                    .filter_map(|v| Config::parse_main_from_yaml(&v, &c).transpose())
                     .collect::<Result<Vec<Config>>>()?;
 
                 Ok(Some(c))
             }
-            _ => c,
+            _ => Ok(config),
         }
     }
 
-    fn parse_main_from_yaml(root: &Yaml) -> Result<Option<Self>> {
+    fn parse_main_from_yaml(root: &Yaml, default: &Config) -> Result<Option<Self>> {
         let mut hasher = DefaultHasher::new();
         root.hash(&mut hasher);
         let hash = format!("{:016X}", hasher.finish());
@@ -108,31 +140,38 @@ impl Config {
         if main.is_badvalue() {
             bail!("main key is absent");
         }
-        let auth = Authentication::from_yaml(main)?;
-        let conn = Connection::from_yaml(main, Some(&auth))?.unwrap_or_default();
-        let sections = Sections::from_yaml(main, Sections::default())?;
-        let custom_instances: Result<Vec<CustomInstance>> = main
+
+        let auth = Authentication::from_yaml(main).unwrap_or_else(|_| default.auth.clone());
+        let conn =
+            Connection::from_yaml(main, Some(&auth))?.unwrap_or_else(|| default.conn().clone());
+        let options = Options::from_yaml(main)?.unwrap_or_else(|| default.options().clone());
+        let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
+        let section_info = Sections::from_yaml(main, &default.sections)?;
+
+        let custom_instances = main
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
-            .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &sections))
-            .collect();
+            .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &section_info))
+            .collect::<Result<Vec<CustomInstance>>>()?;
+        let mode = Mode::from_yaml(main).unwrap_or_else(|_| default.mode().clone());
+        let piggyback_host = main.get_string(keys::PIGGYBACK_HOST);
 
         Ok(Some(Self {
             auth,
             conn,
-            section_info: sections,
-            discovery: Discovery::from_yaml(main)?,
-            piggyback_host: main.get_string(keys::PIGGYBACK_HOST),
-            mode: Mode::from_yaml(main)?,
-            custom_instances: custom_instances?,
+            sections: section_info,
+            discovery,
+            piggyback_host,
+            mode,
+            custom_instances,
             configs: vec![],
             hash,
-            system: System::default(),
+            options,
         }))
     }
 
-    pub fn system(&self) -> &System {
-        &self.system
+    pub fn options(&self) -> &Options {
+        &self.options
     }
 
     pub fn endpoint(&self) -> Endpoint {
@@ -145,15 +184,15 @@ impl Config {
         &self.conn
     }
     pub fn all_sections(&self) -> &Vec<Section> {
-        self.section_info.sections()
+        self.sections.sections()
     }
     pub fn valid_sections(&self) -> Vec<&Section> {
-        self.section_info
+        self.sections
             .select(&[SectionKind::Sync, SectionKind::Async])
     }
 
     pub fn cache_age(&self) -> u32 {
-        self.section_info.cache_age()
+        self.sections.cache_age()
     }
 
     pub fn piggyback_host(&self) -> Option<&str> {
@@ -179,6 +218,10 @@ impl Config {
 
     pub fn cache_dir(&self) -> String {
         "mssql-".to_owned() + &self.hash
+    }
+
+    pub fn sections(&self) -> &Sections {
+        &self.sections
     }
 
     pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
@@ -264,6 +307,7 @@ pub enum AuthType {
     Windows,
     Integrated,
     Token,
+    Undefined,
 }
 
 impl Default for AuthType {
@@ -444,7 +488,7 @@ impl Endpoint {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Discovery {
     detect: bool,
     include: Vec<String>,
@@ -462,16 +506,16 @@ impl Default for Discovery {
 }
 
 impl Discovery {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let discovery = yaml.get(keys::DISCOVERY);
         if discovery.is_badvalue() {
-            return Ok(Discovery::default());
+            return Ok(None);
         }
-        Ok(Self {
+        Ok(Some(Self {
             detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT),
             include: discovery.get_string_vector(keys::INCLUDE, &[]),
             exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
-        })
+        }))
     }
     pub fn detect(&self) -> bool {
         self.detect
@@ -484,7 +528,7 @@ impl Discovery {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Mode {
     Port,
     Socket,
@@ -493,11 +537,7 @@ pub enum Mode {
 
 impl Mode {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        Mode::try_from(
-            yaml.get_string(keys::MODE)
-                .as_deref()
-                .unwrap_or(defaults::MODE),
-        )
+        Mode::try_from(yaml.get_string(keys::MODE).as_deref().unwrap_or_default())
     }
 }
 
@@ -641,7 +681,7 @@ impl Piggyback {
             hostname: piggyback
                 .get_string(keys::HOSTNAME)
                 .context("Bad/Missing hostname in piggyback")?,
-            sections: Sections::from_yaml(piggyback, sections.clone())?,
+            sections: Sections::from_yaml(piggyback, sections)?,
         }))
     }
 
@@ -668,6 +708,8 @@ mod tests {
 ---
 mssql:
   main: # mandatory, to be used if no specific config
+    options:
+      max_connections: 5
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -709,7 +751,7 @@ mssql:
       detect: true # optional(default:yes)
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
-    mode: "port" # optional(default:"port") - "socket", "port" or "special"
+    mode: "socket" # optional(default:"port") - "socket", "port" or "special"
     instances: # optional
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
@@ -721,6 +763,8 @@ mssql:
       - sid: "INST2" # mandatory
   configs:
     - main:
+        options:
+          max_connections: 11
         authentication: # mandatory
           username: "f" # mandatory
           password: "b"
@@ -731,15 +775,19 @@ mssql:
         discovery: # optional
           detect: yes # optional(default:yes)
     - main:
-        authentication: # mandatory
-          username: "f"
-          password: "b"
-          type: "sql_server"
+        options:
+          max_connections: 11
         connection: # optional
           hostname: "localhost" # optional(default: "localhost")
           timeout: 5 # optional(default: 5)
+        piggyback_host: "no"
         discovery: # optional
           detect: yes # optional(default:yes)
+    - main:
+        authentication: # optional
+          username: "f"
+          password: "b"
+          type: "sql_server"
   "#;
         pub const AUTHENTICATION_FULL: &str = r#"
 authentication:
@@ -835,30 +883,48 @@ piggyback:
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
-                section_info: Sections::default(),
+                sections: Sections::default(),
                 discovery: Discovery::default(),
                 piggyback_host: None,
                 mode: Mode::Port,
                 custom_instances: vec![],
                 configs: vec![],
                 hash: String::new(),
-                system: System::default(),
+                options: Options::default(),
             }
         );
     }
 
     #[test]
     fn test_system_default() {
-        let s = System::default();
+        let s = Options::default();
         assert_eq!(s.max_connections(), MAX_CONNECTIONS.into());
         assert_eq!(s.max_queries(), MAX_QUERIES.into());
     }
 
     #[test]
-    fn test_config_all() {
+    fn test_config_inheritance() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
-        assert_eq!(c.configs.len(), 2);
+        assert_eq!(c.configs.len(), 3);
         assert_eq!(c.custom_instances.len(), 2);
+        assert_eq!(c.configs[0].options(), &Options::new(11.into()));
+        assert_eq!(c.configs[1].options(), &Options::new(11.into()));
+        assert_eq!(c.configs[1].auth(), c.auth());
+        assert_ne!(c.configs[1].conn(), c.conn());
+        assert_ne!(c.configs[1].discovery(), c.discovery());
+        assert_ne!(c.configs[1].options(), c.options());
+        assert_ne!(c.configs[1].piggyback_host(), c.piggyback_host());
+        assert_ne!(c.configs[2].auth(), c.auth());
+        assert_eq!(c.configs[2].conn(), c.conn());
+        assert_eq!(c.configs[2].discovery(), c.discovery());
+        assert_eq!(c.configs[2].options(), c.options());
+        assert_eq!(c.configs[2].sections(), c.sections());
+        assert_eq!(c.configs[2].mode(), c.mode());
+
+        // NON INHERITED
+        assert_eq!(c.configs[2].piggyback_host(), None);
+        assert_ne!(c.configs[2].piggyback_host(), c.piggyback_host());
+        assert_ne!(c.configs[2].instances(), c.instances());
     }
 
     #[test]
@@ -973,7 +1039,9 @@ connection:
 
     #[test]
     fn test_discovery_from_yaml_full() {
-        let discovery = Discovery::from_yaml(&create_yaml(data::DISCOVERY_FULL)).unwrap();
+        let discovery = Discovery::from_yaml(&create_yaml(data::DISCOVERY_FULL))
+            .unwrap()
+            .unwrap();
         assert!(!discovery.detect());
         assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
         assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
@@ -987,7 +1055,9 @@ connection:
 
     #[test]
     fn test_discovery_from_yaml_default() {
-        let discovery = Discovery::from_yaml(&create_discovery_yaml_default()).unwrap();
+        let discovery = Discovery::from_yaml(&create_discovery_yaml_default())
+            .unwrap()
+            .unwrap();
         assert!(discovery.detect());
         assert!(discovery.include().is_empty());
         assert!(discovery.exclude().is_empty());
@@ -1012,6 +1082,7 @@ discovery:
     #[test]
     fn test_mode_from_yaml() {
         assert!(Mode::from_yaml(&create_yaml("mode: Zu")).is_err());
+        assert!(Mode::from_yaml(&create_yaml("no_mode: port")).is_err());
         assert_eq!(
             Mode::from_yaml(&create_yaml("mode: Special")).unwrap(),
             Mode::Special
@@ -1125,6 +1196,7 @@ connection:
     #[test]
     fn test_config() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        assert_eq!(c.options(), &Options::new(5.into()));
         assert_eq!(c.instances().len(), 2);
         assert!(c.instances()[0].piggyback().is_some());
         assert_eq!(
@@ -1133,7 +1205,7 @@ connection:
         );
         assert_eq!(c.instances()[0].name().to_string(), "INST1");
         assert_eq!(c.instances()[1].name().to_string(), "INST2");
-        assert_eq!(c.mode(), &Mode::Port);
+        assert_eq!(c.mode(), &Mode::Socket);
         assert_eq!(
             c.discovery().include(),
             &vec!["foo".to_string(), "bar".to_string()]

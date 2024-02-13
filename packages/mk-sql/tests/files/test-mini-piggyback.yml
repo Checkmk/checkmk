@@ -9,6 +9,7 @@ mssql:
       - instance:
       - databases:
           is_async: yes
+    piggyback_host: aaa
     discovery: # optional, defines which instances are to be monitored
       detect: yes # optional, default, if no then valid only instances in `instances` subsection
       exclude: ["MSSQLSERVER"] # optional, no default / prio 3, exclude those instances from the detected list

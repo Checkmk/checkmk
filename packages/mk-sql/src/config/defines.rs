@@ -6,6 +6,9 @@ pub mod keys {
     pub const MSSQL: &str = "mssql";
     pub const MAIN: &str = "main";
 
+    pub const OPTIONS: &str = "options";
+    pub const MAX_CONNECTIONS: &str = "max_connections";
+
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
     pub const PASSWORD: &str = "password";
@@ -66,7 +69,7 @@ pub mod values {
 
 pub mod defaults {
     use super::values;
-    pub const MAX_CONNECTIONS: u32 = 16;
+    pub const MAX_CONNECTIONS: u32 = 6;
     pub const MAX_QUERIES: u32 = 64;
 
     #[cfg(windows)]

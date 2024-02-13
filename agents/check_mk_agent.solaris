@@ -309,6 +309,15 @@ section_checkmk() {
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
 
+    echo "OSType: unix"
+    while read -r line; do
+        raw_line="${line//\"/}"
+        case $line in
+            NAME=*) echo "OSName: ${raw_line##*=}" ;;
+            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+        esac
+    done <<<"$(cat /etc/os-release 2>/dev/null)"
+
     #
     # BEGIN COMMON AGENT CODE
     #

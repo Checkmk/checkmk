@@ -279,6 +279,15 @@ section_checkmk() {
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
 
+    echo "OSType: linux"
+    while read -r line; do
+        raw_line=$(echo "$line" | tr -d \")
+        case $raw_line in
+            NAME=*) echo "OSName: ${raw_line##*=}" ;;
+            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+        esac
+    done </etc/os-release 2>/dev/null
+
     # If we are called via xinetd, try to find only_from configuration
     if [ -n "${REMOTE_HOST}" ]; then
         printf 'OnlyFrom: '

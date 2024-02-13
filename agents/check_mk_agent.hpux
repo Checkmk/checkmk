@@ -39,7 +39,9 @@ section_checkmk() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
-
+    echo "OSType: unix"
+    echo "OSName: HP-UX"
+    echo "OSVersion: $(uname -r | cut -d' ' -f1)"
 }
 
 run_purely_synchronous_sections() {

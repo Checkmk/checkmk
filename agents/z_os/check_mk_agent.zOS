@@ -30,6 +30,8 @@ echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
 echo SpoolDirectory: $SPOOLDIR
 echo AgentDirectory: $MK_CONFDIR
+echo 'OSType: z/os'
+echo 'OSName: z/OS'
 
 dir=$(pwd)
 

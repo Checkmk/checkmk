@@ -1976,25 +1976,28 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                     ),
                                     (
                                         "bound",
-                                        legacy_valuespecs.Tuple(
+                                        legacy_valuespecs.Optional(
                                             title=_("Fixed limits"),
-                                            help=_(
-                                                "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                            label=_("Set fixed limits"),
+                                            valuespec=legacy_valuespecs.Tuple(
+                                                help=_(
+                                                    "Regardless of how the dynamic levels are computed according to the prediction: they will never be set below the following limits. This avoids false alarms during times where the predicted levels would be very low."
+                                                ),
+                                                elements=[
+                                                    legacy_valuespecs.Integer(
+                                                        title="Warning level is at least",
+                                                        unit="GiB",
+                                                    ),
+                                                    legacy_valuespecs.Integer(
+                                                        title="Critical level is at least",
+                                                        unit="GiB",
+                                                    ),
+                                                ],
                                             ),
-                                            elements=[
-                                                legacy_valuespecs.Integer(
-                                                    title="Warning level is at least",
-                                                    unit="GiB",
-                                                ),
-                                                legacy_valuespecs.Integer(
-                                                    title="Critical level is at least",
-                                                    unit="GiB",
-                                                ),
-                                            ],
                                         ),
                                     ),
                                 ],
-                                optional_keys=["bound"],
+                                required_keys=["period", "horizon", "levels", "bound"],
                             ),
                             to_valuespec=lambda x: x,
                             from_valuespec=lambda x: x,
@@ -2157,25 +2160,28 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                     ),
                                     (
                                         "bound",
-                                        legacy_valuespecs.Tuple(
+                                        legacy_valuespecs.Optional(
                                             title=_("Fixed limits"),
-                                            help=_(
-                                                "Regardless of how the dynamic levels are computed according to the prediction: they will never be set above the following limits. This avoids false alarms during times where the predicted levels would be very high."
+                                            label=_("Set fixed limits"),
+                                            valuespec=legacy_valuespecs.Tuple(
+                                                help=_(
+                                                    "Regardless of how the dynamic levels are computed according to the prediction: they will never be set above the following limits. This avoids false alarms during times where the predicted levels would be very high."
+                                                ),
+                                                elements=[
+                                                    legacy_valuespecs.TimeSpan(
+                                                        title="Warning level is at most",
+                                                        display=["seconds", "minutes"],
+                                                    ),
+                                                    legacy_valuespecs.TimeSpan(
+                                                        title="Critical level is at most",
+                                                        display=["seconds", "minutes"],
+                                                    ),
+                                                ],
                                             ),
-                                            elements=[
-                                                legacy_valuespecs.TimeSpan(
-                                                    title="Warning level is at most",
-                                                    display=["seconds", "minutes"],
-                                                ),
-                                                legacy_valuespecs.TimeSpan(
-                                                    title="Critical level is at most",
-                                                    display=["seconds", "minutes"],
-                                                ),
-                                            ],
                                         ),
                                     ),
                                 ],
-                                optional_keys=["bound"],
+                                required_keys=["period", "horizon", "levels", "bound"],
                             ),
                             to_valuespec=lambda x: x,
                             from_valuespec=lambda x: x,

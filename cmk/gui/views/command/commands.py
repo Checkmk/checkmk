@@ -15,7 +15,6 @@ from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -183,7 +182,11 @@ class CommandReschedule(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
-            spread = utils.saveint(request.var("_resched_spread"))
+            spread = request.get_validated_type_input_mandatory(int, "_resched_spread")
+            if spread < 0:
+                raise MKUserError(
+                    "_resched_spread", _("Spread should be a positive number: %s") % spread
+                )
 
             t = time.time()
             if spread:

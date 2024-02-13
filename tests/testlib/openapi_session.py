@@ -496,7 +496,7 @@ class CMKOpenApiSession(requests.Session):
                     url=redirect_url,
                     allow_redirects=False,
                 )
-                if response.status_code == 204:  # job has finished
+                if response.status_code == 204 and not response.content:  # job has finished
                     break
 
                 if response.status_code != 302:

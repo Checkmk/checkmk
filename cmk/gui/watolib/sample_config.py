@@ -347,6 +347,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "mem_win",
                 "megaraid_bbu",
                 "megaraid_pdisks",
+                "megaraid_ldisks",
                 "megraid_vdisks",
                 "mknotifyd",
                 "mknotifyd_connection",

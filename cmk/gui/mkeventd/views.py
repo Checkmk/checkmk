@@ -642,7 +642,9 @@ class PainterEventHost(Painter):
         host_name = row.get("host_name", row["event_host"])
 
         return "", HTML(
-            html.render_a(host_name, _get_event_host_link(host_name, row, cell, request=request))
+            html.render_a(
+                host_name, _get_event_host_link(host_name, row, cell, request=self.request)
+            )
         )
 
 

@@ -3276,35 +3276,35 @@ metric_aws_ec2_running_ondemand_instances_z1d_xlarge = metrics.Metric(
 
 metric_aws_ec2_running_ondemand_instances_f_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_f_vcpu",
-    title=Localizable("Total title=Localizable('Running On-Demand F instances') vCPUs"),
+    title=Localizable("Total running On-Demand F Instances vCPUs"),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_g_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_g_vcpu",
-    title=Localizable("Total title=Localizable('Running On-Demand G instances') vCPUs"),
+    title=Localizable("Total running On-Demand G Instances vCPUs"),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_i_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_i_vcpu",
-    title=Localizable("Total title=Localizable('Running On-Demand Inf instances') vCPUs"),
+    title=Localizable("Total running On-Demand Inf Instances vCPUs"),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_p_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_p_vcpu",
-    title=Localizable("Total title=Localizable('Running On-Demand P instances') vCPUs"),
+    title=Localizable("Total running On-Demand P Instances vCPUs"),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
 )
 
 metric_aws_ec2_running_ondemand_instances_x_vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances_x_vcpu",
-    title=Localizable("Total title=Localizable('Running On-Demand X instances') vCPUs"),
+    title=Localizable("Total running On-Demand X Instances vCPUs"),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
 )
@@ -3312,7 +3312,7 @@ metric_aws_ec2_running_ondemand_instances_x_vcpu = metrics.Metric(
 metric_aws_ec2_running_ondemand_instances___vcpu = metrics.Metric(
     name="aws_ec2_running_ondemand_instances___vcpu",
     title=Localizable(
-        "Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances') vCPUs"
+        "Total running On-Demand Standard (A, C, D, H, I, M, R, T, Z) Instances vCPUs"
     ),
     unit=Unit.COUNT,
     color=Color.DARK_YELLOW,
@@ -3320,7 +3320,7 @@ metric_aws_ec2_running_ondemand_instances___vcpu = metrics.Metric(
 
 metric_aws_consumed_lcus = metrics.Metric(
     name="aws_consumed_lcus",
-    title=Localizable("Consumed Load Balancer Capacity unit=Units"),
+    title=Localizable("Consumed Load Balancer Capacity Units"),
     unit=Unit.COUNT,
     color=Color.PURPLE,
 )

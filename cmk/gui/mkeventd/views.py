@@ -14,7 +14,7 @@ from cmk.utils.statename import short_service_state_name
 from cmk.utils.user import UserId
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config, default_authorized_builtin_role_ids
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -406,7 +406,7 @@ class PainterSvcServicelevel(Painter):
             "service",
             "EC_SL",
             row,
-            active_config.mkeventd_service_levels,
+            self.config.mkeventd_service_levels,
         )
 
 
@@ -434,7 +434,7 @@ class PainterHostServicelevel(Painter):
             "host",
             "EC_SL",
             row,
-            active_config.mkeventd_service_levels,
+            self.config.mkeventd_service_levels,
         )
 
 
@@ -613,7 +613,7 @@ class PainterEventSl(Painter):
         return ["event_sl"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        sl_txt = dict(active_config.mkeventd_service_levels).get(
+        sl_txt = dict(self.config.mkeventd_service_levels).get(
             row["event_sl"], str(row["event_sl"])
         )
         return "", sl_txt

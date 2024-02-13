@@ -5,13 +5,13 @@
 
 from collections.abc import Iterable, Sequence
 
+from cmk.gui.config import active_config
+from cmk.gui.http import request
+from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import painter_exists, painter_registry
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 
-from ..config import active_config
-from ..http import request
-from ..logged_in import user
-from ..painter_options import PainterOptions
 from .sorter import ParameterizedSorter, sorter_registry
 
 

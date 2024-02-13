@@ -56,7 +56,7 @@ class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
         | tuple[Literal["relative"], tuple[float, float]]
         | tuple[Literal["stdev"], tuple[float, float]]
     )
-    bound: tuple[float, float] | None
+    bound: tuple[_NumberT, _NumberT] | None
 
 
 LevelsConfigModel = (

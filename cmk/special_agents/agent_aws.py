@@ -1017,7 +1017,8 @@ class AWSSectionCloudwatch(AWSSection):
 # Example:
 # 2017-01-01 - 2017-05-01; cost and usage data is retrieved from 2017-01-01 up
 # to and including 2017-04-30 but not including 2017-05-01.
-# The GetCostAndUsageRequest operation supports only DAILY and MONTHLY granularities.
+# The GetCostAndUsage operation supports DAILY | MONTHLY | HOURLY granularities.
+# The GetReservationUtilization operation supports only DAILY and MONTHLY granularities.
 
 
 class CostsAndUsage(AWSSection):
@@ -1058,6 +1059,59 @@ class CostsAndUsage(AWSSection):
             ],
         )
         return self._get_response_content(response, "ResultsByTime")
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class ReservationUtilization(AWSSection):
+    @property
+    def name(self) -> str:
+        return "reservation_utilization"
+
+    @property
+    def cache_interval(self) -> int:
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = int(get_seconds_since_midnight(NOW))
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self) -> int:
+        return 86400  # one day
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args):
+        """Query the AWS GetReservationUtilization API.
+
+        This API lags a day behind and we have to query the data starting the day
+        before yesterday. So we query the last 2 data points and let the check
+        report the most recent data point.
+        In the AWS dashboard, we also only have data for from two days ago.
+        """
+        granularity_name, granularity_interval = "DAILY", self.granularity
+        fmt = "%Y-%m-%d"
+
+        params = {
+            "TimePeriod": {
+                "Start": datetime.strftime(NOW - 2 * timedelta(seconds=granularity_interval), fmt),
+                "End": datetime.strftime(NOW, fmt),
+            },
+            "Granularity": granularity_name,
+        }
+
+        response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
+        return self._get_response_content(response, "UtilizationsByTime")
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -6450,7 +6504,9 @@ class AWSSectionsUSEast(AWSSections):
         distributor = ResultDistributor()
 
         if "ce" in services:
-            self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
+            ce_client = self._init_client("ce")
+            self._sections.append(CostsAndUsage(ce_client, region, config))
+            self._sections.append(ReservationUtilization(ce_client, region, config))
 
         cloudwatch_client = self._init_client("cloudwatch")
         tagging_client = self._init_client("resourcegroupstaggingapi")

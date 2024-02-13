@@ -12,6 +12,13 @@ metric_aws_costs_unblended = metrics.Metric(
     color=metrics.Color.PURPLE,
 )
 
+metric_aws_total_reservation_utilization = metrics.Metric(
+    name="aws_total_reservation_utilization",
+    title=Localizable("Total reservation utilization"),
+    unit=metrics.Unit.PERCENTAGE,
+    color=metrics.Color.PURPLE,
+)
+
 metric_aws_glacier_number_of_vaults = metrics.Metric(
     name="aws_glacier_number_of_vaults",
     title=Title("Number of vaults"),

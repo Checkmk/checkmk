@@ -20,12 +20,16 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def branch_version = versioning.get_branch_version(checkout_dir);
 
+    check_job_parameters([
+        ["OVERRIDE_DISTROS"],
+    ]);
+
     check_environment_variables([
         "DOCKER_TAG",
         "EDITION",
     ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_update_tests");
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_update_tests");
     def make_target = build_make_target(EDITION);
 
     testing_helper.run_make_targets(

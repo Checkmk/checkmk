@@ -1270,25 +1270,28 @@ def _get_predictive_levels_choice_element(
         ),
         (
             "bound",
-            legacy_valuespecs.Tuple(
+            legacy_valuespecs.Optional(
                 title=ruleset_api_v1.Localizable("Fixed limits").localize(localizer),
-                help=fixed_help_text.localize(localizer),
-                elements=[
-                    _get_legacy_level_spec(
-                        form_spec_template,
-                        fixed_warn_title,
-                        0,
-                        ruleset_api_v1.form_specs.InputHint,
-                        localizer,
-                    ),
-                    _get_legacy_level_spec(
-                        form_spec_template,
-                        fixed_crit_title,
-                        0,
-                        ruleset_api_v1.form_specs.InputHint,
-                        localizer,
-                    ),
-                ],
+                label=ruleset_api_v1.Localizable("Set fixed limits").localize(localizer),
+                valuespec=legacy_valuespecs.Tuple(
+                    help=fixed_help_text.localize(localizer),
+                    elements=[
+                        _get_legacy_level_spec(
+                            form_spec_template,
+                            fixed_warn_title,
+                            0,
+                            ruleset_api_v1.form_specs.InputHint,
+                            localizer,
+                        ),
+                        _get_legacy_level_spec(
+                            form_spec_template,
+                            fixed_crit_title,
+                            0,
+                            ruleset_api_v1.form_specs.InputHint,
+                            localizer,
+                        ),
+                    ],
+                ),
             ),
         ),
     ]
@@ -1296,7 +1299,7 @@ def _get_predictive_levels_choice_element(
     return legacy_valuespecs.Transform(
         valuespec=legacy_valuespecs.Dictionary(
             elements=predictive_elements,
-            optional_keys=["bound"],
+            required_keys=["period", "horizon", "levels", "bound"],
         ),
         to_valuespec=lambda p: {k: p[k] for k in p if not k.startswith("__")},
         from_valuespec=lambda p: {

@@ -550,6 +550,7 @@ def inv_paint_cmk_label(label: Sequence[str]) -> PaintResult:
         object_type="host",
         with_links=True,
         label_sources={label[0]: "discovered"},
+        request=request,
     )
 
 
@@ -1960,7 +1961,7 @@ class PainterInvhistTime(Painter):
             row["invhist_time"],
             True,
             60 * 10,
-            request=request,
+            request=self.request,
             painter_options=self._painter_options,
         )
 

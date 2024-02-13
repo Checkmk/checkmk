@@ -689,7 +689,13 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what))
+            return (
+                icon,
+                title,
+                url_to_visual(
+                    row, VisualLinkSpec("views", "downtimes_of_" + what), request=request
+                ),
+            )
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
@@ -698,7 +704,7 @@ class DowntimesIcon(Icon):
             return (
                 {"icon": "folder", "emblem": "downtime"},
                 title,
-                url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host")),
+                url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host"), request=request),
             )
         return None
 
@@ -753,7 +759,7 @@ class CommentsIcon(Icon):
             return (
                 "comment",
                 text,
-                url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what)),
+                url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what), request=request),
             )
         return None
 

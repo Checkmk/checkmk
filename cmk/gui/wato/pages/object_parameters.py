@@ -450,7 +450,7 @@ class ModeObjectParameters(WatoMode):
         html.open_td(class_=["settingvalue", "used"])
         html.write_html(
             cmk.gui.view_utils.render_labels(
-                labels, object_type, with_links=False, label_sources=label_sources
+                labels, object_type, with_links=False, label_sources=label_sources, request=request
             )
         )
         html.close_td()

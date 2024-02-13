@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 
 from cmk.utils.user import UserId
 
@@ -925,6 +926,7 @@ def render_mobile_table(
             cell.paint_as_header()
         html.close_tr()
 
+    link_renderer = partial(render_link_to_view, request=request)
     # Paint data rows
     for row in rows:
         odd = "even" if odd == "odd" else "odd"
@@ -939,7 +941,7 @@ def render_mobile_table(
             else:
                 colspan = None
 
-            cell.paint(row, render_link_to_view, colspan=colspan)
+            cell.paint(row, link_renderer, colspan=colspan)
         html.close_tr()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -988,10 +990,11 @@ def render_mobile_list(
 
     html.open_ul(class_="mobilelist", **{"data-role": "listview"})
 
+    link_renderer = partial(render_link_to_view, request=request)
     # Paint data rows
     for row in rows:
         html.open_li()
-        rendered_cells = [cell.render(row, render_link_to_view) for cell in cells]
+        rendered_cells = [cell.render(row, link_renderer) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
             assert isinstance(rendered_content, (str, HTML))
@@ -1063,10 +1066,11 @@ def render_mobile_dataset(
     painter_options = PainterOptions.get_instance()
     painter_options.set("ts_format", "both")
 
+    link_renderer = partial(render_link_to_view, request=request)
     for row in rows:
         html.open_table(class_="dataset")
         for cell in cells:
-            _tdclass, content = cell.render(row, render_link_to_view)
+            _tdclass, content = cell.render(row, link_renderer)
             if not content:
                 continue  # Omit empty cells
 
@@ -1075,7 +1079,7 @@ def render_mobile_dataset(
             html.close_tr()
 
             html.open_tr(class_="data")
-            cell.paint(row, render_link_to_view)
+            cell.paint(row, link_renderer)
             html.close_tr()
 
         html.close_table()

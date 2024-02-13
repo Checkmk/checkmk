@@ -644,7 +644,9 @@ class PainterAggrOutput(Painter):
         return ("", row["aggr_output"])
 
 
-def paint_aggr_hosts(row, link_to_view):
+def paint_aggr_hosts(  # pylint: disable=redefined-outer-name
+    row: Row, link_to_view: str, *, request: Request
+) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
@@ -668,7 +670,7 @@ class PainterAggrHosts(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "aggr_host")
+        return paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
 class PainterAggrHostsServices(Painter):
@@ -687,7 +689,7 @@ class PainterAggrHostsServices(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "host")
+        return paint_aggr_hosts(row, "host", request=self.request)
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -826,16 +828,16 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row, painter_options=PainterOptions.get_instance())
+        return paint_aggregated_tree_state(row, painter_options=self._painter_options)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -863,17 +865,17 @@ class PainterAggrTreestateFrozenDiff(Painter):
             return "", _("Aggregation not configured to be frozen")
 
         return paint_aggregated_tree_state(
-            row, painter_options=PainterOptions.get_instance(), show_frozen_difference=True
+            row, painter_options=self._painter_options, show_frozen_difference=True
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 @request_memoize()
@@ -981,18 +983,18 @@ class PainterAggrTreestateBoxed(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(
             row,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row, user=self.user, request=request)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 def render_tree_json(  # pylint: disable=redefined-outer-name

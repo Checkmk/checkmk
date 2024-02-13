@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import VisualLinkSpec
@@ -34,7 +35,7 @@ class InventoryIcon(Icon):
             if not user.may("view.inv_host"):
                 return None
 
-            v = url_to_visual(row, VisualLinkSpec("views", "inv_host"))
+            v = url_to_visual(row, VisualLinkSpec("views", "inv_host"), request=request)
             assert v is not None
             return (
                 "inventory",

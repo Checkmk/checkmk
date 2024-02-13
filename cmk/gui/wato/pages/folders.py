@@ -1080,6 +1080,7 @@ class ModeFolder(WatoMode):
                     "host",
                     with_links=False,
                     label_sources={k: "explicit" for k in labels.keys()},
+                    request=request,
                 )
             )
             html.write_html(show_all_code)

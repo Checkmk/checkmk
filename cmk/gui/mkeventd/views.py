@@ -543,7 +543,7 @@ class PainterEventFirst(Painter):
             row["event_first"],
             True,
             True,
-            request=request,
+            request=self.request,
             painter_options=PainterOptions.get_instance(),
         )
 
@@ -572,7 +572,7 @@ class PainterEventLast(Painter):
             row["event_last"],
             True,
             True,
-            request=request,
+            request=self.request,
             painter_options=PainterOptions.get_instance(),
         )
 
@@ -640,10 +640,14 @@ class PainterEventHost(Painter):
     def render(self, row: Row, cell: "Cell") -> CellSpec:
         host_name = row.get("host_name", row["event_host"])
 
-        return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
+        return "", HTML(
+            html.render_a(host_name, _get_event_host_link(host_name, row, cell, request=request))
+        )
 
 
-def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
+def _get_event_host_link(  # pylint: disable=redefined-outer-name
+    host_name: HostName, row: Row, cell: "Cell", *, request: Request
+) -> str:
     """
     Needed to support links to views and dashboards. If no link is configured,
     always use ec_events_of_host as target view.
@@ -660,7 +664,7 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
     # See SUP-10272 for a detailed explanation, hacks of view.py do not
     # work for SNMP traps
     return makeuri_contextless(
-        html.request,
+        request,
         [
             (link_type, link_target),
             ("host", host_name),
@@ -1009,7 +1013,7 @@ class PainterEventIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, request=request)
+        return paint_event_icons(row, request=self.request)
 
 
 class PainterEventHistoryIcons(Painter):
@@ -1032,7 +1036,7 @@ class PainterEventHistoryIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_event_icons(row, history=True, request=request)
+        return paint_event_icons(row, history=True, request=self.request)
 
 
 class PainterEventContactGroups(Painter):
@@ -1137,7 +1141,7 @@ class PainterHistoryTime(Painter):
             row["history_time"],
             True,
             True,
-            request=request,
+            request=self.request,
             painter_options=PainterOptions.get_instance(),
         )
 

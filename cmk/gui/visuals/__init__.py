@@ -42,6 +42,7 @@ from ._filter_form import show_filter_form as show_filter_form
 from ._filter_valuespecs import FilterChoices as FilterChoices
 from ._filter_valuespecs import filters_allowed_for_info as filters_allowed_for_info
 from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for_infos
+from ._filter_valuespecs import filters_exist_for_infos as filters_exist_for_infos
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup

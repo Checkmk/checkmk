@@ -20,7 +20,7 @@ class WatoIcon(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("Wato")
+        return _("Setup (formerly Wato)")
 
     def host_columns(self):
         return ["filename"]

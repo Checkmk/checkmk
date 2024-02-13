@@ -644,7 +644,6 @@ class SnapMirrorModel(BaseModel):
         if self.lag_time is None:
             return None
 
-        isodate.parse_duration(self.lag_time)
         return int(isodate.parse_duration(self.lag_time).total_seconds())
 
 

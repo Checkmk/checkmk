@@ -85,7 +85,7 @@ def build(Map args) {
             raise("${args.TARGET} is not known!")
         )
 
-        timeout(time: 30, unit: 'MINUTES') {
+        timeout(time: 60, unit: 'MINUTES') {
             dir(subdir) {
                 bat(command);
             }

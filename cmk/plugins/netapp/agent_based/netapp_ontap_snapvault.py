@@ -6,15 +6,8 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import (
-    AgentSection,
-    check_levels,
-    CheckPlugin,
-    render,
-    Result,
-    Service,
-    State,
-)
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.netapp import models
 
@@ -102,7 +95,7 @@ def check_netapp_ontap_snapvault(
     yield from check_levels(
         value=lagtime,
         levels_upper=levels,
-        render_function=render.timespan,
+        render_func=render.timespan,
         label="Lag time",
     )
 

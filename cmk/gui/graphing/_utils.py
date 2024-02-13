@@ -1148,16 +1148,19 @@ def _compute_predictive_metrics(
     translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
 ) -> Iterator[MetricDefinition]:
     for metric_defintion in metrics_:
+        line_type: Literal["line", "-line"] = (
+            "-line" if metric_defintion.line_type.startswith("-") else "line"
+        )
         for metric in metric_defintion.expression.metrics():
             if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_metric_name),
-                    line_type="line",
+                    line_type=line_type,
                 )
             if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_lower_metric_name),
-                    line_type="line",
+                    line_type=line_type,
                 )
 
 

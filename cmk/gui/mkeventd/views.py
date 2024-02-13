@@ -25,7 +25,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
 from cmk.gui.painter.v0.painters import paint_custom_var
-from cmk.gui.painter_options import paint_age, PainterOptions
+from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -544,7 +544,7 @@ class PainterEventFirst(Painter):
             True,
             True,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -573,7 +573,7 @@ class PainterEventLast(Painter):
             True,
             True,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 
@@ -1142,7 +1142,7 @@ class PainterHistoryTime(Painter):
             True,
             True,
             request=self.request,
-            painter_options=PainterOptions.get_instance(),
+            painter_options=self._painter_options,
         )
 
 

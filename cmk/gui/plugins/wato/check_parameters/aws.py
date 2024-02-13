@@ -734,6 +734,34 @@ rulespec_registry.register(
     )
 )
 
+
+def _parameter_valuespec_aws_reservation_utilization():
+    return Dictionary(
+        elements=[
+            (
+                "levels_utilization_percent",
+                Tuple(
+                    title=_("Lower levels for reservation utilization"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=95.0),
+                        Percentage(title=_("Critical at"), default_value=90.0),
+                    ],
+                ),
+            )
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_reservation_utilization",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_reservation_utilization,
+        title=lambda: _("AWS/CE Total Reservation Utilization"),
+    )
+)
+
 # .
 #   .--ELB-----------------------------------------------------------------.
 #   |                          _____ _     ____                            |

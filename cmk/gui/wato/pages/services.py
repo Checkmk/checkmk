@@ -761,6 +761,7 @@ class DiscoveryPageRenderer:
                 "host",
                 with_links=False,
                 label_sources={label_id: "discovered" for label_id in host_labels.keys()},
+                request=request,
             )
             table.cell(_("Host labels"), labels_html, css=["expanding"])
             return
@@ -780,6 +781,7 @@ class DiscoveryPageRenderer:
                 "host",
                 with_links=False,
                 label_sources={label_id: "discovered"},
+                request=request,
             )
 
         table.cell(_("Host labels"), labels_html, css=["expanding"])
@@ -1196,6 +1198,7 @@ class DiscoveryPageRenderer:
             "service",
             with_links=False,
             label_sources={k: label_type for k in service_labels.keys()},
+            request=request,
         )
         html.write_html(label_code)
 

@@ -192,8 +192,13 @@ def get_labels(row: "Row", what: str) -> Labels:
     return labels
 
 
-def render_labels(
-    labels: Labels, object_type: str, with_links: bool, label_sources: LabelSources
+def render_labels(  # pylint: disable=redefined-outer-name
+    labels: Labels,
+    object_type: str,
+    with_links: bool,
+    label_sources: LabelSources,
+    *,
+    request: Request,
 ) -> HTML:
     return _render_tag_groups_or_labels(
         labels,

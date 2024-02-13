@@ -4104,7 +4104,9 @@ class PainterCommentEntryType(Painter):
             return "", ""
         code: str | HTML = html.render_icon(icon, help_txt)
         if linkview:
-            code = render_link_to_view(code, row, VisualLinkSpec("views", linkview))
+            code = render_link_to_view(
+                code, row, VisualLinkSpec("views", linkview), request=self.request
+            )
         return "icons", code
 
 
@@ -5190,6 +5192,7 @@ class PainterHostLabels(Painter):
             "host",
             with_links=True,
             label_sources=get_label_sources(row, "host"),
+            request=self.request,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> Labels:
@@ -5230,6 +5233,7 @@ class PainterServiceLabels(Painter):
             "service",
             with_links=True,
             label_sources=get_label_sources(row, "service"),
+            request=self.request,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> Labels:

@@ -7192,7 +7192,9 @@ class Labels(ValueSpec[LabelsModel]):
 
     def value_to_html(self, value: LabelsModel) -> ValueSpecText:
         label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
-        return render_labels(value, "host", with_links=False, label_sources=label_sources)
+        return render_labels(
+            value, "host", with_links=False, label_sources=label_sources, request=request
+        )
 
     def render_input(self, varprefix: str, value: LabelsModel) -> None:
         html.help(self.help())

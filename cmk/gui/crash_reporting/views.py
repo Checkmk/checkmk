@@ -173,7 +173,7 @@ class PainterCrashIdent(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         url = makeuri_contextless(
-            request,
+            self.request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -250,7 +250,7 @@ class PainterCrashTime(Painter):
             row["crash_time"],
             has_been_checked=True,
             bold_if_younger_than=3600,
-            request=request,
+            request=self.request,
             painter_options=PainterOptions.get_instance(),
         )
 

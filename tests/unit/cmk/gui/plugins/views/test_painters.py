@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any, Literal
 
@@ -901,7 +902,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row, render_link_to_view)
+        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request))
         assert isinstance(content, (str, HTML))
 
         if isinstance(content, str) and "<" in content:

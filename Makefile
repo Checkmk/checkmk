@@ -198,7 +198,7 @@ node_modules/.bin/prettier: .ran-npm
 	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
 	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
 	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
-	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/'; then \
 	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
             export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
 	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \

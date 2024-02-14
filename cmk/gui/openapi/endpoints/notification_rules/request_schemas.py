@@ -2017,7 +2017,6 @@ class PluginSelector(OneOfSchema):
 
 class PluginNameBuiltInOrCustom(BaseSchema):
     plugin_name = fields.String(
-        enum=[n for (n, _) in user_script_choices("notifications")],
         required=True,
         description="The plugin name.",
         example="mail",

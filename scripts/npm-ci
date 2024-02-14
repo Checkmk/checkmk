@@ -5,6 +5,8 @@
 
 # This script should install the NPM packages and ensure that the same NPM and NodeJS major version is used locally as in the CI
 
+ARTIFACT_STORAGE=https://artifacts.lan.tribe29.com
+
 echo "nodejs $(node --version)"
 echo "npm $(npm --version)"
 
@@ -20,4 +22,17 @@ validate_version() {
 validate_version "NODEJS_VERSION" "node"
 validate_version "NPM_VERSION" "npm"
 
-NODE_OPTIONS="--dns-result-order=ipv4first" npm ci
+echo "open file descriptor limit (soft): $$(ulimit -Sn)"
+echo "open file descriptor limit (hard): $$(ulimit -Hn)"
+
+if curl --silent --output /dev/null --head "${ARTIFACT_STORAGE}/" || [ "${CI}" == "true" ]; then
+    export NPM_CONFIG_REGISTRY="${ARTIFACT_STORAGE}/repository/npm-proxy/"
+    export SASS_BINARY_SITE="${ARTIFACT_STORAGE}/repository/archives/"
+    echo "Installing from local registry ${ARTIFACT_STORAGE}"
+else
+    echo "Installing from public registry"
+fi
+
+# audit=false disables metrics
+# unsafe-perm allows install as root
+NODE_OPTIONS="--dns-result-order=ipv4first" npm ci --yes --audit=false --unsafe-perm

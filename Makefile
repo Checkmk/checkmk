@@ -10,7 +10,6 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
@@ -174,10 +173,6 @@ openapi-clean:
 openapi: $(OPENAPI_SPEC)
 
 
-# TODO: The --unsafe-perm was added because the CI executes this as root during
-# tests and building versions. Once we have the then build system this should not
-# be necessary anymore.
-#
 # NOTE 1: What we actually want are grouped targets, but this would require GNU
 # make >= 4.3, so we use the common workaround of an intermediate target.
 #
@@ -192,20 +187,7 @@ openapi: $(OPENAPI_SPEC)
 node_modules/.bin/webpack: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
-	@echo "npm version: $$(npm --version)"
-	npm --version | grep "^$(NPM_VERSION)\." >/dev/null 2>&1
-	@echo "node version: $$(node --version)"
-	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
-	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
-	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
-	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/'; then \
-	    export NPM_CONFIG_REGISTRY='${ARTIFACT_STORAGE}/repository/npm-proxy/' ; \
-            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
-	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
-	else \
-	    echo "Installing from public registry" ; \
-        fi ; \
-	npm ci --yes --audit=false --unsafe-perm
+	./scripts/npm-ci
 	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we

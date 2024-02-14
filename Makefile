@@ -188,9 +188,6 @@ openapi: $(OPENAPI_SPEC)
 # NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
 # called!" message, where the underlying reason seems to be quite obscure, see
 # https://npm.community/t/crash-npm-err-cb-never-called/858.
-#
-# NOTE 4: The sed call is to get the same "resolved" entries independent of the
-# used registry. The resolved entry is only a hint for npm.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
 node_modules/.bin/prettier: .ran-npm
@@ -210,7 +207,6 @@ node_modules/.bin/prettier: .ran-npm
 	    echo "Installing from public registry" ; \
         fi ; \
 	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
-	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
 	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we

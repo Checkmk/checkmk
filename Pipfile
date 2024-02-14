@@ -108,7 +108,7 @@ yarl = "==1.9.3"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl
 idna = "==3.4"  # needed by yarl
 vcrpy = "==6.0.0"  # used by various unit tests to mock HTTP transactions in some special agents (only)
-cryptography = "==41.0.7"
+cryptography = "==42.0.2"
 bcrypt = "==4.1.2"
 paramiko = "==3.4.0"
 pyasn1 = "==0.4.8"  # needed by pysnmp

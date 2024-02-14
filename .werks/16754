@@ -1,0 +1,14 @@
+Title: docker_container: skip on incomplete data for diskstat and memory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1713263300
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+During the data parsing of a container, it is possible to encounter
+incomplete metric sets, which previously caused a crash. Since the
+data in these instances is simply unavailable, we now skip the
+discovery or check cycle for such cases. This adjustment is applied
+to docker container disktat and memory check plugins.

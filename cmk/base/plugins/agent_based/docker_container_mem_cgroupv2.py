@@ -8,8 +8,7 @@ from .utils import docker, memory
 
 
 def parse_docker_container_mem_cgroupv2(string_table: StringTable) -> memory.SectionMemUsed | None:
-    parsed = docker.parse_container_memory(string_table, cgroup=2)
-    if parsed is None:
+    if (parsed := docker.parse_container_memory(string_table, cgroup=2)) is None:
         return None
     return parsed.to_mem_used()
 

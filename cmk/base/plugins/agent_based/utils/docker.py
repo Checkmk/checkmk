@@ -169,6 +169,9 @@ def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> Memory
 
     container_memory_total: int | None
     if cgroup == 1:
+        if not {"usage_in_bytes", "limit_in_bytes", "total_inactive_file"}.issubset(parsed.keys()):
+            return None
+
         container_memory_usage = _mem_bytes(parsed["usage_in_bytes"])
         # we use the docker way and remove total_inactive_file:
         # https://github.com/docker/cli/blob/70a00157f161b109be77cd4f30ce0662bfe8cc32/cli/command/container/stats_helpers.go#L227-L238
@@ -178,6 +181,9 @@ def parse_container_memory(string_table: StringTable, cgroup: int = 1) -> Memory
             return None
         container_memory_total = min(host_memory_total, mem_limit)
     else:
+        if not {"memory.current", "memory.max", "inactive_file"}.issubset(parsed.keys()):
+            return None
+
         container_memory_usage = _mem_bytes(parsed["memory.current"])
         if (memory_max := parsed["memory.max"]) == ["max"]:
             container_memory_total = host_memory_total

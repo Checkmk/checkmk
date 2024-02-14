@@ -1451,10 +1451,6 @@ def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
         ca.create_site_certificate(site.name, key_size=site_key_size)
 
 
-def agent_ca_existing(site: SiteContext) -> bool:
-    return root_cert_path(cert_dir(Path(site.dir)) / "agents").exists()
-
-
 def initialize_agent_ca(site: SiteContext) -> None:
     """Initialize the agents CA folder alongside a default agent signing CA.
     The default CA shall be used for issuing certificates for requesting agent controllers.
@@ -1462,15 +1458,15 @@ def initialize_agent_ca(site: SiteContext) -> None:
     root certs for agent receiver certificate verification (either as client or server cert)
     """
     ca_path = cert_dir(Path(site.dir)) / "agents"
+    # If this location is updated, then `legacy_ca.pem` has to be updated.
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
 
 
-def link_legacy_agent_ca(site: SiteContext) -> None:
+def link_legacy_agent_ca_v2(site: SiteContext) -> None:
     """If there are agent controller certificates that are signed with the site CA, we have to
     maintain them (at least for a while)."""
-    site_ca_path = root_cert_path(cert_dir(Path(site.dir)))
-    agent_ca_dir = cert_dir(Path(site.dir)) / "agents"
-    (agent_ca_dir / "legacy_ca.pem").symlink_to(site_ca_path)
+    legacy_ca_v2_path = cert_dir(Path(site.dir)) / "agents" / "legacy_ca_v2.pem"
+    os.symlink("../ca.pem", legacy_ca_v2_path)
 
 
 def config_change(
@@ -3080,10 +3076,11 @@ def main_update(  # pylint: disable=too-many-branches
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
 
-    preexisting = agent_ca_existing(site)
-    initialize_agent_ca(site)
-    if not preexisting:
-        link_legacy_agent_ca(site)
+    legacy_agent_ca = cert_dir(Path(site.dir)) / "agents/legacy_ca.pem"
+    if legacy_agent_ca.exists():
+        # This symlink is broken, as omd cp does not support absolute symlinks
+        link_legacy_agent_ca_v2(site)
+        legacy_agent_ca.unlink()
 
     # Let hooks of the new(!) version do their work and update configuration.
     config_set_all(site)

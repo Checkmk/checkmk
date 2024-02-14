@@ -9,18 +9,14 @@
 from .config import ConfigFromWATO as ConfigFromWATO
 from .config import ECRulePack as ECRulePack
 from .config import ECRulePackSpec as ECRulePackSpec
-from .config import MatchGroups as MatchGroups
 from .config import MkpRulePackProxy as MkpRulePackProxy
 from .config import Rule as Rule
-from .config import TextMatchResult as TextMatchResult
-from .config import TextPattern as TextPattern
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
 from .forward import SyslogForwarderUnixSocket as SyslogForwarderUnixSocket
 from .forward import SyslogMessage as SyslogMessage
 from .rule_matcher import compile_rule as compile_rule
-from .rule_matcher import match_ip_network as match_ip_network
 from .rule_matcher import MatchFailure as MatchFailure
 from .rule_matcher import MatchResult as MatchResult
 from .rule_matcher import MatchSuccess as MatchSuccess
@@ -38,8 +34,6 @@ from .rule_packs import RulePackType as RulePackType
 from .rule_packs import save_active_config as save_active_config
 from .rule_packs import save_rule_packs as save_rule_packs
 from .rule_packs import uninstall_packaged_rule_packs as uninstall_packaged_rule_packs
-from .settings import FileDescriptor as FileDescriptor
-from .settings import PortNumber as PortNumber
 from .settings import Settings as Settings
 from .settings import settings as settings
 from .syslog import SyslogFacility as SyslogFacility

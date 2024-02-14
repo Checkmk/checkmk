@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <string_view>
+#include <unordered_set>
 
 #include "common/wtools.h"
 #include "common/wtools_user_control.h"
@@ -820,4 +821,16 @@ TEST(Wtools, MakeSafeFolderIntegration) {
     EXPECT_TRUE(fs::exists(*path));
     fs::remove_all(*path);
 }
+
+TEST(Wtools, GetAdapterInfoStore) {
+    const auto store = GetAdapterInfoStore();
+    EXPECT_GE(store.size(), 1U);
+    std::unordered_set<IF_OPER_STATUS> types;
+    for (auto &&info : store | std::views::values) {
+        types.insert(info.oper_status);
+    }
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusUp));
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusDown));
+}
+
 }  // namespace wtools

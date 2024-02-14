@@ -8,7 +8,6 @@
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
-#include <iphlpapi.h>
 #include <sddl.h>
 #include <shellapi.h>
 
@@ -3680,6 +3679,46 @@ inline std::string ToUtf8(const std::wstring_view src,
     // some older engines may have problems if we do not have trailing zero
     AddSafetyEndingNull(str);
     return str;
+}
+
+std::optional<uint64_t> _to_speed(uint64_t speed) {
+    return speed == 0xFFFF'FFFF'FFFF'FFFF ? std::nullopt : std::optional{speed};
+}
+
+AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
+    return AdapterInfo{
+        .guid{a.AdapterName},
+        .friendly_name{a.FriendlyName},
+        .description{a.Description},
+        .if_type{a.IfType},
+        .receive_speed{_to_speed(a.ReceiveLinkSpeed)},
+        .transmit_speed{_to_speed(a.TransmitLinkSpeed)},
+        .oper_status{a.OperStatus},
+    };
+}
+
+using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
+
+AdapterInfoStore GetAdapterInfoStore() {
+    constexpr auto max_interfaces = 500;
+    const auto buffer =
+        std::make_unique<IP_ADAPTER_ADDRESSES[]>(max_interfaces);
+
+    AdapterInfoStore store;
+    ULONG length = max_interfaces * sizeof(IP_ADAPTER_ADDRESSES);
+
+    if (const auto error =
+            GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_INTERFACES,
+                                 nullptr, buffer.get(), &length);
+        error != ERROR_SUCCESS) {
+        return store;
+    }
+
+    const auto head = buffer.get();
+    for (auto cur = head; cur; cur = cur->Next) {
+        store[std::wstring{cur->Description}] = ToAdapterInfo(*cur);
+    }
+    return store;
 }
 
 }  // namespace wtools

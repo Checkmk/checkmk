@@ -6,8 +6,8 @@
 from datetime import datetime
 
 import pytest
+import time_machine
 from dateutil.relativedelta import relativedelta
-from freezegun import freeze_time
 
 from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
@@ -20,7 +20,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
     Valid from 2023-01-01 08:00:00 til 2023-01-01 10:00:00.
     """
-    with freeze_time(datetime(2023, 1, 1, 8, 0, 0)):
+    with time_machine.travel(datetime(2023, 1, 1, 8, 0, 0)):
         return CertificateWithPrivateKey.generate_self_signed(
             common_name="TestGenerateSelfSigned",
             expiry=relativedelta(hours=2),

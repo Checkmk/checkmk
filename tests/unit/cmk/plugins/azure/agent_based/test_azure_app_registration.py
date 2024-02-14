@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
+from zoneinfo import ZoneInfo
 
-import freezegun
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -109,5 +111,5 @@ def test_check_app_registration(
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    with freezegun.freeze_time("2022-11-22 00:00:00"):
+    with time_machine.travel(datetime.datetime(2022, 11, 22, tzinfo=ZoneInfo("UTC"))):
         assert list(check_app_registration(item, params, section)) == expected_result

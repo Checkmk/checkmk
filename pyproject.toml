@@ -176,7 +176,10 @@ testpaths = ["tests"]
 # successful, etc. etc. We might reconsinder lowering the live log level when we
 # have cleaned up things...
 addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
-markers = ["checks: Run all existing test cases for checks."]
+markers = [
+    "checks: Run all existing test cases for checks.",
+    "slow: Run tests which take relatively larger time to execute.",
+]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [
     # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759

@@ -1451,10 +1451,6 @@ def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
         ca.create_site_certificate(site.name, key_size=site_key_size)
 
 
-def agent_ca_existing(site: SiteContext) -> bool:
-    return root_cert_path(cert_dir(Path(site.dir)) / "agents").exists()
-
-
 def initialize_agent_ca(site: SiteContext) -> None:
     """Initialize the agents CA folder alongside a default agent signing CA.
     The default CA shall be used for issuing certificates for requesting agent controllers.
@@ -1463,14 +1459,6 @@ def initialize_agent_ca(site: SiteContext) -> None:
     """
     ca_path = cert_dir(Path(site.dir)) / "agents"
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
-
-
-def link_legacy_agent_ca(site: SiteContext) -> None:
-    """If there are agent controller certificates that are signed with the site CA, we have to
-    maintain them (at least for a while)."""
-    site_ca_path = root_cert_path(cert_dir(Path(site.dir)))
-    agent_ca_dir = cert_dir(Path(site.dir)) / "agents"
-    (agent_ca_dir / "legacy_ca.pem").symlink_to(site_ca_path)
 
 
 def config_change(
@@ -3079,11 +3067,6 @@ def main_update(  # pylint: disable=too-many-branches
     # Execute some builtin initializations before executing the update-pre-hooks
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
-
-    preexisting = agent_ca_existing(site)
-    initialize_agent_ca(site)
-    if not preexisting:
-        link_legacy_agent_ca(site)
 
     # Let hooks of the new(!) version do their work and update configuration.
     config_set_all(site)

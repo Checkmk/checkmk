@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from abc import ABC, abstractmethod
 from codecs import BOM_UTF8
 from collections.abc import Iterable
 from datetime import datetime, timezone
@@ -13,7 +12,7 @@ from typing import Literal
 
 from cmk.utils.paths import default_config_dir, omd_root
 
-from .settings import Paths, settings
+from .settings import settings
 from .syslog import SyslogFacility
 
 _NILVALUE: Literal["-"] = "-"  # NILVALUE from RFC 5424
@@ -284,40 +283,15 @@ class SyslogMessage:
         return "" if txt.isascii() else BOM_UTF8.decode(cls._ENCODING)
 
 
-class ABCSyslogForwarder(ABC):
-    """Base class for forwarding syslog messages to the EC"""
-
-    @staticmethod
-    def _ec_paths() -> Paths:
-        return settings(
-            "",
-            Path(omd_root),
-            Path(default_config_dir),
-            [""],
-        ).paths
-
-    @abstractmethod
-    def forward(
-        self,
-        syslog_messages: Iterable[SyslogMessage],
-    ) -> None:
-        ...
-
-
-class SyslogForwarderUnixSocket(ABCSyslogForwarder):
-    """Forward syslog messages to the EC using the unix socket"""
-
-    def __init__(
-        self,
-        path: Path | None = None,
-    ) -> None:
-        super().__init__()
-        self._path = str(self._ec_paths().event_socket.value if path is None else path)
-
-    def forward(
-        self,
-        syslog_messages: Iterable[SyslogMessage],
-    ) -> None:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-            sock.connect(self._path)
-            sock.sendall(b"\n".join(bytes(msg) for msg in syslog_messages) + b"\n")
+def forward_to_unix_socket(
+    syslog_messages: Iterable[SyslogMessage],
+    path: Path | None = None,
+) -> None:
+    payload = b"".join(bytes(msg) + b"\n" for msg in syslog_messages)
+    if not payload:
+        return  # optimization: no need for any I/O
+    if path is None:
+        path = settings("", Path(omd_root), Path(default_config_dir), [""]).paths.event_socket.value
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        sock.connect(str(path))
+        sock.sendall(payload)

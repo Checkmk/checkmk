@@ -29,7 +29,7 @@ from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket,
+    forward_to_unix_socket,
     SyslogMessage,
 )
 
@@ -479,7 +479,7 @@ def _forward_events_to_ec(
     service_level: int,
     add_text: bool,
 ) -> None:
-    SyslogForwarderUnixSocket().forward(
+    forward_to_unix_socket(
         _event_to_syslog_message(
             event,
             tag_regexes,
@@ -665,7 +665,7 @@ def _forward_logs_to_ec(
     service_level: int,
     translator: Sequence[LogMessageElement],
 ) -> None:
-    SyslogForwarderUnixSocket().forward(
+    forward_to_unix_socket(
         _log_to_syslog_message(
             log,
             facility,

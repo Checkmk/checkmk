@@ -46,7 +46,7 @@ from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
 )
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket,
+    forward_to_unix_socket,
     SyslogMessage,
 )
 
@@ -520,26 +520,24 @@ class MessageForwarder:
             )
 
         if not method.startswith("spool:"):
-            return self._forward_pipe(
+            return self._forward_unix_socket(
                 Path(method),
                 messages,
             )
 
         return self._forward_spool_directory(method, messages)
 
-    # write into local event pipe
-    # Important: When the event daemon is stopped, then the pipe
+    # write into local UNIX socket
+    # Important: When the event daemon is stopped, then the socket
     # is *not* existing! This prevents us from hanging in such
     # situations. So we must make sure that we do not create a file
-    # instead of the pipe!
+    # instead of the socket!
     @staticmethod
-    def _forward_pipe(
+    def _forward_unix_socket(
         path: Path,
         events: Sequence[SyslogMessage],
     ) -> LogwatchForwardedResult:
-        if not events:
-            return LogwatchForwardedResult()
-        SyslogForwarderUnixSocket(path=path).forward(events)
+        forward_to_unix_socket(events, path)
         return LogwatchForwardedResult(num_forwarded=len(events))
 
     # Spool the log messages to given spool directory.

@@ -14,7 +14,7 @@ from .config import Rule as Rule
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
-from .forward import SyslogForwarderUnixSocket as SyslogForwarderUnixSocket
+from .forward import forward_to_unix_socket as forward_to_unix_socket
 from .forward import SyslogMessage as SyslogMessage
 from .rule_matcher import compile_rule as compile_rule
 from .rule_matcher import MatchFailure as MatchFailure

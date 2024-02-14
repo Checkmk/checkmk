@@ -7,6 +7,7 @@ import enum
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from termios import tcflush, TCIFLUSH
 from typing import Final
 
 from cmk.utils import paths
@@ -27,6 +28,11 @@ from cmk.mkp_tool import (
     PathConfig,
     reload_apache,
 )
+
+
+def prompt(message: str) -> str:
+    tcflush(sys.stdin, TCIFLUSH)
+    return input(message)
 
 
 def get_path_config() -> PathConfig:

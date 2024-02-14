@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
+
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -17,6 +18,7 @@ from cmk.update_config.plugins.actions.rulesets import REPLACED_RULESETS
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     NEED_USER_INPUT_MODES,
+    prompt,
     USER_INPUT_CONTINUE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -49,7 +51,7 @@ class PreUpdateRulesets(PreUpdateAction):
 
 
 def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
-    return input(
+    return prompt(
         f"Exception while trying to load rulesets: {exc}\n\n"
         "You can abort the update process (A) and try to fix "
         "the incompatibilities or try to continue the update (c).\n"
@@ -98,7 +100,7 @@ def _validate_rule_values(
 def _request_user_input_on_invalid_rule(
     ruleset: Ruleset, folder: Folder, index: int, exception: MKUserError
 ) -> str:
-    return input(
+    return prompt(
         "WARNING: Invalid rule configuration detected\n"
         f"Ruleset: {ruleset.name}\n"
         f"Title: {ruleset.title()}\n"

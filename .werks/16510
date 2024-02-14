@@ -1,0 +1,10 @@
+Title: Improve InfluxDB logging
+Class: fix
+Compatible: compat
+Component: core
+Date: 1708077499
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+The InfluxDB logger now logs the line protocol on debug level.

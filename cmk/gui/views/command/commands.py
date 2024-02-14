@@ -957,9 +957,9 @@ class CommandAcknowledge(Command):
             formatted_datetime_str = self.confirm_dialog_date_and_time_format(timestamp)
 
         expire_conditions_li = html.render_li(
-            _("On core restart OR recovery (OK/UP)")
+            _("On recovery (OK/UP)")
             if request.var("_ack_sticky")
-            else _("If state changes OR core restarts OR on recovery (OK/UP)")
+            else _("If state changes OR on recovery (OK/UP)")
         )
         expire_time_li = html.render_li(
             _("On %s (server time).") % formatted_datetime_str

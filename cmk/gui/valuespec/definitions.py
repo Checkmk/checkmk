@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -70,11 +70,10 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
-from cmk.utils.encryption import Encrypter, fetch_certificate_details
+from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.labels import AndOrNotLiteral
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -94,7 +93,6 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -105,7 +103,6 @@ from cmk.gui.type_defs import (
     Icon,
 )
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -139,11 +136,6 @@ T = TypeVar("T")
 # NOTE: Due to the use of Union below, we can't have Callables as values.
 # NOTE: No caching, so it's different from e.g. Scheme's delay/force.
 Promise: TypeAlias = T | Callable[[], T]
-
-
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("ajax_fetch_ca")(AjaxFetchCA)
-    page_registry.register_page_handler("ajax_popup_icon_selector", ajax_popup_icon_selector)
 
 
 # NOTE: This helper function should be used everywhere instead of dispatching on
@@ -2732,26 +2724,6 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
             self._choice_dict[ident].validate_value(val, varprefix + "_" + ident)
 
 
-class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
-    @abc.abstractmethod
-    def _get_choices(self, api_request: Mapping[str, str]) -> Sequence[tuple[str, ValueSpec]]:
-        raise NotImplementedError()
-
-    def page(self) -> dict:
-        # ? get_request() is typed as returning dict[str,Any], the type of ensure_str argument seems to be Any
-        api_request = request.get_request()
-        vs = ListOfMultiple(
-            choices=self._get_choices(api_request), choice_page_name="unused_dummy_page"
-        )
-        with output_funnel.plugged():
-            vs.show_choice_row(
-                ensure_str(api_request["varprefix"]),  # pylint: disable= six-ensure-str-bin-call
-                ensure_str(api_request["ident"]),  # pylint: disable= six-ensure-str-bin-call
-                {},
-            )
-            return {"html_code": output_funnel.drain()}
-
-
 class Float(ValueSpec[float]):
     """Same as Integer, but for floating point values"""
 
@@ -3247,26 +3219,6 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             style="width: 250px;",
             **self._html_attrs,
         )
-
-
-AutocompleterFunc = Callable[[str, dict], Choices]
-
-
-class AutocompleterRegistry(Registry[AutocompleterFunc]):
-    def plugin_name(self, instance):
-        return instance._ident
-
-    def register_autocompleter(self, ident: str, func: AutocompleterFunc) -> None:
-        if not callable(func):
-            raise TypeError()
-
-        # We define the attribute here. for the `plugin_name` method.
-        func._ident = ident  # type: ignore[attr-defined]
-
-        self.register(func)
-
-
-autocompleter_registry = AutocompleterRegistry()
 
 
 # TODO: check where this class is used with strict=False.
@@ -7801,17 +7753,6 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
-def ajax_popup_icon_selector() -> None:
-    """AJAX API call for rendering the icon selector"""
-    varprefix = request.get_ascii_input_mandatory("varprefix")
-    value = request.var("value")
-    allow_empty = request.var("allow_empty") == "1"
-    show_builtin_icons = request.var("show_builtin_icons") == "1"
-
-    vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
-    vs.render_popup_input(varprefix, value)
-
-
 def ListOfTimeRanges(  # pylint: disable=redefined-builtin
     # ListOf
     totext: str | None = None,
@@ -8160,57 +8101,6 @@ class _CAInput(ValueSpec[_CAInputModel]):
         port = self.port.from_html_vars(varprefix + "_port")
         content = request.get_binary_input_mandatory(varprefix)
         return (address, port, content)
-
-
-class AjaxFetchCA(AjaxPage):
-    def page(self) -> PageResult:
-        check_csrf_token()
-        user.need_permission("general.server_side_requests")
-
-        try:
-            vs_address = HostAddress()
-            address = vs_address.from_html_vars("address")
-            vs_address.validate_value(address, "address")
-
-            vs_port = NetworkPort(title=None)
-            port = vs_port.from_html_vars("port")
-            vs_port.validate_value(port, "port")
-        except Exception:
-            raise MKUserError(None, _("Please provide a valid host and port"))
-
-        try:
-            certs = fetch_certificate_details(
-                cmk.utils.paths.trusted_ca_file, socket.AF_INET, (address, port)
-            )
-        except Exception as e:
-            raise MKUserError(None, _("Error fetching data: %s") % e)
-
-        for cert in certs:
-            if not cert.is_ca:
-                continue
-
-            try:
-                cert_pem = cert.verify_result.cert_pem.decode("ascii")
-            except Exception:
-                raise MKUserError(None, _("Failed to decode certificate data"))
-
-            def row(key: str, value: str) -> HTML:
-                return HTMLWriter.render_tr(
-                    HTMLWriter.render_td(key) + HTMLWriter.render_td(value), class_="data"
-                )
-
-            summary = HTMLWriter.render_table(
-                row(_("Issued to"), cert.issued_to)
-                + row(_("Issued by"), cert.issued_by)
-                + row(_("Valid from"), cert.valid_from)
-                + row(_("Valid until"), cert.valid_till)
-                + row(_("Fingerprint"), cert.digest_sha256),
-                class_="data",
-            )
-
-            return {"summary": summary, "cert_pem": cert_pem}
-
-        raise MKUserError(None, _("Found no CA"))
 
 
 def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin

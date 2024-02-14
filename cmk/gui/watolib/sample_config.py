@@ -348,7 +348,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "megaraid_bbu",
                 "megaraid_pdisks",
                 "megaraid_ldisks",
-                "megraid_vdisks",
+                "megaraid_vdisks",
                 "mknotifyd",
                 "mknotifyd_connection",
                 "mssql_backup",

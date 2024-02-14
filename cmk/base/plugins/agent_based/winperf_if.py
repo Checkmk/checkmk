@@ -3,9 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO(sk): Code below is utter bs and must be fully rewritten
+# Lack of comments with links to MSDN. THIS IS MUST HAVE FOR WINDOWS.
+# Tripled code for the same thing. This is a bad idea.
+# Lack of typing
+# Absolutely inappropriate list comprehension counting 40+ lines of code
+# Wrong naming oper_status has no "media disconnect" status
+# Bad typing dict[str,tuple[str,str]]  - is not typing at all
+
 from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
@@ -16,6 +24,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Inventor
 
 Line = Sequence[str]
 Lines = Iterator[Line]
+
+
+# must be in sync with code in windows agent, see IF_STATUS_PSEUDO_COUNTER
+_IF_STATUS_PSEUDO_COUNTER: Final[str] = "2002"
 
 
 def _canonize_name(name: str) -> str:
@@ -73,6 +85,29 @@ def _parse_timestamp_and_instance_names(
     return agent_timestamp, instances
 
 
+# This case is for Win32 and `GetAdaptersAddresses` API
+# from <ifdef.h>
+_WIN32_OPER_STATUS: Final[dict[int, str]] = {
+    1: "up",
+    2: "down",
+    3: "testing",
+    4: "unknown",
+    5: "dormant",
+    6: "not_present",
+    7: "lower_layer_down",
+}
+
+
+def _get_windows_if_status(counter_index: int) -> str:
+    return _WIN32_OPER_STATUS.get(counter_index, "n/a")
+
+
+def _get_oper_status(counters: Mapping[str, int]) -> int:
+    """returns oper status, see MSDN meaning, from pseudo counter if presented
+    otherwise 1 (up)"""
+    return counters.get(_IF_STATUS_PSEUDO_COUNTER) or 1
+
+
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
@@ -81,6 +116,7 @@ def _parse_counters(
     for idx, raw_nic_name in enumerate(raw_nic_names):
         name = _canonize_name(raw_nic_name)
         counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
+        oper_status = _get_oper_status(counters)
         ifaces.setdefault(
             name,
             interfaces.InterfaceWithCounters(
@@ -90,9 +126,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status="1",
+                    oper_status=str(oper_status),
                     out_qlen=counters["34"],
-                    oper_status_name="Connected",
+                    oper_status_name=_get_windows_if_status(oper_status),
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -240,6 +276,7 @@ class AdditionalIfData(NamedTuple):
 
 SectionExtended = Collection[AdditionalIfData]
 
+# NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
 # 2 down

@@ -55,6 +55,25 @@ PLUGIN_OUTPUT_MEM_LIMIT = [
 ]
 
 
+PLUGIN_OUTPUT_MEM_LIMIT = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.4", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"usage": 404840448, "max_usage": 412770304, "stats": {"active_anon": 403460096, "active_fil'
+        'e": 0, "cache": 0, "dirty": 0, "hierarchical_memory_limit": 524288000, "hierarchical_memsw_l'
+        'imit": 0, "inactive_anon": 0, "inactive_file": 4096, "mapped_file": 0, "pgfault": 101904, "p'
+        'gmajfault": 0, "pgpgin": 100716, "pgpgout": 2230, "rss": 403460096, "rss_huge": 0, "total_ac'
+        'tive_anon": 403460096, "total_active_file": 0, "total_cache": 0, "total_dirty": 0, "total_in'
+        'active_anon": 0, "total_inactive_file": 4096, "total_mapped_file": 0, "total_pgfault": 10190'
+        '4, "total_pgmajfault": 0, "total_pgpgin": 100716, "total_pgpgout": 2230, "total_rss": 403460'
+        '096, "total_rss_huge": 0, "total_unevictable": 0, "total_writeback": 0, "unevictable": 0, "w'
+        'riteback": 0}, "limit": 524288000}'
+    ],
+]
+
+
 def test_parse_container_mem_docker_plugin() -> None:
     """
     see if the output returned from mk_docker.py on a host with cgroup v1 can
@@ -91,6 +110,19 @@ def test_parse_container_mem_docker_plugin_with_no_version_and_empty_data() -> N
         ["MemTotal:", "65660592", "kB"],
     ]
     result = parse_docker_container_mem(partial_empty_output)
+    assert result is None
+
+
+def test_parse_container_mem_docker_plugin_with_no_version_and_incomplete_data() -> None:
+    """
+    test if the plugin can handle incomplete data and does not crash
+    """
+    incomplete_output = [
+        ["usage_in_bytes", "121810944"],
+        ["limit_in_bytes", "9223372036854771712"],
+        ["MemTotal:", "65660592", "kB"],
+    ]
+    result = parse_docker_container_mem(incomplete_output)
     assert result is None
 
 

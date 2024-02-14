@@ -35,7 +35,7 @@ def _create_encryption_key(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Backup encryption keys").click()
     logged_in_page.main_area.expect_no_entries()
 
-    logged_in_page.main_area.get_suggestion("Add key").click()
+    logged_in_page.main_area.get_suggestion("Generate key").click()
     logged_in_page.main_area.get_input("key_p_alias").fill("My backup key")
     logged_in_page.main_area.get_input("key_p_passphrase").fill(_backup_passphrase)
     logged_in_page.main_area.get_suggestion("Create").click()

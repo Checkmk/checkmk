@@ -1,0 +1,21 @@
+Title: cmk-update-config: Don't Read Characters Pressed before Prompt Appears
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1707920976
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+During <code>cmk-update-config</code> can prompt you with questions about how to continue the update. This
+is an example.
+
+C+:
+Exception while trying to load rulesets:
+
+You can abort the update process (A) and try to fix the incompatibilities or try to continue the update (c).
+Abort update? [A/c]
+C-:
+
+Previously, these prompts would read input, which was typed before the prompt was shown. Now, only
+the input is read after the prompt is shown.

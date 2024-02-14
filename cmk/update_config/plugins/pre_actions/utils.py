@@ -6,6 +6,7 @@
 import enum
 import sys
 from pathlib import Path
+from termios import tcflush, TCIFLUSH
 
 from cmk.utils import paths
 from cmk.utils.packaging import disable, Installer, PackageID, PathConfig
@@ -41,6 +42,11 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
+def prompt(message: str) -> str:
+    tcflush(sys.stdin, TCIFLUSH)
+    return input(message)
+
+
 def disable_incomp_mkp(
     conflict_mode: ConflictMode,
     module_name: str,
@@ -50,7 +56,7 @@ def disable_incomp_mkp(
 ) -> bool:
     if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
         conflict_mode is ConflictMode.ASK
-        and input(
+        and prompt(
             "Incompatible file '%s' of extension package '%s %s'\n"
             "Error: %s\n\n"
             "You can abort the update process (A) or disable the "
@@ -80,7 +86,7 @@ def continue_on_incomp_local_file(
 ) -> bool:
     if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
         conflict_mode is ConflictMode.ASK
-        and input(
+        and prompt(
             "Incompatible local file '%s'.\n"
             "Error: %s\n\n"
             "You can abort the update process (A) and try to fix "

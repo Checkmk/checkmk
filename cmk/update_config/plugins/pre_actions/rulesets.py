@@ -13,7 +13,7 @@ from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.actions.rulesets import AllRulesets, REPLACED_RULESETS
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -28,7 +28,7 @@ class PreUpdateRulesets(PreUpdateAction):
         except Exception as exc:
             if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
                 conflict_mode is ConflictMode.ASK
-                and input(
+                and prompt(
                     f"Exception while trying to load rulesets: {exc}\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or try to continue the update (c).\n"
@@ -80,7 +80,7 @@ def _validate_rule_values(
             except MKUserError as excpt:
                 if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
                     conflict_mode is ConflictMode.ASK
-                    and input(
+                    and prompt(
                         f"WARNING: Invalid rule configuration detected\n"
                         f"Ruleset: {ruleset.name}\n"
                         f"Title: {ruleset.title()}\n"

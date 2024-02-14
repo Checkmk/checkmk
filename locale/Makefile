@@ -39,7 +39,8 @@ update-pot:
 	git pull --rebase
 	# back in CHECKMK_DIR
 	git pull --rebase
-	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 --keyword=_l --keyword=Localizable -o scanned.pot \
+	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 --keyword=_l --keyword=Localizable \
+		--keyword=Title --keyword=Help --keyword=Label --keyword=Message -o scanned.pot \
 		$$(find -L ../packages -type f -name "*.py" -not -path '*/tests/*' -not -path '*/test/*') \
 		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \
 	sed "/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d"

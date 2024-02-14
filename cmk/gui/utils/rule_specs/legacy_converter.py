@@ -149,9 +149,7 @@ def _convert_to_legacy_check_parameter_rulespec(
                 to_convert.topic,
                 localizer,
             ),
-            item_spec=partial(
-                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
-            ),
+            item_spec=_get_item_spec_maker(to_convert.condition, localizer),
             match_type="dict",
             parameter_valuespec=partial(
                 _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
@@ -186,9 +184,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         case ruleset_api_v1.rule_specs.HostCondition():
             item_spec = None
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
-            item_spec = partial(
-                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
-            )
+            item_spec = _get_item_spec_maker(to_convert.condition, localizer)
         case other:
             assert_never(other)
 
@@ -914,16 +910,29 @@ def _convert_to_legacy_cascading_dropdown(
     return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
 
-def _convert_to_legacy_item_spec(
-    to_convert: ruleset_api_v1.form_specs.basic.Text | ruleset_api_v1.form_specs.basic.SingleChoice,
+def _get_item_spec_maker(
+    condition: ruleset_api_v1.rule_specs.HostAndItemCondition,
     localizer: Callable[[str], str],
-) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
-    if isinstance(to_convert, ruleset_api_v1.form_specs.basic.Text):
-        return _convert_to_legacy_text_input(to_convert, localizer)
-    if isinstance(to_convert, ruleset_api_v1.form_specs.basic.SingleChoice):
-        return _convert_to_legacy_dropdown_choice(to_convert, localizer)
+) -> Callable[
+    [],
+    legacy_valuespecs.TextInput
+    | legacy_valuespecs.DropdownChoice
+    | legacy_valuespecs.TextAreaUnicode
+    | legacy_valuespecs.FixedValue,
+]:
+    item_form_with_title = dataclasses.replace(condition.item_form, title=condition.item_title)
 
-    raise ValueError(to_convert)
+    match item_form_with_title:
+        case ruleset_api_v1.form_specs.basic.Text():
+            return partial(_convert_to_legacy_text_input, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.basic.SingleChoice():
+            return partial(_convert_to_legacy_dropdown_choice, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.basic.MultilineText():
+            return partial(_convert_to_legacy_text_area, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.basic.FixedValue():
+            return partial(_convert_to_legacy_fixed_value, item_form_with_title, localizer)
+        case other:
+            raise ValueError(other)
 
 
 _ValidateFuncType = TypeVar("_ValidateFuncType")

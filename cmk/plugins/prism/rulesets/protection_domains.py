@@ -5,7 +5,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import SingleChoice, SingleChoiceElement, Text
+from cmk.rulesets.v1.form_specs.basic import SingleChoice, SingleChoiceElement
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
@@ -36,5 +36,5 @@ rule_spec_prims_protection_domains = CheckParameters(
     title=Localizable("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,
     parameter_form=_parameter_form_prism_protection_domains,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Protection Domain"))),
+    condition=HostAndItemCondition(item_title=Localizable("Protection Domain")),
 )

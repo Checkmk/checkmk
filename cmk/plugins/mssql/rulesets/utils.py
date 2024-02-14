@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, validators
+from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
 
 
 def _migrate_alternative_to_dropdown(
@@ -54,11 +54,13 @@ def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
     )
 
 
-def mssql_item_spec_instance_tablespace() -> form_specs.basic.Text:
-    return form_specs.basic.Text(
-        title=Localizable("Instance & tablespace name"),
-        help_text=Localizable(
-            "The MSSQL instance name and the tablespace name separated by a space."
+def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
+    return rule_specs.HostAndItemCondition(
+        item_title=Localizable("Instance & tablespace name"),
+        item_form=form_specs.basic.Text(
+            help_text=Localizable(
+                "The MSSQL instance name and the tablespace name separated by a space."
+            ),
+            custom_validate=validators.DisallowEmpty(),
         ),
-        custom_validate=validators.DisallowEmpty(),
     )

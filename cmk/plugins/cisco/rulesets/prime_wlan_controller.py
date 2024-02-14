@@ -6,7 +6,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import Integer, Text, TimeSpan, TimeUnit
+from cmk.rulesets.v1.form_specs.basic import Integer, TimeSpan, TimeUnit
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, TupleDoNotUseWillbeRemoved
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
@@ -32,7 +32,7 @@ def _parameter_form_wlan_controllers_clients():
 rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
     name="cisco_prime_wlan_controller_clients",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Clients"))),
+    condition=HostAndItemCondition(item_title=Localizable("Clients")),
     parameter_form=_parameter_form_wlan_controllers_clients,
     title=Localizable("Cisco Prime WLAN Controller Clients"),
 )
@@ -57,7 +57,7 @@ def _parameter_form_wlan_controllers_access_points():
 rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
     name="cisco_prime_wlan_controller_access_points",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Access points"))),
+    condition=HostAndItemCondition(item_title=Localizable("Access points")),
     parameter_form=_parameter_form_wlan_controllers_access_points,
     title=Localizable("Cisco Prime WLAN Controller Access Points"),
 )
@@ -98,7 +98,7 @@ def _parameter_form_wlan_controllers_last_backup():
 rule_spec_cisco_prime_wlan_controller_last_backup = CheckParameters(
     name="cisco_prime_wlan_controller_last_backup",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Last backup"))),
+    condition=HostAndItemCondition(item_title=Localizable("Last backup")),
     parameter_form=_parameter_form_wlan_controllers_last_backup,
     title=Localizable("Cisco Prime WLAN Controller Last Backup"),
 )

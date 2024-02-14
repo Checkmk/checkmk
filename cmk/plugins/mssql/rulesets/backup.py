@@ -5,7 +5,7 @@
 import cmk.rulesets.v1.form_specs.basic
 from cmk.plugins.mssql.rulesets.utils import (
     fs_mssql_backup_age,
-    mssql_item_spec_instance_tablespace,
+    mssql_condition_instance_tablespace,
 )
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
@@ -73,5 +73,5 @@ rule_spec_mssql_backup = rule_specs.CheckParameters(
     title=Localizable("MSSQL Backup summary"),
     topic=rule_specs.Topic.APPLICATIONS,
     parameter_form=_parameter_formspec_mssql_backup,
-    condition=rule_specs.HostAndItemCondition(item_form=mssql_item_spec_instance_tablespace()),
+    condition=mssql_condition_instance_tablespace(),
 )

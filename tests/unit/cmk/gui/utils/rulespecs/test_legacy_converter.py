@@ -1029,7 +1029,7 @@ def test_convert_to_legacy_rulespec_group(
                     },
                 ),
                 condition=api_v1.rule_specs.HostAndItemCondition(
-                    item_form=api_v1.form_specs.basic.Text(title=api_v1.Localizable("item title"))
+                    item_title=api_v1.Localizable("item title")
                 ),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1096,7 +1096,7 @@ def test_convert_to_legacy_rulespec_group(
                     },
                 ),
                 condition=api_v1.rule_specs.HostAndItemCondition(
-                    item_form=api_v1.form_specs.basic.Text(title=api_v1.Localizable("item title"))
+                    item_title=api_v1.Localizable("item title")
                 ),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1105,7 +1105,10 @@ def test_convert_to_legacy_rulespec_group(
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(
-                    title=_("item title"), placeholder=""
+                    title=_("item title"),
+                    placeholder="",
+                    allow_empty=False,
+                    validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
                     elements=[
@@ -1123,7 +1126,7 @@ def test_convert_to_legacy_rulespec_group(
                 topic=api_v1.rule_specs.Topic.APPLICATIONS,
                 parameter_form=None,
                 condition=api_v1.rule_specs.HostAndItemCondition(
-                    item_form=api_v1.form_specs.basic.Text(title=api_v1.Localizable("item title"))
+                    item_title=api_v1.Localizable("item title")
                 ),
                 help_text=api_v1.Localizable("help text"),
             ),
@@ -1132,7 +1135,10 @@ def test_convert_to_legacy_rulespec_group(
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(
-                    title=_("item title"), placeholder=""
+                    title=_("item title"),
+                    placeholder="",
+                    allow_empty=False,
+                    validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=None,
                 match_type="dict",

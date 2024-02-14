@@ -200,10 +200,7 @@ rule_spec_alertmanager_rule_state = CheckParameters(
     parameter_form=_check_parameters_form_alertmanager,
     title=Localizable("Alertmanager rule states"),
     condition=HostAndItemCondition(
-        item_form=Text(
-            title=Localizable("Name of Alert rules/Alert rule groups"),
-            custom_validate=validators.DisallowEmpty(),
-        )
+        item_title=Localizable("Name of Alert rules/Alert rule groups"),
     ),
 )
 

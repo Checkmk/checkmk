@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import InputHint
-from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer, Text
+from cmk.rulesets.v1.form_specs.basic import BinaryUnit, DataSize, Float, Integer
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
@@ -141,5 +141,5 @@ rule_spec_rabbitmq_nodes_gc = CheckParameters(
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_rabbitmq_nodes_gc,
     title=Localizable("RabbitMQ nodes GC"),
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Node name"))),
+    condition=HostAndItemCondition(item_title=Localizable("Node name")),
 )

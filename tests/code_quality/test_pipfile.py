@@ -151,11 +151,11 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
 
 def iter_relevant_files(basepath: Path) -> Iterable[Path]:
     exclusions = (
-        basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
-        basepath / "packages",  # ignore all packages
-        basepath / "enterprise/core/src/test",  # test files
+        basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
+        basepath / "packages",  # ignore all packages
+        basepath / "tests",
     )
 
     for source_file_path in iter_sourcefiles(basepath):

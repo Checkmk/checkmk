@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import Any
+
 import pytest
 
 from tests.testlib.rest_api_client import ClientRegistry
@@ -555,7 +557,7 @@ def test_aggregation_state_filter_names_with_get_method(
             )
 
 
-def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:
+def create_bipack_get_partial_rule_test_data(clients: ClientRegistry) -> dict:
     clients.BiPack.create(
         pack_id="Labeltest",
         body={"title": "Test title", "contact_groups": [], "public": True},
@@ -570,45 +572,9 @@ def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:
                     "type": "service_search",
                     "conditions": {
                         "host_folder": "",
-                        "host_label_groups": [
-                            [
-                                "and",
-                                [
-                                    ["and", "mystery/switch:yes"],
-                                    ["or", "mystery/switch:no"],
-                                    ["and", ""],
-                                ],
-                            ],
-                            [
-                                "and",
-                                [
-                                    ["and", "network/primary:yes"],
-                                    ["not", "network/primary:no"],
-                                    ["and", ""],
-                                ],
-                            ],
-                        ],
                         "host_tags": {},
                         "host_choice": {"type": "all_hosts"},
                         "service_regex": "(.*)",
-                        "service_label_groups": [
-                            [
-                                "and",
-                                [
-                                    ["not", "network/stable:yes"],
-                                    ["and", "network/uplink:yes"],
-                                    ["and", ""],
-                                ],
-                            ],
-                            [
-                                "or",
-                                [
-                                    ["and", "network/stable:no"],
-                                    ["not", "network/uplink:no"],
-                                    ["and", ""],
-                                ],
-                            ],
-                        ],
                     },
                 },
                 "action": {"type": "state_of_service", "host_regex": "$1$", "service_regex": "$2$"},
@@ -628,10 +594,122 @@ def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:
     }
 
 
-def test_create_rule_with_label_groups(clients: ClientRegistry) -> None:
-    test_rule = create_bipack_get_rule_test_data(clients)
-    resp = clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_rule)
-    assert (
-        resp.json["nodes"][0]["search"]["conditions"]
-        == test_rule["nodes"][0]["search"]["conditions"]
-    )
+host_label_groups = [
+    ["and", [["and", "mystery/switch:yes"], ["or", "mystery/switch:no"]]],
+    ["and", [["and", "network/primary:yes"], ["not", "network/primary:no"]]],
+]
+service_label_groups = [
+    ["and", [["not", "network/stable:yes"], ["and", "network/uplink:yes"]]],
+    ["or", [["and", "network/stable:no"], ["not", "network/uplink:no"]]],
+]
+
+
+service_labels = {"network/stable": {"$ne": "yes"}, "network/uplink": "yes"}
+service_labels_response = [["and", [["not", "network/stable:yes"], ["and", "network/uplink:yes"]]]]
+
+host_labels = {"network/primary": "no", "mystery/switch": "yes"}
+host_labels_response = [["and", [["and", "network/primary:no"], ["and", "mystery/switch:yes"]]]]
+
+
+@pytest.mark.parametrize(
+    "condition_input, host_label_group_response, service_label_group_response",
+    [
+        (
+            {
+                "host_label_groups": host_label_groups,
+                "service_label_groups": service_label_groups,
+            },
+            host_label_groups,
+            service_label_groups,
+        ),
+        (
+            {
+                "host_label_groups": host_label_groups,
+                "service_labels": service_labels,
+            },
+            host_label_groups,
+            service_labels_response,
+        ),
+        (
+            {
+                "host_labels": host_labels,
+                "service_label_groups": service_label_groups,
+            },
+            host_labels_response,
+            service_label_groups,
+        ),
+        (
+            {
+                "host_labels": host_labels,
+                "service_labels": service_labels,
+            },
+            host_labels_response,
+            service_labels_response,
+        ),
+    ],
+    ids=[
+        "host_label_groups_&_service_label_groups",
+        "host_label_groups_&_service_labels",
+        "host_labels_&_service_label_groups",
+        "host_labels_&_service_labels",
+    ],
+)
+def test_create_rule_with_valid_labels_and_label_group_combos(
+    clients: ClientRegistry,
+    condition_input: dict[str, Any],
+    host_label_group_response: Any,
+    service_label_group_response: Any,
+) -> None:
+    test_data = create_bipack_get_partial_rule_test_data(clients)
+    test_data["nodes"][0]["search"]["conditions"].update(condition_input)
+    resp = clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_data)
+    conditions = resp.json["nodes"][0]["search"]["conditions"]
+    assert conditions["service_label_groups"] == service_label_group_response
+    assert conditions["host_label_groups"] == host_label_group_response
+
+
+@pytest.mark.parametrize(
+    "condition_input",
+    [
+        {
+            "host_label_groups": host_label_groups,
+            "service_label_groups": service_label_groups,
+            "service_labels": service_labels,
+        },
+        {
+            "host_label_groups": host_label_groups,
+            "service_label_groups": service_label_groups,
+            "host_labels": host_labels,
+        },
+        {
+            "host_label_groups": host_label_groups,
+        },
+        {
+            "service_label_groups": service_label_groups,
+        },
+        {
+            "host_labels": host_labels,
+        },
+        {
+            "service_labels": service_labels,
+        },
+    ],
+    ids=[
+        "service_label_groups_&_service_labels",
+        "host_label_groups_&_host_labels",
+        "only_host_label_groups",
+        "only_service_label_groups",
+        "only_host_labels",
+        "only_service_labels",
+    ],
+)
+def test_create_rule_with_invalid_labels_and_label_group_combos(
+    clients: ClientRegistry, condition_input: dict[str, Any]
+) -> None:
+    test_rule = create_bipack_get_partial_rule_test_data(clients)
+    test_rule["nodes"][0]["search"]["conditions"].update(condition_input)
+    clients.BiRule.create(
+        rule_id="label_test_rule_id_1",
+        body=test_rule,
+        expect_ok=False,
+    ).assert_status_code(400)

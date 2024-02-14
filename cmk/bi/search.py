@@ -8,13 +8,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from marshmallow import fields, post_dump, post_load, pre_dump, pre_load
+from marshmallow import fields, post_dump, post_load, pre_dump, pre_load, ValidationError
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import AndOrNotLiteral, LabelGroup
+from cmk.utils.labels import AndOrNotLiteral, LabelGroup, single_label_group_from_labels
 from cmk.utils.macros import MacroMapping
 
+from cmk import fields as cmk_fields
 from cmk.bi.lib import (
     ABCBISearch,
     ABCBISearcher,
@@ -104,24 +105,89 @@ class LabelGroupConditionSchema(Schema):
 
 class HostConditionsSchema(Schema):
     host_folder = ReqString(dump_default="", example="servers/groupA")
-    host_label_groups = ReqList(
+    host_label_groups = cmk_fields.List(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
+        description=(
+            "This is a required field but is not enforced, since we still allow our "
+            "legacy field 'host_labels for backward compatibility."
+        ),
         example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
     )
     host_tags = ReqDict(dump_default={}, example={})
     host_choice = ReqNested(
         BIHostChoice, dump_default={"type": "all_hosts"}, example={"type": "all_hosts"}
     )
+    host_labels = cmk_fields.Dict(
+        description=(
+            "Legacy style host labels will be converted to our new 'host_label_groups'. "
+            "This field is deprecated and will be removed in a future version. Use 'host_label_groups' instead."
+        ),
+        example={"network/primary": "no", "mystery/switch": "yes"},
+        metadata={"deprecated": True},
+    )
+
+    @pre_load
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        labels_or_groups = len({"host_label_groups", "host_labels"} & set(data.keys()))
+        if labels_or_groups == 2:
+            raise ValidationError(
+                "The fields 'host_label_groups' and 'host_labels' are mutually exclusive"
+            )
+
+        if labels_or_groups == 0:
+            raise ValidationError("{'host_label_groups': ['Missing data for required field.] }")
+
+        return data
+
+    @post_load
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        if (host_labels := data.pop("host_labels", None)) is not None:
+            data["host_label_groups"] = single_label_group_from_labels(host_labels)
+        return data
 
 
 class ServiceConditionsSchema(HostConditionsSchema):
     service_regex = ReqString(dump_default="", example="Filesystem.*")
-    service_label_groups = ReqList(
+    service_label_groups = cmk_fields.List(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
+        description=(
+            "This is a required field but is not enforced, since we still allow our "
+            "legacy field 'service_labels for backward compatibility."
+        ),
         example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
     )
+    service_labels = cmk_fields.Dict(
+        description=(
+            "Legacy style service labels will be converted to our new 'service_label_groups'. "
+            "This field is deprecated and will be removed in a future version. Use 'service_label_groups' instead."
+        ),
+        example={"network/stable": {"$ne": "yes"}, "network/uplink": "yes"},
+        metadata={"deprecated": True},
+    )
+
+    @pre_load
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        super()._pre_load(data, **kwargs)
+
+        labels_or_groups = len({"service_label_groups", "service_labels"} & set(data.keys()))
+        if labels_or_groups == 2:
+            raise ValidationError(
+                "The fields 'service_label_groups' and 'service_labels' are mutually exclusive"
+            )
+
+        if labels_or_groups == 0:
+            raise ValidationError("{'service_label_groups': ['Missing data for required field.] }")
+
+        return data
+
+    @post_load
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        super()._post_load(data, **kwargs)
+        if (service_labels := data.pop("service_labels", None)) is not None:
+            data["service_label_groups"] = single_label_group_from_labels(service_labels)
+        return data
 
 
 #   .--Empty---------------------------------------------------------------.

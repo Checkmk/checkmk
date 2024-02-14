@@ -17,7 +17,6 @@ def _parameter_form_mssql_backup_per_type():
 
 def _item_spec() -> form_specs.basic.Text:
     return form_specs.basic.Text(
-        title=Localizable("Instance, tablespace & backup type"),
         help_text=Localizable(
             "The MSSQL instance name, the tablespace name and the backup type, each separated "
             "by a space."
@@ -31,5 +30,7 @@ rule_spec_mssql_backup_per_type = rule_specs.CheckParameters(
     topic=rule_specs.Topic.APPLICATIONS,
     parameter_form=_parameter_form_mssql_backup_per_type,
     title=Localizable("MSSQL Backup"),
-    condition=rule_specs.HostAndItemCondition(item_form=_item_spec()),
+    condition=rule_specs.HostAndItemCondition(
+        item_title=Localizable("Instance, tablespace & backup type"), item_form=_item_spec()
+    ),
 )

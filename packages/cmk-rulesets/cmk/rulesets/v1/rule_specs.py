@@ -8,8 +8,10 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Localizable
+from .form_specs._base import FormSpec
 from .form_specs.basic import SingleChoice, Text
 from .form_specs.composed import Dictionary
+from .validators import DisallowEmpty
 
 
 class Topic(Enum):
@@ -51,22 +53,28 @@ class EvalType(Enum):
 
 @dataclass(frozen=True)
 class HostCondition:
-    ...
+    """Creates a condition that allows users to match the rule based on the host."""
 
 
 @dataclass(frozen=True)
 class HostAndServiceCondition:
-    ...
+    """Creates a condition that allows users to match the rule based on the host and the service
+    description."""
 
 
 @dataclass(frozen=True)
 class HostAndItemCondition:
-    """
+    """Creates a condition that allows users to match the rule based on the host and the item of the
+    service.
+
     Args:
-        item_form: Configuration specification for the item of the check
+        item_title: Title for the item of the service
+        item_form: Configuration specification for the item of the check.
+          By default, a text input field that disallows empty strings will be created.
     """
 
-    item_form: Text | SingleChoice
+    item_title: Localizable
+    item_form: FormSpec[str] = Text(custom_validate=DisallowEmpty())
 
 
 @dataclass(frozen=True)
@@ -172,8 +180,6 @@ class EnforcedService:
     help_text: Localizable | None = None
 
     def __post_init__(self) -> None:
-        if isinstance(self.condition, HostAndItemCondition):
-            assert isinstance(self.condition.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 

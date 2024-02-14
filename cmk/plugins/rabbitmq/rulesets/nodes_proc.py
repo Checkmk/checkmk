@@ -5,7 +5,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import Integer, Percentage, Text
+from cmk.rulesets.v1.form_specs.basic import Integer, Percentage
 from cmk.rulesets.v1.form_specs.composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -56,5 +56,5 @@ rule_spec_rabbitmq_nodes_proc = CheckParameters(
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_rabbitmq_nodes_proc,
     title=Localizable("RabbitMQ nodes processes"),
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Node name"))),
+    condition=HostAndItemCondition(item_title=Localizable("Node name")),
 )

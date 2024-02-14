@@ -5,7 +5,7 @@
 
 from cmk.rulesets.v1 import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import ServiceState, Text
+from cmk.rulesets.v1.form_specs.basic import ServiceState
 from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
@@ -27,5 +27,5 @@ rule_spec_mssql_instance = CheckParameters(
     title=Localizable("MSSQL Instance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_mssql_instance,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Instance identifier"))),
+    condition=HostAndItemCondition(item_title=Localizable("Instance identifier")),
 )

@@ -354,7 +354,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             site_id: cert
             for cert in sorted(
                 _load_cert(trusted_cas),
-                key=lambda cert: cert.not_valid_after,
+                key=lambda cert: cert.not_valid_after_utc,
             )
             if (
                 (cns := cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))

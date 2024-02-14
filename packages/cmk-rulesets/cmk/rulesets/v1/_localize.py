@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import enum
 from collections.abc import Callable
-from typing import assert_never
+from typing import assert_never, Self
 
 
 class _Operation(enum.Enum):
@@ -18,20 +18,22 @@ class _Operation(enum.Enum):
 
 class Localizable:
     """
-    Create a localizable string
+    Base class for creating a localizable string
 
-    The return type of this function marks its argument as "to be localized".
+    This class marks its argument as "to be localized".
     The actual localization is done later by the backend. For this to work,
-    the argument passed to this function needs to be present in the localization
-    file.
+    the argument passed to the constructor needs to be present in the localization file.
 
     Args:
-        string: The string to be localized.
+        arg: The string to be localized.
 
     Returns:
         An object that can later be translated by the backend.
 
     Examples:
+        Examples are given for the `Localizable` class, but they apply to all subclasses.
+        Instead of using `Localizable`, you should use one of the subclasses, such as
+        `Title`, `Label`, `Help` or `Message`.
 
         This is a simple use case:
 
@@ -58,10 +60,10 @@ class Localizable:
 
     def __init__(
         self,
-        arg: str | Localizable,
+        arg: str | Self,
         /,
         *,
-        modifier: tuple[_Operation, tuple[str | Localizable, ...]] | None = None,
+        modifier: tuple[_Operation, tuple[str | Self, ...]] | None = None,
     ) -> None:
         self._arg = arg
         self._modifier = modifier
@@ -92,13 +94,32 @@ class Localizable:
             case _:
                 assert_never(operation)
 
-    def __add__(self, other: Localizable) -> Localizable:
-        return Localizable(self, modifier=(_Operation.ADD, (other,)))
+    def __add__(self, other: Self) -> Self:
+        return self.__class__(self, modifier=(_Operation.ADD, (other,)))
 
-    def __mod__(self, other: str | Localizable | tuple[str | Localizable, ...]) -> Localizable:
-        return Localizable(
+    def __mod__(self, other: str | Self | tuple[str | Self, ...]) -> Self:
+        return self.__class__(
             self, modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
         )
 
-    def __rmod__(self, other: Localizable) -> Localizable:
-        return Localizable(other, modifier=(_Operation.MOD, (self,)))
+    def __rmod__(self, other: Self) -> Self:
+        return self.__class__(other, modifier=(_Operation.MOD, (self,)))
+
+
+class Title(Localizable):  # pylint: disable=too-few-public-methods
+    """Create a localizable title which shortly describes an element"""
+
+
+class Label(Localizable):  # pylint: disable=too-few-public-methods
+    """Create a localizable label which acts an extension of the input field with additional
+    information"""
+
+
+class Help(Localizable):  # pylint: disable=too-few-public-methods
+    """Create a localizable help text for more detailed descriptions which can contain more complex
+    formatting"""
+
+
+class Message(Localizable):  # pylint: disable=too-few-public-methods
+    """Create a localizable message which notifies the user during runtime, e.g. to clarify why a
+    validation has failed."""

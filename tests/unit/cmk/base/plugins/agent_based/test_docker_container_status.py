@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Callable, Mapping
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 import cmk.base.plugins.agent_based.docker_container_status as docker
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -22,7 +23,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.plugins.lib import uptime
 from cmk.plugins.lib.docker import AgentOutputMalformatted
 
-NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
     [
         "@docker_version_info",
@@ -246,7 +246,7 @@ def test_check_docker_container_status_uptime(
     section: docker.Section,
     expected_results: CheckResult,
 ) -> None:
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1559728800, tz=ZoneInfo("UTC"))):
         yielded_results = list(docker.check_docker_container_status_uptime(params, section, None))
         assert expected_results == yielded_results
 

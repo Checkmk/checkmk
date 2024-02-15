@@ -407,10 +407,10 @@ def _check_cmk_agent_update(
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
     if aghash := section.aghash:
-        yield Result(state=State.OK, notice=f"Agent configuration: {aghash[:8]}")
+        yield Result(state=State.OK, notice=f"Agent configuration: {aghash}")
 
     if pending := section.pending_hash:
-        yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
+        yield Result(state=State.OK, notice=f"Pending installation: {pending}")
 
     yield from _check_cmk_agent_update_certificates(section)
 

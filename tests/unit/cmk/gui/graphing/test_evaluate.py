@@ -12,6 +12,8 @@ from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 
 from cmk.graphing.v1 import metrics, perfometers, Title
 
+UNIT = metrics.Unit(metrics.DecimalNotation(""))
+
 
 def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
     return perfometers.Perfometer(
@@ -35,7 +37,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             ),
             metrics.Product(
                 Title("Title"),
-                metrics.Unit.COUNT,
+                UNIT,
                 metrics.Color.BLUE,
                 [
                     f"metric-name{start_idx+9}",
@@ -50,7 +52,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             ),
             metrics.Fraction(
                 Title("Title"),
-                metrics.Unit.COUNT,
+                UNIT,
                 metrics.Color.BLUE,
                 dividend=f"metric-name{start_idx+13}",
                 divisor=f"metric-name{start_idx+14}",
@@ -280,7 +282,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Constant(
                 Title("Title"),
-                metrics.Unit.COUNT,
+                UNIT,
                 metrics.Color.BLUE,
                 5.0,
             ),
@@ -436,7 +438,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Product(
                 Title("Title"),
-                metrics.Unit.COUNT,
+                UNIT,
                 metrics.Color.BLUE,
                 ["name1", "name2"],
             ),
@@ -520,7 +522,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Fraction(
                 Title("Title"),
-                metrics.Unit.COUNT,
+                UNIT,
                 metrics.Color.BLUE,
                 dividend="name1",
                 divisor="name2",

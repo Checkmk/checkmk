@@ -8,21 +8,19 @@ import pytest
 from cmk.graphing.v1 import metrics, Title
 
 
-def test_physical_unit_error() -> None:
-    title = Title("")
+def test_auto_precision_error() -> None:
     with pytest.raises(ValueError):
-        metrics.DecimalUnit(title, "")
+        metrics.AutoPrecision(-1)
 
 
-def test_scientific_unit_error() -> None:
-    title = Title("")
+def test_strict_precision_error() -> None:
     with pytest.raises(ValueError):
-        metrics.ScientificUnit(title, "")
+        metrics.StrictPrecision(-1)
 
 
 def test_metric_error_empty_name() -> None:
     title = Title("")
-    unit = metrics.Unit.COUNT
+    unit = metrics.Unit(metrics.DecimalNotation(""))
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
         metrics.Metric(name="", title=title, unit=unit, color=color)
@@ -65,13 +63,15 @@ def test_sum_error_segments_empty_name() -> None:
 
 def test_product_error_no_factors() -> None:
     title = Title("Title")
+    unit = metrics.Unit(metrics.DecimalNotation(""))
+    color = metrics.Color.BLUE
     with pytest.raises(AssertionError):
-        metrics.Product(title, metrics.Unit.COUNT, metrics.Color.BLUE, [])
+        metrics.Product(title, unit, color, [])
 
 
 def test_product_error_factors_empty_name() -> None:
     title = Title("Title")
-    unit = metrics.Unit.COUNT
+    unit = metrics.Unit(metrics.DecimalNotation(""))
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
         metrics.Product(title, unit, color, [""])
@@ -95,7 +95,7 @@ def test_difference_error_subtrahend_empty_name() -> None:
 
 def test_fraction_error_dividend_empty_name() -> None:
     title = Title("Title")
-    unit = metrics.Unit.COUNT
+    unit = metrics.Unit(metrics.DecimalNotation(""))
     color = metrics.Color.BLUE
     divisor = "divisor"
     with pytest.raises(ValueError):
@@ -104,7 +104,7 @@ def test_fraction_error_dividend_empty_name() -> None:
 
 def test_fraction_error_divisor_empty_name() -> None:
     title = Title("Title")
-    unit = metrics.Unit.COUNT
+    unit = metrics.Unit(metrics.DecimalNotation(""))
     color = metrics.Color.BLUE
     dividend = "dividend"
     with pytest.raises(ValueError):

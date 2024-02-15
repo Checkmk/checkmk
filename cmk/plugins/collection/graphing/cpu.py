@@ -5,24 +5,26 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
+UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
+
 metric_load1 = metrics.Metric(
     name="load1",
     title=Title("CPU load average of last minute"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_load5 = metrics.Metric(
     name="load5",
     title=Title("CPU load average of last 5 minutes"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.BLUE,
 )
 
 metric_load15 = metrics.Metric(
     name="load15",
     title=Title("CPU load average of last 15 minutes"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.DARK_BLUE,
 )
 

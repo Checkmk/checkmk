@@ -34,6 +34,7 @@ from tests.testlib.utils import (
 import livestatus
 
 import cmk.utils.caching
+import cmk.utils.crypto.password_hashing
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.redis as redis

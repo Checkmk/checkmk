@@ -5,23 +5,23 @@
 
 import pytest
 
-from cmk.graphing.v1 import Localizable, metrics
+from cmk.graphing.v1 import metrics, Title
 
 
 def test_physical_unit_error() -> None:
-    title = Localizable("")
+    title = Title("")
     with pytest.raises(ValueError):
         metrics.DecimalUnit(title, "")
 
 
 def test_scientific_unit_error() -> None:
-    title = Localizable("")
+    title = Title("")
     with pytest.raises(ValueError):
         metrics.ScientificUnit(title, "")
 
 
 def test_metric_error_empty_name() -> None:
-    title = Localizable("")
+    title = Title("")
     unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
@@ -51,26 +51,26 @@ def test_maximum_of_error_empty_name() -> None:
 
 
 def test_sum_error_no_summands() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     with pytest.raises(AssertionError):
         metrics.Sum(title, metrics.Color.BLUE, [])
 
 
 def test_sum_error_segments_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
         metrics.Sum(title, color, [""])
 
 
 def test_product_error_no_factors() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     with pytest.raises(AssertionError):
         metrics.Product(title, metrics.Unit.COUNT, metrics.Color.BLUE, [])
 
 
 def test_product_error_factors_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
@@ -78,7 +78,7 @@ def test_product_error_factors_empty_name() -> None:
 
 
 def test_difference_error_minuend_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     color = metrics.Color.BLUE
     subtrahend = "subtrahend"
     with pytest.raises(ValueError):
@@ -86,7 +86,7 @@ def test_difference_error_minuend_empty_name() -> None:
 
 
 def test_difference_error_subtrahend_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     color = metrics.Color.BLUE
     minuend = "minuend"
     with pytest.raises(ValueError):
@@ -94,7 +94,7 @@ def test_difference_error_subtrahend_empty_name() -> None:
 
 
 def test_fraction_error_dividend_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     divisor = "divisor"
@@ -103,7 +103,7 @@ def test_fraction_error_dividend_empty_name() -> None:
 
 
 def test_fraction_error_divisor_empty_name() -> None:
-    title = Localizable("Title")
+    title = Title("Title")
     unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     dividend = "dividend"

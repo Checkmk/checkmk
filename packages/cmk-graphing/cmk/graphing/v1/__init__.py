@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from . import graphs, metrics, perfometers, translations
-from ._localize import Localizable
+from ._localize import Title
 
 __all__ = [
     "graphs",
     "metrics",
     "perfometers",
     "translations",
-    "Localizable",
+    "Title",
 ]

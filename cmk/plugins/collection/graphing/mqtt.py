@@ -5,115 +5,120 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
+UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
+UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("1/s"))
+UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
+UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
+
 metric_connections_opened_received_rate = metrics.Metric(
     name="connections_opened_received_rate",
     title=Title("Connections opened"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )
 
 metric_subscriptions = metrics.Metric(
     name="subscriptions",
     title=Title("Current subscriptions"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
 
 metric_clients_connected = metrics.Metric(
     name="clients_connected",
     title=Title("Clients connected"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.PURPLE,
 )
 
 metric_clients_maximum = metrics.Metric(
     name="clients_maximum",
     title=Title("Clients maximum"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.ORANGE,
 )
 
 metric_clients_total = metrics.Metric(
     name="clients_total",
     title=Title("Clients total"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.YELLOW,
 )
 
 metric_bytes_received_rate = metrics.Metric(
     name="bytes_received_rate",
     title=Title("Bytes received"),
-    unit=metrics.Unit.BYTES_IEC_PER_SECOND,
+    unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 
 metric_bytes_sent_rate = metrics.Metric(
     name="bytes_sent_rate",
     title=Title("Bytes sent"),
-    unit=metrics.Unit.BYTES_IEC_PER_SECOND,
+    unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 
 metric_messages_received_rate = metrics.Metric(
     name="messages_received_rate",
     title=Title("Messages received"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 
 metric_messages_sent_rate = metrics.Metric(
     name="messages_sent_rate",
     title=Title("Messages sent"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 
 metric_publish_bytes_received_rate = metrics.Metric(
     name="publish_bytes_received_rate",
     title=Title("PUBLISH messages: Bytes received"),
-    unit=metrics.Unit.BYTES_IEC_PER_SECOND,
+    unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 
 metric_publish_bytes_sent_rate = metrics.Metric(
     name="publish_bytes_sent_rate",
     title=Title("PUBLISH messages: Bytes sent"),
-    unit=metrics.Unit.BYTES_IEC_PER_SECOND,
+    unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 
 metric_publish_messages_received_rate = metrics.Metric(
     name="publish_messages_received_rate",
     title=Title("PUBLISH messages received"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 
 metric_publish_messages_sent_rate = metrics.Metric(
     name="publish_messages_sent_rate",
     title=Title("PUBLISH messages sent"),
-    unit=metrics.Unit.PER_SECOND,
+    unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 
 metric_retained_messages = metrics.Metric(
     name="retained_messages",
     title=Title("Retained messages"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.PURPLE,
 )
 
 metric_stored_messages = metrics.Metric(
     name="stored_messages",
     title=Title("Stored messages"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.ORANGE,
 )
 
 metric_stored_messages_bytes = metrics.Metric(
     name="stored_messages_bytes",
     title=Title("Size of stored messages"),
-    unit=metrics.Unit.BYTE_IEC,
+    unit=UNIT_BYTES,
     color=metrics.Color.YELLOW,
 )
 

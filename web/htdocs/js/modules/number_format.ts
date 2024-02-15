@@ -264,3 +264,376 @@ export function partitionableDomain(
 //console.assert(comp_array(partitionableDomain([18, 2], 4, domainIntervals()), [0, 20, 5]));
 //console.assert(comp_array(partitionableDomain([25, 2], 5, domainIntervals("binary")), [0, 32, 8]));
 //console.assert(comp_array(partitionableDomain([NaN, 2], 2, domainIntervals("binary")), [0, 2, 2]));
+
+export class AutoPrecision {
+    digits: number;
+
+    constructor(digits: number) {
+        this.digits = digits;
+    }
+}
+
+export class StrictPrecision {
+    digits: number;
+
+    constructor(digits: number) {
+        this.digits = digits;
+    }
+}
+
+interface Formatter {
+    format_zero_or_one(value: number): string;
+    format_small_number(value: number): string;
+    format_large_number(value: number): string;
+}
+
+function rstrip(value: string, chars: string): string {
+    let end = value.length - 1;
+    while (chars.indexOf(value[end]) >= 0) {
+        end -= 1;
+    }
+    return value.substr(0, end + 1);
+}
+
+function sanitize(value: string): string {
+    value = rstrip(value, "0");
+    return rstrip(value, ".");
+}
+
+function apply_small_auto_precision(value: number, digits: number): string {
+    const exponent = Math.abs(Math.ceil(Math.log10(value)));
+    if (exponent > 0) {
+        digits = Math.max(exponent + 1, digits);
+    }
+    return value.toPrecision(digits);
+}
+
+class CoefficientFormatter implements Formatter {
+    precision: AutoPrecision | StrictPrecision;
+
+    constructor(precision: AutoPrecision | StrictPrecision) {
+        this.precision = precision;
+    }
+
+    format_zero_or_one(value: number): string {
+        return String(value);
+    }
+
+    format_small_number(value: number): string {
+        let value_with_precision: string;
+        switch (this.precision.constructor) {
+            case AutoPrecision:
+                value_with_precision = apply_small_auto_precision(
+                    value,
+                    this.precision.digits
+                );
+                break;
+            case StrictPrecision:
+                value_with_precision = value.toPrecision(this.precision.digits);
+                break;
+            default:
+                throw new Error();
+        }
+        return sanitize(value_with_precision);
+    }
+
+    format_large_number(value: number): string {
+        let value_with_precision: string;
+        switch (this.precision.constructor) {
+            case AutoPrecision: {
+                const value_floor = Math.floor(value);
+                if (value == value_floor) {
+                    value_with_precision = String(value);
+                } else {
+                    value_with_precision = String(
+                        value_floor +
+                            apply_small_auto_precision(
+                                value - value_floor,
+                                this.precision.digits
+                            )
+                    );
+                }
+                break;
+            }
+            case StrictPrecision:
+                value_with_precision = value.toPrecision(this.precision.digits);
+                break;
+            default:
+                throw new Error();
+        }
+        return sanitize(value_with_precision);
+    }
+}
+
+class Preformatted {
+    coefficient: number;
+    suffix: string;
+
+    constructor(coefficient: number, suffix: string) {
+        this.coefficient = coefficient;
+        this.suffix = suffix;
+    }
+}
+
+interface preformat_number {
+    (value: number, symbol: string): Preformatted;
+}
+
+export class NotationFormatter {
+    symbol: string;
+    preformat_small_number: preformat_number;
+    preformat_large_number: preformat_number;
+    coefficient_formatter: CoefficientFormatter;
+
+    constructor(
+        symbol: string,
+        precision: AutoPrecision | StrictPrecision,
+        preformat_small_number: preformat_number,
+        preformat_large_number: preformat_number
+    ) {
+        this.symbol = symbol;
+        this.coefficient_formatter = new CoefficientFormatter(precision);
+        this.preformat_small_number = preformat_small_number;
+        this.preformat_large_number = preformat_large_number;
+    }
+
+    format_zero_or_one(value: number): string {
+        return String(value) + " " + this.symbol;
+    }
+
+    format_small_number(value: number): string {
+        const formatted = this.preformat_small_number(value, this.symbol);
+        return (
+            render(formatted.coefficient, this.coefficient_formatter) +
+            formatted.suffix
+        );
+    }
+
+    format_large_number(value: number): string {
+        const formatted = this.preformat_large_number(value, this.symbol);
+        return (
+            render(formatted.coefficient, this.coefficient_formatter) +
+            formatted.suffix
+        );
+    }
+}
+
+export function preformat_number(value: number, symbol: string): Preformatted {
+    return new Preformatted(value, " " + symbol);
+}
+
+export function si_preformat_small_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value)) - 1;
+    let factor: number;
+    let prefix: string;
+    if (exponent <= -24) {
+        factor = Math.pow(1000, 8);
+        prefix = "y";
+    } else if (exponent <= -21) {
+        factor = Math.pow(1000, 7);
+        prefix = "z";
+    } else if (exponent <= -18) {
+        factor = Math.pow(1000, 6);
+        prefix = "a";
+    } else if (exponent <= -15) {
+        factor = Math.pow(1000, 5);
+        prefix = "f";
+    } else if (exponent <= -12) {
+        factor = Math.pow(1000, 4);
+        prefix = "p";
+    } else if (exponent <= -9) {
+        factor = Math.pow(1000, 3);
+        prefix = "n";
+    } else if (exponent <= -6) {
+        factor = Math.pow(1000, 2);
+        prefix = "μ";
+    } else if (exponent <= -3) {
+        factor = 1000;
+        prefix = "m";
+    } else {
+        factor = 1;
+        prefix = "";
+    }
+    return new Preformatted(value * factor, " " + prefix + symbol);
+}
+
+export function si_preformat_large_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value));
+    let factor: number;
+    let prefix: string;
+    if (exponent >= 24) {
+        factor = Math.pow(1000, 8);
+        prefix = "Y";
+    } else if (exponent >= 21) {
+        factor = Math.pow(1000, 7);
+        prefix = "Z";
+    } else if (exponent >= 18) {
+        factor = Math.pow(1000, 6);
+        prefix = "E";
+    } else if (exponent >= 15) {
+        factor = Math.pow(1000, 5);
+        prefix = "P";
+    } else if (exponent >= 12) {
+        factor = Math.pow(1000, 4);
+        prefix = "T";
+    } else if (exponent >= 9) {
+        factor = Math.pow(1000, 3);
+        prefix = "G";
+    } else if (exponent >= 6) {
+        factor = Math.pow(1000, 2);
+        prefix = "M";
+    } else if (exponent >= 3) {
+        factor = 1000;
+        prefix = "k";
+    } else {
+        factor = 1;
+        prefix = "";
+    }
+    return new Preformatted(value / factor, " " + prefix + symbol);
+}
+
+export function iec_preformat_large_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log2(value));
+    let factor: number;
+    let prefix: string;
+    if (exponent >= 80) {
+        factor = Math.pow(1024, 8);
+        prefix = "Yi";
+    } else if (exponent >= 70) {
+        factor = Math.pow(1024, 7);
+        prefix = "Zi";
+    } else if (exponent >= 60) {
+        factor = Math.pow(1024, 6);
+        prefix = "Ei";
+    } else if (exponent >= 50) {
+        factor = Math.pow(1024, 5);
+        prefix = "Pi";
+    } else if (exponent >= 40) {
+        factor = Math.pow(1024, 4);
+        prefix = "Ti";
+    } else if (exponent >= 30) {
+        factor = Math.pow(1024, 3);
+        prefix = "Gi";
+    } else if (exponent >= 20) {
+        factor = Math.pow(1024, 2);
+        prefix = "Mi";
+    } else if (exponent >= 10) {
+        factor = 1024;
+        prefix = "Ki";
+    } else {
+        factor = 1;
+        prefix = "";
+    }
+    return new Preformatted(value / factor, " " + prefix + symbol);
+}
+
+export function standard_scientific_preformat_small_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value));
+    return new Preformatted(
+        value / Math.pow(10, exponent),
+        "e" + exponent + " " + symbol
+    );
+}
+
+export function standard_scientific_preformat_large_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value));
+    return new Preformatted(
+        value / Math.pow(10, exponent),
+        "e+" + exponent + " " + symbol
+    );
+}
+
+export function engineering_scientific_preformat_small_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value) / 3) * 3;
+    return new Preformatted(
+        value / Math.pow(10, exponent),
+        "e" + exponent + " " + symbol
+    );
+}
+
+export function engineering_scientific_preformat_large_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(10000) / 3) * 3;
+    return new Preformatted(
+        value / Math.pow(10, exponent),
+        "e+" + exponent + " " + symbol
+    );
+}
+
+export function time_preformat_small_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    const exponent = Math.floor(Math.log10(value)) - 1;
+    let factor: number;
+    if (exponent <= -6) {
+        factor = Math.pow(1000, 2);
+        symbol = "µs";
+    } else if (exponent <= -3) {
+        factor = 1000;
+        symbol = "ms";
+    } else {
+        factor = 1;
+        symbol = "s";
+    }
+    return new Preformatted(value * factor, " " + symbol);
+}
+
+const _ONE_DAY = 86400;
+const _ONE_HOUR = 3600;
+const _ONE_MINUTE = 60;
+
+export function time_preformat_large_number(
+    value: number,
+    symbol: string
+): Preformatted {
+    let factor: number;
+    if (value >= _ONE_DAY) {
+        factor = _ONE_DAY;
+        symbol = "d";
+    } else if (value >= _ONE_HOUR) {
+        factor = _ONE_HOUR;
+        symbol = "h";
+    } else if (value >= _ONE_MINUTE) {
+        factor = _ONE_MINUTE;
+        symbol = "min";
+    } else {
+        factor = 1;
+        symbol = "s";
+    }
+    return new Preformatted(value / factor, " " + symbol);
+}
+
+export function render(value: number, formatter: Formatter): string {
+    if (value < 0) {
+        return "-" + render(Math.abs(value), formatter);
+    }
+    if ([0, 1].includes(value)) {
+        return formatter.format_zero_or_one(value).trim();
+    }
+    if (value < 1) {
+        return formatter.format_small_number(value).trim();
+    }
+    // value > 1
+    return formatter.format_large_number(value).trim();
+}

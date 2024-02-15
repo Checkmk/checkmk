@@ -49,7 +49,7 @@ from ._expression import (
     WarningOf,
 )
 from ._loader import load_graphing_plugins
-from ._parser import parse_color, parse_unit
+from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
     LineType,
@@ -174,13 +174,6 @@ def _parse_raw_graph_range(
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
 
 
-def _parse_or_add_unit(unit: metrics.Unit | metrics.DecimalUnit | metrics.ScientificUnit) -> str:
-    unit_name = unit.name if isinstance(unit, metrics.Unit) else unit.symbol
-    if unit_name not in set(unit_info.keys()):
-        unit_info[unit_name] = parse_unit(unit)
-    return unit_name
-
-
 def _parse_quantity(
     quantity: (
         str
@@ -207,7 +200,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -260,7 +253,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -281,7 +274,7 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_name=_parse_or_add_unit(quantity.unit),
+                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -608,7 +601,7 @@ def add_graphing_plugins(
         if isinstance(plugin, metrics.Metric):
             metric_info[MetricName(plugin.name)] = {
                 "title": plugin.title.localize(_),
-                "unit": _parse_or_add_unit(plugin.unit),
+                "unit": parse_or_add_unit(plugin.unit).name,
                 "color": parse_color(plugin.color),
             }
 

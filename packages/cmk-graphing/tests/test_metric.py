@@ -5,12 +5,24 @@
 
 import pytest
 
-from cmk.graphing.v1 import Localizable, metrics, Unit
+from cmk.graphing.v1 import Localizable, metrics
+
+
+def test_physical_unit_error() -> None:
+    title = Localizable("")
+    with pytest.raises(ValueError):
+        metrics.DecimalUnit(title, "")
+
+
+def test_scientific_unit_error() -> None:
+    title = Localizable("")
+    with pytest.raises(ValueError):
+        metrics.ScientificUnit(title, "")
 
 
 def test_metric_error_empty_name() -> None:
     title = Localizable("")
-    unit = Unit.COUNT
+    unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
         metrics.Metric(name="", title=title, unit=unit, color=color)
@@ -54,12 +66,12 @@ def test_sum_error_segments_empty_name() -> None:
 def test_product_error_no_factors() -> None:
     title = Localizable("Title")
     with pytest.raises(AssertionError):
-        metrics.Product(title, Unit.COUNT, metrics.Color.BLUE, [])
+        metrics.Product(title, metrics.Unit.COUNT, metrics.Color.BLUE, [])
 
 
 def test_product_error_factors_empty_name() -> None:
     title = Localizable("Title")
-    unit = Unit.COUNT
+    unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     with pytest.raises(ValueError):
         metrics.Product(title, unit, color, [""])
@@ -83,7 +95,7 @@ def test_difference_error_subtrahend_empty_name() -> None:
 
 def test_fraction_error_dividend_empty_name() -> None:
     title = Localizable("Title")
-    unit = Unit.COUNT
+    unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     divisor = "divisor"
     with pytest.raises(ValueError):
@@ -92,7 +104,7 @@ def test_fraction_error_dividend_empty_name() -> None:
 
 def test_fraction_error_divisor_empty_name() -> None:
     title = Localizable("Title")
-    unit = Unit.COUNT
+    unit = metrics.Unit.COUNT
     color = metrics.Color.BLUE
     dividend = "dividend"
     with pytest.raises(ValueError):

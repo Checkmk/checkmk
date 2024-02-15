@@ -29,15 +29,7 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
-from cmk.graphing.v1 import (
-    DecimalUnit,
-    graphs,
-    metrics,
-    perfometers,
-    ScientificUnit,
-    translations,
-    Unit,
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._expression import (
@@ -182,8 +174,8 @@ def _parse_raw_graph_range(
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
 
 
-def _parse_or_add_unit(unit: Unit | DecimalUnit | ScientificUnit) -> str:
-    unit_name = unit.name if isinstance(unit, Unit) else unit.symbol
+def _parse_or_add_unit(unit: metrics.Unit | metrics.DecimalUnit | metrics.ScientificUnit) -> str:
+    unit_name = unit.name if isinstance(unit, metrics.Unit) else unit.symbol
     if unit_name not in set(unit_info.keys()):
         unit_info[unit_name] = parse_unit(unit)
     return unit_name

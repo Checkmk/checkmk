@@ -1,0 +1,12 @@
+Title: netapp_ontap_info: enhanced presentation of NetApp system information
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1707991443
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+The version and hardware information for a NetApp system was only displayed for the first retrieved node.
+
+With this werk we now display information for each retrieved node.

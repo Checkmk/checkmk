@@ -526,8 +526,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
         Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
-        Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
-        Result(state=State.OK, notice="Pending installation: 1234abcd"),
+        Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
+        Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
     ]
 
 

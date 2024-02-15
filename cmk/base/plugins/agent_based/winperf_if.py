@@ -185,11 +185,17 @@ def _filter_out_deprecated_plugin_lines(
     return native_agent_data, found_windows_if, found_mk_dhcp_enabled
 
 
-def parse_winperf_if(string_table: StringTable) -> SectionCounters:
-    agent_timestamp = None
-    raw_nic_names: Sequence[str] = []
-    agent_section: dict[str, Line] = {}
+def _is_first_line(line: Sequence[str]) -> bool:
+    """
+    Return true if the line[0] is a float, meaning timestamp.
 
+    All other variants are assumed as malformed input.
+    """
+    # counter can.t contain dot in the name
+    return "." in line[0]
+
+
+def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     # There used to be only a single winperf_if-section which contained both the native agent data
     # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
     # we still handle this case by filtering out the plugin data and advising the user to update
@@ -200,11 +206,12 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
+    agent_timestamp = None
+    raw_nic_names: Sequence[str] = []
+    agent_section: dict[str, Line] = {}
+
     for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
-        if len(line) in (2, 3) and not line[-1].endswith("count"):
-            # Do not consider lines containing counters:
-            # ['-122', '38840302775', 'bulk_count']
-            # ['10', '10000000000', 'large_rawcount']
+        if _is_first_line(line):
             agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
                 line,
                 lines,

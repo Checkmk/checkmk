@@ -237,6 +237,7 @@ def _if_attributes(
                 ["1090", "0", "bulk_count"],
                 ["1092", "0", "bulk_count"],
                 ["1094", "0", "large_rawcount"],
+                ["2002", "1", "text"],
             ],
             SectionCounters(
                 timestamp=1630928323.48,

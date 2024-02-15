@@ -5,24 +5,30 @@
 
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue
+from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
 from cmk.rulesets.v1.form_specs.basic import Integer, TimeMagnitude, TimeSpan
-from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, TupleDoNotUseWillbeRemoved
+from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
+from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels, LevelsConfigModel
+from cmk.rulesets.v1.migrations import (
+    migrate_to_upper_float_levels,
+    migrate_to_upper_integer_levels,
+)
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 _DAY = 24 * 3600
 
 
-def _parameter_form_wlan_controllers_clients():
+def _parameter_form_wlan_controllers_clients() -> Dictionary:
     return Dictionary(
         elements={
-            "clients": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
+            "clients": DictElement[LevelsConfigModel[int]](
+                parameter_form=Levels[int](
                     title=Localizable("Maximum number of clients"),
-                    elements=[
-                        Integer(title=Localizable("Warning at")),
-                        Integer(title=Localizable("Critical at")),
-                    ],
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    predictive=None,
+                    migrate=migrate_to_upper_integer_levels,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             )
         },
@@ -38,16 +44,17 @@ rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
 )
 
 
-def _parameter_form_wlan_controllers_access_points():
+def _parameter_form_wlan_controllers_access_points() -> Dictionary:
     return Dictionary(
         elements={
-            "access_points": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
+            "access_points": DictElement[LevelsConfigModel[int]](
+                parameter_form=Levels[int](
                     title=Localizable("Maximum number of access points"),
-                    elements=[
-                        Integer(title=Localizable("Warning at")),
-                        Integer(title=Localizable("Critical at")),
-                    ],
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    predictive=None,
+                    migrate=migrate_to_upper_integer_levels,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             ),
         },
@@ -63,32 +70,23 @@ rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
 )
 
 
-def _parameter_form_wlan_controllers_last_backup():
+def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
     return Dictionary(
         elements={
-            "last_backup": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
+            "last_backup": DictElement[LevelsConfigModel[float]](
+                parameter_form=Levels[float](
                     title=Localizable("Time since last backup"),
-                    elements=[
-                        TimeSpan(
-                            title=Localizable("Warning at"),
-                            displayed_magnitudes=[
-                                TimeMagnitude.DAY,
-                                TimeMagnitude.HOUR,
-                                TimeMagnitude.MINUTE,
-                            ],
-                            prefill=DefaultValue(7 * _DAY),
-                        ),
-                        TimeSpan(
-                            title=Localizable("Critical at"),
-                            displayed_magnitudes=[
-                                TimeMagnitude.DAY,
-                                TimeMagnitude.HOUR,
-                                TimeMagnitude.MINUTE,
-                            ],
-                            prefill=DefaultValue(30 * _DAY),
-                        ),
-                    ],
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                        ],
+                    ),
+                    prefill_fixed_levels=DefaultValue((7 * _DAY, 30 * _DAY)),
+                    predictive=None,
+                    migrate=migrate_to_upper_float_levels,
                 ),
             )
         },

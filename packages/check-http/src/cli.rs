@@ -177,7 +177,7 @@ pub struct Cli {
     /// Expected HTTP status code.
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
     #[arg(short = 'e', long)]
-    pub status_code: Option<StatusCode>,
+    pub status_code: Vec<StatusCode>,
 
     /// Use TLS version for HTTPS requests.
     /// Not relevant for HTTP connections without TLS.

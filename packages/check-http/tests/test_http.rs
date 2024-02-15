@@ -95,7 +95,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
         },
         CheckParameters {
             onredirect: OnRedirect::Follow,
-            status_code: None,
+            status_code: vec![],
             page_size: None,
             response_time_levels: None,
             document_age_levels: None,

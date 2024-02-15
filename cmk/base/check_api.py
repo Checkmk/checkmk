@@ -119,6 +119,11 @@ def get_percent_human_readable(value: float) -> str:
     return _v1.render.percent(value)
 
 
+# kept in 2.3 to not break adsl_line.1.4.0.mkp
+def get_nic_speed_human_readable(value: float) -> str:
+    return _v1.render.nicspeed(value)
+
+
 def get_age_human_readable(seconds: float) -> str:
     return _v1.render.timespan(seconds) if seconds >= 0 else f"-{_v1.render.timespan(-seconds)}"
 

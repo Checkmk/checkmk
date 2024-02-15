@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 
-from cmk.graphing.v1 import Color, Localizable, metrics, perfometers, Unit
+from cmk.graphing.v1 import Localizable, metrics, perfometers, Unit
 
 
 def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
@@ -23,11 +23,11 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
         segments=[
             metrics.WarningOf(f"metric-name{start_idx+3}"),
             metrics.CriticalOf(f"metric-name{start_idx+4}"),
-            metrics.MinimumOf(f"metric-name{start_idx+5}", Color.BLUE),
-            metrics.MaximumOf(f"metric-name{start_idx+6}", Color.BLUE),
+            metrics.MinimumOf(f"metric-name{start_idx+5}", metrics.Color.BLUE),
+            metrics.MaximumOf(f"metric-name{start_idx+6}", metrics.Color.BLUE),
             metrics.Sum(
                 Localizable("Title"),
-                Color.BLUE,
+                metrics.Color.BLUE,
                 [
                     f"metric-name{start_idx+7}",
                     f"metric-name{start_idx+8}",
@@ -36,7 +36,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             metrics.Product(
                 Localizable("Title"),
                 Unit.COUNT,
-                Color.BLUE,
+                metrics.Color.BLUE,
                 [
                     f"metric-name{start_idx+9}",
                     f"metric-name{start_idx+10}",
@@ -44,14 +44,14 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             ),
             metrics.Difference(
                 Localizable("Title"),
-                Color.BLUE,
+                metrics.Color.BLUE,
                 minuend=f"metric-name{start_idx+11}",
                 subtrahend=f"metric-name{start_idx+12}",
             ),
             metrics.Fraction(
                 Localizable("Title"),
                 Unit.COUNT,
-                Color.BLUE,
+                metrics.Color.BLUE,
                 dividend=f"metric-name{start_idx+13}",
                 divisor=f"metric-name{start_idx+14}",
             ),
@@ -281,7 +281,7 @@ def test_perfometer_matches(
             metrics.Constant(
                 Localizable("Title"),
                 Unit.COUNT,
-                Color.BLUE,
+                metrics.Color.BLUE,
                 5.0,
             ),
             {
@@ -349,7 +349,7 @@ def test_perfometer_matches(
             id="metrics.CriticalOf",
         ),
         pytest.param(
-            metrics.MinimumOf("name", Color.BLUE),
+            metrics.MinimumOf("name", metrics.Color.BLUE),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -371,7 +371,7 @@ def test_perfometer_matches(
             id="metrics.MinimumOf",
         ),
         pytest.param(
-            metrics.MaximumOf("name", Color.BLUE),
+            metrics.MaximumOf("name", metrics.Color.BLUE),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -395,7 +395,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Sum(
                 Localizable("Title"),
-                Color.BLUE,
+                metrics.Color.BLUE,
                 ["name1", "name2"],
             ),
             {
@@ -437,7 +437,7 @@ def test_perfometer_matches(
             metrics.Product(
                 Localizable("Title"),
                 Unit.COUNT,
-                Color.BLUE,
+                metrics.Color.BLUE,
                 ["name1", "name2"],
             ),
             {
@@ -478,7 +478,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Difference(
                 Localizable("Title"),
-                Color.BLUE,
+                metrics.Color.BLUE,
                 minuend="name1",
                 subtrahend="name2",
             ),
@@ -521,7 +521,7 @@ def test_perfometer_matches(
             metrics.Fraction(
                 Localizable("Title"),
                 Unit.COUNT,
-                Color.BLUE,
+                metrics.Color.BLUE,
                 dividend="name1",
                 divisor="name2",
             ),

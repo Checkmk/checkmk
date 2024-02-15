@@ -7,12 +7,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
+from enum import auto, Enum
 
-from ._color import Color
 from ._localize import Localizable
 from ._unit import DecimalUnit, ScientificUnit, Unit
 
 __all__ = [
+    "Color",
     "Metric",
     "Constant",
     "WarningOf",
@@ -24,6 +25,51 @@ __all__ = [
     "Difference",
     "Fraction",
 ]
+
+
+class Color(Enum):
+    LIGHT_RED = auto()
+    RED = auto()
+    DARK_RED = auto()
+
+    LIGHT_ORANGE = auto()
+    ORANGE = auto()
+    DARK_ORANGE = auto()
+
+    LIGHT_YELLOW = auto()
+    YELLOW = auto()
+    DARK_YELLOW = auto()
+
+    LIGHT_GREEN = auto()
+    GREEN = auto()
+    DARK_GREEN = auto()
+
+    LIGHT_BLUE = auto()
+    BLUE = auto()
+    DARK_BLUE = auto()
+
+    LIGHT_CYAN = auto()
+    CYAN = auto()
+    DARK_CYAN = auto()
+
+    LIGHT_PURPLE = auto()
+    PURPLE = auto()
+    DARK_PURPLE = auto()
+
+    LIGHT_PINK = auto()
+    PINK = auto()
+    DARK_PINK = auto()
+
+    LIGHT_BROWN = auto()
+    BROWN = auto()
+    DARK_BROWN = auto()
+
+    LIGHT_GRAY = auto()
+    GRAY = auto()
+    DARK_GRAY = auto()
+
+    BLACK = auto()
+    WHITE = auto()
 
 
 @dataclass(frozen=True, kw_only=True)

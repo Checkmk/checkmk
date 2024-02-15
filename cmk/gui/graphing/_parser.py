@@ -9,7 +9,7 @@ import cmk.utils.render as render
 
 from cmk.gui.i18n import _
 
-from cmk.graphing.v1 import Color, DecimalUnit, ScientificUnit, Unit
+from cmk.graphing.v1 import DecimalUnit, metrics, ScientificUnit, Unit
 
 from ._type_defs import UnitInfo
 
@@ -483,84 +483,84 @@ class RGB:
     blue: int
 
 
-def color_to_rgb(color: Color) -> RGB:
+def color_to_rgb(color: metrics.Color) -> RGB:
     match color:
-        case Color.LIGHT_RED:
+        case metrics.Color.LIGHT_RED:
             return RGB(255, 51, 51)
-        case Color.RED:
+        case metrics.Color.RED:
             return RGB(204, 0, 0)
-        case Color.DARK_RED:
+        case metrics.Color.DARK_RED:
             return RGB(122, 0, 0)
 
-        case Color.LIGHT_ORANGE:
+        case metrics.Color.LIGHT_ORANGE:
             return RGB(255, 163, 71)
-        case Color.ORANGE:
+        case metrics.Color.ORANGE:
             return RGB(255, 127, 0)
-        case Color.DARK_ORANGE:
+        case metrics.Color.DARK_ORANGE:
             return RGB(204, 102, 0)
 
-        case Color.LIGHT_YELLOW:
+        case metrics.Color.LIGHT_YELLOW:
             return RGB(255, 255, 112)
-        case Color.YELLOW:
+        case metrics.Color.YELLOW:
             return RGB(245, 245, 0)
-        case Color.DARK_YELLOW:
+        case metrics.Color.DARK_YELLOW:
             return RGB(204, 204, 0)
 
-        case Color.LIGHT_GREEN:
+        case metrics.Color.LIGHT_GREEN:
             return RGB(112, 255, 112)
-        case Color.GREEN:
+        case metrics.Color.GREEN:
             return RGB(0, 255, 0)
-        case Color.DARK_GREEN:
+        case metrics.Color.DARK_GREEN:
             return RGB(0, 143, 0)
 
-        case Color.LIGHT_BLUE:
+        case metrics.Color.LIGHT_BLUE:
             return RGB(71, 71, 255)
-        case Color.BLUE:
+        case metrics.Color.BLUE:
             return RGB(0, 0, 255)
-        case Color.DARK_BLUE:
+        case metrics.Color.DARK_BLUE:
             return RGB(0, 0, 163)
 
-        case Color.LIGHT_CYAN:
+        case metrics.Color.LIGHT_CYAN:
             return RGB(153, 255, 255)
-        case Color.CYAN:
+        case metrics.Color.CYAN:
             return RGB(0, 255, 255)
-        case Color.DARK_CYAN:
+        case metrics.Color.DARK_CYAN:
             return RGB(0, 184, 184)
 
-        case Color.LIGHT_PURPLE:
+        case metrics.Color.LIGHT_PURPLE:
             return RGB(163, 71, 255)
-        case Color.PURPLE:
+        case metrics.Color.PURPLE:
             return RGB(127, 0, 255)
-        case Color.DARK_PURPLE:
+        case metrics.Color.DARK_PURPLE:
             return RGB(82, 0, 163)
 
-        case Color.LIGHT_PINK:
+        case metrics.Color.LIGHT_PINK:
             return RGB(255, 214, 220)
-        case Color.PINK:
+        case metrics.Color.PINK:
             return RGB(255, 192, 203)
-        case Color.DARK_PINK:
+        case metrics.Color.DARK_PINK:
             return RGB(255, 153, 170)
 
-        case Color.LIGHT_BROWN:
+        case metrics.Color.LIGHT_BROWN:
             return RGB(184, 92, 0)
-        case Color.BROWN:
+        case metrics.Color.BROWN:
             return RGB(143, 71, 0)
-        case Color.DARK_BROWN:
+        case metrics.Color.DARK_BROWN:
             return RGB(102, 51, 0)
 
-        case Color.LIGHT_GRAY:
+        case metrics.Color.LIGHT_GRAY:
             return RGB(153, 153, 153)
-        case Color.GRAY:
+        case metrics.Color.GRAY:
             return RGB(127, 127, 127)
-        case Color.DARK_GRAY:
+        case metrics.Color.DARK_GRAY:
             return RGB(92, 92, 92)
 
-        case Color.BLACK:
+        case metrics.Color.BLACK:
             return RGB(0, 0, 0)
-        case Color.WHITE:
+        case metrics.Color.WHITE:
             return RGB(255, 255, 255)
 
 
-def parse_color(color: Color) -> str:
+def parse_color(color: metrics.Color) -> str:
     rgb = color_to_rgb(color)
     return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

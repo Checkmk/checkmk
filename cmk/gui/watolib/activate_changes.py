@@ -2608,13 +2608,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     local_dir=paths.local_optional_packages_dir,
                     shipped_dir=paths.optional_packages_dir,
                 ),
-                {
-                    mkp_tool.PackagePart.EC_RULE_PACKS: mkp_tool.PackageOperationCallbacks(
-                        install=ec.install_packaged_rule_packs,
-                        release=ec.release_packaged_rule_packs,
-                        uninstall=ec.uninstall_packaged_rule_packs,
-                    )
-                },
+                ec.mkp_callbacks(),
                 version.__version__,
                 parse_version=version.parse_check_mk_version,
             )

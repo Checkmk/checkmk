@@ -23,8 +23,6 @@ from cmk.mkp_tool import (
     make_post_package_change_actions,
     Manifest,
     PackageID,
-    PackageOperationCallbacks,
-    PackagePart,
     PackageStore,
     PathConfig,
     reload_apache,
@@ -57,14 +55,7 @@ def get_path_config() -> PathConfig:
     )
 
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
-    ),
-}
-
+_CALLBACKS: Final = ec.mkp_callbacks()
 
 PACKAGE_STORE = PackageStore(
     enabled_dir=paths.local_enabled_packages_dir,

@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 
-from cmk.graphing.v1 import Localizable, metrics, perfometers, Unit
+from cmk.graphing.v1 import Localizable, metrics, perfometers
 
 
 def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
@@ -35,7 +35,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             ),
             metrics.Product(
                 Localizable("Title"),
-                Unit.COUNT,
+                metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 [
                     f"metric-name{start_idx+9}",
@@ -50,7 +50,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             ),
             metrics.Fraction(
                 Localizable("Title"),
-                Unit.COUNT,
+                metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 dividend=f"metric-name{start_idx+13}",
                 divisor=f"metric-name{start_idx+14}",
@@ -280,7 +280,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Constant(
                 Localizable("Title"),
-                Unit.COUNT,
+                metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 5.0,
             ),
@@ -436,7 +436,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Product(
                 Localizable("Title"),
-                Unit.COUNT,
+                metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 ["name1", "name2"],
             ),
@@ -520,7 +520,7 @@ def test_perfometer_matches(
         pytest.param(
             metrics.Fraction(
                 Localizable("Title"),
-                Unit.COUNT,
+                metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 dividend="name1",
                 divisor="name2",

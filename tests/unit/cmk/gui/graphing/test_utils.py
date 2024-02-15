@@ -39,7 +39,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from cmk.graphing.v1 import graphs, Localizable, metrics, Unit
+from cmk.graphing.v1 import graphs, Localizable, metrics
 
 
 @pytest.mark.parametrize(
@@ -1335,7 +1335,9 @@ def test_graph_template_from_template(
                 title=Localizable("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(Localizable("Constant"), Unit.COUNT, metrics.Color.BLUE, 10),
+                    metrics.Constant(
+                        Localizable("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10
+                    ),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
@@ -1347,7 +1349,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Product(
                         Localizable("Product"),
-                        Unit.COUNT,
+                        metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
@@ -1359,7 +1361,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Fraction(
                         Localizable("Fraction"),
-                        Unit.COUNT,
+                        metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
@@ -1474,7 +1476,9 @@ def test_graph_template_from_template(
                 title=Localizable("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(Localizable("Constant"), Unit.COUNT, metrics.Color.BLUE, 10),
+                    metrics.Constant(
+                        Localizable("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10
+                    ),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
@@ -1486,7 +1490,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Product(
                         Localizable("Product"),
-                        Unit.COUNT,
+                        metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
@@ -1498,7 +1502,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Fraction(
                         Localizable("Fraction"),
-                        Unit.COUNT,
+                        metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",

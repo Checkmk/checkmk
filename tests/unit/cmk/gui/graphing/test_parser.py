@@ -7,320 +7,320 @@ import pytest
 
 from cmk.gui.graphing._parser import parse_unit
 
-from cmk.graphing.v1 import DecimalUnit, Localizable, ScientificUnit, Unit
+from cmk.graphing.v1 import Localizable, metrics
 
 
 @pytest.mark.parametrize(
     "unit, expected_symbol",
     [
         pytest.param(
-            Unit.BAR,
+            metrics.Unit.BAR,
             "bar",
             id="BAR",
         ),
         pytest.param(
-            Unit.BIT_IEC,
+            metrics.Unit.BIT_IEC,
             "bits",
             id="BIT_IEC",
         ),
         pytest.param(
-            Unit.BITS_IEC_PER_SECOND,
+            metrics.Unit.BITS_IEC_PER_SECOND,
             "bits/s",
             id="BITS_IEC_PER_SECOND,",
         ),
         pytest.param(
-            Unit.BIT_SI,
+            metrics.Unit.BIT_SI,
             "bits",
             id="BIT_SI",
         ),
         pytest.param(
-            Unit.BITS_SI_PER_SECOND,
+            metrics.Unit.BITS_SI_PER_SECOND,
             "bits/s",
             id="BITS_SI_PER_SECOND",
         ),
         pytest.param(
-            Unit.BYTE_IEC,
+            metrics.Unit.BYTE_IEC,
             "bytes",
             id="BYTE_IEC",
         ),
         pytest.param(
-            Unit.BYTES_IEC_PER_DAY,
+            metrics.Unit.BYTES_IEC_PER_DAY,
             "bytes/d",
             id="BYTES_IEC_PER_DAY",
         ),
         pytest.param(
-            Unit.BYTES_IEC_PER_OPERATION,
+            metrics.Unit.BYTES_IEC_PER_OPERATION,
             "bytes/op",
             id="BYTES_IEC_PER_OPERATION",
         ),
         pytest.param(
-            Unit.BYTES_IEC_PER_SECOND,
+            metrics.Unit.BYTES_IEC_PER_SECOND,
             "bytes/s",
             id="BYTES_IEC_PER_SECOND",
         ),
         pytest.param(
-            Unit.BYTE_SI,
+            metrics.Unit.BYTE_SI,
             "bytes",
             id="BYTE_SI",
         ),
         pytest.param(
-            Unit.BYTES_SI_PER_DAY,
+            metrics.Unit.BYTES_SI_PER_DAY,
             "bytes/d",
             id="BYTES_SI_PER_DAY",
         ),
         pytest.param(
-            Unit.BYTES_SI_PER_OPERATION,
+            metrics.Unit.BYTES_SI_PER_OPERATION,
             "bytes/op",
             id="BYTES_SI_PER_OPERATION",
         ),
         pytest.param(
-            Unit.BYTES_SI_PER_SECOND,
+            metrics.Unit.BYTES_SI_PER_SECOND,
             "bytes/s",
             id="BYTES_SI_PER_SECOND",
         ),
         pytest.param(
-            Unit.COUNT,
+            metrics.Unit.COUNT,
             "",
             id="COUNT",
         ),
         pytest.param(
-            Unit.DECIBEL,
+            metrics.Unit.DECIBEL,
             "dB",
             id="DECIBEL",
         ),
         pytest.param(
-            Unit.DECIBEL_MILLIVOLT,
+            metrics.Unit.DECIBEL_MILLIVOLT,
             "dBmV",
             id="DECIBEL_MILLIVOLT",
         ),
         pytest.param(
-            Unit.DECIBEL_MILLIWATT,
+            metrics.Unit.DECIBEL_MILLIWATT,
             "dBm",
             id="DECIBEL_MILLIWATT",
         ),
         pytest.param(
-            Unit.DOLLAR,
+            metrics.Unit.DOLLAR,
             "$",
             id="DOLLAR",
         ),
         pytest.param(
-            Unit.ELETRICAL_ENERGY,
+            metrics.Unit.ELETRICAL_ENERGY,
             "Wh",
             id="ELETRICAL_ENERGY",
         ),
         pytest.param(
-            Unit.EURO,
+            metrics.Unit.EURO,
             "€",
             id="EURO",
         ),
         pytest.param(
-            Unit.LITER_PER_SECOND,
+            metrics.Unit.LITER_PER_SECOND,
             "l/s",
             id="LITER_PER_SECOND",
         ),
         pytest.param(
-            Unit.NUMBER,
+            metrics.Unit.NUMBER,
             "",
             id="NUMBER",
         ),
         pytest.param(
-            Unit.PARTS_PER_MILLION,
+            metrics.Unit.PARTS_PER_MILLION,
             "ppm",
             id="PARTS_PER_MILLION",
         ),
         pytest.param(
-            Unit.PERCENTAGE,
+            metrics.Unit.PERCENTAGE,
             "%",
             id="PERCENTAGE",
         ),
         pytest.param(
-            Unit.PERCENTAGE_PER_METER,
+            metrics.Unit.PERCENTAGE_PER_METER,
             "%/m",
             id="PERCENTAGE_PER_METER",
         ),
         pytest.param(
-            Unit.PER_SECOND,
+            metrics.Unit.PER_SECOND,
             "1/s",
             id="PER_SECOND",
         ),
         pytest.param(
-            Unit.READ_CAPACITY_UNIT,
+            metrics.Unit.READ_CAPACITY_UNIT,
             "RCU",
             id="READ_CAPACITY_UNIT",
         ),
         pytest.param(
-            Unit.REVOLUTIONS_PER_MINUTE,
+            metrics.Unit.REVOLUTIONS_PER_MINUTE,
             "rpm",
             id="REVOLUTIONS_PER_MINUTE",
         ),
         pytest.param(
-            Unit.SECONDS_PER_SECOND,
+            metrics.Unit.SECONDS_PER_SECOND,
             "s/s",
             id="SECONDS_PER_SECOND",
         ),
         pytest.param(
-            Unit.VOLT_AMPERE,
+            metrics.Unit.VOLT_AMPERE,
             "VA",
             id="VOLT_AMPERE",
         ),
         pytest.param(
-            Unit.WRITE_CAPACITY_UNIT,
+            metrics.Unit.WRITE_CAPACITY_UNIT,
             "WCU",
             id="WRITE_CAPACITY_UNIT",
         ),
         pytest.param(
-            Unit.AMPERE,
+            metrics.Unit.AMPERE,
             "A",
             id="AMPERE",
         ),
         pytest.param(
-            Unit.CANDELA,
+            metrics.Unit.CANDELA,
             "cd",
             id="CANDELA",
         ),
         pytest.param(
-            Unit.KELVIN,
+            metrics.Unit.KELVIN,
             "K",
             id="KELVIN",
         ),
         pytest.param(
-            Unit.KILOGRAM,
+            metrics.Unit.KILOGRAM,
             "kg",
             id="KILOGRAM",
         ),
         pytest.param(
-            Unit.METRE,
+            metrics.Unit.METRE,
             "m",
             id="METRE",
         ),
         pytest.param(
-            Unit.MOLE,
+            metrics.Unit.MOLE,
             "mol",
             id="MOLE",
         ),
         pytest.param(
-            Unit.SECOND,
+            metrics.Unit.SECOND,
             "s",
             id="SECOND",
         ),
         pytest.param(
-            Unit.BECQUEREL,
+            metrics.Unit.BECQUEREL,
             "Bq",
             id="BECQUEREL",
         ),
         pytest.param(
-            Unit.COULOMB,
+            metrics.Unit.COULOMB,
             "C",
             id="COULOMB",
         ),
         pytest.param(
-            Unit.DEGREE_CELSIUS,
+            metrics.Unit.DEGREE_CELSIUS,
             "°C",
             id="DEGREE_CELSIUS",
         ),
         pytest.param(
-            Unit.FARAD,
+            metrics.Unit.FARAD,
             "F",
             id="FARAD",
         ),
         pytest.param(
-            Unit.GRAY,
+            metrics.Unit.GRAY,
             "Gy",
             id="GRAY",
         ),
         pytest.param(
-            Unit.HENRY,
+            metrics.Unit.HENRY,
             "H",
             id="HENRY",
         ),
         pytest.param(
-            Unit.HERTZ,
+            metrics.Unit.HERTZ,
             "Hz",
             id="HERTZ",
         ),
         pytest.param(
-            Unit.JOULE,
+            metrics.Unit.JOULE,
             "J",
             id="JOULE",
         ),
         pytest.param(
-            Unit.KATAL,
+            metrics.Unit.KATAL,
             "kat",
             id="KATAL",
         ),
         pytest.param(
-            Unit.LUMEN,
+            metrics.Unit.LUMEN,
             "lm",
             id="LUMEN",
         ),
         pytest.param(
-            Unit.LUX,
+            metrics.Unit.LUX,
             "lx",
             id="LUX",
         ),
         pytest.param(
-            Unit.NEWTON,
+            metrics.Unit.NEWTON,
             "N",
             id="NEWTON",
         ),
         pytest.param(
-            Unit.OHM,
+            metrics.Unit.OHM,
             "Ω",
             id="OHM",
         ),
         pytest.param(
-            Unit.PASCAL,
+            metrics.Unit.PASCAL,
             "Pa",
             id="PASCAL",
         ),
         pytest.param(
-            Unit.RADIAN,
+            metrics.Unit.RADIAN,
             "rad",
             id="RADIAN",
         ),
         pytest.param(
-            Unit.SIEMENS,
+            metrics.Unit.SIEMENS,
             "S",
             id="SIEMENS",
         ),
         pytest.param(
-            Unit.SIEVERT,
+            metrics.Unit.SIEVERT,
             "Sv",
             id="SIEVERT",
         ),
         pytest.param(
-            Unit.STERADIAN,
+            metrics.Unit.STERADIAN,
             "sr",
             id="STERADIAN",
         ),
         pytest.param(
-            Unit.TESLA,
+            metrics.Unit.TESLA,
             "T",
             id="TESLA",
         ),
         pytest.param(
-            Unit.VOLT,
+            metrics.Unit.VOLT,
             "V",
             id="VOLT",
         ),
         pytest.param(
-            Unit.WATT,
+            metrics.Unit.WATT,
             "W",
             id="WATT",
         ),
         pytest.param(
-            Unit.WEBER,
+            metrics.Unit.WEBER,
             "Wb",
             id="WEBER",
         ),
     ],
 )
-def test_parse_unit(unit: Unit, expected_symbol: str) -> None:
+def test_parse_unit(unit: metrics.Unit, expected_symbol: str) -> None:
     assert parse_unit(unit)["symbol"] == expected_symbol
 
 
 def test_parse_physical_unit() -> None:
-    unit_info = parse_unit(DecimalUnit(Localizable("Title"), "symbol"))
+    unit_info = parse_unit(metrics.DecimalUnit(Localizable("Title"), "symbol"))
     assert unit_info["title"] == "Title"
     assert unit_info["symbol"] == "symbol"
     assert unit_info["render"](0.00024) == "240 µsymbol"
@@ -328,7 +328,7 @@ def test_parse_physical_unit() -> None:
 
 
 def test_parse_scientific_unit() -> None:
-    unit_info = parse_unit(ScientificUnit(Localizable("Title"), "symbol"))
+    unit_info = parse_unit(metrics.ScientificUnit(Localizable("Title"), "symbol"))
     assert unit_info["title"] == "Title"
     assert unit_info["symbol"] == "symbol"
     assert unit_info["render"](0.00024) == "2.40e-4 symbol"

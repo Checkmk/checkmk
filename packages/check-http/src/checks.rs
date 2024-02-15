@@ -20,7 +20,7 @@ use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 pub struct CheckParameters {
     pub onredirect: OnRedirect,
-    pub status_code: Option<StatusCode>,
+    pub status_code: Vec<StatusCode>,
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
@@ -119,7 +119,7 @@ fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
 fn check_status(
     status: StatusCode,
     version: Version,
-    expected_status: Option<StatusCode>,
+    accepted_statuses: Vec<StatusCode>,
 ) -> Vec<Option<CheckResult>> {
     fn default_statuscode_state(status: StatusCode) -> State {
         if status.is_client_error() {
@@ -131,15 +131,27 @@ fn check_status(
         }
     }
 
-    let (state, status_text) = expected_status
-        .map(|exp_status| {
-            if status == exp_status {
-                (State::Ok, String::new())
+    let (state, status_text) = if accepted_statuses.is_empty() {
+        (default_statuscode_state(status), String::new())
+    } else if accepted_statuses.contains(&status) {
+        (State::Ok, String::new())
+    } else {
+        (
+            State::Crit,
+            if accepted_statuses.len() == 1 {
+                format!(" (expected {})", accepted_statuses[0])
             } else {
-                (State::Crit, format!(" (expected {})", exp_status))
-            }
-        })
-        .unwrap_or((default_statuscode_state(status), String::new()));
+                format!(
+                    " (expected one of [{}])",
+                    accepted_statuses
+                        .iter()
+                        .map(|st| st.as_u16().to_string())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                )
+            },
+        )
+    };
 
     let text = format!("{:?} {}{}", version, status, status_text);
     vec![
@@ -344,13 +356,15 @@ fn check_certificate(
 
 #[cfg(test)]
 mod test_check_status {
+    use std::vec;
+
     use super::*;
     use reqwest::{StatusCode, Version};
 
     #[test]
     fn test_success_unchecked() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, None)
+            check_status(StatusCode::OK, Version::HTTP_11, vec![])
                 == vec![
                     CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
                     CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
@@ -361,7 +375,7 @@ mod test_check_status {
     #[test]
     fn test_client_error_unchecked() {
         assert!(
-            check_status(StatusCode::EXPECTATION_FAILED, Version::HTTP_11, None)
+            check_status(StatusCode::EXPECTATION_FAILED, Version::HTTP_11, vec![])
                 == vec![
                     CheckResult::summary(State::Warn, "HTTP/1.1 417 Expectation Failed"),
                     CheckResult::details(State::Warn, "HTTP/1.1 417 Expectation Failed"),
@@ -372,7 +386,7 @@ mod test_check_status {
     #[test]
     fn test_server_error_unchecked() {
         assert!(
-            check_status(StatusCode::INTERNAL_SERVER_ERROR, Version::HTTP_11, None)
+            check_status(StatusCode::INTERNAL_SERVER_ERROR, Version::HTTP_11, vec![])
                 == vec![
                     CheckResult::summary(State::Crit, "HTTP/1.1 500 Internal Server Error"),
                     CheckResult::details(State::Crit, "HTTP/1.1 500 Internal Server Error"),
@@ -383,7 +397,7 @@ mod test_check_status {
     #[test]
     fn test_success_checked_ok() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, Some(StatusCode::OK))
+            check_status(StatusCode::OK, Version::HTTP_11, vec![StatusCode::OK])
                 == vec![
                     CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
                     CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
@@ -394,11 +408,25 @@ mod test_check_status {
     #[test]
     fn test_success_checked_not_ok() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, Some(StatusCode::IM_USED))
+            check_status(StatusCode::OK, Version::HTTP_11, vec![StatusCode::IM_USED])
                 == vec![
                     CheckResult::summary(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
                     CheckResult::details(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
                 ]
+        )
+    }
+
+    #[test]
+    fn test_success_checked_multiple_not_ok() {
+        assert!(
+            check_status(
+                StatusCode::OK,
+                Version::HTTP_11,
+                vec![StatusCode::ACCEPTED, StatusCode::IM_USED]
+            ) == vec![
+                CheckResult::summary(State::Crit, "HTTP/1.1 200 OK (expected one of [202 226])"),
+                CheckResult::details(State::Crit, "HTTP/1.1 200 OK (expected one of [202 226])"),
+            ]
         )
     }
 
@@ -408,7 +436,7 @@ mod test_check_status {
             check_status(
                 StatusCode::IM_A_TEAPOT,
                 Version::HTTP_11,
-                Some(StatusCode::IM_A_TEAPOT)
+                vec![StatusCode::IM_A_TEAPOT]
             ) == vec![
                 CheckResult::summary(State::Ok, "HTTP/1.1 418 I'm a teapot"),
                 CheckResult::details(State::Ok, "HTTP/1.1 418 I'm a teapot"),

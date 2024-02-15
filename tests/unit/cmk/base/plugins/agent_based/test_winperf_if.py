@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from enum import auto, Enum, StrEnum
+from typing import Final
 
 import pytest
 
@@ -25,9 +27,147 @@ from cmk.base.plugins.agent_based.winperf_if import (
     TeamingData,
 )
 
+
+class Names(StrEnum):
+    IBM_USB_2 = "IBM USB Remote NDIS Network Device 2"
+    INTEL_I350 = "Intel[R] I350 Gigabit Network Connection"
+    INTEL_I350_2 = "Intel[R] I350 Gigabit Network Connection 2"
+    INTEL_I350_3 = "Intel[R] I350 Gigabit Network Connection 3"
+    INTEL_I350_4 = "Intel[R] I350 Gigabit Network Connection 4"
+    INTEL_PRO = "Intel[R] PRO 1000 MT Desktop Adapter"
+    QLOGIC = "QLogic 1 10GbE Server Adapter"
+    QLOGIC_2 = "QLogic 1 10GbE Server Adapter 2"
+    INTEL_NDC = "Intel[R] Gigabit 4P I350-t rNDC"
+    INTEL_NDC_2 = "Intel[R] Gigabit 4P I350-t rNDC 2"
+    INTEL_NDC_3 = "Intel[R] Gigabit 4P I350-t rNDC 3"
+    INTEL_NDC_4 = "Intel[R] Gigabit 4P I350-t rNDC 4"
+    INTEL_X520 = "Intel[R] Ethernet 10G 2P X520 Adapter"
+    INTEL_X520_2 = "Intel[R] Ethernet 10G 2P X520 Adapter 2"
+    INTEL_X520_3 = "Intel[R] Ethernet 10G 2P X520 Adapter 3"
+    INTEL_X520_4 = "Intel[R] Ethernet 10G 2P X520 Adapter 4"
+    ISATAP_A4 = "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}"
+    ISATAP_4F = "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}"
+    ISATAP_01 = "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}"
+    ISATAP_16 = "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}"
+    ISATAP_7A = "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}"
+    NIN = "isatap.corp.nintendo.eu"
+
+
 from cmk.plugins.lib import interfaces
 
 from .utils_inventory import sort_inventory_result
+
+_counters: Final[dict[Names, interfaces.Counters]] = {
+    Names.INTEL_PRO: interfaces.Counters(
+        in_octets=60023498,
+        in_ucast=42348,
+        in_bcast=685,
+        in_disc=0,
+        in_err=0,
+        out_octets=1363362,
+        out_ucast=5771,
+        out_bcast=126,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.IBM_USB_2: interfaces.Counters(
+        in_octets=293841578,
+        in_ucast=3089007,
+        in_bcast=9289,
+        in_disc=0,
+        in_err=0,
+        out_octets=329096662,
+        out_ucast=3089008,
+        out_bcast=600757,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.QLOGIC_2: interfaces.Counters(
+        in_octets=6273480850,
+        in_ucast=5756369,
+        in_bcast=592918,
+        in_disc=0,
+        in_err=0,
+        out_octets=2628728624,
+        out_ucast=4625712,
+        out_bcast=14776,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.QLOGIC: interfaces.Counters(
+        in_octets=20846807,
+        in_ucast=18266,
+        in_bcast=836,
+        in_disc=0,
+        in_err=0,
+        out_octets=3088856,
+        out_ucast=8741,
+        out_bcast=106,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.INTEL_NDC: interfaces.Counters(
+        in_octets=168300731,
+        in_ucast=5438,
+        in_bcast=2340274,
+        in_disc=0,
+        in_err=0,
+        out_octets=8385014,
+        out_ucast=3614,
+        out_bcast=65262,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.INTEL_X520: interfaces.Counters(
+        in_octets=2568258242370,
+        in_ucast=3012412853,
+        in_bcast=7601145,
+        in_disc=1566,
+        in_err=0,
+        out_octets=2787714307906,
+        out_ucast=2922261424,
+        out_bcast=442474,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.INTEL_X520_2: interfaces.Counters(
+        in_octets=410232131549,
+        in_ucast=376555354,
+        in_bcast=225288,
+        in_disc=0,
+        in_err=0,
+        out_octets=1171662236873,
+        out_ucast=833538016,
+        out_bcast=63489,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.INTEL_X520_3: interfaces.Counters(
+        in_octets=271891678,
+        in_ucast=0,
+        in_bcast=3033012,
+        in_disc=0,
+        in_err=0,
+        out_octets=0,
+        out_ucast=0,
+        out_bcast=0,
+        out_disc=0,
+        out_err=0,
+    ),
+    Names.INTEL_X520_4: interfaces.Counters(
+        in_octets=145209040,
+        in_ucast=0,
+        in_bcast=2099072,
+        in_disc=0,
+        in_err=0,
+        out_octets=0,
+        out_ucast=0,
+        out_bcast=0,
+        out_disc=0,
+        out_err=0,
+    ),
+}
+
 
 null_counters = interfaces.Counters(
     in_octets=0,
@@ -43,9 +183,16 @@ null_counters = interfaces.Counters(
 )
 
 
-def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attributes:
+class Mode(Enum):
+    UP = auto()
+    CONN = auto()
+
+
+def _if_attributes(
+    index: int, name: str, speed: int, mode: Mode = Mode.UP
+) -> interfaces.Attributes:
     return interfaces.Attributes(
-        index=index,
+        index=str(index),
         descr=name,
         alias=name,
         type="6",
@@ -53,7 +200,7 @@ def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attribute
         oper_status="1",
         out_qlen=0,
         phys_address="",
-        oper_status_name="up",
+        oper_status_name="up" if mode is Mode.UP else "Connected",
         speed_as_text="",
         group=None,
         node=None,
@@ -94,22 +241,9 @@ def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attribute
             SectionCounters(
                 timestamp=1630928323.48,
                 interfaces={
-                    "Intel[R] PRO 1000 MT Desktop Adapter": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "1", name="Intel[R] PRO 1000 MT Desktop Adapter", speed=1000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=60023498,
-                            in_ucast=42348,
-                            in_bcast=685,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=1363362,
-                            out_ucast=5771,
-                            out_bcast=126,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_PRO: interfaces.InterfaceWithCounters(
+                        _if_attributes(1, Names.INTEL_PRO, 1000000000),
+                        _counters[Names.INTEL_PRO],
                     ),
                 },
                 found_windows_if=False,
@@ -160,22 +294,9 @@ def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attribute
             SectionCounters(
                 timestamp=1630928323.48,
                 interfaces={
-                    "Intel[R] PRO 1000 MT Desktop Adapter": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "1", name="Intel[R] PRO 1000 MT Desktop Adapter", speed=1000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=60023498,
-                            in_ucast=42348,
-                            in_bcast=685,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=1363362,
-                            out_ucast=5771,
-                            out_bcast=126,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_PRO: interfaces.InterfaceWithCounters(
+                        _if_attributes(1, Names.INTEL_PRO, 1000000000),
+                        _counters[Names.INTEL_PRO],
                     ),
                 },
                 found_windows_if=False,
@@ -285,91 +406,40 @@ def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attribute
             SectionCounters(
                 timestamp=1425370325.75,
                 interfaces={
-                    "QLogic 1 10GbE Server Adapter 2": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "1", name="QLogic 1 10GbE Server Adapter 2", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=6273480850,
-                            in_ucast=5756369,
-                            in_bcast=592918,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=2628728624,
-                            out_ucast=4625712,
-                            out_bcast=14776,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.QLOGIC_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(1, Names.QLOGIC_2, 10000000000),
+                        _counters[Names.QLOGIC_2],
                     ),
-                    "QLogic 1 10GbE Server Adapter": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "2", name="QLogic 1 10GbE Server Adapter", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=20846807,
-                            in_ucast=18266,
-                            in_bcast=836,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=3088856,
-                            out_ucast=8741,
-                            out_bcast=106,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.QLOGIC: interfaces.InterfaceWithCounters(
+                        _if_attributes(2, Names.QLOGIC, 10000000000),
+                        _counters[Names.QLOGIC],
                     ),
-                    "Intel[R] I350 Gigabit Network Connection": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "3", name="Intel[R] I350 Gigabit Network Connection", speed=0
-                        ),
+                    Names.INTEL_I350: interfaces.InterfaceWithCounters(
+                        _if_attributes(3, Names.INTEL_I350, 0),
                         null_counters,
                     ),
-                    "Intel[R] I350 Gigabit Network Connection 2": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "4", name="Intel[R] I350 Gigabit Network Connection 2", speed=0
-                        ),
+                    Names.INTEL_I350_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(4, Names.INTEL_I350_2, 0),
                         null_counters,
                     ),
-                    "Intel[R] I350 Gigabit Network Connection 3": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "5", name="Intel[R] I350 Gigabit Network Connection 3", speed=0
-                        ),
+                    Names.INTEL_I350_3: interfaces.InterfaceWithCounters(
+                        _if_attributes(5, Names.INTEL_I350_3, 0),
                         null_counters,
                     ),
-                    "Intel[R] I350 Gigabit Network Connection 4": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "6", name="Intel[R] I350 Gigabit Network Connection 4", speed=0
-                        ),
+                    Names.INTEL_I350_4: interfaces.InterfaceWithCounters(
+                        _if_attributes(6, Names.INTEL_I350_4, 0),
                         null_counters,
                     ),
-                    "IBM USB Remote NDIS Network Device 2": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "7", name="IBM USB Remote NDIS Network Device 2", speed=9728000
-                        ),
-                        interfaces.Counters(
-                            in_octets=293841578,
-                            in_ucast=3089007,
-                            in_bcast=9289,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=329096662,
-                            out_ucast=3089008,
-                            out_bcast=600757,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.IBM_USB_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(7, Names.IBM_USB_2, 9728000),
+                        _counters[Names.IBM_USB_2],
                     ),
-                    "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "8", name="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}", speed=100000
-                        ),
+                    Names.ISATAP_A4: interfaces.InterfaceWithCounters(
+                        _if_attributes(8, Names.ISATAP_A4, 100000),
                         null_counters,
                     ),
-                    "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "9", name="isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}", speed=100000
-                        ),
+                    Names.ISATAP_4F: interfaces.InterfaceWithCounters(
+                        _if_attributes(9, Names.ISATAP_4F, 100000),
                         null_counters,
                     ),
                 },
@@ -854,123 +924,52 @@ def _if_attributes(index: str, *, name: str, speed: int) -> interfaces.Attribute
             SectionCounters(
                 timestamp=1498114570.1,
                 interfaces={
-                    "Intel[R] Gigabit 4P I350-t rNDC": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "1", name="Intel[R] Gigabit 4P I350-t rNDC", speed=1000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=168300731,
-                            in_ucast=5438,
-                            in_bcast=2340274,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=8385014,
-                            out_ucast=3614,
-                            out_bcast=65262,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_NDC: interfaces.InterfaceWithCounters(
+                        _if_attributes(1, Names.INTEL_NDC, 1000000000),
+                        _counters[Names.INTEL_NDC],
                     ),
-                    "Intel[R] Ethernet 10G 2P X520 Adapter": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "2", name="Intel[R] Ethernet 10G 2P X520 Adapter", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=2568258242370,
-                            in_ucast=3012412853,
-                            in_bcast=7601145,
-                            in_disc=1566,
-                            in_err=0,
-                            out_octets=2787714307906,
-                            out_ucast=2922261424,
-                            out_bcast=442474,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_X520: interfaces.InterfaceWithCounters(
+                        _if_attributes(2, Names.INTEL_X520, 10000000000),
+                        _counters[Names.INTEL_X520],
                     ),
-                    "Intel[R] Ethernet 10G 2P X520 Adapter 2": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "3", name="Intel[R] Ethernet 10G 2P X520 Adapter 2", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=410232131549,
-                            in_ucast=376555354,
-                            in_bcast=225288,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=1171662236873,
-                            out_ucast=833538016,
-                            out_bcast=63489,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_X520_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(3, Names.INTEL_X520_2, 10000000000),
+                        _counters[Names.INTEL_X520_2],
                     ),
-                    "Intel[R] Gigabit 4P I350-t rNDC 2": interfaces.InterfaceWithCounters(
-                        _if_attributes("4", name="Intel[R] Gigabit 4P I350-t rNDC 2", speed=0),
+                    Names.INTEL_NDC_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(4, Names.INTEL_NDC_2, 0),
                         null_counters,
                     ),
-                    "Intel[R] Gigabit 4P I350-t rNDC 3": interfaces.InterfaceWithCounters(
-                        _if_attributes("5", name="Intel[R] Gigabit 4P I350-t rNDC 3", speed=0),
+                    Names.INTEL_NDC_3: interfaces.InterfaceWithCounters(
+                        _if_attributes(5, Names.INTEL_NDC_3, 0),
                         null_counters,
                     ),
-                    "Intel[R] Gigabit 4P I350-t rNDC 4": interfaces.InterfaceWithCounters(
-                        _if_attributes("6", name="Intel[R] Gigabit 4P I350-t rNDC 4", speed=0),
+                    Names.INTEL_NDC_4: interfaces.InterfaceWithCounters(
+                        _if_attributes(6, Names.INTEL_NDC_4, 0),
                         null_counters,
                     ),
-                    "Intel[R] Ethernet 10G 2P X520 Adapter 3": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "7", name="Intel[R] Ethernet 10G 2P X520 Adapter 3", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=271891678,
-                            in_ucast=0,
-                            in_bcast=3033012,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=0,
-                            out_ucast=0,
-                            out_bcast=0,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_X520_3: interfaces.InterfaceWithCounters(
+                        _if_attributes(7, Names.INTEL_X520_3, 10000000000),
+                        _counters[Names.INTEL_X520_3],
                     ),
-                    "Intel[R] Ethernet 10G 2P X520 Adapter 4": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "8", name="Intel[R] Ethernet 10G 2P X520 Adapter 4", speed=10000000000
-                        ),
-                        interfaces.Counters(
-                            in_octets=145209040,
-                            in_ucast=0,
-                            in_bcast=2099072,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=0,
-                            out_ucast=0,
-                            out_bcast=0,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.INTEL_X520_4: interfaces.InterfaceWithCounters(
+                        _if_attributes(8, Names.INTEL_X520_4, 10000000000),
+                        _counters[Names.INTEL_X520_4],
                     ),
-                    "isatap.corp.nintendo.eu": interfaces.InterfaceWithCounters(
-                        _if_attributes("9", name="isatap.corp.nintendo.eu", speed=100000),
+                    Names.NIN: interfaces.InterfaceWithCounters(
+                        _if_attributes(9, Names.NIN, 100000),
                         null_counters,
                     ),
-                    "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "10", name="isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}", speed=100000
-                        ),
+                    Names.ISATAP_01: interfaces.InterfaceWithCounters(
+                        _if_attributes(10, Names.ISATAP_01, 100000),
                         null_counters,
                     ),
-                    "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "11", name="isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}", speed=100000
-                        ),
+                    Names.ISATAP_16: interfaces.InterfaceWithCounters(
+                        _if_attributes(11, Names.ISATAP_16, 100000),
                         null_counters,
                     ),
-                    "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}": interfaces.InterfaceWithCounters(
-                        _if_attributes(
-                            "12", name="isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}", speed=100000
-                        ),
+                    Names.ISATAP_7A: interfaces.InterfaceWithCounters(
+                        _if_attributes(12, Names.ISATAP_7A, 100000),
                         null_counters,
                     ),
                 },
@@ -1920,22 +1919,8 @@ def test_parse_winperf_if_dhcp() -> None:
     [
         pytest.param(
             {
-                "Intel[R] PRO 1000 MT Desktop Adapter": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="1",
-                        descr="Intel[R] PRO 1000 MT Desktop Adapter",
-                        alias="Intel[R] PRO 1000 MT Desktop Adapter",
-                        type="6",
-                        speed=1000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_PRO: interfaces.InterfaceWithCounters(
+                    _if_attributes(1, Names.INTEL_PRO, 1000000000, Mode.CONN),
                     interfaces.Counters(
                         in_octets=60023498,
                         in_ucast=42348,
@@ -1954,21 +1939,7 @@ def test_parse_winperf_if_dhcp() -> None:
             None,
             [
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="1",
-                        descr="Intel[R] PRO 1000 MT Desktop Adapter",
-                        alias="Intel[R] PRO 1000 MT Desktop Adapter",
-                        type="6",
-                        speed=1000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(1, Names.INTEL_PRO, 1000000000, Mode.CONN),
                     interfaces.Counters(
                         in_octets=60023498,
                         in_ucast=42348,
@@ -1987,199 +1958,40 @@ def test_parse_winperf_if_dhcp() -> None:
         ),
         pytest.param(
             {
-                "QLogic 1 10GbE Server Adapter 2": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="1",
-                        descr="QLogic 1 10GbE Server Adapter 2",
-                        alias="QLogic 1 10GbE Server Adapter 2",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=6273480850,
-                        in_ucast=5756369,
-                        in_bcast=592918,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=2628728624,
-                        out_ucast=4625712,
-                        out_bcast=14776,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.QLOGIC_2: interfaces.InterfaceWithCounters(
+                    _if_attributes(1, Names.QLOGIC_2, 10000000000, Mode.CONN),
+                    _counters[Names.QLOGIC_2],
                 ),
-                "QLogic 1 10GbE Server Adapter": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="2",
-                        descr="QLogic 1 10GbE Server Adapter",
-                        alias="QLogic 1 10GbE Server Adapter",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=20846807,
-                        in_ucast=18266,
-                        in_bcast=836,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=3088856,
-                        out_ucast=8741,
-                        out_bcast=106,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.QLOGIC: interfaces.InterfaceWithCounters(
+                    _if_attributes(2, Names.QLOGIC, 10000000000, Mode.CONN),
+                    _counters[Names.QLOGIC],
                 ),
-                "Intel[R] I350 Gigabit Network Connection": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="3",
-                        descr="Intel[R] I350 Gigabit Network Connection",
-                        alias="Intel[R] I350 Gigabit Network Connection",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_I350: interfaces.InterfaceWithCounters(
+                    _if_attributes(3, Names.INTEL_I350, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] I350 Gigabit Network Connection 2": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="4",
-                        descr="Intel[R] I350 Gigabit Network Connection 2",
-                        alias="Intel[R] I350 Gigabit Network Connection 2",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_I350_2: interfaces.InterfaceWithCounters(
+                    _if_attributes(4, Names.INTEL_I350_2, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] I350 Gigabit Network Connection 3": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="5",
-                        descr="Intel[R] I350 Gigabit Network Connection 3",
-                        alias="Intel[R] I350 Gigabit Network Connection 3",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_I350_3: interfaces.InterfaceWithCounters(
+                    _if_attributes(5, Names.INTEL_I350_3, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] I350 Gigabit Network Connection 4": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="6",
-                        descr="Intel[R] I350 Gigabit Network Connection 4",
-                        alias="Intel[R] I350 Gigabit Network Connection 4",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_I350_4: interfaces.InterfaceWithCounters(
+                    _if_attributes(6, Names.INTEL_I350_4, 0, Mode.CONN),
                     null_counters,
                 ),
-                "IBM USB Remote NDIS Network Device 2": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="7",
-                        descr="IBM USB Remote NDIS Network Device 2",
-                        alias="IBM USB Remote NDIS Network Device 2",
-                        type="6",
-                        speed=9728000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=293841578,
-                        in_ucast=3089007,
-                        in_bcast=9289,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=329096662,
-                        out_ucast=3089008,
-                        out_bcast=600757,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.IBM_USB_2: interfaces.InterfaceWithCounters(
+                    _if_attributes(7, Names.IBM_USB_2, 9728000, Mode.CONN),
+                    _counters[Names.IBM_USB_2],
                 ),
-                "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="8",
-                        descr="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                        alias="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.ISATAP_A4: interfaces.InterfaceWithCounters(
+                    _if_attributes(8, Names.ISATAP_A4, 100000, Mode.CONN),
                     null_counters,
                 ),
-                "isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="9",
-                        descr="isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}",
-                        alias="isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.ISATAP_4F: interfaces.InterfaceWithCounters(
+                    _if_attributes(9, Names.ISATAP_4F, 100000, Mode.CONN),
                     null_counters,
                 ),
             },
@@ -2260,38 +2072,13 @@ def test_parse_winperf_if_dhcp() -> None:
             ],
             [
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="1",
-                        descr="QLogic 1 10GbE Server Adapter 2",
-                        alias="QLogic 1 10GbE Server Adapter 2",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=6273480850,
-                        in_ucast=5756369,
-                        in_bcast=592918,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=2628728624,
-                        out_ucast=4625712,
-                        out_bcast=14776,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _if_attributes(1, Names.QLOGIC_2, 10000000000, Mode.CONN),
+                    _counters[Names.QLOGIC_2],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="2",
-                        descr="QLogic 1 10GbE Server Adapter",
+                        descr=Names.QLOGIC,
                         alias="Ethernet 2",
                         type="6",
                         speed=10000000000,
@@ -2304,23 +2091,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=20846807,
-                        in_ucast=18266,
-                        in_bcast=836,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=3088856,
-                        out_ucast=8741,
-                        out_bcast=106,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.QLOGIC],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="3",
-                        descr="Intel[R] I350 Gigabit Network Connection",
+                        descr=Names.INTEL_I350,
                         alias="Ethernet 3",
                         type="6",
                         speed=0,
@@ -2338,7 +2114,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="4",
-                        descr="Intel[R] I350 Gigabit Network Connection 2",
+                        descr=Names.INTEL_I350_2,
                         alias="Ethernet 4",
                         type="6",
                         speed=0,
@@ -2356,7 +2132,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="5",
-                        descr="Intel[R] I350 Gigabit Network Connection 3",
+                        descr=Names.INTEL_I350_3,
                         alias="Ethernet 5",
                         type="6",
                         speed=0,
@@ -2374,7 +2150,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="6",
-                        descr="Intel[R] I350 Gigabit Network Connection 4",
+                        descr=Names.INTEL_I350_4,
                         alias="Ethernet 6",
                         type="6",
                         speed=0,
@@ -2392,7 +2168,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="7",
-                        descr="IBM USB Remote NDIS Network Device 2",
+                        descr=Names.IBM_USB_2,
                         alias="Local Area Connection 2",
                         type="6",
                         speed=9728000,
@@ -2405,53 +2181,14 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=293841578,
-                        in_ucast=3089007,
-                        in_bcast=9289,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=329096662,
-                        out_ucast=3089008,
-                        out_bcast=600757,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.IBM_USB_2],
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="8",
-                        descr="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                        alias="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(8, Names.ISATAP_A4, 100000, Mode.CONN),
                     null_counters,
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="9",
-                        descr="isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}",
-                        alias="isatap.{4FCE4C48-6217-465A-B807-B61499AE570C}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(9, Names.ISATAP_4F, 100000, Mode.CONN),
                     null_counters,
                 ),
             ],
@@ -2459,275 +2196,52 @@ def test_parse_winperf_if_dhcp() -> None:
         ),
         pytest.param(
             {
-                "Intel[R] Gigabit 4P I350-t rNDC": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="1",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC",
-                        alias="Intel[R] Gigabit 4P I350-t rNDC",
-                        type="6",
-                        speed=1000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=168300731,
-                        in_ucast=5438,
-                        in_bcast=2340274,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=8385014,
-                        out_ucast=3614,
-                        out_bcast=65262,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.INTEL_NDC: interfaces.InterfaceWithCounters(
+                    _if_attributes(1, Names.INTEL_NDC, 1000000000, Mode.CONN),
+                    _counters[Names.INTEL_NDC],
                 ),
-                "Intel[R] Ethernet 10G 2P X520 Adapter": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="2",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter",
-                        alias="Intel[R] Ethernet 10G 2P X520 Adapter",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=2568258242370,
-                        in_ucast=3012412853,
-                        in_bcast=7601145,
-                        in_disc=1566,
-                        in_err=0,
-                        out_octets=2787714307906,
-                        out_ucast=2922261424,
-                        out_bcast=442474,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.INTEL_X520: interfaces.InterfaceWithCounters(
+                    _if_attributes(2, Names.INTEL_X520, 10000000000, Mode.CONN),
+                    _counters[Names.INTEL_X520],
                 ),
-                "Intel[R] Ethernet 10G 2P X520 Adapter 2": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="3",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 2",
-                        alias="Intel[R] Ethernet 10G 2P X520 Adapter 2",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=410232131549,
-                        in_ucast=376555354,
-                        in_bcast=225288,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=1171662236873,
-                        out_ucast=833538016,
-                        out_bcast=63489,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.INTEL_X520_2: interfaces.InterfaceWithCounters(
+                    _if_attributes(3, Names.INTEL_X520_2, 10000000000, Mode.CONN),
+                    _counters[Names.INTEL_X520_2],
                 ),
-                "Intel[R] Gigabit 4P I350-t rNDC 2": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="4",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 2",
-                        alias="Intel[R] Gigabit 4P I350-t rNDC 2",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_NDC_2: interfaces.InterfaceWithCounters(
+                    _if_attributes(4, Names.INTEL_NDC_2, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] Gigabit 4P I350-t rNDC 3": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="5",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 3",
-                        alias="Intel[R] Gigabit 4P I350-t rNDC 3",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_NDC_3: interfaces.InterfaceWithCounters(
+                    _if_attributes(5, Names.INTEL_NDC_3, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] Gigabit 4P I350-t rNDC 4": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="6",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 4",
-                        alias="Intel[R] Gigabit 4P I350-t rNDC 4",
-                        type="6",
-                        speed=0,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.INTEL_NDC_4: interfaces.InterfaceWithCounters(
+                    _if_attributes(6, Names.INTEL_NDC_4, 0, Mode.CONN),
                     null_counters,
                 ),
-                "Intel[R] Ethernet 10G 2P X520 Adapter 3": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="7",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 3",
-                        alias="Intel[R] Ethernet 10G 2P X520 Adapter 3",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=271891678,
-                        in_ucast=0,
-                        in_bcast=3033012,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=0,
-                        out_ucast=0,
-                        out_bcast=0,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.INTEL_X520_3: interfaces.InterfaceWithCounters(
+                    _if_attributes(7, Names.INTEL_X520_3, 10000000000, Mode.CONN),
+                    _counters[Names.INTEL_X520_3],
                 ),
-                "Intel[R] Ethernet 10G 2P X520 Adapter 4": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="8",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 4",
-                        alias="Intel[R] Ethernet 10G 2P X520 Adapter 4",
-                        type="6",
-                        speed=10000000000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
-                    interfaces.Counters(
-                        in_octets=145209040,
-                        in_ucast=0,
-                        in_bcast=2099072,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=0,
-                        out_ucast=0,
-                        out_bcast=0,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                Names.INTEL_X520_4: interfaces.InterfaceWithCounters(
+                    _if_attributes(8, Names.INTEL_X520_4, 10000000000, Mode.CONN),
+                    _counters[Names.INTEL_X520_4],
                 ),
-                "isatap.corp.nintendo.eu": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="9",
-                        descr="isatap.corp.nintendo.eu",
-                        alias="isatap.corp.nintendo.eu",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.NIN: interfaces.InterfaceWithCounters(
+                    _if_attributes(9, Names.NIN, 100000, Mode.CONN),
                     null_counters,
                 ),
-                "isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="10",
-                        descr="isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
-                        alias="isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.ISATAP_01: interfaces.InterfaceWithCounters(
+                    _if_attributes(10, Names.ISATAP_01, 100000, Mode.CONN),
                     null_counters,
                 ),
-                "isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="11",
-                        descr="isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
-                        alias="isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.ISATAP_16: interfaces.InterfaceWithCounters(
+                    _if_attributes(11, Names.ISATAP_16, 100000, Mode.CONN),
                     null_counters,
                 ),
-                "isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}": interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="12",
-                        descr="isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}",
-                        alias="isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                Names.ISATAP_7A: interfaces.InterfaceWithCounters(
+                    _if_attributes(12, Names.ISATAP_7A, 100000, Mode.CONN),
                     null_counters,
                 ),
             },
@@ -2845,7 +2359,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="1",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC",
+                        descr=Names.INTEL_NDC,
                         alias="NIC1",
                         type="6",
                         speed=1000000000,
@@ -2858,23 +2372,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=168300731,
-                        in_ucast=5438,
-                        in_bcast=2340274,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=8385014,
-                        out_ucast=3614,
-                        out_bcast=65262,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.INTEL_NDC],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="2",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter",
+                        descr=Names.INTEL_X520,
                         alias="SLOT 6 Port 2 MAPI",
                         type="6",
                         speed=10000000000,
@@ -2887,23 +2390,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=2568258242370,
-                        in_ucast=3012412853,
-                        in_bcast=7601145,
-                        in_disc=1566,
-                        in_err=0,
-                        out_octets=2787714307906,
-                        out_ucast=2922261424,
-                        out_bcast=442474,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.INTEL_X520],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="3",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 2",
+                        descr=Names.INTEL_X520_2,
                         alias="SLOT 6 Port 1 DAG",
                         type="6",
                         speed=10000000000,
@@ -2916,23 +2408,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=410232131549,
-                        in_ucast=376555354,
-                        in_bcast=225288,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=1171662236873,
-                        out_ucast=833538016,
-                        out_bcast=63489,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.INTEL_X520_2],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="4",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 2",
+                        descr=Names.INTEL_NDC_2,
                         alias="NIC2",
                         type="6",
                         speed=0,
@@ -2950,7 +2431,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="5",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 3",
+                        descr=Names.INTEL_NDC_3,
                         alias="NIC3",
                         type="6",
                         speed=0,
@@ -2968,7 +2449,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="6",
-                        descr="Intel[R] Gigabit 4P I350-t rNDC 4",
+                        descr=Names.INTEL_NDC_4,
                         alias="NIC4",
                         type="6",
                         speed=0,
@@ -2986,7 +2467,7 @@ def test_parse_winperf_if_dhcp() -> None:
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="7",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 3",
+                        descr=Names.INTEL_X520_3,
                         alias="SLOT 4 Port 1 MAPI",
                         type="6",
                         speed=10000000000,
@@ -2999,23 +2480,12 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=271891678,
-                        in_ucast=0,
-                        in_bcast=3033012,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=0,
-                        out_ucast=0,
-                        out_bcast=0,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.INTEL_X520_3],
                 ),
                 interfaces.InterfaceWithCounters(
                     interfaces.Attributes(
                         index="8",
-                        descr="Intel[R] Ethernet 10G 2P X520 Adapter 4",
+                        descr=Names.INTEL_X520_4,
                         alias="SLOT 4 Port 2 DAG",
                         type="6",
                         speed=10000000000,
@@ -3028,89 +2498,22 @@ def test_parse_winperf_if_dhcp() -> None:
                         node=None,
                         admin_status=None,
                     ),
-                    interfaces.Counters(
-                        in_octets=145209040,
-                        in_ucast=0,
-                        in_bcast=2099072,
-                        in_disc=0,
-                        in_err=0,
-                        out_octets=0,
-                        out_ucast=0,
-                        out_bcast=0,
-                        out_disc=0,
-                        out_err=0,
-                    ),
+                    _counters[Names.INTEL_X520_4],
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="9",
-                        descr="isatap.corp.nintendo.eu",
-                        alias="isatap.corp.nintendo.eu",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(9, Names.NIN, 100000, Mode.CONN),
                     null_counters,
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="10",
-                        descr="isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
-                        alias="isatap.{0143C2F2-BFF1-4839-8766-82C6EB3FC440}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(10, Names.ISATAP_01, 100000, Mode.CONN),
                     null_counters,
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="11",
-                        descr="isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
-                        alias="isatap.{16377083-0A9A-456B-AB35-9A37E78B3FD4}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(11, Names.ISATAP_16, 100000, Mode.CONN),
                     null_counters,
                 ),
                 interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index="12",
-                        descr="isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}",
-                        alias="isatap.{7A093D2B-D64D-43DF-A0F6-050996EE8D9A}",
-                        type="6",
-                        speed=100000,
-                        oper_status="1",
-                        out_qlen=0,
-                        phys_address="",
-                        oper_status_name="Connected",
-                        speed_as_text="",
-                        group=None,
-                        node=None,
-                        admin_status=None,
-                    ),
+                    _if_attributes(12, Names.ISATAP_7A, 100000, Mode.CONN),
                     null_counters,
                 ),
             ],
@@ -3138,7 +2541,7 @@ def test_merge_sections(
     "item, result",
     [
         pytest.param(
-            "Intel[R] PRO 1000 MT Desktop Adapter",
+            Names.INTEL_PRO,
             Result(
                 state=State.WARN,
                 summary="DHCP: enabled",
@@ -3165,7 +2568,7 @@ def test_check_dhcp(item: str, result: Result | None) -> None:
         _check_dhcp(
             item,
             [
-                "Intel[R] PRO 1000 MT Desktop Adapter",
+                Names.INTEL_PRO,
                 "WAN Miniport [SSTP]",
             ],
             [
@@ -3197,39 +2600,14 @@ def test_inventory_winperf_if() -> None:
             SectionCounters(
                 timestamp=1425370325.75,
                 interfaces={
-                    "QLogic 1 10GbE Server Adapter 2": interfaces.InterfaceWithCounters(
-                        interfaces.Attributes(
-                            index="1",
-                            descr="QLogic 1 10GbE Server Adapter 2",
-                            alias="QLogic 1 10GbE Server Adapter 2",
-                            type="6",
-                            speed=10000000000,
-                            oper_status="1",
-                            out_qlen=0,
-                            phys_address="",
-                            oper_status_name="Connected",
-                            speed_as_text="",
-                            group=None,
-                            node=None,
-                            admin_status=None,
-                        ),
-                        interfaces.Counters(
-                            in_octets=6273480850,
-                            in_ucast=5756369,
-                            in_bcast=592918,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=2628728624,
-                            out_ucast=4625712,
-                            out_bcast=14776,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                    Names.QLOGIC_2: interfaces.InterfaceWithCounters(
+                        _if_attributes(1, Names.QLOGIC_2, 10000000000, Mode.CONN),
+                        _counters[Names.QLOGIC_2],
                     ),
-                    "QLogic 1 10GbE Server Adapter": interfaces.InterfaceWithCounters(
+                    Names.QLOGIC: interfaces.InterfaceWithCounters(
                         interfaces.Attributes(
                             index="2",
-                            descr="QLogic 1 10GbE Server Adapter",
+                            descr=Names.QLOGIC,
                             alias="Ethernet 2",
                             type="6",
                             speed=10000000000,
@@ -3242,23 +2620,12 @@ def test_inventory_winperf_if() -> None:
                             node=None,
                             admin_status=None,
                         ),
-                        interfaces.Counters(
-                            in_octets=20846807,
-                            in_ucast=18266,
-                            in_bcast=836,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=3088856,
-                            out_ucast=8741,
-                            out_bcast=106,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                        _counters[Names.QLOGIC],
                     ),
-                    "Intel[R] I350 Gigabit Network Connection": interfaces.InterfaceWithCounters(
+                    Names.INTEL_I350: interfaces.InterfaceWithCounters(
                         interfaces.Attributes(
                             index="3",
-                            descr="Intel[R] I350 Gigabit Network Connection",
+                            descr=Names.INTEL_I350,
                             alias="Ethernet 3",
                             type="6",
                             speed=0,
@@ -3273,10 +2640,10 @@ def test_inventory_winperf_if() -> None:
                         ),
                         null_counters,
                     ),
-                    "Intel[R] I350 Gigabit Network Connection 2": interfaces.InterfaceWithCounters(
+                    Names.INTEL_I350_2: interfaces.InterfaceWithCounters(
                         interfaces.Attributes(
                             index="4",
-                            descr="Intel[R] I350 Gigabit Network Connection 2",
+                            descr=Names.INTEL_I350_2,
                             alias="Ethernet 4",
                             type="6",
                             speed=0,
@@ -3291,10 +2658,10 @@ def test_inventory_winperf_if() -> None:
                         ),
                         null_counters,
                     ),
-                    "IBM USB Remote NDIS Network Device 2": interfaces.InterfaceWithCounters(
+                    Names.IBM_USB_2: interfaces.InterfaceWithCounters(
                         interfaces.Attributes(
                             index="7",
-                            descr="IBM USB Remote NDIS Network Device 2",
+                            descr=Names.IBM_USB_2,
                             alias="Local Area Connection 2",
                             type="6",
                             speed=9728000,
@@ -3307,35 +2674,10 @@ def test_inventory_winperf_if() -> None:
                             node=None,
                             admin_status=None,
                         ),
-                        interfaces.Counters(
-                            in_octets=293841578,
-                            in_ucast=3089007,
-                            in_bcast=9289,
-                            in_disc=0,
-                            in_err=0,
-                            out_octets=329096662,
-                            out_ucast=3089008,
-                            out_bcast=600757,
-                            out_disc=0,
-                            out_err=0,
-                        ),
+                        _counters[Names.IBM_USB_2],
                     ),
-                    "isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}": interfaces.InterfaceWithCounters(
-                        interfaces.Attributes(
-                            index="8",
-                            descr="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                            alias="isatap.{A447D54F-0E4B-40B3-9FBA-228F7DCE8FC7}",
-                            type="6",
-                            speed=100000,
-                            oper_status="1",
-                            out_qlen=0,
-                            phys_address="",
-                            oper_status_name="Connected",
-                            speed_as_text="",
-                            group=None,
-                            node=None,
-                            admin_status=None,
-                        ),
+                    Names.ISATAP_A4: interfaces.InterfaceWithCounters(
+                        _if_attributes(8, Names.ISATAP_A4, 100000, Mode.CONN),
                         null_counters,
                     ),
                 },

@@ -10,10 +10,10 @@ failure() {
 }
 
 # some style settings defined here
-resetColor=$'\e[0m'
 txtRed=$'\e[41m'
 txtGreen=$'\e[32m'
 txtBlue=$'\e[34m'
+resetColor=$'\e[0m'
 
 print_red() {
     printf "%s%s%s\n" "${txtRed}" "$1" "${resetColor}"

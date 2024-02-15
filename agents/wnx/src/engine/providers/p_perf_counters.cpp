@@ -7,6 +7,7 @@
 
 #include "providers/p_perf_counters.h"
 
+#include <numeric>
 #include <ranges>
 #include <string>
 
@@ -15,6 +16,7 @@
 #include "wnx/logger.h"
 
 namespace rs = std::ranges;
+using namespace std::string_view_literals;
 
 namespace cma::provider {
 
@@ -202,6 +204,35 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
     accu += details::MakeWinPerfInstancesLine(object);
     // naked list
     accu += details::MakeWinPerfNakedList(object, key_index);
+
+    if (name == winperf::if_section_name) {
+        auto store = wtools::GetAdapterInfoStore();
+        if (store.empty()) {
+            XLOG::d("No adapters found");
+        }
+        const auto names = wtools::perf::GenerateInstanceNames(object);
+        std::vector<std::wstring> values;
+        values.reserve(names.size() + 2);
+        values.emplace_back(winperf::if_section_pseudo_counter);
+        const auto default_oper_status = wtools::ConvertToUtf16(fmt::format(
+            "{}", static_cast<int>(IF_OPER_STATUS::IfOperStatusUp)));
+
+        for (auto &&n : names) {
+            if (auto search = store.find(n); search != store.end()) {
+                values.emplace_back(wtools::ConvertToUtf16(fmt::format(
+                    "{}", static_cast<int>(search->second.oper_status))));
+            } else {
+                values.emplace_back(default_oper_status);
+            }
+        }
+        values.emplace_back(winperf::if_section_pseudo_counter_type);
+        auto ret =
+            std::accumulate(std::next(values.begin()), values.end(), values[0],
+                            [](const std::wstring &a, const std::wstring &b) {
+                                return a + L' ' + b;
+                            });
+        accu += wtools::ToUtf8(ret) + '\n';
+    }
 
     return accu;
 }

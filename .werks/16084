@@ -1,0 +1,11 @@
+Title: Show full agent hash in Check_MK Agent service and Agent update status
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1707986354
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+As an addition to Werk #15424, the <em>Check_MK Agent</em> service and the
+<em>Agent update status</em> page now also show the full 16-digit agent hash.

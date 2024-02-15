@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.ec.forward import (
+from cmk.ec.syslog import (
     StructuredData,
     StructuredDataID,
     StructuredDataName,

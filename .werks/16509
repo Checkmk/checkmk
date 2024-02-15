@@ -1,0 +1,12 @@
+Title: Fix notifications postponed forever with Use the status of the service
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1707925534
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+Configuring a service with "host check command > use the status of the service"
+would result in notifications for any service to be postponed forever.  This has
+been fixed.

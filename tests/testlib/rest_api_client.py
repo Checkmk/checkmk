@@ -2585,6 +2585,40 @@ class LDAPConnectionClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def create(
+        self,
+        ldap_data: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=ldap_data,
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        ldap_connection_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{ldap_connection_id}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(ldap_connection_id, etag),
+        )
+
+    def _set_etag_header(
+        self,
+        ldap_connection_id: str,
+        etag: IF_MATCH_HEADER_OPTIONS,
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(ldap_connection_id).headers["ETag"]}
+        return set_if_match_header(etag)
+
 
 @dataclasses.dataclass
 class ClientRegistry:

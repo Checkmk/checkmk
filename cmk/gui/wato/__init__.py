@@ -54,7 +54,9 @@ from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Age as Age
 from cmk.gui.valuespec import Alternative as Alternative
+from cmk.gui.valuespec import CascadingDropdown as CascadingDropdown
 from cmk.gui.valuespec import Dictionary as Dictionary
+from cmk.gui.valuespec import DropdownChoice as DropdownChoice
 from cmk.gui.valuespec import Filesize as Filesize
 from cmk.gui.valuespec import FixedValue as FixedValue
 from cmk.gui.valuespec import ListOfStrings as ListOfStrings
@@ -66,6 +68,7 @@ from cmk.gui.valuespec import RegExpUnicode as RegExpUnicode
 from cmk.gui.valuespec import TextAscii as TextAscii
 from cmk.gui.valuespec import TextUnicode as TextUnicode
 from cmk.gui.valuespec import Transform as Transform
+from cmk.gui.valuespec import Tuple as Tuple
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato._main_module_topics import MainModuleTopicAgents as MainModuleTopicAgents
 from cmk.gui.wato._main_module_topics import MainModuleTopicEvents as MainModuleTopicEvents
@@ -163,6 +166,7 @@ from .pages import (
 )
 from .pages import MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
+from .pages._match_conditions import HostTagCondition as HostTagCondition
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
 )
@@ -192,4 +196,28 @@ def load_plugins() -> None:
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
+    _register_pre_21_plugin_api()
     utils.load_web_plugins("wato", globals())
+
+
+def _register_pre_21_plugin_api() -> None:
+    """Register pre 2.1 "plugin API"
+
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
+
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plugins for now.
+
+    At the moment we define an official plugin API, we can drop this and require all plugins to
+    switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
+    """
+    # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.plugins.wato as api_module  # pylint: disable=cmk-module-layer-violation
+
+    for name, value in [
+        ("HostTagCondition", HostTagCondition),
+        ("FullPathFolderChoice", FullPathFolderChoice),
+    ]:
+        api_module.__dict__[name] = value

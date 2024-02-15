@@ -205,39 +205,9 @@ _DOWNLOAD_URL_BASE = "https://exchange.checkmk.com/api/packages/download/"
 
 
 _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
-    "perfcalc-6.0.mkp": _ImportErrors(
-        gui_errors={
-            "wato/perfcalc: cannot import name 'HostTagCondition' from "
-            "'cmk.gui.plugins.wato' (unknown location)",
-        }
-    ),
-    "fileconnector-3.4.0.mkp": _ImportErrors(
-        gui_errors={
-            "wato/fileconnector: cannot import name 'FullPathFolderChoice' from "
-            "'cmk.gui.plugins.wato' (unknown location)",
-        }
-    ),
-    "emcunity-2.2.4.mkp": _ImportErrors(
-        gui_errors={
-            "metrics/emcunity: No module named 'cmk.gui.plugins.metrics.check_mk'",
-            "wato/emcunity_datasource_programs: name 'Tuple' is not defined",
-        }
-    ),
-    "systemd-0.6.mkp": _ImportErrors(
-        gui_errors={"wato/systemd: name 'DropdownChoice' is not defined"}
-    ),
     "nvidia-gpu-2.0.mkp": _ImportErrors(),  # no errors, it's fine!
     "sonicwall-1.4.2.mkp": _ImportErrors(),  # no errors, it's fine!
-    "sap_hana-1.9.8.mkp": _ImportErrors(
-        gui_errors={
-            "metrics/sap_hana: name 'df_translation' is not defined",
-            "wato/sap_hana: name 'CascadingDropdown' is not defined",
-            "wato/sap_hana_backup: name 'Tuple' is not defined",
-            "wato/sap_hana_license: name 'Tuple' is not defined",
-            "wato/sap_hana_memrate: name 'CascadingDropdown' is not defined",
-        }
-    ),
-    "filehandles-3.2.mkp": _ImportErrors(
+    "filehandles-3.2.mkp": _ImportErrors(  # nothing we can do about this one.
         gui_errors={
             "wato/filehandles: (unicode error) 'unicodeescape' codec can't decode bytes "
             "in position 51-52: malformed \\N character escape (<string>, line 128)",

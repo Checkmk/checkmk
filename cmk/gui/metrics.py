@@ -62,6 +62,11 @@ from cmk.gui.i18n import _
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
+    # Needs to be a local import to not influence the regular plugin loading order
+    from cmk.gui.plugins.metrics.translation import (  # pylint: disable=cmk-module-layer-violation,unused-import
+        df_translation,
+    )
+
     utils.load_web_plugins("metrics", globals())
     add_graphing_plugins(load_graphing_plugins())
 

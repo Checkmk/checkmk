@@ -70,6 +70,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.cpu.cpus": {"title": _l("#Physical CPUs"), "paint": "count"},
         ".hardware.cpu.logical_cpus": {"title": _l("#Logical CPUs"), "paint": "count"},
         ".hardware.cpu.cores": {"title": _l("#Cores"), "paint": "count"},
+        ".hardware.cpu.nodes:": {
+            "title": _l("Node Processor"),
+            "keyorder": [
+                "node_name",
+                "cores",
+                "model"
+            ]
+        },
+        ".hardware.cpu.nodes:*.node_name": {"title": _l("Node Name")},
+        ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
+        ".hardware.cpu.nodes:*.model": {"title": _l("CPU Model")},
         ".hardware.memory.": {
             "title": _l("Memory (RAM)"),
             "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],
@@ -138,8 +149,8 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.serial": {"title": _l("Serial Number")},
         ".hardware.system.expresscode": {"title": _l("Express Servicecode")},
         ".hardware.system.model": {"title": _l("Model Name")},
-        ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
         ".hardware.system.node_name": {"title": _l("Node Name")},
+        ".hardware.system.manufacturer": {"title": _l("Manufacturer")},
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
         ".hardware.system.device_number": {"title": _l("Device Number")},
@@ -148,6 +159,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
+        ".hardware.system.nodes:": {
+            "title": _l("Node System"),
+            "keyorder": [
+                "node_name",
+                "id",
+                "model",
+                "product",
+                "serial",
+            ],
+        },
+        ".hardware.system.nodes:*.node_name": {"title": _l("Node Name")},
+        ".hardware.system.nodes:*.id": {"title": _l("ID")},
+        ".hardware.system.nodes:*.model": {"title": _l("Model Name")},
+        ".hardware.system.nodes:*.product": {"title": _l("Product")},
+        ".hardware.system.nodes:*.serial": {"title": _l("Serial Number")},
         ".hardware.components.": {"title": _l("Physical Components")},
         ".hardware.components.others:": {
             "title": _l("Other entities"),

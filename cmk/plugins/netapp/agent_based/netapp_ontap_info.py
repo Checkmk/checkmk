@@ -7,7 +7,6 @@
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import (
-    Attributes,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -16,6 +15,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    TableRow,
 )
 from cmk.plugins.netapp import models
 
@@ -55,19 +55,18 @@ Section = Mapping[str, models.NodeModel]
 
 
 def discovery_netapp_ontap_info(section: Section) -> DiscoveryResult:
-    yield Service()
+    yield from (Service(item=node_name) for node_name in section)
 
 
-def check_netapp_ontap_info(section: Section) -> CheckResult:
-    values = list(section.values())
-    if not values:
+def check_netapp_ontap_info(item: str, section: Section) -> CheckResult:
+    if (node_info := section.get(item)) is None:
         return
-    yield Result(state=State.OK, summary=f"Version: {values[0].version.full}")
+    yield Result(state=State.OK, summary=f"Version: {node_info.version.full}")
 
 
 check_plugin_netapp_ontap_info = CheckPlugin(
     name="netapp_ontap_info",
-    service_name="NetApp Version",
+    service_name="NetApp Version %s",
     sections=["netapp_ontap_node"],
     discovery_function=discovery_netapp_ontap_info,
     check_function=check_netapp_ontap_info,
@@ -75,22 +74,35 @@ check_plugin_netapp_ontap_info = CheckPlugin(
 
 
 def inventory_netapp_ontap_info(section: Section) -> InventoryResult:
-    nodes = list(section.values())
-    if not nodes:
-        return
-    hw_system = {
-        "model": nodes[0].model,
-        "product": nodes[0].system_machine_type,
-        "serial": nodes[0].serial_number,
-        "id": nodes[0].system_id,
-    }
-    hw_cpu = {
-        "cores": nodes[0].cpu_count,
-        "model": nodes[0].cpu_processor,
-    }
+    for node in section.values():
+        hw_system = {
+            "model": node.model,
+            "product": node.system_machine_type,
+            "serial": node.serial_number,
+            "id": node.system_id,
+        }
+        hw_cpu = {
+            "cores": node.cpu_count,
+            "model": node.cpu_processor,
+        }
 
-    yield Attributes(path=["hardware", "cpu"], inventory_attributes=hw_cpu)
-    yield Attributes(path=["hardware", "system"], inventory_attributes=hw_system)
+        yield TableRow(
+            path=["hardware", "cpu", "nodes"],
+            key_columns={
+                "node_name": node.name,
+            },
+            inventory_columns=hw_cpu,
+            status_columns={},
+        )
+
+        yield TableRow(
+            path=["hardware", "system", "nodes"],
+            key_columns={
+                "node_name": node.name,
+            },
+            inventory_columns=hw_system,
+            status_columns={},
+        )
 
 
 inventory_plugin_netapp_ontap_info = InventoryPlugin(

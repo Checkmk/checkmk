@@ -39,7 +39,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from cmk.graphing.v1 import graphs, Localizable, metrics
+from cmk.graphing.v1 import graphs, metrics, Title
 
 
 @pytest.mark.parametrize(
@@ -1332,35 +1332,33 @@ def test_graph_template_from_template(
         pytest.param(
             graphs.Graph(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(
-                        Localizable("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10
-                    ),
+                    metrics.Constant(Title("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
                     metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
                     metrics.Sum(
-                        Localizable("Sum"),
+                        Title("Sum"),
                         metrics.Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
-                        Localizable("Product"),
+                        Title("Product"),
                         metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
-                        Localizable("Difference"),
+                        Title("Difference"),
                         metrics.Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
-                        Localizable("Fraction"),
+                        Title("Fraction"),
                         metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
@@ -1473,35 +1471,33 @@ def test_graph_template_from_template(
         pytest.param(
             graphs.Graph(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(
-                        Localizable("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10
-                    ),
+                    metrics.Constant(Title("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
                     metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
                     metrics.Sum(
-                        Localizable("Sum"),
+                        Title("Sum"),
                         metrics.Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
-                        Localizable("Product"),
+                        Title("Product"),
                         metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
-                        Localizable("Difference"),
+                        Title("Difference"),
                         metrics.Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
-                        Localizable("Fraction"),
+                        Title("Fraction"),
                         metrics.Unit.COUNT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
@@ -1611,7 +1607,7 @@ def test_graph_template_from_template(
         pytest.param(
             graphs.Graph(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 minimal_range=graphs.MinimalRange(0, 100.0),
                 simple_lines=["metric-name"],
             ),
@@ -1632,7 +1628,7 @@ def test_graph_template_from_template(
         pytest.param(
             graphs.Graph(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 simple_lines=["metric-name"],
                 optional=["metric-name-opt"],
                 conflicting=["metric-name-confl"],
@@ -1667,10 +1663,10 @@ def test_graph_template_from_graph(
         pytest.param(
             graphs.Bidirectional(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 lower=graphs.Graph(
                     name="name-lower",
-                    title=Localizable("Title lower"),
+                    title=Title("Title lower"),
                     compound_lines=["metric-name-l1"],
                     simple_lines=[
                         "metric-name-l2",
@@ -1684,7 +1680,7 @@ def test_graph_template_from_graph(
                 ),
                 upper=graphs.Graph(
                     name="name-upper",
-                    title=Localizable("Title upper"),
+                    title=Title("Title upper"),
                     compound_lines=["metric-name-u1"],
                     simple_lines=[
                         "metric-name-u2",
@@ -1765,16 +1761,16 @@ def test_graph_template_from_graph(
         pytest.param(
             graphs.Bidirectional(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 lower=graphs.Graph(
                     name="name-lower",
-                    title=Localizable("Title lower"),
+                    title=Title("Title lower"),
                     minimal_range=graphs.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graphs.Graph(
                     name="name-upper",
-                    title=Localizable("Title upper"),
+                    title=Title("Title upper"),
                     minimal_range=graphs.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),
@@ -1799,16 +1795,16 @@ def test_graph_template_from_graph(
         pytest.param(
             graphs.Bidirectional(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 lower=graphs.Graph(
                     name="name-lower",
-                    title=Localizable("Title lower"),
+                    title=Title("Title lower"),
                     minimal_range=graphs.MinimalRange(1, 10),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graphs.Graph(
                     name="name-upper",
-                    title=Localizable("Title upper"),
+                    title=Title("Title upper"),
                     simple_lines=["metric-name-u"],
                 ),
             ),
@@ -1832,15 +1828,15 @@ def test_graph_template_from_graph(
         pytest.param(
             graphs.Bidirectional(
                 name="name",
-                title=Localizable("Title"),
+                title=Title("Title"),
                 lower=graphs.Graph(
                     name="name-lower",
-                    title=Localizable("Title lower"),
+                    title=Title("Title lower"),
                     simple_lines=["metric-name-l"],
                 ),
                 upper=graphs.Graph(
                     name="name-upper",
-                    title=Localizable("Title upper"),
+                    title=Title("Title upper"),
                     minimal_range=graphs.MinimalRange(2, 11),
                     simple_lines=["metric-name-u"],
                 ),

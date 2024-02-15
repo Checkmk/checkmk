@@ -10,7 +10,7 @@ import pytest
 from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 
-from cmk.graphing.v1 import Localizable, metrics, perfometers
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 
 def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
@@ -26,7 +26,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
             metrics.MinimumOf(f"metric-name{start_idx+5}", metrics.Color.BLUE),
             metrics.MaximumOf(f"metric-name{start_idx+6}", metrics.Color.BLUE),
             metrics.Sum(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Color.BLUE,
                 [
                     f"metric-name{start_idx+7}",
@@ -34,7 +34,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
                 ],
             ),
             metrics.Product(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 [
@@ -43,13 +43,13 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers.Perfometer:
                 ],
             ),
             metrics.Difference(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Color.BLUE,
                 minuend=f"metric-name{start_idx+11}",
                 subtrahend=f"metric-name{start_idx+12}",
             ),
             metrics.Fraction(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 dividend=f"metric-name{start_idx+13}",
@@ -279,7 +279,7 @@ def test_perfometer_matches(
         ),
         pytest.param(
             metrics.Constant(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 5.0,
@@ -394,7 +394,7 @@ def test_perfometer_matches(
         ),
         pytest.param(
             metrics.Sum(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Color.BLUE,
                 ["name1", "name2"],
             ),
@@ -435,7 +435,7 @@ def test_perfometer_matches(
         ),
         pytest.param(
             metrics.Product(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 ["name1", "name2"],
@@ -477,7 +477,7 @@ def test_perfometer_matches(
         ),
         pytest.param(
             metrics.Difference(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Color.BLUE,
                 minuend="name1",
                 subtrahend="name2",
@@ -519,7 +519,7 @@ def test_perfometer_matches(
         ),
         pytest.param(
             metrics.Fraction(
-                Localizable("Title"),
+                Title("Title"),
                 metrics.Unit.COUNT,
                 metrics.Color.BLUE,
                 dividend="name1",

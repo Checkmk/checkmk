@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from ._localize import Localizable
+from ._localize import Title
 from ._type_defs import Bound, Quantity
 
 __all__ = [
@@ -65,7 +65,7 @@ class Graph:
 
         >>> graph_name = Graph(
         ...     name="name",
-        ...     title=Localizable("A title"),
+        ...     title=Title("A title"),
         ...     minimal_range=MinimalRange(0, 100),
         ...     compound_lines=["metric-name-1"],
         ...     simple_lines=["metric-name-2"],
@@ -75,7 +75,7 @@ class Graph:
     """
 
     name: str
-    title: Localizable
+    title: Title
     minimal_range: MinimalRange | None = None
     compound_lines: Sequence[Quantity] = field(default_factory=list)
     simple_lines: Sequence[Quantity] = field(default_factory=list)
@@ -113,22 +113,22 @@ class Bidirectional:
 
         >>> graph_name = Bidirectional(
         ...     name="name",
-        ...     title=Localizable("A title"),
+        ...     title=Title("A title"),
         ...     lower=Graph(
         ...         name="lower",
-        ...         title=Localizable("A title"),
+        ...         title=Title("A title"),
         ...         compound_lines=["metric-name-1"],
         ...     ),
         ...     upper=Graph(
         ...         name="upper",
-        ...         title=Localizable("A title"),
+        ...         title=Title("A title"),
         ...         compound_lines=["metric-name-2"],
         ...     ),
         ... )
     """
 
     name: str
-    title: Localizable
+    title: Title
     lower: Graph
     upper: Graph
 

@@ -137,9 +137,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="clear_auditlog",
-            title=_l("Clear audit log"),
+            title=_l("Archive audit log"),
             description=_l(
-                "Clear the entries of the audit log. To be able to clear the audit log "
+                "Archive the entries of the audit log. To be able to archive the audit log "
                 'a user needs the generic Setup permission "Make changes, perform actions", '
                 'the "View audit log" and this permission.'
             ),

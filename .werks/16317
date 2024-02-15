@@ -1,0 +1,11 @@
+Title: "Aggregation of Downtimes" BI option had no effect
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1707983290
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+The option should change the computation of downtimes from CRIT to WARN but did
+not. This has been fixed.

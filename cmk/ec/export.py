@@ -14,8 +14,6 @@ from .config import Rule as Rule
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event
-from .forward import forward_to_unix_socket as forward_to_unix_socket
-from .forward import SyslogMessage as SyslogMessage
 from .rule_matcher import compile_rule as compile_rule
 from .rule_matcher import MatchFailure as MatchFailure
 from .rule_matcher import MatchResult as MatchResult
@@ -36,6 +34,8 @@ from .rule_packs import save_rule_packs as save_rule_packs
 from .rule_packs import uninstall_packaged_rule_packs as uninstall_packaged_rule_packs
 from .settings import Settings as Settings
 from .settings import settings as settings
+from .syslog import forward_to_unix_socket as forward_to_unix_socket
 from .syslog import SyslogFacility as SyslogFacility
+from .syslog import SyslogMessage as SyslogMessage
 from .syslog import SyslogPriority as SyslogPriority
 from .timeperiod import TimePeriods as TimePeriods

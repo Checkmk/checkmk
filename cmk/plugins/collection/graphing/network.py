@@ -3,20 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import Color, graphs, Localizable, metrics, Unit
+from cmk.graphing.v1 import graphs, Localizable, metrics, Unit
 
 metric_active_connections = metrics.Metric(
     name="active_connections",
     title=Localizable("Active connections"),
     unit=Unit.COUNT,
-    color=Color.PURPLE,
+    color=metrics.Color.PURPLE,
 )
 
 metric_idle_connections = metrics.Metric(
     name="idle_connections",
     title=Localizable("Idle connections"),
     unit=Unit.COUNT,
-    color=Color.DARK_PURPLE,
+    color=metrics.Color.DARK_PURPLE,
 )
 
 graph_db_connections = graphs.Graph(

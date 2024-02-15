@@ -3,27 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import Color, graphs, Localizable, metrics, Unit
+from cmk.graphing.v1 import graphs, Localizable, metrics, Unit
 
 metric_load1 = metrics.Metric(
     name="load1",
     title=Localizable("CPU load average of last minute"),
     unit=Unit.COUNT,
-    color=Color.LIGHT_BLUE,
+    color=metrics.Color.LIGHT_BLUE,
 )
 
 metric_load5 = metrics.Metric(
     name="load5",
     title=Localizable("CPU load average of last 5 minutes"),
     unit=Unit.COUNT,
-    color=Color.BLUE,
+    color=metrics.Color.BLUE,
 )
 
 metric_load15 = metrics.Metric(
     name="load15",
     title=Localizable("CPU load average of last 15 minutes"),
     unit=Unit.COUNT,
-    color=Color.DARK_BLUE,
+    color=metrics.Color.DARK_BLUE,
 )
 
 graph_cpu_load = graphs.Graph(

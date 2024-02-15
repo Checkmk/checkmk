@@ -39,7 +39,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from cmk.graphing.v1 import Color, graphs, Localizable, metrics, Unit
+from cmk.graphing.v1 import graphs, Localizable, metrics, Unit
 
 
 @pytest.mark.parametrize(
@@ -1335,32 +1335,32 @@ def test_graph_template_from_template(
                 title=Localizable("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
+                    metrics.Constant(Localizable("Constant"), Unit.COUNT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", Color.BLUE),
-                    metrics.MaximumOf("metric-name-5", Color.BLUE),
+                    metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
+                    metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
                     metrics.Sum(
                         Localizable("Sum"),
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
                         Localizable("Product"),
                         Unit.COUNT,
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
                         Localizable("Difference"),
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
                         Localizable("Fraction"),
                         Unit.COUNT,
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -1474,32 +1474,32 @@ def test_graph_template_from_template(
                 title=Localizable("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(Localizable("Constant"), Unit.COUNT, Color.BLUE, 10),
+                    metrics.Constant(Localizable("Constant"), Unit.COUNT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", Color.BLUE),
-                    metrics.MaximumOf("metric-name-5", Color.BLUE),
+                    metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
+                    metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
                     metrics.Sum(
                         Localizable("Sum"),
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
                         Localizable("Product"),
                         Unit.COUNT,
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
                         Localizable("Difference"),
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
                         Localizable("Fraction"),
                         Unit.COUNT,
-                        Color.BLUE,
+                        metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -1672,8 +1672,8 @@ def test_graph_template_from_graph(
                         "metric-name-l2",
                         metrics.WarningOf("metric-name-l3"),
                         metrics.CriticalOf("metric-name-l4"),
-                        metrics.MinimumOf("metric-name-l5", Color.BLUE),
-                        metrics.MaximumOf("metric-name-l6", Color.BLUE),
+                        metrics.MinimumOf("metric-name-l5", metrics.Color.BLUE),
+                        metrics.MaximumOf("metric-name-l6", metrics.Color.BLUE),
                     ],
                     optional=["metric-name-opt-l"],
                     conflicting=["metric-name-confl-l"],
@@ -1686,8 +1686,8 @@ def test_graph_template_from_graph(
                         "metric-name-u2",
                         metrics.WarningOf("metric-name-u3"),
                         metrics.CriticalOf("metric-name-u4"),
-                        metrics.MinimumOf("metric-name-u5", Color.BLUE),
-                        metrics.MaximumOf("metric-name-u6", Color.BLUE),
+                        metrics.MinimumOf("metric-name-u5", metrics.Color.BLUE),
+                        metrics.MaximumOf("metric-name-u6", metrics.Color.BLUE),
                     ],
                     optional=["metric-name-opt-u"],
                     conflicting=["metric-name-confl-u"],

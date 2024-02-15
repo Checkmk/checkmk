@@ -6,7 +6,7 @@
 import json
 from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 import time_machine
@@ -260,7 +260,7 @@ def test_check_wlan_controller_alarm_status(
     [
         (
             "wism21",
-            {"access_points": (300, 500)},
+            {"access_points": ("fixed", (300, 500))},
             WLAN_CONTROLLERS_SECTION,
             [
                 Result(state=State.WARN, summary="Count: 483 (warn/crit at 300/500)"),
@@ -272,7 +272,7 @@ def test_check_wlan_controller_alarm_status(
 )
 def test_check_wlan_controller_access_points(
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, tuple[Literal["fixed"], tuple[float, float]]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
 ) -> None:
@@ -285,7 +285,7 @@ def test_check_wlan_controller_access_points(
     [
         (
             "wism21",
-            {"clients": (50, 100)},
+            {"clients": ("fixed", (50, 100))},
             WLAN_CONTROLLERS_SECTION,
             [
                 Result(state=State.CRIT, summary="Count: 167 (warn/crit at 50/100)"),
@@ -297,7 +297,7 @@ def test_check_wlan_controller_access_points(
 )
 def test_check_wlan_controller_clients(
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, tuple[Literal["fixed"], tuple[float, float]]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
 ) -> None:
@@ -333,7 +333,7 @@ def test_check_wlan_controller_reachability(
     [
         (
             "wism21",
-            {"last_backup": (100 * DAY_IN_SECONDS, 600 * DAY_IN_SECONDS)},
+            {"last_backup": ("fixed", (100 * DAY_IN_SECONDS, 600 * DAY_IN_SECONDS))},
             WLAN_CONTROLLERS_SECTION,
             [
                 Result(
@@ -355,7 +355,7 @@ def test_check_wlan_controller_reachability(
 @time_machine.travel(datetime.fromisoformat("2021-10-27 00:00:00.000000Z"))
 def test_check_wlan_controller_last_backup(
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, tuple[Literal["fixed"], tuple[float, float]]],
     section: dict[str, WlanController],
     expected_result: list[CheckResult],
 ) -> None:

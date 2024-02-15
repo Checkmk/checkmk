@@ -5,17 +5,19 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
+UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
+
 metric_active_connections = metrics.Metric(
     name="active_connections",
     title=Title("Active connections"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.PURPLE,
 )
 
 metric_idle_connections = metrics.Metric(
     name="idle_connections",
     title=Title("Idle connections"),
-    unit=metrics.Unit.COUNT,
+    unit=UNIT_COUNT,
     color=metrics.Color.DARK_PURPLE,
 )
 

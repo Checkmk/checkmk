@@ -41,6 +41,8 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
+UNIT = metrics.Unit(metrics.DecimalNotation(""))
+
 
 @pytest.mark.parametrize(
     "data_string, result",
@@ -1336,7 +1338,7 @@ def test_graph_template_from_template(
                 title=Title("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10),
+                    metrics.Constant(Title("Constant"), UNIT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
@@ -1348,7 +1350,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Product(
                         Title("Product"),
-                        metrics.Unit.COUNT,
+                        UNIT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
@@ -1360,7 +1362,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Fraction(
                         Title("Fraction"),
-                        metrics.Unit.COUNT,
+                        UNIT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
@@ -1397,7 +1399,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1440,7 +1442,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1459,7 +1461,7 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1475,7 +1477,7 @@ def test_graph_template_from_template(
                 title=Title("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), metrics.Unit.COUNT, metrics.Color.BLUE, 10),
+                    metrics.Constant(Title("Constant"), UNIT, metrics.Color.BLUE, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
                     metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
@@ -1487,7 +1489,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Product(
                         Title("Product"),
-                        metrics.Unit.COUNT,
+                        UNIT,
                         metrics.Color.BLUE,
                         ["metric-name-7"],
                     ),
@@ -1499,7 +1501,7 @@ def test_graph_template_from_template(
                     ),
                     metrics.Fraction(
                         Title("Fraction"),
-                        metrics.Unit.COUNT,
+                        UNIT,
                         metrics.Color.BLUE,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
@@ -1559,7 +1561,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "line",
@@ -1576,7 +1578,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "line",
@@ -1595,7 +1597,7 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="COUNT",
+                            explicit_unit_name="",
                             explicit_color="#0000ff",
                         ),
                         "line",

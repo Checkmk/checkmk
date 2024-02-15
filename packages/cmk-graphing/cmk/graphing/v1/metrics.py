@@ -12,17 +12,26 @@ from enum import auto, Enum
 from ._localize import Title
 
 __all__ = [
+    "AutoPrecision",
     "Color",
-    "Metric",
     "Constant",
-    "WarningOf",
     "CriticalOf",
-    "MinimumOf",
-    "MaximumOf",
-    "Sum",
-    "Product",
+    "DecimalNotation",
     "Difference",
+    "EngineeringScientificNotation",
     "Fraction",
+    "IECNotation",
+    "MaximumOf",
+    "Metric",
+    "MinimumOf",
+    "Product",
+    "SINotation",
+    "StandardScientificNotation",
+    "StrictPrecision",
+    "Sum",
+    "TimeNotation",
+    "Unit",
+    "WarningOf",
 ]
 
 
@@ -71,98 +80,124 @@ class Color(Enum):
     WHITE = auto()
 
 
-class Unit(Enum):
-    # CMK
-    BAR = auto()  # "bar"
-    BIT_IEC = auto()  # "bits, factor 1024
-    BIT_SI = auto()  # "bits, factor 1000
-    BITS_IEC_PER_SECOND = auto()  # "bits/s, factor 1024
-    BITS_SI_PER_SECOND = auto()  # "bits/s, factor 1000
-    BYTE_IEC = auto()  # "bytes, factor 1024
-    BYTE_SI = auto()  # "bytes, factor 1000
-    BYTES_IEC_PER_SECOND = auto()  # "bytes/s, factor 1024
-    BYTES_SI_PER_SECOND = auto()  # "bytes/s, factor 1000
-    BYTES_IEC_PER_DAY = auto()  # "bytes/d, factor 1024
-    BYTES_SI_PER_DAY = auto()  # "bytes/d, factor 1000
-    BYTES_IEC_PER_OPERATION = auto()  # "bytes/op, factor 1024
-    BYTES_SI_PER_OPERATION = auto()  # "bytes/op, factor 1000
-    COUNT = auto()  # ", integer
-    DECIBEL = auto()  # "dB"
-    DECIBEL_MILLIVOLT = auto()  # "dBmV"
-    DECIBEL_MILLIWATT = auto()  # "dBm"
-    DOLLAR = auto()  # "$"
-    ELETRICAL_ENERGY = auto()  # "Wh"
-    EURO = auto()  # "€"
-    LITER_PER_SECOND = auto()  # "l/s"
-    NUMBER = auto()  # ", float
-    PARTS_PER_MILLION = auto()  # "ppm"
-    PERCENTAGE = auto()  # "%"
-    PERCENTAGE_PER_METER = auto()  # "%/m"
-    PER_SECOND = auto()  # "1/s"
-    READ_CAPACITY_UNIT = auto()  # "RCU"
-    REVOLUTIONS_PER_MINUTE = auto()  # "rpm"
-    SECONDS_PER_SECOND = auto()  # "s/s"
-    VOLT_AMPERE = auto()  # "VA"
-    WRITE_CAPACITY_UNIT = auto()  # "WCU"
-    # SI base unit
-    AMPERE = auto()  # "A"
-    CANDELA = auto()  # "cd"
-    KELVIN = auto()  # "K"
-    KILOGRAM = auto()  # "kg"
-    METRE = auto()  # "m"
-    MOLE = auto()  # "mol"
-    SECOND = auto()  # "s"
-    # SI Units with Special Names and Symbols
-    BECQUEREL = auto()  # "Bq"
-    COULOMB = auto()  # "C"
-    DEGREE_CELSIUS = auto()  # "°C"
-    FARAD = auto()  # "F"
-    GRAY = auto()  # "Gy"
-    HENRY = auto()  # "H"
-    HERTZ = auto()  # "Hz"
-    JOULE = auto()  # "J"
-    KATAL = auto()  # "kat"
-    LUMEN = auto()  # "lm"
-    LUX = auto()  # "lx"
-    NEWTON = auto()  # "N"
-    OHM = auto()  # "Ω"
-    PASCAL = auto()  # "Pa"
-    RADIAN = auto()  # "rad"
-    SIEMENS = auto()  # "S"
-    SIEVERT = auto()  # "Sv"
-    STERADIAN = auto()  # "sr"
-    TESLA = auto()  # "T"
-    VOLT = auto()  # "V"
-    WATT = auto()  # "W"
-    WEBER = auto()  # "Wb"
+@dataclass(frozen=True)
+class DecimalNotation:
+    """
+    A unit with decimal notation has no special format.
+    """
+
+    symbol: str
 
 
 @dataclass(frozen=True)
-class DecimalUnit:
+class SINotation:
     """
-    A unit is rendered with decimals.
+    A unit with the SI notation formats a number with the following magnitudes:
+    y, z, a, f, p, n, µ, m, "", k, M, G, T, P, E, Z, Y.
     """
 
-    title: Title
     symbol: str
-
-    def __post_init__(self) -> None:
-        if not self.symbol:
-            raise ValueError(self.symbol)
 
 
 @dataclass(frozen=True)
-class ScientificUnit:
+class IECNotation:
     """
-    A unit is using scientific notation while rendering.
+    A unit with the IEC notation formats a number with the following magnitudes:
+    "", Ki, Mi, Gi, Ti, Pi, Ei, Zi, Yi.
+    Positive number below one use the decimal notation.
     """
 
-    title: Title
     symbol: str
 
+
+@dataclass(frozen=True)
+class StandardScientificNotation:
+    """
+    A unit with the standard scientific notation formats a number as following:
+    m * 10**n, where 1 <= |m| < 10.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class EngineeringScientificNotation:
+    """
+    A unit with the engineering scientific notation formats a number as following:
+    m * 10**n, where 1 <= |m| < 1000 and n % 3 == 0.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class TimeNotation:
+    """
+    A unit with the time notation formats a number with the following magnitudes:
+    µs, ms, s, min, h, d.
+    """
+
+    @property
+    def symbol(self) -> str:
+        return "s"
+
+
+@dataclass(frozen=True)
+class AutoPrecision:
+    """
+    A unit with auto precision rounds the fractional part to the given digits or to the latest
+    non-zero digit.
+    """
+
+    digits: int
+
     def __post_init__(self) -> None:
-        if not self.symbol:
-            raise ValueError(self.symbol)
+        if self.digits < 0:
+            raise ValueError(self.digits)
+
+
+@dataclass(frozen=True)
+class StrictPrecision:
+    """
+    A unit with strict precision rounds the fractional part to the given digits.
+    """
+
+    digits: int
+
+    def __post_init__(self) -> None:
+        if self.digits < 0:
+            raise ValueError(self.digits)
+
+
+@dataclass(frozen=True)
+class Unit:
+    """
+    Defines a unit which can be used within metrics and metric operations.
+
+    Examples:
+
+        >>> Unit(DecimalNotation(""), StrictPrecision(0))  # rendered as integer
+        Unit(notation=DecimalNotation(symbol=''), precision=StrictPrecision(digits=0))
+
+        >>> Unit(DecimalNotation(""), StrictPrecision(2))  # rendered as float with two digits
+        Unit(notation=DecimalNotation(symbol=''), precision=StrictPrecision(digits=2))
+
+        >>> Unit(SINotation("bytes"))  # bytes which are scaled with SI prefixes
+        Unit(notation=SINotation(symbol='bytes'), precision=AutoPrecision(digits=2))
+
+        >>> Unit(IECNotation("bits"))  # bits which are scaled with IEC prefixes
+        Unit(notation=IECNotation(symbol='bits'), precision=AutoPrecision(digits=2))
+    """
+
+    notation: (
+        DecimalNotation
+        | SINotation
+        | IECNotation
+        | StandardScientificNotation
+        | EngineeringScientificNotation
+        | TimeNotation
+    )
+    precision: AutoPrecision | StrictPrecision = AutoPrecision(2)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -182,14 +217,14 @@ class Metric:
         >>> metric_metric_name = Metric(
         ...     name="metric_name",
         ...     title=Title("A metric"),
-        ...     unit=Unit.PERCENTAGE,
+        ...     unit=Unit(DecimalNotation("")),
         ...     color=Color.BLUE,
         ... )
     """
 
     name: str
     title: Title
-    unit: Unit | DecimalUnit | ScientificUnit
+    unit: Unit
     color: Color
 
     def __post_init__(self) -> None:
@@ -210,13 +245,18 @@ class Constant:
 
     Example:
 
-        >>> Constant(Title("A title"), Unit.COUNT, Color.BLUE, 23.5)
-        Constant(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
-value=23.5)
+        >>> Constant(
+        ...     Title("A title"),
+        ...     Unit(IECNotation("bits")),
+        ...     Color.BLUE,
+        ...     23.5,
+        ... )
+        Constant(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>, value=23.5)
     """
 
     title: Title
-    unit: Unit | DecimalUnit | ScientificUnit
+    unit: Unit
     color: Color
     value: int | float
 
@@ -373,16 +413,17 @@ class Product:
 
         >>> Product(
         ...     Title("A title"),
-        ...     Unit.COUNT,
+        ...     Unit(IECNotation("bits")),
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Product(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
-factors=['metric-name-1', 'metric-name-2'])
+        Product(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>,\
+ factors=['metric-name-1', 'metric-name-2'])
     """
 
     title: Title
-    unit: Unit | DecimalUnit | ScientificUnit
+    unit: Unit
     color: Color
     factors: Sequence[
         str
@@ -480,17 +521,18 @@ class Fraction:
 
         >>> Fraction(
         ...     Title("A title"),
-        ...     Unit.COUNT,
+        ...     Unit(IECNotation("bits")),
         ...     Color.BLUE,
         ...     dividend="metric-name-1",
         ...     divisor="metric-name-2",
         ... )
-        Fraction(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
-dividend='metric-name-1', divisor='metric-name-2')
+        Fraction(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>, dividend='metric-name-1',\
+ divisor='metric-name-2')
     """
 
     title: Title
-    unit: Unit | DecimalUnit | ScientificUnit
+    unit: Unit
     color: Color
     _: KW_ONLY
     dividend: (

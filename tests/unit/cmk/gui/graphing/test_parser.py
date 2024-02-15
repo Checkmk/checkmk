@@ -7,7 +7,7 @@ import pytest
 
 from cmk.gui.graphing._parser import parse_unit
 
-from cmk.graphing.v1 import Localizable, metrics
+from cmk.graphing.v1 import metrics, Title
 
 
 @pytest.mark.parametrize(
@@ -320,7 +320,7 @@ def test_parse_unit(unit: metrics.Unit, expected_symbol: str) -> None:
 
 
 def test_parse_physical_unit() -> None:
-    unit_info = parse_unit(metrics.DecimalUnit(Localizable("Title"), "symbol"))
+    unit_info = parse_unit(metrics.DecimalUnit(Title("Title"), "symbol"))
     assert unit_info["title"] == "Title"
     assert unit_info["symbol"] == "symbol"
     assert unit_info["render"](0.00024) == "240 µsymbol"
@@ -328,7 +328,7 @@ def test_parse_physical_unit() -> None:
 
 
 def test_parse_scientific_unit() -> None:
-    unit_info = parse_unit(metrics.ScientificUnit(Localizable("Title"), "symbol"))
+    unit_info = parse_unit(metrics.ScientificUnit(Title("Title"), "symbol"))
     assert unit_info["title"] == "Title"
     assert unit_info["symbol"] == "symbol"
     assert unit_info["render"](0.00024) == "2.40e-4 symbol"

@@ -5,7 +5,7 @@
 
 from typing import Final
 
-from cmk.graphing.v1 import Localizable
+from cmk.graphing.v1 import Title
 
 _TRANSLATABLE_STRINGS: Final = {
     "The ruleset '%s' has been replaced by '%s'": "%s heißt jetzt %s",
@@ -22,22 +22,22 @@ def _localizer(string: str) -> str:
     return _TRANSLATABLE_STRINGS[string]
 
 
-class TestLocalizable:
+class TestTitle:
     def test_mod_tuple(self) -> None:
         assert (
-            Localizable("The ruleset '%s' has been replaced by '%s'")
+            Title("The ruleset '%s' has been replaced by '%s'")
             % (
-                Localizable("Old rule"),
-                Localizable("Fancy new rule"),
+                Title("Old rule"),
+                Title("Fancy new rule"),
             )
         ).localize(_localizer) == "Raider heißt jetzt Twix"
 
     def test_mod_string(self) -> None:
-        assert (Localizable("The host %r does not exist") % "horst").localize(
+        assert (Title("The host %r does not exist") % "horst").localize(
             _localizer
         ) == "'horst' gibbet nich"
 
     def test_add(self) -> None:
-        assert (Localizable("One sentence. ") + Localizable("Another sentence.")).localize(
+        assert (Title("One sentence. ") + Title("Another sentence.")).localize(
             _localizer
         ) == "blahblah"

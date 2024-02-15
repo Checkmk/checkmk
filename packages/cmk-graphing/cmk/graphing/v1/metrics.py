@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
 from enum import auto, Enum
 
-from ._localize import Localizable
+from ._localize import Title
 
 __all__ = [
     "Color",
@@ -143,7 +143,7 @@ class DecimalUnit:
     A unit is rendered with decimals.
     """
 
-    title: Localizable
+    title: Title
     symbol: str
 
     def __post_init__(self) -> None:
@@ -157,7 +157,7 @@ class ScientificUnit:
     A unit is using scientific notation while rendering.
     """
 
-    title: Localizable
+    title: Title
     symbol: str
 
     def __post_init__(self) -> None:
@@ -181,14 +181,14 @@ class Metric:
 
         >>> metric_metric_name = Metric(
         ...     name="metric_name",
-        ...     title=Localizable("A metric"),
+        ...     title=Title("A metric"),
         ...     unit=Unit.PERCENTAGE,
         ...     color=Color.BLUE,
         ... )
     """
 
     name: str
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
 
@@ -210,12 +210,12 @@ class Constant:
 
     Example:
 
-        >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
-        Constant(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        >>> Constant(Title("A title"), Unit.COUNT, Color.BLUE, 23.5)
+        Constant(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 value=23.5)
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     value: int | float
@@ -327,15 +327,15 @@ class Sum:
     Example:
 
         >>> Sum(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Sum(title=Localizable('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
+        Sum(title=Title('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
 'metric-name-2'])
     """
 
-    title: Localizable
+    title: Title
     color: Color
     summands: Sequence[
         str
@@ -372,16 +372,16 @@ class Product:
     Example:
 
         >>> Product(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Unit.COUNT,
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Product(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        Product(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 factors=['metric-name-1', 'metric-name-2'])
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     factors: Sequence[
@@ -419,16 +419,16 @@ class Difference:
     Example:
 
         >>> Difference(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     minuend="metric-name-1",
         ...     subtrahend="metric-name-2",
         ... )
-        Difference(title=Localizable('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
+        Difference(title=Title('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
 subtrahend='metric-name-2')
     """
 
-    title: Localizable
+    title: Title
     color: Color
     _: KW_ONLY
     minuend: (
@@ -479,17 +479,17 @@ class Fraction:
     Example:
 
         >>> Fraction(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Unit.COUNT,
         ...     Color.BLUE,
         ...     dividend="metric-name-1",
         ...     divisor="metric-name-2",
         ... )
-        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        Fraction(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 dividend='metric-name-1', divisor='metric-name-2')
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     _: KW_ONLY

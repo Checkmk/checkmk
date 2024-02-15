@@ -1,0 +1,12 @@
+Title: EC: Fix missing update action for CRE
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1707986872
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+With werk 16012 the active configuration folder was introduced. During an
+update the event console configuration is synchronized to this folder which is
+missing for the raw edition. Fixed that.

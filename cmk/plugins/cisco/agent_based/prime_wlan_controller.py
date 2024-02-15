@@ -7,10 +7,17 @@ import json
 from collections.abc import Generator, Mapping
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, Literal, NamedTuple
 
-from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DAY_IN_SECONDS = 24 * 60 * 60
@@ -145,7 +152,14 @@ check_plugin_cisco_prime_wlan_controller_alarm_status = CheckPlugin(
 
 
 def check_wlan_controller_access_points(
-    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
+    item: str,
+    params: Mapping[
+        str,
+        tuple[Literal["no_levels"], None]
+        | tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
+        | tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]],
+    ],
+    section: dict[str, WlanController],
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -156,7 +170,7 @@ def check_wlan_controller_access_points(
         levels_upper=params.get("access_points"),
         label="Count",
         metric_name="ap_count",
-        render_func=lambda x: str(int(x)),
+        render_function=lambda x: str(int(x)),
     )
 
 
@@ -172,7 +186,14 @@ check_plugin_cisco_prime_wlan_controller_access_points = CheckPlugin(
 
 
 def check_wlan_controller_clients(
-    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
+    item: str,
+    params: Mapping[
+        str,
+        tuple[Literal["no_levels"], None]
+        | tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
+        | tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]],
+    ],
+    section: dict[str, WlanController],
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -183,7 +204,7 @@ def check_wlan_controller_clients(
         levels_upper=params.get("clients"),
         label="Count",
         metric_name="clients_count",
-        render_func=lambda x: str(int(x)),
+        render_function=lambda x: str(int(x)),
     )
 
 
@@ -222,7 +243,14 @@ check_plugin_cisco_prime_wlan_controller_reachability = CheckPlugin(
 
 
 def check_wlan_controller_last_backup(
-    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
+    item: str,
+    params: Mapping[
+        str,
+        tuple[Literal["no_levels"], None]
+        | tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
+        | tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]],
+    ],
+    section: dict[str, WlanController],
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -236,7 +264,7 @@ def check_wlan_controller_last_backup(
         (datetime.now(timezone.utc) - data.last_backup).total_seconds(),
         levels_upper=params["last_backup"],
         metric_name="backup_age",
-        render_func=render.timespan,
+        render_function=render.timespan,
     )
 
 

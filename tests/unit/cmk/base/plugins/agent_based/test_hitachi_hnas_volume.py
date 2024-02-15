@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import hitachi_hnas_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -143,8 +143,7 @@ def test_check_hitachi_hnas_volume(
     expected: CheckResult,
 ) -> None:
     """Hitachi volume check function returns expected results for different volume params"""
-
-    with on_time("2021-07-22 12:00", "CET"):
+    with time_machine.travel(datetime(2021, 7, 22, 12, tzinfo=ZoneInfo("UTC")), tick=False):
         results = list(check_hitachi_hnas_volume(item, params, section))
 
     assert [r for r in results if isinstance(r, Result)] == [

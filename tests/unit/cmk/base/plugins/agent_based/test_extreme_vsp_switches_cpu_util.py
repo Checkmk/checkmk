@@ -2,12 +2,13 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 from collections.abc import Mapping, Sequence
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -83,7 +84,7 @@ def test_check_vsp_switches_cpu_util(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result],
 ) -> None:
-    with on_time("2023-01-30 12:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2023, 1, 30, 12, tzinfo=ZoneInfo("UTC"))):
         assert (
             list(
                 check_vsp_switches_cpu_util(

@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib import on_time
+import datetime
+from zoneinfo import ZoneInfo
+
+import time_machine
 
 from cmk.base.plugins.agent_based import mssql_backup as msb
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -58,7 +61,7 @@ def test_discovery_single() -> None:
 
 
 def test_check() -> None:
-    with on_time("2016-07-15", "UTC"):
+    with time_machine.travel(datetime.datetime(2016, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, _get_section())) == [
             Result(state=State.OK, summary="[database] Last backup: 2016-07-08 20:20:27"),
             Result(state=State.OK, summary="Time since last backup: 6 days 3 hours"),
@@ -67,7 +70,7 @@ def test_check() -> None:
 
 
 def test_check_with_seconds_metric() -> None:
-    with on_time("2016-07-15", "UTC"):
+    with time_machine.travel(datetime.datetime(2016, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, _get_section())) == [
             Result(state=State.OK, summary="[database] Last backup: 1970-05-23 21:21:18"),
             Result(state=State.OK, summary="Time since last backup: 46 years 64 days"),

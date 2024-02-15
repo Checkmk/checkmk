@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as asm
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -21,7 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 
 from cmk.agent_based.v1.type_defs import StringTable
 
-NOW_SIMULATED = 581792400, "UTC"
+NOW_SIMULATED = 581792400
 
 ITEM = "DISK_GROUP"
 SECTION_OLD_MOUNTED = asm.Section(
@@ -446,7 +447,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
     ],
 )
 def test_check(section: asm.Section, params: Mapping[str, object], expected: CheckResult) -> None:
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
 
 
@@ -492,6 +493,6 @@ def test_check(section: asm.Section, params: Mapping[str, object], expected: Che
 def test_cluster(
     section: Mapping[str, asm.Section], params: Mapping[str, object], expected: CheckResult
 ) -> None:
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
         assert yielded_results == expected

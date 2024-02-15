@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import cisco_meraki_org_device_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
@@ -87,5 +88,5 @@ def test_discover_device_status(
 )
 def test_check_device_status(string_table: StringTable, expected_results: Sequence[Result]) -> None:
     section = cisco_meraki_org_device_status.parse_device_status(string_table)
-    with on_time("2000-01-15 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2000, 1, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(cisco_meraki_org_device_status.check_device_status(section)) == expected_results

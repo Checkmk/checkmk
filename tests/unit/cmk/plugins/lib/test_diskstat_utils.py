@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Iterable, Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.gui.plugins.wato.check_parameters.diskstat import scale_back, scale_forth
 
@@ -144,15 +145,14 @@ def test_compute_rates_multiple_disks() -> None:
     value_store: dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
-    with on_time(0, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(0, tz=ZoneInfo("UTC"))):
         with pytest.raises(IgnoreResultsError):
             diskstat.compute_rates_multiple_disks(
                 disks,
                 value_store,
                 _compute_rates_single_disk,
             )
-
-    with on_time(60, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(60, tz=ZoneInfo("UTC"))):
         disks_w_rates = diskstat.compute_rates_multiple_disks(
             disks,
             value_store,

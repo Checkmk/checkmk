@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Mapping, Sequence
 from copy import copy
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import job
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -114,7 +115,7 @@ SECTION_3: job.Section = {
     },
 }
 
-TIME = 1594300620.0, "CET"
+TIME = 1594300620.0
 
 
 def _modify_start_time(
@@ -452,7 +453,7 @@ def test_process_job_stats(
     exit_code_to_state_map,
     expected_results,
 ):
-    with on_time(*TIME):
+    with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(
             job._process_job_stats(
                 job_data,
@@ -579,5 +580,5 @@ def test_check_job(
     section: job.Section,
     expected_results: Sequence[Result | Metric],
 ) -> None:
-    with on_time(*TIME):
+    with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(job.check_job(item, params, section)) == expected_results

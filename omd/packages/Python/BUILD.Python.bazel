@@ -58,6 +58,7 @@ configure_make(
         "lib",
         "share",
     ],
+    out_include_dir = "include/python%s" % PYTHON_MAJOR_DOT_MINOR,
     postfix_script = """
         py_install_dir="$BUILD_TMPDIR/{installPrefix}";
         bin_dir="$INSTALLDIR/bin";

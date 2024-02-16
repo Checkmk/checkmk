@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -852,8 +853,10 @@ def fixture_service_painter_names() -> list[str]:
 def test_service_painters(
     service_painter_idents: Sequence[str], live: MockLiveStatusConnection
 ) -> None:
-    with live(expect_status_query=False), request.stashed_vars(), on_time(
-        "2018-04-15 16:50", "CET"
+    with (
+        live(expect_status_query=False),
+        request.stashed_vars(),
+        time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("CET"))),
     ):
         request.del_vars()
 

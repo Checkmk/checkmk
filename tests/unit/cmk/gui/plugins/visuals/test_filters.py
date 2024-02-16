@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
@@ -170,7 +171,7 @@ filter_tests = [
             ("comment_entry_time_until_range", "abs"),
         ],
         expected_filters=(
-            "Filter: comment_entry_time >= 981154800\n" "Filter: comment_entry_time <= 1015196400\n"
+            "Filter: comment_entry_time >= 981158400\n" "Filter: comment_entry_time <= 1015200000\n"
         ),
     ),
     FilterTest(
@@ -609,10 +610,15 @@ def filter_test_id(t):
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
 def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context: None) -> None:
-    with set_config(
-        wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
-        tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
-    ), on_time("2018-04-15 16:50", "CET"):
+    with (
+        set_config(
+            wato_host_attrs=[
+                {"name": "bla", "title": "Bla"}
+            ],  # Needed for ABCFilterCustomAttribute
+            tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
+        ),
+        time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("UTC"))),
+    ):
         filt = filter_registry[test.ident]
         filter_vars = dict(filt.value())  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))
@@ -1137,7 +1143,7 @@ def test_filters_filter_table(
 
     monkeypatch.setattr(bi_filters, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("CET"))):
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
@@ -1276,7 +1282,7 @@ def test_filters_filter_table(
     ],
 )
 def test_filters_filter_inv_table(test: FilterTableTest) -> None:
-    with on_time("2018-04-15 16:50", "CET"):
+    with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("CET"))):
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...

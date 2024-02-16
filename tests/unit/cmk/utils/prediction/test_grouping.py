@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.utils.prediction import _grouping
 
@@ -176,8 +177,9 @@ def test_time_slices(
     windows_expected: list[tuple[int, int]],
 ) -> None:
     period_info = _grouping.PREDICTION_PERIODS[period]
-
-    with on_time(utcdate, timezone):
+    with time_machine.travel(
+        datetime.datetime.fromisoformat(utcdate).replace(tzinfo=ZoneInfo(timezone))
+    ):
         now = int(time.time())
         assert callable(period_info.groupby)
 

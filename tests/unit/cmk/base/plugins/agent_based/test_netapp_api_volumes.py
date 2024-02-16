@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Iterable
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import netapp_api_volumes as nav
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -593,7 +594,9 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
         "get_value_store",
         lambda: {"group1.delta": (1591789747, 0)},
     )
-    with on_time("2020-06-10 13:50:21", "UTC"):
+    with time_machine.travel(
+        datetime.datetime(2020, 6, 10, 13, 50, 21, tzinfo=ZoneInfo("UTC")), tick=False
+    ):
         assert list(
             nav.check_netapp_api_volumes(
                 "group1",
@@ -652,7 +655,9 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
             **{k: (1591789747, 0) for k in _create_keys()},
         },
     )
-    with on_time("2020-06-10 13:50:21", "UTC"):
+    with time_machine.travel(
+        datetime.datetime(2020, 6, 10, 13, 50, 21, tzinfo=ZoneInfo("UTC")), tick=False
+    ):
         assert list(
             nav.check_netapp_api_volumes(
                 "euedcnas1710.v_1710_aspera",

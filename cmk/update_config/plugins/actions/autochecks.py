@@ -163,14 +163,20 @@ def rewrite_yielding_errors(logger: Logger) -> Iterable[RewriteError]:
     all_rulesets = AllRulesets.load_all_rulesets()
     for hostname in _autocheck_hosts():
         try:
-            autochecks = _AutochecksStoreV22(hostname).read()
-            AutochecksStore(hostname).write(
-                [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
-            )
+            fixed_autochecks = _get_fixed_autochecks(hostname, all_rulesets, logger)
         except MKGeneralException as exc:
             if debug.enabled():
                 raise
             yield RewriteError(str(exc), hostname)
+        else:
+            AutochecksStore(hostname).write(fixed_autochecks)
+
+
+def _get_fixed_autochecks(
+    host_name: HostName, all_rulesets: AllRulesets, logger: Logger
+) -> list[AutocheckEntry]:
+    autochecks = _AutochecksStoreV22(host_name).read()
+    return [_fix_entry(logger, s, all_rulesets, host_name) for s in autochecks]
 
 
 def _autocheck_hosts() -> Iterable[HostName]:

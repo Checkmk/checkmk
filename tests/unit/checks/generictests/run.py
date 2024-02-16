@@ -167,7 +167,7 @@ def optional_freeze_time(dataset):
     """Optionally freeze of the time in generic dataset tests
 
     If present and truish the datasets freeze_time attribute is passed to
-    freezegun.freeze_time.
+    time_machine.travel.
     """
     if getattr(dataset, "freeze_time", None):
         with time_machine.travel(datetime.datetime.fromisoformat(dataset.freeze_time)):

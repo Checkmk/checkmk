@@ -23,8 +23,12 @@ def get_rule_stats_from_ec() -> Mapping[str, int]:
 
 
 def save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack]) -> None:
-    ec.save_rule_packs(rule_packs, active_config.mkeventd_pprint_rules)
+    ec.save_rule_packs(
+        rule_packs, pretty_print=active_config.mkeventd_pprint_rules, path=ec.rule_pack_dir()
+    )
 
 
 def export_mkp_rule_pack(rule_pack: ec.ECRulePack) -> None:
-    ec.export_rule_pack(rule_pack, active_config.mkeventd_pprint_rules)
+    ec.export_rule_pack(
+        rule_pack, pretty_print=active_config.mkeventd_pprint_rules, path=ec.mkp_rule_pack_dir()
+    )

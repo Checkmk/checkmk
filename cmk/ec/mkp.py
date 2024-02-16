@@ -9,7 +9,13 @@ from pathlib import Path
 from cmk.mkp_tool import PackageOperationCallbacks, PackagePart
 
 from .config import MkpRulePackProxy
-from .rule_packs import export_rule_pack, load_rule_packs, save_rule_packs
+from .rule_packs import (
+    export_rule_pack,
+    load_rule_packs,
+    mkp_rule_pack_dir,
+    rule_pack_dir,
+    save_rule_packs,
+)
 
 
 def _install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
@@ -27,7 +33,7 @@ def _install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
             rule_packs[index] = MkpRulePackProxy(id_)
         else:
             rule_packs.append(MkpRulePackProxy(id_))
-    save_rule_packs(rule_packs)
+    save_rule_packs(rule_packs, pretty_print=False, path=rule_pack_dir())
 
 
 def _uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
@@ -37,7 +43,11 @@ def _uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     deleted the exported rule pack and the rule pack in rules.mk are both deleted.
     """
     affected_ids = {fn.stem for fn in file_names}
-    save_rule_packs(rp for rp in load_rule_packs() if rp["id"] not in affected_ids)
+    save_rule_packs(
+        (rp for rp in load_rule_packs() if rp["id"] not in affected_ids),
+        pretty_print=False,
+        path=rule_pack_dir(),
+    )
 
 
 def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
@@ -61,11 +71,11 @@ def _release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         rp = rule_packs[index]
         if not isinstance(rp, MkpRulePackProxy):
             save = True
-            export_rule_pack(rp)
+            export_rule_pack(rp, pretty_print=False, path=mkp_rule_pack_dir())
             rule_packs[index] = MkpRulePackProxy(id_)
 
     if save:
-        save_rule_packs(rule_packs)
+        save_rule_packs(rule_packs, pretty_print=False, path=rule_pack_dir())
 
 
 def mkp_callbacks() -> Mapping[PackagePart, PackageOperationCallbacks]:

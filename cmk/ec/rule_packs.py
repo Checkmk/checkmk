@@ -254,7 +254,7 @@ def save_active_config(
         target = active_conf_d / path.relative_to(settings.paths.config_dir.value)
         target.parent.mkdir(parents=True, exist_ok=True)
         if path.name == "rules.mk":
-            save_rule_packs(rule_packs, pretty_print=pretty_print, dir_=target.parent)
+            save_rule_packs(rule_packs, pretty_print=pretty_print, path=target.parent)
         else:
             shutil.copy(path, target)
 
@@ -265,12 +265,8 @@ def load_rule_packs() -> Sequence[ECRulePack]:
     return load_config(_default_settings())["rule_packs"]
 
 
-def save_rule_packs(
-    rule_packs: Iterable[ECRulePack], pretty_print: bool = False, dir_: Path | None = None
-) -> None:
-    """Saves the given rule packs to rules.mk. By default they are saved to the
-    default directory for rule packs. If dir_ is given it is used instead of
-    the default."""
+def save_rule_packs(rule_packs: Iterable[ECRulePack], pretty_print: bool, path: Path) -> None:
+    """Saves the given rule packs to rules.mk."""
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
     if pretty_print:
@@ -280,18 +276,14 @@ def save_rule_packs(
 
     output += f"rule_packs += \\\n{rule_packs_text}\n"
 
-    if not dir_:
-        dir_ = rule_pack_dir()
-    dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / "rules.mk", output)
+    path.mkdir(parents=True, exist_ok=True)
+    store.save_text_to_file(path / "rules.mk", output)
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
 # save_rule_packs(), otherwise there is a race condition when the EC
 # recursively reads all *.mk files!
-def export_rule_pack(
-    rule_pack: ECRulePack, pretty_print: bool = False, dir_: Path | None = None
-) -> None:
+def export_rule_pack(rule_pack: ECRulePack, pretty_print: bool, path: Path) -> None:
     """
     Export the representation of a rule pack (i.e. a dict) to a .mk
     file accessible by the WATO module Extension Packages. In case
@@ -299,9 +291,6 @@ def export_rule_pack(
     pack is used.
     The name of the .mk file is determined by the ID of the rule pack,
     i.e. the rule pack 'test' will be saved as 'test.mk'
-    By default the rule pack is saved to the default directory for
-    mkp rule packs. If dir_ is given the default is replaced by the
-    directory dir_.
     """
     if isinstance(rule_pack, MkpRulePackProxy):
         if rule_pack.rule_pack is None:
@@ -314,10 +303,8 @@ def export_rule_pack(
 mkp_rule_packs['{rule_pack['id']}'] = \\
 {repr_}
 """
-    if not dir_:
-        dir_ = mkp_rule_pack_dir()
-    dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", output)
+    path.mkdir(parents=True, exist_ok=True)
+    store.save_text_to_file(path / f"{rule_pack['id']}.mk", output)
 
 
 def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) -> None:

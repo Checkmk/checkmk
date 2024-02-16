@@ -23,9 +23,9 @@ from cmk.rulesets.v1.form_specs import (
     LevelsConfigModel,
     List,
     Text,
+    validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
-from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 
 
 def _valuespec_response_time() -> Dictionary:
@@ -67,7 +67,7 @@ def _valuespec_validity() -> Dictionary:
                 parameter_form=Integer(
                     title=Localizable("Maximum allowed validity"),
                     unit=Localizable("days"),
-                    custom_validate=InRange(min_value=0),
+                    custom_validate=validators.InRange(min_value=0),
                 )
             ),
             "self_signed": DictElement[bool](
@@ -235,7 +235,9 @@ def _valuespec_remaining_validity() -> Levels[int]:
     return Levels[int](
         title=Localizable("Remaining validity time"),
         help_text=Localizable("Minimum number of days a certificate has to be valid."),
-        form_spec_template=Integer(custom_validate=InRange(min_value=0), unit=Localizable("days")),
+        form_spec_template=Integer(
+            custom_validate=validators.InRange(min_value=0), unit=Localizable("days")
+        ),
         level_direction=LevelDirection.LOWER,
         prefill_fixed_levels=InputHint(value=(0, 0)),
         predictive=None,
@@ -260,7 +262,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                 parameter_form=Text(
                                     title=Localizable("Host address or name"),
                                     prefill=InputHint("my.host.tld | 192.168.0.73"),
-                                    custom_validate=DisallowEmpty(),
+                                    custom_validate=validators.DisallowEmpty(),
                                 ),
                                 required=True,
                             ),

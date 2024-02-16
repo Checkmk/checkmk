@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.mssql.rulesets.utils import fs_mssql_backup_age
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
+from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1.form_specs import validators
 
 
 def _parameter_form_mssql_backup_per_type():

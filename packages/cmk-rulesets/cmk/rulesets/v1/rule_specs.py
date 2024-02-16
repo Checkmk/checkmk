@@ -9,7 +9,7 @@ from enum import auto, Enum
 
 from ._localize import Localizable
 from .form_specs import Dictionary, FormSpec, SingleChoice, Text
-from .validators import DisallowEmpty
+from .form_specs.validators import DisallowEmpty
 
 
 class Topic(Enum):

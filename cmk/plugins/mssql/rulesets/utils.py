@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
+from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
 def fs_mssql_backup_age(
@@ -30,6 +30,6 @@ def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
             help_text=Localizable(
                 "The MSSQL instance name and the tablespace name separated by a space."
             ),
-            custom_validate=validators.DisallowEmpty(),
+            custom_validate=form_specs.validators.DisallowEmpty(),
         ),
     )

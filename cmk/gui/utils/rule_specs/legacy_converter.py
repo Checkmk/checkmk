@@ -712,7 +712,7 @@ def _convert_to_legacy_text_input(
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "allow_empty": not isinstance(
-            to_convert.custom_validate, ruleset_api_v1.validators.DisallowEmpty
+            to_convert.custom_validate, ruleset_api_v1.form_specs.validators.DisallowEmpty
         ),
     }
 
@@ -947,7 +947,7 @@ def _convert_to_legacy_validation(
     def wrapper(value: _ValidateFuncType, var_prefix: str) -> None:
         try:
             v1_validate_func(value)
-        except ruleset_api_v1.validators.ValidationError as e:
+        except ruleset_api_v1.form_specs.validators.ValidationError as e:
             raise MKUserError(var_prefix, e.message.localize(localizer))
 
     return wrapper

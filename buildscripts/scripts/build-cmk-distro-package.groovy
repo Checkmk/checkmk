@@ -211,17 +211,6 @@ def main() {
                         stage("Build package") {
                             sh("""
                                 cd ${checkout_dir}/omd
-
-                                # ps wauxw | grep bazel
-                                # bazel clean
-                                #strace \
-                                #    --trace='fork,vfork,clone,clone3,execve,openat,write' \
-                                #    -ttt \
-                                #    -f --decode-pids='pidns' \
-                                #    --columns=0 --abbrev='none' -s 65536 \
-                                #    -o "make-omd.strace.log" \
-                                ps wauxw | grep bazel
-
                                 ${omd_env_vars.join(' ')} \
                                 make ${distro_package_type(distro)}
                             """);

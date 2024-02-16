@@ -78,13 +78,6 @@ def _default_settings() -> Settings:
     )
 
 
-def rule_pack_dir() -> Path:
-    """
-    Returns the default WATO directory of the Event Console.
-    """
-    return _default_settings().paths.rule_pack_dir.value
-
-
 def active_config_dir() -> Path:
     """Returns the directory where active rule packs of the Event Console are located."""
     return _default_settings().paths.active_config_dir.value

@@ -27,7 +27,6 @@ class Paths(NamedTuple):
     main_config_file: AnnotatedPath
     config_dir: AnnotatedPath
     active_config_dir: AnnotatedPath
-    rule_pack_dir: AnnotatedPath
     unix_socket: AnnotatedPath
     event_socket: AnnotatedPath
     event_pipe: AnnotatedPath
@@ -54,9 +53,6 @@ def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
         config_dir=AnnotatedPath("configuration directory", default_config_dir / "mkeventd.d"),
         active_config_dir=AnnotatedPath(
             "active configuration directory", state_dir / "active_config"
-        ),
-        rule_pack_dir=AnnotatedPath(
-            "rule pack directory", default_config_dir / "mkeventd.d" / "wato"
         ),
         unix_socket=AnnotatedPath("Unix socket", run_dir / "status"),
         event_socket=AnnotatedPath("event socket", run_dir / "eventsocket"),

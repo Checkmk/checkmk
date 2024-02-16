@@ -29,6 +29,13 @@ from cmk.mkp_tool import (
     reload_apache,
 )
 
+AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
+GUI_PLUGINS_PREACTION_SORT_INDEX = 20
+
+AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after these two!
+    max(AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX, GUI_PLUGINS_PREACTION_SORT_INDEX) + 10
+)
+
 
 def prompt(message: str) -> str:
     tcflush(sys.stdin, TCIFLUSH)

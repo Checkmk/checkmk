@@ -7,10 +7,9 @@ import ast
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, NamedTuple, Self, TypeVar
+from typing import Any, Generator, NamedTuple, Self, TypeVar
 
 from cmk.utils import debug
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
 from cmk.utils.rulesets.definition import RuleGroup
@@ -133,22 +132,35 @@ class RewriteError:
     host_name: HostName
 
 
-def rewrite_yielding_errors() -> Iterable[RewriteError]:
+def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     all_rulesets = AllRulesets.load_all_rulesets()
     for hostname in _autocheck_hosts():
-        try:
-            fixed_autochecks = _get_fixed_autochecks(hostname, all_rulesets)
-        except Exception as exc:
-            if debug.enabled():
-                raise
-            yield RewriteError(str(exc), hostname)
-        else:
+        fixed_autochecks = yield from _get_fixed_autochecks(hostname, all_rulesets)
+        if write:
             AutochecksStore(hostname).write(fixed_autochecks)
 
 
-def _get_fixed_autochecks(host_name: HostName, all_rulesets: AllRulesets) -> list[AutocheckEntry]:
-    autochecks = _AutochecksStoreV22(host_name).read()
-    return [_fix_entry(s, all_rulesets, host_name) for s in autochecks]
+def _get_fixed_autochecks(
+    host_name: HostName, all_rulesets: AllRulesets
+) -> Generator[RewriteError, None, list[AutocheckEntry]]:
+    try:
+        autochecks = _AutochecksStoreV22(host_name).read()
+    except Exception as exc:
+        if debug.enabled():
+            raise
+        yield RewriteError(f"Failed to load autochecks: {exc}", host_name)
+        return []
+
+    fixed_autochecks: list[AutocheckEntry] = []
+    for entry in autochecks:
+        try:
+            fixed_autochecks.append(_fix_entry(entry, all_rulesets, host_name))
+        except Exception as exc:
+            if debug.enabled():
+                raise
+            yield RewriteError(str(exc), host_name)
+
+    return fixed_autochecks
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
@@ -206,12 +218,7 @@ class _AutochecksStoreV22:
         )
 
     def read(self) -> Sequence[_AutocheckEntryV22]:
-        try:
-            return self._store.read_obj(default=[])
-        except (ValueError, TypeError, KeyError, AttributeError, SyntaxError) as exc:
-            raise MKGeneralException(
-                f"Unable to parse autochecks of host {self._host_name}"
-            ) from exc
+        return self._store.read_obj(default=[])
 
 
 def _fix_entry(

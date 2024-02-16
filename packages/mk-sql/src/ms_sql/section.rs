@@ -31,12 +31,12 @@ pub struct Section {
 impl Section {
     pub fn make_instance_section() -> Self {
         let config_section = config::section::SectionBuilder::new(section::names::INSTANCE).build();
-        Self::new(&config_section, 0)
+        Self::new(&config_section, None)
     }
 
-    pub fn new(section: &config::section::Section, cache_age: u32) -> Self {
+    pub fn new(section: &config::section::Section, global_cache_age: Option<u32>) -> Self {
         let cache_age = if section.kind() == config::section::SectionKind::Async {
-            Some(cache_age)
+            global_cache_age
         } else {
             None
         };
@@ -254,7 +254,7 @@ mod tests {
 
         let section = Section::new(
             &section::SectionBuilder::new("backup").set_async().build(),
-            100,
+            Some(100),
         );
         assert_eq!(section.to_plain_header(), "<<<mssql_backup:sep(124)>>>\n");
         assert!(section
@@ -265,8 +265,12 @@ mod tests {
 
     #[test]
     fn test_section_select_query() {
-        let make_section =
-            |name: &str| Section::new(&config::section::SectionBuilder::new(name).build(), 100);
+        let make_section = |name: &str| {
+            Section::new(
+                &config::section::SectionBuilder::new(name).build(),
+                Some(100),
+            )
+        };
         let test_set: &[(&str, sqls::Id)] = &[
             (names::INSTANCE, sqls::Id::InstanceProperties),
             (names::DATABASES, sqls::Id::Databases),

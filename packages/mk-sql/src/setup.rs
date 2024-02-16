@@ -22,6 +22,9 @@ pub struct Env {
 
     /// guaranteed to contain dir or None
     state_dir: Option<PathBuf>,
+
+    ///
+    disable_caching: bool,
 }
 
 impl Env {
@@ -36,6 +39,7 @@ impl Env {
             temp_dir,
             log_dir,
             state_dir,
+            disable_caching: args.no_spool,
         }
     }
 
@@ -52,6 +56,10 @@ impl Env {
     /// guaranteed to return log dir or None
     pub fn state_dir(&self) -> Option<&Path> {
         self.state_dir.as_deref()
+    }
+
+    pub fn disable_caching(&self) -> bool {
+        self.disable_caching
     }
 
     /// guaranteed to return cache dir or None

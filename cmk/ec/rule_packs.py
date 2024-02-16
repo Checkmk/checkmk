@@ -98,12 +98,13 @@ def active_config_dir() -> Path:
     return _default_settings().paths.active_config_dir.value
 
 
-def remove_exported_rule_pack(id_: str) -> None:
-    """
-    Removes the .mk file representing the exported rule pack.
-    """
-    export_file = mkp_rule_pack_dir() / f"{id_}.mk"
-    export_file.unlink()
+def _exported_rule_pack_path(rule_pack: ECRulePack, path: Path) -> Path:
+    return path / f"{rule_pack['id']}.mk"
+
+
+def remove_exported_rule_pack(rule_pack: ECRulePack, path: Path) -> None:
+    """Removes the .mk file representing the exported rule pack."""
+    _exported_rule_pack_path(rule_pack, path).unlink()
 
 
 def _bind_to_rule_pack_proxies(
@@ -304,7 +305,7 @@ mkp_rule_packs['{rule_pack['id']}'] = \\
 {repr_}
 """
     path.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(path / f"{rule_pack['id']}.mk", output)
+    store.save_text_to_file(_exported_rule_pack_path(rule_pack, path), output)
 
 
 def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) -> None:

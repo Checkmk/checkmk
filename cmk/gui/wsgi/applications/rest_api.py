@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import functools
 import http.client
 import json
 import logging
-import mimetypes
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
@@ -168,26 +166,6 @@ class EndpointAdapter(AbstractWSGIApp):
 
         # Serve the response
         return wsgi_app(environ, start_response)
-
-
-@functools.lru_cache
-def serve_file(  # type: ignore[no-untyped-def]
-    file_name: str,
-    content: bytes,
-    default_content_type="text/plain; charset=utf-8",
-) -> Response:
-    """Construct and cache a Response from a static file."""
-    content_type, _ = mimetypes.guess_type(file_name)
-
-    resp = Response()
-    resp.direct_passthrough = True
-    resp.data = content
-    if content_type is not None:
-        resp.headers["Content-Type"] = content_type
-    else:
-        resp.headers["Content-Type"] = default_content_type
-    resp.freeze()
-    return resp
 
 
 def get_url(environ: WSGIEnvironment) -> str:

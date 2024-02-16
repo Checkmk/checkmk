@@ -7,7 +7,7 @@ import copy
 import hashlib
 import http.client
 from collections.abc import Iterator, Sequence
-from typing import Any
+from typing import Any, get_args
 
 from apispec import APISpec
 from apispec.utils import dedent
@@ -18,6 +18,10 @@ from werkzeug.utils import import_string
 
 from livestatus import SiteId
 
+from cmk.utils import store
+from cmk.utils.site import omd_site
+
+from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
 from cmk.gui.openapi.restful_objects import permissions
@@ -33,6 +37,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
 )
 from cmk.gui.openapi.restful_objects.params import to_openapi
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
+from cmk.gui.openapi.restful_objects.specification import make_spec, spec_path
 from cmk.gui.openapi.restful_objects.type_defs import (
     ContentObject,
     EndpointTarget,
@@ -48,11 +53,29 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     StatusCodeInt,
 )
 from cmk.gui.permissions import permission_registry
+from cmk.gui.session import SuperUserContext
+from cmk.gui.utils import get_failed_plugins
+from cmk.gui.utils.script_helpers import gui_context
 
 Ident = tuple[str, str]
 
 
-def generate_spec(
+def main(args: Sequence[str]) -> int:
+    main_modules.load_plugins()
+    if errors := get_failed_plugins():
+        raise Exception(f"The following errors occured during plugin loading: {errors}")
+
+    with gui_context(), SuperUserContext():
+        for target in get_args(EndpointTarget):
+            store.save_object_to_file(
+                spec_path(target),
+                _generate_spec(make_spec(), target, omd_site()),
+                pretty=False,
+            )
+    return 0
+
+
+def _generate_spec(
     spec: APISpec, target: EndpointTarget, site: SiteId, validate: bool = True
 ) -> dict[str, Any]:
     endpoint: Endpoint

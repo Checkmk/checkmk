@@ -312,15 +312,20 @@ documented we may change it without incrementing the API version.
 
 """
 
+from pathlib import Path
+
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
 import apispec_oneofschema  # type: ignore[import]
 from typing_extensions import TypedDict
 
+import cmk.utils.paths
+
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import to_openapi
+from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 _SECURITY_SCHEMES = {
     "headerAuth": {
@@ -401,6 +406,10 @@ def make_spec() -> apispec.APISpec:
         )
 
     return spec
+
+
+def spec_path(target: EndpointTarget) -> Path:
+    return Path(cmk.utils.paths.var_dir) / "rest_api" / "spec" / f"{target}.spec"
 
 
 def _redoc_spec() -> ReDocSpec:

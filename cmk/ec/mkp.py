@@ -11,7 +11,12 @@ import cmk.utils.paths
 from cmk.mkp_tool import PackageOperationCallbacks, PackagePart
 
 from .config import MkpRulePackProxy
-from .rule_packs import export_rule_pack, load_rule_packs, rule_pack_dir, save_rule_packs
+from .rule_packs import export_rule_pack, load_rule_packs, save_rule_packs
+
+
+def rule_pack_dir() -> Path:
+    """Returns the default WATO directory of the Event Console."""
+    return Path(cmk.utils.paths.default_config_dir) / "mkeventd.d" / "wato"
 
 
 def mkp_rule_pack_dir() -> Path:

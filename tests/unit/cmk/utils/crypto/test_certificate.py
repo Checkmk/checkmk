@@ -41,7 +41,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
     assert self_signed_cert.certificate.organization_name is not None
-    assert "Checkmk Site" in self_signed_cert.certificate.organization_name
+    assert "Checkmk Testing" in self_signed_cert.certificate.organization_name
 
 
 @pytest.mark.parametrize(

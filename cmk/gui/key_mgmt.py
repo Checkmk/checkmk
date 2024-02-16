@@ -538,7 +538,8 @@ def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id:
     # scheme (PKCS1v15). Make sure this is adjusted before changing it here.
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
-        organizational_unit_name=user_id,
+        organization=f"Checkmk Site {site_id}",
+        organizational_unit=user_id,
     )
     return Key(
         certificate=key_pair.certificate.dump_pem().str,

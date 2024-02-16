@@ -202,6 +202,7 @@ def test_sign_csr_with_local_ca() -> None:
 
     peters_mom = CertificateWithPrivateKey.generate_self_signed(
         common_name="peters_mom",
+        organization="Checkmk Testing",
         key_size=1024,
         is_ca=True,
     )

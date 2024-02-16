@@ -23,6 +23,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
     with time_machine.travel(datetime(2023, 1, 1, 8, 0, 0)):
         return CertificateWithPrivateKey.generate_self_signed(
             common_name="TestGenerateSelfSigned",
+            organization="Checkmk Testing",
             expiry=relativedelta(hours=2),
             key_size=1024,
             is_ca=True,

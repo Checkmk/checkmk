@@ -638,6 +638,7 @@ class LabelGroupCondition(base.BaseSchema):
     )
     label_group = fields.List(
         fields.Nested(LabelCondition),
+        minLength=1,
         required=True,
         description="A list of label conditions that form a label group",
         example=[{"operator": "and", "label": "os:linux"}],

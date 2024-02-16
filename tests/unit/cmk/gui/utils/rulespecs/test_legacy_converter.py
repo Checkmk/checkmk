@@ -261,12 +261,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Percentage",
         ),
         pytest.param(
-            api_v1.form_specs.Text(),
+            api_v1.form_specs.String(),
             legacy_valuespecs.TextInput(placeholder=""),
             id="minimal TextInput",
         ),
         pytest.param(
-            api_v1.form_specs.Text(custom_validate=api_v1.form_specs.validators.DisallowEmpty()),
+            api_v1.form_specs.String(custom_validate=api_v1.form_specs.validators.DisallowEmpty()),
             legacy_valuespecs.TextInput(
                 placeholder="",
                 allow_empty=False,
@@ -275,7 +275,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="TextInput empty disallowed",
         ),
         pytest.param(
-            api_v1.form_specs.Text(
+            api_v1.form_specs.String(
                 title=api_v1.Localizable("spec title"),
                 label=api_v1.Localizable("spec label"),
                 macro_support=True,
@@ -331,8 +331,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                 elements=[
-                    api_v1.form_specs.Text(title=api_v1.Localizable("child title 1")),
-                    api_v1.form_specs.Text(title=api_v1.Localizable("child title 2")),
+                    api_v1.form_specs.String(title=api_v1.Localizable("child title 1")),
+                    api_v1.form_specs.String(title=api_v1.Localizable("child title 2")),
                 ],
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
@@ -403,7 +403,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.CascadingSingleChoiceElement(
                         name="first",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.Text(),
+                        parameter_form=api_v1.form_specs.String(),
                     )
                 ],
                 title=api_v1.Localizable("parent title"),
@@ -436,7 +436,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             api_v1.form_specs.List(
                 element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                     elements=[
-                        api_v1.form_specs.Text(),
+                        api_v1.form_specs.String(),
                         api_v1.form_specs.Integer(unit=api_v1.Localizable("km")),
                     ]
                 ),
@@ -929,7 +929,7 @@ def _get_cascading_single_choice_with_prefill_selection(
             api_v1.form_specs.CascadingSingleChoiceElement(
                 name="simple_prefill",
                 title=api_v1.Localizable("simple prefill"),
-                parameter_form=api_v1.form_specs.Text(
+                parameter_form=api_v1.form_specs.String(
                     prefill=api_v1.form_specs.DefaultValue("prefill_text")
                 ),
             ),
@@ -1527,7 +1527,7 @@ def test_generated_rulespec_group_single_registration():
 )
 def test_convert_validation(input_value: str) -> None:
     converted_spec = _convert_to_legacy_valuespec(
-        api_v1.form_specs.Text(custom_validate=_v1_custom_text_validate), _
+        api_v1.form_specs.String(custom_validate=_v1_custom_text_validate), _
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -1578,7 +1578,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
 
     v1_api_list = api_v1.form_specs.List(
         element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
-            elements=[api_v1.form_specs.Text()]
+            elements=[api_v1.form_specs.String()]
         ),
         custom_validate=_v1_custom_list_validate,
     )
@@ -1637,7 +1637,7 @@ def _narrow_type(x: object, narrow_to: type[T]) -> T:
                     api_v1.form_specs.CascadingSingleChoiceElement(
                         name="key_new",
                         title=api_v1.Localizable("Spec title"),
-                        parameter_form=api_v1.form_specs.Text(migrate=lambda x: f"{x}_new"),
+                        parameter_form=api_v1.form_specs.String(migrate=lambda x: f"{x}_new"),
                     )
                 ],
                 migrate=lambda x: (
@@ -1667,7 +1667,7 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.Float(),
         api_v1.form_specs.DataSize(displayed_magnitudes=tuple(api_v1.form_specs.IECMagnitude)),
         api_v1.form_specs.Percentage(),
-        api_v1.form_specs.Text(),
+        api_v1.form_specs.String(),
         api_v1.form_specs.TupleDoNotUseWillbeRemoved(elements=[]),
         api_v1.form_specs.Dictionary(elements={}),
         api_v1.form_specs.SingleChoice(
@@ -1713,7 +1713,7 @@ def test_form_spec_transform(form_spec: FormSpec) -> None:
             api_v1.form_specs.Float,
             api_v1.form_specs.DataSize,
             api_v1.form_specs.Percentage,
-            api_v1.form_specs.Text,
+            api_v1.form_specs.String,
             api_v1.form_specs.RegularExpression,
             api_v1.form_specs.TupleDoNotUseWillbeRemoved,
             api_v1.form_specs.Dictionary,

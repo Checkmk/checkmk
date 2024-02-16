@@ -23,7 +23,7 @@ from cmk.rulesets.v1.form_specs import (
     SIMagnitude,
     SingleChoice,
     SingleChoiceElement,
-    Text,
+    String,
     TimeMagnitude,
     TimeSpan,
     validators,
@@ -134,7 +134,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                 parameter_form=Dictionary(
                     elements={
                         "header_name_pattern": DictElement(
-                            parameter_form=Text(
+                            parameter_form=String(
                                 label=Localizable("Header name pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
@@ -142,7 +142,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                             required=True,
                         ),
                         "header_value_pattern": DictElement(
-                            parameter_form=Text(
+                            parameter_form=String(
                                 label=Localizable("Header value pattern"),
                                 # mode=RegExp.infix,
                                 # maxlen=1023,
@@ -179,7 +179,7 @@ def _valuespec_expected_regex_body() -> Dictionary:
         elements={
             # TODO Regex currently not implemented in ruleset API
             "regex": DictElement(
-                parameter_form=Text(
+                parameter_form=String(
                     label=Localizable("Pattern"),
                     # mode=RegExp.infix,
                     # maxlen=1023,
@@ -220,7 +220,7 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
     return Dictionary(
         elements={
             "body_text": DictElement(
-                parameter_form=Text(
+                parameter_form=String(
                     title=Localizable("Data to send"),
                     help_text=Localizable("Please make sure, that the data is URL-encoded."),
                 ),
@@ -275,7 +275,7 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
                         CascadingSingleChoiceElement(
                             name="custom",
                             title=Localizable("Use custom type"),
-                            parameter_form=Text(
+                            parameter_form=String(
                                 prefill=InputHint("text/plain"),
                             ),
                         ),
@@ -288,8 +288,8 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
 
 
 header_dict_elements = {
-    "header_name": DictElement(parameter_form=Text(label=Localizable("Name")), required=True),
-    "header_value": DictElement(parameter_form=Text(label=Localizable("Value")), required=True),
+    "header_name": DictElement(parameter_form=String(label=Localizable("Name")), required=True),
+    "header_value": DictElement(parameter_form=String(label=Localizable("Value")), required=True),
 }
 
 
@@ -451,7 +451,7 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "user_agent": DictElement(
-                parameter_form=Text(
+                parameter_form=String(
                     title=Localizable("User Agent"),
                     prefill=DefaultValue("checkmk/check_http"),
                     help_text=Localizable('String to be sent in http header as "User Agent"'),
@@ -476,7 +476,7 @@ def _valuespec_connection() -> Dictionary:
                                 help_text=Localizable("Credentials for HTTP Basic Authentication"),
                                 elements={
                                     "user": DictElement(
-                                        parameter_form=Text(
+                                        parameter_form=String(
                                             title=Localizable("Username"),
                                             custom_validate=validators.DisallowEmpty(),
                                         ),
@@ -498,7 +498,7 @@ def _valuespec_connection() -> Dictionary:
                                 title=Localizable("Token based authentication"),
                                 elements={
                                     "header": DictElement(
-                                        parameter_form=Text(title=Localizable("API key header")),
+                                        parameter_form=String(title=Localizable("API key header")),
                                         required=True,
                                     ),
                                     "token": DictElement(
@@ -548,7 +548,7 @@ def _valuespec_content() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="string",
                             title=Localizable("Fixed string"),
-                            parameter_form=Text(title=Localizable("Fixed string")),
+                            parameter_form=String(title=Localizable("Fixed string")),
                         ),
                         CascadingSingleChoiceElement(
                             name="regex",
@@ -647,7 +647,7 @@ def _valuespec_endpoints() -> List:
                                 required=True,
                             ),
                             "name": DictElement(
-                                parameter_form=Text(
+                                parameter_form=String(
                                     title=Localizable("Name"),
                                     custom_validate=validators.DisallowEmpty(),
                                     prefill=InputHint("My HTTP service"),
@@ -659,7 +659,7 @@ def _valuespec_endpoints() -> List:
                     required=True,
                 ),
                 "url": DictElement(
-                    parameter_form=Text(
+                    parameter_form=String(
                         title=Localizable("URL"),
                         prefill=InputHint("https://subdomain.domain.tld:port/path/to/filename"),
                     ),

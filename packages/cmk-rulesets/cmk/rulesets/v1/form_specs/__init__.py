@@ -24,7 +24,7 @@ from ._basic import (
     SIMagnitude,
     SingleChoice,
     SingleChoiceElement,
-    Text,
+    String,
     TimeMagnitude,
     TimeSpan,
 )
@@ -102,7 +102,7 @@ __all__ = [
     "SIMagnitude",
     "SingleChoice",
     "SingleChoiceElement",
-    "Text",
+    "String",
     "TimePeriod",
     "TimeSpan",
     "TimeMagnitude",

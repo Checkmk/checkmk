@@ -444,7 +444,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.Percentage():
             return _convert_to_legacy_percentage(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Text():
+        case ruleset_api_v1.form_specs.String():
             return _convert_to_legacy_text_input(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.RegularExpression():
@@ -706,7 +706,7 @@ def _convert_to_legacy_percentage(
 
 
 def _convert_to_legacy_text_input(
-    to_convert: ruleset_api_v1.form_specs.Text, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.String, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -925,7 +925,7 @@ def _get_item_spec_maker(
     item_form_with_title = dataclasses.replace(condition.item_form, title=condition.item_title)
 
     match item_form_with_title:
-        case ruleset_api_v1.form_specs.Text():
+        case ruleset_api_v1.form_specs.String():
             return partial(_convert_to_legacy_text_input, item_form_with_title, localizer)
         case ruleset_api_v1.form_specs.SingleChoice():
             return partial(_convert_to_legacy_dropdown_choice, item_form_with_title, localizer)

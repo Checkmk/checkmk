@@ -11,7 +11,7 @@ import pytest
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
@@ -27,8 +27,8 @@ from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
-    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
-    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    event1 = ec.Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = ec.Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
 
     history_mongo.add(event=event1, what="NEW")
     history_mongo.add(event=event2, what="NEW")

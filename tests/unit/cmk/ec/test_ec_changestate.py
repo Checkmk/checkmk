@@ -12,7 +12,7 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
@@ -30,7 +30,7 @@ def test_changestate_of_nonexistent_event(status_server: StatusServer) -> None:
 
 def test_change_event_state(event_status: EventStatus, status_server: StatusServer) -> None:
     """Changestate 1 event."""
-    event: Event = {
+    event: ec.Event = {
         "host": HostName("ABC1"),
         "text": "not important",
         "core_host": HostName("ABC"),
@@ -48,7 +48,7 @@ def test_changetestate_of_multiple_events(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:
     """Changestate event list."""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName("ABC1"),
             "text": "event1 text",
@@ -76,7 +76,7 @@ def test_changestate_of_partially_existing_multiple_events(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:
     """Event list with a missing ID still changes the state of the existing event IDs"""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName("ABC1"),
             "text": "event1 text",

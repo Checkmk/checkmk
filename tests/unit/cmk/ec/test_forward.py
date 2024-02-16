@@ -5,13 +5,13 @@
 
 import pytest
 
+import cmk.ec.export as ec
 from cmk.ec.syslog import (
     StructuredData,
     StructuredDataID,
     StructuredDataName,
     StructuredDataParameters,
     StructuredDataValue,
-    SyslogMessage,
 )
 
 
@@ -235,7 +235,7 @@ class TestSyslogMessage:
         stuctured_data: StructuredData,
     ) -> None:
         with pytest.raises(ValueError, match="must"):
-            SyslogMessage(
+            ec.SyslogMessage(
                 facility=facility,
                 severity=severity,
                 structured_data=stuctured_data,
@@ -245,7 +245,7 @@ class TestSyslogMessage:
         "syslog_message, expected_result",
         [
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=30,
                     severity=2,
                 ),
@@ -253,7 +253,7 @@ class TestSyslogMessage:
                 id="facility 30-logfile case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=31,
                     severity=2,
                 ),
@@ -261,7 +261,7 @@ class TestSyslogMessage:
                 id="facility 31-snmptrap case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                 ),
@@ -269,7 +269,7 @@ class TestSyslogMessage:
                 id="minimal case",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -295,7 +295,7 @@ class TestSyslogMessage:
                 id="standard case, ascii",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -323,7 +323,7 @@ class TestSyslogMessage:
                 id="with ip address and service level, ascii",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437,
@@ -351,7 +351,7 @@ class TestSyslogMessage:
                 id="with ip address and service level, utf-8",
             ),
             pytest.param(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=1,
                     severity=2,
                     timestamp=1617864437.23,
@@ -388,7 +388,7 @@ class TestSyslogMessage:
     )
     def test_repr(
         self,
-        syslog_message: SyslogMessage,
+        syslog_message: ec.SyslogMessage,
         expected_result: str,
     ) -> None:
         assert str(syslog_message) == expected_result

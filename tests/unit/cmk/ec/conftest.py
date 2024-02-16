@@ -32,11 +32,10 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 from cmk.ec.perfcounters import Perfcounters
-from cmk.ec.settings import Settings
 
 
 @pytest.fixture(name="settings")
-def fixture_settings() -> Settings:
+def fixture_settings() -> ec.Settings:
     return ec.settings(
         "1.2.3i45",
         cmk.utils.paths.omd_root,
@@ -61,7 +60,7 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="history")
-def fixture_history(settings: Settings, config: Config) -> FileHistory:
+def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
     history = create_history(
         settings,
         config,
@@ -74,7 +73,7 @@ def fixture_history(settings: Settings, config: Config) -> FileHistory:
 
 
 @pytest.fixture(name="history_mongo")
-def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoDBHistory]:
+def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[MongoDBHistory]:
     """history_mongo with connection config file mocked"""
 
     connection_string = os.getenv("MONGODB_CONNECTION_STRING") or ""
@@ -100,7 +99,7 @@ def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoD
 
 
 @pytest.fixture(name="history_sqlite")
-def fixture_history_sqlite(settings: Settings, config: Config) -> Iterator[SQLiteHistory]:
+def fixture_history_sqlite(settings: ec.Settings, config: Config) -> Iterator[SQLiteHistory]:
     """history_sqlite with history file path set to :memory:"""
 
     history = SQLiteHistory(
@@ -123,7 +122,7 @@ def fixture_perfcounters() -> Perfcounters:
 
 @pytest.fixture(name="event_status")
 def fixture_event_status(
-    settings: Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
+    settings: ec.Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
 ) -> EventStatus:
     return EventStatus(
         settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
@@ -132,7 +131,7 @@ def fixture_event_status(
 
 @pytest.fixture(name="event_server")
 def fixture_event_server(
-    settings: Settings,
+    settings: ec.Settings,
     config: Config,
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
@@ -156,7 +155,7 @@ def fixture_event_server(
 
 @pytest.fixture(name="status_server")
 def fixture_status_server(
-    settings: Settings,
+    settings: ec.Settings,
     config: Config,
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,

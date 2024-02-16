@@ -13,8 +13,7 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.config import ConfigFromWATO
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer
 
 
@@ -29,7 +28,7 @@ def test_handle_client(status_server: StatusServer) -> None:
 
 
 def test_mkevent_check_query_perf(
-    config: ConfigFromWATO, event_status: EventStatus, status_server: StatusServer
+    config: ec.ConfigFromWATO, event_status: EventStatus, status_server: StatusServer
 ) -> None:
     for num in range(10000):
         event_status.new_event(
@@ -124,7 +123,7 @@ def test_mkevent_check_query_perf(
 def test_mkevent_query_filters(
     event_status: EventStatus,
     status_server: StatusServer,
-    event: Event,
+    event: ec.Event,
     status_socket: FakeStatusSocket,
     is_match: bool,
 ) -> None:

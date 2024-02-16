@@ -28,10 +28,7 @@ from dateutil import parser as dateutil_parser
 from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    forward_to_unix_socket,
-    SyslogMessage,
-)
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -453,14 +450,14 @@ def _event_to_syslog_message(
     severity: int,
     service_level: int,
     add_text: bool,
-) -> SyslogMessage:
+) -> ec.SyslogMessage:
     LOGGER.debug(event)
     matching_tags = ", ".join(
         tag for tag in event.tags if any(re.match(tag_regex, tag) for tag_regex in tag_regexes)
     )
     tags_text = f", Tags: {matching_tags}" if matching_tags else ""
     details_text = f", Text: {event.text}" if add_text else ""
-    return SyslogMessage(
+    return ec.SyslogMessage(
         facility=facility,
         severity=severity,
         timestamp=event.date_happened,
@@ -479,7 +476,7 @@ def _forward_events_to_ec(
     service_level: int,
     add_text: bool,
 ) -> None:
-    forward_to_unix_socket(
+    ec.forward_to_unix_socket(
         _event_to_syslog_message(
             event,
             tag_regexes,
@@ -635,14 +632,14 @@ def _log_to_syslog_message(
     facility: int,
     service_level: int,
     translator: Sequence[LogMessageElement],
-) -> SyslogMessage:
+) -> ec.SyslogMessage:
     LOGGER.debug(log)
     attributes = dict(log.attributes)
     text_elements = {el.name: _get_nested(attributes, el.key) for el in translator}
     for name, value in text_elements.items():
         if value is None:
             LOGGER.debug("Did not find value for message element: %s", name)
-    return SyslogMessage(
+    return ec.SyslogMessage(
         facility=facility,
         service_level=service_level,
         severity=_SEVERITY_MAPPER[log.attributes.status],
@@ -665,7 +662,7 @@ def _forward_logs_to_ec(
     service_level: int,
     translator: Sequence[LogMessageElement],
 ) -> None:
-    forward_to_unix_socket(
+    ec.forward_to_unix_socket(
         _log_to_syslog_message(
             log,
             facility,

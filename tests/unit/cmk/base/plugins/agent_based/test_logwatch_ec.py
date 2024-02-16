@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 from cmk.base.plugins.agent_based.utils import logwatch as logwatch_
 
-from cmk.ec.export import SyslogMessage
+import cmk.ec.export as ec
 
 _STRING_TABLE_NO_MESSAGES = [
     ["[[[log1]]]"],
@@ -213,7 +213,7 @@ class _FakeForwarder:
     def __call__(
         self,
         method: str | tuple,
-        messages: Sequence[SyslogMessage],
+        messages: Sequence[ec.SyslogMessage],
     ) -> logwatch_ec.LogwatchForwardedResult:
         return logwatch_ec.LogwatchForwardedResult(num_forwarded=len(messages))
 
@@ -596,7 +596,9 @@ def _forward_message(
     result = TestForwardTcpMessageForwarder(item=item, hostname=HostName("some_host_name"))(
         method=method,
         messages=[
-            SyslogMessage(facility=1, severity=1, timestamp=0.0, text=text, application=application)
+            ec.SyslogMessage(
+                facility=1, severity=1, timestamp=0.0, text=text, application=application
+            )
         ],
     )
 

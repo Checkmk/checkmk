@@ -15,8 +15,8 @@ import time_machine
 
 from cmk.utils.hostaddress import HostName
 
+import cmk.ec.export as ec
 from cmk.ec.config import Config
-from cmk.ec.event import Event
 from cmk.ec.history import _current_history_period
 from cmk.ec.history_file import (
     _grep_pipeline,
@@ -31,8 +31,8 @@ from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 def test_file_add_get(history: FileHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
-    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
-    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    event1 = ec.Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = ec.Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
 
     history.add(event=event1, what="NEW")
     history.add(event=event2, what="NEW")

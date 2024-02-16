@@ -13,7 +13,7 @@ import pytest
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite, SQLiteHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
@@ -170,7 +170,7 @@ def test_basic_init_history_table(history_sqlite: SQLiteHistory) -> None:
 def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
 
-    event1 = Event(
+    event1 = ec.Event(
         host=HostName("ABC1"),
         text="Event1 text",
         core_host=HostName("ABC"),
@@ -182,7 +182,7 @@ def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
         host_in_downtime=False,
         contact_groups=("some string1", "another string1"),
     )
-    event2 = Event(
+    event2 = ec.Event(
         host=HostName("ABC2"),
         text="Event2 text",
         core_host=HostName("ABC"),
@@ -229,8 +229,8 @@ def test_file_add_get(history_sqlite: SQLiteHistory) -> None:
 def test_housekeeping(history_sqlite: SQLiteHistory) -> None:
     """Add 2 events to history, drop the older one."""
 
-    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
-    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+    event1 = ec.Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = ec.Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
     history_sqlite.add(event=event1, what="NEW")
     history_sqlite.add(event=event2, what="NEW")
 

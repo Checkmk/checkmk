@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import set_timezone
+import pytest
+import time_machine
 
 from cmk.checkengine.parameters import Parameters
 
@@ -763,7 +765,9 @@ _RESULTS = [
 
 
 def test_check() -> None:
-    with set_timezone("UTC"):  # needed for certificate validity string
+    with time_machine.travel(
+        datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))
+    ):  # needed for certificate validity string
         yielded_results = list(
             livestatus_status._generate_livestatus_results(
                 "heute",

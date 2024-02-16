@@ -11,8 +11,6 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.testlib import set_timezone
-
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -551,7 +549,7 @@ def test_fileinfo_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo(params, section)) == expected_result
 
 
@@ -839,7 +837,7 @@ def test_fileinfo_group_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo_groups(params, section)) == expected_result
 
 

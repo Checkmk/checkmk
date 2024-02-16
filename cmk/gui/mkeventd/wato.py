@@ -1840,7 +1840,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 raise MKUserError("_dissolve", _("rule pack was not exported"))
             self._rule_packs[nr] = rp.get_rule_pack_spec()
             _save_mkeventd_rules(self._rule_packs)
-            ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
+            ec.remove_exported_rule_pack(self._rule_packs[nr], ec.mkp_rule_pack_dir())
             self._add_change(
                 "dissolve-rule-pack",
                 _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"],

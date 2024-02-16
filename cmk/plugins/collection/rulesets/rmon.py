@@ -6,11 +6,11 @@
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
-def _parameter_form_discover_rmon() -> form_specs.composed.Dictionary:
-    return form_specs.composed.Dictionary(
+def _parameter_form_discover_rmon() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
         elements={
-            "discover": form_specs.composed.DictElement(
-                parameter_form=form_specs.basic.BooleanChoice(
+            "discover": form_specs.DictElement(
+                parameter_form=form_specs.BooleanChoice(
                     label=Localizable("Discover RMON statistics services"),
                     prefill=form_specs.DefaultValue(True),
                     help_text=Localizable(

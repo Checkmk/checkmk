@@ -8,9 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Localizable
-from .form_specs._base import FormSpec
-from .form_specs.basic import SingleChoice, Text
-from .form_specs.composed import Dictionary
+from .form_specs import Dictionary, FormSpec, SingleChoice, Text
 from .validators import DisallowEmpty
 
 

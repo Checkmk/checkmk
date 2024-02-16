@@ -5,15 +5,17 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, Text
-from cmk.rulesets.v1.form_specs.composed import (
+from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
+    Integer,
+    Password,
+    Text,
 )
-from cmk.rulesets.v1.form_specs.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
 from cmk.rulesets.v1.validators import InRange
 

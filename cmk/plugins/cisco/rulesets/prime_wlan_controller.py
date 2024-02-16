@@ -5,10 +5,18 @@
 
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
-from cmk.rulesets.v1.form_specs.basic import Integer, TimeMagnitude, TimeSpan
-from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
-from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels, LevelsConfigModel
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    InputHint,
+    Integer,
+    LevelDirection,
+    Levels,
+    LevelsConfigModel,
+    TimeMagnitude,
+    TimeSpan,
+)
 from cmk.rulesets.v1.migrations import (
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,

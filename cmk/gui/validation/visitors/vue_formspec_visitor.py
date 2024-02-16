@@ -21,19 +21,17 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.rulesets.v1.form_specs.basic import (
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    Dictionary,
     Float,
+    FormSpec,
     Integer,
+    List,
     Percentage,
     ServiceState,
     SingleChoice,
     Text,
-)
-from cmk.rulesets.v1.form_specs.composed import (
-    CascadingSingleChoice,
-    Dictionary,
-    List,
     TupleDoNotUseWillbeRemoved,
 )
 

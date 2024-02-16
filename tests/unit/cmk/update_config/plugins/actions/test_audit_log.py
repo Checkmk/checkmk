@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import logging
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.paths import wato_var_dir
@@ -43,7 +44,7 @@ def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture, request_contex
     with open(wato_var_dir() / "log" / "wato_audit.log", "rb") as f:
         expected_content = f.read()
 
-    with on_time("2023-11-08 13:00", "CET"):
+    with time_machine.travel(datetime.datetime(2023, 11, 8, 13, tzinfo=ZoneInfo("CET"))):
         plugin(logging.getLogger(), {})
 
     content = b""

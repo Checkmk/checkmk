@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Callable
 from typing import Final
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -63,7 +64,7 @@ def test_discovery(
 def test_check(
     check_suseconnect: Callable[[object, Section], CheckResult], section_1: Section
 ) -> None:
-    with on_time("2020-07-15 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_suseconnect(
                 {"status": "Registered", "subscription_status": "ACTIVE", "days_left": (14, 7)},
@@ -87,7 +88,7 @@ def test_check(
 def test_agent_output_parsable(
     check_suseconnect: Callable[[object, Section], DiscoveryResult]
 ) -> None:
-    with on_time("2020-07-15 00:00:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 7, 15, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_suseconnect(
                 {"status": "Registered", "subscription_status": "ACTIVE", "days_left": (14, 7)},

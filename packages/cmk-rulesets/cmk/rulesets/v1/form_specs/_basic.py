@@ -269,7 +269,7 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Text(FormSpec[str]):
+class String(FormSpec[str]):
     """
     Args:
         label: Text displayed in front of the input field

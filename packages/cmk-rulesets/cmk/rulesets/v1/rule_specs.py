@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Localizable
-from .form_specs import Dictionary, FormSpec, SingleChoice, Text
+from .form_specs import Dictionary, FormSpec, SingleChoice, String
 from .form_specs.validators import DisallowEmpty
 
 
@@ -72,7 +72,7 @@ class HostAndItemCondition:
     """
 
     item_title: Localizable
-    item_form: FormSpec[str] = Text(custom_validate=DisallowEmpty())
+    item_form: FormSpec[str] = String(custom_validate=DisallowEmpty())
 
 
 @dataclass(frozen=True)
@@ -150,7 +150,7 @@ class CheckParameters:
 
     def __post_init__(self) -> None:
         if isinstance(self.condition, HostAndItemCondition):
-            assert isinstance(self.condition.item_form, (Text, SingleChoice))
+            assert isinstance(self.condition.item_form, (String, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 

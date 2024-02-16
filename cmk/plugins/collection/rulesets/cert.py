@@ -22,7 +22,7 @@ from cmk.rulesets.v1.form_specs import (
     Levels,
     LevelsConfigModel,
     List,
-    Text,
+    String,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
@@ -85,7 +85,7 @@ def _valuespec_specific_values() -> Dictionary:
         title=Localizable("Check for specific values"),
         elements={
             "serialnumber": DictElement[str](
-                parameter_form=Text(
+                parameter_form=String(
                     title=Localizable("Serial number"),
                     prefill=InputHint("5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F"),
                 )
@@ -138,20 +138,20 @@ def _valuespec_specific_values() -> Dictionary:
                     title=Localizable("Issuer"),
                     elements={
                         "common_name": DictElement[str](
-                            parameter_form=Text(title=Localizable("Common name (CN)")),
+                            parameter_form=String(title=Localizable("Common name (CN)")),
                             required=True,
                         ),
                         "organization": DictElement[str](
-                            parameter_form=Text(title=Localizable("Organization (O)"))
+                            parameter_form=String(title=Localizable("Organization (O)"))
                         ),
                         "org_unit": DictElement[str](
-                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
+                            parameter_form=String(title=Localizable("Organizational unit (OU)"))
                         ),
                         "state": DictElement[str](
-                            parameter_form=Text(title=Localizable("State (ST)"))
+                            parameter_form=String(title=Localizable("State (ST)"))
                         ),
                         "country": DictElement[str](
-                            parameter_form=Text(title=Localizable("Country (C)"))
+                            parameter_form=String(title=Localizable("Country (C)"))
                         ),
                     },
                 )
@@ -161,14 +161,14 @@ def _valuespec_specific_values() -> Dictionary:
                     title=Localizable("Subject"),
                     elements={
                         "common_name": DictElement[str](
-                            parameter_form=Text(title=Localizable("Common name (CN)")),
+                            parameter_form=String(title=Localizable("Common name (CN)")),
                             required=True,
                         ),
                         "organization": DictElement[str](
-                            parameter_form=Text(title=Localizable("Organization (O)"))
+                            parameter_form=String(title=Localizable("Organization (O)"))
                         ),
                         "org_unit": DictElement[str](
-                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
+                            parameter_form=String(title=Localizable("Organizational unit (OU)"))
                         ),
                         "pubkey_algorithm": DictElement[tuple[str, object]](
                             parameter_form=CascadingSingleChoice(
@@ -216,14 +216,14 @@ def _valuespec_specific_values() -> Dictionary:
                             )
                         ),
                         "pubkeysize": DictElement[str](
-                            parameter_form=Text(title=Localizable("Public key size"))
+                            parameter_form=String(title=Localizable("Public key size"))
                         ),
                     },
                 )
             ),
             "altnames": DictElement[Sequence[str]](
                 parameter_form=List[str](
-                    element_template=Text(),
+                    element_template=String(),
                     title=Localizable("Certificate subject alternative name"),
                 ),
             ),
@@ -259,7 +259,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                     parameter_form=Dictionary(
                         elements={
                             "address": DictElement[str](
-                                parameter_form=Text(
+                                parameter_form=String(
                                     title=Localizable("Host address or name"),
                                     prefill=InputHint("my.host.tld | 192.168.0.73"),
                                     custom_validate=validators.DisallowEmpty(),

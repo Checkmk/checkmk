@@ -17,7 +17,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     List,
     ServiceState,
-    Text,
+    String,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import (
@@ -80,7 +80,7 @@ def _discovery_parameters_form_alertmanager():
                                     ),
                                     "no_group_services": DictElement(
                                         parameter_form=List(
-                                            element_template=Text(),
+                                            element_template=String(),
                                             title=Localizable(
                                                 "Don't create a group service for the following groups"
                                             ),
@@ -136,7 +136,7 @@ def form_alert_remapping():
             elements={
                 "rule_names": DictElement(
                     parameter_form=List(
-                        element_template=Text(prefill=DefaultValue("Watchdog")),
+                        element_template=String(prefill=DefaultValue("Watchdog")),
                         title=Localizable("Alert rule names"),
                         help_text=Localizable("A list of rule names as defined in Alertmanager."),
                     ),

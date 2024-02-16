@@ -26,7 +26,7 @@ def fs_mssql_backup_age(
 def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
     return rule_specs.HostAndItemCondition(
         item_title=Localizable("Instance & tablespace name"),
-        item_form=form_specs.Text(
+        item_form=form_specs.String(
             help_text=Localizable(
                 "The MSSQL instance name and the tablespace name separated by a space."
             ),

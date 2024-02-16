@@ -32,7 +32,7 @@ def _formspec_inventory_sap_values():
                         form_specs.CascadingSingleChoiceElement(
                             name="exact",
                             title=Localizable("Exact path of the node"),
-                            parameter_form=form_specs.Text(
+                            parameter_form=form_specs.String(
                                 title=Localizable("Exact path of the node"),
                                 prefill=form_specs.DefaultValue(
                                     "SAP CCMS Monitor Templates/Dialog Overview/Dialog "

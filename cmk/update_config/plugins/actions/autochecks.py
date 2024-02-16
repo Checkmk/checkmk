@@ -5,7 +5,8 @@
 
 import ast
 import copy
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from logging import Logger
 from pathlib import Path
 from typing import Any, NamedTuple, Self, TypeVar
@@ -134,22 +135,9 @@ class UpdateAutochecks(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         failed_hosts = []
 
-        all_rulesets = AllRulesets.load_all_rulesets()
-
-        for autocheck_file in Path(autochecks_dir).glob("*.mk"):
-            hostname = HostName(autocheck_file.stem)
-
-            try:
-                autochecks = _AutochecksStoreV22(hostname).read()
-                AutochecksStore(hostname).write(
-                    [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
-                )
-            except MKGeneralException as exc:
-                if debug.enabled():
-                    raise
-                logger.error(str(exc))
-                failed_hosts.append(hostname)
-                continue
+        for rewrite_error in rewrite_yielding_errors(logger):
+            logger.error(rewrite_error.message)
+            failed_hosts.append(rewrite_error.host_name)
 
         if failed_hosts:
             msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"
@@ -164,6 +152,31 @@ update_action_registry.register(
         sort_index=40,
     )
 )
+
+
+@dataclass(frozen=True)
+class RewriteError:
+    message: str
+    host_name: HostName
+
+
+def rewrite_yielding_errors(logger: Logger) -> Iterable[RewriteError]:
+    all_rulesets = AllRulesets.load_all_rulesets()
+    for hostname in _autocheck_hosts():
+        try:
+            autochecks = _AutochecksStoreV22(hostname).read()
+            AutochecksStore(hostname).write(
+                [_fix_entry(logger, s, all_rulesets, hostname) for s in autochecks]
+            )
+        except MKGeneralException as exc:
+            if debug.enabled():
+                raise
+            yield RewriteError(str(exc), hostname)
+
+
+def _autocheck_hosts() -> Iterable[HostName]:
+    for autocheck_file in Path(autochecks_dir).glob("*.mk"):
+        yield HostName(autocheck_file.stem)
 
 
 class _AutocheckEntryV22(NamedTuple):
@@ -262,24 +275,9 @@ def _transformed_params(
     plugin_name: CheckPluginName,
     params: T,
     all_rulesets: RulesetCollection,
-    hostname: str,
+    host: str,
 ) -> Mapping[str, object]:
-    check_plugin = register.get_check_plugin(plugin_name)
-    if check_plugin is None:
-        if not params:
-            return {}
-        if isinstance(params, dict):
-            return {str(k): v for k, v in params.items()}
-        raise MKGeneralException(
-            f"Parameters must be a dict. Can't handle {params=} for missing plugin {plugin_name!r}"
-        )
-
-    ruleset_name = (
-        RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
-        if check_plugin.check_ruleset_name
-        else None
-    )
-    if ruleset_name is None or ruleset_name not in all_rulesets.get_rulesets():
+    if (ruleset := _get_ruleset(plugin_name, all_rulesets)) is None:
         if not params:
             return {}
         if isinstance(params, dict):
@@ -288,16 +286,10 @@ def _transformed_params(
             f"Parameters must be a dict. Can't handle {params=} for plugin {plugin_name!r}"
         )
 
-    debug_info = "host={!r}, plugin={!r}, ruleset={!r}, params={!r}".format(
-        hostname,
-        str(plugin_name),
-        str(check_plugin.check_ruleset_name),
-        params,
-    )
+    debug_info = f"{host=}, plugin={str(plugin_name)!r}, ruleset={str(ruleset.name)!r}, {params=}"
 
     try:
-        ruleset = all_rulesets.get_rulesets()[ruleset_name]
-        new_params = _transform_params_safely(params, ruleset, ruleset_name, logger)
+        new_params = _transform_params_safely(params, ruleset, logger)
         assert new_params or not params, "non-empty params vanished"
     except Exception as exc:
         raise MKGeneralException(f"Transform failed: {debug_info}, error={exc!r}") from exc
@@ -305,9 +297,23 @@ def _transformed_params(
     return new_params
 
 
+def _get_ruleset(
+    plugin_name: CheckPluginName,
+    all_rulesets: RulesetCollection,
+) -> Ruleset | None:
+    if (
+        check_plugin := register.get_check_plugin(plugin_name)
+    ) is None or check_plugin.check_ruleset_name is None:
+        return None
+
+    return all_rulesets.get_rulesets().get(
+        RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
+    )
+
+
 # TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value
 def _transform_params_safely(
-    params: LegacyCheckParameters, ruleset: Ruleset, ruleset_name: str, logger: Logger
+    params: LegacyCheckParameters, ruleset: Ruleset, logger: Logger
 ) -> Mapping[str, object]:
     """Safely converts <params> using <transform_value> function
     Write warning in the log if <transform_value> alters input. Such behavior is not allowed and
@@ -317,11 +323,11 @@ def _transform_params_safely(
     param_copy = copy.deepcopy(params)
     new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
     if param_copy != params:
-        logger.warning(f"transform_value() for ruleset '{ruleset_name}' altered input")
+        logger.warning(f"transform_value() for ruleset '{str(ruleset.name)}' altered input")
 
     if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
         raise TypeError(
-            f"Parameter transformation for {ruleset_name} resulted in non-dict: {new_params!r}"
+            f"Parameter transformation for {str(ruleset.name)} resulted in non-dict: {new_params!r}"
         )
 
     return new_params

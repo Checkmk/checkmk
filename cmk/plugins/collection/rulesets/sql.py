@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from typing import Literal
 
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
-from cmk.rulesets.v1.migrations import migrate_to_lower_float_levels, migrate_to_upper_float_levels
 
 
 def _form_active_checks_sql() -> form_specs.Dictionary:
@@ -128,7 +127,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     form_spec_template=form_specs.Float(),
                     prefill_fixed_levels=form_specs.InputHint((0.0, 0.0)),
                     predictive=None,
-                    migrate=migrate_to_upper_float_levels,
+                    migrate=form_specs.migrate_to_upper_float_levels,
                 ),
                 required=False,
             ),
@@ -139,7 +138,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     form_spec_template=form_specs.Float(),
                     prefill_fixed_levels=form_specs.InputHint((0.0, 0.0)),
                     predictive=None,
-                    migrate=migrate_to_lower_float_levels,
+                    migrate=form_specs.migrate_to_lower_float_levels,
                 ),
                 required=False,
             ),

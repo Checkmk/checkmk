@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import set_timezone
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based import win_os
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
@@ -13,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 @pytest.fixture(name="section", scope="module")
 def _get_section() -> win_os.Section:
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         return win_os.parse_win_os(
             [
                 [

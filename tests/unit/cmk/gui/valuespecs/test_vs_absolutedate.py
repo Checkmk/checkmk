@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
-
-from tests.testlib import set_timezone
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
@@ -34,7 +33,7 @@ class TestAbsoluteDate:
         assert vs.AbsoluteDate().value_to_json(12) == 12
 
     def test_value_to_html(self) -> None:
-        with set_timezone("UTC-2"):
+        with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("Etc/GMT-2"))):
             assert vs.AbsoluteDate().value_to_html(1631397600.0) == "2021-09-12"
             assert (
                 vs.AbsoluteDate(include_time=True).value_to_html(1631453838.1)
@@ -45,7 +44,7 @@ class TestAbsoluteDate:
         assert vs.AbsoluteDate().mask(1631397600.0) == 1631397600.0
 
     def test_from_html_vars(self, request_context: None) -> None:
-        with set_timezone("UTC-2"):
+        with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("Etc/GMT-2"))):
             with request_var(a_year="2021", a_month="9", a_day="12"):
                 assert vs.AbsoluteDate().from_html_vars("a") == 1631397600.0
             with request_var(

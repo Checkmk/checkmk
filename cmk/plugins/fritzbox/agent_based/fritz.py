@@ -6,10 +6,19 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    Attributes,
+    CheckPlugin,
+    InventoryPlugin,
+    Result,
+    RuleSetType,
+    Service,
+    State,
+    type_defs,
+)
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib import interfaces, uptime
-
-from .agent_based_api.v1 import Attributes, register, Result, Service, State, type_defs
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Mapping[str, str]
 
@@ -18,7 +27,7 @@ def parse_fritz(string_table: type_defs.StringTable) -> Section:
     return {line[0]: " ".join(line[1:]) for line in string_table if len(line) > 1}
 
 
-register.agent_section(
+agent_section_fritz = AgentSection(
     name="fritz",
     parse_function=parse_fritz,
 )
@@ -100,12 +109,12 @@ def check_fritz_wan_if(
     )
 
 
-register.check_plugin(
+check_plugin_fritz_wan_if = CheckPlugin(
     name="fritz_wan_if",
     sections=["fritz"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_ruleset_type=RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_fritz_wan_if,
     check_ruleset_name="if",
@@ -156,7 +165,7 @@ def check_fritz_conn(section: Section) -> CheckResult:
         )
 
 
-register.check_plugin(
+check_plugin_fritz_conn = CheckPlugin(
     name="fritz_conn",
     sections=["fritz"],
     service_name="Connection",
@@ -184,7 +193,7 @@ def check_fritz_uptime(
         )
 
 
-register.check_plugin(
+check_plugin_fritz_uptime = CheckPlugin(
     name="fritz_uptime",
     sections=["fritz"],
     service_name="Uptime",
@@ -218,7 +227,7 @@ def check_fritz_link(section: Section) -> CheckResult:
             )
 
 
-register.check_plugin(
+check_plugin_fritz_link = CheckPlugin(
     name="fritz_link",
     sections=["fritz"],
     service_name="Link Info",
@@ -271,7 +280,7 @@ def inventory_fritz(section: Section) -> type_defs.InventoryResult:
     )
 
 
-register.inventory_plugin(
+inventory_plugin_fritz = InventoryPlugin(
     name="fritz",
     inventory_function=inventory_fritz,
 )

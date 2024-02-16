@@ -39,6 +39,10 @@ import requests
 
 from cmk.special_agents.v0_unstable.misc import vcrtrace
 
+__version__ = "2.4.0b1"
+
+USER_AGENT = f"checkmk-special-fritzbox-{__version__}"
+
 UPNPInfo = tuple[Mapping[str, str], str, str]
 
 _QUERIES: Final = (
@@ -120,7 +124,7 @@ class FritzConnection:
         self._session = requests.Session()
         self._session.headers.update(
             {
-                "User-agent": "Check_MK agent_fritzbox",
+                "User-agent": USER_AGENT,
                 "Content-Type": "text/xml",
             }
         )

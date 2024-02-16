@@ -14,12 +14,10 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     Levels,
     LevelsConfigModel,
-    TimeMagnitude,
-    TimeSpan,
-)
-from cmk.rulesets.v1.migrations import (
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 

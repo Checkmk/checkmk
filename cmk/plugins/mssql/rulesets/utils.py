@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
-from cmk.rulesets.v1.migrations import migrate_to_upper_float_levels
 
 
 def fs_mssql_backup_age(
@@ -18,7 +17,7 @@ def fs_mssql_backup_age(
                 displayed_magnitudes=tuple(form_specs.TimeMagnitude)
             ),
             predictive=None,
-            migrate=migrate_to_upper_float_levels,
+            migrate=form_specs.migrate_to_upper_float_levels,
             prefill_fixed_levels=form_specs.InputHint(value=(0.0, 0.0)),
         )
     )

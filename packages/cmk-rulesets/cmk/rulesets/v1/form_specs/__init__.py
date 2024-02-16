@@ -38,6 +38,12 @@ from ._composed import (
     TupleDoNotUseWillbeRemoved,
 )
 from ._levels import LevelDirection, Levels, LevelsConfigModel, PredictiveLevels
+from ._migrations import (
+    migrate_to_lower_float_levels,
+    migrate_to_lower_integer_levels,
+    migrate_to_upper_float_levels,
+    migrate_to_upper_integer_levels,
+)
 from ._preconfigured import (
     Metric,
     MonitoredHost,
@@ -73,6 +79,10 @@ __all__ = [
     "LevelsConfigModel",
     "List",
     "Metric",
+    "migrate_to_lower_float_levels",
+    "migrate_to_lower_integer_levels",
+    "migrate_to_upper_float_levels",
+    "migrate_to_upper_integer_levels",
     "MonitoredHost",
     "MonitoredService",
     "MatchingScope",

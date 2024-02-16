@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import nullcontext as does_not_raise
-from typing import ContextManager, NamedTuple
+from typing import ContextManager, NamedTuple, TypeVar
 
 import pytest
 
-from cmk.rulesets.v1.form_specs import LevelsConfigModel
-from cmk.rulesets.v1.migrations import (
-    _NumberT,
+from cmk.rulesets.v1.form_specs import (
+    LevelsConfigModel,
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
+
+_NumberT = TypeVar("_NumberT", float, int)
 
 
 def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:

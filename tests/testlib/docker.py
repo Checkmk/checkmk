@@ -257,6 +257,12 @@ def start_checkmk(
         }.items()
         if value is not None
     }
+    if name and os.getenv("CLEANUP", "1") == "1":
+        try:
+            c: docker.models.containers.Container = client.containers.get(name)
+            c.remove(force=True)
+        except docker.errors.NotFound:
+            pass
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
     logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
@@ -288,6 +294,7 @@ def start_checkmk(
     try:
         yield c
     finally:
+        c.stop()
         if os.getenv("CLEANUP", "1") == "1":
             c.remove(force=True)
 

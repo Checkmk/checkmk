@@ -54,7 +54,6 @@ from cmk.utils.crypto.keys import (
 )
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
-from cmk.utils.site import omd_site
 
 
 class CertificatePEM(SerializedPEM):
@@ -75,8 +74,8 @@ class CertificateWithPrivateKey(NamedTuple):
     def generate_self_signed(
         cls,
         common_name: str,
-        organization: str | None = None,  # defaults to "Checkmk Site <SITE>"
-        organizational_unit_name: str | None = None,
+        organization: str,
+        organizational_unit: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         subject_alt_dns_names: list[str] | None = None,
@@ -89,8 +88,8 @@ class CertificateWithPrivateKey(NamedTuple):
         private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,
-            organization_name=organization or f"Checkmk Site {omd_site()}",
-            organizational_unit=organizational_unit_name,
+            organization_name=organization,
+            organizational_unit=organizational_unit,
         )
         certificate = Certificate._create(
             subject_public_key=private_key.public_key,

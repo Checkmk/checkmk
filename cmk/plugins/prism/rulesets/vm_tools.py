@@ -2,26 +2,26 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import cmk.rulesets.v1.form_specs.basic
+
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
 def _parameter_form_prism_vm_tools():
-    return form_specs.composed.Dictionary(
+    return form_specs.Dictionary(
         elements={
-            "tools_install": form_specs.composed.DictElement(
-                parameter_form=cmk.rulesets.v1.form_specs.basic.SingleChoice(
+            "tools_install": form_specs.DictElement(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("Tools install state"),
                     elements=[
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="installed",
                             title=Localizable("installed"),
                         ),
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="not_installed",
                             title=Localizable("not installed"),
                         ),
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="ignored",
                             title=Localizable("ignored"),
                         ),
@@ -29,19 +29,19 @@ def _parameter_form_prism_vm_tools():
                     prefill=form_specs.DefaultValue("installed"),
                 )
             ),
-            "tools_enabled": form_specs.composed.DictElement(
-                parameter_form=cmk.rulesets.v1.form_specs.basic.SingleChoice(
+            "tools_enabled": form_specs.DictElement(
+                parameter_form=form_specs.SingleChoice(
                     title=Localizable("VMTools activation state"),
                     elements=[
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="enabled",
                             title=Localizable("enabled"),
                         ),
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="disabled",
                             title=Localizable("not disabled"),
                         ),
-                        cmk.rulesets.v1.form_specs.basic.SingleChoiceElement(
+                        form_specs.SingleChoiceElement(
                             name="ignored",
                             title=Localizable("ignored"),
                         ),

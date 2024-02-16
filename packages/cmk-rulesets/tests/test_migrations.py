@@ -8,7 +8,7 @@ from typing import ContextManager, NamedTuple
 
 import pytest
 
-from cmk.rulesets.v1.form_specs.levels import LevelsConfigModel
+from cmk.rulesets.v1.form_specs import LevelsConfigModel
 from cmk.rulesets.v1.migrations import (
     _NumberT,
     migrate_to_lower_float_levels,

@@ -22,16 +22,16 @@ def _migrate_to_cascading_single_choice(value: object) -> tuple[str, str]:
 
 
 def _formspec_inventory_sap_values():
-    return form_specs.composed.Dictionary(
+    return form_specs.Dictionary(
         elements={
-            "match": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.CascadingSingleChoice(
+            "match": form_specs.DictElement(
+                parameter_form=form_specs.CascadingSingleChoice(
                     title=Localizable("Node Path Matching"),
                     elements=[
-                        form_specs.composed.CascadingSingleChoiceElement(
+                        form_specs.CascadingSingleChoiceElement(
                             name="exact",
                             title=Localizable("Exact path of the node"),
-                            parameter_form=form_specs.basic.Text(
+                            parameter_form=form_specs.Text(
                                 title=Localizable("Exact path of the node"),
                                 prefill=form_specs.DefaultValue(
                                     "SAP CCMS Monitor Templates/Dialog Overview/Dialog "
@@ -39,22 +39,22 @@ def _formspec_inventory_sap_values():
                                 ),
                             ),
                         ),
-                        form_specs.composed.CascadingSingleChoiceElement(
+                        form_specs.CascadingSingleChoiceElement(
                             name="pattern",
                             title=Localizable("Regular expression matching the path"),
-                            parameter_form=form_specs.basic.RegularExpression(
+                            parameter_form=form_specs.RegularExpression(
                                 title=Localizable("Regular expression matching the path"),
-                                predefined_help_text=form_specs.basic.MatchingScope.PREFIX,
+                                predefined_help_text=form_specs.MatchingScope.PREFIX,
                                 help_text=Localizable(
                                     "This regex must match the <i>beginning</i> of the complete "
                                     "path of the node as reported by the agent"
                                 ),
                             ),
                         ),
-                        form_specs.composed.CascadingSingleChoiceElement(
+                        form_specs.CascadingSingleChoiceElement(
                             name="all",
                             title=Localizable("Match all nodes"),
-                            parameter_form=form_specs.basic.FixedValue(
+                            parameter_form=form_specs.FixedValue(
                                 title=Localizable("Match all nodes"), value=""
                             ),
                         ),
@@ -64,8 +64,8 @@ def _formspec_inventory_sap_values():
                 ),
                 required=True,
             ),
-            "limit_item_levels": form_specs.composed.DictElement(
-                parameter_form=form_specs.basic.Integer(
+            "limit_item_levels": form_specs.DictElement(
+                parameter_form=form_specs.Integer(
                     title=Localizable("Limit Path Levels for Service Names"),
                     unit=Localizable("path levels"),
                     help_text=Localizable(

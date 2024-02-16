@@ -5,10 +5,17 @@
 from collections.abc import Mapping
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import InputHint
-from cmk.rulesets.v1.form_specs.basic import DataSize, Float, IECMagnitude, Integer
-from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
-from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DictElement,
+    Dictionary,
+    Float,
+    IECMagnitude,
+    InputHint,
+    Integer,
+    LevelDirection,
+    Levels,
+)
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 MAGNITUDES = tuple(IECMagnitude)[:5]

@@ -6,29 +6,23 @@
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
-def _form_inventory_fujitsu_ca_ports() -> form_specs.composed.Dictionary:
-    return form_specs.composed.Dictionary(
+def _form_inventory_fujitsu_ca_ports() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
         elements={
-            "indices": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.List(
+            "indices": form_specs.DictElement(
+                parameter_form=form_specs.List(
                     title=Localizable("CA port indices"),
-                    element_template=form_specs.basic.Text(),
+                    element_template=form_specs.Text(),
                 )
             ),
-            "modes": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.MultipleChoice(
+            "modes": form_specs.DictElement(
+                parameter_form=form_specs.MultipleChoice(
                     title=Localizable("CA port modes"),
                     elements=[
-                        form_specs.composed.MultipleChoiceElement(
-                            name="CA", title=Localizable("CA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="RA", title=Localizable("RA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="CARA", title=Localizable("CARA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
+                        form_specs.MultipleChoiceElement(name="CA", title=Localizable("CA")),
+                        form_specs.MultipleChoiceElement(name="RA", title=Localizable("RA")),
+                        form_specs.MultipleChoiceElement(name="CARA", title=Localizable("CARA")),
+                        form_specs.MultipleChoiceElement(
                             name="Initiator", title=Localizable("Initiator")
                         ),
                     ],

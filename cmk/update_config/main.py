@@ -201,9 +201,12 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
     logger.info("Verifying Checkmk configuration...")
-    for count, pre_action in enumerate(pre_update_actions, start=1):
-        logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
-        pre_action(conflict_mode)
+
+    # Note: Redis has to be disabled first, the other contexts depend on it
+    with disable_redis(), gui_context():
+        for count, pre_action in enumerate(pre_update_actions, start=1):
+            logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
+            pre_action(conflict_mode)
 
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 

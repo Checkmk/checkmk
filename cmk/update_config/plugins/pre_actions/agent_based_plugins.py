@@ -12,6 +12,7 @@ from cmk.gui.exceptions import MKUserError
 
 from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
+    AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     ConflictMode,
     continue_on_incomp_local_file,
     disable_incomp_mkp,
@@ -75,6 +76,6 @@ pre_update_action_registry.register(
     PreUpdateAgentBasedPlugins(
         name="agent_based_plugins",
         title="Agent based plugins",
-        sort_index=30,
+        sort_index=AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX,
     )
 )

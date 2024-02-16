@@ -2769,7 +2769,7 @@ class Float(ValueSpec[float]):
         maxvalue: float | None = None,
         label: str | None = None,
         unit: str = "",
-        display_format: str = "%.2f",
+        display_format: str = "%r",
         align: Literal["left", "right"] = "left",
         # ValueSpec
         title: str | None = None,
@@ -2842,7 +2842,7 @@ class Percentage(Float):
         maxvalue: None | int | float = 101.0,
         label: str | None = None,
         unit: str = "%",
-        display_format: str = "%.1f",
+        display_format: str = "%r",
         align: Literal["left", "right"] = "left",
         # ValueSpec
         title: str | None = None,

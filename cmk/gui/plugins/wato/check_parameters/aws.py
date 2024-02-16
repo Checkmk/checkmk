@@ -767,13 +767,11 @@ def _parameter_valuespec_aws_elb_statistics():
                     elements=[
                         Float(
                             title=_("Warning at"),
-                            display_format="%.3f",
                             default_value=0.001,
                             unit="/s",
                         ),
                         Float(
                             title=_("Critical at"),
-                            display_format="%.3f",
                             default_value=0.001,
                             unit="/s",
                         ),
@@ -1293,8 +1291,8 @@ def _parameter_valuespec_aws_rds_replica_lag():
                 Tuple(
                     title=_("Upper levels on the replica lag"),
                     elements=[
-                        Float(title=_("Warning at"), unit="s", display_format="%.3f"),
-                        Float(title=_("Critical at"), unit="s", display_format="%.3f"),
+                        Float(title=_("Warning at"), unit="s"),
+                        Float(title=_("Critical at"), unit="s"),
                     ],
                 ),
             ),

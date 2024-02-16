@@ -44,12 +44,10 @@ def _parameter_valuespec_psu_wattage() -> Dictionary:
                         Percentage(
                             label=_("Warning at"),
                             default_value=80.0,
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical at"),
                             default_value=90.0,
-                            display_format="%.3f",
                         ),
                     ],
                 ),
@@ -62,12 +60,10 @@ def _parameter_valuespec_psu_wattage() -> Dictionary:
                         Percentage(
                             label=_("Warning below"),
                             default_value=1.0,
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical below"),
                             default_value=0.1,
-                            display_format="%.3f",
                         ),
                     ],
                 ),

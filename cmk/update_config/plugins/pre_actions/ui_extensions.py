@@ -17,6 +17,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     disable_incomp_mkp,
     get_installer_and_package_map,
     get_path_config,
+    GUI_PLUGINS_PREACTION_SORT_INDEX,
     PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -73,6 +74,6 @@ pre_update_action_registry.register(
     PreUpdateUIExtensions(
         name="ui_extensions",
         title="UI extensions",
-        sort_index=20,
+        sort_index=GUI_PLUGINS_PREACTION_SORT_INDEX,
     )
 )

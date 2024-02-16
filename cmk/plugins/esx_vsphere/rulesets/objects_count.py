@@ -12,7 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     List,
     ServiceState,
-    Text,
+    String,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
@@ -26,7 +26,7 @@ def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
                         elements={
                             "vm_names": DictElement(
                                 parameter_form=List(
-                                    element_template=Text(), title=Localizable("VMs")
+                                    element_template=String(), title=Localizable("VMs")
                                 ),
                                 required=True,
                             ),

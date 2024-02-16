@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Integer,
     Password,
-    Text,
+    String,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
@@ -73,7 +73,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="custom_hostname",
                             title=Localizable("Use other hostname"),
-                            parameter_form=Text(
+                            parameter_form=String(
                                 help_text=Localizable(
                                     "Use a custom name for the SSL certificate validation"
                                 ),

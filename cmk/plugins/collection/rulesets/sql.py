@@ -19,7 +19,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
         ),
         elements={
             "description": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("Service Description"),
                     help_text=Localizable("The name of this active service to be displayed."),
                     custom_validate=validators.DisallowEmpty(),
@@ -50,7 +50,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=False,
             ),
             "name": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("Database Name"),
                     help_text=Localizable("The name of the database on the DBMS"),
                     custom_validate=validators.DisallowEmpty(),
@@ -58,7 +58,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=True,
             ),
             "user": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("Database User"),
                     help_text=Localizable("The username used to connect to the database"),
                     custom_validate=validators.DisallowEmpty(),
@@ -108,7 +108,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                             required=True,
                         ),
                         "input": form_specs.DictElement[str](
-                            parameter_form=form_specs.Text(
+                            parameter_form=form_specs.String(
                                 title=Localizable("Input Parameters"),
                                 help_text=Localizable(
                                     "Input parameters, if required by the database procedure. "
@@ -144,7 +144,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=False,
             ),
             "perfdata": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("Performance Data"),
                     help_text=Localizable(
                         "Store output value into RRD database in a metric with this name."
@@ -155,7 +155,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=False,
             ),
             "text": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("Prefix text"),
                     help_text=Localizable("Additional text prefixed to the output"),
                     custom_validate=validators.DisallowEmpty(),
@@ -163,7 +163,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 required=False,
             ),
             "host": form_specs.DictElement[str](
-                parameter_form=form_specs.Text(
+                parameter_form=form_specs.String(
                     title=Localizable("DNS hostname or IP address"),
                     help_text=Localizable(
                         "This defaults to the host for which the active check is configured."

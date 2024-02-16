@@ -6,7 +6,8 @@
 from collections.abc import Mapping
 from typing import Literal
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs, validators
+from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1.form_specs import validators
 
 
 def _form_active_checks_sql() -> form_specs.Dictionary:

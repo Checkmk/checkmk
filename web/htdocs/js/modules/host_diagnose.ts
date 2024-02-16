@@ -92,7 +92,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_security_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_3"
+                        "vs_host_p_snmp_v3_credentials_2_3_orig"
                     ).value
                 );
             vars +=
@@ -106,7 +106,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_privacy_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_5"
+                        "vs_host_p_snmp_v3_credentials_2_5_orig"
                     ).value
                 );
         }

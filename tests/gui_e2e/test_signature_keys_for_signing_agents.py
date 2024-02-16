@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(name="self_signed_cert", scope="module")
 def fixture_self_signed() -> CertificateWithPrivateKey:
-    return CertificateWithPrivateKey.generate_self_signed("Some CN", "e2etest")
+    return CertificateWithPrivateKey.generate_self_signed(
+        common_name="Some CN", organization="e2etest"
+    )
 
 
 def go_to_signature_page(page: PPage) -> None:

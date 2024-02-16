@@ -23,6 +23,7 @@ from cmk.utils.crypto.certificate import (
     X509Name,
 )
 from cmk.utils.crypto.keys import is_supported_private_key_type, PrivateKey
+from cmk.utils.site import omd_site
 
 
 class _CNTemplate:
@@ -67,6 +68,7 @@ class RootCA(CertificateWithPrivateKey):
         except FileNotFoundError:
             ca = CertificateWithPrivateKey.generate_self_signed(
                 common_name=name,
+                organization=f"Checkmk Site {omd_site()}",
                 expiry=validity,
                 key_size=key_size,
                 is_ca=True,

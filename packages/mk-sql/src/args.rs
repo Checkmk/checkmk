@@ -35,7 +35,7 @@ pub struct Args {
 
     /// All sections are generated as sync
     #[arg(long)]
-    pub disable_caching: bool,
+    pub no_spool: bool,
 
     ///  
     #[arg(long)]

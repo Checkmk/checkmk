@@ -13,25 +13,25 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.export import ECRulePack, Event, MkpRulePackProxy, Rule
+import cmk.ec.export as ec
 
 from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.watolib.search import MatchItem
 
 
 def test_match_item_generator_ec_rule_packs_and_rules() -> None:
-    mkp_rule_pack = MkpRulePackProxy("mkp_rule_pack_id")
+    mkp_rule_pack = ec.MkpRulePackProxy("mkp_rule_pack_id")
     mkp_rule_pack.rule_pack = {
         "title": "MKP Rule pack",
         "id": "mkp_rule_pack_id",
-        "rules": [Rule(id="mkp_rule_id", description="descr", comment="comment")],
+        "rules": [ec.Rule(id="mkp_rule_id", description="descr", comment="comment")],
         "disabled": False,
     }
-    rule_packs: Iterable[ECRulePack] = [
+    rule_packs: Iterable[ec.ECRulePack] = [
         {
             "title": "Rule pack",
             "id": "rule_pack_id",
-            "rules": [Rule(id="rule_id", description="descr", comment="")],
+            "rules": [ec.Rule(id="rule_id", description="descr", comment="")],
             "disabled": False,
         },
         mkp_rule_pack,
@@ -79,7 +79,7 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
     )
     assert (
         mkeventd_wato.send_event(
-            Event(
+            ec.Event(
                 facility=17,
                 priority=1,
                 sl=20,

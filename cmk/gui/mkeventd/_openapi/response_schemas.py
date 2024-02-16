@@ -5,10 +5,7 @@
 
 from typing import get_args
 
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogFacility,
-    SyslogPriority,
-)
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema
@@ -65,13 +62,13 @@ class ECEventAttributes(BaseSchema):
         description="The IP address where the event originated.",
     )
     facility = fields.String(
-        enum=list(SyslogFacility.NAMES.values()),
+        enum=list(ec.SyslogFacility.NAMES.values()),
         required=True,
         example="kern",
         description="The syslog facility.",
     )
     priority = fields.String(
-        enum=list(SyslogPriority.NAMES.values()),
+        enum=list(ec.SyslogPriority.NAMES.values()),
         required=True,
         example="warning",
         description="The syslog priority.",

@@ -45,10 +45,7 @@ from cmk.utils.notify_types import (
     WebHookUrl,
 )
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
-    SyslogFacility,
-    SyslogPriority,
-)
+import cmk.ec.export as ec  # pylint:disable=cmk-module-layer-violation
 
 CheckboxState = Literal["enabled", "disabled"]
 
@@ -1044,7 +1041,7 @@ class CheckboxThrottlePeriodicNotifications:
 # ----------------------------------------------------------------
 FACILITIES = cast(
     Mapping[SysLogFacilityIntType, SysLogFacilityStrType],
-    SyslogFacility.NAMES,
+    ec.SyslogFacility.NAMES,
 )
 
 
@@ -1077,7 +1074,7 @@ class CheckboxSysLogFacility:
 
 
 # ----------------------------------------------------------------
-PRIORITIES = cast(Mapping[SyslogPriorityIntType, SysLogPriorityStrType], SyslogPriority.NAMES)
+PRIORITIES = cast(Mapping[SyslogPriorityIntType, SysLogPriorityStrType], ec.SyslogPriority.NAMES)
 
 
 @dataclass

@@ -6,16 +6,17 @@
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
+import cmk.utils.paths
+
 from cmk.mkp_tool import PackageOperationCallbacks, PackagePart
 
 from .config import MkpRulePackProxy
-from .rule_packs import (
-    export_rule_pack,
-    load_rule_packs,
-    mkp_rule_pack_dir,
-    rule_pack_dir,
-    save_rule_packs,
-)
+from .rule_packs import export_rule_pack, load_rule_packs, rule_pack_dir, save_rule_packs
+
+
+def mkp_rule_pack_dir() -> Path:
+    """Returns the default directory for rule pack exports of the Event Console."""
+    return Path(cmk.utils.paths.default_config_dir) / "mkeventd.d" / "mkp" / "rule_packs"
 
 
 def _install_packaged_rule_packs(file_names: Iterable[Path]) -> None:

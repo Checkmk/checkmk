@@ -10,7 +10,7 @@ from typing import ContextManager
 import pytest
 
 from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.validators import (
+from cmk.rulesets.v1.form_specs.validators import (
     DisallowEmpty,
     EmailAddress,
     InRange,

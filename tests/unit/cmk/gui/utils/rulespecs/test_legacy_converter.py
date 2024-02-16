@@ -41,13 +41,13 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def _v1_custom_text_validate(value: str) -> None:
-    api_v1.validators.DisallowEmpty(error_msg=api_v1.Localizable("Fill this"))(value)
-    api_v1.validators.MatchRegex(
+    api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Localizable("Fill this"))(value)
+    api_v1.form_specs.validators.MatchRegex(
         regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed")
     )(value)
 
     if value == "admin":
-        raise api_v1.validators.ValidationError(api_v1.Localizable("Forbidden"))
+        raise api_v1.form_specs.validators.ValidationError(api_v1.Localizable("Forbidden"))
 
 
 def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
@@ -266,7 +266,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="minimal TextInput",
         ),
         pytest.param(
-            api_v1.form_specs.Text(custom_validate=api_v1.validators.DisallowEmpty()),
+            api_v1.form_specs.Text(custom_validate=api_v1.form_specs.validators.DisallowEmpty()),
             legacy_valuespecs.TextInput(
                 placeholder="",
                 allow_empty=False,
@@ -1562,15 +1562,19 @@ def test_convert_validation(input_value: str) -> None:
 )
 def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -> None:
     def _v1_custom_list_validate(value: Sequence[object]) -> None:
-        api_v1.validators.DisallowEmpty(error_msg=api_v1.Localizable("Empty list"))(value)
+        api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Localizable("Empty list"))(
+            value
+        )
 
         if len(value) > 2:
-            raise api_v1.validators.ValidationError(
+            raise api_v1.form_specs.validators.ValidationError(
                 api_v1.Localizable("Max number of elements exceeded")
             )
 
         if len(set(value)) != len(value):
-            raise api_v1.validators.ValidationError(api_v1.Localizable("Duplicate elements"))
+            raise api_v1.form_specs.validators.ValidationError(
+                api_v1.Localizable("Duplicate elements")
+            )
 
     v1_api_list = api_v1.form_specs.List(
         element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(

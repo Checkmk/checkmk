@@ -26,9 +26,9 @@ from cmk.rulesets.v1.form_specs import (
     Text,
     TimeMagnitude,
     TimeSpan,
+    validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
-from cmk.rulesets.v1.validators import DisallowEmpty
 
 
 def _valuespec_response() -> Dictionary:
@@ -478,7 +478,7 @@ def _valuespec_connection() -> Dictionary:
                                     "user": DictElement(
                                         parameter_form=Text(
                                             title=Localizable("Username"),
-                                            custom_validate=DisallowEmpty(),
+                                            custom_validate=validators.DisallowEmpty(),
                                         ),
                                         required=True,
                                     ),
@@ -623,7 +623,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
 def _valuespec_endpoints() -> List:
     return List(
         title=Localizable("Endpoints"),
-        custom_validate=DisallowEmpty(),
+        custom_validate=validators.DisallowEmpty(),
         element_template=Dictionary(
             elements={
                 "service_name": DictElement(
@@ -649,7 +649,7 @@ def _valuespec_endpoints() -> List:
                             "name": DictElement(
                                 parameter_form=Text(
                                     title=Localizable("Name"),
-                                    custom_validate=DisallowEmpty(),
+                                    custom_validate=validators.DisallowEmpty(),
                                     prefill=InputHint("My HTTP service"),
                                 ),
                                 required=True,

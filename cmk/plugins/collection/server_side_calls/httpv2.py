@@ -166,7 +166,7 @@ class Connection(BaseModel):
     http_versions: HttpVersion | None = None
     tls_versions: EnforceTlsVersion | None = None
     method: tuple[HttpMethod, SendData | None] | None = None  # TODO(ma): CMK-15749
-    proxy: ProxySpec | None
+    proxy: ProxySpec | None = None
     redirects: RedirectPolicy | None = None
     timeout: int | None = None
     user_agent: str | None = None

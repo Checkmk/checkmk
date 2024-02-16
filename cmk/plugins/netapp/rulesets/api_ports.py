@@ -6,24 +6,20 @@
 from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
 
 
-def _form_discovery_netapp_api_ports_ignored() -> form_specs.composed.Dictionary:
-    return form_specs.composed.Dictionary(
+def _form_discovery_netapp_api_ports_ignored() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
         title=Localizable("Netapp port discovery"),
         elements={
-            "ignored_ports": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.MultipleChoice(
+            "ignored_ports": form_specs.DictElement(
+                parameter_form=form_specs.MultipleChoice(
                     title=Localizable("Ignore port types during discovery"),
                     help_text=Localizable("Specify which port types should not be discovered"),
                     elements=[
-                        form_specs.composed.MultipleChoiceElement(
+                        form_specs.MultipleChoiceElement(
                             name="physical", title=Localizable("Physical")
                         ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="vlan", title=Localizable("Vlan")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="trunk", title=Localizable("Trunk")
-                        ),
+                        form_specs.MultipleChoiceElement(name="vlan", title=Localizable("Vlan")),
+                        form_specs.MultipleChoiceElement(name="trunk", title=Localizable("Trunk")),
                     ],
                 ),
             ),

@@ -85,14 +85,6 @@ def rule_pack_dir() -> Path:
     return _default_settings().paths.rule_pack_dir.value
 
 
-def mkp_rule_pack_dir() -> Path:
-    """
-    Returns the default directory for rule pack exports of the
-    Event Console.
-    """
-    return _default_settings().paths.mkp_rule_pack_dir.value
-
-
 def active_config_dir() -> Path:
     """Returns the directory where active rule packs of the Event Console are located."""
     return _default_settings().paths.active_config_dir.value

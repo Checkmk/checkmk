@@ -25,7 +25,7 @@ from werkzeug.routing import Map, Rule, Submount
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils import crash_reporting, paths
+from cmk.utils import crash_reporting, paths, store
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
@@ -39,8 +39,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.restful_objects.specification import make_spec
-from cmk.gui.openapi.spec_generator import generate_spec
+from cmk.gui.openapi.restful_objects.specification import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,
@@ -246,8 +245,6 @@ def get_filename_from_url(url: str) -> str:
     return Path(urllib.parse.urlparse(url).path).name
 
 
-# TODO: Remove the lru_cache once the spec is not generated anymore
-@functools.lru_cache(maxsize=512)
 def serve_spec(
     target: EndpointTarget,
     url: str,
@@ -264,16 +261,18 @@ def serve_spec(
 
     response = Response(status=200)
     site = omd_site()
-    response.data = serialize(_add_site_server(_read_spec(target, site), site, url))
+    response.data = serialize(_add_site_server(_read_spec(target), site, url))
     response.content_type = content_type
     response.freeze()
     return response
 
 
-def _read_spec(target: EndpointTarget, site: SiteId) -> dict[str, Any]:
-    # TODO: Replace this with actual reading a pre-generated spec instead of computing it
-    return generate_spec(make_spec(), target, site)
-    # return {}  # TODO
+def _read_spec(target: EndpointTarget) -> dict[str, Any]:
+    path = spec_path(target)
+    spec = store.load_object_from_file(path, default={})
+    if not spec:
+        raise ValueError(f"Failed to load spec from {path}")
+    return spec
 
 
 def _add_site_server(spec: dict[str, Any], site: SiteId, url: str) -> dict[str, Any]:

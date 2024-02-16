@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-import copy
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from logging import Logger
@@ -289,7 +288,7 @@ def _transformed_params(
     debug_info = f"{host=}, plugin={str(plugin_name)!r}, ruleset={str(ruleset.name)!r}, {params=}"
 
     try:
-        new_params = _transform_params_safely(params, ruleset, logger)
+        new_params = _apply_rulesets_migration(params, ruleset, logger)
         assert new_params or not params, "non-empty params vanished"
     except Exception as exc:
         raise MKGeneralException(f"Transform failed: {debug_info}, error={exc!r}") from exc
@@ -311,19 +310,10 @@ def _get_ruleset(
     )
 
 
-# TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value
-def _transform_params_safely(
+def _apply_rulesets_migration(
     params: LegacyCheckParameters, ruleset: Ruleset, logger: Logger
 ) -> Mapping[str, object]:
-    """Safely converts <params> using <transform_value> function
-    Write warning in the log if <transform_value> alters input. Such behavior is not allowed and
-    the warning helps us to detect bad legacy/old transform functions.
-    Returns `Any` because valuespecs are currently Any
-    """
-    param_copy = copy.deepcopy(params)
-    new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
-    if param_copy != params:
-        logger.warning(f"transform_value() for ruleset '{str(ruleset.name)}' altered input")
+    new_params = ruleset.valuespec().transform_value(params) if params else {}
 
     if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
         raise TypeError(

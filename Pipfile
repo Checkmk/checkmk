@@ -108,7 +108,7 @@ pyghmi = "==1.5.13"  # needed by base for IPMI
 requests = {version = "==2.31.0",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
-isodate = "==0.6.1"  # used by netapp ontap agent
+isoduration = "==20.11.0"  # used by netapp ontap agent
 Jinja2 = "==3.1.3"  # needed by Flask
 more-itertools = "==9.0.0"  # needed by connexion through zipp, pytest
 zipp = "==3.11.0"  # needed by importlib_metadata

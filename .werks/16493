@@ -1,0 +1,11 @@
+Title: netapp_ontap_snapvault: improves lagtime calculation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708076378
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+With this new type of calculation, since we don't have a reference for when this lagtime started or ended,
+we always consider a month to be made up of 30 days.

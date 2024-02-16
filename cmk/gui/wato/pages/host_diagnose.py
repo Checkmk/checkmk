@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
+import base64
 import json
 from collections.abc import Collection
 
+from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.forms as forms
@@ -464,7 +466,7 @@ class ModeAjaxDiagHost(AjaxPage):
 
                 args[8] = snmpv3_auth_proto
                 args[9] = api_request.get("snmpv3_security_name", "")
-                args[10] = api_request.get("snmpv3_security_password", "")
+                args[10] = _decrypt_passwd(api_request.get("snmpv3_security_password", ""))
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
@@ -476,7 +478,7 @@ class ModeAjaxDiagHost(AjaxPage):
 
                     args[11] = snmpv3_privacy_proto
 
-                    args[12] = api_request.get("snmpv3_privacy_password", "")
+                    args[12] = _decrypt_passwd(api_request.get("snmpv3_privacy_password", ""))
             else:
                 args[9] = api_request.get("snmpv3_security_name", "")
 
@@ -491,3 +493,10 @@ class ModeAjaxDiagHost(AjaxPage):
             "status_code": result.return_code,
             "output": result.response,
         }
+
+
+def _decrypt_passwd(encrypted_passwd: str) -> str:
+    try:
+        return Encrypter.decrypt(base64.b64decode(encrypted_passwd.encode("ascii")))
+    except Exception:
+        raise MKUserError(None, _("Decryption of SNMPv3 password failed."))

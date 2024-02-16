@@ -1,0 +1,14 @@
+Title: Connection test using SNMP credentials configured on host page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1708069326
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+If you used "Save & run connection tests" on the host properties page with SNMP
+credentials configured, the configured password was not used for the executed
+tests.
+
+A workaround was to enter the password on the "Test connection" page again.

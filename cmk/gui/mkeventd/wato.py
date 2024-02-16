@@ -48,6 +48,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
+import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -153,11 +154,6 @@ from cmk.gui.watolib.config_variable_groups import (
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
-from cmk.gui.watolib.mkeventd import (
-    export_mkp_rule_pack,
-    get_rule_stats_from_ec,
-    save_mkeventd_rules,
-)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
@@ -1470,6 +1466,18 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
 #   '----------------------------------------------------------------------'
 
 
+def _save_mkeventd_rules(rule_packs: Iterable[ec.ECRulePack]) -> None:
+    ec.save_rule_packs(
+        rule_packs, pretty_print=active_config.mkeventd_pprint_rules, path=ec.rule_pack_dir()
+    )
+
+
+def _export_mkp_rule_pack(rule_pack: ec.ECRulePack) -> None:
+    ec.export_rule_pack(
+        rule_pack, pretty_print=active_config.mkeventd_pprint_rules, path=ec.mkp_rule_pack_dir()
+    )
+
+
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -1480,7 +1488,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
         return 50
 
     def generate(self) -> None:
-        save_mkeventd_rules([ec.default_rule_pack([])])
+        _save_mkeventd_rules([ec.default_rule_pack([])])
 
 
 # .
@@ -1660,6 +1668,17 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         )
 
 
+def _get_rule_stats_from_ec() -> Mapping[str, int]:
+    # Add information about rule hits: If we are running on OMD then we know
+    # the path to the state retention file of mkeventd and can read the rule
+    # statistics directly from that file.
+    rule_stats: dict[str, int] = {}
+    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
+        rule_stats.setdefault(rule_id, 0)
+        rule_stats[rule_id] += count
+    return rule_stats
+
+
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -1764,7 +1783,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             rule_pack = self._rule_packs[nr]
             self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
             del self._rule_packs[nr]
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
 
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
@@ -1789,7 +1808,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"]
             )
@@ -1802,9 +1821,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             except KeyError:
                 raise MKUserError("_export", _("The requested rule pack does not exist"))
 
-            export_mkp_rule_pack(rule_pack)
+            _export_mkp_rule_pack(rule_pack)
             self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "export-rule-pack",
                 _("Made rule pack %s available for MKP export") % rule_pack["id"],
@@ -1820,7 +1839,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             if not isinstance(rp, ec.MkpRulePackProxy):
                 raise MKUserError("_dissolve", _("rule pack was not exported"))
             self._rule_packs[nr] = rp.get_rule_pack_spec()
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
             self._add_change(
                 "dissolve-rule-pack",
@@ -1835,7 +1854,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "reset-rule-pack",
                 _("Reset the rules of rule pack %s to the ones provided via MKP") % rp.id_,
@@ -1844,13 +1863,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Synchronize modified rule pack with MKP
         elif request.has_var("_synchronize"):
             nr = request.get_integer_input_mandatory("_synchronize")
-            export_mkp_rule_pack(self._rule_packs[nr])
+            _export_mkp_rule_pack(self._rule_packs[nr])
             try:
                 rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
                 self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
-            save_mkeventd_rules(self._rule_packs)
+            _save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "synchronize-rule-pack",
                 _("Synchronized MKP with the modified rule pack %s") % rp.id_,
@@ -1865,7 +1884,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
-        save_mkeventd_rules(rule_packs)
+        _save_mkeventd_rules(rule_packs)
 
     def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
@@ -1921,7 +1940,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         have_match = False
 
-        rule_stats = get_rule_stats_from_ec()
+        rule_stats = _get_rule_stats_from_ec()
         rule_pack_hits: dict[str, int] = {}
         for rp in ec.load_rule_packs():
             pack_hits = 0
@@ -2270,10 +2289,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     del self._rule_packs[self._rule_pack_nr]["rules"][move_nr]
 
                     if other_type_ == ec.RulePackType.exported:
-                        export_mkp_rule_pack(other_pack)
+                        _export_mkp_rule_pack(other_pack)
                     if type_ == ec.RulePackType.exported:
-                        export_mkp_rule_pack(self._rule_pack)
-                    save_mkeventd_rules(self._rule_packs)
+                        _export_mkp_rule_pack(self._rule_pack)
+                    _save_mkeventd_rules(self._rule_packs)
 
                     self._add_change(
                         "move-rule-to-pack",
@@ -2297,8 +2316,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             del rules[nr]
 
             if type_ == ec.RulePackType.exported:
-                export_mkp_rule_pack(self._rule_pack)
-            save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack)
+            _save_mkeventd_rules(self._rule_packs)
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
         if request.has_var("_move"):
@@ -2315,8 +2334,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             rules[to_pos:to_pos] = [rule]
 
             if type_ == ec.RulePackType.exported:
-                export_mkp_rule_pack(self._rule_pack)
-            save_mkeventd_rules(self._rule_packs)
+                _export_mkp_rule_pack(self._rule_pack)
+            _save_mkeventd_rules(self._rule_packs)
 
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
@@ -2358,7 +2377,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
-            hits = get_rule_stats_from_ec()
+            hits = _get_rule_stats_from_ec()
             for nr, rule in enumerate(self._rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2550,15 +2569,15 @@ def _add_change_for_sites(
     """If CME, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
     if edition() is Edition.CME and customer_id is not None:
-        sites = list(customer_api().get_sites_of_customer(customer_id).keys())
+        sites_ = list(customer_api().get_sites_of_customer(customer_id).keys())
     else:
-        sites = _get_event_console_sync_sites()
+        sites_ = _get_event_console_sync_sites()
 
     _changes.add_change(
         what,
         message,
         domains=[ConfigDomainEventConsole],
-        sites=sites,
+        sites=sites_,
     )
 
 
@@ -2653,14 +2672,14 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             self._rule_packs.insert(0, self._rule_pack)
         elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
             rp.rule_pack = self._rule_pack
-            export_mkp_rule_pack(self._rule_pack)
+            _export_mkp_rule_pack(self._rule_pack)
         else:
             if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
                 self._rule_packs[self._edit_nr] = self._rule_pack
 
-        save_mkeventd_rules(self._rule_packs)
+        _save_mkeventd_rules(self._rule_packs)
 
         if self._new:
             _add_change_for_sites(
@@ -2857,8 +2876,8 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             self._rules[self._edit_nr] = self._rule
 
         if type_ == ec.RulePackType.exported:
-            export_mkp_rule_pack(self._rule_pack)
-        save_mkeventd_rules(self._rule_packs)
+            _export_mkp_rule_pack(self._rule_pack)
+        _save_mkeventd_rules(self._rule_packs)
 
         if self._new:
             _add_change_for_sites(

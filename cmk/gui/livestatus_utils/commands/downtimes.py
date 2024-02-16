@@ -245,9 +245,9 @@ def schedule_service_downtime(
 
     Examples:
 
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -652,9 +652,9 @@ def schedule_host_downtime(
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=122
 
     Examples:
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config

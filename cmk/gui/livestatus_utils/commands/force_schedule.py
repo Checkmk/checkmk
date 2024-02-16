@@ -27,8 +27,8 @@ def force_schedule_host_check(  # type: ignore[no-untyped-def]
             The time at which this forced check should be performed
 
     Examples:
-        >>> import pytz
-        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -68,8 +68,8 @@ def force_schedule_service_check(  # type: ignore[no-untyped-def]
             The time at which this forced check should be performed
 
     Examples:
-        >>> import pytz
-        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config

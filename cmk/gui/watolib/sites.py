@@ -521,7 +521,6 @@ class CEESiteManagement(SiteManagement):
                             unit=_("sec"),
                             minvalue=0.1,
                             default_value=defaults["heartbeat"][1],
-                            display_format="%.1f",
                         ),
                     ],
                 ),

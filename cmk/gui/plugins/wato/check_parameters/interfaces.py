@@ -545,12 +545,10 @@ def _vs_packet_levels(
                         Percentage(
                             label=_("Warning at"),
                             default_value=percent_levels[0],
-                            display_format="%.3f",
                         ),
                         Percentage(
                             label=_("Critical at"),
                             default_value=percent_levels[1],
-                            display_format="%.3f",
                         ),
                     ],
                 ),

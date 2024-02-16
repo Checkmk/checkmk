@@ -11,7 +11,9 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
 if version.is_managed_edition():
-    from cmk.gui.cme.managed_snapshots import save_active_config
+    from cmk.gui.cme.managed_snapshots import (  # pylint: disable=no-name-in-module
+        save_active_config,
+    )
 else:
     from cmk.gui.mkeventd.helpers import save_active_config
 

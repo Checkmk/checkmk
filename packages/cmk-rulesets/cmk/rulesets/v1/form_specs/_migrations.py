@@ -5,8 +5,7 @@
 
 from typing import Literal, TypeVar
 
-from .form_specs import LevelDirection, LevelsConfigModel
-from .form_specs._levels import _PredictiveLevelsT
+from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel
 
 _NumberT = TypeVar("_NumberT", int, float)
 

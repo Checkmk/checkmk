@@ -1390,7 +1390,7 @@ fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
     ms_sql
         .valid_sections()
         .iter()
-        .map(|s| Section::new(s, ms_sql.cache_age()).to_plain_header())
+        .map(|s| Section::new(s, Some(ms_sql.cache_age())).to_plain_header())
         .collect::<Vec<_>>()
         .join("")
 }
@@ -1431,7 +1431,16 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
     let sections = ms_sql
         .valid_sections()
         .into_iter()
-        .map(|s| Section::new(s, ms_sql.cache_age()))
+        .map(|s| {
+            Section::new(
+                s,
+                if environment.disable_caching() {
+                    None
+                } else {
+                    Some(ms_sql.cache_age())
+                },
+            )
+        })
         .collect::<Vec<_>>();
 
     Ok(generate_signaling_blocks(ms_sql, &instances)

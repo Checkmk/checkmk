@@ -52,7 +52,7 @@ fn test_section_select_query() {
     ] {
         tools::create_file_with_content(&custom_sql_path, &(name.to_owned() + ".sql"), "Bu!");
     }
-    let make_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), 100);
+    let make_section = |name: &str| Section::new(&SectionBuilder::new(name).build(), Some(100));
     for name in [
         names::JOBS,
         names::AVAILABILITY_GROUPS,
@@ -222,7 +222,7 @@ async fn test_validate_all_instances_remote() {
 
 fn make_section<S: Into<String>>(name: S) -> Section {
     let config_section = SectionBuilder::new(name).build();
-    Section::new(&config_section, 100)
+    Section::new(&config_section, Some(100))
 }
 
 async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {

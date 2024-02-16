@@ -9,15 +9,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Attributes,
-    Metric,
-    Result,
-    Service,
-    State,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.fritz import (
+from cmk.agent_based.v2 import Attributes, Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.plugins.fritzbox.agent_based.fritz import (
     check_fritz_conn,
     check_fritz_link,
     check_fritz_uptime,
@@ -30,7 +24,6 @@ from cmk.base.plugins.agent_based.fritz import (
     parse_fritz,
     Section,
 )
-
 from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS, DISCOVERY_DEFAULT_PARAMETERS
 
 _STRING_TABLE = [

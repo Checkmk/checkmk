@@ -9,8 +9,9 @@ from typing import Final, Mapping
 
 import pytest
 
-from tests.testlib import repo_path
+from cmk.base.server_side_calls import load_special_agents
 
+from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.special_agents import (
     agent_activemq,
@@ -25,7 +26,6 @@ from cmk.special_agents import (
     agent_couchbase,
     agent_datadog,
     agent_elasticsearch,
-    agent_fritzbox,
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,
@@ -102,6 +102,45 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "vsphere": agent_vsphere,
     "zerto": None,
 }
+
+UNMIGRATED = {
+    "acme_sbc",
+    "activemq",
+    "alertmanager",
+    "allnet_ip_sensoric",
+    "appdynamics",
+    "aws_status",
+    "cisco_prime",
+    "couchbase",
+    "ddn_s2a",
+    "emcvnx",
+    "gcp_status",
+    "graylog",
+    "hivemanager",
+    "hivemanager_ng",
+    "hp_msa",
+    "ibmsvc",
+    "innovaphone",
+    "ipmi_sensors",
+    "jira",
+    "jolokia",
+    "mqtt",
+    "netapp",
+    "rabbitmq",
+    "random",
+    "ruckus_spot",
+    "salesforce",
+    "siemens_plc",
+    "smb_share",
+    "splunk",
+    "storeonce",
+    "storeonce4x",
+    "tinkerforge",
+    "ucs_bladecenter",
+    "vnx_quotas",
+    "zerto",
+}
+
 
 REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "alertmanager": [],
@@ -213,10 +252,10 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
 
 
 def test_all_agents_tested() -> None:
-    assert set(TESTED_SA_MODULES) == {
-        agent_file.name.split("agent_")[-1]
-        for agent_file in (repo_path() / "agents" / "special").glob("agent_*")
-    }
+    _errors, agents = load_special_agents()
+    migrated = {agent.name for agent in agents.values()}
+    assert not migrated & UNMIGRATED
+    assert set(TESTED_SA_MODULES) == (migrated | UNMIGRATED)
 
 
 @pytest.mark.parametrize(

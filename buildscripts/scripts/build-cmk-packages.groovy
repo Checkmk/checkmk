@@ -553,9 +553,6 @@ def build_package(package_type, build_dir, env) {
                 bazel info peak-heap-size
                 echo 'Server log:'
                 cat \$(bazel info server_log)
-                echo '### PROCESSES ###'
-                ps -axjf
-                bazel shutdown
             """);
         }
     }

@@ -16,7 +16,7 @@ class UpdateAutochecks(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         failed_hosts = []
 
-        for rewrite_error in rewrite_yielding_errors(logger):
+        for rewrite_error in rewrite_yielding_errors():
             logger.error(rewrite_error.message)
             failed_hosts.append(rewrite_error.host_name)
 

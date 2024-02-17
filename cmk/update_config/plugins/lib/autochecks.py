@@ -6,7 +6,6 @@
 import ast
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from logging import Logger
 from pathlib import Path
 from typing import Any, NamedTuple, Self, TypeVar
 
@@ -134,11 +133,11 @@ class RewriteError:
     host_name: HostName
 
 
-def rewrite_yielding_errors(logger: Logger) -> Iterable[RewriteError]:
+def rewrite_yielding_errors() -> Iterable[RewriteError]:
     all_rulesets = AllRulesets.load_all_rulesets()
     for hostname in _autocheck_hosts():
         try:
-            fixed_autochecks = _get_fixed_autochecks(hostname, all_rulesets, logger)
+            fixed_autochecks = _get_fixed_autochecks(hostname, all_rulesets)
         except MKGeneralException as exc:
             if debug.enabled():
                 raise
@@ -147,11 +146,9 @@ def rewrite_yielding_errors(logger: Logger) -> Iterable[RewriteError]:
             AutochecksStore(hostname).write(fixed_autochecks)
 
 
-def _get_fixed_autochecks(
-    host_name: HostName, all_rulesets: AllRulesets, logger: Logger
-) -> list[AutocheckEntry]:
+def _get_fixed_autochecks(host_name: HostName, all_rulesets: AllRulesets) -> list[AutocheckEntry]:
     autochecks = _AutochecksStoreV22(host_name).read()
-    return [_fix_entry(logger, s, all_rulesets, host_name) for s in autochecks]
+    return [_fix_entry(s, all_rulesets, host_name) for s in autochecks]
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
@@ -218,7 +215,6 @@ class _AutochecksStoreV22:
 
 
 def _fix_entry(
-    logger: Logger,
     entry: _AutocheckEntryV22,
     all_rulesets: RulesetCollection,
     hostname: str,
@@ -237,7 +233,6 @@ def _fix_entry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
-            logger,
             new_plugin_name or entry.check_plugin_name,
             explicit_parameters_transform(entry.parameters),
             all_rulesets,
@@ -251,7 +246,6 @@ T = TypeVar("T", bound=LegacyCheckParameters)
 
 
 def _transformed_params(
-    logger: Logger,
     plugin_name: CheckPluginName,
     params: T,
     all_rulesets: RulesetCollection,
@@ -269,7 +263,7 @@ def _transformed_params(
     debug_info = f"{host=}, plugin={str(plugin_name)!r}, ruleset={str(ruleset.name)!r}, {params=}"
 
     try:
-        new_params = _apply_rulesets_migration(params, ruleset, logger)
+        new_params = _apply_rulesets_migration(params, ruleset)
         assert new_params or not params, "non-empty params vanished"
     except Exception as exc:
         raise MKGeneralException(f"Transform failed: {debug_info}, error={exc!r}") from exc
@@ -292,7 +286,7 @@ def _get_ruleset(
 
 
 def _apply_rulesets_migration(
-    params: LegacyCheckParameters, ruleset: Ruleset, logger: Logger
+    params: LegacyCheckParameters, ruleset: Ruleset
 ) -> Mapping[str, object]:
     new_params = ruleset.valuespec().transform_value(params) if params else {}
 

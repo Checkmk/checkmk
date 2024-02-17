@@ -11,6 +11,7 @@ import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, Literal, TYPE_CHECKING
 
@@ -223,26 +224,53 @@ def get_filename_from_url(url: str) -> str:
     return Path(urllib.parse.urlparse(url).path).name
 
 
-def serve_spec(
+def _serve_spec(
     target: EndpointTarget,
     url: str,
     extension: Literal["yaml", "json"],
 ) -> Response:
+    match extension:
+        case "yaml":
+            content_type = "application/x-yaml; charset=utf-8"
+        case "json":
+            content_type = "application/json"
+
+    response = Response(status=200)
+    response.data = _serialize_spec_cached(target, url, extension)
+    response.content_type = content_type
+    response.freeze()
+    return response
+
+
+def _serialize_spec_cached(
+    target: EndpointTarget,
+    url: str,
+    extension: Literal["yaml", "json"],
+) -> str:
+    spec_mtime = spec_path(target).stat().st_mtime
+    url_hash = sha256(url.encode("utf-8")).hexdigest()
+    cache_file = paths.tmp_dir / "rest_api" / "spec_cache" / f"{target}-{extension}-{url_hash}.spec"
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if cache_file.stat().st_mtime > spec_mtime:
+            return cache_file.read_text()
+    except FileNotFoundError:
+        pass
+
+    serialized = _serialize_spec(target, url, extension)
+    cache_file.write_text(serialized)
+    return serialized
+
+
+def _serialize_spec(target: EndpointTarget, url: str, extension: Literal["yaml", "json"]) -> str:
     serialize: Callable[[dict[str, Any]], str]
     match extension:
         case "yaml":
             serialize = dict_to_yaml
-            content_type = "application/x-yaml; charset=utf-8"
         case "json":
             serialize = json.dumps
-            content_type = "application/json"
-
-    response = Response(status=200)
-    site = omd_site()
-    response.data = serialize(_add_site_server(_read_spec(target), site, url))
-    response.content_type = content_type
-    response.freeze()
-    return response
+    return serialize(_add_site_server(_read_spec(target), omd_site(), url))
 
 
 def _read_spec(target: EndpointTarget) -> dict[str, Any]:
@@ -310,7 +338,7 @@ class ServeSpec(AbstractWSGIApp):
         def _url(_environ: WSGIEnvironment) -> str:
             return "/".join(get_url(_environ).split("/")[:-1])
 
-        return serve_spec(
+        return _serve_spec(
             target=self.target,
             url=_url(environ),
             extension=self.extension,

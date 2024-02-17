@@ -454,7 +454,9 @@ def walk_skel(
 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
-def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: SiteContext) -> None:
+def patch_skeleton_files(
+    conflict_mode: str, old_site_name: str, old_replacements: Replacements, new_site: SiteContext
+) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
@@ -474,7 +476,9 @@ def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: Si
                     os.path.isfile(src) and not os.path.islink(src) and os.path.exists(dst)
                 ):  # not deleted by user
                     try:
-                        patch_template_file(conflict_mode, src, dst, old_site, new_site)
+                        _patch_template_file(
+                            conflict_mode, src, dst, old_site_name, old_replacements, new_site
+                        )
                     except MKTerminate:
                         raise
                     except Exception as e:
@@ -485,18 +489,26 @@ def _is_unpatchable_file(path: str) -> bool:
     return path.endswith(".png") or path.endswith(".pdf")
 
 
-def patch_template_file(  # pylint: disable=too-many-branches
-    conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
+def _patch_template_file(  # pylint: disable=too-many-branches
+    conflict_mode: str,
+    src: str,
+    dst: str,
+    old_site_name: str,
+    old_replacements: Replacements,
+    new_site: SiteContext,
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
     content = Path(src).read_bytes()
-    for site in [old_site, new_site]:
-        filename = Path(f"{dst}.skel.{site.name}")
-        filename.write_bytes(replace_tags(content, site.replacements))
+    for name, replacements in [
+        (old_site_name, old_replacements),
+        (new_site.name, new_site.replacements),
+    ]:
+        filename = Path(f"{dst}.skel.{name}")
+        filename.write_bytes(replace_tags(content, replacements))
         try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = Path(f"{dst}.skel.{old_site.name}")
+    old_orig_path = Path(f"{dst}.skel.{old_site_name}")
     new_orig_path = Path(f"{dst}.skel.{new_site.name}")
     if old_orig_path.read_text() == new_orig_path.read_text():
         old_orig_path.unlink()
@@ -527,7 +539,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
             ("install", "Install the default version of the file"),
             (
                 "brute",
-                f"Simply replace /{old_site.name}/ with /{new_site.name}/ in that file",
+                f"Simply replace /{old_site_name}/ with /{new_site.name}/ in that file",
             ),
             ("shell", "Open a shell for looking around"),
             ("abort", "Stop here and abort!"),
@@ -543,7 +555,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                     "Conflicts in " + src + "!",
                     "I've tried to merge your changes with the renaming of %s into %s.\n"
                     "Unfortunately there are conflicts with your changes. \n"
-                    "You have the following options: " % (old_site.name, new_site.name),
+                    "You have the following options: " % (old_site_name, new_site.name),
                     options,
                 )
 
@@ -562,7 +574,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 )  # nosec B605 # BNS:2b5952
             elif choice == "brute":
                 os.system(  # nosec B605 # BNS:2b5952
-                    f"sed 's@/{old_site.name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
+                    f"sed 's@/{old_site_name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
                 )
                 changed = len(
                     [
@@ -602,7 +614,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 sys.stdout.write(" %-35s the failed parts of the patch\n" % (relname + ".rej"))
                 sys.stdout.write(
                     " %-35s default version with the old site name\n"
-                    % (relname + ".skel.%s" % old_site.name)
+                    % (relname + ".skel.%s" % old_site_name)
                 )
                 sys.stdout.write(
                     " %-35s default version with the new site name\n"
@@ -616,7 +628,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 )  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
-        os.remove(dst + ".skel." + old_site.name)
+        os.remove(dst + ".skel." + old_site_name)
         os.remove(dst + ".skel." + new_site.name)
         os.remove(dst + ".orig")
         os.remove(dst + ".rej")
@@ -2605,6 +2617,10 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
+    # Needs to be computed before the site is moved to be able to derive the version from the
+    # version symlink
+    old_replacements = old_site.replacements
+
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
@@ -2638,7 +2654,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     chown_tree(new_site.dir, new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(conflict_mode, old_site, new_site)
+    patch_skeleton_files(conflict_mode, old_site.name, old_replacements, new_site)
 
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:
@@ -3582,7 +3598,9 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     # Change config files from old to new site (see rename_site())
     if sitename != site.name:
         old_site = SiteContext(sitename)
-        patch_skeleton_files(_get_conflict_mode(options), old_site, site)
+        patch_skeleton_files(
+            _get_conflict_mode(options), old_site.name, old_site.replacements, site
+        )
 
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)

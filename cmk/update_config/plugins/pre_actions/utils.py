@@ -121,7 +121,7 @@ def disable_incomp_mkp(
 def _request_user_input_on_incompatible_file(
     path: Path, module_name: str, package_id: PackageID, error: BaseException
 ) -> str:
-    return input(
+    return prompt(
         f"Incompatible file '{path}' of extension package '{package_id.name} {package_id.version}'\n"
         f"Error: {error}\n\n"
         "You can abort the update process (A) or disable the "
@@ -143,7 +143,7 @@ def continue_on_incomp_local_file(
 ) -> bool:
     return (
         conflict_mode in NEED_USER_INPUT_MODES
-        and input(
+        and prompt(
             f"Incompatible local file '{path}'.\n"
             f"Error: {error}\n\n"
             "You can abort the update process (A) and try to fix "

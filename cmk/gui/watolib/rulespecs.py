@@ -419,7 +419,7 @@ class Rulespec(abc.ABC):
             return self._item_name()
 
         if self._item_spec:
-            return self._item_spec().title()
+            return self._item_spec().title() or _("Item")
 
         if self.item_type == "service":
             return _("Service")

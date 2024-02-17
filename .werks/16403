@@ -1,0 +1,19 @@
+Title: Fix assert self._rulespec.item_name is not None
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1707818900
+Edition: cre
+Level: 1
+Version: 2.1.0p40
+
+A <code>rulespec</code> may have an <code>item_spec</code> without a title. In
+<a href="https://checkmk.com/werk/13387">Werk #13387</a> changed it so that if this title is missing the
+the following crash occurs.
+
+C+:
+assert self._rulespec.item_name is not None
+C-:
+
+The occured if one navigates to the parameters via <code>Parameters for this service</code> and clicks
+<code>Parameters</code>. It is now fixed.

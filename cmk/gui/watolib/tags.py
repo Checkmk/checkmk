@@ -17,6 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
+from cmk.gui import hooks
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
@@ -83,7 +84,7 @@ def load_all_tag_config_read_only() -> TagConfig:
     return tag_config
 
 
-def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
+def update_tag_config(tag_config: TagConfig) -> None:
     """Persist the tag config saving the information to the mk file
     and update the current environment
 
@@ -96,6 +97,7 @@ def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
         user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format())
     _update_tag_dependencies()
+    hooks.call("tags-changed")
 
 
 def load_tag_group(ident: TagGroupID) -> TagGroup | None:

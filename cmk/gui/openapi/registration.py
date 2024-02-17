@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
@@ -37,8 +38,10 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
+from . import spec_generator_job
 
-def register(endpoint_registry: EndpointRegistry) -> None:
+
+def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobRegistry) -> None:
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)
@@ -68,3 +71,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     user_config.register(endpoint_registry)
     user_role.register(endpoint_registry)
     version.register(endpoint_registry)
+    spec_generator_job.register(job_registry)

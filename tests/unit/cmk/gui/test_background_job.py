@@ -53,6 +53,7 @@ def test_registered_background_jobs() -> None:
         "CheckmkAutomationBackgroundJob",
         "DiagnosticsDumpBackgroundJob",
         "SearchIndexBackgroundJob",
+        "SpecGeneratorBackgroundJob",
         "DiscoveredHostLabelSyncJob",
         "SyncRemoteSitesBackgroundJob",
         "HostRemovalBackgroundJob",

@@ -268,7 +268,7 @@ def register() -> None:
     graphing.register(page_registry, config_variable_registry)
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
-    openapi_registration.register(endpoint_registry)
+    openapi_registration.register(endpoint_registry, job_registry)
     sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
 

@@ -1,0 +1,15 @@
+Title: Render service graphs of host independent of historic metrics
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1708328512
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+The view "Service graphs of host" used to show the error message "No historic metrics recorded but performance data is available. Maybe performance data processing is disabled." even if the underlying single service graphs existed.
+This occured especially when using a host check command.
+
+The behavior is fixed to always rendering the service graphs in the view "Service graphs of host", if their performance data is available.
+
+Note that this change does not affect the same error message shown for the "Host graph" row of the "Status of Host" view, as the available performance data belongs to the services and not to the host.

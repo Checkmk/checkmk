@@ -3,27 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import time
 
 import pytest
 
+from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
+logger = logging.getLogger(__name__)
 
-@pytest.mark.skip("needs to be analyzed later...")
+
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
 def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print("Old config load time: %s" % old_t)
+    logger.info("Old config load time: %d", old_t)
     assert old_t > time.time() - 86400
 
-    time.sleep(1)  # needed to have at least one second after EC start
-    live.command("[%d] EC_RELOAD" % (int(time.time())))
+    live.command(f"[{int(time.time())}] EC_RELOAD")
     time.sleep(1)  # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-    print("New config load time: %s" % old_t)
+    logger.info("New config load time: %d", new_t)
     assert new_t > old_t
 
 

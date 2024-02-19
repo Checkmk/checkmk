@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -21,24 +21,24 @@ from cmk.rulesets.v1.form_specs import (
 
 
 def test_fixed_value_validation_bool() -> None:
-    FixedValue(value=True, title=Localizable(""))
+    FixedValue(value=True, title=Title(""))
 
 
 def test_fixed_value_validation_int() -> None:
-    FixedValue(value=0, title=Localizable(""))
+    FixedValue(value=0, title=Title(""))
 
 
 def test_fixed_value_validation_float() -> None:
-    FixedValue(value=42.0, title=Localizable(""))
+    FixedValue(value=42.0, title=Title(""))
 
 
 def test_fixed_value_validation_str() -> None:
-    FixedValue(value="juhu", title=Localizable(""))
+    FixedValue(value="juhu", title=Title(""))
 
 
 def test_fixed_value_validation_fails() -> None:
     with pytest.raises(ValueError, match="FixedValue value is not serializable."):
-        FixedValue(value=float("Inf"), title=Localizable("Test FixedValue"))
+        FixedValue(value=float("Inf"), title=Title("Test FixedValue"))
 
 
 def test_dictionary_ident_validation() -> None:
@@ -50,13 +50,13 @@ def test_dictionary_ident_validation() -> None:
 def test_multiple_choice_validation() -> None:
     with pytest.raises(ValueError, match="Invalid prefill element"):
         MultipleChoice(
-            elements=[MultipleChoiceElement(name="element_abc", title=Localizable("Element ABC"))],
+            elements=[MultipleChoiceElement(name="element_abc", title=Title("Element ABC"))],
             prefill=DefaultValue(("element_xyz",)),
         )
 
 
 def test_single_choice_validation() -> None:
-    elements = (SingleChoiceElement(name="element_abc", title=Localizable("Element ABC")),)
+    elements = (SingleChoiceElement(name="element_abc", title=Title("Element ABC")),)
     with pytest.raises(ValueError):
         SingleChoice(
             elements=elements,
@@ -68,7 +68,7 @@ def test_cascading_single_choice_validation() -> None:
     elements = (
         CascadingSingleChoiceElement(
             name="element_abc",
-            title=Localizable("Element ABC"),
+            title=Title("Element ABC"),
             parameter_form=FixedValue(value=None),
         ),
     )
@@ -81,18 +81,18 @@ def test_cascading_single_choice_validation() -> None:
 
 def test_multiple_choice_element_validation() -> None:
     with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        MultipleChoiceElement(name="element\abc", title=Localizable("Element ABC"))
+        MultipleChoiceElement(name="element\abc", title=Title("Element ABC"))
 
 
 def test_single_choice_element_validation() -> None:
     with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        SingleChoiceElement(name="element\abc", title=Localizable("Element ABC"))
+        SingleChoiceElement(name="element\abc", title=Title("Element ABC"))
 
 
 def test_cascading_single_choice_element_validation() -> None:
     with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
         CascadingSingleChoiceElement(
             name="element\abc",
-            title=Localizable("Element ABC"),
+            title=Title("Element ABC"),
             parameter_form=FixedValue(value=None),
         )

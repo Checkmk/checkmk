@@ -5,27 +5,27 @@
 
 
 from cmk.plugins.fritzbox.lib.config import AgentConfigParams
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, Help, Label, rule_specs, Title
 
 
 def _formspec_fritzbox():
     return form_specs.Dictionary(
-        help_text=Localizable(
+        help_text=Help(
             "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
             "about configuration and connection status information."
         ),
         elements={
             "timeout": form_specs.DictElement(
                 parameter_form=form_specs.Integer(
-                    title=Localizable("Connection Timeout"),
-                    help_text=Localizable(
+                    title=Title("Connection Timeout"),
+                    help_text=Help(
                         "The network timeout in seconds when communicating via UPNP. "
                         "The default is 10 seconds. Please note that this "
                         "is not a total timeout, instead it is applied to each API call."
                     ),
                     prefill=form_specs.DefaultValue(10),
                     custom_validate=form_specs.validators.InRange(1, float("inf")),
-                    unit=Localizable("seconds"),
+                    unit=Label("seconds"),
                 ),
             ),
         },
@@ -35,7 +35,7 @@ def _formspec_fritzbox():
 
 rule_spec_fritzbox = rule_specs.SpecialAgent(
     name="fritzbox",
-    title=Localizable("Fritz!Box Devices"),
+    title=Title("Fritz!Box Devices"),
     topic=rule_specs.Topic.NETWORKING,
     parameter_form=_formspec_fritzbox,
     eval_type=rule_specs.EvalType.MERGE,

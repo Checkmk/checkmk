@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from . import form_specs, rule_specs
-from ._localize import Help, Label, Localizable, Message, Title
+from ._localize import Help, Label, Message, Title
 
 __all__ = [
     "form_specs",
     "Help",
     "Label",
-    "Localizable",
     "Message",
     "Title",
     "rule_specs",

@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from enum import StrEnum
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -53,25 +53,25 @@ def migrate_dropdown_ident(raw_value: object) -> tuple[str, object]:
 
 def _discovery_parameters_form_alertmanager():
     return Dictionary(
-        title=Localizable("Alertmanager discovery"),
+        title=Title("Alertmanager discovery"),
         elements={
             "group_services": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Localizable("Service creation"),
+                    title=Title("Service creation"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name=ServiceNumber.MULTIPLE,
-                            title=Localizable("Create services for alert rule groups"),
+                            title=Title("Create services for alert rule groups"),
                             parameter_form=Dictionary(
                                 elements={
                                     "min_amount_rules": DictElement(
                                         parameter_form=Integer(
-                                            title=Localizable(
+                                            title=Title(
                                                 "Minimum amount of alert rules in a group to create a group service"
                                             ),
                                             custom_validate=validators.InRange(min_value=1),
                                             prefill=DefaultValue(3),
-                                            help_text=Localizable(
+                                            help_text=Help(
                                                 "Below the specified value alert rules will be monitored as a"
                                                 "single service."
                                             ),
@@ -81,7 +81,7 @@ def _discovery_parameters_form_alertmanager():
                                     "no_group_services": DictElement(
                                         parameter_form=List(
                                             element_template=String(),
-                                            title=Localizable(
+                                            title=Title(
                                                 "Don't create a group service for the following groups"
                                             ),
                                         ),
@@ -92,7 +92,7 @@ def _discovery_parameters_form_alertmanager():
                         ),
                         CascadingSingleChoiceElement(
                             name=ServiceNumber.ONE,
-                            title=Localizable("Create one service per alert rule"),
+                            title=Title("Create one service per alert rule"),
                             parameter_form=FixedValue(value=None),
                         ),
                     ],
@@ -103,7 +103,7 @@ def _discovery_parameters_form_alertmanager():
             "summary_service": DictElement(
                 parameter_form=FixedValue(
                     value=True,
-                    title=Localizable("Create a summary service for all alert rules"),
+                    title=Title("Create a summary service for all alert rules"),
                 ),
             ),
         },
@@ -115,7 +115,7 @@ rule_spec_discovery_alertmanager = DiscoveryParameters(
     eval_type=EvalType.MERGE,
     name="discovery_alertmanager",
     parameter_form=_discovery_parameters_form_alertmanager,
-    title=Localizable("Alertmanager discovery"),
+    title=Title("Alertmanager discovery"),
 )
 
 
@@ -137,42 +137,42 @@ def form_alert_remapping():
                 "rule_names": DictElement(
                     parameter_form=List(
                         element_template=String(prefill=DefaultValue("Watchdog")),
-                        title=Localizable("Alert rule names"),
-                        help_text=Localizable("A list of rule names as defined in Alertmanager."),
+                        title=Title("Alert rule names"),
+                        help_text=Help("A list of rule names as defined in Alertmanager."),
                     ),
                     required=True,
                 ),
                 "map": DictElement(
                     parameter_form=Dictionary(
-                        title=Localizable("States"),
+                        title=Title("States"),
                         elements={
                             "inactive": DictElement(
                                 parameter_form=ServiceState(
-                                    title=Localizable("inactive"), prefill=DefaultValue(2)
+                                    title=Title("inactive"), prefill=DefaultValue(2)
                                 ),
                                 required=True,
                             ),
                             "pending": DictElement(
                                 parameter_form=ServiceState(
-                                    title=Localizable("pending"), prefill=DefaultValue(2)
+                                    title=Title("pending"), prefill=DefaultValue(2)
                                 ),
                                 required=True,
                             ),
                             "firing": DictElement(
                                 parameter_form=ServiceState(
-                                    title=Localizable("firing"), prefill=DefaultValue(0)
+                                    title=Title("firing"), prefill=DefaultValue(0)
                                 ),
                                 required=True,
                             ),
                             "none": DictElement(
                                 parameter_form=ServiceState(
-                                    title=Localizable("none"), prefill=DefaultValue(2)
+                                    title=Title("none"), prefill=DefaultValue(2)
                                 ),
                                 required=True,
                             ),
                             "not_applicable": DictElement(
                                 parameter_form=ServiceState(
-                                    title=Localizable("n/a"), prefill=DefaultValue(2)
+                                    title=Title("n/a"), prefill=DefaultValue(2)
                                 ),
                                 required=True,
                             ),
@@ -183,15 +183,15 @@ def form_alert_remapping():
                 ),
             },
         ),
-        title=Localizable("Remap alert rule states"),
-        help_text=Localizable("Configure the monitoring state for Alertmanager rules."),
+        title=Title("Remap alert rule states"),
+        help_text=Help("Configure the monitoring state for Alertmanager rules."),
         custom_validate=validators.DisallowEmpty(),
     )
 
 
 def _check_parameters_form_alertmanager():
     return Dictionary(
-        title=Localizable("Alert manager rule state"),
+        title=Title("Alert manager rule state"),
         elements={
             "alert_remapping": DictElement(parameter_form=form_alert_remapping()),
         },
@@ -202,9 +202,9 @@ rule_spec_alertmanager_rule_state = CheckParameters(
     name="alertmanager_rule_state",
     topic=Topic.APPLICATIONS,
     parameter_form=_check_parameters_form_alertmanager,
-    title=Localizable("Alertmanager rule states"),
+    title=Title("Alertmanager rule states"),
     condition=HostAndItemCondition(
-        item_title=Localizable("Name of Alert rules/Alert rule groups"),
+        item_title=Title("Name of Alert rules/Alert rule groups"),
     ),
 )
 
@@ -212,6 +212,6 @@ rule_spec_alertmanager_rule_state_summary = CheckParameters(
     name="alertmanager_rule_state_summary",
     topic=Topic.APPLICATIONS,
     parameter_form=_check_parameters_form_alertmanager,
-    title=Localizable("Alertmanager rule states (Summary)"),
+    title=Title("Alertmanager rule states (Summary)"),
     condition=HostCondition(),
 )

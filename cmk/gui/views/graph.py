@@ -163,6 +163,7 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     request: Request,
     painter_options: PainterOptions,
     show_time_range_previews: bool | None = None,
+    require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -223,7 +224,7 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
         available_metrics = row["service_metrics"]
         perf_data = row["service_perf_data"]
 
-    if not available_metrics and perf_data:
+    if not available_metrics and perf_data and require_historic_metrics:
         return "", _(
             "No historic metrics recorded but performance data is available. "
             "Maybe performance data processing is disabled."
@@ -368,6 +369,9 @@ class PainterHostGraphs(Painter):
             request=self.request,
             painter_options=self._painter_options,
             show_time_range_previews=True,
+            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+            # also render the graphs if there are no historic metrics available (but perf data is)
+            require_historic_metrics="service_description" not in row,
         )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:

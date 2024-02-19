@@ -334,16 +334,17 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
     """Delete comments"""
     user.need_permission("action.addcomment")
     body = params["body"]
-    site_id = body["site_id"]
 
     query_expr: QueryExpression
 
+    site_id: SiteId | None = None
     match body["delete_type"]:
         case "query":
             query_expr = body["query"]
 
         case "by_id":
             query_expr = Comments.id == body["comment_id"]
+            site_id = SiteId(body["site_id"])
 
         case "params":
             host_name = body["host_name"]
@@ -360,7 +361,7 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
             else:
                 query_expr = And(Comments.host_name == host_name)
 
-    comment_cmds.delete_comments(sites.live(), query_expr, SiteId(site_id))
+    comment_cmds.delete_comments(sites.live(), query_expr, site_id)
     return Response(status=204)
 
 

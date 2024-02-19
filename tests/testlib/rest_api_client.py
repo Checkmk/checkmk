@@ -1939,8 +1939,8 @@ class CommentClient(RestApiClient):
 
     def delete(
         self,
-        site_id: str,
         delete_type: str,
+        site_id: str | None = None,
         comment_id: Any | None = None,
         host_name: str | None = None,
         service_descriptions: Sequence[str] | None = None,

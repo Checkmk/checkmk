@@ -5,8 +5,6 @@
 
 from collections.abc import Iterator, Sequence
 
-import cmk.utils.paths
-
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
@@ -30,10 +28,6 @@ def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
     ]
 
 
-def load_ec_settings() -> ec.Settings:
-    return ec.settings("", cmk.utils.paths.omd_root, [""])
-
-
 @request_memoize()
 def eventd_configuration() -> ec.ConfigFromWATO:
     return ec.load_config()
@@ -49,7 +43,6 @@ def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Iterator[ec.ECR
 
 def save_active_config() -> None:
     ec.save_active_config(
-        load_ec_settings(),
         list(dissolve_mkp_proxies(ec.load_rule_packs())),
         active_config.mkeventd_pprint_rules,
     )

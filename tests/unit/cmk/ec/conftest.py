@@ -31,11 +31,12 @@ from cmk.ec.main import (
     StatusTableHistory,
 )
 from cmk.ec.perfcounters import Perfcounters
+from cmk.ec.settings import create_settings
 
 
 @pytest.fixture(name="settings")
 def fixture_settings() -> ec.Settings:
-    return ec.settings("1.2.3i45", cmk.utils.paths.omd_root, ["mkeventd"])
+    return create_settings("1.2.3i45", cmk.utils.paths.omd_root, ["mkeventd"])
 
 
 @pytest.fixture(name="lock_configuration")

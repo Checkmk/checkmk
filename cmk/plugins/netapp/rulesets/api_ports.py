@@ -3,23 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
 def _form_discovery_netapp_api_ports_ignored() -> form_specs.Dictionary:
     return form_specs.Dictionary(
-        title=Localizable("Netapp port discovery"),
+        title=Title("Netapp port discovery"),
         elements={
             "ignored_ports": form_specs.DictElement(
                 parameter_form=form_specs.MultipleChoice(
-                    title=Localizable("Ignore port types during discovery"),
-                    help_text=Localizable("Specify which port types should not be discovered"),
+                    title=Title("Ignore port types during discovery"),
+                    help_text=Help("Specify which port types should not be discovered"),
                     elements=[
-                        form_specs.MultipleChoiceElement(
-                            name="physical", title=Localizable("Physical")
-                        ),
-                        form_specs.MultipleChoiceElement(name="vlan", title=Localizable("Vlan")),
-                        form_specs.MultipleChoiceElement(name="trunk", title=Localizable("Trunk")),
+                        form_specs.MultipleChoiceElement(name="physical", title=Title("Physical")),
+                        form_specs.MultipleChoiceElement(name="vlan", title=Title("Vlan")),
+                        form_specs.MultipleChoiceElement(name="trunk", title=Title("Trunk")),
                     ],
                 ),
             ),
@@ -28,7 +26,7 @@ def _form_discovery_netapp_api_ports_ignored() -> form_specs.Dictionary:
 
 
 rule_spec_discovery_netapp_api_ports_ignored = rule_specs.DiscoveryParameters(
-    title=Localizable("Netapp port discovery"),
+    title=Title("Netapp port discovery"),
     topic=rule_specs.Topic.GENERAL,
     eval_type=rule_specs.EvalType.MERGE,
     name="discovery_netapp_api_ports_ignored",

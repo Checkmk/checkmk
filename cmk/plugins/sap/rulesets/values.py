@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, Help, Label, rule_specs, Title
 from cmk.rulesets.v1.form_specs import validators
 
 
@@ -19,7 +19,7 @@ def _migrate_to_cascading_single_choice(value: object) -> tuple[str, str]:
     if isinstance(value, tuple):
         return value
 
-    raise TypeError(Localizable("Expected a tuple, got %s") % str(type(value)))
+    raise TypeError(f"Expected a tuple, got {type(value)}")
 
 
 def _formspec_inventory_sap_values():
@@ -27,13 +27,13 @@ def _formspec_inventory_sap_values():
         elements={
             "match": form_specs.DictElement(
                 parameter_form=form_specs.CascadingSingleChoice(
-                    title=Localizable("Node Path Matching"),
+                    title=Title("Node Path Matching"),
                     elements=[
                         form_specs.CascadingSingleChoiceElement(
                             name="exact",
-                            title=Localizable("Exact path of the node"),
+                            title=Title("Exact path of the node"),
                             parameter_form=form_specs.String(
-                                title=Localizable("Exact path of the node"),
+                                title=Title("Exact path of the node"),
                                 prefill=form_specs.DefaultValue(
                                     "SAP CCMS Monitor Templates/Dialog Overview/Dialog "
                                     "Response Time/ResponseTime"
@@ -42,11 +42,11 @@ def _formspec_inventory_sap_values():
                         ),
                         form_specs.CascadingSingleChoiceElement(
                             name="pattern",
-                            title=Localizable("Regular expression matching the path"),
+                            title=Title("Regular expression matching the path"),
                             parameter_form=form_specs.RegularExpression(
-                                title=Localizable("Regular expression matching the path"),
+                                title=Title("Regular expression matching the path"),
                                 predefined_help_text=form_specs.MatchingScope.PREFIX,
-                                help_text=Localizable(
+                                help_text=Help(
                                     "This regex must match the <i>beginning</i> of the complete "
                                     "path of the node as reported by the agent"
                                 ),
@@ -54,9 +54,9 @@ def _formspec_inventory_sap_values():
                         ),
                         form_specs.CascadingSingleChoiceElement(
                             name="all",
-                            title=Localizable("Match all nodes"),
+                            title=Title("Match all nodes"),
                             parameter_form=form_specs.FixedValue(
-                                title=Localizable("Match all nodes"), value=""
+                                title=Title("Match all nodes"), value=""
                             ),
                         ),
                     ],
@@ -67,9 +67,9 @@ def _formspec_inventory_sap_values():
             ),
             "limit_item_levels": form_specs.DictElement(
                 parameter_form=form_specs.Integer(
-                    title=Localizable("Limit Path Levels for Service Names"),
-                    unit=Localizable("path levels"),
-                    help_text=Localizable(
+                    title=Title("Limit Path Levels for Service Names"),
+                    unit=Label("path levels"),
+                    help_text=Help(
                         "The service descriptions of the inventorized services are named like the "
                         "paths in SAP. You can use this option to let the inventory function only "
                         "use the last x path levels for naming."
@@ -83,7 +83,7 @@ def _formspec_inventory_sap_values():
 
 
 rule_spec_inventory_sap_values = rule_specs.DiscoveryParameters(
-    title=Localizable("SAP R/3 single value discovery"),
+    title=Title("SAP R/3 single value discovery"),
     name="inventory_sap_values",
     eval_type=rule_specs.EvalType.ALL,
     parameter_form=_formspec_inventory_sap_values,

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -29,7 +29,7 @@ def _parameter_form_wlan_controllers_clients() -> Dictionary:
         elements={
             "clients": DictElement[LevelsConfigModel[int]](
                 parameter_form=Levels[int](
-                    title=Localizable("Maximum number of clients"),
+                    title=Title("Maximum number of clients"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
                     predictive=None,
@@ -44,9 +44,9 @@ def _parameter_form_wlan_controllers_clients() -> Dictionary:
 rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
     name="cisco_prime_wlan_controller_clients",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_title=Localizable("Clients")),
+    condition=HostAndItemCondition(item_title=Title("Clients")),
     parameter_form=_parameter_form_wlan_controllers_clients,
-    title=Localizable("Cisco Prime WLAN Controller Clients"),
+    title=Title("Cisco Prime WLAN Controller Clients"),
 )
 
 
@@ -55,7 +55,7 @@ def _parameter_form_wlan_controllers_access_points() -> Dictionary:
         elements={
             "access_points": DictElement[LevelsConfigModel[int]](
                 parameter_form=Levels[int](
-                    title=Localizable("Maximum number of access points"),
+                    title=Title("Maximum number of access points"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
                     predictive=None,
@@ -70,9 +70,9 @@ def _parameter_form_wlan_controllers_access_points() -> Dictionary:
 rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
     name="cisco_prime_wlan_controller_access_points",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_title=Localizable("Access points")),
+    condition=HostAndItemCondition(item_title=Title("Access points")),
     parameter_form=_parameter_form_wlan_controllers_access_points,
-    title=Localizable("Cisco Prime WLAN Controller Access Points"),
+    title=Title("Cisco Prime WLAN Controller Access Points"),
 )
 
 
@@ -81,7 +81,7 @@ def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
         elements={
             "last_backup": DictElement[LevelsConfigModel[float]](
                 parameter_form=Levels[float](
-                    title=Localizable("Time since last backup"),
+                    title=Title("Time since last backup"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
@@ -102,7 +102,7 @@ def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
 rule_spec_cisco_prime_wlan_controller_last_backup = CheckParameters(
     name="cisco_prime_wlan_controller_last_backup",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_title=Localizable("Last backup")),
+    condition=HostAndItemCondition(item_title=Title("Last backup")),
     parameter_form=_parameter_form_wlan_controllers_last_backup,
-    title=Localizable("Cisco Prime WLAN Controller Last Backup"),
+    title=Title("Cisco Prime WLAN Controller Last Backup"),
 )

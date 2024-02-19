@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     DataSize,
     DictElement,
@@ -46,29 +46,29 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
         elements={
             "gc_num_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=Integer(unit=Localizable("runs")),
+                    form_spec_template=Integer(unit=Label("runs")),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Upper level for total number of GC runs"),
+                    title=Title("Upper level for total number of GC runs"),
                 )
             ),
             "gc_num_rate_upper": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=Float(unit=Localizable("1/s")),
+                    form_spec_template=Float(unit=Label("1/s")),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
                     predictive=None,
-                    title=Localizable("Upper level for GC run rate"),
+                    title=Title("Upper level for GC run rate"),
                 )
             ),
             "gc_num_rate_lower": DictElement(
                 parameter_form=Levels(
-                    form_spec_template=Float(unit=Localizable("1/s")),
+                    form_spec_template=Float(unit=Label("1/s")),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
                     predictive=None,
-                    title=Localizable("Lower level for GC run rate"),
+                    title=Title("Lower level for GC run rate"),
                 )
             ),
             "gc_bytes_reclaimed_upper": DictElement(
@@ -77,7 +77,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Absolute levels for memory reclaimed by GC"),
+                    title=Title("Absolute levels for memory reclaimed by GC"),
                 )
             ),
             "gc_bytes_reclaimed_rate_upper": DictElement(
@@ -86,7 +86,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Upper level for rate of memory reclaimed by GC"),
+                    title=Title("Upper level for rate of memory reclaimed by GC"),
                 )
             ),
             "gc_bytes_reclaimed_rate_lower": DictElement(
@@ -95,7 +95,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Lower level for rate of memory reclaimed by GC"),
+                    title=Title("Lower level for rate of memory reclaimed by GC"),
                 )
             ),
             "runqueue_upper": DictElement(
@@ -104,7 +104,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Upper level for runtime run queue"),
+                    title=Title("Upper level for runtime run queue"),
                 )
             ),
             "runqueue_lower": DictElement(
@@ -113,7 +113,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0, 0)),
                     predictive=None,
-                    title=Localizable("Lower level for runtime run queue"),
+                    title=Title("Lower level for runtime run queue"),
                 )
             ),
         },
@@ -125,6 +125,6 @@ rule_spec_rabbitmq_nodes_gc = CheckParameters(
     name="rabbitmq_nodes_gc",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_rabbitmq_nodes_gc,
-    title=Localizable("RabbitMQ nodes GC"),
-    condition=HostAndItemCondition(item_title=Localizable("Node name")),
+    title=Title("RabbitMQ nodes GC"),
+    condition=HostAndItemCondition(item_title=Title("Node name")),
 )

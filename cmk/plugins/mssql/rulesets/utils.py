@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
 def fs_mssql_backup_age(
-    title: Localizable,
+    title: Title,
 ) -> form_specs.DictElement[form_specs.LevelsConfigModel[float]]:
     return form_specs.DictElement[form_specs.LevelsConfigModel[float]](
         parameter_form=form_specs.Levels[float](
@@ -25,11 +25,9 @@ def fs_mssql_backup_age(
 
 def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
     return rule_specs.HostAndItemCondition(
-        item_title=Localizable("Instance & tablespace name"),
+        item_title=Title("Instance & tablespace name"),
         item_form=form_specs.String(
-            help_text=Localizable(
-                "The MSSQL instance name and the tablespace name separated by a space."
-            ),
+            help_text=Help("The MSSQL instance name and the tablespace name separated by a space."),
             custom_validate=form_specs.validators.DisallowEmpty(),
         ),
     )

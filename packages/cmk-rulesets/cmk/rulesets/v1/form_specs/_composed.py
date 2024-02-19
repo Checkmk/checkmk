@@ -8,7 +8,7 @@
 from dataclasses import dataclass
 from typing import Any, Generic, Mapping, Sequence
 
-from .._localize import Localizable
+from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
 
 
@@ -27,7 +27,7 @@ class CascadingSingleChoiceElement(Generic[ModelT]):
     """
 
     name: str
-    title: Localizable
+    title: Title
     parameter_form: FormSpec[ModelT]
 
     def __post_init__(self) -> None:
@@ -55,9 +55,9 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
     """
 
     elements: Sequence[CascadingSingleChoiceElement[Any]]
-    label: Localizable | None = None
+    label: Label | None = None
 
-    prefill: DefaultValue[str] | InputHint[Localizable] = InputHint(Localizable("Please choose"))
+    prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
 
     def __post_init__(self) -> None:
         avail_idents = {elem.name for elem in self.elements}  # type: ignore[misc]
@@ -100,7 +100,7 @@ class Dictionary(FormSpec[Mapping[str, object]]):
 
     elements: Mapping[str, DictElement[Any]]
 
-    no_elements_text: Localizable = Localizable("(no parameters)")
+    no_elements_text: Message = Message("(no parameters)")
 
     deprecated_elements: tuple[str, ...] = ()
 
@@ -124,9 +124,9 @@ class List(FormSpec[Sequence[ModelT]]):
     """
 
     element_template: FormSpec[ModelT]
-    add_element_label: Localizable = Localizable("Add new entry")
-    remove_element_label: Localizable = Localizable("Remove this entry")
-    no_element_label: Localizable = Localizable("No entries")
+    add_element_label: Label = Label("Add new entry")
+    remove_element_label: Label = Label("Remove this entry")
+    no_element_label: Label = Label("No entries")
 
     editable_order: bool = True
 
@@ -141,7 +141,7 @@ class MultipleChoiceElement:
     """
 
     name: str
-    title: Localizable
+    title: Title
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -20,21 +20,21 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     fd_perc = CascadingSingleChoiceElement(
         name="fd_perc",
-        title=Localizable("Percentual levels for used processes"),
+        title=Title("Percentual levels for used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
             elements=[
-                Percentage(title=Localizable("Warning at usage of")),  # prefill_value=80.0),
-                Percentage(title=Localizable("Critical at usage of")),  # prefill_value=90.0),
+                Percentage(title=Title("Warning at usage of")),  # prefill_value=80.0),
+                Percentage(title=Title("Critical at usage of")),  # prefill_value=90.0),
             ],
         ),
     )
     fd_abs = CascadingSingleChoiceElement(
         name="fd_abs",
-        title=Localizable("Absolute levels for total number of used processes"),
+        title=Title("Absolute levels for total number of used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
             elements=[
-                Integer(title=Localizable("Warning at"), unit=Localizable("processes")),
-                Integer(title=Localizable("Critical at"), unit=Localizable("processes")),
+                Integer(title=Title("Warning at"), unit=Label("processes")),
+                Integer(title=Title("Critical at"), unit=Label("processes")),
             ],
         ),
     )
@@ -43,7 +43,7 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         elements={
             "levels": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Localizable("Levels for erlang process usage"),
+                    title=Title("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
                     prefill=DefaultValue("fd_perc"),
                 )
@@ -56,6 +56,6 @@ rule_spec_rabbitmq_nodes_proc = CheckParameters(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_rabbitmq_nodes_proc,
-    title=Localizable("RabbitMQ nodes processes"),
-    condition=HostAndItemCondition(item_title=Localizable("Node name")),
+    title=Title("RabbitMQ nodes processes"),
+    condition=HostAndItemCondition(item_title=Title("Node name")),
 )

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from .._localize import Localizable
+from .._localize import Help, Title
 
 ModelT = TypeVar("ModelT")
 
@@ -39,8 +39,8 @@ class FormSpec(Generic[ModelT]):
 
     """
 
-    title: Localizable | None = None
-    help_text: Localizable | None = None
+    title: Title | None = None
+    help_text: Help | None = None
     migrate: Callable[[object], ModelT] | None = None
     # Since we can't have a default `migrate` other than `None`, we also allow it here for
     # consistency, although a no-op validator would work as well.

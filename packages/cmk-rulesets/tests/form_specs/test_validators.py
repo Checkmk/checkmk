@@ -9,7 +9,7 @@ from typing import ContextManager
 
 import pytest
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import (
     DisallowEmpty,
     EmailAddress,
@@ -67,7 +67,7 @@ from cmk.rulesets.v1.form_specs.validators import (
             {
                 "min_value": 5.0,
             },
-            Localizable("My own message"),
+            Message("My own message"),
             2.5,
             pytest.raises(ValidationError),
             "My own message",
@@ -75,7 +75,7 @@ from cmk.rulesets.v1.form_specs.validators import (
         ),
         pytest.param(
             {"max_value": 10.0},
-            Localizable("My own message"),
+            Message("My own message"),
             15.0,
             pytest.raises(ValidationError),
             "My own message",
@@ -85,7 +85,7 @@ from cmk.rulesets.v1.form_specs.validators import (
 )
 def test_in_range(
     input_args: Mapping[str, int | float],
-    input_message: Localizable | None,
+    input_message: Message | None,
     test_value: int | float,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -153,7 +153,7 @@ def test_in_range(
         ),
         pytest.param(
             {"min_groups": 3},
-            Localizable("My own message"),
+            Message("My own message"),
             r"(\b[A-Z]+\b).+(\b\d+)",
             pytest.raises(ValidationError),
             "My own message",
@@ -161,7 +161,7 @@ def test_in_range(
         ),
         pytest.param(
             {"max_groups": 1},
-            Localizable("My own message"),
+            Message("My own message"),
             r"(\b[A-Z]+\b).+(\b\d+)",
             pytest.raises(ValidationError),
             "My own message",
@@ -171,7 +171,7 @@ def test_in_range(
 )
 def test_regex_groups_in_range(
     input_args: Mapping[str, int],
-    input_message: Localizable | None,
+    input_message: Message | None,
     test_value: str,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -201,7 +201,7 @@ def test_regex_groups_in_range(
             id="invalid string with default message",
         ),
         pytest.param(
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             "invalid.string",
             pytest.raises(ValidationError),
             "My own message",
@@ -211,7 +211,7 @@ def test_regex_groups_in_range(
 )
 def test_match_regex(
     input_regex: str | re.Pattern[str],
-    input_msg: Mapping[str, Localizable],
+    input_msg: Mapping[str, Message],
     test_value: str,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -242,14 +242,14 @@ def test_match_regex(
             id="invalid sequence with default message",
         ),
         pytest.param(
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             "",
             pytest.raises(ValidationError),
             "My own message",
             id="invalid string with custom message",
         ),
         pytest.param(
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             [],
             pytest.raises(ValidationError),
             "My own message",
@@ -258,7 +258,7 @@ def test_match_regex(
     ],
 )
 def test_disallow_empty(
-    input_msg: Mapping[str, Localizable],
+    input_msg: Mapping[str, Message],
     test_value: str | Sequence[object],
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -288,7 +288,7 @@ def test_disallow_empty(
             id="invalid port without custom message",
         ),
         pytest.param(
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             65537,
             pytest.raises(ValidationError),
             "My own message",
@@ -297,7 +297,7 @@ def test_disallow_empty(
     ],
 )
 def test_network_port(
-    input_msg: Mapping[str, Localizable],
+    input_msg: Mapping[str, Message],
     test_value: int,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -340,7 +340,7 @@ def test_network_port(
         ),
         pytest.param(
             [UrlProtocol.RSYNC],
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             "invalid/url",
             pytest.raises(ValidationError),
             "My own message",
@@ -350,7 +350,7 @@ def test_network_port(
 )
 def test_url(
     protocols: Sequence[UrlProtocol],
-    input_msg: Mapping[str, Localizable],
+    input_msg: Mapping[str, Message],
     test_value: str,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
@@ -386,7 +386,7 @@ def test_url(
             id="invalid address without @",
         ),
         pytest.param(
-            {"error_msg": Localizable("My own message")},
+            {"error_msg": Message("My own message")},
             "name.surname@example",
             pytest.raises(ValidationError),
             "My own message",
@@ -395,7 +395,7 @@ def test_url(
     ],
 )
 def test_email_address(
-    input_msg: Mapping[str, Localizable],
+    input_msg: Mapping[str, Message],
     test_value: str,
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,

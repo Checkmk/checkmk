@@ -7,7 +7,7 @@ import enum
 from dataclasses import dataclass
 from typing import Callable, Generic, Literal, TypedDict, TypeVar
 
-from .._localize import Localizable
+from .._localize import Help, Title
 from ._base import DefaultValue, FormSpec, Prefill
 
 _NumberT = TypeVar("_NumberT", int, float)
@@ -127,8 +127,8 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     """
 
     # no idea why pylint will not see that we inherit these four anyway.
-    title: Localizable | None = None
-    help_text: Localizable | None = None
+    title: Title | None = None
+    help_text: Help | None = None
     migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None
     custom_validate: Callable[[LevelsConfigModel[_NumberT]], object] | None = None
 

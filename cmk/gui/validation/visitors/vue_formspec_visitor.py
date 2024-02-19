@@ -20,7 +20,7 @@ from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     Dictionary,
@@ -408,11 +408,11 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
     # All other types require a conversion to the basic types
     if isinstance(custom_form_spec, ServiceState):
         # TODO handle ServiceState
-        String(title=Localizable("UNKNOWN custom_form_spec ServiceState"))
+        String(title=Title("UNKNOWN custom_form_spec ServiceState"))
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
-    return String(title=Localizable("UNKNOWN custom_form_spec {custom_form_spec}"))
+    return String(title=Title("UNKNOWN custom_form_spec {custom_form_spec}"))
 
 
 def compute_default_value(form_spec: FormSpec) -> Any:

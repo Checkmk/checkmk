@@ -40,7 +40,12 @@ GENERATED_GROUP_PREFIX = "gen-"
 
 
 def _localize_optional(
-    to_localize: ruleset_api_v1.Localizable | None, localizer: Callable[[str], str]
+    to_localize: ruleset_api_v1.Help
+    | ruleset_api_v1.Message
+    | ruleset_api_v1.Label
+    | ruleset_api_v1.Title
+    | None,
+    localizer: Callable[[str], str],
 ) -> str | None:
     return None if to_localize is None else to_localize.localize(localizer)
 
@@ -377,7 +382,7 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
 
 def _convert_to_custom_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
-    title: ruleset_api_v1.Localizable,
+    title: ruleset_api_v1.Title,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
     identifier = f"{GENERATED_GROUP_PREFIX}{hash(title.localize(lambda x: x))}"
@@ -404,7 +409,7 @@ def _to_generated_builtin_sub_group(
     raw_title: str,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
-    title = ruleset_api_v1.Localizable(raw_title)
+    title = ruleset_api_v1.Title(raw_title)
     return _convert_to_custom_group(legacy_main_group, title, localizer)
 
 
@@ -722,7 +727,7 @@ def _convert_to_legacy_text_input(
             "This field supports the use of macros. "
             "The corresponding plugin replaces the macros with the actual values."
         )
-        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
@@ -816,9 +821,9 @@ def _convert_to_legacy_host_state(
 
     return legacy_valuespecs.DropdownChoice(
         choices=[
-            (0, ruleset_api_v1.Localizable("Up").localize(localizer)),
-            (1, ruleset_api_v1.Localizable("Down").localize(localizer)),
-            (2, ruleset_api_v1.Localizable("Unreachable").localize(localizer)),
+            (0, ruleset_api_v1.Title("Up").localize(localizer)),
+            (1, ruleset_api_v1.Title("Down").localize(localizer)),
+            (2, ruleset_api_v1.Title("Unreachable").localize(localizer)),
         ],
         sorted=False,
         **converted_kwargs,
@@ -1037,7 +1042,7 @@ _NumberT = TypeVar("_NumberT", float, int)
 
 def _get_legacy_level_spec(
     form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
-    title: ruleset_api_v1.Localizable,
+    title: ruleset_api_v1.Title,
     prefill_value: _NumberT,
     prefill_type: type[ruleset_api_v1.form_specs.DefaultValue]
     | type[ruleset_api_v1.form_specs.InputHint],
@@ -1072,11 +1077,11 @@ def _get_fixed_levels_choice_element(
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
     if level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
-        warn_title = ruleset_api_v1.Localizable("Warning below")
-        crit_title = ruleset_api_v1.Localizable("Critical below")
+        warn_title = ruleset_api_v1.Title("Warning below")
+        crit_title = ruleset_api_v1.Title("Critical below")
     elif level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
-        warn_title = ruleset_api_v1.Localizable("Warning at")
-        crit_title = ruleset_api_v1.Localizable("Critical at")
+        warn_title = ruleset_api_v1.Title("Warning at")
+        crit_title = ruleset_api_v1.Title("Critical at")
     else:
         assert_never(level_direction)
 
@@ -1107,11 +1112,11 @@ def _get_level_computation_dropdown(
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
     if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
-        warn_title = ruleset_api_v1.Localizable("Warning above")
-        crit_title = ruleset_api_v1.Localizable("Critical above")
+        warn_title = ruleset_api_v1.Title("Warning above")
+        crit_title = ruleset_api_v1.Title("Critical above")
     elif level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
-        warn_title = ruleset_api_v1.Localizable("Warning below")
-        crit_title = ruleset_api_v1.Localizable("Critical below")
+        warn_title = ruleset_api_v1.Title("Warning below")
+        crit_title = ruleset_api_v1.Title("Critical below")
     else:
         assert_never(level_direction)
 
@@ -1133,15 +1138,15 @@ def _get_level_computation_dropdown(
     )
 
     return legacy_valuespecs.CascadingDropdown(
-        title=ruleset_api_v1.Localizable(
-            "Level definition in relation to the predicted value"
-        ).localize(localizer),
+        title=ruleset_api_v1.Title("Level definition in relation to the predicted value").localize(
+            localizer
+        ),
         choices=[
             (
                 _PredictiveLevelDefinition.ABSOLUTE.value,
-                ruleset_api_v1.Localizable("Absolute difference").localize(localizer),
+                ruleset_api_v1.Title("Absolute difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a fixed absolute value"
                     ).localize(localizer),
@@ -1165,9 +1170,9 @@ def _get_level_computation_dropdown(
             ),
             (
                 _PredictiveLevelDefinition.RELATIVE.value,
-                ruleset_api_v1.Localizable("Relative difference").localize(localizer),
+                ruleset_api_v1.Title("Relative difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a percentage"
                     ).localize(localizer),
@@ -1185,25 +1190,25 @@ def _get_level_computation_dropdown(
             ),
             (
                 _PredictiveLevelDefinition.STDDEV.value,
-                ruleset_api_v1.Localizable("Standard deviation difference").localize(localizer),
+                ruleset_api_v1.Title("Standard deviation difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a multiple of the standard deviation"
                     ).localize(localizer),
                     elements=[
                         legacy_valuespecs.Float(
                             title=warn_title.localize(localizer),
-                            unit=ruleset_api_v1.Localizable(
-                                "times the standard deviation"
-                            ).localize(localizer),
+                            unit=ruleset_api_v1.Label("times the standard deviation").localize(
+                                localizer
+                            ),
                             default_value=stddev_prefill[0],
                         ),
                         legacy_valuespecs.Float(
                             title=crit_title.localize(localizer),
-                            unit=ruleset_api_v1.Localizable(
-                                "times the standard deviation"
-                            ).localize(localizer),
+                            unit=ruleset_api_v1.Label("times the standard deviation").localize(
+                                localizer
+                            ),
                             default_value=stddev_prefill[1],
                         ),
                     ],
@@ -1220,18 +1225,18 @@ def _get_predictive_levels_choice_element(
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Transform:
     if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
-        fixed_warn_title = ruleset_api_v1.Localizable("Warning level is at least")
-        fixed_crit_title = ruleset_api_v1.Localizable("Critical level is at least")
-        fixed_help_text = ruleset_api_v1.Localizable(
+        fixed_warn_title = ruleset_api_v1.Title("Warning level is at least")
+        fixed_crit_title = ruleset_api_v1.Title("Critical level is at least")
+        fixed_help_text = ruleset_api_v1.Help(
             "Regardless of how the dynamic levels are computed according to the prediction: they "
             "will never be set below the following limits. This avoids false alarms during times "
             "where the predicted levels would be very low."
         )
 
     elif level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
-        fixed_warn_title = ruleset_api_v1.Localizable("Warning level is at most")
-        fixed_crit_title = ruleset_api_v1.Localizable("Critical level is at most")
-        fixed_help_text = ruleset_api_v1.Localizable(
+        fixed_warn_title = ruleset_api_v1.Title("Warning level is at most")
+        fixed_crit_title = ruleset_api_v1.Title("Critical level is at most")
+        fixed_help_text = ruleset_api_v1.Help(
             "Regardless of how the dynamic levels are computed according to the prediction: they "
             "will never be set above the following limits. This avoids false alarms during times "
             "where the predicted levels would be very high."
@@ -1244,16 +1249,16 @@ def _get_predictive_levels_choice_element(
             "period",
             legacy_valuespecs.DropdownChoice(
                 choices=[
-                    ("wday", ruleset_api_v1.Localizable("Day of the week").localize(localizer)),
-                    ("day", ruleset_api_v1.Localizable("Day of the month").localize(localizer)),
-                    ("hour", ruleset_api_v1.Localizable("Hour of the day").localize(localizer)),
+                    ("wday", ruleset_api_v1.Title("Day of the week").localize(localizer)),
+                    ("day", ruleset_api_v1.Title("Day of the month").localize(localizer)),
+                    ("hour", ruleset_api_v1.Title("Hour of the day").localize(localizer)),
                     (
                         "minute",
-                        ruleset_api_v1.Localizable("Minute of the hour").localize(localizer),
+                        ruleset_api_v1.Title("Minute of the hour").localize(localizer),
                     ),
                 ],
-                title=ruleset_api_v1.Localizable("Base prediction on").localize(localizer),
-                help=ruleset_api_v1.Localizable(
+                title=ruleset_api_v1.Title("Base prediction on").localize(localizer),
+                help=ruleset_api_v1.Help(
                     "Define the periodicity in which the repetition of the measured data is "
                     "expected (monthly, weekly, daily or hourly)"
                 ).localize(localizer),
@@ -1262,13 +1267,13 @@ def _get_predictive_levels_choice_element(
         (
             "horizon",
             legacy_valuespecs.Integer(
-                title=ruleset_api_v1.Localizable("Length of historic data to consider").localize(
+                title=ruleset_api_v1.Title("Length of historic data to consider").localize(
                     localizer
                 ),
-                help=ruleset_api_v1.Localizable(
+                help=ruleset_api_v1.Help(
                     "How many days in the past Checkmk should evaluate the measurement data"
                 ).localize(localizer),
-                unit=ruleset_api_v1.Localizable("days").localize(localizer),
+                unit=ruleset_api_v1.Label("days").localize(localizer),
                 minvalue=1,
                 default_value=90,
             ),
@@ -1282,8 +1287,8 @@ def _get_predictive_levels_choice_element(
         (
             "bound",
             legacy_valuespecs.Optional(
-                title=ruleset_api_v1.Localizable("Fixed limits").localize(localizer),
-                label=ruleset_api_v1.Localizable("Set fixed limits").localize(localizer),
+                title=ruleset_api_v1.Title("Fixed limits").localize(localizer),
+                label=ruleset_api_v1.Label("Set fixed limits").localize(localizer),
                 valuespec=legacy_valuespecs.Tuple(
                     help=fixed_help_text.localize(localizer),
                     elements=[
@@ -1338,18 +1343,18 @@ def _convert_to_legacy_levels(
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
             _LevelDynamicChoice.NO_LEVELS.value,
-            ruleset_api_v1.Localizable("No levels").localize(localizer),
+            ruleset_api_v1.Title("No levels").localize(localizer),
             legacy_valuespecs.FixedValue(
                 value=None,
-                title=ruleset_api_v1.Localizable("No levels").localize(localizer),
-                totext=ruleset_api_v1.Localizable("Do not impose levels, always be OK").localize(
+                title=ruleset_api_v1.Title("No levels").localize(localizer),
+                totext=ruleset_api_v1.Label("Do not impose levels, always be OK").localize(
                     localizer
                 ),
             ),
         ),
         (
             _LevelDynamicChoice.FIXED.value,
-            ruleset_api_v1.Localizable("Fixed levels").localize(localizer),
+            ruleset_api_v1.Title("Fixed levels").localize(localizer),
             _get_fixed_levels_choice_element(
                 to_convert.form_spec_template,
                 to_convert.prefill_fixed_levels,
@@ -1362,7 +1367,7 @@ def _convert_to_legacy_levels(
         choices.append(
             (
                 _LevelDynamicChoice.PREDICTIVE.value,
-                ruleset_api_v1.Localizable("Predictive levels (only on CMC)").localize(localizer),
+                ruleset_api_v1.Title("Predictive levels (only on CMC)").localize(localizer),
                 _get_predictive_levels_choice_element(
                     to_convert.form_spec_template,
                     to_convert.predictive,
@@ -1407,39 +1412,39 @@ def _convert_to_legacy_http_proxy(
         ]
 
     return legacy_valuespecs.CascadingDropdown(
-        title=ruleset_api_v1.Localizable("HTTP proxy").localize(localizer),
+        title=ruleset_api_v1.Title("HTTP proxy").localize(localizer),
         default_value=("environment", "environment"),
         choices=[
             (
                 "environment",
-                ruleset_api_v1.Localizable("Use from environment").localize(localizer),
+                ruleset_api_v1.Title("Use from environment").localize(localizer),
                 legacy_valuespecs.FixedValue(
                     value="environment",
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
                         "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
                         "Have a look at the python requests module documentation for further information. Note "
                         "that these variables must be defined as a site-user in ~/etc/environment and that "
                         "this might affect other notification methods which also use the requests module."
                     ).localize(localizer),
-                    totext=ruleset_api_v1.Localizable(
+                    totext=ruleset_api_v1.Label(
                         "Use proxy settings from the process environment. This is the default."
                     ).localize(localizer),
                 ),
             ),
             (
                 "no_proxy",
-                ruleset_api_v1.Localizable("Connect without proxy").localize(localizer),
+                ruleset_api_v1.Title("Connect without proxy").localize(localizer),
                 legacy_valuespecs.FixedValue(
                     value=None,
-                    totext=ruleset_api_v1.Localizable(
+                    totext=ruleset_api_v1.Label(
                         "Connect directly to the destination instead of using a proxy."
                     ).localize(localizer),
                 ),
             ),
             (
                 "global",
-                ruleset_api_v1.Localizable("Use globally configured proxy").localize(localizer),
+                ruleset_api_v1.Title("Use globally configured proxy").localize(localizer),
                 legacy_valuespecs.DropdownChoice(
                     choices=_global_proxy_choices,
                     sorted=True,
@@ -1447,9 +1452,9 @@ def _convert_to_legacy_http_proxy(
             ),
             (
                 "url",
-                ruleset_api_v1.Localizable("Use explicit proxy settings").localize(localizer),
+                ruleset_api_v1.Title("Use explicit proxy settings").localize(localizer),
                 legacy_valuespecs.Url(
-                    title=ruleset_api_v1.Localizable("Proxy URL").localize(localizer),
+                    title=ruleset_api_v1.Title("Proxy URL").localize(localizer),
                     default_scheme="http",
                     allowed_schemes=allowed_schemas,
                 ),
@@ -1496,9 +1501,9 @@ def _convert_to_legacy_metric_name(
 ) -> legacy_graphing_valuespecs.MetricName:
     converted_kwargs = {}
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
-            "Select from a list of metrics known to Checkmk"
-        ).localize(localizer)
+        help_text = ruleset_api_v1.Help("Select from a list of metrics known to Checkmk").localize(
+            localizer
+        )
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
@@ -1517,12 +1522,12 @@ def _convert_to_legacy_monitored_host_name(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
+        help_text = ruleset_api_v1.Help(
             "Select from a list of host names known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Localizable("Host name").localize(localizer)
+        title = ruleset_api_v1.Title("Host name").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
@@ -1540,12 +1545,12 @@ def _convert_to_legacy_monitored_service_description(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
+        help_text = ruleset_api_v1.Help(
             "Select from a list of service descriptions known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Localizable("Service description").localize(localizer)
+        title = ruleset_api_v1.Title("Service description").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
@@ -1606,7 +1611,7 @@ def _convert_to_legacy_text_area(
             "This field supports the use of macros. "
             "The corresponding plugin replaces the macros with the actual values."
         )
-        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text

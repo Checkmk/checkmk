@@ -1,0 +1,14 @@
+Title: Let cmcdump handle semicolons in plugin output
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1708522742
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+cmcdump would not handle semicolons correctly, leading to
+garbled or incomplete output and spurious errors.
+
+This has been fixed by escaping semicolons in cmcdump
+and unescaping them in livestatus.

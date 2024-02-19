@@ -1419,9 +1419,9 @@ class EventServer(ECServerThread):
             return False  # Found no host in core: Not in downtime!
         try:
             return query_hosts_scheduled_downtime_depth(host_name) >= 1
-        except Exception as e:
-            self._logger.error(
-                f"Cannot get downtime info for host '{host_name}', assuming no downtime: {e}"
+        except Exception:
+            self._logger.exception(
+                "Cannot get downtime info for host '%s', assuming no downtime.", host_name
             )
             return False
 
@@ -2642,7 +2642,7 @@ class EventStatus:
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %s.", path)
             except Exception:
-                self._logger.exception(f"Error loading event state from {path}")
+                self._logger.exception("Error loading event state from %s", path)
                 raise
 
         # Add new columns and fix broken events

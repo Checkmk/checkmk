@@ -30,7 +30,6 @@ from .config import (
 )
 from .defaults import default_config, default_rule_pack
 from .settings import Settings
-from .settings import settings as create_settings
 
 
 class RulePackType(Enum):
@@ -69,16 +68,6 @@ class RulePackType(Enum):
         if is_proxy and is_packaged:
             return RulePackType.unmodified_mkp
         return RulePackType.modified_mkp
-
-
-def _default_settings() -> Settings:
-    """Returns default EC settings. This function should vanish in the long run!"""
-    return create_settings("", cmk.utils.paths.omd_root, [""])
-
-
-def active_config_dir() -> Path:
-    """Returns the directory where active rule packs of the Event Console are located."""
-    return _default_settings().paths.active_config_dir.value
 
 
 def _exported_rule_pack_path(rule_pack: ECRulePack, path: Path) -> Path:
@@ -181,7 +170,7 @@ def _load_config(  # pylint: disable=too-many-branches
 
 
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.eventd_configuration()
-def load_config(settings: Settings) -> ConfigFromWATO:
+def load_config() -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
     distributed setups."""
     return _load_config(
@@ -243,7 +232,7 @@ def save_active_config(
 def load_rule_packs() -> Sequence[ECRulePack]:
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
     in the rule packs are already bound to the referenced object."""
-    return load_config(_default_settings())["rule_packs"]
+    return load_config()["rule_packs"]
 
 
 def save_rule_packs(rule_packs: Iterable[ECRulePack], pretty_print: bool, path: Path) -> None:

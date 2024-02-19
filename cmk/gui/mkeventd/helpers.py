@@ -36,7 +36,7 @@ def load_ec_settings() -> ec.Settings:
 
 @request_memoize()
 def eventd_configuration() -> ec.ConfigFromWATO:
-    return ec.load_config(load_ec_settings())
+    return ec.load_config()
 
 
 def dissolve_mkp_proxies(rule_packs: Sequence[ec.ECRulePack]) -> Iterator[ec.ECRulePackSpec]:

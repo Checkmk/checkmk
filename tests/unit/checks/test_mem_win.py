@@ -13,7 +13,7 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.legacy_checks import mem
+from cmk.base.legacy_checks import mem_win
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -72,7 +72,7 @@ INJECTED_PGF = InjectedParameters(
     "params, expected_result",
     [
         pytest.param(
-            mem.Params(
+            mem_win.Params(
                 memory=("perc_used", (80.0, 90.0)),
                 pagefile=("perc_used", (70.0, 90.0)),
             ),
@@ -109,7 +109,7 @@ INJECTED_PGF = InjectedParameters(
             id="normal levels",
         ),
         pytest.param(
-            mem.Params(
+            mem_win.Params(
                 memory=("abs_free", (2097152000, 1048576000)),
                 pagefile=("abs_free", (52428800000, 4194304000)),
                 average=10,
@@ -144,7 +144,7 @@ INJECTED_PGF = InjectedParameters(
             id="normal levels + averaging",
         ),
         pytest.param(
-            mem.Params(
+            mem_win.Params(
                 memory=(
                     "predictive",
                     {
@@ -184,7 +184,7 @@ INJECTED_PGF = InjectedParameters(
             id="predictive levels",
         ),
         pytest.param(
-            mem.Params(
+            mem_win.Params(
                 memory=(
                     "predictive",
                     {

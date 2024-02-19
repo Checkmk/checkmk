@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.legacy_checks.mem import check_mem_vmalloc, inventory_mem_vmalloc
+from cmk.base.legacy_checks.mem_vmalloc import check_mem_vmalloc, inventory_mem_vmalloc
 
 _SECTION = {
     "VmallocTotal": 2 * 1024**2,

@@ -10,9 +10,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from cmk.utils.paths import omd_root
+import cmk.utils.paths
 
-from .settings import settings
+from .settings import create_paths
 
 
 class SyslogPriority:
@@ -363,7 +363,7 @@ def forward_to_unix_socket(
     if not payload:
         return  # optimization: no need for any I/O
     if path is None:
-        path = settings("", Path(omd_root), [""]).paths.event_socket.value
+        path = create_paths(cmk.utils.paths.omd_root).event_socket.value
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
         sock.connect(str(path))
         sock.sendall(payload)

@@ -72,8 +72,7 @@ from .query import (
 )
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_active_config
-from .settings import FileDescriptor, PortNumber, Settings
-from .settings import settings as create_settings
+from .settings import create_settings, FileDescriptor, PortNumber, Settings
 from .snmp import SNMPTrapParser
 from .syslog import SyslogFacility, SyslogPriority
 from .timeperiod import TimePeriods

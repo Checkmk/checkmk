@@ -29,7 +29,7 @@ from .config import (
     MkpRulePackProxy,
 )
 from .defaults import default_config, default_rule_pack
-from .settings import Settings
+from .settings import create_paths, Settings
 
 
 class RulePackType(Enum):
@@ -188,7 +188,6 @@ def load_active_config(settings: Settings) -> ConfigFromWATO:
 
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.save_active_config()
 def save_active_config(
-    settings: Settings,
     rule_packs: Iterable[ECRulePackSpec],
     pretty_print: bool = False,
 ) -> None:
@@ -205,21 +204,23 @@ def save_active_config(
 
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
+
+    active_config_dir = create_paths(cmk.utils.paths.omd_root).active_config_dir.value
     try:
-        shutil.rmtree(str(settings.paths.active_config_dir.value))
+        shutil.rmtree(str(active_config_dir))
     except FileNotFoundError:
         pass
 
-    settings.paths.active_config_dir.value.mkdir(parents=True, exist_ok=True)
+    active_config_dir.mkdir(parents=True, exist_ok=True)
     try:
         shutil.copy(
             cmk.utils.paths.ec_main_config_file,
-            settings.paths.active_config_dir.value / "mkeventd.mk",
+            active_config_dir / "mkeventd.mk",
         )
     except FileNotFoundError:
         pass
 
-    active_conf_d = settings.paths.active_config_dir.value / "conf.d"
+    active_conf_d = active_config_dir / "conf.d"
     for path in cmk.utils.paths.ec_config_dir.glob("**/*.mk"):
         target = active_conf_d / path.relative_to(cmk.utils.paths.ec_config_dir)
         target.parent.mkdir(parents=True, exist_ok=True)

@@ -91,7 +91,12 @@ multisite_builtin_views.update(
 )
 
 
-def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
+def paint_time_graph_cmk(
+    row,
+    cell,
+    override_graph_render_options=None,
+    require_historic_metrics: bool = True,
+):
     graph_identification = (
         "template",
         {
@@ -153,7 +158,7 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
         available_metrics = row["service_metrics"]
         perf_data = row["service_perf_data"]
 
-    if not available_metrics and perf_data:
+    if not available_metrics and perf_data and require_historic_metrics:
         return "", _(
             "No historic metrics recorded but performance data is available. "
             "Maybe performance data processing is disabled."
@@ -164,9 +169,16 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     )
 
 
-def paint_cmk_graphs_with_timeranges(row, cell):
+def paint_cmk_graphs_with_timeranges(
+    row,
+    cell,
+    require_historic_metrics: bool = True,
+):
     return paint_time_graph_cmk(
-        row, cell, override_graph_render_options={"show_time_range_previews": True}
+        row,
+        cell,
+        override_graph_render_options={"show_time_range_previews": True},
+        require_historic_metrics=require_historic_metrics,
     )
 
 
@@ -267,7 +279,13 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row, cell):
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        return paint_cmk_graphs_with_timeranges(
+            row,
+            cell,
+            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+            # also render the graphs if there are no historic metrics available (but perf data is)
+            require_historic_metrics="service_description" not in row,
+        )
 
 
 @painter_option_registry.register

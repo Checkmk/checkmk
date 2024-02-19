@@ -141,16 +141,19 @@ def continue_on_incomp_local_file(
     path: Path,
     error: BaseException,
 ) -> bool:
+    return continue_per_users_choice(
+        conflict_mode,
+        f"Incompatible local file '{path}'.\n"
+        f"Error: {error}\n\n"
+        "You can abort the update process (A) and try to fix "
+        "the incompatibilities or continue the update (c).\n\n"
+        "Abort the update process? [A/c] \n",
+    )
+
+
+def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
     return (
-        conflict_mode in NEED_USER_INPUT_MODES
-        and prompt(
-            f"Incompatible local file '{path}'.\n"
-            f"Error: {error}\n\n"
-            "You can abort the update process (A) and try to fix "
-            "the incompatibilities or continue the update (c).\n\n"
-            "Abort the update process? [A/c] \n"
-        ).lower()
-        in USER_INPUT_CONTINUE
+        conflict_mode in NEED_USER_INPUT_MODES and prompt(propt_text).lower() in USER_INPUT_CONTINUE
     )
 
 

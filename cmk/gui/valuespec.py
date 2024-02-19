@@ -884,7 +884,7 @@ class TextInput(ValueSpec[str]):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         placeholder: str | None = None,
         # ValueSpec
@@ -914,7 +914,7 @@ class TextInput(ValueSpec[str]):
         )
         self._minlen = minlen
         self._maxlen = maxlen
-        self._onkeyup = onkeyup
+        self._oninput = oninput
         self._autocomplete = autocomplete
         self._placeholder = placeholder
 
@@ -937,7 +937,7 @@ class TextInput(ValueSpec[str]):
             cssclass=self._cssclass,
             type_="text",
             autocomplete="off" if not self._autocomplete else None,
-            onkeyup=self._onkeyup if self._onkeyup else None,
+            oninput=self._oninput if self._oninput else None,
             placeholder=self._placeholder,
         )
 
@@ -1025,7 +1025,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     forbidden_chars: str = "",
     minlen: int | None = None,
     maxlen: int | None = None,
-    onkeyup: str | None = None,
+    oninput: str | None = None,
     autocomplete: bool = True,
     placeholder: str | None = None,
     # ValueSpec
@@ -1052,7 +1052,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
         ),
         minlen=minlen,
         maxlen=maxlen,
-        onkeyup=onkeyup,
+        oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
@@ -1074,7 +1074,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     forbidden_chars: str = "",
     minlen: int | None = None,
     maxlen: int | None = None,
-    onkeyup: str | None = None,
+    oninput: str | None = None,
     autocomplete: bool = True,
     placeholder: str | None = None,
     # ValueSpec
@@ -1110,7 +1110,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
         forbidden_chars=forbidden_chars,
         minlen=minlen,
         maxlen=maxlen,
-        onkeyup=onkeyup,
+        oninput=oninput,
         autocomplete=autocomplete,
         placeholder=placeholder,
         title=title,
@@ -1146,7 +1146,7 @@ class RegExp(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         placeholder: str | None = None,
         # From ValueSpec
@@ -1169,7 +1169,7 @@ class RegExp(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1293,7 +1293,7 @@ class EmailAddress(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         # From ValueSpec
         title: str | None = None,
@@ -1344,7 +1344,7 @@ class EmailAddress(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1529,7 +1529,7 @@ class HostAddress(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -1551,7 +1551,7 @@ class HostAddress(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1681,7 +1681,7 @@ class Url(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         placeholder: str | None = None,
         # ValueSpec
@@ -1704,7 +1704,7 @@ class Url(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -1851,7 +1851,7 @@ class TextAreaUnicode(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -1873,7 +1873,7 @@ class TextAreaUnicode(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -1945,7 +1945,7 @@ class Filename(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         # ValueSpec
         title: str | None = None,
@@ -1967,7 +1967,7 @@ class Filename(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             title=title,
             help=help,
@@ -6582,7 +6582,7 @@ class LDAPDistinguishedName(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = True,
         placeholder: str | None = None,
         # ValueSpec
@@ -6605,7 +6605,7 @@ class LDAPDistinguishedName(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -6665,7 +6665,7 @@ class Password(TextInput):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = False,  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
@@ -6706,7 +6706,7 @@ class Password(TextInput):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,
@@ -6794,7 +6794,7 @@ class PasswordSpec(Password):
         regex_error: str | None = None,
         minlen: int | None = None,
         maxlen: int | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         autocomplete: bool = False,  # NOTE: Different!
         placeholder: str | None = None,
         # ValueSpec
@@ -6820,7 +6820,7 @@ class PasswordSpec(Password):
             regex_error=regex_error,
             minlen=minlen,
             maxlen=maxlen,
-            onkeyup=onkeyup,
+            oninput=oninput,
             autocomplete=autocomplete,
             placeholder=placeholder,
             title=title,

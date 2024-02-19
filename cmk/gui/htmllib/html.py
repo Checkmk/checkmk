@@ -950,7 +950,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         autocomplete: str | None = None,
         style: str | None = None,
         type_: str | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
         data_world: str | None = None,
@@ -997,7 +997,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             "readonly": "true" if read_only else None,
             "value": value,
             "onblur": onblur,
-            "onkeyup": onkeyup,
+            "oninput": oninput,
             "onkeydown": ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
             if submit
             else None,

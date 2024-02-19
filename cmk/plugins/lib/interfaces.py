@@ -20,7 +20,7 @@ from collections.abc import (
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, assert_never, Literal, ParamSpec, TypeVar
+from typing import Any, assert_never, Final, Literal, ParamSpec, TypeVar
 
 import pydantic
 from typing_extensions import TypedDict
@@ -148,7 +148,7 @@ class Attributes:
 
     def finalize(self) -> None:
         if not self.oper_status_name:
-            self.oper_status_name = statename(self.oper_status)
+            self.oper_status_name = get_if_state_name(self.oper_status)
 
         # Fix bug in TP Link switches
         if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
@@ -520,9 +520,11 @@ def tryint(x: Any) -> Any:
         return x
 
 
-# Name of state (lookup SNMP enum)
-def statename(st: str) -> str:
-    names = {
+def get_if_state_name(state: str) -> str:
+    """return name of the network interface card state.
+    on lookup failure returns state.
+    Reference: windows SDK ifdef.h, for example"""
+    state_to_name: Final[dict[str, str]] = {
         "1": "up",
         "2": "down",
         "3": "testing",
@@ -532,7 +534,7 @@ def statename(st: str) -> str:
         "7": "lower layer down",
         "8": "degraded",
     }
-    return names.get(st, st)
+    return state_to_name.get(state, state)
 
 
 def render_mac_address(phys_address: Iterable[int] | str) -> str:
@@ -1168,7 +1170,7 @@ def _accumulate_attributes(
     else:
         cumulated_attributes.oper_status = "2"  # down
         cumulated_attributes.out_qlen = None
-    cumulated_attributes.oper_status_name = statename(cumulated_attributes.oper_status)
+    cumulated_attributes.oper_status_name = get_if_state_name(cumulated_attributes.oper_status)
 
     alias_info = []
     if len(nodes) > 1:
@@ -1245,7 +1247,7 @@ def _group_members(
             oper_status_name=attributes.oper_status_name,
             admin_status_name=None
             if attributes.admin_status is None
-            else statename(attributes.admin_status),
+            else get_if_state_name(attributes.admin_status),
         )
         groups_node.append(member_info)
     return group_members
@@ -1663,8 +1665,8 @@ def _check_oper_and_admin_state(
         if combined_mon_state is not None and attributes.admin_status is not None:
             yield Result(
                 state=combined_mon_state,
-                summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
-                details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
+                summary=f"(op. state: {attributes.oper_status_name}, admin state: {get_if_state_name(attributes.admin_status)})",
+                details=f"Operational state: {attributes.oper_status_name}, Admin state: {get_if_state_name(attributes.admin_status)}",
             )
             return
     yield from _check_oper_and_admin_state_independent(
@@ -1708,7 +1710,7 @@ def _check_oper_and_admin_state_independent(
             target_admin_states,
             _get_map_states(mapping.map_admin_states),
         ),
-        summary=f"Admin state: {statename(attributes.admin_status)}",
+        summary=f"Admin state: {get_if_state_name(attributes.admin_status)}",
     )
 
 

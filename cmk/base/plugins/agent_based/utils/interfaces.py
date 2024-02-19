@@ -43,6 +43,7 @@ from cmk.plugins.lib.interfaces import (
     DiscoveryDefaultParams,
     FixedLevels,
     GeneralPacketLevels,
+    get_if_state_name,
     GroupConfiguration,
     GroupMembers,
     IndependentMapping,
@@ -64,7 +65,6 @@ from cmk.plugins.lib.interfaces import (
     ServiceLabels,
     SingleInterfaceDiscoveryParams,
     StateMappings,
-    statename,
     TInterfaceType,
     tryint,
 )

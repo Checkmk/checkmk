@@ -591,14 +591,14 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
                         summary="Physical interfaces: %s(%s)"
                         % (
                             member_name,
-                            interfaces.statename(member_state),
+                            interfaces.get_if_state_name(member_state),
                         ),
                     )
                     first_member = False
                 else:
                     yield Result(
                         state=State(mon_state),
-                        summary=f"{member_name}({interfaces.statename(member_state)})",
+                        summary=f"{member_name}({interfaces.get_if_state_name(member_state)})",
                     )
 
         if "speed_differs" in vif and speed_info_included:

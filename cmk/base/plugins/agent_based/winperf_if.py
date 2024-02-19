@@ -85,21 +85,8 @@ def _parse_timestamp_and_instance_names(
     return agent_timestamp, instances
 
 
-# This case is for Win32 and `GetAdaptersAddresses` API
-# from <ifdef.h>
-_WIN32_OPER_STATUS: Final[dict[int, str]] = {
-    1: "up",
-    2: "down",
-    3: "testing",
-    4: "unknown",
-    5: "dormant",
-    6: "not_present",
-    7: "lower_layer_down",
-}
-
-
 def _get_windows_if_status(counter_index: int) -> str:
-    return _WIN32_OPER_STATUS.get(counter_index, "n/a")
+    return interfaces.get_if_state_name(str(counter_index))
 
 
 def _get_oper_status(counters: Mapping[str, int]) -> int:

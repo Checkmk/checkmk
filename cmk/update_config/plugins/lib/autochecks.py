@@ -138,7 +138,7 @@ def rewrite_yielding_errors() -> Iterable[RewriteError]:
     for hostname in _autocheck_hosts():
         try:
             fixed_autochecks = _get_fixed_autochecks(hostname, all_rulesets)
-        except MKGeneralException as exc:
+        except Exception as exc:
             if debug.enabled():
                 raise
             yield RewriteError(str(exc), hostname)
@@ -256,17 +256,17 @@ def _transformed_params(
             return {}
         if isinstance(params, dict):
             return {str(k): v for k, v in params.items()}
-        raise MKGeneralException(
-            f"Parameters must be a dict. Can't handle {params=} for plugin {plugin_name!r}"
+        raise TypeError(
+            f"Migration missing: {params=} for plugin '{str(plugin_name)}' (expected type dict)"
         )
 
-    debug_info = f"{host=}, plugin={str(plugin_name)!r}, ruleset={str(ruleset.name)!r}, {params=}"
-
     try:
-        new_params = _apply_rulesets_migration(params, ruleset)
+        new_params = _apply_rulesets_migration(params, ruleset, plugin_name)
         assert new_params or not params, "non-empty params vanished"
     except Exception as exc:
-        raise MKGeneralException(f"Transform failed: {debug_info}, error={exc!r}") from exc
+        raise ValueError(
+            f"Migration failed: {params=} for plugin '{str(plugin_name)}': {exc}"
+        ) from exc
 
     return new_params
 
@@ -286,13 +286,13 @@ def _get_ruleset(
 
 
 def _apply_rulesets_migration(
-    params: LegacyCheckParameters, ruleset: Ruleset
+    params: LegacyCheckParameters, ruleset: Ruleset, plugin_name: CheckPluginName
 ) -> Mapping[str, object]:
     new_params = ruleset.valuespec().transform_value(params) if params else {}
 
     if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
         raise TypeError(
-            f"Parameter transformation for {str(ruleset.name)} resulted in non-dict: {new_params!r}"
+            f"Migration invalid: {new_params=} for '{str(plugin_name)}' (expected type dict)"
         )
 
     return new_params

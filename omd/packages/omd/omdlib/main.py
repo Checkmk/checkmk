@@ -1451,15 +1451,15 @@ def initialize_agent_ca(site: SiteContext) -> None:
     root certs for agent receiver certificate verification (either as client or server cert)
     """
     ca_path = cert_dir(Path(site.dir)) / "agents"
+    # If this location is updated, then `legacy_ca.pem` has to be updated.
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
 
 
-def link_legacy_agent_ca(site: SiteContext) -> None:
+def link_legacy_agent_ca_v2(site: SiteContext) -> None:
     """If there are agent controller certificates that are signed with the site CA, we have to
     maintain them (at least for a while)."""
-    site_ca_path = root_cert_path(cert_dir(Path(site.dir)))
-    agent_ca_dir = cert_dir(Path(site.dir)) / "agents"
-    (agent_ca_dir / "legacy_ca.pem").symlink_to(site_ca_path)
+    legacy_ca_v2_path = cert_dir(Path(site.dir)) / "agents" / "legacy_ca_v2.pem"
+    os.symlink("../ca.pem", legacy_ca_v2_path)
 
 
 def config_change(
@@ -3056,8 +3056,11 @@ def main_update(  # pylint: disable=too-many-branches
 
     preexisting = agent_ca_existing(site)
     initialize_agent_ca(site)
-    if not preexisting:
-        link_legacy_agent_ca(site)
+    legacy_agent_ca = cert_dir(Path(site.dir)) / "agents/legacy_ca.pem"
+    if legacy_agent_ca.exists() or not preexisting:
+        link_legacy_agent_ca_v2(site)
+        # This symlink is broken, as omd cp does not support absolute symlinks
+        legacy_agent_ca.unlink(missing_ok=True)
 
     # Let hooks of the new(!) version do their work and update configuration.
     config_set_all(site)

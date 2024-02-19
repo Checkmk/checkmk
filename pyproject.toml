@@ -1,6 +1,8 @@
 [tool.ruff]
 src = ["cmk", "tests"]
-target-version = "py311"
+target-version = "py312"
+
+[tool.ruff.lint]
 ignore = [
     "E402", # module level import not on top of the file
     "E501", # line too long, 100s of fails. Fixable.
@@ -37,11 +39,14 @@ select = ["E", "F", "YTT"]
 unfixable = [
     "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
-[per-file-ignores]
+
+[tool.ruff.lint.per-file-ignores]
 "cmk/gui/config.py" = ["F403", "F405"]
-[flake8-annotations]
+
+[tool.ruff.lint.flake8-annotations]
 suppress-dummy-args = true
-[mccabe]
+
+[tool.ruff.lint.mccabe]
 max-complexity = 15
 
 

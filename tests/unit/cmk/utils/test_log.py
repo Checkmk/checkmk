@@ -52,7 +52,9 @@ def test_open_log(tmp_path: Path) -> None:
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 
-    with time_machine.travel(datetime.datetime(2018, 4, 15, 18, 50, tzinfo=ZoneInfo("CET"))):
+    with time_machine.travel(
+        datetime.datetime(2018, 4, 15, 18, 50, tzinfo=ZoneInfo("CET")), tick=False
+    ):
         log.logger.warning("abc")
         log.logger.warning("äbc")
 

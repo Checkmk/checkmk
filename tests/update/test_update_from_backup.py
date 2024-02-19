@@ -78,6 +78,11 @@ def _base_site_demo(site_factory_demo):
     reason="Test currently failing for missing `php7`. "
     "This will be fixed starting from base-version 2.2.0p8",
 )
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp3",
+    reason="TODO CMK-16192: Since SUP-16031, we only have php8 in SLES 15 SP3 and it seems we cannot "
+    "provide both versions in parallel",
+)
 @pytest.mark.cee
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")

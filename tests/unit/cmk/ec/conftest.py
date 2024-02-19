@@ -5,7 +5,6 @@
 
 import logging
 import os
-import pathlib
 import threading
 from collections.abc import Iterator
 from unittest import mock
@@ -36,12 +35,7 @@ from cmk.ec.perfcounters import Perfcounters
 
 @pytest.fixture(name="settings")
 def fixture_settings() -> ec.Settings:
-    return ec.settings(
-        "1.2.3i45",
-        cmk.utils.paths.omd_root,
-        pathlib.Path(cmk.utils.paths.default_config_dir),
-        ["mkeventd"],
-    )
+    return ec.settings("1.2.3i45", cmk.utils.paths.omd_root, ["mkeventd"])
 
 
 @pytest.fixture(name="lock_configuration")

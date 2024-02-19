@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Sequence
-from pathlib import Path
 
 import cmk.utils.paths
 
@@ -32,7 +31,7 @@ def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
 
 
 def load_ec_settings() -> ec.Settings:
-    return ec.settings("", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""])
+    return ec.settings("", cmk.utils.paths.omd_root, [""])
 
 
 @request_memoize()

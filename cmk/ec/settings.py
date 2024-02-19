@@ -42,7 +42,7 @@ class Paths(NamedTuple):
     mongodb_config_file: AnnotatedPath
 
 
-def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
+def _default_paths(omd_root: Path) -> Paths:
     """Returns all default filesystem paths related to the event console"""
     run_dir = omd_root / "tmp/run/mkeventd"
     state_dir = omd_root / "var/mkeventd"
@@ -227,9 +227,9 @@ class Settings(NamedTuple):
     options: Options
 
 
-def settings(version: str, omd_root: Path, default_config_dir: Path, argv: list[str]) -> Settings:
+def settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
     """Returns all event console settings"""
-    paths = _default_paths(omd_root, default_config_dir)
+    paths = _default_paths(omd_root)
     port_numbers = _default_port_numbers()
     parser = ECArgumentParser(Path(argv[0]).name, version, paths, port_numbers)
     args = parser.parse_args(argv[1:])
@@ -250,11 +250,4 @@ if __name__ == "__main__":
     import cmk.utils.paths
     import cmk.utils.version as cmk_version
 
-    print(
-        settings(
-            str(cmk_version.__version__),
-            cmk.utils.paths.omd_root,
-            Path(cmk.utils.paths.default_config_dir),
-            sys.argv,
-        )
-    )
+    print(settings(str(cmk_version.__version__), cmk.utils.paths.omd_root, sys.argv))

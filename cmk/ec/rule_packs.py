@@ -73,9 +73,7 @@ class RulePackType(Enum):
 
 def _default_settings() -> Settings:
     """Returns default EC settings. This function should vanish in the long run!"""
-    return create_settings(
-        "", cmk.utils.paths.omd_root, Path(cmk.utils.paths.default_config_dir), [""]
-    )
+    return create_settings("", cmk.utils.paths.omd_root, [""])
 
 
 def active_config_dir() -> Path:

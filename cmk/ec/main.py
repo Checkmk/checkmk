@@ -3363,12 +3363,7 @@ def main() -> None:
     """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = create_settings(
-        cmk_version.__version__,
-        cmk.utils.paths.omd_root,
-        Path(cmk.utils.paths.default_config_dir),
-        sys.argv,
-    )
+    settings = create_settings(cmk_version.__version__, cmk.utils.paths.omd_root, sys.argv)
 
     pid_path = None
     try:

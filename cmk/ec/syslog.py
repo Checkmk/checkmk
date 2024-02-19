@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from cmk.utils.paths import default_config_dir, omd_root
+from cmk.utils.paths import omd_root
 
 from .settings import settings
 
@@ -363,7 +363,7 @@ def forward_to_unix_socket(
     if not payload:
         return  # optimization: no need for any I/O
     if path is None:
-        path = settings("", Path(omd_root), Path(default_config_dir), [""]).paths.event_socket.value
+        path = settings("", Path(omd_root), [""]).paths.event_socket.value
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
         sock.connect(str(path))
         sock.sendall(payload)

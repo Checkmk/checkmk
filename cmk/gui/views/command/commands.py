@@ -1147,8 +1147,7 @@ class CommandAcknowledge(Command):
                         _("You cannot set an expiration date and time that is in the past:")
                         + f' "{expire_date} {expire_time}"',
                     )
-                expire = expire_timestamp - int(time.time())
-                expire_text = ";%d" % expire
+                expire_text = ";%d" % expire_timestamp
             else:
                 expire_text = ""
 

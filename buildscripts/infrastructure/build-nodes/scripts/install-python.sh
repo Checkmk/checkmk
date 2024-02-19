@@ -21,14 +21,14 @@ else
     PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
 fi
 
-OPENSSL_VERSION=1.1.1w
+OPENSSL_VERSION="1.1.1w"
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR="/opt"
 
-# Increase this to enforce a recreation of the build cache
-BUILD_ID=9
+# Increase the numeric suffix to enforce a recreation of the build cache
+BUILD_ID="openssl-${OPENSSL_VERSION}-9"
 
 build_package() {
     mkdir -p "$TARGET_DIR/src"

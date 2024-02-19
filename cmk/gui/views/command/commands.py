@@ -995,7 +995,7 @@ class CommandAcknowledge(Command):
             label=_("Comment"),
             required=True,
             placeholder=_("e.g. ticket ID"),
-            onkeyup=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
+            oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
         if request.get_str_input("_ack_comment"):
             html.final_javascript(
@@ -1534,7 +1534,7 @@ class CommandScheduleDowntimes(Command):
             required=not self._adhoc_downtime_configured(),
             placeholder=_("What is the occasion?"),
             submit="_down_custom",
-            onkeyup="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
+            oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         if request.get_str_input("_down_comment"):
             html.final_javascript(

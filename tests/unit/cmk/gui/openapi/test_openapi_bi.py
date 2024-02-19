@@ -571,43 +571,39 @@ def create_bipack_get_rule_test_data(clients: ClientRegistry) -> dict:
                     "conditions": {
                         "host_folder": "",
                         "host_label_groups": [
-                            [
-                                "and",
-                                [
-                                    ["and", "mystery/switch:yes"],
-                                    ["or", "mystery/switch:no"],
-                                    ["and", ""],
+                            {
+                                "operator": "and",
+                                "label_group": [
+                                    {"operator": "and", "label": "mystery/switch:yes"},
+                                    {"operator": "or", "label": "mystery/switch:no"},
                                 ],
-                            ],
-                            [
-                                "and",
-                                [
-                                    ["and", "network/primary:yes"],
-                                    ["not", "network/primary:no"],
-                                    ["and", ""],
+                            },
+                            {
+                                "operator": "or",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/primary:yes"},
+                                    {"operator": "not", "label": "network/primary:no"},
                                 ],
-                            ],
+                            },
                         ],
                         "host_tags": {},
                         "host_choice": {"type": "all_hosts"},
                         "service_regex": "(.*)",
                         "service_label_groups": [
-                            [
-                                "and",
-                                [
-                                    ["not", "network/stable:yes"],
-                                    ["and", "network/uplink:yes"],
-                                    ["and", ""],
+                            {
+                                "operator": "and",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/stable:yes"},
+                                    {"operator": "or", "label": "network/stable:no"},
                                 ],
-                            ],
-                            [
-                                "or",
-                                [
-                                    ["and", "network/stable:no"],
-                                    ["not", "network/uplink:no"],
-                                    ["and", ""],
+                            },
+                            {
+                                "operator": "or",
+                                "label_group": [
+                                    {"operator": "and", "label": "network/uplink:yes"},
+                                    {"operator": "not", "label": "network/uplink:no"},
                                 ],
-                            ],
+                            },
                         ],
                     },
                 },

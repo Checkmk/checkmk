@@ -65,41 +65,29 @@ class LabelConditionSchema(Schema):
     label = ReqString()
 
 
-def internal_label_group_to_schema(data: tuple[AndOrNotLiteral, LabelGroup]) -> dict[str, Any]:
-    return {
-        "operator": data[0],
-        "label_group": [{"operator": op, "label": val} for op, val in data[1]],
-    }
-
-
-def schema_to_internal_label_group(data: dict[str, Any]) -> tuple[AndOrNotLiteral, LabelGroup]:
-    op: AndOrNotLiteral = data["operator"]
-    label_group: LabelGroup = [
-        (label_condition["operator"], label_condition["label"])
-        for label_condition in data["label_group"]
-    ]
-    return op, label_group
-
-
 class LabelGroupConditionSchema(Schema):
     operator = ReqString(enum=["and", "or", "not"])
     label_group = ReqList(fields.Nested(LabelConditionSchema))
 
     @pre_dump
-    def _pre_dump(self, data: tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any) -> dict[str, Any]:
-        return internal_label_group_to_schema(data)
-
-    @post_dump
-    def _post_dump(self, data: dict[str, Any], **kwargs: Any) -> tuple[AndOrNotLiteral, LabelGroup]:
-        return schema_to_internal_label_group(data)
-
-    @pre_load
-    def _pre_load(self, data: tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any) -> dict[str, Any]:
-        return internal_label_group_to_schema(data)
+    def _pre_dump(
+        self, data: dict[str, Any] | tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any
+    ) -> dict[str, Any]:
+        if isinstance(data, dict):
+            return data
+        return {
+            "operator": data[0],
+            "label_group": [{"operator": op, "label": val} for op, val in data[1]],
+        }
 
     @post_load
     def _post_load(self, data: dict[str, Any], **kwargs: Any) -> tuple[AndOrNotLiteral, LabelGroup]:
-        return schema_to_internal_label_group(data)
+        op: AndOrNotLiteral = data["operator"]
+        label_group: LabelGroup = [
+            (label_condition["operator"], label_condition["label"])
+            for label_condition in data["label_group"]
+        ]
+        return op, label_group
 
 
 class HostConditionsSchema(Schema):

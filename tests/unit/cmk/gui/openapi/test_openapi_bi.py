@@ -595,20 +595,60 @@ def create_bipack_get_partial_rule_test_data(clients: ClientRegistry) -> dict:
 
 
 host_label_groups = [
-    ["and", [["and", "mystery/switch:yes"], ["or", "mystery/switch:no"]]],
-    ["and", [["and", "network/primary:yes"], ["not", "network/primary:no"]]],
+    {
+        "operator": "and",
+        "label_group": [
+            {"operator": "and", "label": "mystery/switch:yes"},
+            {"operator": "or", "label": "mystery/switch:no"},
+        ],
+    },
+    {
+        "operator": "and",
+        "label_group": [
+            {"operator": "and", "label": "network/primary:yes"},
+            {"operator": "not", "label": "network/primary:no"},
+        ],
+    },
 ]
 service_label_groups = [
-    ["and", [["not", "network/stable:yes"], ["and", "network/uplink:yes"]]],
-    ["or", [["and", "network/stable:no"], ["not", "network/uplink:no"]]],
+    {
+        "operator": "and",
+        "label_group": [
+            {"operator": "not", "label": "network/stable:yes"},
+            {"operator": "and", "label": "network/uplink:yes"},
+        ],
+    },
+    {
+        "operator": "or",
+        "label_group": [
+            {"operator": "and", "label": "network/stable:no"},
+            {"operator": "not", "label": "network/uplink:no"},
+        ],
+    },
 ]
 
 
 service_labels = {"network/stable": {"$ne": "yes"}, "network/uplink": "yes"}
-service_labels_response = [["and", [["not", "network/stable:yes"], ["and", "network/uplink:yes"]]]]
+service_labels_response = [
+    {
+        "operator": "and",
+        "label_group": [
+            {"operator": "not", "label": "network/stable:yes"},
+            {"operator": "and", "label": "network/uplink:yes"},
+        ],
+    }
+]
 
 host_labels = {"network/primary": "no", "mystery/switch": "yes"}
-host_labels_response = [["and", [["and", "network/primary:no"], ["and", "mystery/switch:yes"]]]]
+host_labels_response = [
+    {
+        "operator": "and",
+        "label_group": [
+            {"operator": "and", "label": "network/primary:no"},
+            {"operator": "and", "label": "mystery/switch:yes"},
+        ],
+    }
+]
 
 
 @pytest.mark.parametrize(

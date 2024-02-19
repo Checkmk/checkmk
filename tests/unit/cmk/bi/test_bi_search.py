@@ -113,6 +113,7 @@ def test_host_search(
             }
         }
     )
+    schema_config = search_class.schema()().load(schema_config)
     search = search_class(schema_config)
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}

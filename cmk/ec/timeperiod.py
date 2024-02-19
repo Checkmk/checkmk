@@ -28,8 +28,8 @@ class TimePeriods:
             if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
                 self._active = query_timeperiods_in()
                 self._cache_timestamp = timestamp
-        except Exception as e:
-            self._logger.error(f"Cannot update time period information: {e}")
+        except Exception:
+            self._logger.exception("Cannot update time period information.")
             raise
 
     def active(self, name: TimeperiodName) -> bool:

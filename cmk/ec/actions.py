@@ -90,10 +90,14 @@ def do_event_actions(
         if aname == "@NOTIFY":
             do_notify(host_config, logger, event, is_cancelling=is_cancelling)
         elif action := table.get(aname):
-            logger.info(f'executing action "{action["title"]}" on event {event["id"]}')
+            logger.info('executing action "%s" on event %s', action["title"], event["id"])
             do_event_action(history, settings, config, logger, event_columns, action, event, "")
         else:
-            logger.info(f'undefined action "{aname}", must be one of {", ".join(table.keys())}')
+            logger.info(
+                'undefined action "%s", must be one of %s',
+                aname,
+                ", ".join(table.keys()),
+            )
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -481,8 +485,8 @@ def _add_contact_information_to_context(
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)
-    except Exception as e:
-        logger.error(f"Cannot get contact group members, assuming none: {e}")
+    except Exception:
+        logger.exception("Cannot get contact group members, assuming none:")
         contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
@@ -498,8 +502,8 @@ def _add_contact_information_to_context(
 def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
         return query_status_enable_notifications()
-    except Exception as e:
-        logger.error(
-            f"Cannot determine whether notifications are enabled in core, assuming YES: {e}"
+    except Exception:
+        logger.exception(
+            "Cannot determine whether notifications are enabled in core, assuming YES."
         )
         return True

@@ -160,6 +160,7 @@ def paint_time_graph_cmk(
     cell: Cell,
     *,
     show_time_range_previews: bool | None = None,
+    require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -221,7 +222,7 @@ def paint_time_graph_cmk(
         available_metrics = row["service_metrics"]
         perf_data = row["service_perf_data"]
 
-    if not available_metrics and perf_data:
+    if not available_metrics and perf_data and require_historic_metrics:
         return "", _(
             "No historic metrics recorded but performance data is available. "
             "Maybe performance data processing is disabled."
@@ -246,8 +247,17 @@ def paint_time_graph_cmk(
     )
 
 
-def paint_cmk_graphs_with_timeranges(row: Row, cell: Cell) -> tuple[Literal[""], HTML | str]:
-    return paint_time_graph_cmk(row, cell, show_time_range_previews=True)
+def paint_cmk_graphs_with_timeranges(
+    row: Row,
+    cell: Cell,
+    require_historic_metrics: bool = True,
+) -> tuple[Literal[""], HTML | str]:
+    return paint_time_graph_cmk(
+        row,
+        cell,
+        show_time_range_previews=True,
+        require_historic_metrics=require_historic_metrics,
+    )
 
 
 def cmk_time_graph_params():
@@ -356,7 +366,13 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_cmk_graphs_with_timeranges(row, cell)
+        return paint_cmk_graphs_with_timeranges(
+            row,
+            cell,
+            # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
+            # also render the graphs if there are no historic metrics available (but perf data is)
+            require_historic_metrics="service_description" not in row,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> object:
         raise PythonExportError()

@@ -3685,6 +3685,12 @@ std::optional<uint64_t> _to_speed(uint64_t speed) {
 }
 
 AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
+    const auto address = std::accumulate(
+        std::next(std::begin(a.PhysicalAddress)), std::end(a.PhysicalAddress),
+        fmt::format("{:02X}", a.PhysicalAddress[0]),
+        [](std::string_view a, BYTE b) -> std::string {
+            return fmt::format("{}:{:02X}", a, b);
+        });
     return AdapterInfo{
         .guid{a.AdapterName},
         .friendly_name{a.FriendlyName},
@@ -3693,10 +3699,31 @@ AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
         .receive_speed{_to_speed(a.ReceiveLinkSpeed)},
         .transmit_speed{_to_speed(a.TransmitLinkSpeed)},
         .oper_status{a.OperStatus},
+        .mac_address{address},
     };
 }
 
 using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
+
+std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept {
+    std::wstring output{name};
+    for (auto &c : output) {
+        switch (c) {
+            case L'(':
+                c = L'[';
+                break;
+            case L')':
+                c = L']';
+                break;
+            case L'\\':
+            case L'/':
+            case L'#':
+                c = L'_';
+                break;
+        }
+    }
+    return output;
+}
 
 AdapterInfoStore GetAdapterInfoStore() {
     constexpr auto max_interfaces = 500;
@@ -3715,7 +3742,7 @@ AdapterInfoStore GetAdapterInfoStore() {
 
     const auto head = buffer.get();
     for (auto cur = head; cur; cur = cur->Next) {
-        store[std::wstring{cur->Description}] = ToAdapterInfo(*cur);
+        store[MangleNameForPerfCounter(cur->Description)] = ToAdapterInfo(*cur);
     }
     return store;
 }

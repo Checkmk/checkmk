@@ -187,8 +187,8 @@ def load_config(settings: Settings) -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
     distributed setups."""
     return _load_config(
-        [settings.paths.main_config_file.value]
-        + sorted(settings.paths.config_dir.value.glob("**/*.mk"))
+        [cmk.utils.paths.ec_main_config_file]
+        + sorted(cmk.utils.paths.ec_config_dir.glob("**/*.mk"))
     )
 
 
@@ -226,15 +226,15 @@ def save_active_config(
     settings.paths.active_config_dir.value.mkdir(parents=True, exist_ok=True)
     try:
         shutil.copy(
-            settings.paths.main_config_file.value,
+            cmk.utils.paths.ec_main_config_file,
             settings.paths.active_config_dir.value / "mkeventd.mk",
         )
     except FileNotFoundError:
         pass
 
     active_conf_d = settings.paths.active_config_dir.value / "conf.d"
-    for path in settings.paths.config_dir.value.glob("**/*.mk"):
-        target = active_conf_d / path.relative_to(settings.paths.config_dir.value)
+    for path in cmk.utils.paths.ec_config_dir.glob("**/*.mk"):
+        target = active_conf_d / path.relative_to(cmk.utils.paths.ec_config_dir)
         target.parent.mkdir(parents=True, exist_ok=True)
         if path.name == "rules.mk":
             save_rule_packs(rule_packs, pretty_print=pretty_print, path=target.parent)

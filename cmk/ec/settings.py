@@ -24,8 +24,6 @@ class AnnotatedPath(NamedTuple):
 class Paths(NamedTuple):
     """filesystem paths related to the event console"""
 
-    main_config_file: AnnotatedPath
-    config_dir: AnnotatedPath
     active_config_dir: AnnotatedPath
     unix_socket: AnnotatedPath
     event_socket: AnnotatedPath
@@ -49,8 +47,6 @@ def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
     run_dir = omd_root / "tmp/run/mkeventd"
     state_dir = omd_root / "var/mkeventd"
     return Paths(
-        main_config_file=AnnotatedPath("main configuration", default_config_dir / "mkeventd.mk"),
-        config_dir=AnnotatedPath("configuration directory", default_config_dir / "mkeventd.d"),
         active_config_dir=AnnotatedPath(
             "active configuration directory", state_dir / "active_config"
         ),

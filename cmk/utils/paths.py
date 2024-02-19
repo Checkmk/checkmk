@@ -85,6 +85,8 @@ diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
 visuals_cache_dir = Path(tmp_dir, "visuals_cache")
 predictions_dir = Path(var_dir, "prediction")
+ec_main_config_file = Path(default_config_dir, "mkeventd.mk")
+ec_config_dir = Path(default_config_dir, "mkeventd.d")
 
 # persisted secret files
 # avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead

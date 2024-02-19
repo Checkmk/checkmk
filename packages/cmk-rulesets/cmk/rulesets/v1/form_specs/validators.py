@@ -8,7 +8,7 @@ from collections.abc import Sequence, Sized
 from typing import Final
 from urllib.parse import urlparse
 
-from .._localize import Localizable
+from .._localize import Message
 
 
 class ValidationError(ValueError):
@@ -18,20 +18,20 @@ class ValidationError(ValueError):
         message: Description of why the value is invalid
     """
 
-    def __init__(self, message: Localizable) -> None:
+    def __init__(self, message: Message) -> None:
         super().__init__(message)
         self._message = message
 
     @property
-    def message(self) -> Localizable:
+    def message(self) -> Message:
         return self._message
 
 
 class DisallowEmpty:  # pylint: disable=too-few-public-methods
     """Custom validator that makes sure the validated value is not empty."""
 
-    def __init__(self, error_msg: Localizable | None = None) -> None:
-        self.error_msg: Final = error_msg or Localizable("An empty value is not allowed here.")
+    def __init__(self, error_msg: Message | None = None) -> None:
+        self.error_msg: Final = error_msg or Message("An empty value is not allowed here.")
 
     def __call__(self, value: Sequence[object]) -> None:
         if value is None or (isinstance(value, Sized) and len(value) == 0):
@@ -45,7 +45,7 @@ class InRange:  # pylint: disable=too-few-public-methods
         self,
         min_value: int | float | None = None,
         max_value: int | float | None = None,
-        error_msg: Localizable | None = None,
+        error_msg: Message | None = None,
     ) -> None:
         self.range: Final = (min_value, max_value)
         self.error_msg: Final = (
@@ -53,20 +53,20 @@ class InRange:  # pylint: disable=too-few-public-methods
         )
 
     @staticmethod
-    def _get_default_errmsg(min_: float | None, max_: float | None) -> Localizable:
+    def _get_default_errmsg(min_: float | None, max_: float | None) -> Message:
         if min_ is None:
             if max_ is None:
                 raise ValidationError(
-                    Localizable(
+                    Message(
                         "Either the minimum or maximum allowed value must be "
                         "configured, otherwise this validator is meaningless."
                     )
                 )
-            return Localizable("The maximum allowed value is %s.") % str(max_)
+            return Message("The maximum allowed value is %s.") % str(max_)
 
         if max_ is None:
-            return Localizable("The minimum allowed value is %s.") % str(min_)
-        return Localizable("Allowed values range from %s to %s.") % (str(min_), str(max_))
+            return Message("The minimum allowed value is %s.") % str(min_)
+        return Message("Allowed values range from %s to %s.") % (str(min_), str(max_))
 
     def __call__(self, value: int | float) -> None:
         if self.range[0] is not None and value < self.range[0]:
@@ -82,7 +82,7 @@ class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
         self,
         min_groups: int | None = None,
         max_groups: int | None = None,
-        error_msg: Localizable | None = None,
+        error_msg: Message | None = None,
     ) -> None:
         self.range: Final = (min_groups, max_groups)
         self.error_msg: Final = (
@@ -90,20 +90,20 @@ class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
         )
 
     @staticmethod
-    def _get_default_errmsg(min_: float | None, max_: float | None) -> Localizable:
+    def _get_default_errmsg(min_: float | None, max_: float | None) -> Message:
         if min_ is None:
             if max_ is None:
                 raise ValidationError(
-                    Localizable(
+                    Message(
                         "Either the minimum or maximum number of allowed groups must be configured,"
                         " otherwise this validator is meaningless."
                     )
                 )
-            return Localizable("The maximum allowed number of regex groups is %s.") % str(max_)
+            return Message("The maximum allowed number of regex groups is %s.") % str(max_)
 
         if max_ is None:
-            return Localizable("The minimum allowed number of regex groups is %s.") % str(min_)
-        return Localizable("Allowed number of regex groups ranges from %s to %s.") % (
+            return Message("The minimum allowed number of regex groups is %s.") % str(min_)
+        return Message("Allowed number of regex groups ranges from %s to %s.") % (
             str(min_),
             str(max_),
         )
@@ -119,10 +119,10 @@ class RegexGroupsInRange:  # pylint: disable=too-few-public-methods
 class MatchRegex:  # pylint: disable=too-few-public-methods
     """Custom validator that ensures the validated value matches the given regular expression."""
 
-    def __init__(self, regex: re.Pattern[str] | str, error_msg: Localizable | None = None) -> None:
+    def __init__(self, regex: re.Pattern[str] | str, error_msg: Message | None = None) -> None:
         self.regex: Final = re.compile(regex) if isinstance(regex, str) else regex
         self.error_msg: Final = error_msg or (
-            Localizable("Your input does not match the required format '%s'.") % self.regex.pattern
+            Message("Your input does not match the required format '%s'.") % self.regex.pattern
         )
 
     def __call__(self, value: str) -> None:
@@ -133,9 +133,9 @@ class MatchRegex:  # pylint: disable=too-few-public-methods
 class NetworkPort:  # pylint: disable=too-few-public-methods
     """Validator that ensures that an integer is in the network port range"""
 
-    def __init__(self, error_msg: Localizable | None = None) -> None:
+    def __init__(self, error_msg: Message | None = None) -> None:
         self.error_msg: Final = error_msg or (
-            Localizable("Your input does not match the required port range 0-65535.")
+            Message("Your input does not match the required port range 0-65535.")
         )
 
     def __call__(self, value: int) -> None:
@@ -176,12 +176,10 @@ class UrlProtocol(enum.StrEnum):
 class Url:  # pylint: disable=too-few-public-methods
     """Custom validator that ensures the validated value is a URL with the specified scheme."""
 
-    def __init__(
-        self, protocols: Sequence[UrlProtocol], error_msg: Localizable | None = None
-    ) -> None:
+    def __init__(self, protocols: Sequence[UrlProtocol], error_msg: Message | None = None) -> None:
         self.protocols: Final = protocols
         self.error_msg: Final = error_msg or (
-            Localizable("Your input is not a valid URL conforming to any allowed protocols ('%s').")
+            Message("Your input is not a valid URL conforming to any allowed protocols ('%s').")
             % str(", ".join(self.protocols))
         )
 
@@ -194,10 +192,8 @@ class Url:  # pylint: disable=too-few-public-methods
 class EmailAddress:  # pylint: disable=too-few-public-methods
     """Validator that ensures the validated value is an email address"""
 
-    def __init__(self, error_msg: Localizable | None = None) -> None:
-        self.error_msg: Final = error_msg or (
-            Localizable("Your input is not a valid email address.")
-        )
+    def __init__(self, error_msg: Message | None = None) -> None:
+        self.error_msg: Final = error_msg or (Message("Your input is not a valid email address."))
 
     def __call__(self, value: str) -> None:
         # According to RFC5322 an email address is defined as:

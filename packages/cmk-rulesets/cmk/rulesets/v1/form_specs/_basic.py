@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import ClassVar, Literal, Sequence, TypeVar
 
-from .._localize import Localizable
+from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, Prefill
 
 
@@ -24,7 +24,7 @@ class BooleanChoice(FormSpec[bool]):
         migrate: Transformation of the stored configuration
     """
 
-    label: Localizable | None = None
+    label: Label | None = None
     prefill: DefaultValue[bool] = DefaultValue(False)
 
 
@@ -62,7 +62,7 @@ class DataSize(FormSpec[int]):
         prefill: Value in bytes to pre-populate the form field with.
     """
 
-    label: Localizable | None = None
+    label: Label | None = None
     displayed_magnitudes: Sequence[SIMagnitude] | Sequence[IECMagnitude]
     prefill: Prefill[int] = InputHint(0)
 
@@ -114,7 +114,7 @@ class FixedValue(FormSpec[_FixedValueT]):
     """
 
     value: _FixedValueT
-    label: Localizable | None = None
+    label: Label | None = None
 
     def __post_init__(self) -> None:
         try:
@@ -139,8 +139,8 @@ class Float(FormSpec[float]):
         prefill: Value to pre-populate the form field with.
     """
 
-    label: Localizable | None = None
-    unit: Localizable | None = None
+    label: Label | None = None
+    unit: Label | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
 
@@ -150,7 +150,7 @@ class HostState(FormSpec[Literal[0, 1, 2]]):
     """Specifies the configuration of a host state.
 
     >>> state_form_spec = HostState(
-    ...     title=Localizable("Host state"),
+    ...     title=Title("Host state"),
     ...     prefill=DefaultValue(HostState.UP),
     ... )
     """
@@ -177,8 +177,8 @@ class Integer(FormSpec[int]):
         The configured value will be presented as an integer to consumers.
     """
 
-    label: Localizable | None = None
-    unit: Localizable | None = None
+    label: Label | None = None
+    unit: Label | None = None
     prefill: Prefill[int] = InputHint(0)
 
 
@@ -207,7 +207,7 @@ class MultilineText(FormSpec[str]):
     monospaced: bool = False
     macro_support: bool = False
 
-    label: Localizable | None = None
+    label: Label | None = None
 
     prefill: Prefill[str] = InputHint("")
 
@@ -221,7 +221,7 @@ class Percentage(FormSpec[float]):
         prefill: Value to pre-populate the form field with.
     """
 
-    label: Localizable | None = None
+    label: Label | None = None
 
     prefill: Prefill[float] = InputHint(0.0)
 
@@ -245,7 +245,7 @@ class RegularExpression(FormSpec[str]):
     """
 
     predefined_help_text: MatchingScope
-    label: Localizable | None = None
+    label: Label | None = None
 
     prefill: Prefill[str] = InputHint("")
 
@@ -255,7 +255,7 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     """Specifies the configuration of a service state.
 
     >>> state_form_spec = ServiceState(
-    ...     title=Localizable("State if somthing happens"),
+    ...     title=Title("State if something happens"),
     ...     prefill=DefaultValue(ServiceState.WARN),
     ... )
     """
@@ -278,7 +278,7 @@ class String(FormSpec[str]):
         prefill: Value to pre-populate the form field with.
     """
 
-    label: Localizable | None = None
+    label: Label | None = None
     macro_support: bool = False
 
     prefill: Prefill[str] = InputHint("")
@@ -308,7 +308,7 @@ class TimeSpan(FormSpec[float]):
         The configured value will be presented as a float to consumers.
     """
 
-    label: Localizable | None = None
+    label: Label | None = None
     displayed_magnitudes: Sequence[TimeMagnitude]
     prefill: Prefill[float] = InputHint(0.0)
 
@@ -321,8 +321,8 @@ class InvalidElementMode(Enum):
 @dataclass
 class InvalidElementValidator:
     mode: InvalidElementMode = InvalidElementMode.COMPLAIN
-    display: Localizable | None = None
-    error_msg: Localizable | None = None
+    display: Title | None = None
+    error_msg: Message | None = None
 
 
 @dataclass(frozen=True)
@@ -335,7 +335,7 @@ class SingleChoiceElement:
     """
 
     name: str
-    title: Localizable
+    title: Title
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
@@ -358,13 +358,13 @@ class SingleChoice(FormSpec[str]):
     """
 
     elements: Sequence[SingleChoiceElement]
-    no_elements_text: Localizable | None = None
+    no_elements_text: Message | None = None
 
     frozen: bool = False
 
-    label: Localizable | None = None
+    label: Label | None = None
 
-    prefill: DefaultValue[str] | InputHint[Localizable] = InputHint(Localizable("Please choose"))
+    prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
 
     deprecated_elements: tuple[str, ...] | None = None
     invalid_element_validation: InvalidElementValidator | None = None

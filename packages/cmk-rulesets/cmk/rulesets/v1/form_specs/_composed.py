@@ -73,12 +73,12 @@ class DictElement(Generic[ModelT]):
         parameter_form: Configuration specification of this entry
         required: Whether the user has to configure the value in question. If set to False, it may
                   be omitted.
-        read_only: Element that can't be edited. Can be used to store the discovered parameters.
+        render_only: Element that can't be edited. Can be used to store the discovered parameters.
     """
 
     parameter_form: FormSpec[ModelT]
     required: bool = False
-    read_only: bool = False  # TODO: render_only is more fitting
+    render_only: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]

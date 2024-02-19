@@ -121,7 +121,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                     "key_read_only": api_v1.form_specs.DictElement(
                         parameter_form=api_v1.form_specs.ServiceState(title=api_v1.Title("title")),
-                        read_only=True,
+                        render_only=True,
                     ),
                 },
                 title=api_v1.Title("Configuration title"),

@@ -427,7 +427,7 @@ def _extract_dictionary_key_props(
     for key, dic_elem in dic_elements.items():
         if dic_elem.required:
             key_props.required.append(key)
-        if dic_elem.read_only:
+        if dic_elem.render_only:
             key_props.hidden.append(key)
 
     return key_props

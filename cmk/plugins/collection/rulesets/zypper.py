@@ -39,8 +39,6 @@ def _parameter_form_zypper() -> Dictionary:
                 ),
             ),
         },
-        # TODO remove before 2.3 release, showcases migration
-        migrate=lambda v: v if isinstance(v, dict) and v else {},
     )
 
 

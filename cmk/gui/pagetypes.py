@@ -53,7 +53,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.logged_in import save_user_file, user
+from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
@@ -970,11 +970,18 @@ class Overridable(Base[_T_OverridableSpec]):
         assert owner is not None
 
         save_dict = {}
+        save_dict_by_owner: dict[UserId, dict[str, object]] = {}
         for page in instances.instances():
-            if page.owner() == owner:
+            if (page_owner := page.owner()) == owner:
                 save_dict[page.name()] = page.serialize()
+            elif LoggedInUser(owner).may("general.edit_foreign_%s" % cls.type_name()):
+                save_dict_by_owner.setdefault(page_owner, {}).setdefault(
+                    page.name(), page.serialize()
+                )
 
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
+        for page_owner, save_dict_of_owner in save_dict_by_owner.items():
+            save_user_file("user_%ss" % cls.type_name(), save_dict_of_owner, page_owner)
 
     def clone(self) -> Self:
         page_dict = self._.copy()

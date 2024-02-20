@@ -93,7 +93,7 @@ def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
 
 
 def format_labels_for_csv_export(labels: Labels) -> str:
-    return ", ".join(f"{k}: {v}" for k, v in labels.items())
+    return ", ".join(f"{k}:{v}" for k, v in labels.items())
 
 
 def get_tag_groups(row: Row, what: str) -> Mapping[TagGroupID, TagID]:

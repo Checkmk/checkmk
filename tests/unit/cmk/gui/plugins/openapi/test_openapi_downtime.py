@@ -903,3 +903,110 @@ def test_with_defaulted_timezone() -> None:
     assert _with_defaulted_timezone(
         datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min), _get_local_timezone
     ) == datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.min)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_service_description_for_service_downtimes(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "literally nothing",
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+        ]
+    )
+    with mock_livestatus:
+        resp = clients.Downtime.get_all()
+        assert len(resp.json["value"]) == 2
+
+        for val in resp.json["value"]:
+            if val["extensions"]["is_service"] == "yes":
+                assert val["extensions"]["service_description"] == "CPU load"
+            else:
+                assert "service_description" not in val["extensions"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.parametrize("service_downtime", [True, False])
+def test_openapi_service_description_for_single_downtime(
+    clients: ClientRegistry,
+    service_downtime: bool,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a service downtime",
+            },
+            {
+                "id": 124,
+                "host_name": "heute",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a host downtime",
+            },
+        ],
+    )
+
+    service_id = 123 if service_downtime else 124
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+            f"Filter: id = {service_id}",
+        ],
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        resp = clients.Downtime.get(downtime_id=service_id, site_id="NO_SITE")
+
+        if service_downtime:
+            assert resp.json["extensions"]["is_service"] == "yes"
+            assert resp.json["extensions"]["service_description"] == "CPU load"
+        else:
+            assert resp.json["extensions"]["is_service"] == "no"
+            assert "service_description" not in resp.json["extensions"]

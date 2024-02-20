@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from marshmallow_oneofschema import OneOfSchema
+
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
@@ -13,7 +15,7 @@ from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
 from cmk import fields
 
 
-class DowntimeAttributes(BaseSchema):
+class BaseDowntimeSchema(BaseSchema):
     site_id = gui_fields.SiteField(
         description="The site id of the downtime.",
         example="heute",
@@ -29,11 +31,6 @@ class DowntimeAttributes(BaseSchema):
         required=True,
         description="The author of the downtime.",
         example="Mr Bojangles",
-    )
-    is_service = fields.String(
-        required=True,
-        description="yes, if this entry is for a service, no if it is for a host.",
-        example="yes",
     )
     start_time = gui_fields.Timestamp(
         required=True,
@@ -55,6 +52,39 @@ class DowntimeAttributes(BaseSchema):
         description="A comment text.",
         example="Down for update",
     )
+
+
+class HostDowntimeAttributes(BaseDowntimeSchema):
+    is_service = fields.Constant(
+        "no", description="Host downtime entry", example="no", required=True
+    )
+
+
+class ServiceDowntimeAttributes(BaseDowntimeSchema):
+    is_service = fields.Constant(
+        "yes", description="Service downtime entry", example="yes", required=False
+    )
+    service_description = fields.String(
+        required=True,
+        description="The service description if the downtime corresponds to a service, otherwise this field is not present.",
+        example="CPU Load",
+    )
+
+
+class DowntimeAttributes(OneOfSchema):
+    type_field = "is_service"
+    type_schemas = {
+        "yes": ServiceDowntimeAttributes,
+        "no": HostDowntimeAttributes,
+    }
+    type_field_remove = False
+
+    def get_obj_type(self, obj):
+        is_service = obj.get("is_service")
+        if is_service in self.type_schemas:
+            return is_service
+
+        raise Exception("Unknown object type: %s" % repr(obj))
 
 
 class DowntimeObject(DomainObject):

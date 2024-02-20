@@ -1,0 +1,10 @@
+Title: downtimes: Added service_description field to services downtimes
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1708440732
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+When querying downtimes through the "show all downtimes" endpoint, the service_description field for service downtimes was not included. This werk introduces this field, which is not present in the host downtimes.

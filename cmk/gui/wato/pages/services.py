@@ -769,15 +769,9 @@ class DiscoveryPageRenderer:
         plugin_names = HTML("")
         labels_html = HTML("")
         for label_id, label in host_labels.items():
-            label_data = {label_id: label["value"]}
-            ctype = label["plugin_name"]
-
-            manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
-            plugin_names += (
-                HTMLWriter.render_a(content=ctype, href=manpage_url) + HTMLWriter.render_br()
-            )
+            plugin_names += HTMLWriter.render_p(label["plugin_name"])
             labels_html += render_labels(
-                label_data,
+                {label_id: label["value"]},
                 "host",
                 with_links=False,
                 label_sources={label_id: "discovered"},

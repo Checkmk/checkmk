@@ -152,6 +152,11 @@ div#service_container {
 
       &.plugins {
         min-width: 200px;
+
+        p {
+          margin-top: 5px;
+          margin-bottom: 5px;
+        }
       }
 
       a {

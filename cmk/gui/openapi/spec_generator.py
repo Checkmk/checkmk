@@ -9,11 +9,11 @@ import http.client
 from collections.abc import Iterator, Sequence
 from typing import Any, get_args
 
+import openapi_spec_validator
 from apispec import APISpec
 from apispec.utils import dedent
 from marshmallow import Schema
 from marshmallow.schema import SchemaMeta
-from openapi_spec_validator import validate_spec
 from werkzeug.utils import import_string
 
 from livestatus import SiteId
@@ -118,7 +118,7 @@ def _generate_spec(
     # does not modify the spec.
     check_dict = copy.deepcopy(generated_spec)
     # TODO: Need to investigate later what is going on here after cleaning up a bit further
-    validate_spec(check_dict)  # type: ignore[arg-type]
+    openapi_spec_validator.validate(check_dict)  # type: ignore[arg-type]
     return generated_spec
 
 

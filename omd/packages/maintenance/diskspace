@@ -10,8 +10,9 @@ import subprocess
 import sys
 import time
 import traceback
-from pathlib import Path
 from typing import Any, Literal
+
+from omdlib.utils import get_site_distributed_setup, SiteDistributedSetup
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root, var_dir
@@ -304,20 +305,10 @@ def _get_configured_hosts() -> tuple[set, set, bool]:
     """
     local_site_hosts: set = set()
     all_hosts: set = set()
-    is_wato_remote_site = True
 
-    file_vars: dict = {}
-    if (
-        distr_wato_filepath := Path("~/etc/check_mk/conf.d/distributed_wato.mk").expanduser()
-    ).exists():
-        exec(  # nosec B102 # BNS:aee528
-            distr_wato_filepath.read_text(),
-            file_vars,
-            file_vars,
-        )
+    is_wato_remote_site = get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
 
-    if not file_vars.get("is_wato_slave_site", False):
-        is_wato_remote_site = False
+    if not is_wato_remote_site:
         all_hosts.update(
             subprocess.check_output(
                 ["check_mk", "--list-hosts", "--all-sites", "--include-offline"], encoding="utf-8"

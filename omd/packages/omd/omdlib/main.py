@@ -102,7 +102,9 @@ from omdlib.utils import (
     create_skeleton_files,
     delete_user_file,
     get_editor,
+    get_site_distributed_setup,
     replace_tags,
+    SiteDistributedSetup,
 )
 from omdlib.version_info import VersionInfo
 
@@ -2816,7 +2818,11 @@ def main_update(  # pylint: disable=too-many-branches
     # but we can only do this if we have access to the version we upgrade from:
     # (docker installations have only a single version, the one they run and update to.)
     access_to_from_version = os.path.exists(os.path.join(site.real_dir, "version"))
-    if is_major_update and access_to_from_version:
+    if (
+        is_major_update
+        and access_to_from_version
+        and get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE
+    ):
         unack_werks = unacknowledged_incompatible_werks()
         if len(unack_werks):
             note_list_is_clipped = ""

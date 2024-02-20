@@ -536,7 +536,7 @@ def _serialize_single_downtime(downtime):
 
 
 def _downtime_properties(info):
-    return {
+    downtime = {
         "site_id": info["site"],
         "host_name": info["host_name"],
         "author": info["author"],
@@ -546,6 +546,11 @@ def _downtime_properties(info):
         "recurring": "yes" if info["recurring"] else "no",
         "comment": info["comment"],
     }
+
+    if info["is_service"]:
+        downtime["service_description"] = info["service_description"]
+
+    return downtime
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

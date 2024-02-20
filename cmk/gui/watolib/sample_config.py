@@ -383,7 +383,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "wmic_process",
                 "zfsget",
             ],
-            "lock_on_logon_failures": 10,
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,
                 # Add the CA of the site to the trusted CAs. This has the benefit that remote sites

@@ -12,6 +12,7 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    entry_point_prefixes,
     InventoryPlugin,
     SimpleSNMPSection,
     SNMPSection,
@@ -46,15 +47,7 @@ def load_all_plugins() -> list[str]:
             raise exception
 
     discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        PluginGroup.AGENT_BASED,
-        {
-            SimpleSNMPSection: "snmp_section_",
-            SNMPSection: "snmp_section_",
-            AgentSection: "agent_section_",
-            CheckPlugin: "check_plugin_",
-            InventoryPlugin: "inventory_plugin_",
-        },
-        raise_errors=cmk.utils.debug.enabled(),
+        PluginGroup.AGENT_BASED, entry_point_prefixes(), raise_errors=cmk.utils.debug.enabled()
     )
     errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
     for loaded_plugin in discovered_plugins.plugins.items():

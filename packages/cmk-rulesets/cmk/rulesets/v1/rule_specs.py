@@ -79,6 +79,9 @@ class HostAndItemCondition:
 class Host:
     """Specifies rule configurations for hosts
 
+    Instaneces of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -101,6 +104,9 @@ class Host:
 @dataclass(frozen=True)
 class Service:
     """Specifies rule configurations for services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title
@@ -126,6 +132,9 @@ class Service:
 @dataclass(frozen=True)
 class CheckParameters:
     """Specifies rule configurations for checks
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title
@@ -159,6 +168,9 @@ class CheckParameters:
 class EnforcedService:
     """Specifies rule configurations for checks whose creation is enforced
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -186,6 +198,9 @@ class EnforcedService:
 class DiscoveryParameters:
     """Specifies configurations for the discovery of services
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -208,6 +223,9 @@ class DiscoveryParameters:
 @dataclass(frozen=True)
 class ActiveCheck:
     """Specifies rule configurations for active checks
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title
@@ -232,6 +250,9 @@ class ActiveCheck:
 class AgentConfig:
     """Specifies rule configurations for agents
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -254,6 +275,9 @@ class AgentConfig:
 @dataclass(frozen=True)
 class SpecialAgent:
     """Specifies rule configurations for special agents
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title
@@ -278,6 +302,9 @@ class SpecialAgent:
 class AgentAccess:
     """Specifies configurations for the connection to the Checkmk and SNMP agents
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -300,6 +327,9 @@ class AgentAccess:
 @dataclass(frozen=True)
 class NotificationParameters:
     """Specifies rule configurations for notifications
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title
@@ -324,6 +354,9 @@ class NotificationParameters:
 class SNMP:
     """Specifies configurations for SNMP services
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
     Args:
         title: Human readable title
         topic: Categorization of the rule
@@ -346,6 +379,9 @@ class SNMP:
 @dataclass(frozen=True)
 class InventoryParameters:
     """Specifies rule configurations for inventory services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
     Args:
         title: Human readable title

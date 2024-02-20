@@ -162,6 +162,9 @@ class Translation:
     A translation applies to the given check commands and renames or scales given old metrics to new
     ones.
 
+    Istances of this class will only be picked up by Checkmk if their names start with
+    ``translation_``.
+
     Args:
         name: An unique name
         check_commands: A list of check commands to which the translations apply

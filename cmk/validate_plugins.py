@@ -152,13 +152,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     # only for check API v2
     discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_plugins(
         PluginGroup.AGENT_BASED,
-        {
-            agent_based_v2.SimpleSNMPSection: "snmp_section_",
-            agent_based_v2.SNMPSection: "snmp_section_",
-            agent_based_v2.AgentSection: "agent_section_",
-            agent_based_v2.CheckPlugin: "check_plugin_",
-            agent_based_v2.InventoryPlugin: "inventory_plugin_",
-        },
+        agent_based_v2.entry_point_prefixes(),
         raise_errors=False,  # already raised during loading validation if enabled
     )
 

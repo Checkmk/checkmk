@@ -3,10 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from . import graphs, metrics, perfometers, translations
 from ._localize import Title
 
+
+def entry_point_prefixes() -> (
+    Mapping[
+        type[
+            metrics.Metric
+            | translations.Translation
+            | perfometers.Perfometer
+            | perfometers.Bidirectional
+            | perfometers.Stacked
+            | graphs.Graph
+            | graphs.Bidirectional
+        ],
+        str,
+    ]
+):
+    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+
+    These types can be used to create plugins that can be discovered by Checkmk.
+    To be discovered, the plugin must be of one of the types returned by this function and its name
+    must start with the corresponding prefix.
+
+    >>> for plugin_type, prefix in entry_point_prefixes().items():
+    ...     print(f'{plugin_type.__name__}: "{prefix}"')
+    Metric: "metric_"
+    Translation: "translation_"
+    Perfometer: "perfometer_"
+    Bidirectional: "perfometer_"
+    Stacked: "perfometer_"
+    Graph: "graph_"
+    Bidirectional: "graph_"
+    """
+    return {
+        metrics.Metric: "metric_",
+        translations.Translation: "translation_",
+        perfometers.Perfometer: "perfometer_",
+        perfometers.Bidirectional: "perfometer_",
+        perfometers.Stacked: "perfometer_",
+        graphs.Graph: "graph_",
+        graphs.Bidirectional: "graph_",
+    }
+
+
 __all__ = [
+    "entry_point_prefixes",
     "graphs",
     "metrics",
     "perfometers",

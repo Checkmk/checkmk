@@ -203,6 +203,9 @@ class Unit:
 @dataclass(frozen=True, kw_only=True)
 class Metric:
     """
+
+    Instances of this class will only be picked up by Checkmk if their names start with ``metric_``.
+
     A metric can be used within :class:`WarningOf`, :class:`CriticalOf`, :class:`MinimumOf`,
     :class:`MaximumOf`, perfometers or graphs by its name.
 

@@ -10,7 +10,7 @@
 import functools
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, overload, TypeVar
+from typing import Any, Generic, overload, TypeVar
 
 from ..v1 import SNMPTree
 from ..v1._detection import SNMPDetectSpecification  # sorry
@@ -36,6 +36,9 @@ DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
 @dataclass
 class AgentSection(Generic[_Section]):
     """An AgentSection to plug into Checkmk
+
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``agent_section_``.
 
     The section marked by '<<<name>>>' in the raw agent output will be processed
     according to the functions and options given to this function:
@@ -150,6 +153,9 @@ class AgentSection(Generic[_Section]):
 @dataclass
 class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     """A SimpleSNMPSection to plug into Checkmk
+
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``snmp_section_``.
 
     The snmp information will be gathered and parsed according to the functions and
     options given to this function:
@@ -296,6 +302,9 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 class SNMPSection(Generic[_TableTypeT, _Section]):
     """An SNMPSection to plug into Checkmk
 
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``snmp_section_``.
+
     The snmp information will be gathered and parsed according to the functions and
     options given to this function:
 
@@ -433,6 +442,9 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
 class CheckPlugin:
     """A CheckPlugin to plug into Checkmk.
 
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``check_plugin_``.
+
     Args:
 
       name:                     The unique name of the check plugin. It must only contain the
@@ -503,6 +515,9 @@ class CheckPlugin:
 class InventoryPlugin:
     """An InventoryPlugin to plug into Checkmk.
 
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``inventory_plugin_``.
+
     Args:
 
       name:                     The unique name of the plugin. It must only contain the
@@ -535,3 +550,38 @@ class InventoryPlugin:
     inventory_function: InventoryFunction
     inventory_default_parameters: Mapping[str, object] | None = None
     inventory_ruleset_name: str | None = None
+
+
+def entry_point_prefixes() -> (  # type: ignore[misc]  # explicit Any
+    Mapping[
+        type[
+            AgentSection[Any]
+            | CheckPlugin
+            | InventoryPlugin
+            | SimpleSNMPSection[Any, Any]
+            | SNMPSection[Any, Any]
+        ],
+        str,
+    ]
+):
+    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+
+    These types can be used to create plugins that can be discovered by Checkmk.
+    To be discovered, the plugin must be of one of the types returned by this function and its name
+    must start with the corresponding prefix.
+
+    >>> for plugin_type, prefix in entry_point_prefixes().items():
+    ...     print(f'{plugin_type.__name__}: "{prefix}"')
+    SimpleSNMPSection: "snmp_section_"
+    SNMPSection: "snmp_section_"
+    AgentSection: "agent_section_"
+    CheckPlugin: "check_plugin_"
+    InventoryPlugin: "inventory_plugin_"
+    """
+    return {  # type: ignore[misc]  # expression contains Any
+        SimpleSNMPSection: "snmp_section_",
+        SNMPSection: "snmp_section_",
+        AgentSection: "agent_section_",
+        CheckPlugin: "check_plugin_",
+        InventoryPlugin: "inventory_plugin_",
+    }

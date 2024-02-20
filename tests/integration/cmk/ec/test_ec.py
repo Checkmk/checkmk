@@ -1,3 +1,4 @@
+import logging
 import pprint
 import re
 import subprocess
@@ -8,6 +9,8 @@ import pytest
 
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) -> None:
@@ -290,14 +293,22 @@ def test_ec_global_settings(site: Site, setup_ec: Iterator) -> None:
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
     live = site.live
-    time.sleep(1)  # wait to set up connection
 
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    start_time = time.time()
+    while not (
+        queried_event_messages := live.query_column("GET eventconsoleevents\nColumns: event_text")
+    ):
+        logger.info("Waiting for the SNMP trap to be translated...")
+        time.sleep(0.1)
+        if time.time() > start_time + 30:
+            raise TimeoutError("Timeout reached for the SNMP trap to be translated.")
+
     assert len(queried_event_messages) == 1
 
     pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation
-    match = re.compile(pattern).search(queried_event_messages[0])
-    assert match, f"{pattern} not found in the event message"
+    assert re.compile(pattern).search(
+        queried_event_messages[0]
+    ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
 
     # cleanup: disable SNMP trap receiver
     _change_snmp_trap_receiver(site, enable_receiver=False)

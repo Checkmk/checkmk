@@ -1,0 +1,9 @@
+Title: Fix saving changes of foreign custom graphs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1708421444
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+

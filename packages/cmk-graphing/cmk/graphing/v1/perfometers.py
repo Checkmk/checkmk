@@ -83,6 +83,9 @@ class FocusRange:
 @dataclass(frozen=True, kw_only=True)
 class Perfometer:
     """
+    Istances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
+
     Args:
         name: An unique name
         focus_range: A focus range
@@ -113,6 +116,9 @@ class Perfometer:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
+
     Args:
         name: An unique name
         left: A perfometer which grows to the left
@@ -147,6 +153,9 @@ class Bidirectional:
 @dataclass(frozen=True, kw_only=True)
 class Stacked:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``perfometer_``.
+
     Args:
         name: An unique name
         lower: A perfometer at the bottom

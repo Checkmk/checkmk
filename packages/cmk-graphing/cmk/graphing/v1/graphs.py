@@ -47,6 +47,8 @@ class MinimalRange:
 @dataclass(frozen=True, kw_only=True)
 class Graph:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with ``graph_``.
+
     Args:
         name: A unique name
         title: A title
@@ -103,6 +105,8 @@ class Graph:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with ``graph_``.
+
     Args:
         name: A unique name
         title: A title

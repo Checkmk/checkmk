@@ -51,6 +51,9 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
     """
     Defines an active check
 
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``active_check_``.
+
     One ActiveCheckConfig can create multiple Checkmk services.
     The executable will be searched for in the following three folders, in
     order of preference:

@@ -15,12 +15,11 @@ You can find a script in `doc/treasures/migration_helpers/` that
 will do most of the migration for you.
 
 
-`check_levels` renamed to `check_levels_fixed`
-**********************************************
+`check_levels` signature changed
+********************************
 
-This renaming allows us to provide a new `check_levels` function,
-that is particularly designed to work well with the `Levels` element
-from the new `rulesets API v1`.
+The new func:`check_levels` function accepts is designed to work well
+with the `Levels` element from the new `rulesets API v1`.
 
 
 Registration is replaced by a discovery approach

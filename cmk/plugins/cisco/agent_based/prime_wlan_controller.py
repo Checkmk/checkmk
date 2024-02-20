@@ -170,7 +170,7 @@ def check_wlan_controller_access_points(
         levels_upper=params.get("access_points"),
         label="Count",
         metric_name="ap_count",
-        render_function=lambda x: str(int(x)),
+        render_func=lambda x: str(int(x)),
     )
 
 
@@ -204,7 +204,7 @@ def check_wlan_controller_clients(
         levels_upper=params.get("clients"),
         label="Count",
         metric_name="clients_count",
-        render_function=lambda x: str(int(x)),
+        render_func=lambda x: str(int(x)),
     )
 
 
@@ -264,7 +264,7 @@ def check_wlan_controller_last_backup(
         (datetime.now(timezone.utc) - data.last_backup).total_seconds(),
         levels_upper=params["last_backup"],
         metric_name="backup_age",
-        render_function=render.timespan,
+        render_func=render.timespan,
     )
 
 

@@ -160,7 +160,7 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
             age,
             metric_name=perfkey,
             levels_upper=params.get(backup_type_var),
-            render_function=render.timespan,
+            render_func=render.timespan,
             label="Time since last backup",
         )
 
@@ -234,7 +234,7 @@ def check_mssql_backup_per_type(
                     age,
                     metric_name="backup_age",
                     levels_upper=params.get("levels"),
-                    render_function=render.timespan,
+                    render_func=render.timespan,
                     label="Time since last backup",
                 )
                 return

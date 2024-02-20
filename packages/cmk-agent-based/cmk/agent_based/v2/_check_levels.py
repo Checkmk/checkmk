@@ -168,7 +168,7 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
     levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
     levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
     metric_name: str | None = None,
-    render_function: Callable[[float], str] | None = None,
+    render_func: Callable[[float], str] | None = None,
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
@@ -196,7 +196,7 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
         ...     levels_upper=("fixed", (12., 42.)),
         ...     metric_name="temperature",
         ...     label="Fridge",
-        ...     render_function=lambda v: "%.1f°" % v,
+        ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
         Fridge: 23.0° (warn/crit at 12.0°/42.0°)
@@ -204,7 +204,7 @@ def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
         Metric('temperature', 23.0, levels=(12.0, 42.0))
 
     """
-    render_func = render_function if render_function else _default_rendering
+    render_func = render_func if render_func else _default_rendering
     value_string = render_func(value)
     info_text = f"{label}: {value_string}" if label else value_string
 

@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    Metric,
     render,
     Result,
     Service,
@@ -21,6 +25,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.netapp_api import (
     check_netapp_luns,
     check_netapp_qtree_quota,
+    check_netapp_vs_traffic,
     discover_netapp_qtree_quota,
     get_single_check,
     get_summary_check,
@@ -29,9 +34,8 @@ from cmk.plugins.lib.netapp_api import (
     SectionMultipleInstances,
 )
 
-LAST_TIME_EPOCH = (
-    datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
-).total_seconds()
+LAST_TIME_EPOCH = 0
+NOW_SIMULATED_SECONDS = 3600
 
 
 @pytest.mark.parametrize(
@@ -117,11 +121,6 @@ def test_check_netapp_luns(
     read_only: bool,
     params: Mapping[str, Any],
 ) -> None:
-    NOW_SIMULATED_SECONDS = (
-        datetime.strptime("1988-06-08 17:00:00.000000", "%Y-%m-%d %H:%M:%S.%f")
-        - datetime(1970, 1, 1)
-    ).total_seconds()
-
     result = list(
         check_netapp_luns(
             item,
@@ -330,3 +329,54 @@ def test_check_netapp_qtree_quota_unknown(qtree: Qtree, expected_result: CheckRe
     result = list(check_netapp_qtree_quota("item_name", qtree, {}, {}))
 
     assert result == expected_result
+
+
+def test_check_netapp_vs_traffic():
+    protocol_map = {
+        "iscsi_lif": (
+            "iSCSI",
+            [
+                (
+                    "average_read_latency",
+                    "iscsi_read_latency",
+                    "avg. Read latency",
+                    0.001,
+                    lambda x: "%.2f ms" % (x * 1000),
+                ),
+                ("read_data", "iscsi_read_data", "read data", 1, render.bytes),
+            ],
+        )
+    }
+
+    latency_calc_ref = {
+        "iscsi": {
+            "average_read_latency": "iscsi_read_ops",
+        },
+    }
+
+    item_counters = {
+        "iscsi_read_ops": 100000,
+        "read_data": 100000,
+        "average_read_latency": 10000,
+    }
+
+    value_store = {
+        #                 last time, last value
+        "iscsi_lif.read_ops": (LAST_TIME_EPOCH, 2000),
+        "iscsi_lif.read_data": (LAST_TIME_EPOCH, 2000),
+        "iscsi_lif.average_read_latency": (LAST_TIME_EPOCH, 10),
+    }
+
+    with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
+        result = list(
+            check_netapp_vs_traffic(
+                item_counters, "iscsi_lif", protocol_map, latency_calc_ref, time.time(), value_store
+            )
+        )
+
+        assert result == [
+            Result(state=State.OK, summary="iSCSI avg. Read latency: 0.00 ms"),
+            Metric("iscsi_read_latency", 0.0),
+            Result(state=State.OK, summary="iSCSI read data: 27 B"),
+            Metric("iscsi_read_data", 27.22222222222222),
+        ]

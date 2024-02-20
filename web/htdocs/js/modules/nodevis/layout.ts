@@ -1087,42 +1087,34 @@ class LayoutApplier {
         const elements: ContextMenuElement[] = [];
         const styles = this.layout_style_factory.get_styles();
 
-        elements.push({
-            text: texts.get("show_force_configuration"),
-            on: () => this._layout_manager.show_force_config(),
-            href: "",
-            img: "themes/facelift/images/icon_aggr.svg",
-        });
-
+        const nested: ContextMenuElement = {
+            text: node
+                ? texts.get("convert_to")
+                : texts.get("convert_all_nodes_to"),
+            children: [],
+        };
         for (const [_key, style] of Object.entries(styles)) {
             if (node) {
-                elements.push({
-                    text:
-                        texts.get("convert_to") +
-                        " " +
-                        style.prototype.description(),
+                nested.children!.push({
+                    text: style.prototype.description(),
                     on: () => this._convert_node(node, style),
                     href: "",
-                    img: "themes/facelift/images/icon_aggr.svg",
                 });
             } else {
-                elements.push({
-                    text:
-                        texts.get("convert_all_nodes_to") +
-                        " " +
-                        style.prototype.description(),
+                nested.children!.push({
+                    text: style.prototype.description(),
                     on: () => this._convert_all(style),
                     href: "",
-                    img: "themes/facelift/images/icon_aggr.svg",
                 });
             }
         }
+        elements.push(nested);
+
         if (!node) {
             elements.push({
                 text: texts.get("remove_all_styles"),
                 on: () => this._convert_all(null),
                 href: "",
-                img: "themes/facelift/images/icon_aggr.svg",
             });
         }
 
@@ -1134,6 +1126,13 @@ class LayoutApplier {
                 img: "themes/facelift/images/icon_aggr.svg",
             });
         }
+
+        elements.push({
+            text: texts.get("show_force_configuration"),
+            on: () => this._layout_manager.show_force_config(),
+            href: "",
+            img: "",
+        });
 
         return elements;
     }

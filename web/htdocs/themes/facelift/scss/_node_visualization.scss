@@ -77,7 +77,8 @@ div#viewport_information {
 }
 
 div.topology_layout_designer,
-a#menu_shortcut_edit_layout {
+a#menu_shortcut_edit_layout,
+div.topology_compare_history {
   img {
     content: url("images/icon_toggle_off.svg") !important;
 
@@ -604,7 +605,24 @@ div.node_vis {
   }
 
   div#popup_menu {
-    background-color: $bg-color;
+    min-width: 250px;
+
+    li.nested {
+      a {
+        display: inline;
+      }
+
+      span.triangle {
+        display: inline;
+        position: absolute;
+        right: 0px;
+        margin-top: -2px;
+      }
+    }
+
+    ul {
+      background-color: $bg-color;
+    }
     label {
       color: $font-color;
     }
@@ -615,8 +633,16 @@ div.node_vis {
     cursor: pointer;
   }
 
-  li.popup_link div:hover {
-    text-decoration: underline;
+  li.popup_link {
+    span {
+      text-decoration: unset !important;
+    }
+  }
+
+  li.popup_link:not(.nested) {
+    div:hover {
+      text-decoration: underline;
+    }
   }
 
   /* Style indicators */

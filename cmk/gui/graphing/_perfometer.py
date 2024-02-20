@@ -95,11 +95,6 @@ def _parse_perfometer(
     # Convert legacy tuple based perfometer
     perfometer_type, perfometer_args = perfometer[0], perfometer[1]
     if perfometer_type == "dual":
-        if len(perfometer_args) != 2:
-            raise MKGeneralException(
-                _("Perf-O-Meter %r must contain exactly two definitions, not %d")
-                % (perfometer, len(perfometer_args))
-            )
         return _DualPerfometerSpec(
             type="dual",
             perfometers=[_parse_sub_perfometer(p) for p in perfometer_args],

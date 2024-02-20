@@ -29,6 +29,7 @@ for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
 )
 
 call :check_choco
+call :check_perl
 call :check_make
 call :set_wnx_version
 call :check_repo_crlf
@@ -81,6 +82,16 @@ powershell Write-Host "Looking for choco..." -Foreground White
 @choco -v > nul
 @if "%errorlevel%" NEQ "0" powershell Write-Host "choco must be installed!" -Foreground Red & call :halt 55
 powershell Write-Host "[+] choco" -Foreground Green
+goto :eof
+
+
+:: CHECK FOR Perl
+:: if perl is absent then build is not possible: Rust/OpenSSL needs it
+:check_perl
+powershell Write-Host "Looking for perl..." -Foreground White
+@perl -v > nul
+@if "%errorlevel%" NEQ "0" powershell Write-Host "perl must be installed!" -Foreground Red & call :halt 56
+powershell Write-Host "[+] perl" -Foreground Green
 goto :eof
 
 
@@ -234,5 +245,5 @@ rem Creates a syntax error, stops immediately
 goto :eof
 
 :__SetErrorLevel
-exit /b %time:~-2%
+exit /b %1
 goto :eof

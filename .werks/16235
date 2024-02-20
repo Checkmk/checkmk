@@ -1,0 +1,8 @@
+Title: oracle_sql: don't crash on wrong keyword
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708456674
+Edition: cre
+Level: 1
+Version: 2.2.0p23

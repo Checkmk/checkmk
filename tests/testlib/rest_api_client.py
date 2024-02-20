@@ -1902,7 +1902,7 @@ class EventConsoleClient(RestApiClient):
     def delete(
         self,
         filter_type: Literal["by_id", "query", "params"],
-        site_id: str,
+        site_id: str | None = None,
         query: str | None = None,
         event_id: int | None = None,
         host: str | None = None,
@@ -1911,7 +1911,10 @@ class EventConsoleClient(RestApiClient):
         phase: Literal["open", "ack"] | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body: dict[str, Any] = {"site_id": site_id, "filter_type": filter_type}
+        body: dict[str, Any] = {"filter_type": filter_type}
+
+        if site_id is not None:
+            body.update({"site_id": site_id})
 
         if filter_type == "by_id":
             body.update({"event_id": event_id})

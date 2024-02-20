@@ -221,7 +221,7 @@ def change_state(
 def archive_events(
     connection: MultiSiteConnection,
     query: Query,
-    site_id: SiteId,
+    site_id: SiteId | None,
 ) -> None:
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():

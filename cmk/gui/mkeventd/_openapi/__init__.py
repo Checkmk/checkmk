@@ -23,6 +23,8 @@ The event console endpoints allow for
 from collections.abc import Mapping
 from typing import Any
 
+from livestatus import SiteId
+
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
 from cmk.gui import fields as gui_fields
@@ -363,6 +365,8 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
     """Archive events"""
     user.need_permission("mkeventd.delete")
     body = params["body"]
+
+    site_id: SiteId | None = None
     match body["filter_type"]:
         case "params":
             filters = body["filters"]
@@ -375,11 +379,12 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
             )
         case "by_id":
             del_query = filter_event_table(event_id=body["event_id"])
+            site_id = SiteId(body["site_id"])
 
         case "query":
             del_query = filter_event_table(query=body["query"])
 
-    archive_events(sites.live(), del_query, body["site_id"])
+    archive_events(sites.live(), del_query, site_id)
     return Response(status=204)
 
 

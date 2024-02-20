@@ -13,11 +13,11 @@ from openapi_spec_validator import validate_spec
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
-def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=401)
 
 
-def test_json_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+def test_json_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=401)
 
 

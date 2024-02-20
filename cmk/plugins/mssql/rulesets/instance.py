@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import ServiceState, Text
-from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, ServiceState
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
@@ -15,7 +13,7 @@ def _parameter_form_mssql_instance() -> Dictionary:
         elements={
             "map_connection_state": DictElement(
                 parameter_form=ServiceState(
-                    title=Localizable("Connection status"), prefill=DefaultValue(ServiceState.CRIT)
+                    title=Title("Connection status"), prefill=DefaultValue(ServiceState.CRIT)
                 )
             ),
         }
@@ -24,8 +22,8 @@ def _parameter_form_mssql_instance() -> Dictionary:
 
 rule_spec_mssql_instance = CheckParameters(
     name="mssql_instance",
-    title=Localizable("MSSQL Instance"),
+    title=Title("MSSQL Instance"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_mssql_instance,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Instance identifier"))),
+    condition=HostAndItemCondition(item_title=Title("Instance identifier")),
 )

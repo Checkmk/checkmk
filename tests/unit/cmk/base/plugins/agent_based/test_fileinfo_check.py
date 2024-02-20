@@ -6,11 +6,10 @@
 import datetime
 from collections.abc import Mapping
 from copy import deepcopy
+from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
-
-from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -550,7 +549,7 @@ def test_fileinfo_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo(params, section)) == expected_result
 
 
@@ -838,7 +837,7 @@ def test_fileinfo_group_discovery(
     expected_result: DiscoveryResult,
 ) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
-    with set_timezone("UTC"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         assert list(fileinfo_utils.discovery_fileinfo_groups(params, section)) == expected_result
 
 
@@ -968,7 +967,7 @@ def test_fileinfo_group_discovery(
         ),
     ],
 )
-@time_machine.travel(datetime.datetime.fromisoformat("2021-07-12 12:00Z"))
+@time_machine.travel(datetime.datetime(2021, 7, 12, 12, tzinfo=ZoneInfo("UTC")))
 def test_fileinfo_groups_check(
     info: StringTable,
     item: str,

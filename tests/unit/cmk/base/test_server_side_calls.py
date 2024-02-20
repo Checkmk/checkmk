@@ -145,7 +145,7 @@ class ConfigCacheMock:
         return self._tags
 
 
-class TestSpecialAgentLegacyConfiguration(NamedTuple):
+class SpecialAgentLegacyConfiguration(NamedTuple):
     args: Sequence[str]
     stdin: str | None
 
@@ -1114,7 +1114,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             "$HOST_NAME$": "host_name",
             "$HOST_TAG_tag1$": "value1",
             "$HOST_TAG_tag2$": "value2",
-            "$HOST_attr1$": "value1",
+            "$HOST_ATTR_attr1$": "value1",
             "HOSTALIAS": "test alias",
         },
     )
@@ -1150,7 +1150,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {},
-            {"test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(["arg0"], None)},
+            {"test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(["arg0"], None)},
             {},
             HOST_CONFIG,
             {},
@@ -1160,7 +1160,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["arg0", "arg;1"], None
                 )
             },
@@ -1173,7 +1173,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["list0", "list1"], None
                 )
             },
@@ -1186,7 +1186,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["arg0", "arg;1"], "stdin_blob"
                 )
             },
@@ -1199,7 +1199,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["list0", "list1"], "stdin_blob"
                 )
             },

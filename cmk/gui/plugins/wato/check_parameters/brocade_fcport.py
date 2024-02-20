@@ -199,10 +199,8 @@ def _parameter_valuespec_brocade_fcport():
                 Tuple(
                     title=_("CRC errors rate"),
                     elements=[
-                        Percentage(title=_("Warning at"), unit=_("percent"), display_format="%.2f"),
-                        Percentage(
-                            title=_("Critical at"), unit=_("percent"), display_format="%.2f"
-                        ),
+                        Percentage(title=_("Warning at"), unit=_("percent")),
+                        Percentage(title=_("Critical at"), unit=_("percent")),
                     ],
                 ),
             ),

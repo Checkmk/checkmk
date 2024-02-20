@@ -77,7 +77,7 @@ def test_site_config_for_livestatus_tcp_tls(site_spec: SiteConfiguration, result
     assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
-def test_sorted_sites(mocker: MockerFixture) -> None:
+def test_sorted_sites(mocker: MockerFixture, request_context: None) -> None:
     mocker.patch.object(
         user,
         "authorized_sites",

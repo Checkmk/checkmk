@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
 
 import cmk.gui.sites as sites
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -29,15 +29,7 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
 from cmk.gui.utils.speaklater import LazyString
 
 from cmk.discover_plugins import DiscoveredPlugins
-from cmk.graphing.v1 import (
-    DecimalUnit,
-    graphs,
-    metrics,
-    perfometers,
-    ScientificUnit,
-    translations,
-    Unit,
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, translations
 
 from ._color import get_gray_tone, get_palette_color_by_index, parse_color_into_hexrgb
 from ._expression import (
@@ -182,8 +174,8 @@ def _parse_raw_graph_range(
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
 
 
-def _parse_or_add_unit(unit: Unit | DecimalUnit | ScientificUnit) -> str:
-    unit_name = unit.name if isinstance(unit, Unit) else unit.symbol
+def _parse_or_add_unit(unit: metrics.Unit | metrics.DecimalUnit | metrics.ScientificUnit) -> str:
+    unit_name = unit.name if isinstance(unit, metrics.Unit) else unit.symbol
     if unit_name not in set(unit_info.keys()):
         unit_info[unit_name] = parse_unit(unit)
     return unit_name
@@ -722,7 +714,7 @@ def _compute_lookup_metric_name(metric_name: str) -> str:
 
 
 def parse_perf_data(
-    perf_data_string: str, check_command: str | None = None
+    perf_data_string: str, check_command: str | None = None, *, config: Config
 ) -> tuple[Perfdata, str]:
     """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
@@ -767,7 +759,7 @@ def parse_perf_data(
             )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if active_config.debug:
+            if config.debug:
                 raise exc
 
     return perf_data, check_command
@@ -1043,9 +1035,13 @@ def available_metrics_translated(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    perf_data, check_command = parse_perf_data(
+        perf_data_string, check_command, config=active_config
+    )
     rrd_perf_data_string = _perf_data_string_from_metric_names(rrd_metrics)
-    rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
+    rrd_perf_data, check_command = parse_perf_data(
+        rrd_perf_data_string, check_command, config=active_config
+    )
     if not rrd_perf_data + perf_data:
         return {}
 
@@ -1144,16 +1140,19 @@ def _compute_predictive_metrics(
     translated_metrics: Mapping[str, TranslatedMetric], metrics_: Sequence[MetricDefinition]
 ) -> Iterator[MetricDefinition]:
     for metric_defintion in metrics_:
+        line_type: Literal["line", "-line"] = (
+            "-line" if metric_defintion.line_type.startswith("-") else "line"
+        )
         for metric in metric_defintion.expression.metrics():
             if (predict_metric_name := f"predict_{metric.name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_metric_name),
-                    line_type="line",
+                    line_type=line_type,
                 )
             if (predict_lower_metric_name := f"predict_lower_{metric.name}") in translated_metrics:
                 yield MetricDefinition(
                     expression=Metric(predict_lower_metric_name),
-                    line_type="line",
+                    line_type=line_type,
                 )
 
 

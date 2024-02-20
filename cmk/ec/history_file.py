@@ -151,7 +151,7 @@ def _expire_logfiles(
         except Exception as e:
             if settings.options.debug:
                 raise
-            logger.warning(f"Error expiring log files: {e}")
+            logger.warning("Error expiring log files: %s", e)
 
 
 # Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
@@ -283,7 +283,7 @@ def parse_history_file(
                 if filter_row(parts):
                     entries.append(parts)
             except Exception:
-                logger.exception(f"Invalid line '{line!r}' in history file {path}")
+                logger.exception("Invalid line '%s' in history file %s", line, path)
 
     return entries
 

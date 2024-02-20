@@ -3,9 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO(sk): Code below is utter bs and must be fully rewritten
+# Lack of comments with links to MSDN. THIS IS MUST HAVE FOR WINDOWS.
+# Tripled code for the same thing. This is a bad idea.
+# Lack of typing
+# Absolutely inappropriate list comprehension counting 40+ lines of code
+# Wrong naming oper_status has no "media disconnect" status
+# Bad typing dict[str,tuple[str,str]]  - is not typing at all
+
 from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
@@ -16,6 +24,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, Inventor
 
 Line = Sequence[str]
 Lines = Iterator[Line]
+
+
+# must be in sync with code in windows agent, see IF_STATUS_PSEUDO_COUNTER
+_IF_STATUS_PSEUDO_COUNTER: Final[str] = "2002"
 
 
 def _canonize_name(name: str) -> str:
@@ -73,6 +85,16 @@ def _parse_timestamp_and_instance_names(
     return agent_timestamp, instances
 
 
+def _get_windows_if_status(counter_index: int) -> str:
+    return interfaces.get_if_state_name(str(counter_index))
+
+
+def _get_oper_status(counters: Mapping[str, int]) -> int:
+    """returns oper status, see MSDN meaning, from pseudo counter if presented
+    otherwise 1 (up)"""
+    return counters.get(_IF_STATUS_PSEUDO_COUNTER) or 1
+
+
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
@@ -81,6 +103,7 @@ def _parse_counters(
     for idx, raw_nic_name in enumerate(raw_nic_names):
         name = _canonize_name(raw_nic_name)
         counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
+        oper_status = _get_oper_status(counters)
         ifaces.setdefault(
             name,
             interfaces.InterfaceWithCounters(
@@ -90,9 +113,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status="1",
+                    oper_status=str(oper_status),
                     out_qlen=counters["34"],
-                    oper_status_name="Connected",
+                    oper_status_name=_get_windows_if_status(oper_status),
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -149,11 +172,17 @@ def _filter_out_deprecated_plugin_lines(
     return native_agent_data, found_windows_if, found_mk_dhcp_enabled
 
 
-def parse_winperf_if(string_table: StringTable) -> SectionCounters:
-    agent_timestamp = None
-    raw_nic_names: Sequence[str] = []
-    agent_section: dict[str, Line] = {}
+def _is_first_line(line: Sequence[str]) -> bool:
+    """
+    Return true if the line[0] is a float, meaning timestamp.
 
+    All other variants are assumed as malformed input.
+    """
+    # counter can.t contain dot in the name
+    return "." in line[0]
+
+
+def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     # There used to be only a single winperf_if-section which contained both the native agent data
     # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
     # we still handle this case by filtering out the plugin data and advising the user to update
@@ -164,11 +193,12 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
+    agent_timestamp = None
+    raw_nic_names: Sequence[str] = []
+    agent_section: dict[str, Line] = {}
+
     for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
-        if len(line) in (2, 3) and not line[-1].endswith("count"):
-            # Do not consider lines containing counters:
-            # ['-122', '38840302775', 'bulk_count']
-            # ['10', '10000000000', 'large_rawcount']
+        if _is_first_line(line):
             agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
                 line,
                 lines,
@@ -240,6 +270,7 @@ class AdditionalIfData(NamedTuple):
 
 SectionExtended = Collection[AdditionalIfData]
 
+# NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
 # 2 down

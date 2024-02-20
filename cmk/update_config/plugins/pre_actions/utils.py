@@ -7,6 +7,7 @@ import enum
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from termios import tcflush, TCIFLUSH
 from typing import Final
 
 from cmk.utils import paths
@@ -23,12 +24,15 @@ from cmk.mkp_tool import (
     make_post_package_change_actions,
     Manifest,
     PackageID,
-    PackageOperationCallbacks,
-    PackagePart,
     PackageStore,
     PathConfig,
     reload_apache,
 )
+
+
+def prompt(message: str) -> str:
+    tcflush(sys.stdin, TCIFLUSH)
+    return input(message)
 
 
 def get_path_config() -> PathConfig:
@@ -57,14 +61,7 @@ def get_path_config() -> PathConfig:
     )
 
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
-    ),
-}
-
+_CALLBACKS: Final = ec.mkp_callbacks()
 
 PACKAGE_STORE = PackageStore(
     enabled_dir=paths.local_enabled_packages_dir,
@@ -124,7 +121,7 @@ def disable_incomp_mkp(
 def _request_user_input_on_incompatible_file(
     path: Path, module_name: str, package_id: PackageID, error: BaseException
 ) -> str:
-    return input(
+    return prompt(
         f"Incompatible file '{path}' of extension package '{package_id.name} {package_id.version}'\n"
         f"Error: {error}\n\n"
         "You can abort the update process (A) or disable the "
@@ -146,7 +143,7 @@ def continue_on_incomp_local_file(
 ) -> bool:
     return (
         conflict_mode in NEED_USER_INPUT_MODES
-        and input(
+        and prompt(
             f"Incompatible local file '{path}'.\n"
             f"Error: {error}\n\n"
             "You can abort the update process (A) and try to fix "

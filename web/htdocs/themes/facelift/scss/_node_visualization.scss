@@ -535,7 +535,7 @@ div.node_vis {
   .link_element {
     line,
     path {
-      stroke: $ux-theme-6;
+      stroke: $darkgrey;
     }
 
     stroke-dasharray: 2 3;
@@ -677,10 +677,6 @@ div.node_vis {
     animation-direction: reverse;
     stroke-dasharray: 20 1;
     stroke-dashoffset: 0;
-  }
-
-  svg text {
-    fill: $font-color;
   }
 
   div#main_window_layered {

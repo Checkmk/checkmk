@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import set_timezone
+import datetime
+from zoneinfo import ZoneInfo
+
+import time_machine
 
 from cmk.utils.timeperiod import is_timeperiod_active, TimeperiodSpecs
 
@@ -43,7 +46,7 @@ def test_is_timeperiod_active() -> None:
     }
 
     test_timestamp = 1704276660.0
-    with set_timezone("CET"):
+    with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("CET"))):
         assert is_timeperiod_active(test_timestamp, "time_period_1", timeperiods)
         assert not is_timeperiod_active(test_timestamp, "time_period_2", timeperiods)
         assert not is_timeperiod_active(test_timestamp, "time_period_3", timeperiods)

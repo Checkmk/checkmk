@@ -10,7 +10,6 @@ DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
-ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
@@ -43,7 +42,7 @@ CI ?= false
         format format-c test-format-c format-python format-shell \
         format-js help install mrproper mrclean \
         packages setup setversion version openapi \
-        protobuf-files
+        protobuf-files frontend-vue
 
 help:
 	@echo "setup                          --> Prepare system for development and building"
@@ -94,7 +93,11 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+#
+# We added frontend-vue as a dependency here, so both $(JAVASCRIPT_MINI) and
+# frontend-vue can be build independently of each other. Otherwise f12ing
+# `./web` would also build frontend-vue
+dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES) frontend-vue
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -129,6 +132,10 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	    $(TAROPTS) \
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
+
+frontend-vue:
+	cd packages/frontend_vue && ./run
+	cp packages/frontend_vue/dist/assets/vue_min.js* web/htdocs/js/
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -174,10 +181,6 @@ openapi-clean:
 openapi: $(OPENAPI_SPEC)
 
 
-# TODO: The --unsafe-perm was added because the CI executes this as root during
-# tests and building versions. Once we have the then build system this should not
-# be necessary anymore.
-#
 # NOTE 1: What we actually want are grouped targets, but this would require GNU
 # make >= 4.3, so we use the common workaround of an intermediate target.
 #
@@ -188,29 +191,11 @@ openapi: $(OPENAPI_SPEC)
 # NOTE 3: NPM sometimes terminates with a very unhelpful "npm ERR! cb() never
 # called!" message, where the underlying reason seems to be quite obscure, see
 # https://npm.community/t/crash-npm-err-cb-never-called/858.
-#
-# NOTE 4: The sed call is to get the same "resolved" entries independent of the
-# used registry. The resolved entry is only a hint for npm.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
-	@echo "npm version: $$(npm --version)"
-	npm --version | grep "^$(NPM_VERSION)\." >/dev/null 2>&1
-	@echo "node version: $$(node --version)"
-	node --version | grep "^v$(NODEJS_VERSION)\." >/dev/null 2>&1
-	@echo "open file descriptor limit (soft): $$(ulimit -Sn)"
-	@echo "open file descriptor limit (hard): $$(ulimit -Hn)"
-	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
-	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
-            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
-	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
-	else \
-	    REGISTRY= ; \
-	    echo "Installing from public registry" ; \
-        fi ; \
-	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
-	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
+	./scripts/npm-ci
 	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we

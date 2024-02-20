@@ -49,7 +49,7 @@ class TestCascadingDropDown:
         # valuespec. this was not the case in the previous implementation.
         assert get_cascading_dropdown().mask((20, 2222)) == (20, "******")
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(c_sel="0", c_0="smth"):
             assert get_cascading_dropdown().from_html_vars("c") == ("long", "smth")
         with request_var(c_sel="1"):

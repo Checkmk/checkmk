@@ -20,20 +20,18 @@ from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
 
-from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.rulesets.v1.form_specs.basic import (
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    Dictionary,
     Float,
+    FormSpec,
     Integer,
+    List,
     Percentage,
     ServiceState,
     SingleChoice,
-    Text,
-)
-from cmk.rulesets.v1.form_specs.composed import (
-    CascadingSingleChoice,
-    Dictionary,
-    List,
+    String,
     TupleDoNotUseWillbeRemoved,
 )
 
@@ -123,7 +121,7 @@ class VueFormSpecVisitor:
             return self._visit_dropdown_choice
         if isinstance(form_spec, List):
             return self._visit_list
-        if isinstance(form_spec, Text):
+        if isinstance(form_spec, String):
             return self._visit_text
         raise MKGeneralException(f"No visitor for {form_spec}")
 
@@ -330,7 +328,7 @@ class VueFormSpecVisitor:
             raw_value,
         )
 
-    def _visit_text(self, form_spec: Text, value: str) -> VueVisitorMethodResult:
+    def _visit_text(self, form_spec: String, value: str) -> VueVisitorMethodResult:
         return (
             VueFormSpecComponent(
                 form_spec,
@@ -392,7 +390,7 @@ VueFormSpecTypes = (
     Integer
     | Float
     | Percentage
-    | Text
+    | String
     | TupleDoNotUseWillbeRemoved
     | SingleChoice
     | CascadingSingleChoice
@@ -410,11 +408,11 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
     # All other types require a conversion to the basic types
     if isinstance(custom_form_spec, ServiceState):
         # TODO handle ServiceState
-        Text(title=Localizable("UNKNOWN custom_form_spec ServiceState"))
+        String(title=Title("UNKNOWN custom_form_spec ServiceState"))
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
-    return Text(title=Localizable("UNKNOWN custom_form_spec {custom_form_spec}"))
+    return String(title=Title("UNKNOWN custom_form_spec {custom_form_spec}"))
 
 
 def compute_default_value(form_spec: FormSpec) -> Any:
@@ -435,7 +433,7 @@ def compute_default_value(form_spec: FormSpec) -> Any:
     if isinstance(form_spec, Dictionary):
         # TODO: Enable active keys
         return {}
-    if isinstance(form_spec, Text):
+    if isinstance(form_spec, String):
         return form_spec.prefill.value
 
     return "##################MISSING DEFAULT VALUE##########################"

@@ -3,62 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, validators
+from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
-def _migrate_alternative_to_dropdown(
-    model: object,
-) -> tuple[str, tuple[int, int] | tuple[None, None]]:
-    if not isinstance(model, tuple):
-        raise TypeError("Invalid type, expected tuple, got {}".format(type(model)))
-
-    if model[0] in ("no_levels", "levels"):
-        return model
-
-    if model == (None, None):
-        return ("no_levels", model)
-
-    return ("levels", model)
-
-
-# TODO: migrate to form_specs.Levels after check_levels function has been implemented
-def fs_mssql_backup_age(title: Localizable) -> form_specs.composed.DictElement:
-    return form_specs.composed.DictElement(
-        parameter_form=form_specs.composed.CascadingSingleChoice(
+def fs_mssql_backup_age(
+    title: Title,
+) -> form_specs.DictElement[form_specs.LevelsConfigModel[float]]:
+    return form_specs.DictElement[form_specs.LevelsConfigModel[float]](
+        parameter_form=form_specs.Levels[float](
             title=title,
-            elements=[
-                form_specs.composed.CascadingSingleChoiceElement(
-                    name="levels",
-                    title=Localizable("Set levels"),
-                    parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
-                        elements=[
-                            form_specs.basic.TimeSpan(title=Localizable("Warning if older than")),
-                            form_specs.basic.TimeSpan(title=Localizable("Critical if older than")),
-                        ],
-                    ),
-                ),
-                form_specs.composed.CascadingSingleChoiceElement(
-                    name="no_levels",
-                    title=Localizable("No levels"),
-                    parameter_form=form_specs.composed.TupleDoNotUseWillbeRemoved(
-                        elements=[
-                            form_specs.basic.FixedValue(value=None, label=Localizable("")),
-                            form_specs.basic.FixedValue(value=None, label=Localizable("")),
-                        ],
-                    ),
-                ),
-            ],
-            prefill=form_specs.DefaultValue("levels"),
-            migrate=_migrate_alternative_to_dropdown,
+            level_direction=form_specs.LevelDirection.UPPER,
+            form_spec_template=form_specs.TimeSpan(
+                displayed_magnitudes=tuple(form_specs.TimeMagnitude)
+            ),
+            predictive=None,
+            migrate=form_specs.migrate_to_upper_float_levels,
+            prefill_fixed_levels=form_specs.InputHint(value=(0.0, 0.0)),
         )
     )
 
 
-def mssql_item_spec_instance_tablespace() -> form_specs.basic.Text:
-    return form_specs.basic.Text(
-        title=Localizable("Instance & tablespace name"),
-        help_text=Localizable(
-            "The MSSQL instance name and the tablespace name separated by a space."
+def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
+    return rule_specs.HostAndItemCondition(
+        item_title=Title("Instance & tablespace name"),
+        item_form=form_specs.String(
+            help_text=Help("The MSSQL instance name and the tablespace name separated by a space."),
+            custom_validate=form_specs.validators.DisallowEmpty(),
         ),
-        custom_validate=validators.DisallowEmpty(),
     )

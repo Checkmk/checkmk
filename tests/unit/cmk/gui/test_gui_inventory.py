@@ -298,7 +298,11 @@ def test__make_filter_choices_from_api_request_paths(
     ],
 )
 def test_load_filtered_and_merged_tree(
-    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: ImmutableTree
+    monkeypatch: MonkeyPatch,
+    hostname: HostName | None,
+    row: Row,
+    expected_tree: ImmutableTree,
+    request_context: None,
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
@@ -320,7 +324,7 @@ def test_get_history_empty() -> None:
     assert len(corrupted_history_files) == 0
 
 
-def test_get_history_archive_but_no_inv_tree() -> None:
+def test_get_history_archive_but_no_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history
@@ -364,7 +368,7 @@ def _create_inventory_history() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_get_history() -> None:
+def test_get_history(request_context: None) -> None:
     hostname = HostName("inv-host")
     expected_results = [
         (1, 0, 0),
@@ -424,6 +428,7 @@ def test_get_history() -> None:
 def test_load_delta_tree(
     search_timestamp: int,
     expected_raw_delta_tree: dict,
+    request_context: None,
 ) -> None:
     hostname = HostName("inv-host")
 
@@ -445,7 +450,7 @@ def test_load_delta_tree_no_such_timestamp() -> None:
 
 
 @pytest.mark.usefixtures("create_inventory_history")
-def test_load_latest_delta_tree() -> None:
+def test_load_latest_delta_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
     search_timestamp = int(Path(cmk.utils.paths.inventory_output_dir, hostname).stat().st_mtime)
 
@@ -462,7 +467,7 @@ def test_load_latest_delta_tree() -> None:
     assert delta_tree_2 is not None
 
 
-def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
+def test_load_latest_delta_tree_no_archive_and_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # current tree
@@ -474,7 +479,7 @@ def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
     assert not cmk.gui.inventory.load_latest_delta_tree(hostname)
 
 
-def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
+def test_load_latest_delta_tree_one_archive_and_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history
@@ -494,7 +499,7 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
     assert delta_tree is not None
 
 
-def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
+def test_load_latest_delta_tree_one_archive_and_no_inv_tree(request_context: None) -> None:
     hostname = HostName("inv-host")
 
     # history

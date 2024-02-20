@@ -28,7 +28,7 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     )
 
 
-def test_automation_user_secret() -> None:
+def test_automation_user_secret(patch_omd_site: None) -> None:
     aus = secrets.AutomationUserSecret(UserId("crypto_secrets_new_user"))
 
     assert not aus.exists()

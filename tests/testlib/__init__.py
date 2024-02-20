@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import datetime
 import fcntl
 import importlib.machinery
 import importlib.util
@@ -19,7 +18,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Final
 
-import freezegun
 import pytest
 import urllib3
 from psutil import Process
@@ -418,16 +416,6 @@ def set_timezone(timezone: str) -> Iterator[None]:
         _set_tz(old_tz)
 
 
-@contextmanager
-def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
-    """Set the time and timezone for the test"""
-    if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
-
-    with set_timezone(timezone), freezegun.freeze_time(utctime):
-        yield
-
-
 __all__ = [
     "repo_path",
     "add_python_paths",
@@ -435,7 +423,6 @@ __all__ = [
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "on_time",
     "set_timezone",
     "Site",
     "SiteFactory",

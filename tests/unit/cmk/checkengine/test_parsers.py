@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -33,14 +32,6 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 
 StringTable = list[list[str]]
-
-
-@pytest.fixture(autouse=True)
-def enable_debug_fixture():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.enable()
-    yield
-    cmk.utils.debug.debug_mode = debug_mode
 
 
 class TestAgentParser:

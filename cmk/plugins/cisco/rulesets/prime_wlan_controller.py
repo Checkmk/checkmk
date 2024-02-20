@@ -4,25 +4,37 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import Integer, Text, TimeSpan, TimeUnit
-from cmk.rulesets.v1.form_specs.composed import DictElement, Dictionary, TupleDoNotUseWillbeRemoved
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    InputHint,
+    Integer,
+    LevelDirection,
+    Levels,
+    LevelsConfigModel,
+    migrate_to_upper_float_levels,
+    migrate_to_upper_integer_levels,
+    TimeMagnitude,
+    TimeSpan,
+)
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 _DAY = 24 * 3600
 
 
-def _parameter_form_wlan_controllers_clients():
+def _parameter_form_wlan_controllers_clients() -> Dictionary:
     return Dictionary(
         elements={
-            "clients": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
-                    title=Localizable("Maximum number of clients"),
-                    elements=[
-                        Integer(title=Localizable("Warning at")),
-                        Integer(title=Localizable("Critical at")),
-                    ],
+            "clients": DictElement[LevelsConfigModel[int]](
+                parameter_form=Levels[int](
+                    title=Title("Maximum number of clients"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    predictive=None,
+                    migrate=migrate_to_upper_integer_levels,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             )
         },
@@ -32,22 +44,23 @@ def _parameter_form_wlan_controllers_clients():
 rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
     name="cisco_prime_wlan_controller_clients",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Clients"))),
+    condition=HostAndItemCondition(item_title=Title("Clients")),
     parameter_form=_parameter_form_wlan_controllers_clients,
-    title=Localizable("Cisco Prime WLAN Controller Clients"),
+    title=Title("Cisco Prime WLAN Controller Clients"),
 )
 
 
-def _parameter_form_wlan_controllers_access_points():
+def _parameter_form_wlan_controllers_access_points() -> Dictionary:
     return Dictionary(
         elements={
-            "access_points": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
-                    title=Localizable("Maximum number of access points"),
-                    elements=[
-                        Integer(title=Localizable("Warning at")),
-                        Integer(title=Localizable("Critical at")),
-                    ],
+            "access_points": DictElement[LevelsConfigModel[int]](
+                parameter_form=Levels[int](
+                    title=Title("Maximum number of access points"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    predictive=None,
+                    migrate=migrate_to_upper_integer_levels,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             ),
         },
@@ -57,38 +70,29 @@ def _parameter_form_wlan_controllers_access_points():
 rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
     name="cisco_prime_wlan_controller_access_points",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Access points"))),
+    condition=HostAndItemCondition(item_title=Title("Access points")),
     parameter_form=_parameter_form_wlan_controllers_access_points,
-    title=Localizable("Cisco Prime WLAN Controller Access Points"),
+    title=Title("Cisco Prime WLAN Controller Access Points"),
 )
 
 
-def _parameter_form_wlan_controllers_last_backup():
+def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
     return Dictionary(
         elements={
-            "last_backup": DictElement(
-                parameter_form=TupleDoNotUseWillbeRemoved(
-                    title=Localizable("Time since last backup"),
-                    elements=[
-                        TimeSpan(
-                            title=Localizable("Warning at"),
-                            displayed_units=[
-                                TimeUnit.DAY,
-                                TimeUnit.HOUR,
-                                TimeUnit.MINUTE,
-                            ],
-                            prefill=DefaultValue(7 * _DAY),
-                        ),
-                        TimeSpan(
-                            title=Localizable("Critical at"),
-                            displayed_units=[
-                                TimeUnit.DAY,
-                                TimeUnit.HOUR,
-                                TimeUnit.MINUTE,
-                            ],
-                            prefill=DefaultValue(30 * _DAY),
-                        ),
-                    ],
+            "last_backup": DictElement[LevelsConfigModel[float]](
+                parameter_form=Levels[float](
+                    title=Title("Time since last backup"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                        ],
+                    ),
+                    prefill_fixed_levels=DefaultValue((7 * _DAY, 30 * _DAY)),
+                    predictive=None,
+                    migrate=migrate_to_upper_float_levels,
                 ),
             )
         },
@@ -98,7 +102,7 @@ def _parameter_form_wlan_controllers_last_backup():
 rule_spec_cisco_prime_wlan_controller_last_backup = CheckParameters(
     name="cisco_prime_wlan_controller_last_backup",
     topic=Topic.OPERATING_SYSTEM,
-    condition=HostAndItemCondition(item_form=Text(title=Localizable("Last backup"))),
+    condition=HostAndItemCondition(item_title=Title("Last backup")),
     parameter_form=_parameter_form_wlan_controllers_last_backup,
-    title=Localizable("Cisco Prime WLAN Controller Last Backup"),
+    title=Title("Cisco Prime WLAN Controller Last Backup"),
 )

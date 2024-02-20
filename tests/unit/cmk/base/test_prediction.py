@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import math
 import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from pprint import pprint
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.utils.prediction import _grouping, _prediction, DataStat, PredictionStore
 
@@ -32,7 +33,7 @@ def test_group_by(
     timestamp: Timestamp,
     result: tuple[_grouping.Timegroup, Timestamp],
 ) -> None:
-    with on_time(timestamp, "CET"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(timestamp, tz=ZoneInfo("CET"))):
         assert group_by(timestamp) == result
 
 
@@ -42,7 +43,7 @@ def test_group_by(
         # North Summertime
         # days after each other, start is previous day end
         (
-            "2018-07-08 2:00",
+            "2018-07-08 02:00",
             "UTC",
             86400 * 3,
             "hour",
@@ -50,7 +51,7 @@ def test_group_by(
         ),
         # Same but 2hrs back on timestamp
         (
-            "2018-07-08 2:00",
+            "2018-07-08 02:00",
             "Europe/Berlin",
             86400 * 2,
             "hour",
@@ -58,15 +59,15 @@ def test_group_by(
         ),
         # North Winter time shift
         (
-            "2018-07-08 2:00",
+            "2018-07-08 02:00",
             "America/New_York",
             86400 * 2,
             "hour",
-            [(1530936000, 1531022400), (1530849600, 1530936000)],
+            [(1531022400, 1531108800), (1530936000, 1531022400)],
         ),
         # days after each other, start is previous day end
         (
-            "2018-10-28 2:00",
+            "2018-10-28 02:00",
             "UTC",
             86400 * 2,
             "hour",
@@ -74,7 +75,7 @@ def test_group_by(
         ),
         # After change: missing 1hr between current and previous day, current has 1hr to UTC, previous 2hrs
         (
-            "2018-10-28 2:00",
+            "2018-10-28 02:00",
             "Europe/Berlin",
             86400 * 2,
             "hour",
@@ -82,7 +83,7 @@ def test_group_by(
         ),
         # Before change: Sequential days, 2hrs to UTC, missing end of day hour
         (
-            "2018-10-28 0:00",
+            "2018-10-28 00:00",
             "Europe/Berlin",
             86400 * 2,
             "hour",
@@ -90,7 +91,7 @@ def test_group_by(
         ),
         # After change: missing 1hr between current and previous day
         (
-            "2018-11-04 7:00",
+            "2018-11-04 07:00",
             "America/New_York",
             86400 * 2,
             "hour",
@@ -98,11 +99,11 @@ def test_group_by(
         ),
         # Before change: Sequential days, missing end of day hour
         (
-            "2018-11-04 5:00",
+            "2018-11-04 05:00",
             "America/New_York",
             86400 * 2,
             "hour",
-            [(1541304000, 1541390400), (1541217600, 1541304000)],
+            [(1541307600, 1541394000), (1541217600, 1541304000)],
         ),
         # North into summer, a week distance is ~6.95 days not 7, jumping an hour
         (
@@ -126,7 +127,12 @@ def test_time_slices(
     More than a test is an exemplification of our convention
     Predictive levels work on local times, because they are linked to human routines.
     """
-    with on_time(utcdate, timezone):
+
+    # fold=1 means use the daylight saving time if applicable for the current timezone
+    with time_machine.travel(
+        datetime.datetime.fromisoformat(utcdate).replace(tzinfo=ZoneInfo(timezone), fold=1),
+        tick=False,
+    ):
         timestamp = time.time()
         print(timestamp)
 

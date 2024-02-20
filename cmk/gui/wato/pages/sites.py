@@ -1217,7 +1217,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
                 )
                 return
 
-            if not self._site["replication"] and not site_is_local(self._site_id):
+            if not self._site["replication"] and not site_is_local(active_config, self._site_id):
                 html.show_error(
                     _(
                         "This site is not the central site nor a replication "

@@ -20,9 +20,9 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId
 
+import cmk.gui.mkeventd.wato
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
-import cmk.gui.watolib.mkeventd
 from cmk.gui.config import active_config
 from cmk.gui.nodevis.utils import topology_dir
 
@@ -61,7 +61,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch: pytest.MonkeyPatch) -> No
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(cmk.gui.mkeventd.wato, "_get_rule_stats_from_ec", lambda: {})
 
 
 @pytest.fixture(autouse=True)

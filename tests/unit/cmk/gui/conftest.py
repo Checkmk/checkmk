@@ -46,14 +46,12 @@ from cmk.automations.results import DeleteHostsResult
 
 import cmk.gui.config as config_module
 import cmk.gui.login as login
+import cmk.gui.mkeventd.wato as mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
-import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
-from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.session import load_session_infos
@@ -83,20 +81,12 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture(autouse=True)
-def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.search.updates_requested",
-        return_value=False,
-    )
-
-
-@pytest.fixture(autouse=True)
 def gui_cleanup_after_test(
-    request_context: None,
-    deactivate_search_index_building_at_requenst_end: None,
+    mocker: MockerFixture,
 ) -> Iterator[None]:
+    # deactivate_search_index_building_at_requenst_end.
+    mocker.patch("cmk.gui.watolib.search.updates_requested", return_value=False)
     yield
-
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
     # clear event after each request.
     hooks.call("request-end")
@@ -258,18 +248,19 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
-# TODO: The list of registries is not complete. It would be better to selectively solve this
-# A good next step would be to prevent modifications of registries during test execution and
-# only allow them selectively with an automatic cleanup after the test finished.
-@pytest.fixture(autouse=True)
-def reset_gui_registries() -> Iterator[None]:
-    """Fixture to reset registries to its default entries."""
-    registries: list[Registry[Any]] = [
-        dashlet_registry,
-        permission_registry,
-        permission_section_registry,
-    ]
-    with reset_registries(registries):
+@pytest.fixture(name="registry_list")
+def fixture_registry_list() -> list[None | Registry[Any]]:
+    """Returns list of the registries to be reset after test-case execution.
+
+    Override this fixture by defining it within a test-module.
+    """
+    return []
+
+
+@pytest.fixture(name="reset_gui_registries")
+def fixture_reset_gui_registries(registry_list: list[Registry[Any]]) -> Iterator[None]:
+    """Fixture to reset a list of registries to their default entries."""
+    with reset_registries(registry_list):
         yield
 
 
@@ -436,7 +427,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(mkeventd, "get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 
@@ -454,7 +445,7 @@ def with_host(
     root_folder.delete_hosts(hostnames, automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
 
@@ -506,7 +497,7 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 
 
 @pytest.fixture()
-def flask_app() -> Flask:
+def flask_app(patch_omd_site: None, use_fakeredis_client: None) -> Flask:
     return session_wsgi_app(testing=True)
 
 

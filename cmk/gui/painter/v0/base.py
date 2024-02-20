@@ -22,9 +22,10 @@ from cmk.gui import visuals
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -41,11 +42,13 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
+from ...config import active_config, Config
+from ...painter_options import PainterOptions
 from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
@@ -71,6 +74,21 @@ class Painter(abc.ABC):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
+
+    def __init__(  # pylint: disable=redefined-outer-name
+        self,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
+        theme: Theme,
+    ):
+        self.user = user
+        self.config = config
+        self.request = request
+        self._painter_options = painter_options
+        self.theme = theme
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -286,7 +304,13 @@ class Painter(abc.ABC):
 
 class PainterRegistry(Registry[type[Painter]]):
     def plugin_name(self, instance: type[Painter]) -> str:
-        return instance().ident
+        return instance(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+        ).ident
 
 
 painter_registry = PainterRegistry()
@@ -418,10 +442,24 @@ class Cell:
             return None
 
     def painter(self) -> Painter:
+        painter_options_inst = PainterOptions.get_instance()
         try:
-            return PainterAdapter(experimental_painter_registry[self.painter_name()])
+            return PainterAdapter(
+                experimental_painter_registry[self.painter_name()],
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=painter_options_inst,
+                theme=theme,
+            )
         except KeyError:
-            return painter_registry[self.painter_name()]()
+            return painter_registry[self.painter_name()](
+                user=user,
+                config=active_config,
+                request=request,
+                painter_options=painter_options_inst,
+                theme=theme,
+            )
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -484,7 +522,13 @@ class Cell:
 
     def tooltip_painter(self) -> Painter:
         assert self._tooltip_painter_name is not None
-        return painter_registry[self._tooltip_painter_name]()
+        return painter_registry[self._tooltip_painter_name](
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+        )
 
     def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
@@ -743,7 +787,23 @@ class PainterAdapter(Painter):
 
     """
 
-    def __init__(self, painter: V1Painter):
+    def __init__(  # pylint: disable=redefined-outer-name
+        self,
+        painter: V1Painter,
+        *,
+        user: LoggedInUser,
+        config: Config,
+        request: Request,
+        painter_options: PainterOptions,
+        theme: Theme,
+    ):
+        super().__init__(
+            user=user,
+            config=config,
+            request=request,
+            painter_options=painter_options,
+            theme=theme,
+        )
         self._painter = painter
 
     @property

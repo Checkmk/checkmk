@@ -490,7 +490,10 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-        if display_options.enabled(display_options.F):
+        # Only render the filter page menu popup if there are filters available for the given infos
+        if display_options.enabled(display_options.F) and visuals.filters_exist_for_infos(
+            self.view.datasource.infos
+        ):
             display_dropdown.topics.insert(
                 0,
                 PageMenuTopic(
@@ -590,7 +593,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
-        if not display_options.enabled(display_options.F) or not show_filters:
+        if not display_options.enabled(display_options.F):
             return HTML()
 
         with output_funnel.plugged():

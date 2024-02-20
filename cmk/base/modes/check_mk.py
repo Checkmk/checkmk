@@ -1209,7 +1209,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 config_cache.effective_host,
                 partial(config.service_description, ruleset_matcher),
             )
-            for node in config_cache.nodes_of(host) or [host]
+            for node in config_cache.nodes(host) or [host]
         )
         # config_cache.remove_autochecks(host)
         if count:
@@ -1689,7 +1689,7 @@ def mode_check_discovery(
             check_result = execute_check_discovery(
                 hostname,
                 is_cluster=hostname in config_cache.hosts_config.clusters,
-                cluster_nodes=config_cache.nodes_of(hostname) or (),
+                cluster_nodes=config_cache.nodes(hostname),
                 params=config_cache.discovery_check_parameters(hostname),
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
@@ -1989,7 +1989,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         _preprocess_hostnames(
             frozenset(hostnames),
             is_cluster=lambda hn: hn in config_cache.hosts_config.clusters,
-            resolve_nodes=lambda hn: config_cache.nodes_of(hn) or (),
+            resolve_nodes=config_cache.nodes,
             config_cache=config_cache,
             only_host_labels="only-host-labels" in options,
         )
@@ -2402,7 +2402,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
             if hostname in hosts_config.clusters:
                 check_result = inventory.inventorize_cluster(
-                    config_cache.nodes_of(hostname) or (),
+                    config_cache.nodes(hostname),
                     parameters=parameters,
                     previous_tree=previous_tree,
                 ).check_result
@@ -2496,7 +2496,7 @@ def _execute_active_check_inventory(
 
     if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
-            config_cache.nodes_of(host_name) or (),
+            config_cache.nodes(host_name),
             parameters=parameters,
             previous_tree=previous_tree,
         )

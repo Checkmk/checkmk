@@ -6,6 +6,7 @@
 
 import pytest
 
+from cmk.gui.http import request
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import format_plugin_output
 
@@ -64,5 +65,5 @@ from cmk.gui.view_utils import format_plugin_output
         ),
     ],
 )
-def test_button_url(args: str, expected: HTML) -> None:
-    assert format_plugin_output(args) == expected
+def test_button_url(args: str, expected: HTML, request_context: None) -> None:
+    assert format_plugin_output(args, request=request) == expected

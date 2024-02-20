@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue
-from cmk.rulesets.v1.form_specs.basic import FixedValue, Integer, Text
-from cmk.rulesets.v1.form_specs.composed import (
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
+    Integer,
+    Password,
+    String,
+    validators,
 )
-from cmk.rulesets.v1.form_specs.preconfigured import Password
 from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
-from cmk.rulesets.v1.validators import InRange
 
 
 def _migrate(value: object) -> Mapping[str, int | tuple[str | None] | tuple[str, str]]:
@@ -40,12 +42,12 @@ def _migrate(value: object) -> Mapping[str, int | tuple[str | None] | tuple[str,
 
 def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
     return Dictionary(
-        title=Localizable("Pure Storage FlashArray"),
+        title=Title("Pure Storage FlashArray"),
         elements={
             "api_token": DictElement(
                 parameter_form=Password(
-                    title=Localizable("API token"),
-                    help_text=Localizable(
+                    title=Title("API token"),
+                    help_text=Help(
                         "Generate the API token through the Purity user interface"
                         " (System > Users > Create API Token)"
                         " or through the Purity command line interface"
@@ -56,23 +58,23 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
             ),
             "ssl": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Localizable("SSL certificate checking"),
+                    title=Title("SSL certificate checking"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="deactivated",
-                            title=Localizable("Deactivated"),
+                            title=Title("Deactivated"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="hostname",
-                            title=Localizable("Use hostname"),
+                            title=Title("Use hostname"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
                             name="custom_hostname",
-                            title=Localizable("Use other hostname"),
-                            parameter_form=Text(
-                                help_text=Localizable(
+                            title=Title("Use other hostname"),
+                            parameter_form=String(
+                                help_text=Help(
                                     "Use a custom name for the SSL certificate validation"
                                 ),
                             ),
@@ -84,9 +86,9 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
             ),
             "timeout": DictElement(
                 parameter_form=Integer(
-                    title=Localizable("Timeout"),
+                    title=Title("Timeout"),
                     prefill=DefaultValue(5),
-                    custom_validate=InRange(min_value=1),
+                    custom_validate=validators.InRange(min_value=1),
                 ),
                 required=True,
             ),
@@ -99,6 +101,6 @@ rule_spec_pure_storage_fa = SpecialAgent(
     topic=Topic.STORAGE,
     name="pure_storage_fa",
     eval_type=EvalType.MERGE,
-    title=Localizable("Pure Storage FlashArray"),
+    title=Title("Pure Storage FlashArray"),
     parameter_form=_form_spec_special_agents_pure_storage_fa,
 )

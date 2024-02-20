@@ -7,9 +7,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
 
-from ._localize import Localizable
-from .form_specs.basic import SingleChoice, Text
-from .form_specs.composed import Dictionary
+from ._localize import Help, Title
+from .form_specs import Dictionary, FormSpec, SingleChoice, String
+from .form_specs.validators import DisallowEmpty
 
 
 class Topic(Enum):
@@ -41,7 +41,7 @@ class CustomTopic:
         title: human-readable title of this group
     """
 
-    title: Localizable
+    title: Title
 
 
 class EvalType(Enum):
@@ -51,22 +51,28 @@ class EvalType(Enum):
 
 @dataclass(frozen=True)
 class HostCondition:
-    ...
+    """Creates a condition that allows users to match the rule based on the host."""
 
 
 @dataclass(frozen=True)
 class HostAndServiceCondition:
-    ...
+    """Creates a condition that allows users to match the rule based on the host and the service
+    description."""
 
 
 @dataclass(frozen=True)
 class HostAndItemCondition:
-    """
+    """Creates a condition that allows users to match the rule based on the host and the item of the
+    service.
+
     Args:
-        item_form: Configuration specification for the item of the check
+        item_title: Title for the item of the service
+        item_form: Configuration specification for the item of the check.
+          By default, a text input field that disallows empty strings will be created.
     """
 
-    item_form: Text | SingleChoice
+    item_title: Title
+    item_form: FormSpec[str] = String(custom_validate=DisallowEmpty())
 
 
 @dataclass(frozen=True)
@@ -83,13 +89,13 @@ class Host:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -107,14 +113,14 @@ class Service:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     condition: HostCondition | HostAndServiceCondition
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -133,18 +139,18 @@ class CheckParameters:
                                   service created with this rule spec
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     name: str
     condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
     create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
         if isinstance(self.condition, HostAndItemCondition):
-            assert isinstance(self.condition.item_form, (Text, SingleChoice))
+            assert isinstance(self.condition.item_form, (String, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
@@ -163,17 +169,15 @@ class EnforcedService:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary] | None
     name: str
     condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
     def __post_init__(self) -> None:
-        if isinstance(self.condition, HostAndItemCondition):
-            assert isinstance(self.condition.item_form, (Text, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
@@ -192,13 +196,13 @@ class DiscoveryParameters:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -215,13 +219,13 @@ class ActiveCheck:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -238,13 +242,13 @@ class AgentConfig:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -261,13 +265,13 @@ class SpecialAgent:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -284,13 +288,13 @@ class AgentAccess:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -307,13 +311,13 @@ class NotificationParameters:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -330,13 +334,13 @@ class SNMP:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
 
 @dataclass(frozen=True)
@@ -353,10 +357,10 @@ class InventoryParameters:
         help_text: Description to help the user with the configuration
     """
 
-    title: Localizable
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None

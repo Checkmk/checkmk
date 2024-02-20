@@ -103,13 +103,21 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
                 old_group_backup,
                 "edit-%sgroups" % group_type,
                 _l("Removed %sgroup %s from customer %s")
-                % (group_type, name, customer.get_customer_name_by_id(old_customer)),
+                % (
+                    group_type,
+                    name,
+                    customer.get_customer_name_by_id(old_customer),
+                ),
             )
             _add_group_change(
                 extra_info,
                 "edit-%sgroups" % group_type,
                 _l("Moved %sgroup %s to customer %s. Additional properties may have changed.")
-                % (group_type, name, customer.get_customer_name_by_id(new_customer)),
+                % (
+                    group_type,
+                    name,
+                    customer.get_customer_name_by_id(new_customer),
+                ),
             )
         else:
             _add_group_change(

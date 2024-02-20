@@ -4,18 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from . import graphs, metrics, perfometers, translations
-from ._color import Color
-from ._localize import Localizable
-from ._unit import DecimalUnit, ScientificUnit, Unit
+from ._localize import Title
 
 __all__ = [
     "graphs",
     "metrics",
     "perfometers",
     "translations",
-    "Color",
-    "Localizable",
-    "DecimalUnit",
-    "ScientificUnit",
-    "Unit",
+    "Title",
 ]

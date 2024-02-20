@@ -124,7 +124,6 @@ from cmk.checkengine.parser import (
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base import server_side_calls
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
@@ -316,7 +315,7 @@ def _get_clustered_services(
     config_cache: ConfigCache,
     cluster_name: HostName,
 ) -> Iterable[ConfiguredService]:
-    for node in config_cache.nodes_of(cluster_name) or []:
+    for node in config_cache.nodes(cluster_name):
         node_checks: list[ConfiguredService] = []
         if not config_cache.is_ping_host(cluster_name):
             node_checks += config_cache.get_autochecks_of(node)
@@ -329,9 +328,10 @@ def _get_clustered_services(
         )
 
 
-class ClusterCacheInfo(NamedTuple):
-    clusters_of: dict[HostName, list[HostName]]
-    nodes_of: dict[HostName, list[HostName]]
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ClusterCacheInfo:
+    clusters_of: Mapping[HostName, Sequence[HostName]]
+    nodes_of: Mapping[HostName, Sequence[HostName]]
 
 
 class RRDConfig(TypedDict):
@@ -1403,13 +1403,7 @@ def load_all_plugins(
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
-    # Load new active checks.
-    # These are just loaded here, because there currently is no other place
-    # that will report the errors. Maybe a `cmk --validate-plugins` would be nice.
-    # CMK-15720
-    more_errors, _plugins = server_side_calls.load_active_checks()
-
-    return [*errors, *more_errors]
+    return errors
 
 
 def _initialize_data_structures() -> None:
@@ -1945,7 +1939,7 @@ def get_ssc_host_config(
         **indexed_ipv6_macros,
         **{f"$HOST_TAG_{k}$": v for k, v in tags.items()},
         **{f"$HOST_LABEL_{k}$": v for k, v in labels.items()},
-        **{f"$HOST_{k}$": v for k, v in custom_attributes.items()},
+        **{f"$HOST_ATTR_{k}$": v for k, v in custom_attributes.items()},
         **legacy_macros,
     }
 
@@ -2029,7 +2023,7 @@ class ConfigCache:
         self._autochecks_manager = AutochecksManager()
 
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
-        self._nodes_of_cache: dict[HostName, list[HostName]] = {}
+        self._nodes_cache: dict[HostName, list[HostName]] = {}
         self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
         self._check_mk_check_interval: dict[HostName, float] = {}
 
@@ -2049,7 +2043,7 @@ class ConfigCache:
                 self._discovered_labels_of_service,
             ),
             clusters_of=self._clusters_of_cache,
-            nodes_of=self._nodes_of_cache,
+            nodes_of=self._nodes_cache,
             all_configured_hosts=list(set(self.hosts_config)),
         )
 
@@ -2585,10 +2579,8 @@ class ConfigCache:
                 return False
 
             # for clusters with an auto-piggyback tag check if nodes have piggyback data
-            if (
-                host_name in self.hosts_config.clusters
-                and (nodes := self.nodes_of(host_name)) is not None
-            ):
+            nodes = self.nodes(host_name)
+            if nodes and host_name in self.hosts_config.clusters:
                 return any(self._has_piggyback_data(node) for node in nodes)
 
             # Legacy automatic detection
@@ -3070,9 +3062,11 @@ class ConfigCache:
     def max_cachefile_age(self, hostname: HostName) -> MaxAge:
         check_interval = self.check_mk_check_interval(hostname)
         return MaxAge(
-            checking=check_max_cachefile_age
-            if self.nodes_of(hostname) is None
-            else cluster_max_cachefile_age,
+            checking=(
+                cluster_max_cachefile_age
+                if hostname in self.hosts_config.clusters
+                else check_max_cachefile_age
+            ),
             discovery=1.5 * check_interval,
             inventory=1.5 * check_interval,
         )
@@ -3621,9 +3615,9 @@ class ConfigCache:
         return attrs
 
     def get_cluster_nodes_for_config(self, host_name: HostName) -> Sequence[HostName]:
-        nodes = self.nodes_of(host_name)
-        if nodes is None:
-            return []
+        nodes = self.nodes(host_name)
+        if not nodes:
+            return ()
 
         self._verify_cluster_address_family(host_name, nodes)
         self._verify_cluster_datasource(host_name, nodes)
@@ -3794,25 +3788,24 @@ class ConfigCache:
             clustername = HostName(cluster.split("|", 1)[0])
             for name in hosts:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
-            self._nodes_of_cache[clustername] = hosts
+            self._nodes_cache[clustername] = hosts
 
     def get_cluster_cache_info(self) -> ClusterCacheInfo:
-        return ClusterCacheInfo(self._clusters_of_cache, self._nodes_of_cache)
+        return ClusterCacheInfo(clusters_of=self._clusters_of_cache, nodes_of=self._nodes_cache)
 
-    def clusters_of(self, hostname: HostName) -> list[HostName]:
+    def clusters_of(self, hostname: HostName) -> Sequence[HostName]:
         """Returns names of cluster hosts the host is a node of"""
-        return self._clusters_of_cache.get(hostname, [])
+        return self._clusters_of_cache.get(hostname, ())
 
-    # TODO: cleanup None case
-    def nodes_of(self, hostname: HostName) -> Sequence[HostName] | None:
-        """Returns the nodes of a cluster. Returns None if no match."""
-        return self._nodes_of_cache.get(hostname)
+    def nodes(self, hostname: HostName) -> Sequence[HostName]:
+        """Returns the nodes of a cluster. Returns () if no match."""
+        return self._nodes_cache.get(hostname, ())
 
     def effective_host(
         self,
         node_name: HostName,
         servicedesc: str,
-        part_of_clusters: list[HostName] | None = None,
+        part_of_clusters: Sequence[HostName] = (),
     ) -> HostName:
         """Compute the effective host (node or cluster) of a service
 
@@ -3837,7 +3830,7 @@ class ConfigCache:
         self,
         node_name: HostName,
         servicedesc: str,
-        part_of_clusters: list[HostName] | None = None,
+        part_of_clusters: Sequence[HostName],
     ) -> HostName:
         if part_of_clusters:
             the_clusters = part_of_clusters
@@ -3857,12 +3850,11 @@ class ConfigCache:
 
         # 1. New style: explicitly assigned services
         for cluster, conf in clustered_services_of.items():
-            nodes = self.nodes_of(cluster)
-            if not nodes:
+            if cluster not in self.hosts_config.clusters:
                 raise MKGeneralException(
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )
-            if node_name in nodes and self.ruleset_matcher.get_service_bool_value(
+            if node_name in self.nodes(cluster) and self.ruleset_matcher.get_service_bool_value(
                 node_name, servicedesc, conf
             ):
                 return cluster

@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest_mock import MockerFixture
-
-from tests.testlib import on_time
 
 from tests.unit.cmk.base.plugins.agent_based.utils_inventory import sort_inventory_result
 
@@ -401,7 +402,7 @@ def test_inventorize_interfaces(
     uptime_sec: float | None,
     expected_result: InventoryResult,
 ) -> None:
-    with on_time(500000, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(500000, tz=ZoneInfo("UTC"))):
         assert sort_inventory_result(
             inventorize_interfaces(
                 params,

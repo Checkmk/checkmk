@@ -454,7 +454,9 @@ def walk_skel(
 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
-def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: SiteContext) -> None:
+def patch_skeleton_files(
+    conflict_mode: str, old_site_name: str, old_replacements: Replacements, new_site: SiteContext
+) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
@@ -474,7 +476,9 @@ def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: Si
                     os.path.isfile(src) and not os.path.islink(src) and os.path.exists(dst)
                 ):  # not deleted by user
                     try:
-                        patch_template_file(conflict_mode, src, dst, old_site, new_site)
+                        _patch_template_file(
+                            conflict_mode, src, dst, old_site_name, old_replacements, new_site
+                        )
                     except MKTerminate:
                         raise
                     except Exception as e:
@@ -485,18 +489,26 @@ def _is_unpatchable_file(path: str) -> bool:
     return path.endswith(".png") or path.endswith(".pdf")
 
 
-def patch_template_file(  # pylint: disable=too-many-branches
-    conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
+def _patch_template_file(  # pylint: disable=too-many-branches
+    conflict_mode: str,
+    src: str,
+    dst: str,
+    old_site_name: str,
+    old_replacements: Replacements,
+    new_site: SiteContext,
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
     content = Path(src).read_bytes()
-    for site in [old_site, new_site]:
-        filename = Path(f"{dst}.skel.{site.name}")
-        filename.write_bytes(replace_tags(content, site.replacements))
+    for name, replacements in [
+        (old_site_name, old_replacements),
+        (new_site.name, new_site.replacements),
+    ]:
+        filename = Path(f"{dst}.skel.{name}")
+        filename.write_bytes(replace_tags(content, replacements))
         try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = Path(f"{dst}.skel.{old_site.name}")
+    old_orig_path = Path(f"{dst}.skel.{old_site_name}")
     new_orig_path = Path(f"{dst}.skel.{new_site.name}")
     if old_orig_path.read_text() == new_orig_path.read_text():
         old_orig_path.unlink()
@@ -527,7 +539,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
             ("install", "Install the default version of the file"),
             (
                 "brute",
-                f"Simply replace /{old_site.name}/ with /{new_site.name}/ in that file",
+                f"Simply replace /{old_site_name}/ with /{new_site.name}/ in that file",
             ),
             ("shell", "Open a shell for looking around"),
             ("abort", "Stop here and abort!"),
@@ -543,7 +555,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                     "Conflicts in " + src + "!",
                     "I've tried to merge your changes with the renaming of %s into %s.\n"
                     "Unfortunately there are conflicts with your changes. \n"
-                    "You have the following options: " % (old_site.name, new_site.name),
+                    "You have the following options: " % (old_site_name, new_site.name),
                     options,
                 )
 
@@ -562,7 +574,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 )  # nosec B605 # BNS:2b5952
             elif choice == "brute":
                 os.system(  # nosec B605 # BNS:2b5952
-                    f"sed 's@/{old_site.name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
+                    f"sed 's@/{old_site_name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
                 )
                 changed = len(
                     [
@@ -602,7 +614,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 sys.stdout.write(" %-35s the failed parts of the patch\n" % (relname + ".rej"))
                 sys.stdout.write(
                     " %-35s default version with the old site name\n"
-                    % (relname + ".skel.%s" % old_site.name)
+                    % (relname + ".skel.%s" % old_site_name)
                 )
                 sys.stdout.write(
                     " %-35s default version with the new site name\n"
@@ -616,7 +628,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
                 )  # nosec B605 # BNS:2b5952
     # remove unnecessary files
     try:
-        os.remove(dst + ".skel." + old_site.name)
+        os.remove(dst + ".skel." + old_site_name)
         os.remove(dst + ".skel." + new_site.name)
         os.remove(dst + ".orig")
         os.remove(dst + ".rej")
@@ -1314,6 +1326,9 @@ def permission_action(
     if new_type == "link":
         return None  # Do not touch symlinks
 
+    if user_type is None:
+        return None  # Don't change permissions of non existant paths
+
     if user_type != new_type:
         return None  # Do not touch when type changed by the user
 
@@ -1436,10 +1451,6 @@ def initialize_site_ca(site: SiteContext, site_key_size: int = 4096) -> None:
         ca.create_site_certificate(site.name, key_size=site_key_size)
 
 
-def agent_ca_existing(site: SiteContext) -> bool:
-    return root_cert_path(cert_dir(Path(site.dir)) / "agents").exists()
-
-
 def initialize_agent_ca(site: SiteContext) -> None:
     """Initialize the agents CA folder alongside a default agent signing CA.
     The default CA shall be used for issuing certificates for requesting agent controllers.
@@ -1448,14 +1459,6 @@ def initialize_agent_ca(site: SiteContext) -> None:
     """
     ca_path = cert_dir(Path(site.dir)) / "agents"
     RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' agent signing CA")
-
-
-def link_legacy_agent_ca(site: SiteContext) -> None:
-    """If there are agent controller certificates that are signed with the site CA, we have to
-    maintain them (at least for a while)."""
-    site_ca_path = root_cert_path(cert_dir(Path(site.dir)))
-    agent_ca_dir = cert_dir(Path(site.dir)) / "agents"
-    (agent_ca_dir / "legacy_ca.pem").symlink_to(site_ca_path)
 
 
 def config_change(
@@ -2045,6 +2048,7 @@ def main_help(
     sys.stdout.write(
         "\nGeneral Options:\n"
         " -V <version>                    set specific version, useful in combination with update/create\n"
+        " -f, --force                     use force mode, useful in combination with update\n"
         " omd COMMAND -h, --help          show available options of COMMAND\n"
     )
 
@@ -2601,6 +2605,10 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
+    # Needs to be computed before the site is moved to be able to derive the version from the
+    # version symlink
+    old_replacements = old_site.replacements
+
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
@@ -2634,7 +2642,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     chown_tree(new_site.dir, new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(conflict_mode, old_site, new_site)
+    patch_skeleton_files(conflict_mode, old_site.name, old_replacements, new_site)
 
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:
@@ -2893,6 +2901,8 @@ def main_update(  # pylint: disable=too-many-branches
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "
             "update with '-f'.\n"
+            "You can execute the command in the following way:\n"
+            "'omd -f update' or 'omd --force update'"
             "But you will be on your own from there."
         )
 
@@ -3057,11 +3067,6 @@ def main_update(  # pylint: disable=too-many-branches
     # Execute some builtin initializations before executing the update-pre-hooks
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
-
-    preexisting = agent_ca_existing(site)
-    initialize_agent_ca(site)
-    if not preexisting:
-        link_legacy_agent_ca(site)
 
     # Let hooks of the new(!) version do their work and update configuration.
     config_set_all(site)
@@ -3576,7 +3581,9 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     # Change config files from old to new site (see rename_site())
     if sitename != site.name:
         old_site = SiteContext(sitename)
-        patch_skeleton_files(_get_conflict_mode(options), old_site, site)
+        patch_skeleton_files(
+            _get_conflict_mode(options), old_site.name, old_site.replacements, site
+        )
 
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)

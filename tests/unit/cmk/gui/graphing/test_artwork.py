@@ -5,10 +5,10 @@
 
 from collections.abc import Sequence
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import set_timezone
+import time_machine
 
 from cmk.gui.graphing._artwork import (
     _areastack,
@@ -158,7 +158,7 @@ def test__compute_v_axis_min_max_precedence(
 
 
 def test_t_axis_labels_seconds() -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert [
             label_pos.timestamp()
             for label_pos in _t_axis_labels_seconds(
@@ -174,7 +174,7 @@ def test_t_axis_labels_seconds() -> None:
 
 
 def test_t_axis_labels_week() -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert [
             label_pos.timestamp()
             for label_pos in _t_axis_labels_week(
@@ -553,7 +553,7 @@ def test_compute_graph_t_axis(
     step: int,
     expected_result: TimeAxis,
 ) -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert (
             _compute_graph_t_axis(
                 start_time=start_time,

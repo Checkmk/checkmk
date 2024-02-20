@@ -1065,7 +1065,9 @@ class ModeFolder(WatoMode):
             table.cell(_("Tags"), css=["tag-ellipsis"])
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
             html.write_html(
-                cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False)
+                cmk.gui.view_utils.render_tag_groups(
+                    tag_groups, "host", with_links=False, request=request
+                )
             )
             html.write_html(show_all_code)
 
@@ -1078,6 +1080,7 @@ class ModeFolder(WatoMode):
                     "host",
                     with_links=False,
                     label_sources={k: "explicit" for k in labels.keys()},
+                    request=request,
                 )
             )
             html.write_html(show_all_code)

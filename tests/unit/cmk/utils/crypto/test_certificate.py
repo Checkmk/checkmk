@@ -5,13 +5,13 @@
 
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cryptography.x509 as x509
 import pytest
+import time_machine
 from dateutil.relativedelta import relativedelta
-from freezegun import freeze_time
 
 from tests.testlib.certs import rsa_private_keys_equal
 
@@ -41,7 +41,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
     assert self_signed_cert.certificate.organization_name is not None
-    assert "Checkmk Site" in self_signed_cert.certificate.organization_name
+    assert "Checkmk Testing" in self_signed_cert.certificate.organization_name
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ def test_verify_expiry(
     #
     # We assume self_signed_cert is valid for 2 hours. Otherwise the test will not work.
     #
-    with freeze_time(self_signed_cert.certificate.not_valid_before + time_offset):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + time_offset):
         with expectation:
             self_signed_cert.certificate.verify_expiry(allowed_drift)
 
@@ -93,7 +93,7 @@ def test_days_til_expiry(
     when: relativedelta,
     expected_days_remaining: relativedelta,
 ) -> None:
-    with freeze_time(self_signed_cert.certificate.not_valid_before + when):
+    with time_machine.travel(self_signed_cert.certificate.not_valid_before + when):
         assert self_signed_cert.certificate.days_til_expiry() == expected_days_remaining
 
 
@@ -283,7 +283,7 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
             subject_name=X509Name.create(common_name="sans_test"),
             subject_alt_dns_names=sans,
             expiry=relativedelta(days=1),
-            start_date=datetime.now(),
+            start_date=datetime.now(timezone.utc),
             issuer_signing_key=self_signed_cert.private_key,
             issuer_name=X509Name.create(common_name="sans_test"),
         ).get_subject_alt_names()
@@ -314,7 +314,7 @@ def test_sign_csr(
         subject_private_key=subject_key,
     )
 
-    with freeze_time(signing_certificate.certificate.not_valid_before):
+    with time_machine.travel(signing_certificate.certificate.not_valid_before):
         new_cert = signing_certificate.sign_csr(csr, expiry=relativedelta(days=1))
 
     assert new_cert.not_valid_before == signing_certificate.certificate.not_valid_before

@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.heartbeat_crm import (
@@ -243,7 +245,7 @@ def test_check_heartbeat_crm_too_old(section_1: Section) -> None:
 
 
 def test_check_heartbeat_crm_ok(section_1: Section) -> None:
-    with on_time("2020-09-08 10:36:36", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 9, 8, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
         assert list(
             _check_heartbeat_crm(
                 {"max_age": 60, "num_nodes": 2, "num_resources": 3},
@@ -258,7 +260,7 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
 
 
 def test_check_heartbeat_crm_crit(section_2: Section) -> None:
-    with on_time("2019-08-18 10:36:36", "UTC"):
+    with time_machine.travel(datetime.datetime(2019, 8, 18, 10, 36, 36, tzinfo=ZoneInfo("UTC"))):
         assert list(
             _check_heartbeat_crm(
                 {

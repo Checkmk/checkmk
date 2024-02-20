@@ -49,6 +49,8 @@ from cmk.gui.views.perfometer.legacy_perfometers.utils import LegacyPerfometerRe
     ],
 )
 def test_perfometer_fileinfo_groups(
-    perf_data: Perfdata, expected_result: LegacyPerfometerResult
+    perf_data: Perfdata,
+    expected_result: LegacyPerfometerResult,
+    request_context: None,
 ) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

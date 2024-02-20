@@ -6,21 +6,12 @@
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.graphing._utils import metric_info
 
-_METRICS_WITH_UNKNOWN_UNIT = [
-    "read_avg_rtt_ms",
-    "read_avg_exe_ms",
-    "write_avg_rtt_ms",
-    "write_avg_exe_ms",
-]
-
 
 def test_metric_info_unit() -> None:
     assert metric_info
     unit_info_keys = list(unit_info.keys())
     assert unit_info_keys
-    assert [
-        name for name, info in metric_info.items() if info["unit"] not in unit_info_keys
-    ] == _METRICS_WITH_UNKNOWN_UNIT
+    assert not [name for name, info in metric_info.items() if info["unit"] not in unit_info_keys]
 
 
 def _is_valid_color(color: str) -> bool:

@@ -53,7 +53,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
-from cmk.gui.painter_options import paint_age
+from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.type_defs import ColumnName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
@@ -438,7 +438,7 @@ class PerfgraphIcon(Icon):
     def _graph_icon_link(self, row, what):
         if display_options.disabled(display_options.X):
             return ""
-        return cmk_graph_url(row, what)
+        return cmk_graph_url(row, what, request=request)
 
 
 # .
@@ -689,7 +689,13 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what))
+            return (
+                icon,
+                title,
+                url_to_visual(
+                    row, VisualLinkSpec("views", "downtimes_of_" + what), request=request
+                ),
+            )
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
@@ -698,7 +704,7 @@ class DowntimesIcon(Icon):
             return (
                 {"icon": "folder", "emblem": "downtime"},
                 title,
-                url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host")),
+                url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host"), request=request),
             )
         return None
 
@@ -739,14 +745,21 @@ class CommentsIcon(Icon):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
                 text += '{} {}: "{}" \n'.format(
-                    paint_age(timestamp, True, 0, "abs")[1],
+                    paint_age(
+                        timestamp,
+                        True,
+                        0,
+                        request=request,
+                        painter_options=PainterOptions.get_instance(),
+                        mode="abs",
+                    )[1],
                     author,
                     comment,
                 )
             return (
                 "comment",
                 text,
-                url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what)),
+                url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what), request=request),
             )
         return None
 
@@ -861,7 +874,7 @@ class StalenessIcon(Icon):
     def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
-        if is_stale(row):
+        if is_stale(row, config=active_config):
             if what == "host":
                 title = _("This host is stale")
             else:

@@ -124,7 +124,7 @@ def _transform_imports(imports: str) -> str:
     for old, new in IMPORTS:
         imports = imports.replace(old, new)
     imports += (
-        "from cmk.agent_based.v1 import check_levels"
+        "from cmk.agent_based.v1 import check_levels\n"
         "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
         " SimpleSNMPSection, CheckPlugin, InventoryPlugin\n\n"
     )

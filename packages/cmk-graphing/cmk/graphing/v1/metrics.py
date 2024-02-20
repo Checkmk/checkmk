@@ -7,12 +7,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
+from enum import auto, Enum
 
-from ._color import Color
-from ._localize import Localizable
-from ._unit import DecimalUnit, ScientificUnit, Unit
+from ._localize import Title
 
 __all__ = [
+    "Color",
     "Metric",
     "Constant",
     "WarningOf",
@@ -24,6 +24,145 @@ __all__ = [
     "Difference",
     "Fraction",
 ]
+
+
+class Color(Enum):
+    LIGHT_RED = auto()
+    RED = auto()
+    DARK_RED = auto()
+
+    LIGHT_ORANGE = auto()
+    ORANGE = auto()
+    DARK_ORANGE = auto()
+
+    LIGHT_YELLOW = auto()
+    YELLOW = auto()
+    DARK_YELLOW = auto()
+
+    LIGHT_GREEN = auto()
+    GREEN = auto()
+    DARK_GREEN = auto()
+
+    LIGHT_BLUE = auto()
+    BLUE = auto()
+    DARK_BLUE = auto()
+
+    LIGHT_CYAN = auto()
+    CYAN = auto()
+    DARK_CYAN = auto()
+
+    LIGHT_PURPLE = auto()
+    PURPLE = auto()
+    DARK_PURPLE = auto()
+
+    LIGHT_PINK = auto()
+    PINK = auto()
+    DARK_PINK = auto()
+
+    LIGHT_BROWN = auto()
+    BROWN = auto()
+    DARK_BROWN = auto()
+
+    LIGHT_GRAY = auto()
+    GRAY = auto()
+    DARK_GRAY = auto()
+
+    BLACK = auto()
+    WHITE = auto()
+
+
+class Unit(Enum):
+    # CMK
+    BAR = auto()  # "bar"
+    BIT_IEC = auto()  # "bits, factor 1024
+    BIT_SI = auto()  # "bits, factor 1000
+    BITS_IEC_PER_SECOND = auto()  # "bits/s, factor 1024
+    BITS_SI_PER_SECOND = auto()  # "bits/s, factor 1000
+    BYTE_IEC = auto()  # "bytes, factor 1024
+    BYTE_SI = auto()  # "bytes, factor 1000
+    BYTES_IEC_PER_SECOND = auto()  # "bytes/s, factor 1024
+    BYTES_SI_PER_SECOND = auto()  # "bytes/s, factor 1000
+    BYTES_IEC_PER_DAY = auto()  # "bytes/d, factor 1024
+    BYTES_SI_PER_DAY = auto()  # "bytes/d, factor 1000
+    BYTES_IEC_PER_OPERATION = auto()  # "bytes/op, factor 1024
+    BYTES_SI_PER_OPERATION = auto()  # "bytes/op, factor 1000
+    COUNT = auto()  # ", integer
+    DECIBEL = auto()  # "dB"
+    DECIBEL_MILLIVOLT = auto()  # "dBmV"
+    DECIBEL_MILLIWATT = auto()  # "dBm"
+    DOLLAR = auto()  # "$"
+    ELETRICAL_ENERGY = auto()  # "Wh"
+    EURO = auto()  # "€"
+    LITER_PER_SECOND = auto()  # "l/s"
+    NUMBER = auto()  # ", float
+    PARTS_PER_MILLION = auto()  # "ppm"
+    PERCENTAGE = auto()  # "%"
+    PERCENTAGE_PER_METER = auto()  # "%/m"
+    PER_SECOND = auto()  # "1/s"
+    READ_CAPACITY_UNIT = auto()  # "RCU"
+    REVOLUTIONS_PER_MINUTE = auto()  # "rpm"
+    SECONDS_PER_SECOND = auto()  # "s/s"
+    VOLT_AMPERE = auto()  # "VA"
+    WRITE_CAPACITY_UNIT = auto()  # "WCU"
+    # SI base unit
+    AMPERE = auto()  # "A"
+    CANDELA = auto()  # "cd"
+    KELVIN = auto()  # "K"
+    KILOGRAM = auto()  # "kg"
+    METRE = auto()  # "m"
+    MOLE = auto()  # "mol"
+    SECOND = auto()  # "s"
+    # SI Units with Special Names and Symbols
+    BECQUEREL = auto()  # "Bq"
+    COULOMB = auto()  # "C"
+    DEGREE_CELSIUS = auto()  # "°C"
+    FARAD = auto()  # "F"
+    GRAY = auto()  # "Gy"
+    HENRY = auto()  # "H"
+    HERTZ = auto()  # "Hz"
+    JOULE = auto()  # "J"
+    KATAL = auto()  # "kat"
+    LUMEN = auto()  # "lm"
+    LUX = auto()  # "lx"
+    NEWTON = auto()  # "N"
+    OHM = auto()  # "Ω"
+    PASCAL = auto()  # "Pa"
+    RADIAN = auto()  # "rad"
+    SIEMENS = auto()  # "S"
+    SIEVERT = auto()  # "Sv"
+    STERADIAN = auto()  # "sr"
+    TESLA = auto()  # "T"
+    VOLT = auto()  # "V"
+    WATT = auto()  # "W"
+    WEBER = auto()  # "Wb"
+
+
+@dataclass(frozen=True)
+class DecimalUnit:
+    """
+    A unit is rendered with decimals.
+    """
+
+    title: Title
+    symbol: str
+
+    def __post_init__(self) -> None:
+        if not self.symbol:
+            raise ValueError(self.symbol)
+
+
+@dataclass(frozen=True)
+class ScientificUnit:
+    """
+    A unit is using scientific notation while rendering.
+    """
+
+    title: Title
+    symbol: str
+
+    def __post_init__(self) -> None:
+        if not self.symbol:
+            raise ValueError(self.symbol)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,14 +181,14 @@ class Metric:
 
         >>> metric_metric_name = Metric(
         ...     name="metric_name",
-        ...     title=Localizable("A metric"),
+        ...     title=Title("A metric"),
         ...     unit=Unit.PERCENTAGE,
         ...     color=Color.BLUE,
         ... )
     """
 
     name: str
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
 
@@ -71,12 +210,12 @@ class Constant:
 
     Example:
 
-        >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
-        Constant(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        >>> Constant(Title("A title"), Unit.COUNT, Color.BLUE, 23.5)
+        Constant(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 value=23.5)
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     value: int | float
@@ -188,15 +327,15 @@ class Sum:
     Example:
 
         >>> Sum(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Sum(title=Localizable('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
+        Sum(title=Title('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
 'metric-name-2'])
     """
 
-    title: Localizable
+    title: Title
     color: Color
     summands: Sequence[
         str
@@ -233,16 +372,16 @@ class Product:
     Example:
 
         >>> Product(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Unit.COUNT,
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Product(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        Product(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 factors=['metric-name-1', 'metric-name-2'])
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     factors: Sequence[
@@ -280,16 +419,16 @@ class Difference:
     Example:
 
         >>> Difference(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     minuend="metric-name-1",
         ...     subtrahend="metric-name-2",
         ... )
-        Difference(title=Localizable('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
+        Difference(title=Title('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
 subtrahend='metric-name-2')
     """
 
-    title: Localizable
+    title: Title
     color: Color
     _: KW_ONLY
     minuend: (
@@ -340,17 +479,17 @@ class Fraction:
     Example:
 
         >>> Fraction(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Unit.COUNT,
         ...     Color.BLUE,
         ...     dividend="metric-name-1",
         ...     divisor="metric-name-2",
         ... )
-        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
+        Fraction(title=Title('A title'), unit=<Unit.COUNT: 14>, color=<Color.BLUE: 14>, \
 dividend='metric-name-1', divisor='metric-name-2')
     """
 
-    title: Localizable
+    title: Title
     unit: Unit | DecimalUnit | ScientificUnit
     color: Color
     _: KW_ONLY

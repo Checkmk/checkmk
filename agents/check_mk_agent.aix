@@ -310,6 +310,9 @@ section_checkmk() {
     echo "SpoolDirectory: ${SPOOLDIR}"
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
+    echo "OSType: unix"
+    echo "OSName: AIX"
+    echo "OSVersion: $(oslevel -s)"
 
     #
     # BEGIN COMMON AGENT CODE

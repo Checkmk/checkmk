@@ -40,7 +40,12 @@ GENERATED_GROUP_PREFIX = "gen-"
 
 
 def _localize_optional(
-    to_localize: ruleset_api_v1.Localizable | None, localizer: Callable[[str], str]
+    to_localize: ruleset_api_v1.Help
+    | ruleset_api_v1.Message
+    | ruleset_api_v1.Label
+    | ruleset_api_v1.Title
+    | None,
+    localizer: Callable[[str], str],
 ) -> str | None:
     return None if to_localize is None else to_localize.localize(localizer)
 
@@ -149,9 +154,7 @@ def _convert_to_legacy_check_parameter_rulespec(
                 to_convert.topic,
                 localizer,
             ),
-            item_spec=partial(
-                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
-            ),
+            item_spec=_get_item_spec_maker(to_convert.condition, localizer),
             match_type="dict",
             parameter_valuespec=partial(
                 _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
@@ -186,9 +189,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         case ruleset_api_v1.rule_specs.HostCondition():
             item_spec = None
         case ruleset_api_v1.rule_specs.HostAndItemCondition():
-            item_spec = partial(
-                _convert_to_legacy_item_spec, to_convert.condition.item_form, localizer
-            )
+            item_spec = _get_item_spec_maker(to_convert.condition, localizer)
         case other:
             assert_never(other)
 
@@ -381,7 +382,7 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
 
 def _convert_to_custom_group(
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
-    title: ruleset_api_v1.Localizable,
+    title: ruleset_api_v1.Title,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
     identifier = f"{GENERATED_GROUP_PREFIX}{hash(title.localize(lambda x: x))}"
@@ -408,7 +409,7 @@ def _to_generated_builtin_sub_group(
     raw_title: str,
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
-    title = ruleset_api_v1.Localizable(raw_title)
+    title = ruleset_api_v1.Title(raw_title)
     return _convert_to_custom_group(legacy_main_group, title, localizer)
 
 
@@ -419,7 +420,7 @@ class _LegacyDictKeyProps:
 
 
 def _extract_dictionary_key_props(
-    dic_elements: Mapping[str, ruleset_api_v1.form_specs.composed.DictElement]
+    dic_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
 ) -> _LegacyDictKeyProps:
     key_props = _LegacyDictKeyProps(required=[], hidden=[])
 
@@ -436,28 +437,28 @@ def _convert_to_inner_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     match to_convert:
-        case ruleset_api_v1.form_specs.basic.Integer():
+        case ruleset_api_v1.form_specs.Integer():
             return _convert_to_legacy_integer(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.Float():
+        case ruleset_api_v1.form_specs.Float():
             return _convert_to_legacy_float(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.DataSize():
+        case ruleset_api_v1.form_specs.DataSize():
             return _convert_to_legacy_datasize(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.Percentage():
+        case ruleset_api_v1.form_specs.Percentage():
             return _convert_to_legacy_percentage(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.Text():
+        case ruleset_api_v1.form_specs.String():
             return _convert_to_legacy_text_input(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.RegularExpression():
+        case ruleset_api_v1.form_specs.RegularExpression():
             return _convert_to_legacy_regular_expression(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved():
+        case ruleset_api_v1.form_specs.TupleDoNotUseWillbeRemoved():
             return _convert_to_legacy_tuple(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.composed.Dictionary():
+        case ruleset_api_v1.form_specs.Dictionary():
             elements = [
                 (key, _convert_to_legacy_valuespec(elem.parameter_form, localizer))
                 for key, elem in to_convert.elements.items()
@@ -478,58 +479,58 @@ def _convert_to_inner_legacy_valuespec(
                 else None,
             )
 
-        case ruleset_api_v1.form_specs.basic.SingleChoice():
+        case ruleset_api_v1.form_specs.SingleChoice():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.composed.CascadingSingleChoice():
+        case ruleset_api_v1.form_specs.CascadingSingleChoice():
             return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.ServiceState():
+        case ruleset_api_v1.form_specs.ServiceState():
             return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.HostState():
+        case ruleset_api_v1.form_specs.HostState():
             return _convert_to_legacy_host_state(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.composed.List():
+        case ruleset_api_v1.form_specs.List():
             return _convert_to_legacy_list(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.FixedValue():
+        case ruleset_api_v1.form_specs.FixedValue():
             return _convert_to_legacy_fixed_value(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.TimeSpan():
+        case ruleset_api_v1.form_specs.TimeSpan():
             return _convert_to_legacy_time_span(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.levels.Levels():
+        case ruleset_api_v1.form_specs.Levels():
             return _convert_to_legacy_levels(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.BooleanChoice():
+        case ruleset_api_v1.form_specs.BooleanChoice():
             return _convert_to_legacy_checkbox(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.FileUpload():
+        case ruleset_api_v1.form_specs.FileUpload():
             return _convert_to_legacy_file_upload(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.Proxy():
+        case ruleset_api_v1.form_specs.Proxy():
             return _convert_to_legacy_http_proxy(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.Metric():
+        case ruleset_api_v1.form_specs.Metric():
             return _convert_to_legacy_metric_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.MonitoredHost():
+        case ruleset_api_v1.form_specs.MonitoredHost():
             return _convert_to_legacy_monitored_host_name(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.MonitoredService():
+        case ruleset_api_v1.form_specs.MonitoredService():
             return _convert_to_legacy_monitored_service_description(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.Password():
+        case ruleset_api_v1.form_specs.Password():
             return _convert_to_legacy_individual_or_stored_password(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.composed.MultipleChoice():
+        case ruleset_api_v1.form_specs.MultipleChoice():
             return _convert_to_legacy_list_choice(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.basic.MultilineText():
+        case ruleset_api_v1.form_specs.MultilineText():
             return _convert_to_legacy_text_area(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.preconfigured.TimePeriod():
+        case ruleset_api_v1.form_specs.TimePeriod():
             return _convert_to_legacy_timeperiod_selection(to_convert, localizer)
 
         case other:
@@ -552,7 +553,7 @@ def _convert_to_legacy_valuespec(
     if to_convert.migrate is not None:
         migrate_func = (
             allow_empty_value_wrapper(to_convert.migrate)
-            if isinstance(to_convert, ruleset_api_v1.form_specs.composed.CascadingSingleChoice)
+            if isinstance(to_convert, ruleset_api_v1.form_specs.CascadingSingleChoice)
             else to_convert.migrate
         )
         return legacy_valuespecs.Migrate(
@@ -563,7 +564,7 @@ def _convert_to_legacy_valuespec(
 
 
 def _convert_to_legacy_integer(
-    to_convert: ruleset_api_v1.form_specs.basic.Integer, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Integer, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Integer:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -575,9 +576,9 @@ def _convert_to_legacy_integer(
         converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -589,7 +590,7 @@ def _convert_to_legacy_integer(
 
 
 def _convert_to_legacy_float(
-    to_convert: ruleset_api_v1.form_specs.basic.Float, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Float, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Float:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -602,9 +603,9 @@ def _convert_to_legacy_float(
         converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -616,58 +617,65 @@ def _convert_to_legacy_float(
 
 
 def _convert_to_legacy_binary_unit(
-    unit: ruleset_api_v1.form_specs.basic.BinaryUnit,
+    unit: ruleset_api_v1.form_specs.SIMagnitude | ruleset_api_v1.form_specs.IECMagnitude,
 ) -> legacy_valuespecs.LegacyBinaryUnit:
     match unit:
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.BYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.BYTE:
             return legacy_valuespecs.LegacyBinaryUnit.Byte
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.KILOBYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.KILO:
             return legacy_valuespecs.LegacyBinaryUnit.KB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEGABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.MEGA:
             return legacy_valuespecs.LegacyBinaryUnit.MB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIGABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.GIGA:
             return legacy_valuespecs.LegacyBinaryUnit.GB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.TERABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.TERA:
             return legacy_valuespecs.LegacyBinaryUnit.TB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.PETABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.PETA:
             return legacy_valuespecs.LegacyBinaryUnit.PB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.EXA:
             return legacy_valuespecs.LegacyBinaryUnit.EB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZETTABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.ZETTA:
             return legacy_valuespecs.LegacyBinaryUnit.ZB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOTTABYTE:
+        case ruleset_api_v1.form_specs.SIMagnitude.YOTTA:
             return legacy_valuespecs.LegacyBinaryUnit.YB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.KIBIBYTE:
+
+        case ruleset_api_v1.form_specs.IECMagnitude.BYTE:
+            return legacy_valuespecs.LegacyBinaryUnit.Byte
+        case ruleset_api_v1.form_specs.IECMagnitude.KIBI:
             return legacy_valuespecs.LegacyBinaryUnit.KiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.MEBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.MEBI:
             return legacy_valuespecs.LegacyBinaryUnit.MiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.GIBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.GIBI:
             return legacy_valuespecs.LegacyBinaryUnit.GiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.TEBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.TEBI:
             return legacy_valuespecs.LegacyBinaryUnit.TiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.PEBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.PEBI:
             return legacy_valuespecs.LegacyBinaryUnit.PiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.EXBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.EXBI:
             return legacy_valuespecs.LegacyBinaryUnit.EiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.ZEBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.ZEBI:
             return legacy_valuespecs.LegacyBinaryUnit.ZiB
-        case ruleset_api_v1.form_specs.basic.BinaryUnit.YOBIBYTE:
+        case ruleset_api_v1.form_specs.IECMagnitude.YOBI:
             return legacy_valuespecs.LegacyBinaryUnit.YiB
 
 
 def _convert_to_legacy_datasize(
-    to_convert: ruleset_api_v1.form_specs.basic.DataSize, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.DataSize, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.LegacyDataSize:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
+        "units": [
+            _convert_to_legacy_binary_unit(magnitude)
+            for magnitude in to_convert.displayed_magnitudes
+        ],
     }
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -675,16 +683,11 @@ def _convert_to_legacy_datasize(
             to_convert.custom_validate, localizer
         )
 
-    if to_convert.displayed_units is not None:
-        converted_kwargs["units"] = [
-            _convert_to_legacy_binary_unit(unit) for unit in to_convert.displayed_units
-        ]
-
     return legacy_valuespecs.LegacyDataSize(**converted_kwargs)
 
 
 def _convert_to_legacy_percentage(
-    to_convert: ruleset_api_v1.form_specs.basic.Percentage, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Percentage, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Percentage:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -694,9 +697,9 @@ def _convert_to_legacy_percentage(
     }
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -708,13 +711,13 @@ def _convert_to_legacy_percentage(
 
 
 def _convert_to_legacy_text_input(
-    to_convert: ruleset_api_v1.form_specs.basic.Text, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.String, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "allow_empty": not isinstance(
-            to_convert.custom_validate, ruleset_api_v1.validators.DisallowEmpty
+            to_convert.custom_validate, ruleset_api_v1.form_specs.validators.DisallowEmpty
         ),
     }
 
@@ -724,15 +727,15 @@ def _convert_to_legacy_text_input(
             "This field supports the use of macros. "
             "The corresponding plugin replaces the macros with the actual values."
         )
-        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["placeholder"] = to_convert.prefill.value
 
     if to_convert.custom_validate is not None:
@@ -744,7 +747,7 @@ def _convert_to_legacy_text_input(
 
 
 def _convert_to_legacy_regular_expression(
-    to_convert: ruleset_api_v1.form_specs.basic.RegularExpression, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.RegularExpression, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.RegExp:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -764,11 +767,11 @@ def _convert_to_legacy_regular_expression(
         )
 
     match to_convert.predefined_help_text:
-        case ruleset_api_v1.form_specs.basic.MatchingScope.PREFIX:
+        case ruleset_api_v1.form_specs.MatchingScope.PREFIX:
             mode: Literal["infix", "prefix", "complete"] = legacy_valuespecs.RegExp.prefix
-        case ruleset_api_v1.form_specs.basic.MatchingScope.INFIX:
+        case ruleset_api_v1.form_specs.MatchingScope.INFIX:
             mode = legacy_valuespecs.RegExp.infix
-        case ruleset_api_v1.form_specs.basic.MatchingScope.FULL:
+        case ruleset_api_v1.form_specs.MatchingScope.FULL:
             mode = legacy_valuespecs.RegExp.complete
         case other_match:
             assert_never(other_match)
@@ -777,7 +780,7 @@ def _convert_to_legacy_regular_expression(
 
 
 def _convert_to_legacy_tuple(
-    to_convert: ruleset_api_v1.form_specs.composed.TupleDoNotUseWillbeRemoved,
+    to_convert: ruleset_api_v1.form_specs.TupleDoNotUseWillbeRemoved,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
     legacy_elements = [
@@ -796,7 +799,7 @@ def _convert_to_legacy_tuple(
 
 
 def _convert_to_legacy_monitoring_state(
-    to_convert: ruleset_api_v1.form_specs.basic.ServiceState, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.ServiceState, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -808,7 +811,7 @@ def _convert_to_legacy_monitoring_state(
 
 
 def _convert_to_legacy_host_state(
-    to_convert: ruleset_api_v1.form_specs.basic.HostState, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.HostState, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -818,9 +821,9 @@ def _convert_to_legacy_host_state(
 
     return legacy_valuespecs.DropdownChoice(
         choices=[
-            (0, ruleset_api_v1.Localizable("Up").localize(localizer)),
-            (1, ruleset_api_v1.Localizable("Down").localize(localizer)),
-            (2, ruleset_api_v1.Localizable("Unreachable").localize(localizer)),
+            (0, ruleset_api_v1.Title("Up").localize(localizer)),
+            (1, ruleset_api_v1.Title("Down").localize(localizer)),
+            (2, ruleset_api_v1.Title("Unreachable").localize(localizer)),
         ],
         sorted=False,
         **converted_kwargs,
@@ -828,7 +831,7 @@ def _convert_to_legacy_host_state(
 
 
 def _convert_to_legacy_dropdown_choice(
-    to_convert: ruleset_api_v1.form_specs.basic.SingleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.SingleChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.DropdownChoice:
     choices = [
         (
@@ -853,9 +856,9 @@ def _convert_to_legacy_dropdown_choice(
 
     if to_convert.invalid_element_validation is not None:
         match to_convert.invalid_element_validation.mode:
-            case ruleset_api_v1.form_specs.basic.InvalidElementMode.COMPLAIN:
+            case ruleset_api_v1.form_specs.InvalidElementMode.COMPLAIN:
                 converted_kwargs["invalid_choice"] = "complain"
-            case ruleset_api_v1.form_specs.basic.InvalidElementMode.KEEP:
+            case ruleset_api_v1.form_specs.InvalidElementMode.KEEP:
                 converted_kwargs["invalid_choice"] = None
             case _:
                 assert_never(to_convert.invalid_element_validation.mode)
@@ -879,7 +882,7 @@ def _convert_to_legacy_dropdown_choice(
 
 
 def _convert_to_legacy_cascading_dropdown(
-    to_convert: ruleset_api_v1.form_specs.composed.CascadingSingleChoice,
+    to_convert: ruleset_api_v1.form_specs.CascadingSingleChoice,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
     legacy_choices = [
@@ -897,9 +900,9 @@ def _convert_to_legacy_cascading_dropdown(
         "help": _localize_optional(to_convert.help_text, localizer),
     }
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.composed.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["no_preselect_title"] = to_convert.prefill.value.localize(localizer)
-        case ruleset_api_v1.form_specs.composed.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             # CascadingSingleChoice.__post_init__ checks that prefill_selection is one of the elements
             default_choice = next(
                 legacy_choice
@@ -914,16 +917,29 @@ def _convert_to_legacy_cascading_dropdown(
     return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
 
-def _convert_to_legacy_item_spec(
-    to_convert: ruleset_api_v1.form_specs.basic.Text | ruleset_api_v1.form_specs.basic.SingleChoice,
+def _get_item_spec_maker(
+    condition: ruleset_api_v1.rule_specs.HostAndItemCondition,
     localizer: Callable[[str], str],
-) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
-    if isinstance(to_convert, ruleset_api_v1.form_specs.basic.Text):
-        return _convert_to_legacy_text_input(to_convert, localizer)
-    if isinstance(to_convert, ruleset_api_v1.form_specs.basic.SingleChoice):
-        return _convert_to_legacy_dropdown_choice(to_convert, localizer)
+) -> Callable[
+    [],
+    legacy_valuespecs.TextInput
+    | legacy_valuespecs.DropdownChoice
+    | legacy_valuespecs.TextAreaUnicode
+    | legacy_valuespecs.FixedValue,
+]:
+    item_form_with_title = dataclasses.replace(condition.item_form, title=condition.item_title)
 
-    raise ValueError(to_convert)
+    match item_form_with_title:
+        case ruleset_api_v1.form_specs.String():
+            return partial(_convert_to_legacy_text_input, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.SingleChoice():
+            return partial(_convert_to_legacy_dropdown_choice, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.MultilineText():
+            return partial(_convert_to_legacy_text_area, item_form_with_title, localizer)
+        case ruleset_api_v1.form_specs.FixedValue():
+            return partial(_convert_to_legacy_fixed_value, item_form_with_title, localizer)
+        case other:
+            raise ValueError(other)
 
 
 _ValidateFuncType = TypeVar("_ValidateFuncType")
@@ -936,14 +952,14 @@ def _convert_to_legacy_validation(
     def wrapper(value: _ValidateFuncType, var_prefix: str) -> None:
         try:
             v1_validate_func(value)
-        except ruleset_api_v1.validators.ValidationError as e:
+        except ruleset_api_v1.form_specs.validators.ValidationError as e:
             raise MKUserError(var_prefix, e.message.localize(localizer))
 
     return wrapper
 
 
 def _convert_to_legacy_list(
-    to_convert: ruleset_api_v1.form_specs.composed.List, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
     template = _convert_to_legacy_valuespec(to_convert.element_template, localizer)
     converted_kwargs: dict[str, Any] = {
@@ -965,7 +981,7 @@ def _convert_to_legacy_list(
 
 
 def _convert_to_legacy_fixed_value(
-    to_convert: ruleset_api_v1.form_specs.basic.FixedValue, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.FixedValue, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.FixedValue:
     return legacy_valuespecs.FixedValue(
         value=to_convert.value,
@@ -978,23 +994,23 @@ def _convert_to_legacy_fixed_value(
 
 
 def _convert_to_legacy_time_unit(
-    unit: ruleset_api_v1.form_specs.basic.TimeUnit,
+    unit: ruleset_api_v1.form_specs.TimeMagnitude,
 ) -> Literal["days", "hours", "minutes", "seconds", "milliseconds"]:
     match unit:
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MILLISECOND:
+        case ruleset_api_v1.form_specs.TimeMagnitude.MILLISECOND:
             return "milliseconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.SECOND:
+        case ruleset_api_v1.form_specs.TimeMagnitude.SECOND:
             return "seconds"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.MINUTE:
+        case ruleset_api_v1.form_specs.TimeMagnitude.MINUTE:
             return "minutes"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.HOUR:
+        case ruleset_api_v1.form_specs.TimeMagnitude.HOUR:
             return "hours"
-        case ruleset_api_v1.form_specs.basic.TimeUnit.DAY:
+        case ruleset_api_v1.form_specs.TimeMagnitude.DAY:
             return "days"
 
 
 def _convert_to_legacy_time_span(
-    to_convert: ruleset_api_v1.form_specs.basic.TimeSpan, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.TimeSpan, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TimeSpan:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -1002,15 +1018,15 @@ def _convert_to_legacy_time_span(
         "label": _localize_optional(to_convert.label, localizer),
     }
 
-    if to_convert.displayed_units is not None:
+    if to_convert.displayed_magnitudes is not None:
         converted_kwargs["display"] = [
-            _convert_to_legacy_time_unit(u) for u in to_convert.displayed_units
+            _convert_to_legacy_time_unit(u) for u in to_convert.displayed_magnitudes
         ]
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -1026,7 +1042,7 @@ _NumberT = TypeVar("_NumberT", float, int)
 
 def _get_legacy_level_spec(
     form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
-    title: ruleset_api_v1.Localizable,
+    title: ruleset_api_v1.Title,
     prefill_value: _NumberT,
     prefill_type: type[ruleset_api_v1.form_specs.DefaultValue]
     | type[ruleset_api_v1.form_specs.InputHint],
@@ -1057,15 +1073,15 @@ def _get_prefill_type(
 def _get_fixed_levels_choice_element(
     form_spec: ruleset_api_v1.form_specs.FormSpec[_NumberT],
     prefill: ruleset_api_v1.form_specs.Prefill[tuple[_NumberT, _NumberT]],
-    level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
+    level_direction: ruleset_api_v1.form_specs.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Tuple:
-    if level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.LOWER:
-        warn_title = ruleset_api_v1.Localizable("Warning below")
-        crit_title = ruleset_api_v1.Localizable("Critical below")
-    elif level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.UPPER:
-        warn_title = ruleset_api_v1.Localizable("Warning at")
-        crit_title = ruleset_api_v1.Localizable("Critical at")
+    if level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
+        warn_title = ruleset_api_v1.Title("Warning below")
+        crit_title = ruleset_api_v1.Title("Critical below")
+    elif level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
+        warn_title = ruleset_api_v1.Title("Warning at")
+        crit_title = ruleset_api_v1.Title("Critical at")
     else:
         assert_never(level_direction)
 
@@ -1091,16 +1107,16 @@ class _PredictiveLevelDefinition(enum.StrEnum):
 
 def _get_level_computation_dropdown(
     form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
-    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels[_NumberT],
-    level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
+    to_convert: ruleset_api_v1.form_specs.PredictiveLevels[_NumberT],
+    level_direction: ruleset_api_v1.form_specs.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
-    if level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.UPPER:
-        warn_title = ruleset_api_v1.Localizable("Warning above")
-        crit_title = ruleset_api_v1.Localizable("Critical above")
-    elif level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.LOWER:
-        warn_title = ruleset_api_v1.Localizable("Warning below")
-        crit_title = ruleset_api_v1.Localizable("Critical below")
+    if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
+        warn_title = ruleset_api_v1.Title("Warning above")
+        crit_title = ruleset_api_v1.Title("Critical above")
+    elif level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
+        warn_title = ruleset_api_v1.Title("Warning below")
+        crit_title = ruleset_api_v1.Title("Critical below")
     else:
         assert_never(level_direction)
 
@@ -1122,15 +1138,15 @@ def _get_level_computation_dropdown(
     )
 
     return legacy_valuespecs.CascadingDropdown(
-        title=ruleset_api_v1.Localizable(
-            "Level definition in relation to the predicted value"
-        ).localize(localizer),
+        title=ruleset_api_v1.Title("Level definition in relation to the predicted value").localize(
+            localizer
+        ),
         choices=[
             (
                 _PredictiveLevelDefinition.ABSOLUTE.value,
-                ruleset_api_v1.Localizable("Absolute difference").localize(localizer),
+                ruleset_api_v1.Title("Absolute difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a fixed absolute value"
                     ).localize(localizer),
@@ -1154,9 +1170,9 @@ def _get_level_computation_dropdown(
             ),
             (
                 _PredictiveLevelDefinition.RELATIVE.value,
-                ruleset_api_v1.Localizable("Relative difference").localize(localizer),
+                ruleset_api_v1.Title("Relative difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a percentage"
                     ).localize(localizer),
@@ -1174,25 +1190,25 @@ def _get_level_computation_dropdown(
             ),
             (
                 _PredictiveLevelDefinition.STDDEV.value,
-                ruleset_api_v1.Localizable("Standard deviation difference").localize(localizer),
+                ruleset_api_v1.Title("Standard deviation difference").localize(localizer),
                 legacy_valuespecs.Tuple(
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "The thresholds are calculated by increasing or decreasing the predicted "
                         "value by a multiple of the standard deviation"
                     ).localize(localizer),
                     elements=[
                         legacy_valuespecs.Float(
                             title=warn_title.localize(localizer),
-                            unit=ruleset_api_v1.Localizable(
-                                "times the standard deviation"
-                            ).localize(localizer),
+                            unit=ruleset_api_v1.Label("times the standard deviation").localize(
+                                localizer
+                            ),
                             default_value=stddev_prefill[0],
                         ),
                         legacy_valuespecs.Float(
                             title=crit_title.localize(localizer),
-                            unit=ruleset_api_v1.Localizable(
-                                "times the standard deviation"
-                            ).localize(localizer),
+                            unit=ruleset_api_v1.Label("times the standard deviation").localize(
+                                localizer
+                            ),
                             default_value=stddev_prefill[1],
                         ),
                     ],
@@ -1204,23 +1220,23 @@ def _get_level_computation_dropdown(
 
 def _get_predictive_levels_choice_element(
     form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
-    to_convert: ruleset_api_v1.form_specs.levels.PredictiveLevels[_NumberT],
-    level_direction: ruleset_api_v1.form_specs.levels.LevelDirection,
+    to_convert: ruleset_api_v1.form_specs.PredictiveLevels[_NumberT],
+    level_direction: ruleset_api_v1.form_specs.LevelDirection,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.Transform:
-    if level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.UPPER:
-        fixed_warn_title = ruleset_api_v1.Localizable("Warning level is at least")
-        fixed_crit_title = ruleset_api_v1.Localizable("Critical level is at least")
-        fixed_help_text = ruleset_api_v1.Localizable(
+    if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER:
+        fixed_warn_title = ruleset_api_v1.Title("Warning level is at least")
+        fixed_crit_title = ruleset_api_v1.Title("Critical level is at least")
+        fixed_help_text = ruleset_api_v1.Help(
             "Regardless of how the dynamic levels are computed according to the prediction: they "
             "will never be set below the following limits. This avoids false alarms during times "
             "where the predicted levels would be very low."
         )
 
-    elif level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.LOWER:
-        fixed_warn_title = ruleset_api_v1.Localizable("Warning level is at most")
-        fixed_crit_title = ruleset_api_v1.Localizable("Critical level is at most")
-        fixed_help_text = ruleset_api_v1.Localizable(
+    elif level_direction is ruleset_api_v1.form_specs.LevelDirection.LOWER:
+        fixed_warn_title = ruleset_api_v1.Title("Warning level is at most")
+        fixed_crit_title = ruleset_api_v1.Title("Critical level is at most")
+        fixed_help_text = ruleset_api_v1.Help(
             "Regardless of how the dynamic levels are computed according to the prediction: they "
             "will never be set above the following limits. This avoids false alarms during times "
             "where the predicted levels would be very high."
@@ -1233,16 +1249,16 @@ def _get_predictive_levels_choice_element(
             "period",
             legacy_valuespecs.DropdownChoice(
                 choices=[
-                    ("wday", ruleset_api_v1.Localizable("Day of the week").localize(localizer)),
-                    ("day", ruleset_api_v1.Localizable("Day of the month").localize(localizer)),
-                    ("hour", ruleset_api_v1.Localizable("Hour of the day").localize(localizer)),
+                    ("wday", ruleset_api_v1.Title("Day of the week").localize(localizer)),
+                    ("day", ruleset_api_v1.Title("Day of the month").localize(localizer)),
+                    ("hour", ruleset_api_v1.Title("Hour of the day").localize(localizer)),
                     (
                         "minute",
-                        ruleset_api_v1.Localizable("Minute of the hour").localize(localizer),
+                        ruleset_api_v1.Title("Minute of the hour").localize(localizer),
                     ),
                 ],
-                title=ruleset_api_v1.Localizable("Base prediction on").localize(localizer),
-                help=ruleset_api_v1.Localizable(
+                title=ruleset_api_v1.Title("Base prediction on").localize(localizer),
+                help=ruleset_api_v1.Help(
                     "Define the periodicity in which the repetition of the measured data is "
                     "expected (monthly, weekly, daily or hourly)"
                 ).localize(localizer),
@@ -1251,13 +1267,13 @@ def _get_predictive_levels_choice_element(
         (
             "horizon",
             legacy_valuespecs.Integer(
-                title=ruleset_api_v1.Localizable("Length of historic data to consider").localize(
+                title=ruleset_api_v1.Title("Length of historic data to consider").localize(
                     localizer
                 ),
-                help=ruleset_api_v1.Localizable(
+                help=ruleset_api_v1.Help(
                     "How many days in the past Checkmk should evaluate the measurement data"
                 ).localize(localizer),
-                unit=ruleset_api_v1.Localizable("days").localize(localizer),
+                unit=ruleset_api_v1.Label("days").localize(localizer),
                 minvalue=1,
                 default_value=90,
             ),
@@ -1270,25 +1286,28 @@ def _get_predictive_levels_choice_element(
         ),
         (
             "bound",
-            legacy_valuespecs.Tuple(
-                title=ruleset_api_v1.Localizable("Fixed limits").localize(localizer),
-                help=fixed_help_text.localize(localizer),
-                elements=[
-                    _get_legacy_level_spec(
-                        form_spec_template,
-                        fixed_warn_title,
-                        0,
-                        ruleset_api_v1.form_specs.InputHint,
-                        localizer,
-                    ),
-                    _get_legacy_level_spec(
-                        form_spec_template,
-                        fixed_crit_title,
-                        0,
-                        ruleset_api_v1.form_specs.InputHint,
-                        localizer,
-                    ),
-                ],
+            legacy_valuespecs.Optional(
+                title=ruleset_api_v1.Title("Fixed limits").localize(localizer),
+                label=ruleset_api_v1.Label("Set fixed limits").localize(localizer),
+                valuespec=legacy_valuespecs.Tuple(
+                    help=fixed_help_text.localize(localizer),
+                    elements=[
+                        _get_legacy_level_spec(
+                            form_spec_template,
+                            fixed_warn_title,
+                            0,
+                            ruleset_api_v1.form_specs.InputHint,
+                            localizer,
+                        ),
+                        _get_legacy_level_spec(
+                            form_spec_template,
+                            fixed_crit_title,
+                            0,
+                            ruleset_api_v1.form_specs.InputHint,
+                            localizer,
+                        ),
+                    ],
+                ),
             ),
         ),
     ]
@@ -1296,7 +1315,7 @@ def _get_predictive_levels_choice_element(
     return legacy_valuespecs.Transform(
         valuespec=legacy_valuespecs.Dictionary(
             elements=predictive_elements,
-            optional_keys=["bound"],
+            required_keys=["period", "horizon", "levels", "bound"],
         ),
         to_valuespec=lambda p: {k: p[k] for k in p if not k.startswith("__")},
         from_valuespec=lambda p: {
@@ -1306,7 +1325,7 @@ def _get_predictive_levels_choice_element(
             # is reflecetd in the stored data after update.
             "__reference_metric__": to_convert.reference_metric,
             "__direction__": "upper"
-            if level_direction is ruleset_api_v1.form_specs.levels.LevelDirection.UPPER
+            if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER
             else "lower",
         },
     )
@@ -1319,23 +1338,23 @@ class _LevelDynamicChoice(enum.StrEnum):
 
 
 def _convert_to_legacy_levels(
-    to_convert: ruleset_api_v1.form_specs.levels.Levels[_NumberT], localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT], localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
             _LevelDynamicChoice.NO_LEVELS.value,
-            ruleset_api_v1.Localizable("No levels").localize(localizer),
+            ruleset_api_v1.Title("No levels").localize(localizer),
             legacy_valuespecs.FixedValue(
                 value=None,
-                title=ruleset_api_v1.Localizable("No levels").localize(localizer),
-                totext=ruleset_api_v1.Localizable("Do not impose levels, always be OK").localize(
+                title=ruleset_api_v1.Title("No levels").localize(localizer),
+                totext=ruleset_api_v1.Label("Do not impose levels, always be OK").localize(
                     localizer
                 ),
             ),
         ),
         (
             _LevelDynamicChoice.FIXED.value,
-            ruleset_api_v1.Localizable("Fixed levels").localize(localizer),
+            ruleset_api_v1.Title("Fixed levels").localize(localizer),
             _get_fixed_levels_choice_element(
                 to_convert.form_spec_template,
                 to_convert.prefill_fixed_levels,
@@ -1348,7 +1367,7 @@ def _convert_to_legacy_levels(
         choices.append(
             (
                 _LevelDynamicChoice.PREDICTIVE.value,
-                ruleset_api_v1.Localizable("Predictive levels (only on CMC)").localize(localizer),
+                ruleset_api_v1.Title("Predictive levels (only on CMC)").localize(localizer),
                 _get_predictive_levels_choice_element(
                     to_convert.form_spec_template,
                     to_convert.predictive,
@@ -1358,15 +1377,29 @@ def _convert_to_legacy_levels(
             )
         )
 
+    match to_convert.form_spec_template:
+        case ruleset_api_v1.form_specs.Float() | ruleset_api_v1.form_specs.TimeSpan() | ruleset_api_v1.form_specs.Percentage():
+            # mypy accepts int's in place of float's (https://github.com/python/mypy/issues/11385).
+            # However, int is not a subclass of float, issubclass(int, float) is false. In a
+            # CascadingDropdown it is not acceptable to pass an int instead of a float (CMK-16402
+            # shows the warning). We transform the value here, such that users which rely on mypy
+            # validation are not disappointed.
+            prefill_value = (
+                float(to_convert.prefill_fixed_levels.value[0]),
+                float(to_convert.prefill_fixed_levels.value[1]),
+            )
+        case ruleset_api_v1.form_specs.Integer() | ruleset_api_v1.form_specs.DataSize():
+            prefill_value = to_convert.prefill_fixed_levels.value
+
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
         choices=choices,
-        default_value=(_LevelDynamicChoice.FIXED.value, (0, 0)),
+        default_value=(_LevelDynamicChoice.FIXED.value, prefill_value),
     )
 
 
 def _convert_to_legacy_http_proxy(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.Proxy, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Proxy, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     allowed_schemas = {s.value for s in to_convert.allowed_schemas}
 
@@ -1379,39 +1412,39 @@ def _convert_to_legacy_http_proxy(
         ]
 
     return legacy_valuespecs.CascadingDropdown(
-        title=ruleset_api_v1.Localizable("HTTP proxy").localize(localizer),
+        title=ruleset_api_v1.Title("HTTP proxy").localize(localizer),
         default_value=("environment", "environment"),
         choices=[
             (
                 "environment",
-                ruleset_api_v1.Localizable("Use from environment").localize(localizer),
+                ruleset_api_v1.Title("Use from environment").localize(localizer),
                 legacy_valuespecs.FixedValue(
                     value="environment",
-                    help=ruleset_api_v1.Localizable(
+                    help=ruleset_api_v1.Help(
                         "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
                         "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
                         "Have a look at the python requests module documentation for further information. Note "
                         "that these variables must be defined as a site-user in ~/etc/environment and that "
                         "this might affect other notification methods which also use the requests module."
                     ).localize(localizer),
-                    totext=ruleset_api_v1.Localizable(
+                    totext=ruleset_api_v1.Label(
                         "Use proxy settings from the process environment. This is the default."
                     ).localize(localizer),
                 ),
             ),
             (
                 "no_proxy",
-                ruleset_api_v1.Localizable("Connect without proxy").localize(localizer),
+                ruleset_api_v1.Title("Connect without proxy").localize(localizer),
                 legacy_valuespecs.FixedValue(
                     value=None,
-                    totext=ruleset_api_v1.Localizable(
+                    totext=ruleset_api_v1.Label(
                         "Connect directly to the destination instead of using a proxy."
                     ).localize(localizer),
                 ),
             ),
             (
                 "global",
-                ruleset_api_v1.Localizable("Use globally configured proxy").localize(localizer),
+                ruleset_api_v1.Title("Use globally configured proxy").localize(localizer),
                 legacy_valuespecs.DropdownChoice(
                     choices=_global_proxy_choices,
                     sorted=True,
@@ -1419,9 +1452,9 @@ def _convert_to_legacy_http_proxy(
             ),
             (
                 "url",
-                ruleset_api_v1.Localizable("Use explicit proxy settings").localize(localizer),
+                ruleset_api_v1.Title("Use explicit proxy settings").localize(localizer),
                 legacy_valuespecs.Url(
-                    title=ruleset_api_v1.Localizable("Proxy URL").localize(localizer),
+                    title=ruleset_api_v1.Title("Proxy URL").localize(localizer),
                     default_scheme="http",
                     allowed_schemes=allowed_schemas,
                 ),
@@ -1432,7 +1465,7 @@ def _convert_to_legacy_http_proxy(
 
 
 def _convert_to_legacy_checkbox(
-    to_convert: ruleset_api_v1.form_specs.basic.BooleanChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.BooleanChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Checkbox:
     return legacy_valuespecs.Checkbox(
         label=_localize_optional(to_convert.label, localizer),
@@ -1443,7 +1476,7 @@ def _convert_to_legacy_checkbox(
 
 
 def _convert_to_legacy_file_upload(
-    to_convert: ruleset_api_v1.form_specs.basic.FileUpload, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.FileUpload, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.FileUpload:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -1464,13 +1497,13 @@ def _convert_to_legacy_file_upload(
 
 
 def _convert_to_legacy_metric_name(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.Metric, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Metric, localizer: Callable[[str], str]
 ) -> legacy_graphing_valuespecs.MetricName:
     converted_kwargs = {}
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
-            "Select from a list of metrics known to Checkmk"
-        ).localize(localizer)
+        help_text = ruleset_api_v1.Help("Select from a list of metrics known to Checkmk").localize(
+            localizer
+        )
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
@@ -1478,7 +1511,7 @@ def _convert_to_legacy_metric_name(
 
 
 def _convert_to_legacy_monitored_host_name(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.MonitoredHost,
+    to_convert: ruleset_api_v1.form_specs.MonitoredHost,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredHostname:
     converted_kwargs: dict[str, Any] = {
@@ -1489,19 +1522,19 @@ def _convert_to_legacy_monitored_host_name(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
+        help_text = ruleset_api_v1.Help(
             "Select from a list of host names known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Localizable("Host name").localize(localizer)
+        title = ruleset_api_v1.Title("Host name").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredHostname(**converted_kwargs)
 
 
 def _convert_to_legacy_monitored_service_description(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.MonitoredService,
+    to_convert: ruleset_api_v1.form_specs.MonitoredService,
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.MonitoredServiceDescription:
     converted_kwargs: dict[str, Any] = {
@@ -1512,19 +1545,19 @@ def _convert_to_legacy_monitored_service_description(
         )
     }
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
-        help_text = ruleset_api_v1.Localizable(
+        help_text = ruleset_api_v1.Help(
             "Select from a list of service descriptions known to Checkmk"
         ).localize(localizer)
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is None:
-        title = ruleset_api_v1.Localizable("Service description").localize(localizer)
+        title = ruleset_api_v1.Title("Service description").localize(localizer)
     converted_kwargs["title"] = title
 
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
 
 
 def _convert_to_legacy_individual_or_stored_password(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.Password, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.CascadingDropdown:
     return legacy_page_groups.IndividualOrStoredPassword(
         title=_localize_optional(to_convert.title, localizer),
@@ -1534,7 +1567,7 @@ def _convert_to_legacy_individual_or_stored_password(
 
 
 def _convert_to_legacy_list_choice(
-    to_convert: ruleset_api_v1.form_specs.composed.MultipleChoice, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.MultipleChoice, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListChoice | legacy_valuespecs.DualListChoice:
     # arbitrarily chosen maximal size of created ListChoice
     # if number of choices if bigger, MultipleChoice is converted to DualListChoice
@@ -1568,7 +1601,7 @@ def _convert_to_legacy_list_choice(
 
 
 def _convert_to_legacy_text_area(
-    to_convert: ruleset_api_v1.form_specs.basic.MultilineText, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
     converted_kwargs: dict[str, Any] = {}
 
@@ -1578,15 +1611,15 @@ def _convert_to_legacy_text_area(
             "This field supports the use of macros. "
             "The corresponding plugin replaces the macros with the actual values."
         )
-        localized_text = ruleset_api_v1.Localizable(macros_help_text).localize(localizer)
+        localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text
     else:
         converted_kwargs["help"] = help_text
 
     match to_convert.prefill:
-        case ruleset_api_v1.form_specs.basic.DefaultValue():
+        case ruleset_api_v1.form_specs.DefaultValue():
             converted_kwargs["default_value"] = to_convert.prefill.value
-        case ruleset_api_v1.form_specs.basic.InputHint():
+        case ruleset_api_v1.form_specs.InputHint():
             pass  # not implemented for legacy VS
 
     if to_convert.custom_validate is not None:
@@ -1603,7 +1636,7 @@ def _convert_to_legacy_text_area(
 
 
 def _convert_to_legacy_timeperiod_selection(
-    to_convert: ruleset_api_v1.form_specs.preconfigured.TimePeriod, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.TimePeriod, localizer: Callable[[str], str]
 ) -> legacy_timeperiods.TimeperiodSelection:
     return legacy_timeperiods.TimeperiodSelection(
         title=_localize_optional(to_convert.title, localizer),

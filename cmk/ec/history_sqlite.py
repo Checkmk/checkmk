@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History sqlite backend"""
 import itertools
+import json
 import sqlite3
 import time
 from collections.abc import Iterable, Iterator, Sequence
@@ -50,6 +51,18 @@ TABLE_COLUMNS: Final = (
     "host_in_downtime",
     "match_groups_syslog_application",
 )
+
+
+def configure_sqlite_types() -> None:
+    """
+    Registers the required converters/adaptors for the sqlite3 type conversions.
+    """
+    sqlite3.register_converter("JSON", lambda value: json.loads(value.decode("utf8")))
+    sqlite3.register_converter("BOOL", lambda value: value.decode("utf8") == "1")
+
+    sqlite3.register_adapter(bool, int)
+    sqlite3.register_adapter(list, json.dumps)
+    sqlite3.register_adapter(tuple, json.dumps)
 
 
 def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
@@ -145,23 +158,29 @@ class SQLiteHistory(History):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
             self._settings.database.touch(exist_ok=True)
 
+        configure_sqlite_types()
+
         # TODO consider enabling PRAGMA journal_mode=WAL; after some performance measurements
         # TODO lookup our ec backend thread safety.
         # check_same_thread=False the connection may be accessed in multiple threads.
-        self.conn = sqlite3.connect(self._settings.database, check_same_thread=False)
+        self.conn = sqlite3.connect(
+            self._settings.database, check_same_thread=False, detect_types=sqlite3.PARSE_DECLTYPES
+        )
+
+        self.conn.row_factory = sqlite3.Row
 
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(
                 """CREATE TABLE IF NOT EXISTS history
-                                (time text, what text, who text, addinfo text, id INTEGER, count INTEGER,
-                                text TEXT, first FLOAT, last FLOAT,
+                                (time REAL, what TEXT, who TEXT, addinfo TEXT, id INTEGER, count INTEGER,
+                                text TEXT, first REAL, last REAL,
                                 comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
                                 pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
-                                state INTEGER, phase TEXT, owner TEXT, match_groups TEXT,
-                                contact_groups TEXT, ipaddress TEXT, orig_host TEXT,
+                                state INTEGER, phase TEXT, owner TEXT, match_groups JSON,
+                                contact_groups JSON, ipaddress TEXT, orig_host TEXT,
                                 contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
-                                match_groups_syslog_application TEXT);"""
+                                match_groups_syslog_application JSON);"""
             )
 
     def flush(self) -> None:

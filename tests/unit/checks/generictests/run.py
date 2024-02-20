@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
+import datetime
 from contextlib import contextmanager
 
-import freezegun
+import time_machine
 
 from tests.testlib import Check, MissingCheckInfoError
 
@@ -166,10 +167,10 @@ def optional_freeze_time(dataset):
     """Optionally freeze of the time in generic dataset tests
 
     If present and truish the datasets freeze_time attribute is passed to
-    freezegun.freeze_time.
+    time_machine.travel.
     """
     if getattr(dataset, "freeze_time", None):
-        with freezegun.freeze_time(dataset.freeze_time):
+        with time_machine.travel(datetime.datetime.fromisoformat(dataset.freeze_time)):
             yield
     else:
         yield
@@ -196,10 +197,11 @@ def run(check_info, dataset):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with current_host(HostName("non-existent-testhost")), mock_item_state(
-                mock_is
-            ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
-                check, mock_hecm, "get_host_merged_dict"
+            with (
+                current_host(HostName("non-existent-testhost")),
+                mock_item_state(mock_is),
+                MockHostExtraConf(check, mock_hec),
+                MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),
             ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 

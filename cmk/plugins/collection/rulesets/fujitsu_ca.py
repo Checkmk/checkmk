@@ -3,33 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, rule_specs, Title
 
 
-def _form_inventory_fujitsu_ca_ports() -> form_specs.composed.Dictionary:
-    return form_specs.composed.Dictionary(
+def _form_inventory_fujitsu_ca_ports() -> form_specs.Dictionary:
+    return form_specs.Dictionary(
         elements={
-            "indices": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.List(
-                    title=Localizable("CA port indices"),
-                    element_template=form_specs.basic.Text(),
+            "indices": form_specs.DictElement(
+                parameter_form=form_specs.List(
+                    title=Title("CA port indices"),
+                    element_template=form_specs.String(),
                 )
             ),
-            "modes": form_specs.composed.DictElement(
-                parameter_form=form_specs.composed.MultipleChoice(
-                    title=Localizable("CA port modes"),
+            "modes": form_specs.DictElement(
+                parameter_form=form_specs.MultipleChoice(
+                    title=Title("CA port modes"),
                     elements=[
-                        form_specs.composed.MultipleChoiceElement(
-                            name="CA", title=Localizable("CA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="RA", title=Localizable("RA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="CARA", title=Localizable("CARA")
-                        ),
-                        form_specs.composed.MultipleChoiceElement(
-                            name="Initiator", title=Localizable("Initiator")
+                        form_specs.MultipleChoiceElement(name="CA", title=Title("CA")),
+                        form_specs.MultipleChoiceElement(name="RA", title=Title("RA")),
+                        form_specs.MultipleChoiceElement(name="CARA", title=Title("CARA")),
+                        form_specs.MultipleChoiceElement(
+                            name="Initiator", title=Title("Initiator")
                         ),
                     ],
                 ),
@@ -39,7 +33,7 @@ def _form_inventory_fujitsu_ca_ports() -> form_specs.composed.Dictionary:
 
 
 rule_spec_inventory_fujitsu_ca_ports = rule_specs.DiscoveryParameters(
-    title=Localizable("Fujitsu storage CA port discovery"),
+    title=Title("Fujitsu storage CA port discovery"),
     topic=rule_specs.Topic.GENERAL,
     eval_type=rule_specs.EvalType.MERGE,
     name="inventory_fujitsu_ca_ports",

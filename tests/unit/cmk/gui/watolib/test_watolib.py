@@ -279,7 +279,7 @@ def test_registered_configvars() -> None:
 
 
 # Can be removed once we use mypy there
-def test_registered_configvars_types() -> None:
+def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)

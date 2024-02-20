@@ -3,61 +3,76 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.rulesets.v1 import Localizable
-from cmk.rulesets.v1.form_specs import DefaultValue, InputHint
-from cmk.rulesets.v1.form_specs.basic import BooleanChoice, FixedValue, Float, Integer, Text
-from cmk.rulesets.v1.form_specs.composed import (
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
+    DefaultValue,
     DictElement,
     Dictionary,
+    FixedValue,
+    Float,
+    InputHint,
+    Integer,
+    LevelDirection,
+    Levels,
+    LevelsConfigModel,
     List,
-    TupleDoNotUseWillbeRemoved,
+    String,
+    validators,
 )
-from cmk.rulesets.v1.form_specs.levels import LevelDirection, Levels
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
-from cmk.rulesets.v1.validators import DisallowEmpty, InRange
 
 
-def _valuespec_response_time() -> TupleDoNotUseWillbeRemoved:
+def _valuespec_response_time() -> Dictionary:
     # TODO API uses seconds, we need ms here!
     # NOTE (mo): store seconds, not milliseconds. Use TimeSpan Formspec!
-    return TupleDoNotUseWillbeRemoved(
-        title=Localizable("Response time"),
-        elements=[
-            Levels(
-                form_spec_template=Float(unit=Localizable("seconds")),
-                level_direction=LevelDirection.LOWER,
-                prefill_fixed_levels=InputHint((0.0, 0.0)),
-                predictive=None,
+    return Dictionary(
+        title=Title("Response time"),
+        elements={
+            "levels_lower": DictElement[LevelsConfigModel[float]](
+                parameter_form=Levels[float](
+                    form_spec_template=Float(unit=Label("seconds")),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint((0.0, 0.0)),
+                    predictive=None,
+                ),
+                required=True,
             ),
-            Levels(
-                form_spec_template=Float(unit=Localizable("seconds")),
-                level_direction=LevelDirection.UPPER,
-                prefill_fixed_levels=DefaultValue((0.001, 0.002)),
-                predictive=None,
+            "levels_upper": DictElement[LevelsConfigModel[float]](
+                parameter_form=Levels[float](
+                    form_spec_template=Float(unit=Label("seconds")),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((0.001, 0.002)),
+                    predictive=None,
+                ),
+                required=True,
             ),
-        ],
+        },
     )
 
 
 def _valuespec_validity() -> Dictionary:
     return Dictionary(
-        title=Localizable("Check certificate validity"),
+        title=Title("Check certificate validity"),
         elements={
-            "remaining": DictElement(parameter_form=_valuespec_remaining_validity()),
-            "maximum": DictElement(
+            "remaining": DictElement[LevelsConfigModel[int]](
+                parameter_form=_valuespec_remaining_validity()
+            ),
+            "maximum": DictElement[int](
                 parameter_form=Integer(
-                    title=Localizable("Maximum allowed validity"),
-                    unit=Localizable("days"),
-                    custom_validate=InRange(min_value=0),
+                    title=Title("Maximum allowed validity"),
+                    unit=Label("days"),
+                    custom_validate=validators.InRange(min_value=0),
                 )
             ),
-            "self_signed": DictElement(
+            "self_signed": DictElement[bool](
                 parameter_form=BooleanChoice(
-                    label=Localizable("Allow self-signed certificates"),
+                    label=Label("Allow self-signed certificates"),
                 ),
                 required=True,
             ),
@@ -67,206 +82,204 @@ def _valuespec_validity() -> Dictionary:
 
 def _valuespec_specific_values() -> Dictionary:
     return Dictionary(
-        title=Localizable("Check for specific values"),
+        title=Title("Check for specific values"),
         elements={
-            "serialnumber": DictElement(
-                parameter_form=Text(
-                    title=Localizable("Serial number"),
+            "serialnumber": DictElement[str](
+                parameter_form=String(
+                    title=Title("Serial number"),
                     prefill=InputHint("5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F"),
                 )
             ),
-            "signature_algorithm": DictElement(
+            "signature_algorithm": DictElement[tuple[str, object]](
                 parameter_form=CascadingSingleChoice(
-                    title=Localizable("Encryption algorithm"),
+                    title=Title("Encryption algorithm"),
                     prefill=DefaultValue("rsa"),
                     elements=[
-                        CascadingSingleChoiceElement(
+                        CascadingSingleChoiceElement[tuple[str, object]](
                             name="rsa",
-                            title=Localizable("RSA"),
+                            title=Title("RSA"),
                             parameter_form=_get_hashing_algorithm("RSA"),
                         ),
-                        CascadingSingleChoiceElement(
+                        CascadingSingleChoiceElement[tuple[str, object]](
                             name="ecdsa",
-                            title=Localizable("ECDSA"),
+                            title=Title("ECDSA"),
                             parameter_form=_get_hashing_algorithm("ECDSA"),
                         ),
-                        CascadingSingleChoiceElement(
+                        CascadingSingleChoiceElement[None](
                             name="ed25519",
-                            title=Localizable("ED25519"),
-                            parameter_form=FixedValue(
+                            title=Title("ED25519"),
+                            parameter_form=FixedValue[None](
                                 value=None,
-                                title=Localizable("ED25519"),
-                                label=Localizable("Hashing algorithm included in encryption"),
+                                title=Title("ED25519"),
+                                label=Label("Hashing algorithm included in encryption"),
                             ),
                         ),
-                        CascadingSingleChoiceElement(
+                        CascadingSingleChoiceElement[None](
                             name="rsassa_pss",
-                            title=Localizable("RSASSA_PSS"),
-                            parameter_form=FixedValue(
+                            title=Title("RSASSA_PSS"),
+                            parameter_form=FixedValue[None](
                                 value=None,
-                                title=Localizable("RSASSA_PSS"),
-                                label=Localizable(
+                                title=Title("RSASSA_PSS"),
+                                label=Label(
                                     "Defined by signature algorithm parameters",
                                 ),
                             ),
                         ),
-                        CascadingSingleChoiceElement(
+                        CascadingSingleChoiceElement[tuple[str, object]](
                             name="dsa",
-                            title=Localizable("DSA"),
+                            title=Title("DSA"),
                             parameter_form=_get_hashing_algorithm("DSA"),
                         ),
                     ],
                 )
             ),
-            "issuer": DictElement(
+            "issuer": DictElement[Mapping[str, object]](
                 parameter_form=Dictionary(
-                    title=Localizable("Issuer"),
+                    title=Title("Issuer"),
                     elements={
-                        "common_name": DictElement(
-                            parameter_form=Text(title=Localizable("Common name (CN)")),
+                        "common_name": DictElement[str](
+                            parameter_form=String(title=Title("Common name (CN)")),
                             required=True,
                         ),
-                        "organization": DictElement(
-                            parameter_form=Text(title=Localizable("Organization (O)"))
+                        "organization": DictElement[str](
+                            parameter_form=String(title=Title("Organization (O)"))
                         ),
-                        "org_unit": DictElement(
-                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
+                        "org_unit": DictElement[str](
+                            parameter_form=String(title=Title("Organizational unit (OU)"))
                         ),
-                        "state": DictElement(parameter_form=Text(title=Localizable("State (ST)"))),
-                        "country": DictElement(
-                            parameter_form=Text(title=Localizable("Country (C)"))
+                        "state": DictElement[str](parameter_form=String(title=Title("State (ST)"))),
+                        "country": DictElement[str](
+                            parameter_form=String(title=Title("Country (C)"))
                         ),
                     },
                 )
             ),
-            "subject": DictElement(
+            "subject": DictElement[Mapping[str, object]](
                 parameter_form=Dictionary(
-                    title=Localizable("Subject"),
+                    title=Title("Subject"),
                     elements={
-                        "common_name": DictElement(
-                            parameter_form=Text(title=Localizable("Common name (CN)")),
+                        "common_name": DictElement[str](
+                            parameter_form=String(title=Title("Common name (CN)")),
                             required=True,
                         ),
-                        "organization": DictElement(
-                            parameter_form=Text(title=Localizable("Organization (O)"))
+                        "organization": DictElement[str](
+                            parameter_form=String(title=Title("Organization (O)"))
                         ),
-                        "org_unit": DictElement(
-                            parameter_form=Text(title=Localizable("Organizational unit (OU)"))
+                        "org_unit": DictElement[str](
+                            parameter_form=String(title=Title("Organizational unit (OU)"))
                         ),
-                        "pubkey_algorithm": DictElement(
+                        "pubkey_algorithm": DictElement[tuple[str, object]](
                             parameter_form=CascadingSingleChoice(
-                                title=Localizable("Public key algorithm"),
+                                title=Title("Public key algorithm"),
                                 prefill=DefaultValue("rsa"),
                                 elements=[
-                                    CascadingSingleChoiceElement(
+                                    CascadingSingleChoiceElement[str](
                                         name="rsa",
-                                        title=Localizable("RSA"),
-                                        parameter_form=FixedValue(
-                                            value="rsa", title=Localizable("RSA")
+                                        title=Title("RSA"),
+                                        parameter_form=FixedValue[str](
+                                            value="rsa", title=Title("RSA")
                                         ),
                                     ),
-                                    CascadingSingleChoiceElement(
+                                    CascadingSingleChoiceElement[str](
                                         name="ec",
-                                        title=Localizable("Elliptic curve"),
-                                        parameter_form=FixedValue(
-                                            value="ec", title=Localizable("Elliptic curve")
+                                        title=Title("Elliptic curve"),
+                                        parameter_form=FixedValue[str](
+                                            value="ec", title=Title("Elliptic curve")
                                         ),
                                     ),
-                                    CascadingSingleChoiceElement(
+                                    CascadingSingleChoiceElement[str](
                                         name="dsa",
-                                        title=Localizable("DSA"),
-                                        parameter_form=FixedValue(
-                                            value="dsa", title=Localizable("DSA")
+                                        title=Title("DSA"),
+                                        parameter_form=FixedValue[str](
+                                            value="dsa", title=Title("DSA")
                                         ),
                                     ),
-                                    CascadingSingleChoiceElement(
+                                    CascadingSingleChoiceElement[None](
                                         name="gost_r3410",
-                                        title=Localizable("GOST R 34.10-2001"),
-                                        parameter_form=FixedValue(
+                                        title=Title("GOST R 34.10-2001"),
+                                        parameter_form=FixedValue[None](
                                             value=None,
-                                            title=Localizable("GOST R 34.10-2001"),
+                                            title=Title("GOST R 34.10-2001"),
                                         ),
                                     ),
-                                    CascadingSingleChoiceElement(
+                                    CascadingSingleChoiceElement[None](
                                         name="gost_r3410_2012",
-                                        title=Localizable("GOST R 34.10-2012"),
-                                        parameter_form=FixedValue(
+                                        title=Title("GOST R 34.10-2012"),
+                                        parameter_form=FixedValue[None](
                                             value=None,
-                                            title=Localizable("GOST R 34.10-2012"),
+                                            title=Title("GOST R 34.10-2012"),
                                         ),
                                     ),
                                 ],
                             )
                         ),
-                        "pubkeysize": DictElement(
-                            parameter_form=Text(title=Localizable("Public key size"))
+                        "pubkeysize": DictElement[str](
+                            parameter_form=String(title=Title("Public key size"))
                         ),
                     },
                 )
             ),
-            "altnames": DictElement(
-                parameter_form=List(
-                    element_template=Text(),
-                    title=Localizable("Certificate subject alternative name"),
+            "altnames": DictElement[Sequence[str]](
+                parameter_form=List[str](
+                    element_template=String(),
+                    title=Title("Certificate subject alternative name"),
                 ),
             ),
         },
     )
 
 
-def _valuespec_remaining_validity() -> TupleDoNotUseWillbeRemoved:
-    return TupleDoNotUseWillbeRemoved(
-        title=Localizable("Remaining validity time"),
-        help_text=Localizable("Minimum number of days a certificate has to be valid."),
-        elements=[
-            Integer(
-                title=Localizable("Warning at or below"),
-                unit=Localizable("days"),
-                custom_validate=InRange(min_value=0),
-            ),
-            Integer(
-                title=Localizable("Critical at or below"),
-                unit=Localizable("days"),
-                custom_validate=InRange(min_value=0),
-            ),
-        ],
+def _valuespec_remaining_validity() -> Levels[int]:
+    return Levels[int](
+        title=Title("Remaining validity time"),
+        help_text=Help("Minimum number of days a certificate has to be valid."),
+        form_spec_template=Integer(
+            custom_validate=validators.InRange(min_value=0), unit=Label("days")
+        ),
+        level_direction=LevelDirection.LOWER,
+        prefill_fixed_levels=InputHint(value=(0, 0)),
+        predictive=None,
     )
 
 
 def _valuespec_port() -> Integer:
     return Integer(
-        title=Localizable("Port"),
+        title=Title("Port"),
         prefill=DefaultValue(443),
     )
 
 
-def _valuespec_host_settings() -> List:
+def _valuespec_host_settings() -> List[Mapping[str, object]]:
     return List(
         element_template=Dictionary(
             elements={
-                "connection": DictElement(
+                "connection": DictElement[Mapping[str, object]](
                     parameter_form=Dictionary(
                         elements={
-                            "address": DictElement(
-                                parameter_form=Text(
-                                    title=Localizable("Host address or name"),
+                            "address": DictElement[str](
+                                parameter_form=String(
+                                    title=Title("Host address or name"),
                                     prefill=InputHint("my.host.tld | 192.168.0.73"),
-                                    custom_validate=DisallowEmpty(),
+                                    custom_validate=validators.DisallowEmpty(),
                                 ),
                                 required=True,
                             ),
-                            "port": DictElement(parameter_form=_valuespec_port()),
+                            "port": DictElement[int](parameter_form=_valuespec_port()),
                         },
                     ),
                     required=True,
                 ),
-                "individual_settings": DictElement(
+                "individual_settings": DictElement[Mapping[str, object]](
                     parameter_form=Dictionary(
-                        title=Localizable("Individual settings"),
+                        title=Title("Individual settings"),
                         elements={
-                            "response_time": DictElement(parameter_form=_valuespec_response_time()),
-                            "validity": DictElement(parameter_form=_valuespec_validity()),
-                            "cert_details": DictElement(
+                            "response_time": DictElement[Mapping[str, object]](
+                                parameter_form=_valuespec_response_time()
+                            ),
+                            "validity": DictElement[Mapping[str, object]](
+                                parameter_form=_valuespec_validity()
+                            ),
+                            "cert_details": DictElement[Mapping[str, object]](
                                 parameter_form=_valuespec_specific_values()
                             ),
                         },
@@ -279,12 +292,16 @@ def _valuespec_host_settings() -> List:
 
 def _valuespec_standard_settings() -> Dictionary:
     return Dictionary(
-        title=Localizable("Standard settings"),
+        title=Title("Standard settings"),
         elements={
-            "port": DictElement(parameter_form=_valuespec_port()),
-            "response_time": DictElement(parameter_form=_valuespec_response_time()),
-            "validity": DictElement(parameter_form=_valuespec_validity()),
-            "cert_details": DictElement(parameter_form=_valuespec_specific_values()),
+            "port": DictElement[int](parameter_form=_valuespec_port()),
+            "response_time": DictElement[Mapping[str, object]](
+                parameter_form=_valuespec_response_time()
+            ),
+            "validity": DictElement[Mapping[str, object]](parameter_form=_valuespec_validity()),
+            "cert_details": DictElement[Mapping[str, object]](
+                parameter_form=_valuespec_specific_values()
+            ),
         },
     )
 
@@ -292,36 +309,38 @@ def _valuespec_standard_settings() -> Dictionary:
 def _form_active_checks_cert() -> Dictionary:
     return Dictionary(
         elements={
-            "host_settings": DictElement(
+            "host_settings": DictElement[Sequence[Mapping[str, object]]](
                 parameter_form=_valuespec_host_settings(),
                 required=True,
             ),
-            "standard_settings": DictElement(parameter_form=_valuespec_standard_settings()),
+            "standard_settings": DictElement[Mapping[str, object]](
+                parameter_form=_valuespec_standard_settings()
+            ),
         },
     )
 
 
 def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> CascadingSingleChoice:
     sha2 = [
-        ("sha224", Localizable("SHA224")),
-        ("sha256", Localizable("SHA256")),
-        ("sha384", Localizable("SHA384")),
-        ("sha512", Localizable("SHA512")),
+        ("sha224", Title("SHA224")),
+        ("sha256", Title("SHA256")),
+        ("sha384", Title("SHA384")),
+        ("sha512", Title("SHA512")),
     ]
     sha3 = [
-        ("sha3_224", Localizable("SHA3_224")),
-        ("sha3_256", Localizable("SHA3_256")),
-        ("sha3_384", Localizable("SHA3_384")),
-        ("sha3_512", Localizable("SHA3_512")),
+        ("sha3_224", Title("SHA3_224")),
+        ("sha3_256", Title("SHA3_256")),
+        ("sha3_384", Title("SHA3_384")),
+        ("sha3_512", Title("SHA3_512")),
     ]
     elements = sha2 + sha3 if algorithm in ["RSA", "ECDSA"] else sha2
     return CascadingSingleChoice(
-        title=Localizable(algorithm),
+        title=Title(algorithm),
         elements=[
-            CascadingSingleChoiceElement(
+            CascadingSingleChoiceElement[str](
                 name=value,
                 title=title,
-                parameter_form=FixedValue(
+                parameter_form=FixedValue[str](
                     value=value,
                     title=title,
                 ),
@@ -333,7 +352,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
 
 
 rule_spec_cert = ActiveCheck(
-    title=Localizable("Check certificates"),
+    title=Title("Check certificates"),
     topic=Topic.NETWORKING,
     eval_type=EvalType.ALL,
     name="cert",

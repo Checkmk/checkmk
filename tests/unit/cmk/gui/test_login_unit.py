@@ -36,7 +36,7 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
 
 
-def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,
@@ -56,7 +56,7 @@ def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
         assert resp.location.startswith("user_login_two_factor.py")
 
 
-def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_forced_password_change(wsgi_app: WebTestAppForCMK, request_context: None) -> None:
     custom_attrs: UserSpec = {
         "enforce_pw_change": True,
     }
@@ -66,7 +66,9 @@ def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
         assert resp.location.startswith("user_change_pw.py")
 
 
-def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestAppForCMK) -> None:
+def test_login_two_factor_has_precedence_over_password_change(
+    wsgi_app: WebTestAppForCMK, request_context: None
+) -> None:
     auth_struct: WebAuthnCredential = {
         "credential_id": "Yaddayadda!",
         "registered_at": 0,

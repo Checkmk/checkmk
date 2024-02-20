@@ -35,7 +35,7 @@ class TestValueSpecTextInput:
         expect_validate_success(vs.TextInput(maxlen=3), "123")
         expect_validate_failure(vs.TextInput(maxlen=3), "1234")
 
-    def test_html_vars(self) -> None:
+    def test_html_vars(self, request_context: None) -> None:
         with request_var(dr="who"):
             assert vs.TextInput().from_html_vars("dr") == "who"
 

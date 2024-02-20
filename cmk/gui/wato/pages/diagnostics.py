@@ -48,6 +48,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
@@ -687,7 +688,7 @@ def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignor
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            if site_is_local(site):
+            if site_is_local(active_config, site):
                 tarfile_localpath = result.tarfile_path
             else:
                 tarfile_localpath = _get_tarfile_from_remotesite(
@@ -759,11 +760,11 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
 
 
 def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
-    if site_is_local(site):
+    if site_is_local(active_config, site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
     raw_response = do_remote_automation(
-        get_site_config(site),
+        get_site_config(active_config, site),
         "diagnostics-dump-get-file",
         [
             ("tarfile_name", tarfile_name),

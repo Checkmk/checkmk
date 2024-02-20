@@ -15,7 +15,6 @@ from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -183,7 +182,11 @@ class CommandReschedule(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
-            spread = utils.saveint(request.var("_resched_spread"))
+            spread = request.get_validated_type_input_mandatory(int, "_resched_spread")
+            if spread < 0:
+                raise MKUserError(
+                    "_resched_spread", _("Spread should be a positive number: %s") % spread
+                )
 
             t = time.time()
             if spread:
@@ -957,9 +960,9 @@ class CommandAcknowledge(Command):
             formatted_datetime_str = self.confirm_dialog_date_and_time_format(timestamp)
 
         expire_conditions_li = html.render_li(
-            _("On core restart OR recovery (OK/UP)")
+            _("On recovery (OK/UP)")
             if request.var("_ack_sticky")
-            else _("If state changes OR core restarts OR on recovery (OK/UP)")
+            else _("If state changes OR on recovery (OK/UP)")
         )
         expire_time_li = html.render_li(
             _("On %s (server time).") % formatted_datetime_str
@@ -992,7 +995,7 @@ class CommandAcknowledge(Command):
             label=_("Comment"),
             required=True,
             placeholder=_("e.g. ticket ID"),
-            onkeyup=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
+            oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
         if request.get_str_input("_ack_comment"):
             html.final_javascript(
@@ -1144,8 +1147,7 @@ class CommandAcknowledge(Command):
                         _("You cannot set an expiration date and time that is in the past:")
                         + f' "{expire_date} {expire_time}"',
                     )
-                expire = expire_timestamp - int(time.time())
-                expire_text = ";%d" % expire
+                expire_text = ";%d" % expire_timestamp
             else:
                 expire_text = ""
 
@@ -1532,7 +1534,7 @@ class CommandScheduleDowntimes(Command):
             required=not self._adhoc_downtime_configured(),
             placeholder=_("What is the occasion?"),
             submit="_down_custom",
-            onkeyup="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
+            oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         if request.get_str_input("_down_comment"):
             html.final_javascript(

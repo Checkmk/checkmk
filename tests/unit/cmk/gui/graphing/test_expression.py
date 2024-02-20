@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import (
     ConditionalMetricExpression,
     Constant,
@@ -70,7 +71,9 @@ def test_evaluate_cpu_utilization(
     # Assemble
     assert metric_info, "Global variable is empty/has not been initialized."
     assert graph_info, "Global variable is empty/has not been initialized."
-    perf_data_parsed, check_command = parse_perf_data(perf_data, check_command)
+    perf_data_parsed, check_command = parse_perf_data(
+        perf_data, check_command, config=active_config
+    )
     translated_metrics = translate_metrics(perf_data_parsed, check_command)
     assert (
         parse_expression(expression, translated_metrics).evaluate(translated_metrics).value
@@ -113,7 +116,7 @@ def test_evaluate_cpu_utilization(
         # figuring out how to represent graphs for active-icmp check when host has multiple
         # addresses.
         pytest.param(
-            parse_perf_data("127.0.0.1pl=5%;80;100;;")[0],
+            parse_perf_data("127.0.0.1pl=5%;80;100;;", config=active_config)[0],
             "check_mk_active-icmp",
             "127.0.0.1pl",
             Metric(name="127.0.0.1pl"),
@@ -125,7 +128,7 @@ def test_evaluate_cpu_utilization(
         # Here the user has a metrics that represent subnets, but the values look like floats
         # Test that evaluation recognizes the metric from the perf data
         pytest.param(
-            parse_perf_data("10.172=6")[0],
+            parse_perf_data("10.172=6", config=active_config)[0],
             "check_mk-local",
             "10.172",
             Metric(name="10.172"),

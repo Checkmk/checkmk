@@ -15,6 +15,7 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.metrics as metrics
+from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._expression import (
@@ -202,7 +203,7 @@ def test_horizontal_rules_from_thresholds(
                     title="Warning output",
                 ),
             ],
-            metrics.translate_perf_data(perf_string),
+            metrics.translate_perf_data(perf_string, config=active_config),
         )
         == result
     )

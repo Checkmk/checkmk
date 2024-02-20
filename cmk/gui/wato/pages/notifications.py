@@ -1123,7 +1123,9 @@ class ModeNotifications(ABCNotificationsMode):
         table.cell(
             _("Plugin output"),
             cmk.gui.view_utils.format_plugin_output(
-                output, shall_escape=active_config.escape_plugin_output
+                output,
+                request=request,
+                shall_escape=active_config.escape_plugin_output,
             ),
         )
 
@@ -1482,7 +1484,9 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 def _get_notification_sync_sites():
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
     # pylint: disable=not-an-iterable
-    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
+    return sorted(
+        site_id for site_id in wato_slave_sites() if not site_is_local(active_config, site_id)
+    )
 
 
 class ModeUserNotifications(ABCUserNotificationsMode):

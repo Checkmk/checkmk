@@ -1235,7 +1235,7 @@ def test_move_host_to_the_same_folder(clients: ClientRegistry) -> None:
     resp.json["title"] = "Invalid move action"
 
 
-@pytest.mark.usefixtures("custom_host_attribute")
+@pytest.mark.usefixtures("request_context", "custom_host_attribute")
 def test_openapi_host_config_effective_attributes_includes_custom_attributes_regression(
     clients: ClientRegistry,
 ) -> None:

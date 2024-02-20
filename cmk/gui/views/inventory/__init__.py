@@ -45,7 +45,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
 from cmk.gui.inventory.filters import (
@@ -228,15 +228,14 @@ class PainterInventoryTree(Painter):
         if not (tree := self._compute_data(row, cell)):
             return "", ""
 
-        painter_options = PainterOptions.get_instance()
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -551,6 +550,7 @@ def inv_paint_cmk_label(label: Sequence[str]) -> PaintResult:
         object_type="host",
         with_links=True,
         label_sources={label[0]: "discovered"},
+        request=request,
     )
 
 
@@ -1163,6 +1163,7 @@ def register_table_views_and_columns() -> None:
 
 def _register_table_views_and_columns() -> None:
     # create painters for node with a display hint
+    painter_options = PainterOptions.get_instance()
     for hints in DISPLAY_HINTS:
         if "*" in hints.abc_path:
             # FIXME DYNAMIC-PATHS
@@ -1178,7 +1179,7 @@ def _register_table_views_and_columns() -> None:
 
         ident = ("inv",) + hints.abc_path
 
-        _register_node_painter("_".join(ident), hints)
+        _register_node_painter("_".join(ident), hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
@@ -1197,7 +1198,9 @@ def _register_table_views_and_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _register_node_painter(name: str, hints: DisplayHints) -> None:
+def _register_node_painter(
+    name: str, hints: DisplayHints, *, painter_options: PainterOptions
+) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
         name,
@@ -1225,7 +1228,9 @@ def _register_node_painter(name: str, hints: DisplayHints) -> None:
             "printable": False,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_tree(row, hints.abc_path),
+            "paint": lambda row: _paint_host_inventory_tree(
+                row, hints.abc_path, painter_options=painter_options
+            ),
             "export_for_python": lambda row, cell: (
                 _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
@@ -1246,11 +1251,12 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     return row.get("host_inventory", ImmutableTree()).get_tree(path)
 
 
-def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
+def _paint_host_inventory_tree(
+    row: Row, path: SDPath, *, painter_options: PainterOptions
+) -> CellSpec:
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
-    painter_options = PainterOptions.get_instance()
     tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
@@ -1258,7 +1264,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree)
+        tree_renderer.show(tree, request=request)
         code = HTML(output_funnel.drain())
 
     return "invtree", code
@@ -1951,7 +1957,13 @@ class PainterInvhistTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["invhist_time"], True, 60 * 10)
+        return paint_age(
+            row["invhist_time"],
+            True,
+            60 * 10,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterInvhistDelta(Painter):
@@ -1985,7 +1997,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2372,7 +2384,7 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree)
+    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request=request)
 
 
 class TreeRenderer:
@@ -2420,7 +2432,9 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
+    def _show_table(  # pylint: disable=redefined-outer-name
+        self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, *, request: Request
+    ) -> None:
         if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
             html.div(
@@ -2474,7 +2488,9 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
+    def _show_node(  # pylint: disable=redefined-outer-name
+        self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints, *, request: Request
+    ) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
             treename=self._tree_name,
@@ -2498,18 +2514,20 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node)
+                self.show(node, request=request)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree) -> None:
+    def show(  # pylint: disable=redefined-outer-name
+        self, tree: ImmutableTree | ImmutableDeltaTree, *, request: Request
+    ) -> None:
         hints = DISPLAY_HINTS.get_tree_hints(tree.path)
 
         if tree.attributes:
             self._show_attributes(tree.attributes, hints)
 
         if tree.table:
-            self._show_table(tree.table, hints)
+            self._show_table(tree.table, hints, request=request)
 
         for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hints(name))
+                self._show_node(node, hints.get_node_hints(name), request=request)

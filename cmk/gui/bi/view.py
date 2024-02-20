@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import typing
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Literal
@@ -27,9 +27,9 @@ from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
@@ -644,7 +644,9 @@ class PainterAggrOutput(Painter):
         return ("", row["aggr_output"])
 
 
-def paint_aggr_hosts(row, link_to_view):
+def paint_aggr_hosts(  # pylint: disable=redefined-outer-name
+    row: Row, link_to_view: str, *, request: Request
+) -> CellSpec:
     h = []
     for site, host in row["aggr_hosts"]:
         url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
@@ -668,7 +670,7 @@ class PainterAggrHosts(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "aggr_host")
+        return paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
 class PainterAggrHostsServices(Painter):
@@ -687,7 +689,7 @@ class PainterAggrHostsServices(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggr_hosts(row, "host")
+        return paint_aggr_hosts(row, "host", request=self.request)
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -766,10 +768,11 @@ class PainterOptionAggrWrap(PainterOption):
 
 def paint_aggregated_tree_state(
     row: Row,
+    *,
+    painter_options: PainterOptions,
     force_renderer_cls: type[ABCFoldableTreeRenderer] | None = None,
     show_frozen_difference: bool = False,
 ) -> CellSpec:
-    painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
     only_problems = painter_options.get("aggr_onlyproblems") == "1"
@@ -825,16 +828,16 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row)
+        return paint_aggregated_tree_state(row, painter_options=self._painter_options)
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -861,16 +864,18 @@ class PainterAggrTreestateFrozenDiff(Painter):
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
 
-        return paint_aggregated_tree_state(row, show_frozen_difference=True)
+        return paint_aggregated_tree_state(
+            row, painter_options=self._painter_options, show_frozen_difference=True
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
 @request_memoize()
@@ -976,19 +981,28 @@ class PainterAggrTreestateBoxed(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
+        return paint_aggregated_tree_state(
+            row,
+            painter_options=self._painter_options,
+            force_renderer_cls=FoldableTreeRendererBoxes,
+        )
 
     def export_for_python(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell) -> dict:
-        return render_tree_json(row)
+        return render_tree_json(row, user=self.user, request=self.request)
 
 
-def render_tree_json(row) -> dict[str, Any]:  # type: ignore[no-untyped-def]
+def render_tree_json(  # pylint: disable=redefined-outer-name
+    row: typing.Mapping[str, typing.Any],
+    *,
+    user: LoggedInUser,
+    request: Request,
+) -> dict[str, Any]:
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     if expansion_level != user.bi_expansion_level:

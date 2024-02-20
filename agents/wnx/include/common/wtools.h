@@ -11,18 +11,16 @@
 
 #ifndef WTOOLS_H
 #define WTOOLS_H
-#if defined(_WIN32)
-#include <AclAPI.h>
-#include <comdef.h>
 
-#include "Windows.h"
-#include "winperf.h"
+#include <WinSock2.h>  // here to help iphlpapi.h
 
 #define _WIN32_DCOM  // NOLINT
 
+#include <AclAPI.h>
 #include <TlHelp32.h>
 #include <WbemIdl.h>
-#endif
+#include <comdef.h>
+#include <iphlpapi.h>
 
 #include <atomic>
 #include <cstdint>
@@ -33,9 +31,11 @@
 #include <string_view>
 #include <tuple>
 
+#include "Windows.h"
 #include "datablock.h"
 #include "tools/_win.h"
 #include "tools/_xlog.h"
+#include "winperf.h"
 
 namespace wtools {
 constexpr std::string_view safe_temp_sub_dir = "cmk_service";
@@ -1111,6 +1111,19 @@ bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port);
 std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port);
 
 uint32_t GetServiceStatus(const std::wstring &name) noexcept;
+
+struct AdapterInfo {
+    std::string guid;
+    std::wstring friendly_name;
+    std::wstring description;
+    IFTYPE if_type;
+    std::optional<uint64_t> receive_speed;
+    std::optional<uint64_t> transmit_speed;
+    IF_OPER_STATUS oper_status;
+};
+using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
+
+AdapterInfoStore GetAdapterInfoStore();
 }  // namespace wtools
 
 #endif  // WTOOLS_H

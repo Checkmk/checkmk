@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import form_specs, migrations, rule_specs, validators
-from ._localize import Localizable
+from . import form_specs, rule_specs
+from ._localize import Help, Label, Message, Title
 
 __all__ = [
     "form_specs",
-    "Localizable",
-    "migrations",
+    "Help",
+    "Label",
+    "Message",
+    "Title",
     "rule_specs",
-    "validators",
 ]

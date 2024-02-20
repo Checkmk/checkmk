@@ -7,15 +7,26 @@ from typing import Any
 
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.config import active_config
+from cmk.gui.http import request
+from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
+from ...utils.theme import theme
 from .base import Sorter
 
 
 class SorterRegistry(Registry[type[Sorter]]):
     def plugin_name(self, instance: type[Sorter]) -> str:
-        return instance().ident
+        return instance(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+        ).ident
 
 
 sorter_registry = SorterRegistry()
@@ -50,7 +61,13 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
 def declare_1to1_sorter(
     painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
 ) -> PainterName:
-    painter = painter_registry[painter_name]()
+    painter = painter_registry[painter_name](
+        user=user,
+        config=active_config,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+        theme=theme,
+    )
 
     register_sorter(
         painter_name,

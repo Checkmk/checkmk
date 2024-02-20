@@ -12,8 +12,6 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from tests.testlib import on_time
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.checkmk_agent import (
@@ -483,11 +481,9 @@ def test_certificate_results(
         ]
     )
 
-    with on_time(datetime(2001, 5, 25, 13, 13, 13), "CEST"):
+    with time_machine.travel(datetime(2001, 5, 25, 13, 13, 13, tzinfo=ZoneInfo("UTC"))):
         assert [*_check_cmk_agent_update({}, None, section)] == [
-            Result(
-                state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
-            ),  # timezones?
+            Result(state=State.OK, notice="Time since last update check: 2 hours 0 minutes"),
             Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
             *results,
@@ -530,8 +526,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
         Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
-        Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
-        Result(state=State.OK, notice="Pending installation: 1234abcd"),
+        Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
+        Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
     ]
 
 

@@ -177,6 +177,14 @@ TEST(WinPerf, IfCounter) {
               cfg::GetPerformanceFrequency());
     // check at least one negative value is in
     EXPECT_TRUE(rs::any_of(table, [](auto &l) { return l[0] == '-'; }));
+
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 1].starts_with(
+        wtools::ToUtf8(winperf::if_section_pseudo_counter)));
+
+    // check pseudo counter is in last line
+    EXPECT_TRUE(table[table.size() - 1].ends_with(
+        wtools::ToUtf8(winperf::if_section_pseudo_counter_type)));
 }
 
 TEST(WinPerf, TcpConnCounter) {

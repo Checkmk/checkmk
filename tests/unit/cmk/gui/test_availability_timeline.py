@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.gui.availability import layout_timeline
 
@@ -136,7 +138,9 @@ def test_layout_timeline_spans(
     style,
     expected,
 ):
-    with on_time("2022-11-04 14:02:30,439", "CET"):
+    with time_machine.travel(
+        datetime.datetime(2022, 11, 4, 14, 2, 30, 439, tzinfo=ZoneInfo("CET"))
+    ):
         assert (
             layout_timeline(
                 what,

@@ -91,9 +91,9 @@ def parse_oracle_sql(string_table):
             instance[key] = float(line[1])
 
         else:
-            instance["parsing_error"].setdefault(("unknown", "Unknown error", 3), []).append(
-                ":".join(line).strip()
-            )
+            instance["parsing_error"].setdefault(
+                ("unknown", f'Unexpected Keyword: "{key}". Line was', 3), []
+            ).append(":".join(line).strip())
 
     return parsed
 
@@ -117,10 +117,11 @@ def check_oracle_sql(item, params, parsed):
     if elapsed_time is not None:
         perfdata.append(("elapsed_time", elapsed_time))
 
-    yield data["exit"], ", ".join(data["details"]), perfdata
+    if details := data["details"]:
+        yield data["exit"], ", ".join(details), perfdata
 
-    if data["long"]:
-        yield 0, "\n%s" % "\n".join(data["long"])
+    if long := data["long"]:
+        yield 0, "\n%s" % "\n".join(long)
 
 
 check_info["oracle_sql"] = LegacyCheckDefinition(

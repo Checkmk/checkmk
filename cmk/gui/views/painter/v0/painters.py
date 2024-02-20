@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import json
 import time
 from collections.abc import Callable, Iterable, Sequence
 from fnmatch import fnmatch
@@ -67,6 +66,7 @@ from cmk.gui.visual_link import render_link_to_view
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter, PainterRegistry
 from .helpers import (
+    format_labels_for_csv_export,
     get_label_sources,
     get_tag_groups,
     paint_host_list,
@@ -5057,7 +5057,7 @@ class PainterHostLabels(Painter):
         return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        return json.dumps(self._compute_data(row, cell))
+        return format_labels_for_csv_export(self._compute_data(row, cell))
 
     def export_for_json(self, row: Row, cell: Cell) -> Labels:
         return self._compute_data(row, cell)
@@ -5097,7 +5097,7 @@ class PainterServiceLabels(Painter):
         return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        return json.dumps(self._compute_data(row, cell))
+        return format_labels_for_csv_export(self._compute_data(row, cell))
 
     def export_for_json(self, row: Row, cell: Cell) -> Labels:
         return self._compute_data(row, cell)

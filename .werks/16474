@@ -1,0 +1,11 @@
+Title: Revert Werk #16473 and export labels comma separated lists instead
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1708436095
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+This change reverts <a href="https://checkmk.com/werk/16473">Werk #16473</a> and instead
+implements the &lt;2.2 behaviour for labels in CSV exports.

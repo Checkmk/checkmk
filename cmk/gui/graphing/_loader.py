@@ -9,7 +9,7 @@ import cmk.utils.debug
 from cmk.utils.plugin_registry import Registry
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import graphs, metrics, perfometers, translations
+from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
 
 from ._type_defs import UnitInfo
 from ._unit_info import unit_info
@@ -28,15 +28,7 @@ def load_graphing_plugins() -> (
 ):
     return discover_plugins(
         PluginGroup.GRAPHING,
-        {
-            metrics.Metric: "metric_",
-            translations.Translation: "translation_",
-            perfometers.Perfometer: "perfometer_",
-            perfometers.Bidirectional: "perfometer_",
-            perfometers.Stacked: "perfometer_",
-            graphs.Graph: "graph_",
-            graphs.Bidirectional: "graph_",
-        },
+        entry_point_prefixes(),
         raise_errors=cmk.utils.debug.enabled(),
     )
 

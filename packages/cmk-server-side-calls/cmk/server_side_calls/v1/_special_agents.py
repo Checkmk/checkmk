@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
 from ._utils import HostConfig, HTTPProxy, Secret
 
@@ -16,6 +16,9 @@ _ParsedParameters = TypeVar("_ParsedParameters")
 class SpecialAgentCommand:
     """
     Defines a special agent command
+
+    Instances of this class will only be picked up by Checkmk if their names start with
+    ``special_agent_``.
 
     One SpecialAgentCommand results in one call of the special agent.
 
@@ -43,6 +46,9 @@ class SpecialAgentCommand:
 class SpecialAgentConfig(Generic[_ParsedParameters]):
     """
     Defines a special agent
+
+    Instances of this class will only be picked up by Checkmk if their names start
+    with ``special_agent_``.
 
     One SpecialAgentConfig can result in multiple calls of the special agent.
     The executable will be searched for in the following three folders, in
@@ -93,6 +99,8 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
 
         The first existing file will be used.
     """
+
+    NAME_PREFIX: ClassVar = "special_agent_"
 
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]

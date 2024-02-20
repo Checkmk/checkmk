@@ -112,9 +112,17 @@ from ..v1.type_defs import (
 )
 from . import clusterize, render
 from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
-from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
+from ._plugins import (
+    AgentSection,
+    CheckPlugin,
+    entry_point_prefixes,
+    InventoryPlugin,
+    SimpleSNMPSection,
+    SNMPSection,
+)
 
 __all__ = [
+    "entry_point_prefixes",
     # the order is relevant for the sphinx doc!
     "AgentSection",
     "CheckPlugin",

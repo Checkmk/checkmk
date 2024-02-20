@@ -833,4 +833,10 @@ TEST(Wtools, GetAdapterInfoStore) {
     EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusDown));
 }
 
+TEST(Wtools, MangleNameForPerfCounter) {
+    EXPECT_EQ(MangleNameForPerfCounter(L"abc"), L"abc");
+    EXPECT_EQ(MangleNameForPerfCounter(L"/\\!@#$%^&**()__ `~'\""),
+              L"__!@_$%^&**[]__ `~'\"");
+}
+
 }  // namespace wtools

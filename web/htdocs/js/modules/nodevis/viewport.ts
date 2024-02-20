@@ -105,7 +105,7 @@ export class Viewport {
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "svg_content")
-            .style("cursor", "move")
+            .style("cursor", "grab")
             .on("contextmenu", event => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -126,6 +126,9 @@ export class Viewport {
         this._zoom_behaviour
             .scaleExtent([0.2, 10])
             .on("zoom", event => this.zoomed(event))
+            .on("end", () =>
+                this._svg_content_selection.style("cursor", "grab")
+            )
             .filter(event => {
                 // Disable left click zoom
                 return event.button === 0 || event.button === 1;
@@ -467,6 +470,7 @@ export class Viewport {
             this._layers[layer_id].zoomed();
             this._layers[layer_id].update_gui();
         }
+        this._svg_content_selection.style("cursor", "grabbing");
     }
 
     // Applies scale and x/y translation

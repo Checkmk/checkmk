@@ -375,39 +375,40 @@ class TopologyHost extends TopologyCoreEntity {
             TopologyCoreEntity.prototype.get_context_menu_elements.call(this);
 
         const custom_settings = get_custom_node_settings(this.node);
-        const options = [
-            new RadioGroupOption("default", texts.get("default")),
-            new RadioGroupOption("all", texts.get("all")),
-            new RadioGroupOption("only_problems", texts.get("only_problems")),
-            new RadioGroupOption("none", texts.get("none")),
+        const current_setting = custom_settings.show_services || "default";
+        const options: [string, string][] = [
+            ["default", texts.get("global_default")],
+            ["all", texts.get("all")],
+            ["only_problems", texts.get("only_problems")],
+            ["none", texts.get("none")],
         ];
-        const radio_div = d3.select<HTMLDivElement, null>(
-            document.createElement("div")
-        );
 
-        const current_service_option = custom_settings.show_services
-            ? custom_settings.show_services
-            : "default";
-        render_radio_group(
-            radio_div,
-            texts.get("services"),
-            "service_visibility_popup",
-            options,
-            current_service_option,
-            (new_option: string) => {
-                console.log("new option");
-                const custom_settings = get_custom_node_settings(this.node);
-                if (new_option == "default")
-                    delete custom_settings["show_services"];
-                else custom_settings["show_services"] = new_option;
-                this._world.viewport.get_nodes_layer().hide_context_menu();
-                this._world.update_data();
-            }
-        );
+        function changed_option(world: NodevisWorld, new_option: string) {
+            if (new_option == "default")
+                delete custom_settings["show_services"];
+            else custom_settings["show_services"] = new_option;
+            world.viewport.get_nodes_layer().hide_context_menu();
+            world.update_data();
+        }
 
-        elements.push({
-            dom: radio_div.node()! as HTMLDivElement,
+        const service_choice: ContextMenuElement = {
+            text: texts.get("show_services"),
+            children: [],
+        };
+
+        options.forEach(([ident, text]) => {
+            const world = this._world;
+            service_choice.children!.push({
+                img:
+                    current_setting == ident
+                        ? "themes/facelift/images/icon_tick.svg"
+                        : "",
+                text: text,
+                on: () => changed_option(world, ident),
+            });
         });
+        elements.push(service_choice);
+
         return elements;
     }
 

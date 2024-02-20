@@ -13,7 +13,8 @@
 
 from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
-from typing import Any, Final, NamedTuple
+from functools import partial
+from typing import Any, Callable, Final, NamedTuple
 
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
@@ -26,8 +27,9 @@ Line = Sequence[str]
 Lines = Iterator[Line]
 
 
-# must be in sync with code in windows agent, see IF_STATUS_PSEUDO_COUNTER
+# Pseudo counters must be in sync with code in windows agent, grep if_status_pseudo_counter in WA
 _IF_STATUS_PSEUDO_COUNTER: Final[str] = "2002"
+_IF_MAC_PSEUDO_COUNTER: Final[str] = "2006"
 
 
 def _canonize_name(name: str) -> str:
@@ -89,21 +91,37 @@ def _get_windows_if_status(counter_index: int) -> str:
     return interfaces.get_if_state_name(str(counter_index))
 
 
-def _get_oper_status(counters: Mapping[str, int]) -> int:
+def _get_oper_status(agent_section: Mapping[str, Line], idx: int) -> int:
     """returns oper status, see MSDN meaning, from pseudo counter if presented
     otherwise 1 (up)"""
-    return counters.get(_IF_STATUS_PSEUDO_COUNTER) or 1
+    if line := agent_section.get(_IF_STATUS_PSEUDO_COUNTER):
+        return int(line[idx])
+    return 1
+
+
+def _get_mac(agent_section: Mapping[str, Line], idx: int) -> str:
+    """returns mac address byte string if pseudo counter exists
+    otherwise empty"""
+    if line := agent_section.get(_IF_MAC_PSEUDO_COUNTER):
+        mac = interfaces.mac_address_from_hexstring(line[idx])
+        # WA can return 0 if MAC is not known/on error, defense is implemented on base of beta
+        # testing where minimal errors in WA output led to a crash in WATO
+        return "" if mac == "\0x00" else mac
+    return ""
 
 
 def _parse_counters(
     raw_nic_names: Sequence[str],
     agent_section: Mapping[str, Line],
 ) -> Mapping[str, interfaces.InterfaceWithCounters]:
+    def get_int_value(pos: int, row: str) -> int:
+        return int(agent_section[row][pos])
+
     ifaces: dict[str, interfaces.InterfaceWithCounters] = {}
     for idx, raw_nic_name in enumerate(raw_nic_names):
+        counter: Callable[[str], int] = partial(get_int_value, idx)
         name = _canonize_name(raw_nic_name)
-        counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
-        oper_status = _get_oper_status(counters)
+        oper_status = _get_oper_status(agent_section, idx)
         ifaces.setdefault(
             name,
             interfaces.InterfaceWithCounters(
@@ -112,22 +130,23 @@ def _parse_counters(
                     descr=name,
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
-                    speed=counters["10"],
+                    speed=counter("10"),
                     oper_status=str(oper_status),
-                    out_qlen=counters["34"],
+                    out_qlen=counter("34"),
                     oper_status_name=_get_windows_if_status(oper_status),
+                    phys_address=_get_mac(agent_section, idx),
                 ),
                 interfaces.Counters(
-                    in_octets=counters["-246"],
-                    in_ucast=counters["14"],
-                    in_bcast=counters["16"],
-                    in_disc=counters["18"],
-                    in_err=counters["20"],
-                    out_octets=counters["-4"],
-                    out_ucast=counters["26"],
-                    out_bcast=counters["28"],
-                    out_disc=counters["30"],
-                    out_err=counters["32"],
+                    in_octets=counter("-246"),
+                    in_ucast=counter("14"),
+                    in_bcast=counter("16"),
+                    in_disc=counter("18"),
+                    in_err=counter("20"),
+                    out_octets=counter("-4"),
+                    out_ucast=counter("26"),
+                    out_bcast=counter("28"),
+                    out_disc=counter("30"),
+                    out_err=counter("32"),
                 ),
             ),
         )

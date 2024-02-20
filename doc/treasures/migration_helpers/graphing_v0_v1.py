@@ -47,17 +47,7 @@ from cmk.gui.graphing._utils import (  # pylint: disable=cmk-module-layer-violat
 )
 from cmk.gui.utils.speaklater import LazyString  # pylint: disable=cmk-module-layer-violation
 
-from cmk.graphing.v1 import (
-    Color,
-    DecimalUnit,
-    graphs,
-    Localizable,
-    metrics,
-    perfometers,
-    ScientificUnit,
-    translations,
-    Unit,
-)
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
 
 _LOGGER = logging.getLogger(__file__)
 
@@ -82,46 +72,47 @@ class Unparseable:
     name: str
 
 
+_UNUSED_UNIT = metrics.Unit(metrics.DecimalNotation(""))
 _UNIT_MAP = {
-    "": Unit.NUMBER,
-    "count": Unit.COUNT,
-    "%": Unit.PERCENTAGE,
-    "s": Unit.SECOND,
-    "1/s": Unit.PER_SECOND,
-    "hz": Unit.HERTZ,
-    "bytes": Unit.BYTE_IEC,
-    "bytes/s": Unit.BYTES_IEC_PER_SECOND,
-    "s/s": Unit.SECONDS_PER_SECOND,
-    "bits": Unit.BIT_IEC,
-    "bits/s": Unit.BITS_IEC_PER_SECOND,
-    "bytes/d": Unit.BYTES_IEC_PER_DAY,
-    "c": Unit.DEGREE_CELSIUS,
-    "a": Unit.AMPERE,
-    "v": Unit.VOLT,
-    "w": Unit.WATT,
-    "va": Unit.VOLT_AMPERE,
-    "wh": Unit.ELETRICAL_ENERGY,
-    "dbm": Unit.DECIBEL_MILLIWATT,
-    "dbmv": Unit.DECIBEL_MILLIVOLT,
-    "db": Unit.DECIBEL,
-    "ppm": Unit.PARTS_PER_MILLION,
-    "%/m": Unit.PERCENTAGE_PER_METER,
-    "bar": Unit.BAR,
-    "pa": Unit.PASCAL,
-    "l/s": Unit.LITER_PER_SECOND,
-    "rpm": Unit.REVOLUTIONS_PER_MINUTE,
-    "bytes/op": Unit.BYTES_IEC_PER_OPERATION,
-    "EUR": Unit.EURO,
-    "RCU": Unit.READ_CAPACITY_UNIT,
-    "WCU": Unit.WRITE_CAPACITY_UNIT,
+    "": metrics.Unit(metrics.StandardScientificNotation("")),
+    "count": metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0)),
+    "%": metrics.Unit(metrics.DecimalNotation("%")),
+    "s": metrics.Unit(metrics.TimeNotation()),
+    "1/s": metrics.Unit(metrics.DecimalNotation("1/s")),
+    "hz": metrics.Unit(metrics.DecimalNotation("Hz")),
+    "bytes": metrics.Unit(metrics.IECNotation("bytes")),
+    "bytes/s": metrics.Unit(metrics.IECNotation("bytes/s")),
+    "s/s": metrics.Unit(metrics.DecimalNotation("s/s")),
+    "bits": metrics.Unit(metrics.IECNotation("bits/s")),
+    "bits/s": metrics.Unit(metrics.IECNotation("bits/d")),
+    "bytes/d": metrics.Unit(metrics.IECNotation("bytes/d")),
+    "c": metrics.Unit(metrics.DecimalNotation("°C")),
+    "a": metrics.Unit(metrics.DecimalNotation("A"), metrics.AutoPrecision(3)),
+    "v": metrics.Unit(metrics.DecimalNotation("V"), metrics.AutoPrecision(3)),
+    "w": metrics.Unit(metrics.DecimalNotation("W"), metrics.AutoPrecision(3)),
+    "va": metrics.Unit(metrics.DecimalNotation("VA"), metrics.AutoPrecision(3)),
+    "wh": metrics.Unit(metrics.DecimalNotation("Wh"), metrics.AutoPrecision(3)),
+    "dbm": metrics.Unit(metrics.DecimalNotation("dBm")),
+    "dbmv": metrics.Unit(metrics.DecimalNotation("dBmV")),
+    "db": metrics.Unit(metrics.DecimalNotation("dB")),
+    "ppm": metrics.Unit(metrics.DecimalNotation("ppm")),
+    "%/m": metrics.Unit(metrics.DecimalNotation("%/m")),
+    "bar": metrics.Unit(metrics.DecimalNotation("bar"), metrics.AutoPrecision(4)),
+    "pa": metrics.Unit(metrics.DecimalNotation("Pa"), metrics.AutoPrecision(3)),
+    "l/s": metrics.Unit(metrics.DecimalNotation("l/s"), metrics.AutoPrecision(3)),
+    "rpm": metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4)),
+    "bytes/op": metrics.Unit(metrics.IECNotation("bytes/op")),
+    "EUR": metrics.Unit(metrics.DecimalNotation("€"), metrics.StrictPrecision(2)),
+    "RCU": metrics.Unit(metrics.SINotation("RCU"), metrics.AutoPrecision(3)),
+    "WCU": metrics.Unit(metrics.SINotation("WCU"), metrics.AutoPrecision(3)),
 }
 
 
-def _parse_legacy_unit(legacy_unit: str) -> Unit | DecimalUnit:
+def _parse_legacy_unit(legacy_unit: str) -> metrics.Unit:
     if legacy_unit in _UNIT_MAP:
         return _UNIT_MAP[legacy_unit]
     _LOGGER.info("Unit %r not found, use 'DecimalUnit'", legacy_unit)
-    return DecimalUnit(Localizable(legacy_unit), legacy_unit)
+    return metrics.Unit(metrics.DecimalNotation(legacy_unit))
 
 
 def _rgb_from_hexstr(hexstr: str) -> RGB:
@@ -176,10 +167,10 @@ def _rgb_from_legacy_wheel(legacy_color_name: str) -> RGB:
 @dataclass(frozen=True)
 class _Distance:
     distance: float
-    color: Color
+    color: metrics.Color
 
     @classmethod
-    def from_rgb(cls, legacy_rgb: RGB, new: Color) -> _Distance:
+    def from_rgb(cls, legacy_rgb: RGB, new: metrics.Color) -> _Distance:
         new_rgb = color_to_rgb(new)
         return cls(
             math.sqrt(
@@ -198,10 +189,10 @@ def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metrics.Metric:
         rgb = _rgb_from_legacy_wheel(legacy_color)
     return metrics.Metric(
         name=name,
-        title=Localizable(str(info["title"])),
+        title=Title(str(info["title"])),
         unit=_parse_legacy_unit(info["unit"]),
         color=min(
-            (_Distance.from_rgb(rgb, color) for color in Color),
+            (_Distance.from_rgb(rgb, color) for color in metrics.Color),
             key=lambda d: d.distance,
         ).color,
     )
@@ -322,9 +313,9 @@ def _parse_scalar_name(
         case "crit":
             return metrics.CriticalOf(metric_name)
         case "min":
-            return metrics.MinimumOf(metric_name, color=Color.GRAY)
+            return metrics.MinimumOf(metric_name, color=metrics.Color.GRAY)
         case "max":
-            return metrics.MaximumOf(metric_name, color=Color.GRAY)
+            return metrics.MaximumOf(metric_name, color=metrics.Color.GRAY)
     raise ValueError(scalar_name)
 
 
@@ -334,23 +325,23 @@ def _make_percent(
     ),
     metric_name: str,
     explicit_title: str,
-    explicit_color: Color,
+    explicit_color: metrics.Color,
 ) -> metrics.Fraction:
     return metrics.Fraction(
-        Localizable(explicit_title),
-        Unit.PERCENTAGE,
+        Title(explicit_title),
+        metrics.Unit(metrics.DecimalNotation("%")),
         explicit_color,
         dividend=metrics.Product(
             # Title, unit, color have no impact
-            Localizable(""),
-            Unit.NUMBER,
-            Color.GRAY,
+            Title(""),
+            _UNUSED_UNIT,
+            metrics.Color.GRAY,
             [
                 metrics.Constant(
                     # Title, unit, color have no impact
-                    Localizable(""),
-                    Unit.NUMBER,
-                    Color.GRAY,
+                    Title(""),
+                    _UNUSED_UNIT,
+                    metrics.Color.GRAY,
                     100.0,
                 ),
                 percent_value,
@@ -359,13 +350,13 @@ def _make_percent(
         divisor=metrics.MaximumOf(
             # Color has no impact
             metric_name,
-            color=Color.GRAY,
+            color=metrics.Color.GRAY,
         ),
     )
 
 
 def _parse_single_expression(
-    expression: str, explicit_title: str, explicit_color: Color
+    expression: str, explicit_title: str, explicit_color: metrics.Color
 ) -> (
     str
     | metrics.Constant
@@ -416,7 +407,7 @@ def _resolve_stack(
     ],
     explicit_title: str,
     explicit_unit_name: str,
-    explicit_color: Color,
+    explicit_color: metrics.Color,
 ) -> (
     str
     | metrics.Constant
@@ -466,7 +457,7 @@ def _resolve_stack(
             case "+":
                 resolved.append(
                     metrics.Sum(
-                        Localizable(explicit_title),
+                        Title(explicit_title),
                         explicit_color,
                         [left, right],
                     )
@@ -474,7 +465,7 @@ def _resolve_stack(
             case "*":
                 resolved.append(
                     metrics.Product(
-                        Localizable(explicit_title),
+                        Title(explicit_title),
                         _parse_legacy_unit(explicit_unit_name),
                         explicit_color,
                         [left, right],
@@ -483,7 +474,7 @@ def _resolve_stack(
             case "-":
                 resolved.append(
                     metrics.Difference(
-                        Localizable(explicit_title),
+                        Title(explicit_title),
                         explicit_color,
                         minuend=left,
                         subtrahend=right,
@@ -493,21 +484,21 @@ def _resolve_stack(
                 # Handle zero division by always adding a tiny bit to the divisor
                 resolved.append(
                     metrics.Fraction(
-                        Localizable(explicit_title),
+                        Title(explicit_title),
                         _parse_legacy_unit(explicit_unit_name),
                         explicit_color,
                         dividend=left,
                         divisor=metrics.Sum(
                             # Title, color have no impact
-                            Localizable(""),
-                            Color.GRAY,
+                            Title(""),
+                            metrics.Color.GRAY,
                             [
                                 right,
                                 metrics.Constant(
                                     # Title, unit, color have no impact
-                                    Localizable(""),
-                                    Unit.NUMBER,
-                                    Color.GRAY,
+                                    Title(""),
+                                    _UNUSED_UNIT,
+                                    metrics.Color.GRAY,
                                     1e-16,
                                 ),
                             ],
@@ -537,12 +528,12 @@ def _parse_expression(
         explicit_color = min(
             (
                 _Distance.from_rgb(_rgb_from_hexstr(f"#{explicit_hexstr_color}"), color)
-                for color in Color
+                for color in metrics.Color
             ),
             key=lambda d: d.distance,
         ).color
     else:
-        explicit_color = Color.GRAY
+        explicit_color = metrics.Color.GRAY
 
     explicit_unit_name = ""
     if "@" in expression:
@@ -867,7 +858,7 @@ def _parse_legacy_graph_info(
     if lower_compound_lines or lower_simple_lines:
         lower = graphs.Graph(
             name=name,
-            title=Localizable(str(info["title"])),
+            title=Title(str(info["title"])),
             minimal_range=_parse_legacy_range(info.get("range")),
             compound_lines=lower_compound_lines,
             simple_lines=lower_simple_lines,
@@ -879,7 +870,7 @@ def _parse_legacy_graph_info(
     if upper_compound_lines or upper_simple_lines:
         upper = graphs.Graph(
             name=name,
-            title=Localizable(str(info["title"])),
+            title=Title(str(info["title"])),
             minimal_range=_parse_legacy_range(info.get("range")),
             compound_lines=upper_compound_lines,
             simple_lines=list(upper_simple_lines) + list(quantities),
@@ -908,7 +899,7 @@ def _parse_legacy_graph_infos(
         if lower is not None and upper is not None:
             yield graphs.Bidirectional(
                 name=f"{lower.name}_{upper.name}",
-                title=Localizable(str(info["title"])),
+                title=Title(str(info["title"])),
                 lower=lower,
                 upper=upper,
             )
@@ -948,22 +939,31 @@ def _name_repr(name: str) -> str:
     return f"{name!r}"
 
 
-def _title_repr(title: Localizable) -> str:
-    return f'Localizable("{str(title.localize(lambda v: v))}")'
+def _title_repr(title: Title) -> str:
+    return f'Title("{str(title.localize(lambda v: v))}")'
 
 
-def _unit_repr(unit: Unit | DecimalUnit | ScientificUnit) -> str:
-    match unit:
-        case Unit():
-            return f"Unit.{unit.name}"
-        case DecimalUnit():
-            return f"DecimalUnit({_title_repr(unit.title)}, {_name_repr(unit.symbol)})"
-        case ScientificUnit():
-            return f"ScientificUnit({_title_repr(unit.title)}, {_name_repr(unit.symbol)})"
+def _notation_repr(
+    notation: metrics.DecimalNotation
+    | metrics.SINotation
+    | metrics.IECNotation
+    | metrics.StandardScientificNotation
+    | metrics.EngineeringScientificNotation
+    | metrics.TimeNotation,
+) -> str:
+    return f"metrics.{notation.__class__.__name__}({notation.symbol!r})"
 
 
-def _color_repr(color: Color) -> str:
-    return f"Color.{color.name}"
+def _precision_repr(precision: metrics.AutoPrecision | metrics.StrictPrecision) -> str:
+    return f"metrics.{precision.__class__.__name__}({precision.digits})"
+
+
+def _unit_repr(unit: metrics.Unit) -> str:
+    return f"metrics.Unit({_notation_repr(unit.notation)}, {_precision_repr(unit.precision)})"
+
+
+def _color_repr(color: metrics.Color) -> str:
+    return f"metrics.Color.{color.name}"
 
 
 def _inst_repr(

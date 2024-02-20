@@ -6,9 +6,12 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
+    check_job_parameters([
+        ["OVERRIDE_DISTROS"],
+    ]);
+
     check_environment_variables([
         "DOCKER_TAG",
-        "OVERRIDE_DISTROS",
     ]);
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_tests");

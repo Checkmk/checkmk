@@ -7,6 +7,7 @@ import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 
 import docker  # type: ignore[import-untyped]
 import pytest
@@ -48,9 +49,16 @@ def _checkmk(client: docker.DockerClient) -> docker.models.containers.Container:
 
 @pytest.fixture(name="oracle")
 def _oracle(
-    client: docker.DockerClient, checkmk: docker.models.containers.Container
+    client: docker.DockerClient,
+    checkmk: docker.models.containers.Container,
+    tmp_path: Path,
 ) -> docker.models.containers.Container:
-    with _start_oracle(client, checkmk, name="oracle", persist_db=True) as container:
+    with _start_oracle(
+        client,
+        checkmk,
+        root_dir=tmp_path,
+        name="oracle",
+    ) as container:
         yield container
 
 
@@ -64,8 +72,8 @@ class OracleDatabase:
     USER: str = "c##checkmk"
     PORT: int = 1521
     UID: int = 54321
-    ORADATA: str = os.getenv("ORADATA", "/opt/oracle/oradata")
-    ORAENV: str = os.getenv("ORAENV", "/tmp/oraenv")
+    ORADATA: str = "oradata"
+    ORAENV: str = "oraenv"
 
     SYS_AUTH: str = f"sys/{PWD}@localhost:{PORT}/{SID}"
 
@@ -136,8 +144,8 @@ def _install_oracle_plugin(container: docker.models.containers.Container) -> Non
 def _start_oracle(
     client: docker.DockerClient,
     checkmk: docker.models.containers.Container,
+    root_dir: Path,
     name: str = "oracle",
-    persist_db: bool = True,
 ) -> Iterator[docker.models.containers.Container]:
     oracle_image = _pull_oracle(client)
     db = OracleDatabase()
@@ -149,20 +157,22 @@ def _start_oracle(
     api_user = "automation"
     api_secret = checkmk_docker_automation_secret(checkmk, site_id, api_user)
 
-    makedirs(db.ORAENV)
-    execute(["chmod", "775", db.ORADATA])
-    execute(["chown", f"{db.UID}", db.ORAENV])
-    write_file(f"{db.ORAENV}/mk_oracle.cfg", db.mk_service_cfg)
-    write_file(f"{db.ORAENV}/create_user.sql", db.create_user_sql)
-    write_file(f"{db.ORAENV}/register_listener.sql", db.register_listener_sql)
-    write_file(f"{db.ORAENV}/restart_oracle.sql", db.restart_oracle_sql)
+    oraenv = Path(root_dir / db.ORAENV).as_posix()
+    oradata = Path(root_dir / db.ORADATA).as_posix()
 
-    volumes = [f"{db.ORAENV}:/opt/oracle/oraenv"]
-    if persist_db:
-        makedirs(db.ORADATA)
-        execute(["chmod", "775", db.ORADATA])
-        execute(["chown", str(db.UID), db.ORADATA])
-        volumes.append(f"{db.ORADATA}:/opt/oracle/oradata")
+    makedirs(oraenv)
+    execute(["chmod", "775", oradata])
+    execute(["chown", f"{db.UID}", oraenv])
+    write_file(f"{oraenv}/mk_oracle.cfg", db.mk_service_cfg)
+    write_file(f"{oraenv}/create_user.sql", db.create_user_sql)
+    write_file(f"{oraenv}/register_listener.sql", db.register_listener_sql)
+    write_file(f"{oraenv}/restart_oracle.sql", db.restart_oracle_sql)
+
+    volumes = [f"{oraenv}:/opt/oracle/oraenv"]
+    makedirs(oradata)
+    execute(["chmod", "775", oradata])
+    execute(["chown", str(db.UID), oradata])
+    volumes.append(f"{oradata}:/opt/oracle/oradata")
 
     try:
         oracle: docker.models.containers.Container = client.containers.get(name)

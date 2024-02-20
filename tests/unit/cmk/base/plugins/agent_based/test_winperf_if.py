@@ -187,6 +187,17 @@ class Mode(StrEnum):
     UP = "up"
     CONN = "Connected"
     DISCONN = "Media disconnected"
+    DOWN = "down"
+
+
+def _to_oper_status(mode: Mode) -> int:
+    mode_to_int: dict[Mode, int] = {
+        Mode.UP: 1,
+        Mode.CONN: 1,
+        Mode.DISCONN: 7,
+        Mode.DOWN: 2,
+    }
+    return mode_to_int[mode]
 
 
 def _if_attributes(
@@ -204,7 +215,7 @@ def _if_attributes(
         alias=name if alias is None else alias,
         type="6",
         speed=speed,
-        oper_status="7" if mode == Mode.DISCONN else "1",
+        oper_status=str(_to_oper_status(mode)),
         out_qlen=0,
         phys_address="" if phys_address is None else phys_address,
         oper_status_name=str(mode),
@@ -907,14 +918,54 @@ def _flatten(data: Sequence[_Block]) -> _Block:
     "string_table, section",
     [
         pytest.param(
+            _flatten(
+                [
+                    VALID_ONE_IF_INPUT,
+                    DHCP_STRANGE_INPUT,
+                    [
+                        ["2002", "2", "text"],
+                        ["2006", "01:02:03:04:05:06", "text"],
+                    ],
+                ]
+            ),
+            SectionCounters(
+                timestamp=1630928323.48,
+                interfaces={
+                    str(Names.INTEL_PRO): interfaces.InterfaceWithCounters(
+                        _if_attributes(
+                            1,
+                            Names.INTEL_PRO,
+                            1000000000,
+                            mode=Mode.DOWN,
+                            phys_address="\x01\x02\x03\x04\x05\x06",
+                        ),
+                        _counters[Names.INTEL_PRO],
+                    ),
+                },
+                found_windows_if=False,
+                found_mk_dhcp_enabled=True,
+            ),
+            id="single interface with legacy plugin data, status and mac",
+        )
+    ],
+)
+def test_parse_winperf_if_ex(
+    string_table: StringTable,
+    section: SectionCounters,
+) -> None:
+    assert parse_winperf_if(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "string_table, section",
+    [
+        pytest.param(
             VALID_ONE_IF_INPUT,
             SectionCounters(
                 timestamp=1630928323.48,
                 interfaces={
-                    Names.INTEL_PRO: interfaces.InterfaceWithCounters(
-                        _if_attributes(1, Names.INTEL_PRO, 1000000000),
-                        _counters[Names.INTEL_PRO],
-                    ),
+                    str(name): _entry(i + 1, name, speed)
+                    for i, (name, speed) in enumerate([(Names.INTEL_PRO, 1000000000)])
                 },
                 found_windows_if=False,
                 found_mk_dhcp_enabled=False,
@@ -926,30 +977,33 @@ def _flatten(data: Sequence[_Block]) -> _Block:
             SectionCounters(
                 timestamp=1630928323.48,
                 interfaces={
-                    Names.INTEL_PRO: interfaces.InterfaceWithCounters(
-                        _if_attributes(1, Names.INTEL_PRO, 1000000000),
-                        _counters[Names.INTEL_PRO],
-                    ),
+                    str(name): _entry(i + 1, name, speed)
+                    for i, (name, speed) in enumerate([(Names.INTEL_PRO, 1000000000)])
                 },
                 found_windows_if=False,
                 found_mk_dhcp_enabled=True,
             ),
-            id="single interface with legacy plugin data",
+            id="single interface with legacy plugin data and pseudo counter",
         ),
         pytest.param(
             MULTIPLY_INTERFACES_INPUT,
             SectionCounters(
                 timestamp=1425370325.75,
                 interfaces={
-                    Names.QLOGIC_2: _entry(1, Names.QLOGIC_2, 10000000000),
-                    Names.QLOGIC: _entry(2, Names.QLOGIC, 10000000000),
-                    Names.INTEL_I350: _entry(3, Names.INTEL_I350, 0),
-                    Names.INTEL_I350_2: _entry(4, Names.INTEL_I350_2, 0),
-                    Names.INTEL_I350_3: _entry(5, Names.INTEL_I350_3, 0),
-                    Names.INTEL_I350_4: _entry(6, Names.INTEL_I350_4, 0),
-                    Names.IBM_USB_2: _entry(7, Names.IBM_USB_2, 9728000),
-                    Names.ISATAP_A4: _entry(8, Names.ISATAP_A4, 100000),
-                    Names.ISATAP_4F: _entry(9, Names.ISATAP_4F, 100000),
+                    str(name): _entry(i + 1, name, speed)
+                    for i, (name, speed) in enumerate(
+                        [
+                            (Names.QLOGIC_2, 10000000000),
+                            (Names.QLOGIC, 10000000000),
+                            (Names.INTEL_I350, 0),
+                            (Names.INTEL_I350_2, 0),
+                            (Names.INTEL_I350_3, 0),
+                            (Names.INTEL_I350_4, 0),
+                            (Names.IBM_USB_2, 9728000),
+                            (Names.ISATAP_A4, 100000),
+                            (Names.ISATAP_4F, 100000),
+                        ]
+                    )
                 },
                 found_windows_if=False,
                 found_mk_dhcp_enabled=False,
@@ -967,18 +1021,23 @@ def _flatten(data: Sequence[_Block]) -> _Block:
             SectionCounters(
                 timestamp=1498114570.1,
                 interfaces={
-                    Names.INTEL_NDC: _entry(1, Names.INTEL_NDC, 1000000000),
-                    Names.INTEL_X520: _entry(2, Names.INTEL_X520, 10000000000),
-                    Names.INTEL_X520_2: _entry(3, Names.INTEL_X520_2, 10000000000),
-                    Names.INTEL_NDC_2: _entry(4, Names.INTEL_NDC_2, 0),
-                    Names.INTEL_NDC_3: _entry(5, Names.INTEL_NDC_3, 0),
-                    Names.INTEL_NDC_4: _entry(6, Names.INTEL_NDC_4, 0),
-                    Names.INTEL_X520_3: _entry(7, Names.INTEL_X520_3, 10000000000),
-                    Names.INTEL_X520_4: _entry(8, Names.INTEL_X520_4, 10000000000),
-                    Names.NIN: _entry(9, Names.NIN, 100000),
-                    Names.ISATAP_01: _entry(10, Names.ISATAP_01, 100000),
-                    Names.ISATAP_16: _entry(11, Names.ISATAP_16, 100000),
-                    Names.ISATAP_7A: _entry(12, Names.ISATAP_7A, 100000),
+                    str(name): _entry(i + 1, name, speed)
+                    for i, (name, speed) in enumerate(
+                        [
+                            (Names.INTEL_NDC, 1000000000),
+                            (Names.INTEL_X520, 10000000000),
+                            (Names.INTEL_X520_2, 10000000000),
+                            (Names.INTEL_NDC_2, 0),
+                            (Names.INTEL_NDC_3, 0),
+                            (Names.INTEL_NDC_4, 0),
+                            (Names.INTEL_X520_3, 10000000000),
+                            (Names.INTEL_X520_4, 10000000000),
+                            (Names.NIN, 100000),
+                            (Names.ISATAP_01, 100000),
+                            (Names.ISATAP_16, 100000),
+                            (Names.ISATAP_7A, 100000),
+                        ]
+                    )
                 },
                 found_windows_if=True,
                 found_mk_dhcp_enabled=False,

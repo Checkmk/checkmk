@@ -309,6 +309,8 @@ export interface ContextMenuElement {
     dom?: HTMLDivElement;
     on?: (event: Event, data: any) => void;
     data?: any;
+    element_source?: string;
+    children?: ContextMenuElement[];
 }
 
 declare module "d3" {

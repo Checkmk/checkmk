@@ -320,15 +320,12 @@ export class LayeredNodesLayer extends FixLayer {
         const elements: ContextMenuElement[] = [];
         data.forEach(([ident, is_active]) => {
             elements.push({
-                text:
-                    (is_active ? texts.get("hide") : texts.get("show")) +
-                    " " +
-                    texts.get(ident).toLowerCase(),
+                text: texts.get("show") + " " + texts.get(ident).toLowerCase(),
                 on: (_event, d) => {
                     nodes_class_list.toggle("hide_" + d.data);
                 },
                 href: "",
-                img: "themes/facelift/images/icon_aggr.svg",
+                img: is_active ? "themes/facelift/images/icon_tick.svg" : "",
                 data: ident,
             });
         });
@@ -387,9 +384,10 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     _add_elements_to_context_menu(
-        content: d3.Selection<HTMLUListElement, null, any, unknown>,
+        content: d3.Selection<HTMLUListElement, any, any, undefined>,
         element_source: string,
-        elements: ContextMenuElement[]
+        elements: ContextMenuElement[],
+        level = 0
     ): void {
         // Renders links and html elements
         let links = content
@@ -399,11 +397,17 @@ export class LayeredNodesLayer extends FixLayer {
             .data(elements.filter(element => !element.dom));
 
         links = links
-            .join("li")
+            .enter()
+            .append("li")
+            .attr("class", d => (d.children ? "nested" : ""))
             .classed(element_source, true)
             .classed("popup_link", true)
+            .style("height", "15px")
             .append("a")
-            .classed("noselect", true);
+            .classed("noselect", true)
+            .on("mouseover", () => {
+                content.selectAll("ul.level_" + (level + 1)).remove();
+            });
 
         // Add optional href
         links.each((d, idx, nodes) => {
@@ -416,12 +420,9 @@ export class LayeredNodesLayer extends FixLayer {
 
         // Add optional img
         links.each(function (d) {
-            if (d.img) {
-                d3.select(this)
-                    .append("img")
-                    .classed("icon", true)
-                    .attr("src", d.img);
-            }
+            const img = d3.select(this).append("img").classed("icon", true);
+            if (d.img) img.attr("src", d.img);
+            else img.style("opacity", 0);
         });
 
         // Add text
@@ -439,6 +440,54 @@ export class LayeredNodesLayer extends FixLayer {
                 d3.select(nodes[idx]).on("click", event => {
                     if (d.on) d.on(event, d);
                     this.hide_context_menu();
+                });
+            }
+        });
+
+        // Add nested elements
+        links.each((d, idx, nodes) => {
+            if (d.children) {
+                const next_level = level + 1;
+                const scoped_element_source = d.element_source
+                    ? d.element_source
+                    : element_source;
+                const node = d3.select(nodes[idx]);
+                node.classed("nested", true);
+                d3.select(node.node()!.parentElement)
+                    .selectAll<HTMLSpanElement, null>("span.triangle")
+                    .data([null])
+                    .enter()
+                    .insert("span", ":first-child")
+                    .classed("triangle", true)
+                    .text("▶");
+                node.on("mouseover", () => {
+                    content
+                        .selectAll(
+                            "ul.level_" +
+                                next_level +
+                                ":not(." +
+                                scoped_element_source +
+                                ")"
+                        )
+                        .remove();
+                    const child_node = node
+                        .selectAll<HTMLUListElement, null>("ul")
+                        .data([null])
+                        .join("ul")
+                        .classed("level_" + next_level, true)
+                        .classed(scoped_element_source, true)
+                        .on("mouseover", null);
+                    child_node
+                        .style("position", "relative")
+                        .style("overflow", "visible")
+                        .style("left", "250px")
+                        .style("top", "-15px");
+                    this._add_elements_to_context_menu(
+                        child_node,
+                        scoped_element_source,
+                        d.children!,
+                        next_level
+                    );
                 });
             }
         });

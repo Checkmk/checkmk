@@ -61,7 +61,7 @@ def _valuespec_response() -> Dictionary:
 
 def _valuespec_document() -> Dictionary:
     return Dictionary(
-        title=Title("Document"),
+        title=Title("How to handle the document"),
         elements={
             "document_body": DictElement(
                 parameter_form=SingleChoice(
@@ -83,7 +83,7 @@ def _valuespec_document() -> Dictionary:
             ),
             "max_age": DictElement(
                 parameter_form=TimeSpan(
-                    title=Title("Age"),
+                    title=Title("Check document age"),
                     displayed_magnitudes=[
                         TimeMagnitude.SECOND,
                         TimeMagnitude.MINUTE,
@@ -97,7 +97,7 @@ def _valuespec_document() -> Dictionary:
             ),
             "page_size": DictElement(
                 parameter_form=Dictionary(
-                    title=Title("Size"),
+                    title=Title("Check document size"),
                     elements={
                         "min": DictElement(
                             parameter_form=DataSize(
@@ -139,7 +139,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                         "header_name_pattern": DictElement[str](
                             parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
-                                predefined_help_text=MatchingScope.INFIX
+                                predefined_help_text=MatchingScope.INFIX,
                                 # maxlen=1023,
                             ),
                             required=True,
@@ -147,7 +147,7 @@ def _valuespec_expected_regex_header() -> Dictionary:
                         "header_value_pattern": DictElement[str](
                             parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
-                                predefined_help_text=MatchingScope.INFIX
+                                predefined_help_text=MatchingScope.INFIX,
                                 # maxlen=1023,
                             ),
                             required=True,
@@ -404,7 +404,7 @@ def _valuespec_connection() -> Dictionary:
             "proxy": DictElement(parameter_form=Proxy()),
             "redirects": DictElement(
                 parameter_form=SingleChoice(
-                    title=Title("Redirects"),
+                    title=Title("How to handle redirects"),
                     elements=[
                         SingleChoiceElement(
                             name="ok",
@@ -443,7 +443,7 @@ def _valuespec_connection() -> Dictionary:
             ),
             "user_agent": DictElement(
                 parameter_form=String(
-                    title=Title("User Agent"),
+                    title=Title("User agent"),
                     prefill=DefaultValue("checkmk/check_http"),
                     help_text=Help('String to be sent in http header as "User Agent"'),
                 ),
@@ -508,11 +508,11 @@ def _valuespec_connection() -> Dictionary:
 
 def _valuespec_content() -> Dictionary:
     return Dictionary(
-        title=Title("String validation"),
+        title=Title("Search for strings"),
         elements={
             "header": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Header"),
+                    title=Title("Search for header"),
                     prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -533,7 +533,7 @@ def _valuespec_content() -> Dictionary:
             ),
             "body": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Body"),
+                    title=Title("Search in body"),
                     prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -557,7 +557,11 @@ def _valuespec_content() -> Dictionary:
 # individual settings (currently referred as "shared_settings")
 def _valuespec_settings(is_standard: bool = True) -> Dictionary:
     return Dictionary(
-        title=(Title("Standard settings") if is_standard else Title("Individual settings")),
+        title=(
+            Title("Standard settings for all endpoints")
+            if is_standard
+            else Title("Individual settings to use for this endpoint")
+        ),
         elements={
             "connection": DictElement(parameter_form=_valuespec_connection()),
             "response_time": DictElement[SimpleLevelsConfigModel[float]](
@@ -579,7 +583,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="validate",
-                            title=Title("Certificate validity"),
+                            title=Title("Check certificate"),
                             parameter_form=SimpleLevels[float](
                                 title=Title("Check validity"),
                                 form_spec_template=TimeSpan(
@@ -611,7 +615,8 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
 
 def _valuespec_endpoints() -> List:
     return List(
-        title=Title("Endpoints"),
+        title=Title("HTTP web service endpoints to monitor"),
+        add_element_label=Label("Add new endpoint"),
         custom_validate=validators.DisallowEmpty(),
         element_template=Dictionary(
             elements={
@@ -632,6 +637,7 @@ def _valuespec_endpoints() -> List:
                                             title=Title("Do not use a prefix"),
                                         ),
                                     ],
+                                    prefill=DefaultValue("auto"),
                                 ),
                                 required=True,
                             ),
@@ -666,7 +672,7 @@ def _form_active_checks_httpv2() -> Dictionary:
     return Dictionary(
         elements={
             "endpoints": DictElement(parameter_form=_valuespec_endpoints(), required=True),
-            "standard_settings": DictElement(parameter_form=_valuespec_settings()),
+            "standard_settings": DictElement(parameter_form=_valuespec_settings(), required=True),
         },
     )
 
@@ -674,7 +680,7 @@ def _form_active_checks_httpv2() -> Dictionary:
 rule_spec_httpv2 = ActiveCheck(
     title=Title("Check HTTP web service"),
     topic=Topic.NETWORKING,
-    eval_type=EvalType.MERGE,
+    eval_type=EvalType.ALL,
     name="httpv2",
     parameter_form=_form_active_checks_httpv2,
 )

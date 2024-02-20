@@ -1,0 +1,9 @@
+Title: Fix 'AssertionError' if 'The last..', 'Date range', 'The next..' or 'Until' is configured in forecast graphs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1708428985
+Edition: cee
+Level: 1
+Version: 2.1.0p40
+

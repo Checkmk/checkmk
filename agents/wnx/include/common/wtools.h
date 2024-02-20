@@ -1120,10 +1120,16 @@ struct AdapterInfo {
     std::optional<uint64_t> receive_speed;
     std::optional<uint64_t> transmit_speed;
     IF_OPER_STATUS oper_status;
+    std::string mac_address;
 };
 using AdapterInfoStore = std::unordered_map<std::wstring, AdapterInfo>;
 
 AdapterInfoStore GetAdapterInfoStore();
+
+//// Mangles names for use as a counter names
+/// See: MSDN, PerformanceCounter.InstanceName Property
+/// https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter.instancename?view=dotnet-plat-ext-8.0
+std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept;
 }  // namespace wtools
 
 #endif  // WTOOLS_H

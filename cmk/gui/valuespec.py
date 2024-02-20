@@ -5983,7 +5983,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 # where it is clear from the context if values are required or not. Therefore, we
                 # dont add a required label in this case.
                 if not two_columns and not vs.allow_empty():
-                    html.span(" (required)", class_="required")
+                    html.span(_(" (required)"), class_="required")
 
             if two_columns:
                 if vs.title() and not colon_printed:

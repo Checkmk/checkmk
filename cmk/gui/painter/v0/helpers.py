@@ -10,6 +10,7 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
@@ -89,6 +90,10 @@ def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
         output, request=request, row=row, shall_escape=active_config.escape_plugin_output
     )
+
+
+def format_labels_for_csv_export(labels: Labels) -> str:
+    return ", ".join(f"{k}: {v}" for k, v in labels.items())
 
 
 def get_tag_groups(row: Row, what: str) -> Mapping[TagGroupID, TagID]:

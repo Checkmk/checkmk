@@ -984,7 +984,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "md",
         "megaraid_bbu",
         "mem.linux",
-        "mem.win",
         "mem.vmalloc",
         "mikrotik_signal",
         "mkbackup",

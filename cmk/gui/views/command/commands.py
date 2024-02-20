@@ -1606,13 +1606,25 @@ class CommandScheduleDowntimes(Command):
     def _get_duration_options(self) -> HTML:
         duration_options = HTML("")
         for nr, time_range in enumerate(active_config.user_downtime_timeranges):
+            css_class = ["button", "duration"]
+            time_range_end = time_range["end"]
+            if nr == 0:
+                end_time = time_interval_end(time_range_end, self._current_local_time())
+                html.final_javascript(
+                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+                )
+                html.final_javascript(
+                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+                )
+                css_class += ["active"]
+
             duration_options += html.render_input(
                 name=(varname := f'_downrange__{time_range["end"]}'),
                 type_="button",
                 id_=varname,
-                class_=["button", "duration"] + (["active"] if nr == 0 else []),
+                class_=css_class,
                 value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range["end"], varname),
+                onclick=self._get_onclick(time_range_end, varname),
                 submit="_set_date_and_time",
             )
         return duration_options
@@ -1638,11 +1650,11 @@ class CommandScheduleDowntimes(Command):
 
     def _get_onclick(
         self,
-        time_range: int | Literal["next_day", "next_week", "next_month", "next_year"],
+        time_range_end: int | Literal["next_day", "next_week", "next_month", "next_year"],
         id_: str,
     ) -> str:
         start_time = self._current_local_time()
-        end_time = time_interval_end(time_range, self._current_local_time())
+        end_time = time_interval_end(time_range_end, start_time)
 
         return (
             f'cmk.page_menu.update_down_duration_button("{id_}");'
@@ -2037,7 +2049,7 @@ def time_interval_end(
 ) -> float | None:
     now = time.localtime(start_time)
     if isinstance(time_value, int):
-        return start_time + 7200
+        return start_time + time_value
     if time_value == "next_day":
         return (
             time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1

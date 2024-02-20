@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import hashlib
 import http.client
 from collections.abc import Iterator, Sequence
@@ -112,13 +111,8 @@ def _generate_spec(
     if not validate:
         return generated_spec
 
-    # NOTE: deepcopy the dict because validate_spec modifies the spec in-place, leaving some
-    # internal properties lying around, which leads to an invalid spec-file.
-    # TODO: Review if this is still necessary. At least the type of validate_spec suggests that it
-    # does not modify the spec.
-    check_dict = copy.deepcopy(generated_spec)
     # TODO: Need to investigate later what is going on here after cleaning up a bit further
-    openapi_spec_validator.validate(check_dict)  # type: ignore[arg-type]
+    openapi_spec_validator.validate(generated_spec)  # type: ignore[arg-type]
     return generated_spec
 
 

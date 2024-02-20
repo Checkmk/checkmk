@@ -1544,7 +1544,7 @@ class CommandScheduleDowntimes(Command):
 
     def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
         html.open_div(class_="group")
-        html.heading("Date and time")
+        html.heading(_("Date and time"))
 
         html.open_table(class_=["down_date_and_time"])
 

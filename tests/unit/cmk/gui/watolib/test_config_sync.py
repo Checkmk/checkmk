@@ -312,6 +312,7 @@ def _get_expected_paths(
         "etc/check_mk/rrdcached.d/wato",
         "etc/check_mk/rrdcached.d/wato/sitespecific.mk",
         "etc/omd",
+        "etc/omd/distributed.mk",
         "etc/omd/sitespecific.mk",
     ]
 

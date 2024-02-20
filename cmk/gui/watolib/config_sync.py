@@ -475,6 +475,7 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[st
 def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
     _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
     _create_distributed_wato_file_for_dcd(base_dir, is_remote)
+    _create_distributed_wato_file_for_omd(base_dir, is_remote)
 
 
 def _create_distributed_wato_file_for_base(
@@ -500,3 +501,9 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     output += "dcd_is_wato_remote_site = %r\n" % is_remote
 
     store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
+
+
+def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> None:
+    output = wato_fileheader()
+    output += f"is_wato_remote_site = {is_remote}\n"
+    store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)

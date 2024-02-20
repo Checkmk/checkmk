@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import enum
 import os
 import shutil
 from collections.abc import Iterator
+from pathlib import Path
 
 
 def is_containerized() -> bool:
@@ -52,3 +54,24 @@ def get_editor() -> str:
         return "vi"
 
     return editor
+
+
+class SiteDistributedSetup(str, enum.Enum):
+    DISTRIBUTED_REMOTE = "distributed_remote"
+    NOT_DISTRIBUTED = "not_distributed"
+    UNKNOWN = "unknown"
+
+
+def get_site_distributed_setup() -> SiteDistributedSetup:
+    file_vars: dict = {}
+    if (distr_wato_filepath := Path("~/etc/omd/distributed.mk").expanduser()).exists():
+        exec(  # nosec B102 # BNS:aee528
+            distr_wato_filepath.read_text(),
+            file_vars,
+            file_vars,
+        )
+    if "is_wato_remote_site" not in file_vars:
+        return SiteDistributedSetup.UNKNOWN
+    if file_vars["is_wato_remote_site"] is True:
+        return SiteDistributedSetup.DISTRIBUTED_REMOTE
+    return SiteDistributedSetup.NOT_DISTRIBUTED

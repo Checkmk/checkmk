@@ -23,8 +23,8 @@ metric_aws_costs_unblended = metrics.Metric(
 
 metric_aws_total_reservation_utilization = metrics.Metric(
     name="aws_total_reservation_utilization",
-    title=Localizable("Total reservation utilization"),
-    unit=metrics.Unit.PERCENTAGE,
+    title=Title("Total reservation utilization"),
+    unit=UNIT_PERCENTAGE,
     color=metrics.Color.PURPLE,
 )
 

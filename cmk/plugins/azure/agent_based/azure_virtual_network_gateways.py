@@ -8,8 +8,17 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.azure import (
     create_check_metrics_function,
     get_service_labels_from_resource_tags,

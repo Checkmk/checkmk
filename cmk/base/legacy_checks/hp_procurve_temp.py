@@ -8,8 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
 
 # .1.3.6.1.4.1.11.2.14.11.1.2.8.1.1.2.0 Sys-1   # system name
 # .1.3.6.1.4.1.11.2.14.11.1.2.8.1.1.3.0 21C     # current temperature

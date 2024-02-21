@@ -7,8 +7,7 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, exists, not_exists, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, exists, not_exists, SNMPTree, StringTable
 
 
 def inventory_fortigate_sessions(info):

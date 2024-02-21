@@ -12,6 +12,8 @@ from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     get_value_store,
     IgnoreResultsError,
@@ -19,8 +21,8 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.interfaces import bandwidth_levels, BandwidthUnit, PredictiveLevels
 from cmk.plugins.netapp import models
 

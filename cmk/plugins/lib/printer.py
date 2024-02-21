@@ -10,8 +10,16 @@
 
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import all_of, any_of, contains, exists, Service, startswith
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    exists,
+    Service,
+    startswith,
+)
 
 Section = dict[str, int]
 

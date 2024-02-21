@@ -7,8 +7,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.inventory_azure_load_balancer import inventory_load_balancer
 
-from cmk.agent_based.v2 import TableRow
-from cmk.agent_based.v2.type_defs import InventoryResult
+from cmk.agent_based.v2 import InventoryResult, TableRow
 from cmk.plugins.azure.agent_based.azure_load_balancer import parse_load_balancer
 from cmk.plugins.lib.azure_load_balancer import Section
 

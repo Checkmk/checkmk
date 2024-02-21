@@ -17,8 +17,7 @@ from typing import Any
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, render
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, render, StringTable
 
 Section = Mapping[str, Mapping[str, int]]
 

@@ -20,8 +20,8 @@ from cmk.agent_based.v2 import (
     not_exists,
     render,
     SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 
 def inventory_cisco_cpu(info):

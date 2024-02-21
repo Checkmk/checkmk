@@ -8,8 +8,7 @@ from collections.abc import Mapping
 from cmk.base.check_api import check_levels, CheckResult, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import Service, SNMPTree
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
 
 

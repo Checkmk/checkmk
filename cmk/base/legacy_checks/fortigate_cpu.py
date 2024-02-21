@@ -8,8 +8,16 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, exists, not_exists, Service, SNMPTree
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    contains,
+    DiscoveryResult,
+    exists,
+    not_exists,
+    Service,
+    SNMPTree,
+    StringTable,
+)
 
 
 def parse_fortigate_cpu(string_table: StringTable) -> StringTable | None:

@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 from cmk.plugins.pure_storage_fa.agent_based.pure_storage_fa_alerts import (
     check_internal_alerts,
     discover_internal_alerts,

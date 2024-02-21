@@ -7,8 +7,7 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
 
 
 def inventory_win_cpuusage(info):

@@ -7,8 +7,16 @@ from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 _NO_ISSUES = Result(
     state=State.OK, summary="No known issues. Details: https://azure.status.microsoft/en-us/status"

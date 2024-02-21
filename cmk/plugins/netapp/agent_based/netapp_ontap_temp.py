@@ -6,8 +6,15 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Service
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    StringTable,
+)
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 from cmk.plugins.netapp import models
 

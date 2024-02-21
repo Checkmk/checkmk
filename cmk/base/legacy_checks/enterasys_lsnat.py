@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, exists, SNMPTree, startswith, StringTable
 
 
 def inventory_enterasys_lsnat(info):

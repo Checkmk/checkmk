@@ -5,8 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import Service
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 
 def discover(string_table: StringTable) -> DiscoveryResult:

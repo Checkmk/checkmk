@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render, Service, SNMPTree
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import DiscoveryResult, render, Service, SNMPTree, StringTable
 from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 

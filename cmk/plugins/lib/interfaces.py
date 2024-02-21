@@ -27,6 +27,8 @@ from typing_extensions import TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
@@ -37,7 +39,6 @@ from cmk.agent_based.v2 import (
     Service,
     ServiceLabel,
     State,
-    type_defs,
 )
 
 ServiceLabels = dict[str, str]
@@ -906,7 +907,7 @@ def _groups_from_params(
 def discover_interfaces(  # pylint: disable=too-many-branches
     params: Sequence[Mapping[str, Any]],
     section: Section[TInterfaceType],
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     if len(section) == 0:
         return
 
@@ -1065,7 +1066,7 @@ def _check_ungrouped_ifs(
     section: Section[TInterfaceType],
     timestamp: float,
     value_store: MutableMapping[str, Any],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     """
     Check one or more ungrouped interfaces. In a non-cluster setup, only one interface will match
     the item and the results will simply be the output of check_single_interface. On a cluster,
@@ -1258,7 +1259,7 @@ def _check_grouped_ifs(
     group_name: str,
     timestamp: float,
     value_store: MutableMapping[str, Any],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     """
     Grouped interfaces are combined into a single interface, which is then passed to
     check_single_interface.
@@ -1309,7 +1310,7 @@ def check_multiple_interfaces(
     group_name: str = "Interface group",
     timestamp: float | None = None,
     value_store: MutableMapping[str, Any] | None = None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if timestamp is None:
         timestamp = time.time()
     if value_store is None:
@@ -1406,12 +1407,12 @@ _METRICS_TO_LEGACY_MAP = {
 # corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
 # case, we can remove _rename_metrics_to_legacy.
 def _rename_metrics_to_legacy(
-    check_interfaces: Callable[_TCheckInterfaceParams, type_defs.CheckResult]
-) -> Callable[_TCheckInterfaceParams, type_defs.CheckResult]:
+    check_interfaces: Callable[_TCheckInterfaceParams, CheckResult]
+) -> Callable[_TCheckInterfaceParams, CheckResult]:
     def rename_metrics_to_legacy(
         *args: _TCheckInterfaceParams.args,
         **kwargs: _TCheckInterfaceParams.kwargs,
-    ) -> type_defs.CheckResult:
+    ) -> CheckResult:
         yield from (
             Metric(
                 name=_METRICS_TO_LEGACY_MAP.get(
@@ -1439,7 +1440,7 @@ def check_single_interface(
     *,
     group_name: str = "Interface group",
     use_discovered_state_and_speed: bool = True,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from _interface_name(
         group_name=group_name if group_members else None,
         item=item,
@@ -1756,7 +1757,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
     monitor_total: bool,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if unit is BandwidthUnit.BIT:
         bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
@@ -1800,7 +1801,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     levels: FixedLevels | PredictiveLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if traffic.average:
         filtered_traffic = traffic.average.value
         title = "%s average %dmin" % (direction.title(), traffic.average.backlog)
@@ -1912,7 +1913,7 @@ def _output_packet_rates(
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: tuple[float, float] | None,
     rates: RatesWithAverages,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
         (
             "in",
@@ -2025,7 +2026,7 @@ def _check_single_packet_rate(
     display_name: str,
     metric_name: str,
     reference_rate: float | None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     # Calculate the metric with actual levels, no matter if they
     # come from perc_- or abs_levels
     if perc_levels is not None:
@@ -2089,7 +2090,7 @@ def cluster_check(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Section[TInterfaceType] | None],
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from check_multiple_interfaces(
         item,
         params,

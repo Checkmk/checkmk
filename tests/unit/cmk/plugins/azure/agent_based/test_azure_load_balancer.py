@@ -9,8 +9,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
 from cmk.plugins.azure.agent_based.azure_load_balancer import (
     check_byte_count,
     check_health,

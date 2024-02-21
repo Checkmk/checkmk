@@ -5,8 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.aws.lib import (
     check_aws_limits,
     CloudwatchInsightsSection,

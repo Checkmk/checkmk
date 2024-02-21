@@ -9,8 +9,7 @@ from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import equals, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import equals, SNMPTree, StringTable
 
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |

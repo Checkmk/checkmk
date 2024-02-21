@@ -5,8 +5,7 @@
 
 from typing import NamedTuple
 
-from cmk.agent_based.v2 import IgnoreResults, Metric, Result, State
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResults, Metric, Result, State, StringTable
 
 
 class CheckResults(NamedTuple):

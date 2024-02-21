@@ -8,8 +8,15 @@ from typing import Optional, Tuple, TypedDict
 from pydantic import BaseModel
 
 from cmk.agent_based.v1 import check_levels, Result, Service, State
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, IgnoreResultsError, render
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    StringTable,
+)
 from cmk.plugins.aws.lib import parse_aws
 
 

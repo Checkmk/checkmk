@@ -325,7 +325,7 @@ export class LayeredNodesLayer extends FixLayer {
                     nodes_class_list.toggle("hide_" + d.data);
                 },
                 href: "",
-                img: is_active ? "themes/facelift/images/icon_tick.svg" : "",
+                tick: is_active,
                 data: ident,
             });
         });
@@ -421,8 +421,13 @@ export class LayeredNodesLayer extends FixLayer {
         // Add optional img
         links.each(function (d) {
             const img = d3.select(this).append("img").classed("icon", true);
-            if (d.img) img.attr("src", d.img);
-            else img.style("opacity", 0);
+            if (d.tick) {
+                // Simple tick
+                img.classed("tick", true);
+            } else if (d.img) {
+                // Explicit image
+                img.attr("src", d.img);
+            } else img.style("opacity", 0);
         });
 
         // Add text

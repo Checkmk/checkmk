@@ -164,7 +164,7 @@ def test_get_first_matching_perfometer(
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
             },
-            61,
+            60,
             id="filesystem check without overcommittment",
         ),
         pytest.param(
@@ -174,7 +174,7 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            61,
+            60,
             id="filesystem check without overcommittment (+overprovisioned)",
         ),
         pytest.param(
@@ -184,7 +184,7 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            62,
+            61,
             id="filesystem check with overcommittment",
         ),
     ],

@@ -423,10 +423,6 @@ perfometer_info.append({"type": "logarithmic", "metric": "rta", "half_value": 0.
 perfometer_info.append({"type": "logarithmic", "metric": "rtt", "half_value": 0.1, "exponent": 4})
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "load1", "half_value": 4.0, "exponent": 2.0}
-)
-
-perfometer_info.append(
     {"type": "logarithmic", "metric": "temp", "half_value": 40.0, "exponent": 1.2}
 )
 

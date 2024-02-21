@@ -261,6 +261,9 @@ class ModeAuditLog(WatoMode):
             return HTML(output_funnel.drain())
 
     def action(self) -> ActionResult:
+        if not transactions.check_transaction():
+            return None
+
         if request.var("_action") == "clear":
             user.need_permission("wato.auditlog")
             user.need_permission("wato.clear_auditlog")

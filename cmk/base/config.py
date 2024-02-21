@@ -1870,7 +1870,7 @@ def get_resource_macros() -> Mapping[str, str]:
 
 
 def get_ssc_host_config(
-    host_name: HostName, config_cache: ConfigCache, legacy_macros: Mapping[str, str]
+    host_name: HostName, config_cache: ConfigCache, legacy_macros: Mapping[str, object]
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     ip_family = ConfigCache.address_family(host_name)
@@ -1940,7 +1940,7 @@ def get_ssc_host_config(
         **{f"$HOST_TAG_{k}$": v for k, v in tags.items()},
         **{f"$HOST_LABEL_{k}$": v for k, v in labels.items()},
         **{f"$HOST_ATTR_{k}$": v for k, v in custom_attributes.items()},
-        **legacy_macros,
+        **{k: str(v) for k, v in legacy_macros.items()},
     }
 
     return server_side_calls_api.HostConfig(

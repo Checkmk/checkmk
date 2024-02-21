@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from cmk.agent_based.v1 import HostLabel
 from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringTable
 from cmk.agent_based.v2 import AgentSection
-from cmk.plugins.lib.azure import azure_tags_to_valid_labels
+from cmk.plugins.lib.labels import custom_tags_to_valid_labels
 
 
 def _parse_host_labels(string_table: StringTable) -> tuple[Mapping[str, str], Mapping[str, str]]:
@@ -36,7 +36,7 @@ def host_labels(section: tuple[Mapping[str, str], Mapping[str, str]]) -> HostLab
     if resource_info.get("vm_instance"):
         yield HostLabel("cmk/azure/vm", "instance")
 
-    labels = azure_tags_to_valid_labels(tags)
+    labels = custom_tags_to_valid_labels(tags)
     for key, value in labels.items():
         yield HostLabel(f"cmk/azure/tag/{key}", value)
 

@@ -111,10 +111,17 @@ def test_all_sections_are_subscribed_by_some_plugin(
 ) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
-    We have very few sections (one at the time of this writing),
-    that are not subscribed to by any plugin.
+    We have very few sections that are not subscribed to by any plugin.
     We can afford to keep track of those.
     """
+    allowed_unsubscribed_sections = {
+        "labels",
+        "azure_labels",
+        "ec2_labels",
+        "elb_generic_labels",
+        "elbv2_generic_labels",
+    }
+
     all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
 
     subscribed_sections_names = set(
@@ -126,7 +133,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
 
     unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
 
-    assert unsubscribed_sections_names == {"azure_labels", "labels"}
+    assert unsubscribed_sections_names == allowed_unsubscribed_sections
 
 
 def test_section_detection_uses_sysdescr_or_sysobjid(

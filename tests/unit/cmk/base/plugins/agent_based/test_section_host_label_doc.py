@@ -2,9 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Test the documentation of the host label functions
+"""Test the documentation of the host label functions.
 
-Cutrrently the helper below is just used to facilitate the testing.
+Currently the helper below is just used to facilitate the testing.
 Someday it may be used to automatically extract the doc for all
 builtin host labels.
 """
@@ -21,6 +21,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
     "cmk/azure/tag/{key}:{value}",
     "cmk/azure/vm:instance",
+    "cmk/aws/tag/{key}:{value}",
     "cmk/check_mk_server",
     "cmk/device_type",
     "cmk/docker_image",

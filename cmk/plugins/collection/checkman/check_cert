@@ -1,0 +1,26 @@
+title: Certificates
+agents: active
+catalog: agentless
+license: GPLv2
+distribution: check_mk
+
+item:
+ The name of the host to check (Service name)
+
+description:
+ This performs an active check of an server providing a certificate over TCP.
+
+ With this active check you may monitor certificates not only of web servers,
+ but all servers that encrypt a TCP connection. For this you have to specify
+ the TCP port as it is not derivable from the HTTP protocol. The default is
+ set to 443.
+
+ You may configure checks for the general validity and if the certificate is
+ allowed to be self-signed.
+
+ Additionally, you may check for specific values to monitor if you're looking
+ at the correct certificate or if certain policies are fulfilled.
+
+ This check can be configured via ruleset at Checkmk Setup. This ruleset also
+ allows to specifiy multiple connections to check per host/rule. Peaser refer
+ to the ruleset for details.

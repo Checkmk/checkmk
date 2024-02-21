@@ -6,11 +6,24 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
+from .config import Action as Action
 from .config import ConfigFromWATO as ConfigFromWATO
+from .config import ContactGroups as ContactGroups
+from .config import Count as Count
 from .config import ECRulePack as ECRulePack
 from .config import ECRulePackSpec as ECRulePackSpec
+from .config import EventLimit as EventLimit
+from .config import EventLimits as EventLimits
+from .config import Expect as Expect
+from .config import LogConfig as LogConfig
 from .config import MkpRulePackProxy as MkpRulePackProxy
+from .config import Replication as Replication
 from .config import Rule as Rule
+from .config import ServiceLevel as ServiceLevel
+from .config import SNMPCredential as SNMPCredential
+from .config import SNMPTrapTranslation as SNMPTrapTranslation
+from .config import State as State
+from .config import TextPattern as TextPattern
 from .defaults import default_config as default_config
 from .defaults import default_rule_pack as default_rule_pack
 from .event import Event as Event

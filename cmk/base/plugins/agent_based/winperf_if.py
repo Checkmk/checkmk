@@ -289,6 +289,7 @@ class AdditionalIfData(NamedTuple):
 
 SectionExtended = Collection[AdditionalIfData]
 
+# TODO(sk): remove this after deprecation of the corresponding plugin winperf_if.ps1
 # NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
@@ -301,7 +302,7 @@ SectionExtended = Collection[AdditionalIfData]
 _NetConnectionStatus_TO_OPER_STATUS: Mapping[str, tuple[str, str]] = {
     "0": ("2", "Disconnected"),
     "1": ("2", "Connecting"),
-    "2": ("1", "Connected"),
+    "2": ("1", "up"),
     "3": ("2", "Disconnecting"),
     "4": ("2", "Hardware not present"),
     "5": ("2", "Hardware disabled"),
@@ -340,7 +341,7 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
         for oper_status, oper_status_name in [
             _NetConnectionStatus_TO_OPER_STATUS.get(
                 line_dict["NetConnectionStatus"],
-                ("2", "Disconnected"),
+                ("2", "down"),
             )
         ]
         # we need to ignore data on interfaces in the optional

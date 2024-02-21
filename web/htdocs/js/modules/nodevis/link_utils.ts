@@ -62,7 +62,6 @@ export class AbstractLink implements TypeWithName {
             .selectAll("line")
             .data(this._line_config.style == "straight" ? [this.id()] : [])
             .join("line")
-            .attr("marker-end", "url(#triangle)")
             .attr("stroke-width", function (d) {
                 // @ts-ignore
                 return Math.max(1, 2 - d.depth);

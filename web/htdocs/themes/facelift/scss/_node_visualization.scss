@@ -543,8 +543,15 @@ div.node_vis {
       stroke: $darkgrey;
     }
 
-    stroke-dasharray: 2 3;
-    &.host_service_link {
+    &.foreign_link {
+      line,
+      path {
+        stroke-dasharray: 2 3;
+        stroke-width: 1;
+      }
+    }
+
+    &.local_link {
       line,
       path {
         stroke-dasharray: none;

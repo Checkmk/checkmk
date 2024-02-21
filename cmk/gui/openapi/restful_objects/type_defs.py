@@ -394,11 +394,7 @@ OpenAPITag = TypedDict(
 
 ParameterKey = tuple[str, ...]
 
-StatusCodeInt = Literal[
-    200,
-    204,
-    301,
-    302,
+ErrorStatusCodeInt = Literal[
     400,
     401,
     403,
@@ -411,10 +407,25 @@ StatusCodeInt = Literal[
     422,
     423,
     428,
+    500,
     504,
-    409,
 ]
-ErrorStatusCodeInt = Literal[400, 401, 403, 404, 405, 406, 409, 412, 415, 422, 423, 428, 500]
+SuccessStatusCodeInt = Literal[
+    200,
+    204,
+]
+
+RedirectStatusCodeInt = Literal[
+    301,
+    302,
+]
+
+StatusCodeInt = Literal[
+    SuccessStatusCodeInt,
+    ErrorStatusCodeInt,
+    RedirectStatusCodeInt,
+]
+
 StatusCode = Literal[
     "200",
     "204",
@@ -432,6 +443,7 @@ StatusCode = Literal[
     "422",
     "423",
     "428",
+    "500",
     "504",
 ]
 

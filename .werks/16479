@@ -1,0 +1,10 @@
+Title: ntopng integration: fix ntopng version 6.0+ compatibility
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1708510081
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+The ntopng integration is now compatible with ntopng versions newer than 6.0.

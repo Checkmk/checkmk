@@ -8,7 +8,13 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import IgnoreResultsError, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
+from .utils.aws import (
+    aws_host_labels,
+    discover_aws_generic,
+    extract_aws_metrics_by_labels,
+    parse_aws,
+    parse_aws_labels,
+)
 from .utils.interfaces import CHECK_DEFAULT_PARAMETERS, check_single_interface, Interface
 
 Section = Mapping[str, float]
@@ -52,6 +58,12 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
 register.agent_section(
     name="aws_ec2",
     parse_function=parse_aws_ec2,
+)
+
+register.agent_section(
+    name="ec2_labels",
+    parse_function=parse_aws_labels,
+    host_label_function=aws_host_labels,
 )
 
 # .

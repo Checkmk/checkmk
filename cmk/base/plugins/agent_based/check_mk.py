@@ -35,7 +35,7 @@ def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:
         val = " ".join(line[1:])
         section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
-    return {"version": None, "agentos": None, **section}
+    return {"version": None, "agentos": None} | section
 
 
 def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
@@ -61,10 +61,11 @@ def host_label_function_labels(section: CheckmkSection) -> HostLabelGenerator:
         cmk/os_version:
             This label is set to the version of the operating system as reported by the agent as "OSVersion"
     """
+
     if (agentos := section.get("agentos")) is not None:
         yield HostLabel("cmk/os_family", agentos)
 
-    if (ostype := section.get("ostype")) is not None:
+    if (ostype := section.get("ostype", agentos)) is not None:
         yield HostLabel("cmk/os_type", ostype)
 
     if (osplatform := section.get("osplatform", agentos)) is not None:

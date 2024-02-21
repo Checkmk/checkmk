@@ -400,19 +400,25 @@ def build_tar_gz(
 
         LOG.info(f"Creating Image-Tarball {tar_name} ...")
         if "-rc" in version_tag:
-            LOG.info(f"{version_tag} contains rc information, do a retagging before docker save.")
+            LOG.info(
+                f"{version_tag} contains rc information, do a retagging before docker save with {args.version}."
+            )
+
+            # image.tag() is required to make image.save() work properly.
+            # See docs of image.save(chunk_size=2097152, named=False):
+            # If set to True, the first tag in the tags list will be used to identify the image.
+            # Alternatively, any element of the tags list can be used as an argument to use that specific tag as the saved identifier.
             image.tag(
                 repository=f"{docker_repo_name}/check-mk-{args.edition}",
                 tag=f"{args.version}",
             )
-
+            this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
             with gzip.open(tar_name, "wb") as tar_ball:
+                # image.save() can only take elements of the tags list of an image
+                # as new tags are appended to the list of tags, the "oldest" one would be used if nothing is specified by the named keyword
                 for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
-
-            docker_client.images.remove(
-                image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
-            )
+            docker_client.images.remove(image=this_tag)
         else:
             with gzip.open(tar_name, "wb") as tar_ball:
                 for chunk in image.save(named=this_tag):

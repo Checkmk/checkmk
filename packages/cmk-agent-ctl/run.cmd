@@ -28,7 +28,7 @@ if "%~1"=="-S" (set arg_sign=%2) & shift & shift & goto CheckOpts
 if "%~1"=="--sign" (set arg_sign=%2) & shift & shift & goto CheckOpts
 )
 
-set ci_root_dir=workdir\workspace
+set ci_root_dir=workdir\workspace\checkmk
 set ci_junction_to_root_dir=x
 set script_to_run=.\scripts\cargo_build_core.cmd
 powershell -ExecutionPolicy ByPass -File scripts/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%

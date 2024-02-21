@@ -24,6 +24,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Literal,
     Mapping,
@@ -39,6 +40,7 @@ from typing import (
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
+from botocore.client import BaseClient  # type: ignore[import]
 
 import cmk.utils.password_store
 import cmk.utils.store as store
@@ -451,6 +453,17 @@ def fetch_resources_matching_tags(
         if is_any_tag_matching:
             matching_resources_arn.add(resource["ResourceARN"])
     return matching_resources_arn
+
+
+def _describe_alarms(
+    client: BaseClient, get_response_content: Callable, names: Union[Sequence[str], None] = None
+) -> Iterator[Mapping[str, object]]:
+    paginator = client.get_paginator("describe_alarms")
+    kwargs = {"AlarmNames": names} if names else {}
+
+    for page in paginator.paginate(**kwargs):
+        for alarm in get_response_content(page, "MetricAlarms"):
+            yield alarm
 
 
 #
@@ -3736,9 +3749,8 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args):
-        response = self._client.describe_alarms()
-        return self._get_response_content(response, "MetricAlarms")
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(self, raw_content, colleague_contents):
         self._add_limit(
@@ -3785,10 +3797,10 @@ class CloudwatchAlarms(AWSSection):
                     for alarm in colleague_contents.content
                     if alarm["AlarmName"] in self._names
                 ]
-            response = self._client.describe_alarms(AlarmNames=self._names)
-        else:
-            response = self._client.describe_alarms()
-        return self._get_response_content(response, "MetricAlarms")
+            return list(
+                _describe_alarms(self._client, self._get_response_content, names=self._names)
+            )
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(self, raw_content, colleague_contents):
         if raw_content.content:

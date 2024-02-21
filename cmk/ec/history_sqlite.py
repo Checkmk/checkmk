@@ -219,3 +219,6 @@ class SQLiteHistory(History):
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
+
+        # should be executed outside of the transaction
+        self.conn.execute("VACUUM;")

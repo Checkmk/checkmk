@@ -546,7 +546,7 @@ class Mailbox:
         def format_date(timestamp: float) -> str:
             return time.strftime("%d-%b-%Y", time.gmtime(timestamp))
 
-        def fetch_timestamp(mail_id: str) -> int:
+        def fetch_timestamp(mail_id: str | bytes) -> int:
             # Alternative, more flexible but slower implementation using <DATE> rather than
             # <INTERNALDATE> - maybe we should make this selectable
             # msg = self._mailbox.fetch(mail_id, "(RFC822)")[1]
@@ -590,7 +590,6 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                if isinstance(mail_id, str)
                 for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]

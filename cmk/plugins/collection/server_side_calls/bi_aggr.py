@@ -87,7 +87,7 @@ def check_bi_aggr_services(
         args += ["--acknowledged", opt_params.acknowledged]
     if opt_params and opt_params.track_downtimes:
         args += ["-r", "-n", host_config.name]
-    description = f"Aggr {params.aggregation_name}"
+    description = f"Aggr {aggregation_name}"
     yield ActiveCheckCommand(service_description=description, command_arguments=args)
 
 

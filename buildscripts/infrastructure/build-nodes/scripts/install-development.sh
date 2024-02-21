@@ -154,11 +154,16 @@ collect_user_input() {
 }
 
 strip_binaries() {
+    STRIP_PATH="${INSTALL_PATH}"
+    if [ $# -eq 1 ]; then
+        STRIP_PATH=$1
+    fi
+
     if [[ -n ${CI} ]]; then
         # CI build, located at /opt
-        /opt/strip_binaries "${INSTALL_PATH}"
+        /opt/strip_binaries "${STRIP_PATH}"
     else
-        omd/strip_binaries "${INSTALL_PATH}"
+        omd/strip_binaries "${STRIP_PATH}"
     fi
 }
 
@@ -210,9 +215,15 @@ install_python_and_teammates() {
 
     if [[ $STRIP_LATER -eq 1 ]]; then
         print_blue "strip_binaries during Python setup"
-        strip_binaries
+        strip_for_python
         "${SCRIPT_DIR}"/install-python.sh link-only
     fi
+}
+
+strip_for_python() {
+    # strip only the content of the latest created directory
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "Python-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "openssl-*" -print -quit | head -n 1)"
 }
 
 install_for_cpp_dev() {
@@ -258,8 +269,7 @@ install_for_cpp_dev() {
 
     if [[ $STRIP_LATER -eq 1 ]]; then
         print_blue "strip_binaries during CPP setup"
-        strip_binaries
-
+        strip_for_cpp
         "${SCRIPT_DIR}"/install-gnu-toolchain.sh link-only
         "${SCRIPT_DIR}"/install-valgrind.sh link-only
         "${SCRIPT_DIR}"/install-cmake.sh link-only
@@ -271,6 +281,16 @@ install_for_cpp_dev() {
     "${SCRIPT_DIR}"/install-patchelf.sh
 
     print_green "Installation for CPP development done"
+}
+
+strip_for_cpp() {
+    # strip only the content of the latest created directory
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "gcc-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "iwyu-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "valgrind-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "cmake-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "protobuf-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
 }
 
 install_cmk_package_dependencies() {
@@ -290,7 +310,7 @@ install_for_rust_dev() {
 
     if [[ $STRIP_LATER -eq 1 ]]; then
         print_blue "strip_binaries during Rust setup"
-        strip_binaries
+        strip_for_rust
         "${SCRIPT_DIR}"/install-rust-cargo.sh link-only
     fi
 
@@ -298,6 +318,12 @@ install_for_rust_dev() {
 
     IMPORTANT_MESSAGES+=("Don't forget to call: export RUSTUP_HOME=${INSTALL_PATH}/rust/rustup")
     print_red "${IMPORTANT_MESSAGES[${#IMPORTANT_MESSAGES[@]} - 1]}"
+}
+
+strip_for_rust() {
+    # strip only the content of the latest created directory
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
+    strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "rust" -print -quit | head -n 1)"
 }
 
 install_for_frontend_dev() {
@@ -454,10 +480,10 @@ fi
 
 if [[ $STRIP_LATER -gt 1 ]]; then
     print_blue "strip_binaries finally"
-    strip_binaries
 
     if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
         print_debug "Link CPP things"
+        strip_for_cpp
         "${SCRIPT_DIR}"/install-gnu-toolchain.sh link-only
         "${SCRIPT_DIR}"/install-valgrind.sh link-only
         "${SCRIPT_DIR}"/install-cmake.sh link-only
@@ -468,11 +494,13 @@ if [[ $STRIP_LATER -gt 1 ]]; then
 
     if [[ $INSTALL_FOR_PYTHON -eq 1 && $INSTALLED_BY_PYENV -eq 0 ]]; then
         print_debug "Link Python"
+        strip_for_python
         "${SCRIPT_DIR}"/install-python.sh link-only
     fi
 
     if [[ $INSTALL_FOR_RUST -eq 1 ]]; then
         print_debug "Link Rust"
+        strip_for_rust
         "${SCRIPT_DIR}"/install-rust-cargo.sh link-only
     fi
 fi

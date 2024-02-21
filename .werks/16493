@@ -7,5 +7,3 @@ Edition: cre
 Level: 1
 Version: 2.2.0p23
 
-With this new type of calculation, since we don't have a reference for when this lagtime started or ended,
-we always consider a month to be made up of 30 days.

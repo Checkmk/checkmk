@@ -649,9 +649,6 @@ class SnapMirrorModel(BaseModel):
         We suppose this lag time it is always in the order of hours
         (see: https://kb.netapp.com/onprem/ontap/dp/SnapMirror/What_is_SnapMirror_lag_time)
         But also, in case, we consider 1 month always 30 days.
-
-        Once we have all branches with pydantic > 2.0.0, we can use its timedelta support:
-        https://docs.pydantic.dev/2.6/api/standard_library_types/#datetimetimedelta
         """
 
         if not self.lag_time:

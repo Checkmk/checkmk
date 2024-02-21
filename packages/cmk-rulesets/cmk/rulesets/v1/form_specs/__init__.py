@@ -38,8 +38,17 @@ from ._composed import (
     MultipleChoiceElement,
     TupleDoNotUseWillbeRemoved,
 )
-from ._levels import LevelDirection, Levels, LevelsConfigModel, PredictiveLevels
+from ._levels import (
+    LevelDirection,
+    Levels,
+    LevelsConfigModel,
+    PredictiveLevels,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
+)
 from ._migrations import (
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_upper_float_levels,
@@ -78,12 +87,16 @@ __all__ = [
     "LevelDirection",
     "Levels",
     "LevelsConfigModel",
+    "SimpleLevels",
+    "SimpleLevelsConfigModel",
     "List",
     "Metric",
     "migrate_to_lower_float_levels",
     "migrate_to_lower_integer_levels",
     "migrate_to_upper_float_levels",
     "migrate_to_upper_integer_levels",
+    "migrate_to_float_simple_levels",
+    "migrate_to_integer_simple_levels",
     "MonitoredHost",
     "MonitoredService",
     "MatchingScope",

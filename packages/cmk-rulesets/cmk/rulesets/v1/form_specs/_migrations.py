@@ -5,7 +5,7 @@
 
 from typing import Literal, TypeVar
 
-from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel
+from ._levels import _PredictiveLevelsT, LevelDirection, LevelsConfigModel, SimpleLevelsConfigModel
 
 _NumberT = TypeVar("_NumberT", int, float)
 
@@ -165,3 +165,49 @@ def migrate_to_lower_float_levels(model: object) -> LevelsConfigModel[float]:
         model: Old value presented to the consumers to be migrated
     """
     return _migrate_to_levels(model, float, LevelDirection.LOWER)
+
+
+def _migrate_to_simple_levels(
+    model: object, ntype: type[_NumberT]
+) -> SimpleLevelsConfigModel[_NumberT]:
+    match model:
+        case None | (None, None) | ("no_levels", None):
+            return "no_levels", None
+
+        case ("fixed", (int(warn), int(crit)) | (float(warn), float(crit))) | (
+            int(warn),
+            int(crit),
+        ) | (float(warn), float(crit)):
+            return "fixed", (ntype(warn), ntype(crit))
+
+        case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
+            raise TypeError(
+                f"Could not migrate {model!r} to SimpleLevelsConfigModel. "
+                "Consider using Levels instead of SimpleLevels."
+            )
+
+        case _:
+            raise TypeError(f"Could not migrate {model!r} to SimpleLevelsConfigModel.")
+
+
+def migrate_to_integer_simple_levels(model: object) -> SimpleLevelsConfigModel[int]:
+    """
+    Transform a previous levels configuration (Tuple or SimpleLevels)
+    representing (warn, crit) levels to an integer-based model of the `SimpleLevels` FormSpec.
+    The decimal part of floating point values will be truncated when converting to integer values.
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    return _migrate_to_simple_levels(model, int)
+
+
+def migrate_to_float_simple_levels(model: object) -> SimpleLevelsConfigModel[float]:
+    """
+    Transform a previous levels configuration (Tuple or SimpleLevels)
+    representing (warn, crit) levels to a float-based model of the `SimpleLevels` FormSpec
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    return _migrate_to_simple_levels(model, float)

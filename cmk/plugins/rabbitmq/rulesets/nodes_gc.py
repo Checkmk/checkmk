@@ -14,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     LevelDirection,
-    Levels,
+    SimpleLevels,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
@@ -45,74 +45,66 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
     return Dictionary(
         elements={
             "gc_num_upper": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=Integer(unit=Label("runs")),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Upper level for total number of GC runs"),
                 )
             ),
             "gc_num_rate_upper": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=Float(unit=Label("1/s")),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
-                    predictive=None,
                     title=Title("Upper level for GC run rate"),
                 )
             ),
             "gc_num_rate_lower": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=Float(unit=Label("1/s")),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
-                    predictive=None,
                     title=Title("Lower level for GC run rate"),
                 )
             ),
             "gc_bytes_reclaimed_upper": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Absolute levels for memory reclaimed by GC"),
                 )
             ),
             "gc_bytes_reclaimed_rate_upper": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Upper level for rate of memory reclaimed by GC"),
                 )
             ),
             "gc_bytes_reclaimed_rate_lower": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=DataSize(displayed_magnitudes=MAGNITUDES),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Lower level for rate of memory reclaimed by GC"),
                 )
             ),
             "runqueue_upper": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Upper level for runtime run queue"),
                 )
             ),
             "runqueue_lower": DictElement(
-                parameter_form=Levels(
+                parameter_form=SimpleLevels(
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    predictive=None,
                     title=Title("Lower level for runtime run queue"),
                 )
             ),

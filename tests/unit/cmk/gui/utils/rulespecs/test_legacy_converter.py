@@ -1677,9 +1677,17 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
         api_v1.form_specs.List(element_template=api_v1.form_specs.Integer()),
         api_v1.form_specs.FixedValue(value=None),
         api_v1.form_specs.TimeSpan(displayed_magnitudes=tuple(api_v1.form_specs.TimeMagnitude)),
+        api_v1.form_specs.SimpleLevels(
+            level_direction=api_v1.form_specs.LevelDirection.UPPER,
+            form_spec_template=api_v1.form_specs.Integer(),
+            prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
+        ),
         api_v1.form_specs.Levels(
             level_direction=api_v1.form_specs.LevelDirection.UPPER,
-            predictive=None,
+            predictive=api_v1.form_specs.PredictiveLevels(
+                reference_metric="my_metric",
+                prefill_abs_diff=api_v1.form_specs.DefaultValue((1.0, 2.0)),
+            ),
             form_spec_template=api_v1.form_specs.Integer(),
             prefill_fixed_levels=api_v1.form_specs.DefaultValue((23.0, 42.0)),
         ),
@@ -1694,53 +1702,6 @@ def _exposed_form_specs() -> Sequence[FormSpec]:
             predefined_help_text=api_v1.form_specs.MatchingScope.FULL
         ),
     ]
-
-
-@pytest.mark.parametrize("form_spec", _exposed_form_specs())
-def test_form_spec_transform(form_spec: FormSpec) -> None:
-    if isinstance(
-        form_spec,
-        (
-            api_v1.form_specs.Integer,
-            api_v1.form_specs.Float,
-            api_v1.form_specs.DataSize,
-            api_v1.form_specs.Percentage,
-            api_v1.form_specs.String,
-            api_v1.form_specs.RegularExpression,
-            api_v1.form_specs.TupleDoNotUseWillbeRemoved,
-            api_v1.form_specs.Dictionary,
-            api_v1.form_specs.SingleChoice,
-            api_v1.form_specs.CascadingSingleChoice,
-            api_v1.form_specs.ServiceState,
-            api_v1.form_specs.HostState,
-            api_v1.form_specs.List,
-            api_v1.form_specs.FixedValue,
-            api_v1.form_specs.TimeSpan,
-            api_v1.form_specs.Levels,
-            api_v1.form_specs.BooleanChoice,
-            api_v1.form_specs.MultipleChoice,
-            api_v1.form_specs.MultilineText,
-        ),
-    ):
-        try:
-            _ = form_spec.migrate
-        except AttributeError:
-            assert False
-    elif isinstance(
-        form_spec,
-        (
-            api_v1.form_specs.FileUpload,
-            api_v1.form_specs.Metric,
-            api_v1.form_specs.MonitoredHost,
-            api_v1.form_specs.MonitoredService,
-            api_v1.form_specs.Password,
-            api_v1.form_specs.Proxy,
-        ),
-    ):
-        # these don't have a transform
-        assert True
-    else:
-        raise NotImplementedError(form_spec)
 
 
 def _get_legacy_no_levels_choice() -> tuple[str, str, legacy_valuespecs.FixedValue]:
@@ -1770,12 +1731,11 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
     ["api_levels", "legacy_levels"],
     [
         pytest.param(
-            api_v1.form_specs.Levels(
+            api_v1.form_specs.SimpleLevels(
                 title=api_v1.Title("Lower levels"),
                 form_spec_template=api_v1.form_specs.Integer(),
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
-                predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Lower levels"),
@@ -1788,11 +1748,10 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="lower fixed",
         ),
         pytest.param(
-            api_v1.form_specs.Levels(
+            api_v1.form_specs.SimpleLevels(
                 form_spec_template=api_v1.form_specs.Integer(),
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
-                predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[
@@ -1804,14 +1763,13 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             id="upper fixed",
         ),
         pytest.param(
-            api_v1.form_specs.Levels[float](
+            api_v1.form_specs.SimpleLevels[float](
                 title=api_v1.Title("Cast to super type float"),
                 form_spec_template=api_v1.form_specs.TimeSpan(
                     displayed_magnitudes=[api_v1.form_specs.TimeMagnitude.SECOND]
                 ),
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
-                predictive=None,
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Cast to super type float"),

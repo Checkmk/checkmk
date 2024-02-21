@@ -13,10 +13,10 @@ Docs:
 - https://library.netapp.com/ecmdocs/ECMLP2885777/html/resources/counter_table.html
 - https://docs.netapp.com/us-en/ontap-restmap-9131//perf.html#perf-object-instance-list-info-iter
 """
+import datetime
 from collections.abc import Sequence
 from typing import Any, Literal, Union
 
-from isoduration import parse_duration  # type: ignore
 from pydantic import BaseModel, Field
 
 MEGA = 1024.0 * 1024.0
@@ -637,36 +637,18 @@ class SnapMirrorModel(BaseModel):
     policy_type: str
     state: str | None = None
     source_svm_name: str | None = None
-    lag_time: str | None = None
+    lag_time: datetime.timedelta | None = None
     destination: str
 
-    def lagtime(self) -> int | None:
+    def lagtime(self) -> float | None:
         """
-        The amount of days/hours in a duration depends on when this durations started.
-        E.g. 1 month of duration from 2024-03-01 to 2024-04-01 is 31 days,
-        from 2024-04-01 to 2024-05-01 is 30 days.
-
-        We suppose this lag time it is always in the order of hours
-        (see: https://kb.netapp.com/onprem/ontap/dp/SnapMirror/What_is_SnapMirror_lag_time)
-        But also, in case, we consider 1 month always 30 days.
-
-        Once we have all branches with pydantic > 2.0.0, we can use its timedelta support:
-        https://docs.pydantic.dev/2.6/api/standard_library_types/#datetimetimedelta
+        see: https://kb.netapp.com/onprem/ontap/dp/SnapMirror/What_is_SnapMirror_lag_time
         """
 
-        if not self.lag_time:
+        if self.lag_time is None:
             return None
 
-        duration = parse_duration(self.lag_time)
-        total_days = duration.date.days
-        total_days += duration.date.weeks * 7
-        total_days += ((duration.date.years * 12) + duration.date.months) * 30
-
-        total_seconds = duration.time.seconds
-        total_seconds += ((duration.time.hours * 60) + duration.time.minutes) * 60
-        total_seconds += total_days * 24 * 60 * 60
-
-        return int(total_seconds)
+        return self.lag_time.total_seconds()
 
 
 class FcPortModel(BaseModel):
